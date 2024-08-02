@@ -54,9 +54,10 @@ export class AddressBookPage {
     const addOrganizationButton = this.page.locator(this.allOrgsAddOrg);
 
     await addOrganizationButton.click();
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    await this.page.reload();
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // await new Promise((resolve) => setTimeout(resolve, 1500));
+    // await this.page.reload();
+    // await new Promise((resolve) => setTimeout(resolve, 1500));
+    await this.page.waitForResponse('**/customer-os-api');
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
   }
 

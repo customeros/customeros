@@ -32,6 +32,7 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
     <>
       <Menu>
         <MenuButton
+          data-test='contract-menu-dots'
           className={cn(
             `flex items-center max-h-5 p-1 hover:bg-gray-100 rounded`,
           )}
@@ -42,6 +43,7 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
           <MenuItem
             onClick={onOpenEditModal}
             className='flex items-center text-base'
+            data-test='contract-menu-edit-contract'
           >
             <Edit03 className='mr-1 text-gray-500' />
             Edit contract
@@ -72,6 +74,7 @@ export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
           {status == ContractStatus.Draft && (
             <MenuItem
               className='flex items-center text-base'
+              data-test='contract-menu-delete-contract'
               onClick={() => onStatusModalOpen(ContractStatusModalMode.Delete)}
             >
               <Trash01 className='mr-1 text-gray-500' />

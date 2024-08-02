@@ -36,7 +36,7 @@ test('convert org to customer', async ({ page }) => {
   await customersPage.ensureNumberOfCustomersExist(1);
 });
 
-test('create contract', async ({ page }) => {
+test('create and delete contracts', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const addressBookPage = new AddressBookPage(page);
   const organizationAccountPage = new OrganizationAccountPage(page);
@@ -59,4 +59,6 @@ test('create contract', async ({ page }) => {
   await organizationAccountPage.checkContractsCount(1);
   await organizationAccountPage.addContractNonEmpty();
   await organizationAccountPage.checkContractsCount(2);
+  await organizationAccountPage.deleteContract(1);
+  await organizationAccountPage.checkContractsCount(1);
 });

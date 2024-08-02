@@ -336,6 +336,7 @@ export const ContractBillingDetailsForm: FC<SubscriptionServiceModalProps> =
                         size='sm'
                         variant='ghost'
                         onClick={openAddressModal}
+                        data-test='contract-billing-details-address'
                         className='font-normal text-base p-0 ml-1 relative text-gray-500 hover:bg-transparent focus:bg-transparent underline'
                       >
                         {contractStore?.tempValue.billingDetails

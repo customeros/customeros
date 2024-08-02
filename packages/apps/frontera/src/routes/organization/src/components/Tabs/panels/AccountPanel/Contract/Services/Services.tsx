@@ -31,7 +31,7 @@ export const Services: React.FC<Props> = ({
             variant='ghost'
             colorScheme='gray'
             aria-label={'Add services'}
-            data-Test='org-account-add-services'
+            data-test='org-account-add-services'
             icon={<Plus className='text-gray-400' />}
             onClick={() => {
               onModalOpen();
