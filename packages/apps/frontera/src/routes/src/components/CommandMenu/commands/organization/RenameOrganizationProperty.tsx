@@ -25,6 +25,7 @@ export const RenameOrganizationProperty = observer(() => {
 
     entity?.update((value) => {
       value[property] = newValue;
+
       return value;
     });
   };

@@ -27,6 +27,7 @@ export const csvDataMapper = {
     });
 
     if (!jobRole?.startedAt) return '';
+
     return DateTimeUtils.timeAgo(jobRole.startedAt);
   },
   [ColumnViewType.ContactsLinkedin]: (d: ContactStore) => {

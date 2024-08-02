@@ -301,10 +301,11 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     if (tableType === TableViewType.Organizations) {
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('OrganizationHub');
+
         return;
       }
 
-      if (index) {
+      if (index > -1) {
         store.ui.commandMenu.setType('OrganizationCommands');
         store.ui.commandMenu.setContext({
           entity: 'Organization',
