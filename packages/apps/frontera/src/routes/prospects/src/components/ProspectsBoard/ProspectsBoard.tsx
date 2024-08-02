@@ -81,7 +81,7 @@ export const ProspectsBoard = observer(() => {
   const handleFocus = (id: string) => {
     setFocused(id);
     store.ui.commandMenu.setType('OpportunityCommands');
-    store.ui.commandMenu.setContext({ entity: 'Opportunity', id });
+    store.ui.commandMenu.setContext({ entity: 'Opportunity', ids: [id] });
   };
 
   const handleBlur = () => {

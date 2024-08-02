@@ -15,7 +15,7 @@ import { GlobalSharedCommands } from './GlobalHub';
 export const OpportunityCommands = observer(() => {
   const store = useStore();
   const opportunity = store.opportunities.value.get(
-    store.ui.commandMenu.context.id as string,
+    store.ui.commandMenu.context.ids?.[0] as string,
   );
   const label = `Opportunity - ${opportunity?.value.name}`;
 

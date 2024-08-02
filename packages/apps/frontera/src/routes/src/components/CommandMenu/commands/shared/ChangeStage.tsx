@@ -4,14 +4,18 @@ import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { getStageFromColumn } from '@opportunities/components/ProspectsBoard/columns';
 
-import { Check } from '@ui/media/icons/Check.tsx';
+import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
-import { InternalStage, OrganizationStage } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
+import {
+  InternalStage,
+  OrganizationStage,
+  OrganizationRelationship,
+} from '@graphql/types';
 import {
   stageOptions,
   getStageOptions,
-} from '@organization/components/Tabs/panels/AboutPanel/util.ts';
+} from '@organization/components/Tabs/panels/AboutPanel/util';
 
 type OpportunityStage = InternalStage | string;
 
@@ -29,15 +33,16 @@ export const ChangeStage = observer(() => {
   const entity = match(context.entity)
     .returnType<OpportunityStore | OrganizationStore | undefined>()
     .with('Opportunity', () =>
-      store.opportunities.value.get(context.id as string),
+      store.opportunities.value.get(context.ids?.[0] as string),
     )
     .with('Organization', () =>
-      store.organizations.value.get(context.id as string),
+      store.organizations.value.get(context.ids?.[0] as string),
     )
     .otherwise(() => undefined);
 
   const label = match(context.entity)
     .with('Organization', () => `Organization - ${entity?.value?.name}`)
+    .with('Organizations', () => `${context.ids?.length} organizations`)
     .with('Opportunity', () => `Opportunity - ${entity?.value?.name}`)
     .otherwise(() => '');
 
@@ -60,11 +65,14 @@ export const ChangeStage = observer(() => {
     .with('Organization', () =>
       getStageOptions((entity as OrganizationStore).value?.relationship),
     )
+    .with('Organizations', () =>
+      getStageOptions(OrganizationRelationship.Prospect),
+    )
     .with('Opportunity', () => opportunityStages ?? [])
     .otherwise(() => []);
 
   const handleSelect = (value: OrganizationStage | OpportunityStage) => () => {
-    if (!context.id) return;
+    if (!context.ids?.[0]) return;
 
     if (!entity) return;
 
@@ -75,6 +83,12 @@ export const ChangeStage = observer(() => {
 
           return org;
         });
+      })
+      .with('Organizations', () => {
+        store.organizations.updateStage(
+          context.ids as string[],
+          value as OrganizationStage,
+        );
       })
       .with('Opportunity', () => {
         (entity as OpportunityStore)?.update((opp) => {

@@ -22,7 +22,7 @@ export const AddContactViaLinkedInUrl = observer(() => {
   const [validationError, setValidationError] = useState(false);
   const [allowSubmit, setAllowSubmit] = useState(false);
 
-  const entity = store.organizations.value.get(context.id as string);
+  const entity = store.organizations.value.get((context.ids as string[])?.[0]);
   const label = `Organization - ${entity?.value?.name}`;
 
   useDidMount(() => {
@@ -43,7 +43,7 @@ export const AddContactViaLinkedInUrl = observer(() => {
 
       store.contacts.createWithSocial({
         socialUrl: formattedUrl,
-        organizationId: context.id as string,
+        organizationId: (context.ids as string[])?.[0],
       });
 
       setUrl('');

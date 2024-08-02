@@ -16,9 +16,8 @@ import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationCommands = observer(() => {
   const store = useStore();
-  const organization = store.organizations.value.get(
-    store.ui.commandMenu.context.id as string,
-  );
+  const id = (store.ui.commandMenu.context.ids as string[])?.[0];
+  const organization = store.organizations.value.get(id);
   const label = `Organization - ${organization?.value.name}`;
 
   return (

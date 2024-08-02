@@ -13,12 +13,12 @@ export const RenameOrganizationProperty = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const [allowSubmit, setAllowSubmit] = useState(false);
-  const entity = store.organizations.value.get(context.id as string);
+  const entity = store.organizations.value.get(context.ids?.[0] as string);
   const label = `Organization - ${entity?.value?.name}`;
   const property = context.property as 'name' | 'website';
 
   const handleSelect = (newValue: string) => {
-    if (!context.id) return;
+    if (!context.ids?.[0]) return;
     const property = context.property as 'name' | 'website';
 
     if (!entity || !property) return;

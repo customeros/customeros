@@ -9,12 +9,12 @@ export const UpdateHealthStatus = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
-  const entity = store.organizations.value.get(context.id as string);
+  const entity = store.organizations.value.get(context.ids?.[0] as string);
   const label = `Organization - ${entity?.value?.name}`;
 
   const handleSelect =
     (renewalLikelihood: OpportunityRenewalLikelihood) => () => {
-      if (!context.id) return;
+      if (!context.ids?.[0]) return;
 
       if (!entity) return;
       entity?.update((value) => {

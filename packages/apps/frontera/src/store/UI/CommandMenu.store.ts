@@ -17,15 +17,20 @@ export type CommandMenuType =
   | 'AddContactViaLinkedInUrl'
   | 'RenameOrganizationProperty'
   | 'DeleteConfirmationModal'
+  | 'OrganizationBulkCommands'
   | 'SetOpportunityNextSteps';
 
 type Context = {
-  id: string | null;
+  ids: Array<string>;
   property?: string | null;
-  entity: 'Opportunity' | 'Organization' | null;
+  entity: 'Opportunity' | 'Organization' | 'Organizations' | null;
 };
 
-const makeDefaultContext = () => ({ id: null, entity: null, property: null });
+const makeDefaultContext = () => ({
+  entity: null,
+  property: null,
+  ids: [],
+});
 
 export class CommandMenuStore {
   isOpen = false;
@@ -72,9 +77,9 @@ export class CommandMenuStore {
     });
   }
 
-  clearContextId() {
+  clearContextIds() {
     runInAction(() => {
-      if (this.context) this.context.id = null;
+      if (this.context) this.context.ids = [];
     });
   }
 
