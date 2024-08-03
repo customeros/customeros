@@ -11,7 +11,6 @@ type Config struct {
 
 	ReacherConfig ReacherConfig
 	SmartyConfig  SmartyConfig
-	HunterConfig  HunterConfig
 
 	Postgres config.PostgresConfig
 	Neo4j    config.Neo4jConfig
@@ -27,9 +26,4 @@ type ReacherConfig struct {
 type SmartyConfig struct {
 	AuthId    string `env:"SMARTY_AUTH_ID" validate:"required"`
 	AuthToken string `env:"SMARTY_AUTH_TOKEN" validate:"required"`
-}
-
-type HunterConfig struct {
-	ApiKey  string `env:"HUNTER_IO_API_KEY" validate:"required"`
-	ApiPath string `env:"HUNTER_IO_API_PATH" validate:"required"`
 }
