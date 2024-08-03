@@ -1,8 +1,9 @@
 package constants
 
 const (
-	ServiceName            = "CUSTOMER-OS-API"
-	AppSourceCustomerOsApi = "customer-os-api"
+	ServiceName                = "CUSTOMER-OS-API"
+	AppSourceCustomerOsApi     = "customer-os-api"
+	AppSourceCustomerOsApiRest = "customer-os-api/rest"
 
 	UrlCustomerOsApi                    = "https://customeros.ai"
 	UrlInvoices                         = UrlCustomerOsApi + "/invoices"

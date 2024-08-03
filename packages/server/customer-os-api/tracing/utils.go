@@ -89,6 +89,11 @@ func SetDefaultResolverSpanTags(ctx context.Context, span opentracing.Span) {
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentResolver)
 }
 
+func SetDefaultRestSpanTags(ctx context.Context, span opentracing.Span) {
+	setDefaultSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentRest)
+}
+
 func LogObjectAsJson(span opentracing.Span, name string, object any) {
 	tracing.LogObjectAsJson(span, name, object)
 }
