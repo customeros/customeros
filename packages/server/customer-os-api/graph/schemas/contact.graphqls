@@ -49,7 +49,7 @@ extend type Mutation {
     contact_AddSocial(contactId: ID!, input: SocialInput!): Social! @hasTenant
     contact_RemoveSocial(contactId: ID!, socialId: ID!): ActionResponse! @hasTenant
 
-    contact_FindEmail(contactId: ID!, organizationId: ID!): String!
+    contact_FindEmail(contactId: ID!, organizationId: ID!): String! @deprecated(reason: "Decommissioned")
 }
 
 type CustomerContact {

@@ -14,7 +14,6 @@ type Services struct {
 	AddressValidationService     AddressValidationService
 	PhoneNumberValidationService PhoneNumberValidationService
 	EmailValidationService       EmailValidationService
-	EmailFinderService           EmailFinderService
 }
 
 func InitServices(config *config.Config, db *config.StorageDB, driver *neo4j.DriverWithContext, log logger.Logger) *Services {
@@ -25,7 +24,6 @@ func InitServices(config *config.Config, db *config.StorageDB, driver *neo4j.Dri
 	services.AddressValidationService = NewAddressValidationService(config, services)
 	services.PhoneNumberValidationService = NewPhoneNumberValidationService(services)
 	services.EmailValidationService = NewEmailValidationService(config, services, log)
-	services.EmailFinderService = NewEmailFinderService(config, services, log)
 
 	return services
 }

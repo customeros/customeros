@@ -180,28 +180,6 @@ func main() {
 			c.JSON(200, dto.MapValidationEmailResponse(response, nil))
 		})
 
-	r.POST("/findEmail",
-		handler.TracingEnhancer(ctx, "POST /findEmail"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
-		func(c *gin.Context) {
-			var request dto.FindEmailRequest
-
-			if err := c.BindJSON(&request); err != nil {
-				appLogger.Errorf("Fail reading request: %v", err.Error())
-				c.AbortWithStatus(500)
-				return
-			}
-
-			response, err := services.EmailFinderService.FindEmail(ctx, request.FirstName, request.LastName, request.Domain)
-			if err != nil {
-				appLogger.Errorf("Error finding email: %v", err.Error())
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, response)
-		})
-
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 

@@ -28,9 +28,8 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Metrics          metrics.Config
 	Services         struct {
-		ValidationApi     string  `env:"VALIDATION_API" validate:"required"`
-		ValidationApiKey  string  `env:"VALIDATION_API_KEY" validate:"required"`
-		HunterAcceptScore float64 `env:"HUNTER_IO_ACCEPT_SCORE" validate:"required" envDefault:"75.0"`
+		ValidationApi    string `env:"VALIDATION_API" validate:"required"`
+		ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
 	}
 	AppConfig struct {
 		TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
