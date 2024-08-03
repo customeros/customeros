@@ -311,6 +311,7 @@ func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Con
 		"now":            utils.Now(),
 		"acceptedStatuses": []string{
 			neo4jenum.InvoiceStatusDue.String(),
+			neo4jenum.InvoiceStatusOverdue.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))

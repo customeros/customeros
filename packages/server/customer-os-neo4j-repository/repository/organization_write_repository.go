@@ -105,6 +105,7 @@ type OrganizationUpdateFields struct {
 }
 
 type OrganizationWriteRepository interface {
+	ReserveOrganizationId(ctx context.Context, tenant, organizationId string) (string, error)
 	CreateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationCreateFields) error
 	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationCreateFields) error
 	UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error
@@ -139,6 +140,31 @@ func NewOrganizationWriteRepository(driver *neo4j.DriverWithContext, database st
 
 func (r *organizationWriteRepository) prepareWriteSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *organizationWriteRepository) ReserveOrganizationId(ctx context.Context, tenant, inputId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ReserveOrganizationId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("organizationId", inputId))
+
+	orgId := utils.NewUUIDIfEmpty(inputId)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+							MERGE (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$id})
+							SET org.updatedAt = datetime()`, tenant)
+	params := map[string]any{
+		"id":     orgId,
+		"tenant": tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return orgId, err
 }
 
 func (r *organizationWriteRepository) CreateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationCreateFields) error {
@@ -201,32 +227,39 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.icpFit = $icpFit,
 						org.aggregateVersion = $aggregateVersion,
 						org.lastTouchpointAt = datetime()
-		 ON MATCH SET 	org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name is null OR org.name = '' THEN $name ELSE org.name END,
-						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description is null OR org.description = '' THEN $description ELSE org.description END,
-						org.hide = CASE WHEN $overwrite=true OR (org.sourceOfTruth=$sourceOfTruth AND $hide = false) THEN $hide ELSE org.hide END,
-						org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,
-						org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END,
-						org.subIndustry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,
-						org.industryGroup = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industryGroup is null OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END,
-						org.targetAudience = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.targetAudience is null OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END,
-						org.valueProposition = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.valueProposition is null OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END,
-						org.lastFundingRound = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingRound is null OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END,
-						org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,
-						org.referenceId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,
+		 ON MATCH SET 	org.source = CASE WHEN org.source IS NULL THEN $source ELSE org.source END,
+						org.sourceOfTruth = CASE WHEN org.sourceOfTruth IS NULL THEN $sourceOfTruth ELSE org.sourceOfTruth END,
+						org.appSource = CASE WHEN org.appSource IS NULL THEN $appSource ELSE org.appSource END,
+						org.createdAt = CASE WHEN org.createdAt IS NULL THEN $createdAt ELSE org.createdAt END,
+						org.leadSource = CASE WHEN org.leadSource IS NULL THEN $leadSource ELSE org.leadSource END,
+						org.lastTouchpointAt = CASE WHEN org.lastTouchpointAt IS NULL THEN datetime() ELSE org.lastTouchpointAt END,
+						org.onboardingStatus = CASE WHEN org.onboardingStatus IS NULL THEN $onboardingStatus ELSE org.onboardingStatus END,
+						org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name IS NULL OR org.name = '' THEN $name ELSE org.name END,
+						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description IS NULL OR org.description = '' THEN $description ELSE org.description END,
+						org.hide = CASE WHEN $overwrite=true OR org.hide IS NULL OR (org.sourceOfTruth=$sourceOfTruth AND $hide = false) THEN $hide ELSE org.hide END,
+						org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.website IS NULL OR org.website = '' THEN $website ELSE org.website END,
+						org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industry IS NULL OR org.industry = '' THEN $industry ELSE org.industry END,
+						org.subIndustry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.subIndustry IS NULL OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,
+						org.industryGroup = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industryGroup IS NULL OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END,
+						org.targetAudience = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.targetAudience IS NULL OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END,
+						org.valueProposition = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.valueProposition IS NULL OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END,
+						org.lastFundingRound = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingRound IS NULL OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END,
+						org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.lastFundingAmount IS NULL OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,
+						org.referenceId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.referenceId IS NULL OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,
 						org.logoUrl = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.logoUrl is null OR org.logoUrl = '' THEN $logoUrl ELSE org.logoUrl END,
 						org.iconUrl = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.iconUrl is null OR org.iconUrl = '' THEN $iconUrl ELSE org.iconUrl END,
 						org.headquarters = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.headquarters is null OR org.headquarters = '' THEN $headquarters ELSE org.headquarters END,
 						org.employeeGrowthRate = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.employeeGrowthRate is null OR org.employeeGrowthRate = '' THEN $employeeGrowthRate ELSE org.employeeGrowthRate END,
 						org.yearFounded = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.yearFounded is null OR org.yearFounded = 0 THEN $yearFounded ELSE org.yearFounded END,
-						org.note = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.note is null OR org.note = '' THEN $note ELSE org.note END,
+						org.note = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.note IS NULL OR org.note = '' THEN $note ELSE org.note END,
 						org.isPublic = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.isPublic is null THEN $isPublic ELSE org.isPublic END,
 						org.employees = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,
-						org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,
+						org.market = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.market IS NULL OR org.market = '' THEN $market ELSE org.market END,
 						org.slackChannelId = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,
 						org.relationship = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,
 						org.stage = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,
 						org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN datetime() ELSE org.stageUpdatedAt END,
-						org.icpFit = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $icpFit ELSE org.icpFit END,
+						org.icpFit = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.icpFit IS NULL THEN $icpFit ELSE org.icpFit END,
 						org.aggregateVersion = $aggregateVersion,
 						org.updatedAt=datetime(),
 						org.syncedWithEventStore = true`, tenant)
