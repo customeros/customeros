@@ -36,6 +36,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error)
 	GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error)
 	GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error)
+	GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error)
 	GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error)
 	GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error)
 	GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error)
@@ -420,6 +421,44 @@ func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context
 		if queryResult, err := tx.Run(ctx, cypher, map[string]any{
 			"tenant": tenant,
 			"domain": domain,
+		}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if result == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+	span.LogFields(log.Bool("result.found", true))
+
+	return result.(*dbtype.Node), err
+}
+
+func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.LogFields(log.String("socialUrl", socialUrl))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(:Social {url:$url}) RETURN o limit 1`
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, map[string]any{
+			"tenant": tenant,
+			"url":    socialUrl,
 		}); err != nil {
 			return nil, err
 		} else {
