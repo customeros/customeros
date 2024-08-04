@@ -1160,6 +1160,11 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return nil
 	}
 
+	if invoiceEntity.Provider.Email == "" {
+		h.log.Warnf("Provider email address is empty for invoice %s", invoiceId)
+		return nil
+	}
+
 	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
