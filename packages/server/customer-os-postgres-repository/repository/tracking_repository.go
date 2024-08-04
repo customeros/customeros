@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -215,6 +216,11 @@ func (r trackingRepositoryImpl) MarkAllExcludeIdWithState(ctx context.Context, e
 func (repo *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.Tracking) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.Store")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
+	if tracking.Tenant != "" {
+		span.SetTag(tracing.SpanTagTenant, tracking.Tenant)
+	}
+	tracing.LogObjectAsJson(span, "tracking", tracking)
 
 	err := repo.gormDb.Save(&tracking).Error
 
