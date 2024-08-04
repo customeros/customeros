@@ -62,7 +62,7 @@ func (s *eventStoreService) DeleteEventStoreStream(ctx context.Context, request 
 		}
 	}
 
-	// 1 day in seconds
+	// 7 days in seconds
 	maxAgeSeconds := events2.StreamMetadataMaxAgeSeconds
 	if request.MinutesUntilDeletion > 0 {
 		maxAgeSeconds = int(request.MinutesUntilDeletion * 60)
