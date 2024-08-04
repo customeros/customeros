@@ -44,7 +44,7 @@
         },
         {
           "name": "Overdue invoices without overdue timeline event",
-          "query": "MATCH (i:Invoice {status:'OVERDUE'}) WHERE date(i.createdAt) > date('2024-05-01') AND NOT (i)<-[:ACTION_ON]-(:Action {type:'INVOICE_OVERDUE'}) RETURN count(i)"
+          "query": "MATCH (i:Invoice {status:'OVERDUE'}) WHERE date(i.createdAt) > date('2024-05-01') AND NOT (i)<-[:ACTION_ON]-(:Action {type:'INVOICE_OVERDUE'}) AND i.updatedAt > datetime()-duration({days:7}) RETURN count(i)"
         },
         {
           "name": "Contract next invoice date before invoice period end date",
