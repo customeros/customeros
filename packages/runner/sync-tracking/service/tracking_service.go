@@ -755,6 +755,7 @@ func (s *trackingService) sendSlackMessage(c context.Context, tenant, channel, b
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
 	}
 	if slackSettings == nil {
+		span.LogFields(log.String("skip", "slack settings not found"))
 		s.services.Logger.Warnf("slack settings not found for tenant %s", tenant)
 		return nil
 	} else {
