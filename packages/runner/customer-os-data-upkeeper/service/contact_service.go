@@ -24,11 +24,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"sync"
@@ -285,11 +283,11 @@ type WeConnectContactResponse struct {
 		Name  string `json:"name"`
 		Title string `json:"title"`
 	} `json:"experience"`
-	Campaigns            []string      `json:"campaigns"`
-	CustomFields         []interface{} `json:"custom_fields"`
-	ConnectedAt          string        `json:"connected_at"`
-	TimestampConnectedAt int           `json:"timestamp_connected_at"`
-	Id                   string        `json:"id"`
+	Campaigns []string `json:"campaigns"`
+	//CustomFields         []interface{} `json:"custom_fields"`
+	ConnectedAt          string `json:"connected_at"`
+	TimestampConnectedAt int    `json:"timestamp_connected_at"`
+	Id                   string `json:"id"`
 }
 
 type BetterContactRequestBody struct {
@@ -331,14 +329,16 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 		go func(parentCtx context.Context, integration entity.PersonalIntegration) {
 			defer waitGroup.Done()
 
-			span, ctx := opentracing.StartSpanFromContext(parentCtx, "ContactService.syncWeConnectContacts.thread."+integration.TenantName+"."+integration.Email)
+			span, ctx := tracing.StartTracerSpan(parentCtx, "ContactService.syncWeConnectContacts.thread")
 			defer span.Finish()
 
 			tenant := integration.TenantName
+			span.SetTag(tracing.SpanTagTenant, tenant)
+			span.LogFields(log.String("integrationEmail", integration.Email))
 
 			useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, integration.Email)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(err, "UserReadRepository.GetFirstUserByEmail"))
 				return
 			}
 
@@ -358,7 +358,6 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 			addedSocial := 0
 
 			for {
-
 				select {
 				case <-ctx.Done():
 					s.log.Infof("Context cancelled, stopping")
@@ -370,7 +369,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				// Create new request
 				req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, errors.Wrap(err, "http.NewRequest"))
 					return
 				}
 
@@ -379,14 +378,14 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				client := &http.Client{}
 				res, err := client.Do(req)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, errors.Wrap(err, "client.Do"))
 					return
 				}
 				defer res.Body.Close()
 
-				responseBody, err := ioutil.ReadAll(res.Body)
+				responseBody, err := io.ReadAll(res.Body)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, errors.Wrap(err, "io.ReadAll"))
 					return
 				}
 
@@ -395,7 +394,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				// Convert response to map
 				err = json.Unmarshal(responseBody, &contactList)
 				if err != nil {
-					tracing.TraceErr(span, err)
+					tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
 					return
 				}
 
@@ -417,7 +416,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 
 					contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
 					if err != nil {
-						tracing.TraceErr(span, err)
+						tracing.TraceErr(span, errors.Wrap(err, "ContactReadRepository.GetContactsWithSocialUrl"))
 						return
 					}
 
@@ -436,7 +435,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 
 						contactId, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
 						if err != nil {
-							tracing.TraceErr(span, err)
+							tracing.TraceErr(span, errors.Wrap(err, "CreateContact"))
 							return
 						}
 						contactIds = append(contactIds, contactId)
@@ -453,7 +452,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 
 							isLinkedWith, err := s.commonServices.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, cid, model.CONTACT, "CONNECTED_WITH", userId, model.USER)
 							if err != nil {
-								tracing.TraceErr(span, err)
+								tracing.TraceErr(span, errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
 								return
 							}
 
@@ -475,7 +474,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 
 								err = s.eventBufferService.ParkBaseEvent(ctx, &evt, tenant, utils.Now().Add(time.Minute*1))
 								if err != nil {
-									tracing.TraceErr(span, err)
+									tracing.TraceErr(span, errors.Wrap(err, "ParkBaseEvent"))
 									return
 								}
 							}
