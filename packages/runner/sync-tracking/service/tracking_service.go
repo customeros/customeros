@@ -748,16 +748,15 @@ func (s *trackingService) sendSlackMessage(c context.Context, tenant, channel, b
 		return fmt.Errorf("failed to create POST request: %v", err)
 	}
 
-	// default API key for
-	botApiKey := s.cfg.SlackBotApiKey
+	botApiKey := ""
 	// prepare bot key
 	slackSettings, err := s.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
 	}
 	if slackSettings == nil {
-		err = errors.New(fmt.Sprintf("slack settings not found for tenant %s", tenant))
-		tracing.TraceErr(span, err)
+		s.services.Logger.Warnf("slack settings not found for tenant %s", tenant)
+		return nil
 	} else {
 		botApiKey = slackSettings.AccessToken
 	}
