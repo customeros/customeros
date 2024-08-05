@@ -258,7 +258,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         ids: selectedIds,
       });
     }
-  }, [selection, isCommandMenuPrompted]);
+  }, [selection]);
 
   useEffect(() => {
     store.ui.setSearchCount(data.length);
@@ -292,6 +292,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const isSearching =
     store.ui.isSearching === tableViewDef?.value?.tableType?.toLowerCase();
 
+  const focusedId =
+    typeof focusIndex === 'number' ? data?.[focusIndex]?.id : null;
   const targetInvoice: Invoice = data?.find(
     (i) => i.value.metadata?.id === targetId,
   )?.value as Invoice;
@@ -299,18 +301,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
 
   const createSocial = () => {
-    if (!focusIndex) return;
+    if (!focusedId) return;
     store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
 
     store.ui.commandMenu.setOpen(true);
     store.ui.commandMenu.setContext({
       entity: 'Organization',
-      ids: [data?.[focusIndex]?.id],
+      ids: [focusedId],
     });
   };
-
-  const focusedId =
-    typeof focusIndex === 'number' ? data?.[focusIndex]?.id : null;
 
   const handleSetFocused = (index: number | null) => {
     if (isCommandMenuPrompted) return;
@@ -380,6 +379,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
+              onOpenCommandK={() => {
+                store.ui.commandMenu.setOpen(true);
+              }}
               onHide={() => {
                 store.ui.commandMenu.setOpen(true);
                 store.ui.commandMenu.setType('DeleteConfirmationModal');

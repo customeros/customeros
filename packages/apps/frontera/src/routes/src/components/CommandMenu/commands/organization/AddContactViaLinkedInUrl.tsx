@@ -1,4 +1,4 @@
-import React, { useState, MouseEvent } from 'react';
+import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { useDidMount, useKeyBindings } from 'rooks';
@@ -31,7 +31,7 @@ export const AddContactViaLinkedInUrl = observer(() => {
     }, 100);
   });
 
-  const handleConfirm = (e: MouseEvent<HTMLButtonElement> | KeyboardEvent) => {
+  const handleConfirm = (e: KeyboardEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setValidationError(false);
@@ -86,8 +86,9 @@ export const AddContactViaLinkedInUrl = observer(() => {
             if (e.key === '/') {
               e.stopPropagation();
             }
-
-            if (e.key === 'Backspace' && url.length === 1) {
+          }}
+          onKeyUp={(e) => {
+            if (e.key === 'Backspace' && url.length === 0) {
               setValidationError(false);
             }
           }}

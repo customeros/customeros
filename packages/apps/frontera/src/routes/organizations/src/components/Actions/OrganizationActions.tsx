@@ -5,24 +5,20 @@ import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { X } from '@ui/media/icons/X';
 import { Copy07 } from '@ui/media/icons/Copy07';
-import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
-import { UserX01 } from '@ui/media/icons/UserX01';
+import { Command } from '@ui/media/icons/Command';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { useModKey } from '@shared/hooks/useModKey';
-import { HeartHand } from '@ui/media/icons/HeartHand';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableInstance } from '@ui/presentation/Table';
-import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { TableIdType, OrganizationStage } from '@graphql/types';
-import { LinkedInSolid } from '@ui/media/icons/LinkedInSolid.tsx';
-import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
-import { EditTagsModal } from '@organizations/components/Actions/components/EditTagsModal.tsx';
+import { ActionItem } from '@organizations/components/Actions/ActionItem';
 
 interface TableActionsProps {
   onHide: () => void;
   tableId?: TableIdType;
   focusedId?: string | null;
+  onOpenCommandK: () => void;
   isCommandMenuOpen: boolean;
   onCreateContact: () => void;
   enableKeyboardShortcuts?: boolean;
@@ -41,12 +37,8 @@ export const OrganizationTableActions = ({
   onCreateContact,
   focusedId,
   isCommandMenuOpen,
+  onOpenCommandK,
 }: TableActionsProps) => {
-  const {
-    open: isTagEditOpen,
-    onOpen: onOpenTagEdit,
-    onClose: onCloseTagEdit,
-  } = useDisclosure({ id: 'organization-tag-actions' });
   const [targetId, setTargetId] = useState<string | null>(null);
 
   const selection = table.getState().rowSelection;
@@ -164,17 +156,32 @@ export const OrganizationTableActions = ({
       {selectCount > 0 && !isCommandMenuOpen && (
         <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
           {selectCount && (
-            <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
-              <p
-                onClick={clearSelection}
-                className='flex text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
-              >
-                {`${selectCount} selected`}
-                <span className='ml-1 inline-flex items-center'>
-                  <X />
-                </span>
-              </p>
-            </div>
+            <Tooltip
+              className='p-1 pl-2'
+              label={
+                <div className='flex items-center text-sm'>
+                  Open command menu
+                  <div className='bg-gray-600 h-5 w-5 rounded-sm ml-3 mr-1 flex justify-center items-center'>
+                    <Command className='size-3' />
+                  </div>
+                  <div className='bg-gray-600 text-xs h-5 w-5 rounded-sm flex justify-center items-center'>
+                    K
+                  </div>
+                </div>
+              }
+            >
+              <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
+                <p
+                  onClick={clearSelection}
+                  className='flex text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
+                >
+                  {`${selectCount} selected`}
+                  <span className='ml-1 inline-flex items-center'>
+                    <X />
+                  </span>
+                </p>
+              </div>
+            </Tooltip>
           )}
 
           <ActionItem
@@ -192,85 +199,15 @@ export const OrganizationTableActions = ({
               Merge
             </ActionItem>
           )}
-          {tableId &&
-            [
-              TableIdType.Leads,
-              TableIdType.Nurture,
-              TableIdType.Organizations,
-            ].includes(tableId) && (
-              <ActionItem
-                shortcutKey='U'
-                onClick={moveToAllOrgs}
-                icon={<UserX01 className='text-inherit size-3' />}
-                tooltip={'Change to Unqualified and move to All orgs'}
-              >
-                Unqualify
-              </ActionItem>
-            )}
-
-          {tableId &&
-            [TableIdType.Leads, TableIdType.Organizations].includes(
-              tableId,
-            ) && (
-              <ActionItem
-                shortcutKey='T'
-                onClick={moveToTarget}
-                tooltip='Change to Target and move to Targets'
-                icon={<HeartHand className='text-inherit size-3' />}
-              >
-                Target
-              </ActionItem>
-            )}
-          {tableId &&
-            selectedIds.length === 1 &&
-            [TableIdType.Nurture, TableIdType.Organizations].includes(
-              tableId,
-            ) && (
-              <ActionItem
-                shortcutKey='C'
-                onClick={onCreateContact}
-                tooltip='Add contact via LinkedIn URL'
-                icon={
-                  <LinkedInSolid className='text-inherit size-4 text-inherit ' />
-                }
-              >
-                Add LinkedIn contact
-              </ActionItem>
-            )}
-
-          {tableId &&
-            [TableIdType.Leads, TableIdType.Nurture].includes(tableId) && (
-              <ActionItem
-                onClick={onOpenTagEdit}
-                icon={<Tag01 className='text-inherit size-4 text-inherit ' />}
-              >
-                Edit tags
-              </ActionItem>
-            )}
-          {tableId &&
-            [
-              TableIdType.Leads,
-              TableIdType.Nurture,
-              TableIdType.Organizations,
-            ].includes(tableId) && (
-              <ActionItem
-                shortcutKey='O'
-                onClick={moveToOpportunities}
-                tooltip='Change to Engaged and move to Opportunities'
-                icon={<CoinsStacked01 className='text-inherit size-3' />}
-              >
-                Opportunity
-              </ActionItem>
-            )}
+          <ActionItem
+            onClick={onOpenCommandK}
+            dataTest='org-actions-commandk'
+            icon={<Command className='text-inherit size-3' />}
+          >
+            Command
+          </ActionItem>
         </ButtonGroup>
       )}
-
-      <EditTagsModal
-        isOpen={isTagEditOpen}
-        onClose={onCloseTagEdit}
-        selectedIds={selectedIds}
-        clearSelection={clearSelection}
-      />
     </>
   );
 };
