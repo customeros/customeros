@@ -80,9 +80,7 @@ export const SearchBarFilterData = observer(() => {
       <SearchSm className='size-5' />
       <div
         data-test={`search-${tableName}`}
-        className={
-          'font-medium flex items-center gap-1 break-keep w-max mb-[2px]'
-        }
+        className={'font-medium flex items-center gap-1 break-keep w-max '}
       >
         {totalResults}{' '}
         {appliedFilters?.length ? (

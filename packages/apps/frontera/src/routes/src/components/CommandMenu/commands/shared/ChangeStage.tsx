@@ -31,19 +31,34 @@ export const ChangeStage = observer(() => {
     }));
 
   const entity = match(context.entity)
-    .returnType<OpportunityStore | OrganizationStore | undefined>()
+    .returnType<
+      OpportunityStore | OrganizationStore | OrganizationStore[] | undefined
+    >()
     .with('Opportunity', () =>
       store.opportunities.value.get(context.ids?.[0] as string),
     )
     .with('Organization', () =>
       store.organizations.value.get(context.ids?.[0] as string),
     )
+    .with(
+      'Organizations',
+      () =>
+        context.ids?.map((e: string) =>
+          store.organizations.value.get(e),
+        ) as OrganizationStore[],
+    )
     .otherwise(() => undefined);
 
   const label = match(context.entity)
-    .with('Organization', () => `Organization - ${entity?.value?.name}`)
+    .with(
+      'Organization',
+      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+    )
     .with('Organizations', () => `${context.ids?.length} organizations`)
-    .with('Opportunity', () => `Opportunity - ${entity?.value?.name}`)
+    .with(
+      'Opportunity',
+      () => `Opportunity - ${(entity as OpportunityStore)?.value?.name}`,
+    )
     .otherwise(() => '');
 
   const selectedStageOption = match(context.entity)

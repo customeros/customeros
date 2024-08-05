@@ -78,13 +78,17 @@ export const AddContactViaLinkedInUrl = observer(() => {
           autoComplete='off'
           variant='unstyled'
           name='linkedin-input'
-          placeholder='Add contact'
+          placeholder='Add contact via LinkedIn'
           onChange={(e) => {
             setUrl(e.target.value);
           }}
           onKeyDown={(e) => {
             if (e.key === '/') {
               e.stopPropagation();
+            }
+
+            if (e.key === 'Backspace' && url.length === 1) {
+              setValidationError(false);
             }
           }}
         />
