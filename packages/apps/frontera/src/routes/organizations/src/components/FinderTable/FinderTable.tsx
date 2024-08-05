@@ -118,7 +118,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       });
     }
 
-    // Apply sorting
     if (tableType) {
       const columnId = sorting[0]?.id;
       const isDesc = sorting[0]?.desc;
