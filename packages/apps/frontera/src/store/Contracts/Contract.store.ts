@@ -463,6 +463,7 @@ const CONTRACT_QUERY = gql`
         canPayWithDirectDebit
         canPayWithBankTransfer
         canPayWithCard
+        check
         billingCycle
         invoicingStarted
         payAutomatically

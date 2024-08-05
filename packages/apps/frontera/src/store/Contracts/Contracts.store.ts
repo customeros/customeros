@@ -310,6 +310,7 @@ const CONTRACTS_QUERY = gql`
           billingEmail
           billingEmailCC
           billingEmailBCC
+          check
           payOnline
           canPayWithDirectDebit
           canPayWithBankTransfer
