@@ -87,10 +87,17 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   ) as MergedColumnDefs;
   const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
 
+  const removeAccents = (str: string) => {
+    return str
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  };
+
   const organizationsData = store.organizations?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Organizations) return arr;
-    const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
 
+    const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
     const flowFilters = getFlowFilterFns(workFlow?.getFilters());
 
     if (flowFilters.length && flowFiltersStatus) {
@@ -102,11 +109,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
 
     if (searchTerm) {
-      arr = arr.filter((entity) =>
-        entity.value?.name
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase() as string),
-      );
+      const normalizedSearchTerm = removeAccents(searchTerm);
+
+      arr = arr.filter((entity) => {
+        const name = entity.value?.name || '';
+
+        return removeAccents(name).includes(normalizedSearchTerm);
+      });
     }
 
     if (tableType) {
@@ -122,7 +131,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     return arr;
   });
-
   const contactsData = store.contacts?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Contacts) return arr;
 
@@ -133,11 +141,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
 
     if (searchTerm) {
-      arr = arr.filter((entity) =>
-        entity.value?.name
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase() as string),
-      );
+      const normalizedSearchTerm = removeAccents(searchTerm);
+
+      arr = arr.filter((entity) => {
+        const name = entity.value?.name || '';
+
+        return removeAccents(name).includes(normalizedSearchTerm);
+      });
     }
 
     if (tableType) {
