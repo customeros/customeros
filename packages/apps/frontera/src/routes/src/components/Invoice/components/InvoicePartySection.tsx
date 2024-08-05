@@ -107,7 +107,9 @@ export const InvoicePartySection: FC<InvoiceHeaderProps> = ({
             )}
 
             <span className='text-sm leading-4 text-gray-500'>
-              {countries.find((c) => c.alpha2 === country?.toLowerCase())?.name}
+              {countries
+                .find((c) => c.name === country)
+                ?.alpha3.toLocaleUpperCase()}
             </span>
             {email && (
               <span className='text-sm leading-4 text-gray-500 break-words'>
