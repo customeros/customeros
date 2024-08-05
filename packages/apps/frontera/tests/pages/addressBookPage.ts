@@ -62,10 +62,16 @@ export class AddressBookPage {
     );
 
     await addressBookEmptyCreateOrg.click();
-    // await new Promise((resolve) => setTimeout(resolve, 1500));
-    // await this.page.reload();
-    // await new Promise((resolve) => setTimeout(resolve, 1500));
-    await this.page.waitForResponse('**/customer-os-api');
+
+    const orgCreationResp = await this.page.waitForResponse(
+      '**/customer-os-api',
+    );
+    const orgCreationJson = await orgCreationResp.json();
+
+    expect(
+      'error' in orgCreationJson,
+      `The createOrganization mutation returned errors`,
+    ).toBe(false);
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
   }
 
