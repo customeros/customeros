@@ -105,7 +105,7 @@ export const KanbanColumn = observer(
     };
 
     const handleCreateDraft = () => {
-      store.ui.commandMenu.toggle('SetOpportunityOrganization', {
+      store.ui.commandMenu.toggle('ChooseOpportunityOrganization', {
         ids: [],
         meta: { stage },
         entity: 'Opportunity',
