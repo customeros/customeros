@@ -66,6 +66,7 @@ export const BillingDetailsForm: FC<BillingAddressDetailsForm> = observer(
             name='country'
             placeholder='Country'
             options={countryOptions}
+            dataTest='contract-billing-details-address-country'
             onChange={(newValue) =>
               handleUpdateBillingDetails('country', newValue?.value)
             }

@@ -8,7 +8,7 @@ export class AddressBookPage {
   private sideNavItemAllOrgs = 'button[data-test="side-nav-item-all-orgs"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
   private organizationNameInAllOrgsTable =
-    'a[data-test="organization-name-in-all-orgs-table"]';
+    'p[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
     'p[data-test="organization-website-in-all-orgs-table"]';
   private organizationRelationshipInAllOrgsTable =
@@ -37,6 +37,8 @@ export class AddressBookPage {
   private orgActionsArchive = 'button[data-test="org-actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
+  private addressBookEmptyCreateOrg =
+    'button[data-test="address-book-empty-create-org"]';
 
   constructor(page: Page) {
     this.page = page;
@@ -54,10 +56,22 @@ export class AddressBookPage {
     const addOrganizationButton = this.page.locator(this.allOrgsAddOrg);
 
     await addOrganizationButton.click();
-    // await new Promise((resolve) => setTimeout(resolve, 1500));
-    // await this.page.reload();
-    // await new Promise((resolve) => setTimeout(resolve, 1500));
-    await this.page.waitForResponse('**/customer-os-api');
+
+    const addressBookEmptyCreateOrg = this.page.locator(
+      this.addressBookEmptyCreateOrg,
+    );
+
+    await addressBookEmptyCreateOrg.click();
+
+    const orgCreationResp = await this.page.waitForResponse(
+      '**/customer-os-api',
+    );
+    const orgCreationJson = await orgCreationResp.json();
+
+    expect(
+      'error' in orgCreationJson,
+      `The createOrganization mutation returned errors`,
+    ).toBe(false);
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
   }
 
@@ -263,6 +277,10 @@ export class AddressBookPage {
   }
 
   async goToOrganization() {
+    await this.page.waitForSelector(this.organizationNameInAllOrgsTable, {
+      state: 'visible',
+    });
+
     await this.page.click(this.organizationNameInAllOrgsTable);
   }
 
