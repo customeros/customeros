@@ -240,8 +240,8 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
     const areFieldsEmpty = checkEmpty(values);
 
     const showConfirmationDialog =
-      (!areParticipantFieldsPristine && !areFieldsEmpty) ||
-      (!subjectField.meta.pristine && !subject.length) ||
+      ((!areParticipantFieldsPristine && !areFieldsEmpty) ||
+        (!subjectField.meta.pristine && !subject.length)) &&
       !isFormEmpty;
 
     if (isFormPristine || !showConfirmationDialog) {
