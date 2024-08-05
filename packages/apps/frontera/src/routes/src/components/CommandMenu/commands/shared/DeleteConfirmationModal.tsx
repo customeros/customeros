@@ -10,8 +10,9 @@ export const DeleteConfirmationModal = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
-  const handleClose = () =>
+  const handleClose = () => {
     store.ui.commandMenu.toggle('DeleteConfirmationModal');
+  };
 
   return (
     <Command label='Change Stage'>
@@ -48,7 +49,7 @@ export const DeleteConfirmationModal = observer(() => {
               handleClose();
             }}
           >
-            Delete
+            Archive
           </Button>
         </div>
       </article>

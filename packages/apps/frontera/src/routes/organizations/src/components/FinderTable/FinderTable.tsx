@@ -258,7 +258,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         ids: selectedIds,
       });
     }
-  }, [selection]);
+  }, [selection, isCommandMenuPrompted]);
 
   useEffect(() => {
     store.ui.setSearchCount(data.length);
@@ -375,11 +375,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             <OrganizationTableActions
               focusedId={focusedId}
               onCreateContact={createSocial}
-              onHide={store.organizations.hide}
               onMerge={store.organizations.merge}
               tableId={tableViewDef?.value.tableId}
+              isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
+              onHide={() => {
+                store.ui.commandMenu.setOpen(true);
+                store.ui.commandMenu.setType('DeleteConfirmationModal');
+              }}
               enableKeyboardShortcuts={
                 !isEditing &&
                 !isFiltering &&

@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import type { ReactElement } from 'react';
 
 import { useKey } from 'rooks';
@@ -6,6 +7,7 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 import {
   Modal,
   ModalBody,
@@ -58,8 +60,15 @@ const Commands: Record<CommandMenuType, ReactElement> = {
 
 export const CommandMenu = observer(() => {
   const store = useStore();
+  const commandRef = useRef(null);
+
+  useOutsideClick({
+    ref: commandRef,
+    handler: () => store.ui.commandMenu.setOpen(false),
+  });
 
   useKey('Escape', () => {
+    // store.ui.commandMenu.toggle(store.ui.commandMenu.type);
     store.ui.commandMenu.setOpen(false);
   });
   useModKey('k', () => {
@@ -75,7 +84,7 @@ export const CommandMenu = observer(() => {
         {/* z-[5001] is needed to ensure tooltips are not overlapping  - tooltips have zIndex of 5000 - this should be revisited */}
         <ModalOverlay className='z-[5001]'>
           <ModalBody>
-            <ModalContent>
+            <ModalContent ref={commandRef}>
               {Commands[store.ui.commandMenu.type ?? 'GlobalHub']}
             </ModalContent>
           </ModalBody>

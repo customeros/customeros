@@ -180,7 +180,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
               role='button'
               ref={floatingActionPropmterRef}
               onClick={() => inputRef.current?.focus()}
-              className='flex flex-row items-center gap-1 absolute top-[8px] cursor-text'
+              className='flex flex-row items-center gap-1 absolute top-[11px] cursor-text'
               style={{
                 left: `calc(${measureRef?.current?.offsetWidth ?? 0}px + 24px)`,
               }}

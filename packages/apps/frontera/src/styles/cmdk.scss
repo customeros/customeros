@@ -7,7 +7,7 @@
 }
 
 [cmdk-list] {
-  @apply max-h-[470px]  overflow-y-auto overscroll-contain;
+  @apply max-h-[364px]  overflow-y-auto overscroll-contain;
 
   &:has([cmdk-item]) {
     @apply p-2.5

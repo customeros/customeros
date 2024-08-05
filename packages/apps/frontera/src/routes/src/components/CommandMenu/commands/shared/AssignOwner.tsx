@@ -15,6 +15,9 @@ export const AssignOwner = observer(() => {
   const users = store.users.toArray();
 
   const entity = match(context.entity)
+    .returnType<
+      OpportunityStore | OrganizationStore | OrganizationStore[] | undefined
+    >()
     .with('Opportunity', () =>
       store.opportunities.value.get((context.ids as string[])?.[0]),
     )
