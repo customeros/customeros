@@ -20,7 +20,7 @@ type Services struct {
 	EnrichDetailsTrackingService TrackingService
 }
 
-func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB, grpcClient *grpc_client.Clients) *Services {
+func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB, grpcClient *grpc_client.Clients, logger logger.Logger) *Services {
 	services := new(Services)
 
 	services.GrpcClient = grpcClient
@@ -28,6 +28,8 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, gormDb, driver, cfg.Neo4j.Database, grpcClient)
 
 	services.EnrichDetailsTrackingService = NewTrackingService(cfg, services)
+
+	services.Logger = logger
 
 	return services
 }

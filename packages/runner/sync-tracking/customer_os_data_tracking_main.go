@@ -53,7 +53,7 @@ func main() {
 	}
 	grpcClient := grpc_client.InitClients(gRPCconn)
 
-	services := service.InitServices(cfg, &neo4jDriver, postgresDb.GormDB, grpcClient)
+	services := service.InitServices(cfg, &neo4jDriver, postgresDb.GormDB, grpcClient, appLogger)
 
 	cronJub := localcron.StartCron(cfg, services)
 

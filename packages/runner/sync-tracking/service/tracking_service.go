@@ -716,8 +716,8 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 	return nil
 }
 
-func (s *trackingService) sendSlackMessage(c context.Context, tenant, channel, blocks string) error {
-	span, _ := opentracing.StartSpanFromContext(c, "TrackingService.sendSlackMessage")
+func (s *trackingService) sendSlackMessage(ctx context.Context, tenant, channel, blocks string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingService.sendSlackMessage")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("channel", channel))
@@ -750,7 +750,7 @@ func (s *trackingService) sendSlackMessage(c context.Context, tenant, channel, b
 
 	botApiKey := ""
 	// prepare bot key
-	slackSettings, err := s.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant)
+	slackSettings, err := s.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get slack settings"))
 	}
