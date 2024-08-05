@@ -18,11 +18,15 @@ export type CommandMenuType =
   | 'RenameOrganizationProperty'
   | 'DeleteConfirmationModal'
   | 'OrganizationBulkCommands'
+  | 'ChooseOpportunityOrganization'
+  | 'ChooseOpportunityStage'
   | 'SetOpportunityNextSteps';
 
 type Context = {
   ids: Array<string>;
   property?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  meta?: Record<string, any>;
   entity: 'Opportunity' | 'Organization' | 'Organizations' | null;
 };
 

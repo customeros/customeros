@@ -2,7 +2,6 @@ import type { RootStore } from '@store/root';
 
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
-import { gql } from 'graphql-request';
 import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
 import { UserStore } from '@store/Users/User.store';
@@ -16,13 +15,13 @@ import {
   Opportunity,
   InternalType,
   InternalStage,
-  OpportunityUpdateInput,
   OpportunityRenewalLikelihood,
-  OpportunityRenewalUpdateInput,
 } from '@graphql/types';
 
+import { OpportunitiesService } from './__services__/Opportunities.service';
+
 export class OpportunityStore implements Store<Opportunity> {
-  value: Opportunity = defaultValue;
+  value: Opportunity = makeDefaultValue();
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -32,8 +31,11 @@ export class OpportunityStore implements Store<Opportunity> {
   sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncable.load<Opportunity>();
   update = makeAutoSyncable.update<Opportunity>();
+  private service: OpportunitiesService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = OpportunitiesService.getInstance(transport);
+
     makeAutoObservable(this);
     makeAutoSyncable(this, {
       channelName: 'Opportunity',
@@ -70,12 +72,11 @@ export class OpportunityStore implements Store<Opportunity> {
     try {
       this.isLoading = true;
 
-      const { opportunity } = await this.transport.graphql.request<
-        OPPORTUNITY_QUERY_RESULT,
-        { id: string }
-      >(OPORTUNITY_QUERY, { id: this.id });
+      const { opportunity } = await this.service.getOpportunity({
+        id: this.id,
+      });
 
-      this.load(opportunity);
+      this.load(opportunity as Opportunity);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -90,17 +91,12 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateProperty(property: keyof Opportunity) {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<unknown, UPDATE_OPPORTUNITY_PAYLOAD>(
-        OPPORTUNITY_UPDATE_MUTATION,
-        {
-          input: {
-            opportunityId: this.id,
-            [property]: this.value[property],
-          },
+      await this.service.updateOpportunity({
+        input: {
+          opportunityId: this.id,
+          [property]: this.value[property],
         },
-      );
-
-      runInAction(() => {});
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -123,14 +119,9 @@ export class OpportunityStore implements Store<Opportunity> {
         renewalLikelihood: this.value.renewalLikelihood,
       };
 
-      await this.transport.graphql.request<
-        unknown,
-        UPDATE_OPPORTUNITY_RENEWAL_PAYLOAD
-      >(UPDATE_OPPORTUNITY_RENEWAL_MUTATION, {
+      await this.service.updateOpportunityRenewal({
         input,
       });
-
-      runInAction(() => {});
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -148,10 +139,7 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityExternalStage(externalStage: string) {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<
-        unknown,
-        OPPORTUNITY_UPDATE_STAGE_PAYLOAD
-      >(OPPORTUNITY_UPDATE_STAGE, {
+      await this.service.updateOpportunity({
         input: {
           opportunityId: this.id,
           externalStage,
@@ -172,10 +160,9 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityCloseLost() {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<
-        unknown,
-        OPPORTUNITY_UPDATE_CLOSE_LOST_PAYLOAD
-      >(OPPORTUNITY_UPDATE_CLOSE_LOST, { opportunityId: this.id });
+      await this.service.updateOpportunityToCloseLost({
+        opportunityId: this.id,
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -190,10 +177,9 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityCloseWon() {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<
-        unknown,
-        OPPORTUNITY_UPDATE_CLOSE_WON_PAYLOAD
-      >(OPPORTUNITY_UPDATE_CLOSE_WON, { opportunityId: this.id });
+      await this.service.updateOpportunityToCloseWon({
+        opportunityId: this.id,
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -208,10 +194,7 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityOwner(userId: string) {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<
-        unknown,
-        UPDATE_OPPORTUNITY_OWNER_PAYLOAD
-      >(UPATE_OPPORTUNITY_OWNER_MUTATION, {
+      await this.service.updateOpportunityOwner({
         opportunityId: this.id,
         userID: userId,
       });
@@ -265,150 +248,10 @@ export class OpportunityStore implements Store<Opportunity> {
   }
 }
 
-type UPDATE_OPPORTUNITY_PAYLOAD = {
-  input: OpportunityUpdateInput;
-};
-
-const OPPORTUNITY_UPDATE_MUTATION = gql`
-  mutation OpportunityUpdateStage($input: OpportunityUpdateInput!) {
-    opportunity_Update(input: $input) {
-      id
-    }
-  }
-`;
-
-type OPPORTUNITY_UPDATE_STAGE_PAYLOAD = {
-  input: OpportunityUpdateInput;
-};
-
-const OPPORTUNITY_UPDATE_STAGE = gql`
-  mutation OpportunityUpdateStage($input: OpportunityUpdateInput!) {
-    opportunity_Update(input: $input) {
-      id
-    }
-  }
-`;
-
-type OPPORTUNITY_UPDATE_CLOSE_WON_PAYLOAD = {
-  opportunityId: string;
-};
-
-const OPPORTUNITY_UPDATE_CLOSE_WON = gql`
-  mutation OpportunityUpdateCloseWon($opportunityId: ID!) {
-    opportunity_CloseWon(opportunityId: $opportunityId) {
-      accepted
-    }
-  }
-`;
-
-type OPPORTUNITY_UPDATE_CLOSE_LOST_PAYLOAD = {
-  opportunityId: string;
-};
-
-const OPPORTUNITY_UPDATE_CLOSE_LOST = gql`
-  mutation OpportunityUpdateCloseLost($opportunityId: ID!) {
-    opportunity_CloseLost(opportunityId: $opportunityId) {
-      accepted
-    }
-  }
-`;
-
-type OPPORTUNITY_QUERY_RESULT = {
-  opportunity: Opportunity;
-};
-
-const OPORTUNITY_QUERY = gql`
-  query Opportunity($id: ID!) {
-    opportunity(id: $id) {
-      metadata {
-        id
-        created
-        lastUpdated
-        source
-        sourceOfTruth
-        appSource
-      }
-      id
-      createdAt
-      updatedAt
-      name
-      amount
-      currency
-      maxAmount
-      internalType
-      externalType
-      internalStage
-      externalStage
-      stageLastUpdated
-      estimatedClosedAt
-      organization {
-        metadata {
-          id
-          created
-          lastUpdated
-          sourceOfTruth
-        }
-      }
-      generalNotes
-      nextSteps
-      renewedAt
-      renewalApproved
-      renewalLikelihood
-      renewalUpdatedByUserId
-      renewalUpdatedByUserAt
-      renewalAdjustedRate
-      comments
-      createdBy {
-        id
-        firstName
-        lastName
-      }
-      owner {
-        id
-        firstName
-        lastName
-      }
-      source
-      sourceOfTruth
-      appSource
-      externalLinks {
-        externalId
-        externalUrl
-      }
-    }
-  }
-`;
-
-type UPDATE_OPPORTUNITY_RENEWAL_PAYLOAD = {
-  input: OpportunityRenewalUpdateInput;
-};
-
-const UPDATE_OPPORTUNITY_RENEWAL_MUTATION = gql`
-  mutation updateOpportunityRenewal($input: OpportunityRenewalUpdateInput!) {
-    opportunityRenewalUpdate(input: $input) {
-      metadata {
-        id
-      }
-    }
-  }
-`;
-
-type UPDATE_OPPORTUNITY_OWNER_PAYLOAD = {
-  userID: string;
-  opportunityId: string;
-};
-const UPATE_OPPORTUNITY_OWNER_MUTATION = gql`
-  mutation updateOpportunityOwner($opportunityId: ID!, $userID: ID!) {
-    opportunity_SetOwner(opportunityId: $opportunityId, userId: $userID) {
-      accepted
-    }
-  }
-`;
-
-const defaultValue: Opportunity = {
+const makeDefaultValue = (): Opportunity => ({
   metadata: {
-    id: '',
-    created: '',
+    id: crypto.randomUUID(),
+    created: new Date().toISOString(),
     lastUpdated: '',
     source: DataSource.Na,
     sourceOfTruth: DataSource.Na,
@@ -439,4 +282,4 @@ const defaultValue: Opportunity = {
   source: DataSource.Na,
   sourceOfTruth: DataSource.Na,
   updatedAt: new Date().toISOString(),
-};
+});

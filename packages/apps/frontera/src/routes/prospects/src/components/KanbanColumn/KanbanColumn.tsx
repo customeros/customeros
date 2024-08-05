@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import {
@@ -9,17 +7,15 @@ import {
 } from '@hello-pangea/dnd';
 
 import { cn } from '@ui/utils/cn';
-import { X } from '@ui/media/icons/X';
+import { Input } from '@ui/form/Input';
 import { Plus } from '@ui/media/icons/Plus';
-import { Check } from '@ui/media/icons/Check';
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Percent03 } from '@ui/media/icons/Percent03';
-import { Input, ResizableInput } from '@ui/form/Input';
-import { Opportunity, InternalStage } from '@graphql/types';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
+import { Opportunity, InternalStage } from '@graphql/types';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
@@ -53,16 +49,19 @@ export const KanbanColumn = observer(
       store.tableViewDefs.opportunitiesPreset ?? '',
     );
     const column = viewDef?.value.columns.find((c) => c.columnId === columnId);
-    const [newData, setNewData] = useState<Array<{ id: string; name: string }>>(
-      [],
-    );
 
     const cards = store.opportunities.toComputedArray((arr) => {
-      return arr.filter(
-        (opp) =>
-          opp.value.internalType === 'NBO' &&
-          filterFns.every((fn) => fn(opp.value)),
-      );
+      return arr
+        .filter(
+          (opp) =>
+            opp.value.internalType === 'NBO' &&
+            filterFns.every((fn) => fn(opp.value)),
+        )
+        .sort(
+          (a, b) =>
+            new Date(b.value.metadata.created).valueOf() -
+            new Date(a.value.metadata.created).valueOf(),
+        );
     });
 
     const totalSum = formatCurrency(
@@ -105,20 +104,12 @@ export const KanbanColumn = observer(
       viewDef?.save();
     };
 
-    const handleUpdateNewData = (id: string, newName: string) => {
-      setNewData((prev) =>
-        prev.map((item) =>
-          item.id === id ? { ...item, name: newName } : item,
-        ),
-      );
-    };
-
-    const handleRemoveNewData = (id: string) => {
-      setNewData((prev) => prev.filter((item) => item.id !== id));
-    };
-
-    const handleSaveNewData = () => {
-      store.organizations.create();
+    const handleCreateDraft = () => {
+      store.ui.commandMenu.toggle('SetOpportunityOrganization', {
+        ids: [],
+        meta: { stage },
+        entity: 'Opportunity',
+      });
     };
 
     return (
@@ -155,6 +146,10 @@ export const KanbanColumn = observer(
                   />
                 </MenuButton>
                 <MenuList>
+                  <MenuItem onClick={handleCreateDraft}>
+                    <Plus />
+                    Add new opportunity
+                  </MenuItem>
                   <MenuItem onClick={onOpen}>
                     <Percent03 />
                     <span>Set win probability</span>
@@ -166,16 +161,6 @@ export const KanbanColumn = observer(
               {`${totalSum} • ${cards.length}`}
             </span>
           </div>
-
-          {column?.name === 'New prospects' && (
-            <IconButton
-              size='xs'
-              icon={<Plus />}
-              variant='ghost'
-              onClick={handleSaveNewData}
-              aria-label={'Add new prospect'}
-            />
-          )}
         </div>
 
         <Droppable
@@ -207,43 +192,6 @@ export const KanbanColumn = observer(
               {...dropProvided.droppableProps}
               style={{ height: 'calc(100% - 40px)' }}
             >
-              {newData.map((data) => (
-                <div
-                  key={data.id}
-                  className={cn(
-                    'relative flex flex-col items-start p-4 mt-3 bg-white rounded-lg cursor-pointer bg-opacity-90 group hover:bg-opacity-100',
-                  )}
-                >
-                  <ResizableInput
-                    autoFocus
-                    value={data.name}
-                    className='text-sm font-medium shadow-none p-0 min-h-5'
-                    onChange={(e) =>
-                      handleUpdateNewData(data.id, e.target.value)
-                    }
-                  />
-
-                  <div className='flex justify-end w-full'>
-                    <IconButton
-                      size='xs'
-                      icon={<X />}
-                      variant='ghost'
-                      className='p-1'
-                      aria-label='Cancel'
-                      onClick={() => handleRemoveNewData(data.id)}
-                    />
-                    <IconButton
-                      size='xs'
-                      variant='ghost'
-                      className='p-1'
-                      icon={<Check />}
-                      aria-label='Save'
-                      onClick={handleSaveNewData}
-                    />
-                  </div>
-                </div>
-              ))}
-
               {cards.map((card, index) => (
                 <DraggableKanbanCard
                   card={card}

@@ -1,15 +1,15 @@
 import { Channel } from 'phoenix';
-import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
 import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { Pagination, Opportunity } from '@graphql/types';
+import { Opportunity, OpportunityCreateInput } from '@graphql/types';
 
 import mock from './mock.json';
 import { OpportunityStore } from './Opportunity.store';
+import { OpportunitiesService } from './__services__/Opportunities.service';
 
 export class OpportunitiesStore implements GroupStore<Opportunity> {
   version = 0;
@@ -23,8 +23,11 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Opportunity>();
+  private service: OpportunitiesService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = OpportunitiesService.getInstance(transport);
+
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Opportunities',
@@ -59,14 +62,11 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
       this.isLoading = true;
 
       const { opportunities_LinkedToOrganizations } =
-        await this.transport.graphql.request<
-          OPPORTUNITIES_QUERY_RESPONSE,
-          OPPORTUNITIES_QUERY_PAYLOAD
-        >(OPPORTUNITIES_QUERY, {
+        await this.service.getOpportunities({
           pagination: { limit: 1000, page: 1 },
         });
 
-      this.load(opportunities_LinkedToOrganizations.content);
+      this.load(opportunities_LinkedToOrganizations?.content as Opportunity[]);
       runInAction(() => {
         this.isBootstrapped = true;
         this.totalElements = opportunities_LinkedToOrganizations.totalElements;
@@ -88,16 +88,15 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
     while (this.totalElements > this.value.size) {
       try {
         const { opportunities_LinkedToOrganizations } =
-          await this.transport.graphql.request<
-            OPPORTUNITIES_QUERY_RESPONSE,
-            OPPORTUNITIES_QUERY_PAYLOAD
-          >(OPPORTUNITIES_QUERY, {
+          await this.service.getOpportunities({
             pagination: { limit: 1000, page },
           });
 
         runInAction(() => {
           page++;
-          this.load(opportunities_LinkedToOrganizations.content);
+          this.load(
+            opportunities_LinkedToOrganizations?.content as Opportunity[],
+          );
         });
       } catch (e) {
         runInAction(() => {
@@ -117,83 +116,61 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
 
     return compute(arr);
   }
-}
 
-type OPPORTUNITIES_QUERY_PAYLOAD = {
-  pagination: Pagination;
-};
+  async create(payload: Partial<Opportunity> = {}) {
+    const draft = new OpportunityStore(this.root, this.transport);
 
-type OPPORTUNITIES_QUERY_RESPONSE = {
-  opportunities_LinkedToOrganizations: {
-    content: [];
-    totalElements: number;
-    totalAvailable: number;
-  };
-};
+    Object.assign(draft.value, payload);
 
-const OPPORTUNITIES_QUERY = gql`
-  query getOpportunities($pagination: Pagination!) {
-    opportunities_LinkedToOrganizations(pagination: $pagination) {
-      content {
-        metadata {
-          id
-          created
-          lastUpdated
-          source
-          sourceOfTruth
-          appSource
-        }
-        name
-        amount
-        maxAmount
-        internalType
-        externalType
-        internalStage
-        externalStage
-        estimatedClosedAt
-        generalNotes
-        nextSteps
-        renewedAt
-        currency
-        stageLastUpdated
-        renewalApproved
-        renewalLikelihood
-        renewalUpdatedByUserId
-        renewalUpdatedByUserAt
-        renewalAdjustedRate
-        comments
-        organization {
-          metadata {
-            id
-            created
-            lastUpdated
-            sourceOfTruth
-          }
-        }
-        createdBy {
-          id
-          firstName
-          lastName
-          name
-        }
-        owner {
-          id
-          firstName
-          lastName
-          name
-        }
-        externalLinks {
-          externalUrl
-          externalId
-        }
-        id
-        createdAt
-        updatedAt
-        source
-        appSource
-      }
-      totalElements
-      totalAvailable
+    const tempId = draft.value.metadata.id;
+    let serverId = '';
+
+    this.value.set(tempId, draft);
+
+    if (!draft.value.organization?.metadata.id) return;
+
+    try {
+      this.isLoading = true;
+
+      const payload: OpportunityCreateInput = {
+        name: draft.value.name,
+        organizationId: draft.value.organization?.metadata.id,
+        internalType: draft.value.internalType,
+        externalStage: draft.value.externalStage,
+      };
+
+      const { opportunity_Create } = await this.service.createOpportunity({
+        input: payload,
+      });
+
+      runInAction(() => {
+        serverId = opportunity_Create?.metadata.id;
+
+        const store = this.value.get(tempId);
+
+        if (!store) return;
+
+        store.value.metadata.id = serverId;
+        this.value.delete(tempId);
+        this.value.set(serverId, store);
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+
+        this.sync({
+          action: 'APPEND',
+          ids: [serverId],
+        });
+
+        setTimeout(() => {
+          this.value.get(serverId)?.invalidate();
+        }, 1000);
+      });
     }
   }
-`;
+}

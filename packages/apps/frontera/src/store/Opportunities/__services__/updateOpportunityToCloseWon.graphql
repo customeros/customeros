@@ -1,0 +1,5 @@
+mutation updateOpportunityToCloseWon($opportunityId: ID!) {
+  opportunity_CloseWon(opportunityId: $opportunityId) {
+    accepted
+  }
+}
