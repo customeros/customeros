@@ -71,7 +71,7 @@ func (r *commonWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, 
 	span.SetTag(tracing.SpanTagEntityId, entityId)
 	span.LogFields(log.String("property", string(property)), log.String("nodeLabel", nodeLabel), log.Object("value", value))
 
-	cypher := fmt.Sprintf(`(n:%s:%s_%s {id: $entityId}) SET n.%s = $value`, nodeLabel, nodeLabel, tenant, property)
+	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id: $entityId}) SET n.%s = $value`, nodeLabel, nodeLabel, tenant, property)
 	params := map[string]any{
 		"entityId": entityId,
 		"value":    utils.TimePtrAsAny(value),
