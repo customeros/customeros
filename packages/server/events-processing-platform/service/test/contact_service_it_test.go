@@ -39,6 +39,7 @@ func TestContactService_CreateContact(t *testing.T) {
 		Description:     "This is a contact description",
 		Timezone:        "America/Los_Angeles",
 		ProfilePhotoUrl: "https://www.google.com",
+		Username:        "bobsmith",
 		AppSource:       "event-processing-platform",
 		Source:          "N/A",
 		SourceOfTruth:   "N/A",
@@ -62,6 +63,7 @@ func TestContactService_CreateContact(t *testing.T) {
 	require.Equal(t, "Mr.", eventData.Prefix)
 	require.Equal(t, "America/Los_Angeles", eventData.Timezone)
 	require.Equal(t, "https://www.google.com", eventData.ProfilePhotoUrl)
+	require.Equal(t, "bobsmith", eventData.Username)
 	require.Equal(t, "event-processing-platform", eventData.AppSource)
 	require.Equal(t, "openline", eventData.Source)
 	require.Equal(t, "openline", eventData.SourceOfTruth)
@@ -92,6 +94,7 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		Description:     "This is a contact description",
 		Timezone:        "America/Los_Angeles",
 		ProfilePhotoUrl: "https://www.google.com?id=123",
+		Username:        "bobsmith",
 		AppSource:       "event-processing-platform",
 		Source:          "N/A",
 		SourceOfTruth:   "N/A",

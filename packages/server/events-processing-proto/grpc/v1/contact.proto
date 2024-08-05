@@ -18,6 +18,7 @@ enum ContactFieldMask {
   CONTACT_FIELD_DESCRIPTION = 5;
   CONTACT_FIELD_TIMEZONE = 6;
   CONTACT_FIELD_PROFILE_PHOTO_URL = 7;
+  CONTACT_FIELD_USERNAME = 8;
 }
 
 message UpsertContactGrpcRequest {
@@ -40,6 +41,7 @@ message UpsertContactGrpcRequest {
   string loggedInUserId = 17;
   repeated ContactFieldMask fieldsMask = 18;
   string socialUrl = 19;
+  string username = 20;
 }
 
 message LinkPhoneNumberToContactGrpcRequest {

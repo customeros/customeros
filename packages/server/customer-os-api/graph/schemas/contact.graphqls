@@ -89,6 +89,7 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     The last name of the contact in customerOS.
     """
     lastName:           String
+    username:           String
     description:        String
     timezone:           String
     profilePhotoUrl:    String
@@ -211,11 +212,12 @@ input ContactInput {
     """
     The last name of the contact.
     """
-    lastName: String
-    name: String
-    description: String
-    timezone: String
-    profilePhotoUrl: String
+    lastName:           String
+    name:               String
+    description:        String
+    timezone:           String
+    profilePhotoUrl:    String
+    username:           String
 
     """
     An ISO8601 timestamp recording when the contact was created in customerOS.
@@ -292,6 +294,7 @@ input ContactUpdateInput {
     description:        String
     timezone:           String
     profilePhotoUrl:    String
+    username:           String
 }
 
 input ContactOrganizationInput {

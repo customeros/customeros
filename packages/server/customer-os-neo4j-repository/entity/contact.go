@@ -28,6 +28,7 @@ const (
 	ContactPropertyTimezone                                  ContactProperty = "timezone"
 	ContactPropertyProfilePhotoUrl                           ContactProperty = "profilePhotoUrl"
 	ContactPropertyHide                                      ContactProperty = "hide"
+	ContactPropertyUsername                                  ContactProperty = "username"
 )
 
 type ContactEntity struct {
@@ -48,6 +49,7 @@ type ContactEntity struct {
 	Timezone        string `neo4jDb:"property:timezone;lookupName:TIMEZONE;supportCaseSensitive:true"`
 	ProfilePhotoUrl string `neo4jDb:"property:profilePhotoUrl;lookupName:PROFILE_PHOTO_URL;supportCaseSensitive:true"`
 	Hide            bool   `neo4jDb:"property:hide;lookupName:HIDE;supportCaseSensitive:false"`
+	Username        string `neo4jDb:"property:username;lookupName:USERNAME;supportCaseSensitive:true"`
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails

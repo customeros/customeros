@@ -324,6 +324,7 @@ func (a *ContactAggregate) onContactCreate(evt eventstore.Event) error {
 	a.Contact.Description = eventData.Description
 	a.Contact.Timezone = eventData.Timezone
 	a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+	a.Contact.Username = eventData.Username
 	a.Contact.Source = cmnmod.Source{
 		Source:        eventData.Source,
 		SourceOfTruth: eventData.SourceOfTruth,
@@ -359,6 +360,9 @@ func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
 		if a.Contact.ProfilePhotoUrl == "" {
 			a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
 		}
+		if a.Contact.Username == "" {
+			a.Contact.Username = eventData.Username
+		}
 		if a.Contact.Prefix == "" {
 			a.Contact.Prefix = eventData.Prefix
 		}
@@ -370,6 +374,7 @@ func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
 		a.Contact.Description = eventData.Description
 		a.Contact.Timezone = eventData.Timezone
 		a.Contact.ProfilePhotoUrl = eventData.ProfilePhotoUrl
+		a.Contact.Username = eventData.Username
 	}
 	a.Contact.UpdatedAt = eventData.UpdatedAt
 	if eventData.Source == events2.SourceOpenline {

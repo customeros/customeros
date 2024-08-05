@@ -50,6 +50,7 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 		Timezone:        request.Timezone,
 		ProfilePhotoUrl: request.ProfilePhotoUrl,
 		SocialUrl:       request.SocialUrl,
+		Username:        request.Username,
 	}
 
 	sourceFields := commonmodel.Source{}
@@ -128,6 +129,8 @@ func extractContactFieldsMask(fields []contactpb.ContactFieldMask) []string {
 			fieldsMask = append(fieldsMask, event.FieldMaskTimezone)
 		case contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL:
 			fieldsMask = append(fieldsMask, event.FieldMaskProfilePhotoUrl)
+		case contactpb.ContactFieldMask_CONTACT_FIELD_USERNAME:
+			fieldsMask = append(fieldsMask, event.FieldMaskUsername)
 		}
 	}
 	return utils.RemoveDuplicates(fieldsMask)

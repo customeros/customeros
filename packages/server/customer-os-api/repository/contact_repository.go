@@ -394,6 +394,7 @@ func (r *contactRepository) MergeContactPropertiesInTx(ctx context.Context, tx n
 				primary.description = CASE WHEN primary.description is null OR primary.description = '' THEN merged.description ELSE primary.description END, 
 				primary.timezone = CASE WHEN primary.timezone is null OR primary.timezone = '' THEN merged.timezone ELSE primary.timezone END, 
 				primary.profilePhotoUrl = CASE WHEN primary.profilePhotoUrl is null OR primary.profilePhotoUrl = '' THEN merged.profilePhotoUrl ELSE primary.profilePhotoUrl END, 
+				primary.username = CASE WHEN primary.username is null OR primary.username = '' THEN merged.username ELSE primary.username END, 
 				primary.prefix = CASE WHEN primary.prefix is null OR primary.prefix = '' THEN merged.prefix ELSE primary.prefix END, 
 				primary.sourceOfTruth=$sourceOfTruth,
 				primary.updatedAt = datetime()

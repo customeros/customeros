@@ -995,6 +995,7 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		Description:     utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyDescription)),
 		Timezone:        utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyTimezone)),
 		ProfilePhotoUrl: utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyProfilePhotoUrl)),
+		Username:        utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyUsername)),
 		Prefix:          utils.GetStringPropOrEmpty(props, string(entity.ContactPropertyPrefix)),
 		Hide:            utils.GetBoolPropOrFalse(props, string(entity.ContactPropertyHide)),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),

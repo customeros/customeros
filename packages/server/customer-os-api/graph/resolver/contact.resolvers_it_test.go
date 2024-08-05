@@ -90,6 +90,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 			require.Equal(t, "", contact.Description)
 			require.Equal(t, "", contact.Timezone)
 			require.Equal(t, "", contact.ProfilePhotoUrl)
+			require.Equal(t, "", contact.Username)
 			require.Equal(t, "openline", contact.Tenant)
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
@@ -159,6 +160,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, "Some description", contact.Description)
 			require.Equal(t, "America/Los_Angeles", contact.Timezone)
 			require.Equal(t, "http://www.abc.com", contact.ProfilePhotoUrl)
+			require.Equal(t, "bobsmith", contact.Username)
 			require.Equal(t, tenantName, contact.Tenant)
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
@@ -345,6 +347,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 		LastName:        "last",
 		Description:     "description",
 		ProfilePhotoUrl: "original url",
+		Username:        "bobsmith",
 		Source:          neo4jentity.DataSourceHubspot,
 		SourceOfTruth:   neo4jentity.DataSourceHubspot,
 	})
@@ -359,11 +362,12 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 			require.Equal(t, "updated description", contact.Description)
 			require.Equal(t, "updated timezone", contact.Timezone)
 			require.Equal(t, "http://updated.com", contact.ProfilePhotoUrl)
+			require.Equal(t, "updated username", contact.Username)
 			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
 			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
 			require.Equal(t, tenantName, contact.Tenant)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
-			require.Equal(t, 7, len(contact.FieldsMask))
+			require.Equal(t, 8, len(contact.FieldsMask))
 			return &contactgrpc.ContactIdGrpcResponse{
 				Id: contactId,
 			}, nil

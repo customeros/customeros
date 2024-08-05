@@ -369,6 +369,7 @@ type Contact struct {
 	FirstName *string `json:"firstName,omitempty"`
 	// The last name of the contact in customerOS.
 	LastName        *string `json:"lastName,omitempty"`
+	Username        *string `json:"username,omitempty"`
 	Description     *string `json:"description,omitempty"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
@@ -435,6 +436,7 @@ type ContactInput struct {
 	Description     *string `json:"description,omitempty"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
+	Username        *string `json:"username,omitempty"`
 	// An ISO8601 timestamp recording when the contact was created in customerOS.
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Deprecated
@@ -487,6 +489,7 @@ type ContactUpdateInput struct {
 	Description     *string `json:"description,omitempty"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
+	Username        *string `json:"username,omitempty"`
 }
 
 // Specifies how many pages of contact information has been returned in the query response.

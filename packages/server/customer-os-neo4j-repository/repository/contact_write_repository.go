@@ -21,6 +21,7 @@ type ContactCreateFields struct {
 	Description      string       `json:"description"`
 	Timezone         string       `json:"timezone"`
 	ProfilePhotoUrl  string       `json:"profilePhotoUrl"`
+	Username         string       `json:"username"`
 	Name             string       `json:"name"`
 	CreatedAt        time.Time    `json:"createdAt"`
 	SourceFields     model.Source `json:"sourceFields"`
@@ -35,6 +36,7 @@ type ContactUpdateFields struct {
 	Description           string `json:"description"`
 	Timezone              string `json:"timezone"`
 	ProfilePhotoUrl       string `json:"profilePhotoUrl"`
+	Username              string `json:"username"`
 	Name                  string `json:"name"`
 	Source                string `json:"source"`
 	UpdateFirstName       bool   `json:"updateFirstName"`
@@ -44,6 +46,7 @@ type ContactUpdateFields struct {
 	UpdateDescription     bool   `json:"updateDescription"`
 	UpdateTimezone        bool   `json:"updateTimezone"`
 	UpdateProfilePhotoUrl bool   `json:"updateProfilePhotoUrl"`
+	UpdateUsername        bool   `json:"updateUsername"`
 }
 
 type ContactWriteRepository interface {
@@ -95,6 +98,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.description = $description,
 						c.timezone = $timezone,
 						c.profilePhotoUrl = $profilePhotoUrl,
+						c.username = $username,
 						c.name = $name,
 						c.source = $source,
 						c.sourceOfTruth = $sourceOfTruth,
@@ -110,6 +114,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.lastName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.lastName is null OR c.lastName = '' THEN $lastName ELSE c.lastName END,
 						c.timezone = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.timezone is null OR c.timezone = '' THEN $timezone ELSE c.timezone END,
 						c.profilePhotoUrl = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.profilePhotoUrl is null OR c.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE c.profilePhotoUrl END,
+						c.username = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.username is null OR c.username = '' THEN $username ELSE c.username END,
 						c.prefix = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.prefix is null OR c.prefix = '' THEN $prefix ELSE c.prefix END,
 						c.description = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.description is null OR c.description = '' THEN $description ELSE c.description END,
 						c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
@@ -125,6 +130,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 		"description":      data.Description,
 		"timezone":         data.Timezone,
 		"profilePhotoUrl":  data.ProfilePhotoUrl,
+		"username":         data.Username,
 		"name":             data.Name,
 		"tenant":           tenant,
 		"source":           data.SourceFields.Source,
@@ -193,6 +199,10 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	if data.UpdateProfilePhotoUrl {
 		cypher += ", c.profilePhotoUrl = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.profilePhotoUrl is null OR c.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE c.profilePhotoUrl END"
 		params["profilePhotoUrl"] = data.ProfilePhotoUrl
+	}
+	if data.UpdateUsername {
+		cypher += ", c.username = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.username is null OR c.username = '' THEN $username ELSE c.username END"
+		params["username"] = data.Username
 	}
 
 	span.LogFields(log.String("query", cypher))

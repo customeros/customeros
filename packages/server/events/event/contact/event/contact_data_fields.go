@@ -9,4 +9,5 @@ type ContactDataFields struct {
 	Timezone        string
 	ProfilePhotoUrl string
 	SocialUrl       string
+	Username        string
 }
