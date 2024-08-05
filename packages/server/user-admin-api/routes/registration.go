@@ -285,8 +285,10 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 
 	isPersonalEmail := false
 	//check if the user is using a personal email provider
-	for _, personalEmailProvider := range personalEmailProvider {
-		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
+	for _, personalEmailProviderItem := range personalEmailProvider {
+		domainLowercase := strings.ToLower(strings.TrimSpace(domain))
+		personalEmailProviderDomainLowercase := strings.ToLower(strings.TrimSpace(personalEmailProviderItem.ProviderDomain))
+		if domainLowercase == personalEmailProviderDomainLowercase {
 			isPersonalEmail = true
 			break
 		}
