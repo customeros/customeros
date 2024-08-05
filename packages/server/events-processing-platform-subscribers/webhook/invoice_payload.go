@@ -61,7 +61,7 @@ type InvoicePayload struct {
 	Event string `json:"event"`
 }
 
-func PopulateInvoiceFinalizedPayload(invoice *neo4jentity.InvoiceEntity, org *neo4jentity.OrganizationEntity, contract *neo4jentity.ContractEntity, ils []*neo4jentity.InvoiceLineEntity) *InvoicePayload {
+func PopulateInvoicePayload(invoice *neo4jentity.InvoiceEntity, org *neo4jentity.OrganizationEntity, contract *neo4jentity.ContractEntity, ils []*neo4jentity.InvoiceLineEntity) *InvoicePayload {
 	if invoice == nil || org == nil || contract == nil || ils == nil {
 		return nil
 	}

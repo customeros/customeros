@@ -628,7 +628,7 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
-				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactRequestedAt", utils.NowPtr())
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, "techFindWorkEmailWithBetterContactRequestedAt", utils.NowPtr())
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
@@ -836,7 +836,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 			}
 		}
 
-		err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactCompletedAt", utils.NowPtr())
+		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, "techFindWorkEmailWithBetterContactCompletedAt", utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -955,7 +955,7 @@ func (s *contactService) enrichContactsByEmail(ctx context.Context, now time.Tim
 				s.log.Errorf("Error enriching contact {%s}: %s", record.ContactId, err.Error())
 			}
 			// mark contact with enrich requested
-			err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.ContactId, neo4jentity.ContactPropertyEnrichRequestedAt, utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())

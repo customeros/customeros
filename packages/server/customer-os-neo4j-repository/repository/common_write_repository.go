@@ -9,10 +9,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"time"
 )
 
 type CommonWriteRepository interface {
 	LinkEntityWithEntity(ctx context.Context, tenant, entityId string, entityType model.EntityType, relationship string, withEntityId string, withEntityType model.EntityType) error
+	UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error
 }
 
 type commonWriteRepository struct {
@@ -60,4 +62,26 @@ func (r *commonWriteRepository) LinkEntityWithEntity(ctx context.Context, tenant
 		return err
 	}
 	return nil
+}
+
+func (r *commonWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	span.SetTag(tracing.SpanTagEntityId, entityId)
+	span.LogFields(log.String("property", string(property)), log.String("nodeLabel", nodeLabel), log.Object("value", value))
+
+	cypher := fmt.Sprintf(`(n:%s:%s_%s {id: $entityId}) SET n.%s = $value`, nodeLabel, nodeLabel, tenant, property)
+	params := map[string]any{
+		"entityId": entityId,
+		"value":    utils.TimePtrAsAny(value),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }

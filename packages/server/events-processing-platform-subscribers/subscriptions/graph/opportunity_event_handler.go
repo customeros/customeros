@@ -410,7 +410,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	opportunityAfterUpdate := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	if opportunityBeforeUpdate.InternalStage != opportunityAfterUpdate.InternalStage || opportunityBeforeUpdate.ExternalStage != opportunityAfterUpdate.ExternalStage {
-		err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, opportunityId, neo4jentity.OpportunityPropertyStageUpdatedAt, utils.NowPtr())
+		err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelOpportunity, opportunityId, string(neo4jentity.OpportunityPropertyStageUpdatedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while updating opportunity %s: %s", opportunityId, err.Error())
