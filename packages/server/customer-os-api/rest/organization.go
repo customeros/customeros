@@ -129,6 +129,7 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 			orgName = websiteDomain
 		}
 		upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
+			Id:             newOrgId,
 			Tenant:         common.GetTenantFromContext(ctx),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			Name:           orgName,
