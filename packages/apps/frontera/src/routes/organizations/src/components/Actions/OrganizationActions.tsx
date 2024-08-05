@@ -18,13 +18,13 @@ import { TableIdType, OrganizationStage } from '@graphql/types';
 import { LinkedInSolid } from '@ui/media/icons/LinkedInSolid.tsx';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { EditTagsModal } from '@organizations/components/Actions/components/EditTagsModal.tsx';
-import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 interface TableActionsProps {
+  onHide: () => void;
   tableId?: TableIdType;
   focusedId?: string | null;
+  isCommandMenuOpen: boolean;
   onCreateContact: () => void;
-  onHide: (ids: string[]) => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<OrganizationStore>;
   onMerge: (primaryId: string, mergeIds: string[]) => void;
@@ -40,9 +40,8 @@ export const OrganizationTableActions = ({
   enableKeyboardShortcuts,
   onCreateContact,
   focusedId,
+  isCommandMenuOpen,
 }: TableActionsProps) => {
-  const { open: isOpen, onOpen, onClose } = useDisclosure();
-
   const {
     open: isTagEditOpen,
     onOpen: onOpenTagEdit,
@@ -61,12 +60,6 @@ export const OrganizationTableActions = ({
     if (!targetId || !mergeIds.length) return;
 
     onMerge(targetId, mergeIds);
-    clearSelection();
-  };
-
-  const handleHideOrganizations = () => {
-    onHide(selectedIds);
-    onClose();
     clearSelection();
   };
 
@@ -168,7 +161,7 @@ export const OrganizationTableActions = ({
 
   return (
     <>
-      {selectCount > 0 && (
+      {selectCount > 0 && !isCommandMenuOpen && (
         <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
           {selectCount && (
             <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
@@ -185,7 +178,7 @@ export const OrganizationTableActions = ({
           )}
 
           <ActionItem
-            onClick={onOpen}
+            onClick={onHide}
             dataTest='org-actions-archive'
             icon={<Archive className='text-inherit size-3' />}
           >
@@ -272,34 +265,11 @@ export const OrganizationTableActions = ({
         </ButtonGroup>
       )}
 
-      {/*<CreateContactFromLinkedInModal*/}
-      {/*  organizationId={targetId ?? ''}*/}
-      {/*  isOpen={isCreateContactModalOpen}*/}
-      {/*  onConfirm={createContactForOrganization}*/}
-      {/*  onClose={() => {*/}
-      {/*    onCloseCreateContactModal();*/}
-      {/*    setTargetId(null);*/}
-      {/*  }}*/}
-      {/*/>*/}
-
       <EditTagsModal
         isOpen={isTagEditOpen}
         onClose={onCloseTagEdit}
         selectedIds={selectedIds}
         clearSelection={clearSelection}
-      />
-
-      <ConfirmDeleteDialog
-        isOpen={isOpen}
-        onClose={onClose}
-        icon={<Archive />}
-        confirmButtonLabel={'Archive'}
-        loadingButtonLabel='Archiving'
-        onConfirm={handleHideOrganizations}
-        dataTest='org-actions-confirm-archive'
-        label={`Archive selected ${
-          selectCount === 1 ? 'organization' : 'organizations'
-        }?`}
       />
     </>
   );

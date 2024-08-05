@@ -12,6 +12,7 @@ import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands/GlobalHub.tsx';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationCommands = observer(() => {
@@ -31,7 +32,7 @@ export const OrganizationCommands = observer(() => {
             store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
           }}
         >
-          Add contact
+          Add contact via LinkedIn
         </CommandItem>
 
         <CommandItem
@@ -182,6 +183,9 @@ export const OrganizationCommands = observer(() => {
         {/*>*/}
         {/*  Change onboarding stage*/}
         {/*</CommandItem>*/}
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
       </Command.List>
     </Command>
   );
