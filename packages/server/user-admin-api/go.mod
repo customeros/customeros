@@ -29,7 +29,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/sirupsen/logrus v1.9.3
-	golang.org/x/oauth2 v0.21.0
+	golang.org/x/oauth2 v0.22.0
 	golang.org/x/text v0.16.0
 	google.golang.org/api v0.190.0
 	google.golang.org/protobuf v1.34.2
