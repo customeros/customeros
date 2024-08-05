@@ -116,7 +116,18 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		orgName = domains[0]
 	}
 
+	// Reserve organization ID
+	newOrgId, err := r.Services.Repositories.Neo4jRepositories.OrganizationWriteRepository.ReserveOrganizationId(ctx, common.GetTenantFromContext(ctx), "")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to create organization")
+		return nil, nil
+	}
+	span.SetTag(tracing.SpanTagEntityId, newOrgId)
+
+	// Create organization with given ID
 	upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
+		Id:                 newOrgId,
 		Tenant:             common.GetTenantFromContext(ctx),
 		LoggedInUserId:     common.GetUserIdFromContext(ctx),
 		Name:               orgName,
@@ -181,7 +192,6 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		upsertOrganizationRequest.IsPublic = *input.Public
 	}
 
-	var err error
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 		return r.Clients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
@@ -283,6 +293,9 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 		graphql.AddErrorf(ctx, "Failed to fetch organization details")
 		return &model.Organization{
 			ID: response.Id,
+			Metadata: &model.Metadata{
+				ID: response.Id,
+			},
 		}, nil
 	}
 
