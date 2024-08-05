@@ -303,15 +303,17 @@ const CONTRACTS_QUERY = gql`
           organizationLegalName
           billingCycle
           payAutomatically
-          canPayWithCard
           billingCycleInMonths
-          canPayWithBankTransfer
           invoicingStarted
           region
           dueDays
           billingEmail
           billingEmailCC
           billingEmailBCC
+          payOnline
+          canPayWithDirectDebit
+          canPayWithBankTransfer
+          canPayWithCard
         }
         upcomingInvoices {
           metadata {
