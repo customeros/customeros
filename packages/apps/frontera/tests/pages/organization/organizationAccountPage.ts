@@ -69,17 +69,6 @@ export class OrganizationAccountPage {
     await this.page.waitForResponse('**/customer-os-api');
   }
 
-  async fillInBillingAddress() {
-    await this.page.click(this.contractBillingDetailsAddressCountry);
-
-    const countryInput = this.page.locator(
-      this.contractBillingDetailsAddressCountry,
-    );
-
-    await countryInput.fill('South Georgia and the South Sandwich Islands');
-    await countryInput.press('Enter');
-  }
-
   async openContractDotsMenu(contractIndex: number) {
     // await this.page.click(this.contractMenuDots);
     const firstContract = this.page

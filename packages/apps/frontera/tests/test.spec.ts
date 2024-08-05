@@ -56,9 +56,7 @@ test('create and delete contracts', async ({ page }) => {
   await addressBookPage.goToOrganization();
   await organizationSideNavPage.goToAccount();
   await organizationAccountPage.addContractEmpty();
-  // await organizationAccountPage.openContractDotsMenu(0);
   await organizationAccountPage.addBillingAddress(0);
-  // await organizationAccountPage.fillInBillingAddress();
   await organizationAccountPage.checkContractsCount(1);
   await organizationAccountPage.addSLIsToContract(0);
   await organizationAccountPage.checkSLIsInAccountPanel();
