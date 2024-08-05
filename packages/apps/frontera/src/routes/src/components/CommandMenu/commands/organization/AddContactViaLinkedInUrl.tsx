@@ -86,8 +86,9 @@ export const AddContactViaLinkedInUrl = observer(() => {
             if (e.key === '/') {
               e.stopPropagation();
             }
-
-            if (e.key === 'Backspace' && url.length === 1) {
+          }}
+          onKeyUp={(e) => {
+            if (e.key === 'Backspace' && e.target.value.length === 0) {
               setValidationError(false);
             }
           }}
