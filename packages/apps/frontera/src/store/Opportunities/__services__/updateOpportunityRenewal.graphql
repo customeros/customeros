@@ -1,0 +1,7 @@
+mutation updateOpportunityRenewal($input: OpportunityRenewalUpdateInput!) {
+  opportunityRenewalUpdate(input: $input) {
+    metadata {
+      id
+    }
+  }
+}

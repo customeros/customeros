@@ -1,0 +1,59 @@
+query Opportunity($id: ID!) {
+  opportunity(id: $id) {
+    metadata {
+      id
+      created
+      lastUpdated
+      source
+      sourceOfTruth
+      appSource
+    }
+    id
+    createdAt
+    updatedAt
+    name
+    amount
+    currency
+    maxAmount
+    internalType
+    externalType
+    internalStage
+    externalStage
+    stageLastUpdated
+    estimatedClosedAt
+    organization {
+      metadata {
+        id
+        created
+        lastUpdated
+        sourceOfTruth
+      }
+    }
+    generalNotes
+    nextSteps
+    renewedAt
+    renewalApproved
+    renewalLikelihood
+    renewalUpdatedByUserId
+    renewalUpdatedByUserAt
+    renewalAdjustedRate
+    comments
+    createdBy {
+      id
+      firstName
+      lastName
+    }
+    owner {
+      id
+      firstName
+      lastName
+    }
+    source
+    sourceOfTruth
+    appSource
+    externalLinks {
+      externalId
+      externalUrl
+    }
+  }
+}

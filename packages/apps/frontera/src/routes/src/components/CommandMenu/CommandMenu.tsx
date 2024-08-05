@@ -1,7 +1,9 @@
 import { useRef } from 'react';
 import type { ReactElement } from 'react';
+import { useLocation } from 'react-router-dom';
 
 import { useKey } from 'rooks';
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { CommandMenuType } from '@store/UI/CommandMenu.store';
 
@@ -31,10 +33,12 @@ import {
   OpportunityCommands,
   OrganizationCommands,
   RenameOpportunityName,
+  ChooseOpportunityStage,
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   AddContactViaLinkedInUrl,
   RenameOrganizationProperty,
+  ChooseOpportunityOrganization,
 } from './commands';
 
 const Commands: Record<CommandMenuType, ReactElement> = {
@@ -56,9 +60,13 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   SetOpportunityNextSteps: <SetOpportunityNextSteps />,
   DeleteConfirmationModal: <DeleteConfirmationModal />,
   OrganizationBulkCommands: <OrganizationBulkCommands />,
+  ChooseOpportunityStage: <ChooseOpportunityStage />,
+  ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
 };
 
 export const CommandMenu = observer(() => {
+  const location = useLocation();
+
   const store = useStore();
   const commandRef = useRef(null);
 
@@ -68,9 +76,16 @@ export const CommandMenu = observer(() => {
   });
 
   useKey('Escape', () => {
-    // store.ui.commandMenu.toggle(store.ui.commandMenu.type);
-    store.ui.commandMenu.setOpen(false);
+    match(location.pathname)
+      .with('/prospects', () => {
+        store.ui.commandMenu.setOpen(false);
+        store.ui.commandMenu.setType('OpportunityHub');
+      })
+      .otherwise(() => {
+        store.ui.commandMenu.setOpen(false);
+      });
   });
+
   useModKey('k', () => {
     store.ui.commandMenu.setOpen(true);
   });
