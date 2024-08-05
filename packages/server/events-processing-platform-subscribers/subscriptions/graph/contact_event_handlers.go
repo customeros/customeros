@@ -65,6 +65,7 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 			Description:      eventData.Description,
 			Timezone:         eventData.Timezone,
 			ProfilePhotoUrl:  eventData.ProfilePhotoUrl,
+			Username:         eventData.Username,
 			Name:             eventData.Name,
 			CreatedAt:        eventData.CreatedAt,
 			SourceFields: neo4jmodel.Source{
@@ -140,6 +141,7 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		Description:           eventData.Description,
 		Timezone:              eventData.Timezone,
 		ProfilePhotoUrl:       eventData.ProfilePhotoUrl,
+		Username:              eventData.Username,
 		Name:                  eventData.Name,
 		Source:                eventData.Source,
 		UpdateFirstName:       eventData.UpdateFirstName(),
@@ -149,6 +151,7 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		UpdateDescription:     eventData.UpdateDescription(),
 		UpdateTimezone:        eventData.UpdateTimezone(),
 		UpdateProfilePhotoUrl: eventData.UpdateProfilePhotoUrl(),
+		UpdateUsername:        eventData.UpdateUsername(),
 	}
 	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateContact(ctx, eventData.Tenant, contactId, data)
 	if err != nil {

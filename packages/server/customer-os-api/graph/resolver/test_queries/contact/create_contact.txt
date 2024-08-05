@@ -8,6 +8,7 @@ contact_Create(
       description: "Some description",
       timezone: "America/Los_Angeles",
       profilePhotoUrl: "http://www.abc.com",
+      username: "bobsmith",
       createdAt: "2023-01-02T03:04:05.000Z"
       email: {
             email: "contact@abc.com",

@@ -19,6 +19,7 @@ type Contact struct {
 	Description     string                        `json:"description"`
 	Timezone        string                        `json:"timezone"`
 	ProfilePhotoUrl string                        `json:"profilePhotoUrl"`
+	Username        string                        `json:"username"`
 	Source          cmnmod.Source                 `json:"source"`
 	CreatedAt       time.Time                     `json:"createdAt"`
 	UpdatedAt       time.Time                     `json:"updatedAt"`
@@ -93,7 +94,8 @@ func (c *Contact) SameData(fields event.ContactDataFields, externalSystem cmnmod
 			c.Prefix == fields.Prefix &&
 			c.Description == fields.Description &&
 			c.Timezone == fields.Timezone &&
-			c.ProfilePhotoUrl == fields.ProfilePhotoUrl {
+			c.ProfilePhotoUrl == fields.ProfilePhotoUrl &&
+			c.Username == fields.Username {
 			return true
 		}
 	} else {
@@ -103,7 +105,8 @@ func (c *Contact) SameData(fields event.ContactDataFields, externalSystem cmnmod
 			(c.Prefix != "" || c.Prefix == fields.Prefix) &&
 			(c.Description != "" || c.Description == fields.Description) &&
 			(c.Timezone != "" || c.Timezone == fields.Timezone) &&
-			(c.ProfilePhotoUrl != "" || c.ProfilePhotoUrl == fields.ProfilePhotoUrl) {
+			(c.ProfilePhotoUrl != "" || c.ProfilePhotoUrl == fields.ProfilePhotoUrl) &&
+			(c.Username != "" || c.Username == fields.Username) {
 			return true
 		}
 	}

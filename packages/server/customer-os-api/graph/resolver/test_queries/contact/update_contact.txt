@@ -10,6 +10,7 @@ mutation UpdateContact($contactId: ID!){
             description: "updated description"
             timezone: "updated timezone"
             profilePhotoUrl: "http://updated.com"
+            username: "updated username"
         }
     ) {
         id

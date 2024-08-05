@@ -20,6 +20,7 @@ type ContactUpdateEvent struct {
 	Description     string                `json:"description"`
 	Timezone        string                `json:"timezone"`
 	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
+	Username        string                `json:"username"`
 	ExternalSystem  cmnmod.ExternalSystem `json:"externalSystem,omitempty"`
 	FieldsMask      []string              `json:"fieldsMask,omitempty"`
 }
@@ -33,6 +34,7 @@ func NewContactUpdateEvent(aggregate eventstore.Aggregate, source string, dataFi
 		Description:     dataFields.Description,
 		Timezone:        dataFields.Timezone,
 		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
+		Username:        dataFields.Username,
 		Name:            dataFields.Name,
 		UpdatedAt:       updatedAt,
 		Source:          source,
@@ -79,4 +81,8 @@ func (e ContactUpdateEvent) UpdateTimezone() bool {
 
 func (e ContactUpdateEvent) UpdateProfilePhotoUrl() bool {
 	return utils.Contains(e.FieldsMask, FieldMaskProfilePhotoUrl)
+}
+
+func (e ContactUpdateEvent) UpdateUsername() bool {
+	return utils.Contains(e.FieldsMask, FieldMaskUsername)
 }

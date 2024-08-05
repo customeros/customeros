@@ -33,6 +33,7 @@ const (
 	FieldMaskDescription     = "description"
 	FieldMaskTimezone        = "timezone"
 	FieldMaskProfilePhotoUrl = "profilePhotoUrl"
+	FieldMaskUsername        = "username"
 )
 
 type ContactCreateEvent struct {
@@ -44,6 +45,7 @@ type ContactCreateEvent struct {
 	Description     string                `json:"description"`
 	Timezone        string                `json:"timezone"`
 	ProfilePhotoUrl string                `json:"profilePhotoUrl"`
+	Username        string                `json:"username"`
 	SocialUrl       string                `json:"socialUrl"`
 	Source          string                `json:"source"`
 	SourceOfTruth   string                `json:"sourceOfTruth"`
@@ -64,6 +66,7 @@ func NewContactCreateEvent(aggregate eventstore.Aggregate, dataFields ContactDat
 		Description:     dataFields.Description,
 		Timezone:        dataFields.Timezone,
 		ProfilePhotoUrl: dataFields.ProfilePhotoUrl,
+		Username:        dataFields.Username,
 		SocialUrl:       dataFields.SocialUrl,
 		Source:          sourceFields.Source,
 		SourceOfTruth:   sourceFields.SourceOfTruth,

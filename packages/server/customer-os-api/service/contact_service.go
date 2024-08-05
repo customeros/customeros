@@ -131,6 +131,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 		Prefix:          contactDetails.ContactEntity.Prefix,
 		Description:     contactDetails.ContactEntity.Description,
 		ProfilePhotoUrl: contactDetails.ContactEntity.ProfilePhotoUrl,
+		Username:        contactDetails.ContactEntity.Username,
 		SocialUrl:       contactDetails.SocialUrl,
 		Name:            contactDetails.ContactEntity.Name,
 		Timezone:        contactDetails.ContactEntity.Timezone,
@@ -250,6 +251,7 @@ func (s *contactService) Update(ctx context.Context, input model.ContactUpdateIn
 		Description:     utils.IfNotNilString(input.Description),
 		Timezone:        utils.IfNotNilString(input.Timezone),
 		ProfilePhotoUrl: utils.StringFirstNonEmpty(utils.IfNotNilString(input.ProfilePhotoURL), currentContactEntity.ProfilePhotoUrl),
+		Username:        utils.StringFirstNonEmpty(utils.IfNotNilString(input.Username), currentContactEntity.Username),
 	}
 	if input.Patch != nil && *input.Patch {
 		var fieldsMask []contactpb.ContactFieldMask
@@ -273,6 +275,9 @@ func (s *contactService) Update(ctx context.Context, input model.ContactUpdateIn
 		}
 		if input.ProfilePhotoURL != nil {
 			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL)
+		}
+		if input.Username != nil {
+			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_USERNAME)
 		}
 		if len(fieldsMask) == 0 {
 			span.LogFields(log.String("result", "No fields to update"))

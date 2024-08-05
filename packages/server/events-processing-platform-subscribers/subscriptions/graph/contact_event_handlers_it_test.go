@@ -310,6 +310,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	contactLastNameCreate := "Contact LastName Create"
 	timezoneCreate := "Europe/Paris"
 	profilePhotoUrlCreate := "www.pic.com/create"
+	usernameCreate := "usernameCreate"
 	prefixCreate := "Mr."
 	descriptionCreate := "Description Create"
 	sourceOfTruthCreate := constants.SourceOpenline
@@ -320,6 +321,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		LastName:        contactLastNameCreate,
 		Timezone:        timezoneCreate,
 		ProfilePhotoUrl: profilePhotoUrlCreate,
+		Username:        usernameCreate,
 		Prefix:          prefixCreate,
 		Description:     descriptionCreate,
 		UpdatedAt:       now,
@@ -343,6 +345,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	contactLastNameUpdate := "Contact LastName Update"
 	timezoneUpdate := "Europe/Bucharest"
 	profilePhotoUrlUpdate := "www.pic.com/update"
+	usernameUpdate := "usernameUpdate"
 	prefixUpdate := "Mrs."
 	descriptionUpdate := "Description Update"
 	dataFields := event2.ContactDataFields{
@@ -351,6 +354,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		LastName:        contactLastNameUpdate,
 		Timezone:        timezoneUpdate,
 		ProfilePhotoUrl: profilePhotoUrlUpdate,
+		Username:        usernameUpdate,
 		Prefix:          prefixUpdate,
 		Description:     descriptionUpdate,
 	}
@@ -361,6 +365,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 			event2.FieldMaskLastName,
 			event2.FieldMaskTimezone,
 			event2.FieldMaskProfilePhotoUrl,
+			event2.FieldMaskUsername,
 			event2.FieldMaskPrefix,
 			event2.FieldMaskDescription})
 	require.Nil(t, err)
@@ -377,6 +382,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	require.Equal(t, contactLastNameUpdate, utils.GetStringPropOrEmpty(contactProps, "lastName"))
 	require.Equal(t, timezoneUpdate, utils.GetStringPropOrEmpty(contactProps, "timezone"))
 	require.Equal(t, profilePhotoUrlUpdate, utils.GetStringPropOrEmpty(contactProps, "profilePhotoUrl"))
+	require.Equal(t, usernameUpdate, utils.GetStringPropOrEmpty(contactProps, "username"))
 	require.Equal(t, prefixUpdate, utils.GetStringPropOrEmpty(contactProps, "prefix"))
 	require.Equal(t, descriptionUpdate, utils.GetStringPropOrEmpty(contactProps, "description"))
 	require.Less(t, now, utils.GetTimePropOrNow(contactProps, "updatedAt"))
