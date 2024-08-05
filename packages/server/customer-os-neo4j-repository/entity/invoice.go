@@ -5,6 +5,14 @@ import (
 	"time"
 )
 
+type InvoiceProperty string
+
+const (
+	InvoicePropertyCreatedAt                   InvoiceProperty = "createdAt"
+	InvoicePropertyFinalizedWebhookProcessedAt InvoiceProperty = "techInvoiceFinalizedWebhookProcessedAt"
+	InvoicePropertyPaidWebhookProcessedAt      InvoiceProperty = "techInvoicePaidWebhookProcessedAt"
+)
+
 type InvoiceEntity struct {
 	EventStoreAggregate
 	Id                   string
@@ -70,6 +78,7 @@ type PaymentDetails struct {
 type InvoiceInternalFields struct {
 	InvoiceFinalizedSentAt             *time.Time // used to send the invoice finalized notification to slack and integration app
 	InvoiceFinalizedWebhookProcessedAt *time.Time // used to process webhook for invoice finalized to temporal, if no webhook is configured, property will be set
+	InvoicePaidWebhookProcessedAt      *time.Time // used to process webhook for invoice paid to temporal, if no webhook is configured, property will be set
 	PaymentLinkRequestedAt             *time.Time
 	PayInvoiceNotificationRequestedAt  *time.Time // used for locking in batch to not send the same notification multiple times under an hour
 	PayInvoiceNotificationSentAt       *time.Time // used to prevent sending the same notification

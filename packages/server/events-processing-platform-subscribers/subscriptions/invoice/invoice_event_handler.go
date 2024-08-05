@@ -396,7 +396,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 			h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceId, err.Error())
 			// TODO: must implement retry mechanism for dispatching invoice finalized event
 		}
-		err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkInvoiceFinalizedWebhookProcessed(ctx, eventData.Tenant, invoiceEntity.Id)
+		err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
@@ -605,7 +605,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 		ilEntities = append(ilEntities, ilEntity)
 	}
 
-	webhookPayload := webhook.PopulateInvoiceFinalizedPayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
+	webhookPayload := webhook.PopulateInvoicePayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
 	// dispatch the event
 	err = webhook.DispatchWebhook(
 		ctx,
@@ -618,6 +618,73 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (h *InvoiceEventHandler) dispatchInvoicePaidEvent(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.dispatchInvoicePaidEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.LogObjectAsJson(span, "invoice", invoice)
+
+	// get organization linked to invoice to build payload for webhook
+	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+	organizationEntity := neo4jentity.OrganizationEntity{}
+	if organizationDbNode != nil {
+		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+	}
+
+	// get contract linked to invoice to build payload for webhook
+	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+
+	contractEntity := neo4jentity.ContractEntity{}
+	if len(contractDbNode) > 0 && contractDbNode[0] != nil {
+		node := contractDbNode[0].Node
+		if node != nil {
+			contractEntity = *neo4jmapper.MapDbNodeToContractEntity(node)
+		}
+	}
+
+	// get invoice line items linked to invoice to build payload for webhook
+	invoiceLineDbNodes, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, tenant, invoice.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
+		return err
+	}
+
+	ilEntities := []*neo4jentity.InvoiceLineEntity{}
+	for _, ilDbNode := range invoiceLineDbNodes {
+		ilEntity := neo4jmapper.MapDbNodeToInvoiceLineEntity(ilDbNode)
+		ilEntities = append(ilEntities, ilEntity)
+	}
+
+	webhookPayload := webhook.PopulateInvoicePayload(&invoice, &organizationEntity, &contractEntity, ilEntities)
+	// dispatch the event
+	err = webhook.DispatchWebhook(
+		ctx,
+		tenant,
+		webhook.WebhookEventInvoiceStatusPaid,
+		webhookPayload,
+		h.repositories,
+		h.cfg,
+	)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error dispatching invoice paid event for invoice %s: %s", invoice.Id, err.Error())
 		return err
 	}
 
@@ -1023,6 +1090,22 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
 		return nil
+	}
+
+	// do not dispatch invoice paid event if it was already dispatched
+	if invoiceEntity.InvoiceInternalFields.InvoicePaidWebhookProcessedAt == nil {
+		// dispatch invoice paid event
+		err = h.dispatchInvoicePaidEvent(ctx, eventData.Tenant, *invoiceEntity)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error dispatching invoice paid event for invoice %s: %s", invoiceId, err.Error())
+		} else {
+			err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyPaidWebhookProcessedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("Error setting invoice paid webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
+			}
+		}
 	}
 
 	// paid notification already sent, skip

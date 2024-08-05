@@ -254,7 +254,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		h.log.Infof("Person not found for %s", flow.GetParam1())
 
 		// mark contact as failed to enrich
-		err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, flow.GetTimeLabel(), utils.NowPtr())
+		err := h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(flow.GetTimeLabel()), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
 			h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
@@ -370,7 +370,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, flow.GetTimeLabel(), utils.NowPtr())
+	err := h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(flow.GetTimeLabel()), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
@@ -383,7 +383,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	// mark contact as enriched
-	err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateTimeProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedAt, utils.NowPtr())
+	err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedAt), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
 		h.log.Errorf("Error updating enriched at property: %s", err.Error())

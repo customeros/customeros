@@ -5,7 +5,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
@@ -99,7 +98,6 @@ type OpportunityWriteRepository interface {
 	CloseWin(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
 	CloseLoose(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
 	MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error
-	UpdateTimeProperty(ctx context.Context, tenant, opportunityId string, property entity.OpportunityProperty, value *time.Time) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
 }
 
@@ -522,29 +520,6 @@ func (r *opportunityWriteRepository) MarkRenewalRequested(ctx context.Context, t
 	params := map[string]any{
 		"opportunityId": opportunityId,
 		"now":           utils.Now(),
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *opportunityWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, opportunityId string, property entity.OpportunityProperty, value *time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateTimeProperty")
-	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-	span.LogFields(log.String("property", string(property)), log.Object("value", value))
-
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity_%s {id: $opportunityId})
-			SET op.%s = $value`, tenant, string(property))
-	params := map[string]any{
-		"opportunityId": opportunityId,
-		"value":         utils.TimePtrAsAny(value),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
