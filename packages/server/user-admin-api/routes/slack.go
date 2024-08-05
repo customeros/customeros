@@ -24,7 +24,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 	rg.POST("/slack/oauth/callback", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
 		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 
-		slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant.(string))
+		slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant.(string))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -80,7 +80,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 		}
 
 		if slackResponse.Ok {
-			_, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Save(postgresEntity.SlackSettingsEntity{
+			_, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Save(ctx, postgresEntity.SlackSettingsEntity{
 				TenantName:   tenant.(string),
 				AppId:        slackResponse.AppId,
 				AuthedUserId: slackResponse.AuthedUser.Id,
@@ -101,7 +101,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 	rg.POST("/slack/revoke", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
 		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 
-		slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant.(string))
+		slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant.(string))
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 			return
@@ -144,7 +144,7 @@ func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *servic
 			}
 
 			if slackResponse.Ok && slackResponse.Revoked != nil && *slackResponse.Revoked {
-				err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Delete(tenant.(string))
+				err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Delete(ctx, tenant.(string))
 				if err != nil {
 					ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 					return

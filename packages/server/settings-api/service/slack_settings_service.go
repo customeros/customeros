@@ -3,10 +3,11 @@ package service
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/model"
+	"golang.org/x/net/context"
 )
 
 type SlackSettingsService interface {
-	GetSlackSettings(tenant string) (*model.SlackSettingsResponse, error)
+	GetSlackSettings(ctx context.Context, tenant string) (*model.SlackSettingsResponse, error)
 }
 
 type slackSettingsService struct {
@@ -21,8 +22,8 @@ func NewSlackSettingsService(services *Services, log logger.Logger) SlackSetting
 	}
 }
 
-func (u slackSettingsService) GetSlackSettings(tenant string) (*model.SlackSettingsResponse, error) {
-	slackSettings, err := u.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(tenant)
+func (u slackSettingsService) GetSlackSettings(ctx context.Context, tenant string) (*model.SlackSettingsResponse, error) {
+	slackSettings, err := u.services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant)
 	if err != nil {
 		return nil, err
 	}

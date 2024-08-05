@@ -34,7 +34,7 @@ func InitUserSettingsRoutes(r *gin.Engine, services *service.Services) {
 
 		func(c *gin.Context) {
 			tenant, _ := c.Get(security.KEY_TENANT_NAME)
-			userSettings, err := services.SlackSettingsService.GetSlackSettings(tenant.(string))
+			userSettings, err := services.SlackSettingsService.GetSlackSettings(c, tenant.(string))
 			if err != nil {
 				c.JSON(500, gin.H{"error": err.Error()})
 				return
