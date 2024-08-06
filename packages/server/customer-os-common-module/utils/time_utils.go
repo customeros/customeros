@@ -215,3 +215,11 @@ func GenerateYearMonths(start, end time.Time) []YearMonth {
 func IsEndOfMonth(t time.Time) bool {
 	return t.Day() == LastDayOfMonth(t.Year(), int(t.Month())).Day()
 }
+
+func GetCurrentTimeInTimeZone(timezone string) time.Time {
+	loc, err := time.LoadLocation(timezone)
+	if err != nil {
+		return time.Now()
+	}
+	return time.Now().In(loc)
+}

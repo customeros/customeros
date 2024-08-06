@@ -12,6 +12,8 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events => ../events
 
+replace github.com/openline-ai/openline-customer-os/packages/server/validation-api => ../validation-api
+
 require (
 	github.com/99designs/gqlgen v0.17.49
 	github.com/caarlos0/env/v6 v6.10.1
@@ -29,6 +31,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240710133651-a82bf94a04e7
 	github.com/openline-ai/openline-customer-os/packages/server/events v0.0.0-20240413132139-bfffc416fdeb
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb
+	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-00010101000000-000000000000
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.19.1
@@ -38,7 +41,7 @@ require (
 	github.com/testcontainers/testcontainers-go v0.32.0
 	github.com/vektah/gqlparser/v2 v2.5.16
 	go.uber.org/zap v1.27.0
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
+	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d
 	golang.org/x/net v0.27.0
 	google.golang.org/grpc v1.65.0
 	google.golang.org/protobuf v1.34.2
@@ -128,6 +131,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
+	github.com/smartystreets/smartystreets-go-sdk v1.19.5 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect

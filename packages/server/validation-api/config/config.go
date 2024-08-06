@@ -31,12 +31,10 @@ type SmartyConfig struct {
 }
 
 type IpDataConfig struct {
-	ApiUrl string `env:"IPDATA_API_URL" validate:"required"`
-	ApiKey string `env:"IPDATA_API_KEY" validate:"required"`
+	ApiUrl                   string `env:"IPDATA_API_URL" validate:"required"`
+	ApiKey                   string `env:"IPDATA_API_KEY" validate:"required"`
+	InvalidateCacheAfterDays int    `env:"IPDATA_INVALIDATE_CACHE_AFTER_IN_DAYS" default:"90"  validate:"required"`
 }
-
-//IPDATA_API_URL: https://api.ipdata.co
-//IPDATA_API_KEY:
 
 type IpHunterConfig struct {
 	ApiKey string `env:"IPHUNTER_API_KEY" validate:"required"`
