@@ -1,3 +1,5 @@
+import { useSearchParams } from 'react-router-dom';
+
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import {
@@ -43,15 +45,16 @@ export const KanbanColumn = observer(
     filterFns,
     isLoading,
   }: CardColumnProps) => {
-    const { open, onOpen, onToggle } = useDisclosure();
     const store = useStore();
+    const [searchParams] = useSearchParams();
+    const { open, onOpen, onToggle } = useDisclosure();
     const viewDef = store.tableViewDefs.getById(
       store.tableViewDefs.opportunitiesPreset ?? '',
     );
     const column = viewDef?.value.columns.find((c) => c.columnId === columnId);
 
     const cards = store.opportunities.toComputedArray((arr) => {
-      return arr
+      arr = arr
         .filter(
           (opp) =>
             opp.value.internalType === 'NBO' &&
@@ -62,6 +65,27 @@ export const KanbanColumn = observer(
             new Date(b.value.metadata.created).valueOf() -
             new Date(a.value.metadata.created).valueOf(),
         );
+
+      if (searchParams.has('search')) {
+        const search = searchParams.get('search')?.toLowerCase() ?? '';
+
+        if (!search) return arr;
+
+        arr = arr.filter((opp) => {
+          return (
+            opp.value.name.toLowerCase().includes(search) ||
+            opp.organization?.value?.name.toLowerCase().includes(search) ||
+            (
+              opp.value.owner?.name ||
+              [opp.value.owner?.firstName, opp.value.owner?.lastName].join(' ')
+            )
+              ?.toLowerCase()
+              .includes(search)
+          );
+        });
+      }
+
+      return arr;
     });
 
     const totalSum = formatCurrency(
