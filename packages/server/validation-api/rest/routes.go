@@ -1,22 +1,28 @@
-package main
+package rest
 
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"net"
+	"net/http"
 )
 
-func registerRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cfg *config.Config, logger logger.Logger) {
+func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cfg *config.Config, logger logger.Logger) {
 	r.GET("/health", healthCheckHandler)
 	r.GET("/readiness", healthCheckHandler)
 	validateAddress(ctx, r, services)
 	validatePhoneNumber(ctx, r, services)
 	validateEmail(ctx, r, services, logger)
+	ipLookup(ctx, r, services, logger)
 }
 
 func healthCheckHandler(c *gin.Context) {
@@ -147,5 +153,65 @@ func validateAddress(ctx context.Context, r *gin.Engine, services *service.Servi
 
 				c.JSON(200, model.MapValidationUsAddressResponse(validatedAddressResponse, nil, true))
 			}
+		})
+}
+
+func ipLookup(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
+	r.POST("/ipLookup",
+		handler.TracingEnhancer(ctx, "POST /ipLookup"),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
+		func(c *gin.Context) {
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpLookup", c.Request.Header)
+			defer span.Finish()
+
+			var request model.IpLookupRequest
+
+			if err := c.BindJSON(&request); err != nil {
+				l.Errorf("Fail reading request: %v", err.Error())
+				c.JSON(http.StatusBadRequest, model.IpLookupResponse{
+					Status:  "error",
+					Message: "Invalid request body",
+				})
+				return
+			}
+
+			// check ip is present
+			if request.Ip == "" {
+				tracing.TraceErr(span, errors.New("Missing ip parameter"))
+				l.Errorf("Missing ip parameter")
+				c.JSON(http.StatusBadRequest, model.IpLookupResponse{
+					Status:  "error",
+					Message: "Missing ip parameter",
+				})
+				return
+			}
+			span.LogFields(log.String("request.ip", request.Ip))
+
+			// check ip format
+			if net.ParseIP(request.Ip) == nil {
+				tracing.TraceErr(span, errors.New("Invalid IP address format"))
+				l.Errorf("Invalid IP address format: %s", request.Ip)
+				c.JSON(http.StatusBadRequest, model.IpLookupResponse{
+					Status:  "error",
+					Message: "Invalid IP address format",
+				})
+				return
+			}
+
+			response, err := services.IpIntelligenceService.LookupIp(ctx, request.Ip)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				l.Errorf("Error on : %v", err.Error())
+				c.JSON(http.StatusInternalServerError, model.IpLookupResponse{
+					Status:  "error",
+					Message: "Internal server error",
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, model.IpLookupResponse{
+				Status: "success",
+				Data:   response,
+			})
 		})
 }

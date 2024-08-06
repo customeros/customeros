@@ -5,6 +5,7 @@ import (
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 	"github.com/opentracing/opentracing-go"
 	"io"
@@ -51,7 +52,7 @@ func main() {
 
 	services := service.InitServices(cfg, postgresDb.GormDB, &neo4jDriver, appLogger)
 
-	registerRoutes(ctx, r, services, cfg, appLogger)
+	rest.RegisterRoutes(ctx, r, services, cfg, appLogger)
 
 	r.Run(":" + cfg.ApiPort)
 }
