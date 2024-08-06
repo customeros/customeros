@@ -2,7 +2,7 @@ import { Command, useCommandState } from 'cmdk';
 
 import { cn } from '@ui/utils/cn';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
-import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
+import { ChevronRight } from '@ui/media/icons/ChevronRight';
 
 interface CommandInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {

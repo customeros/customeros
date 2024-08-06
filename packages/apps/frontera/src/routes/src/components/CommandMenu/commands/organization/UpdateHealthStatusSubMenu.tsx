@@ -1,6 +1,6 @@
+import { Activity } from '@ui/media/icons/Activity';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
-import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 
 export const UpdateHealthStatusSubMenu = ({
   selectedIds,
@@ -18,9 +18,9 @@ export const UpdateHealthStatusSubMenu = ({
     <>
       <CommandSubItem
         rightLabel='High'
+        icon={<Activity />}
         leftLabel='Change health status'
         keywords={['renewal likelihood']}
-        icon={<AlignHorizontalCentre02 />}
         onSelectAction={() => {
           updateHealth(selectedIds, OpportunityRenewalLikelihood.HighRenewal);
           closeMenu();
@@ -29,9 +29,9 @@ export const UpdateHealthStatusSubMenu = ({
 
       <CommandSubItem
         rightLabel='Medium'
+        icon={<Activity />}
         leftLabel='Change health status'
         keywords={['renewal likelihood']}
-        icon={<AlignHorizontalCentre02 />}
         onSelectAction={() => {
           updateHealth(selectedIds, OpportunityRenewalLikelihood.MediumRenewal);
           closeMenu();
@@ -40,9 +40,9 @@ export const UpdateHealthStatusSubMenu = ({
 
       <CommandSubItem
         rightLabel='Low'
+        icon={<Activity />}
         leftLabel='Change health status'
         keywords={['renewal likelihood']}
-        icon={<AlignHorizontalCentre02 />}
         onSelectAction={() => {
           updateHealth(selectedIds, OpportunityRenewalLikelihood.LowRenewal);
           closeMenu();
