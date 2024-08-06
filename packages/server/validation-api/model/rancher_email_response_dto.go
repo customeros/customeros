@@ -1,4 +1,4 @@
-package dto
+package model
 
 type RancherEmailResponseDTO struct {
 	Input       string `json:"input"`

@@ -1,4 +1,4 @@
-package dto
+package model
 
 type ValidationPhoneNumberRequest struct {
 	PhoneNumber string `json:"phoneNumber"`

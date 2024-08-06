@@ -1,4 +1,4 @@
-package dto
+package model
 
 type ValidationEmailRequest struct {
 	Email string `json:"email"`
