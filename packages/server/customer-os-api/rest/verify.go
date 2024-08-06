@@ -30,13 +30,13 @@ type IpIntelligenceResponse struct {
 }
 
 type IpIntelligenceThreats struct {
-	IsProxy      bool `json:"isProxy"`
-	IsVpn        bool `json:"isVpn"`
-	IsTor        bool `json:"isTor"`
-	IsBot        bool `json:"isBot"`
-	IsDatacenter bool `json:"isDatacenter"`
-	IsCloudRelay bool `json:"isCloudRelay"`
-	IsMobile     bool `json:"isMobile"`
+	IsProxy       bool `json:"isProxy"`
+	IsVpn         bool `json:"isVpn"`
+	IsTor         bool `json:"isTor"`
+	IsUnallocated bool `json:"isUnallocated"`
+	IsDatacenter  bool `json:"isDatacenter"`
+	IsCloudRelay  bool `json:"isCloudRelay"`
+	IsMobile      bool `json:"isMobile"`
 }
 
 type IpIntelligenceGeolocation struct {
@@ -139,13 +139,13 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			Status: "success",
 			IP:     ipAddress,
 			Threats: IpIntelligenceThreats{
-				IsProxy: result.Data.Threat.IsProxy,
-				//IsVpn:        TBD,
-				IsTor: result.Data.Threat.IsTor,
-				//IsBot:        TBD,
-				IsDatacenter: result.Data.Threat.IsDatacenter,
-				IsCloudRelay: result.Data.Threat.IsIcloudRelay,
-				//IsMobile:     TBD,
+				IsProxy:       result.Data.Threat.IsProxy,
+				IsVpn:         result.Data.Threat.IsVpn,
+				IsTor:         result.Data.Threat.IsTor,
+				IsUnallocated: result.Data.Threat.IsBogon,
+				IsDatacenter:  result.Data.Threat.IsDatacenter,
+				IsCloudRelay:  result.Data.Threat.IsIcloudRelay,
+				IsMobile:      result.Data.Carrier != nil,
 			},
 			Geolocation: IpIntelligenceGeolocation{
 				City:            result.Data.City,
@@ -168,6 +168,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 				Type:   result.Data.Asn.Type,
 			},
 			Organization: IpIntelligenceOrganization{
+				// TBD: Snitcher
 				//Name:     TBD,
 				//Domain:   TBD,
 				//LinkedIn: TBD,
