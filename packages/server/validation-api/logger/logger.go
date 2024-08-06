@@ -1,20 +1,20 @@
 package logger
 
 import (
-	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonlogger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 )
 
 type ExtendedLogger struct {
-	common_logger.AppLogger
+	commonlogger.AppLogger
 }
 
-func NewExtendedAppLogger(cfg *common_logger.Config) *ExtendedLogger {
-	appLogger := common_logger.NewAppLogger(cfg)
+func NewExtendedAppLogger(cfg *commonlogger.Config) *ExtendedLogger {
+	appLogger := commonlogger.NewAppLogger(cfg)
 	return &ExtendedLogger{
 		AppLogger: *appLogger,
 	}
 }
 
 type Logger interface {
-	common_logger.Logger
+	commonlogger.Logger
 }

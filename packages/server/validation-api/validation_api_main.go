@@ -14,8 +14,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
-
 	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
@@ -63,23 +61,23 @@ func main() {
 		handler.TracingEnhancer(ctx, "POST /validateAddress"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
-			var request dto.ValidationAddressRequest
+			var request model.ValidationAddressRequest
 			if err := c.BindJSON(&request); err != nil {
 				errorMessage := "Invalid request body"
-				c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+				c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
 				return
 			}
 			if request.International {
 				internationalAddressLookup, err := services.AddressValidationService.ValidateInternationalAddress(request.Address, request.Country)
 				if err != nil {
 					errorMessage := err.Error()
-					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
 					return
 				}
 
 				if internationalAddressLookup == nil {
 					errorMessage := "Invalid address"
-					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
 					return
 				}
 
@@ -93,22 +91,22 @@ func main() {
 
 				if !addressVerified {
 					errorMessage := "Address could not be verified"
-					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
 					return
 				}
 
-				c.JSON(200, dto.MapValidationInternationalAddressResponse(internationalAddressLookup, nil, true))
+				c.JSON(200, model.MapValidationInternationalAddressResponse(internationalAddressLookup, nil, true))
 			} else {
 				validatedAddressResponse, err := services.AddressValidationService.ValidateUsAddress(request.Address)
 				if err != nil {
 					errorMessage := err.Error()
-					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
 					return
 				}
 
 				if validatedAddressResponse == nil {
 					errorMessage := "Invalid address"
-					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
 					return
 				}
 
@@ -122,11 +120,11 @@ func main() {
 
 				if !addressVerified {
 					errorMessage := "Address could not be verified"
-					c.JSON(400, dto.MapValidationNoAddressResponse(&errorMessage))
+					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
 					return
 				}
 
-				c.JSON(200, dto.MapValidationUsAddressResponse(validatedAddressResponse, nil, true))
+				c.JSON(200, model.MapValidationUsAddressResponse(validatedAddressResponse, nil, true))
 			}
 		})
 
@@ -134,35 +132,35 @@ func main() {
 		handler.TracingEnhancer(ctx, "POST /validatePhoneNumber"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
-			var request dto.ValidationPhoneNumberRequest
+			var request model.ValidationPhoneNumberRequest
 
 			if err := c.BindJSON(&request); err != nil {
 				errorMessage := "Invalid request body"
-				c.JSON(400, dto.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
+				c.JSON(400, model.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
 				return
 			}
 
 			e164, country, err := services.PhoneNumberValidationService.ValidatePhoneNumber(ctx, request.Country, request.PhoneNumber)
 			if err != nil {
 				errorMessage := err.Error()
-				c.JSON(500, dto.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
+				c.JSON(500, model.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
 				return
 			}
 
 			if e164 == nil {
 				errorMessage := "Invalid phone number"
-				c.JSON(400, dto.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
+				c.JSON(400, model.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
 				return
 			}
 
-			c.JSON(200, dto.MapValidationPhoneNumberResponse(e164, country, nil, true))
+			c.JSON(200, model.MapValidationPhoneNumberResponse(e164, country, nil, true))
 		})
 
 	r.POST("/validateEmail",
 		handler.TracingEnhancer(ctx, "POST /validateEmail"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
-			var request dto.ValidationEmailRequest
+			var request model.ValidationEmailRequest
 
 			if err := c.BindJSON(&request); err != nil {
 				appLogger.Errorf("Fail reading request: %v", err.Error())
@@ -177,7 +175,7 @@ func main() {
 				return
 			}
 
-			c.JSON(200, dto.MapValidationEmailResponse(response, nil))
+			c.JSON(200, model.MapValidationEmailResponse(response, nil))
 		})
 
 	r.GET("/health", healthCheckHandler)

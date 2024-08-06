@@ -1,4 +1,4 @@
-package dto
+package model
 
 import (
 	international_street "github.com/smartystreets/smartystreets-go-sdk/international-street-api"

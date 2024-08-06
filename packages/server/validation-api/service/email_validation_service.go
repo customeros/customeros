@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
 	"github.com/opentracing/opentracing-go"
 	"io"
@@ -16,7 +15,7 @@ import (
 )
 
 type EmailValidationService interface {
-	ValidateEmail(ctx context.Context, email string) (*dto.RancherEmailResponseDTO, error)
+	ValidateEmail(ctx context.Context, email string) (*model.RancherEmailResponseDTO, error)
 }
 
 type emailValidationService struct {
@@ -33,7 +32,7 @@ func NewEmailValidationService(config *config.Config, services *Services, log lo
 	}
 }
 
-func (s *emailValidationService) ValidateEmail(ctx context.Context, email string) (*dto.RancherEmailResponseDTO, error) {
+func (s *emailValidationService) ValidateEmail(ctx context.Context, email string) (*model.RancherEmailResponseDTO, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.OnEmailCreate")
 	defer span.Finish()
 
@@ -68,7 +67,7 @@ func (s *emailValidationService) ValidateEmail(ctx context.Context, email string
 		return nil, err
 	}
 	if resp.StatusCode == 200 {
-		d := new(dto.RancherEmailResponseDTO)
+		d := new(model.RancherEmailResponseDTO)
 
 		err = json.Unmarshal(body, &d)
 		if err != nil {

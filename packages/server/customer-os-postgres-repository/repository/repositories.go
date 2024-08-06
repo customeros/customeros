@@ -105,15 +105,15 @@ func (r *Repositories) Migration(db *gorm.DB) {
 
 	var err error
 
-	err = db.AutoMigrate(&entity.Tenant{})
-	if err != nil {
-		panic(err)
-	}
-
 	//err = db.AutoMigrate(&entity.AppKey{})
 	//if err != nil {
 	//	panic(err)
 	//}
+
+	err = db.AutoMigrate(&entity.Tenant{})
+	if err != nil {
+		panic(err)
+	}
 
 	err = db.AutoMigrate(&entity.AiLocationMapping{})
 	if err != nil {
