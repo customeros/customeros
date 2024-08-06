@@ -2,7 +2,7 @@ import { CommandSubItem } from '@ui/overlay/CommandMenu';
 import { OrganizationRelationship } from '@graphql/types';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 
-export const RelationshipSubMenu = ({
+export const RelationshipSubItemGroup = ({
   selectedIds,
   updateRelationship,
   closeMenu,
@@ -18,8 +18,8 @@ export const RelationshipSubMenu = ({
     <>
       <CommandSubItem
         rightLabel='Customer'
+        leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
-        leftLabel='Change org relationship'
         onSelectAction={() => {
           updateRelationship(selectedIds, OrganizationRelationship.Customer);
           closeMenu();
@@ -28,8 +28,8 @@ export const RelationshipSubMenu = ({
 
       <CommandSubItem
         rightLabel='Former Customer'
+        leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
-        leftLabel='Change org relationship'
         onSelectAction={() => {
           updateRelationship(
             selectedIds,
@@ -41,8 +41,8 @@ export const RelationshipSubMenu = ({
 
       <CommandSubItem
         rightLabel='Not A Fit'
+        leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
-        leftLabel='Change org relationship'
         onSelectAction={() => {
           updateRelationship(selectedIds, OrganizationRelationship.NotAFit);
           closeMenu();
@@ -50,8 +50,8 @@ export const RelationshipSubMenu = ({
       />
       <CommandSubItem
         rightLabel='Prospect'
+        leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
-        leftLabel='Change org relationship'
         onSelectAction={() => {
           updateRelationship(selectedIds, OrganizationRelationship.Prospect);
           closeMenu();

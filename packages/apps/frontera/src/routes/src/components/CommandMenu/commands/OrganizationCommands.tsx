@@ -11,12 +11,12 @@ import { Activity } from '@ui/media/icons/Activity.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { StageSubMenu } from '@shared/components/CommandMenu/commands/shared';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
 import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands/GlobalHub.tsx';
 import {
-  RelationshipSubMenu,
-  UpdateHealthStatusSubMenu,
+  RelationshipSubItemGroup,
+  UpdateHealthStatusSubItemGroup,
 } from '@shared/components/CommandMenu/commands/organization';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
@@ -111,7 +111,7 @@ export const OrganizationCommands = observer(() => {
         >
           Change relationship...
         </CommandItem>
-        <RelationshipSubMenu
+        <RelationshipSubItemGroup
           selectedIds={selectedIds}
           closeMenu={() => store.ui.commandMenu.setOpen(false)}
           updateRelationship={store.organizations.updateRelationship}
@@ -128,7 +128,7 @@ export const OrganizationCommands = observer(() => {
             Change org stage...
           </CommandItem>
         )}
-        <StageSubMenu
+        <StageSubItemGroup
           selectedIds={selectedIds}
           updateStage={store.organizations.updateStage}
           closeMenu={() => store.ui.commandMenu.setOpen(false)}
@@ -162,7 +162,7 @@ export const OrganizationCommands = observer(() => {
         >
           Change health status...
         </CommandItem>
-        <UpdateHealthStatusSubMenu
+        <UpdateHealthStatusSubItemGroup
           selectedIds={selectedIds}
           updateHealth={store.organizations.updateHealth}
           closeMenu={() => store.ui.commandMenu.setOpen(false)}

@@ -2,7 +2,7 @@ import { OrganizationStage } from '@graphql/types';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
 
-export const StageSubMenu = ({
+export const StageSubItemGroup = ({
   selectedIds,
   updateStage,
   closeMenu,
@@ -16,6 +16,7 @@ export const StageSubMenu = ({
       <CommandSubItem
         rightLabel='Lead'
         icon={<Columns03 />}
+        keywords={['stage ']}
         leftLabel='Change org stage'
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Lead);
@@ -26,6 +27,7 @@ export const StageSubMenu = ({
       <CommandSubItem
         rightLabel='Target'
         icon={<Columns03 />}
+        keywords={['stage ']}
         leftLabel='Change org stage'
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Target);
@@ -36,6 +38,7 @@ export const StageSubMenu = ({
       <CommandSubItem
         rightLabel='Engaged'
         icon={<Columns03 />}
+        keywords={['stage ']}
         leftLabel='Change org stage'
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Engaged);
@@ -45,6 +48,7 @@ export const StageSubMenu = ({
       <CommandSubItem
         rightLabel='Trial'
         icon={<Columns03 />}
+        keywords={['stage ']}
         leftLabel='Change org stage'
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Trial);

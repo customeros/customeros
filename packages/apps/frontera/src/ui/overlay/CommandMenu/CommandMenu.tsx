@@ -87,7 +87,7 @@ export const CommandSubItem: React.FC<CommandSubItemProps> = ({
     <CommandItem
       leftAccessory={icon}
       onSelect={onSelectAction}
-      className={cn(search.length === 0 && 'hidden')}
+      className={cn(search.length <= 3 && 'hidden')}
       {...rest}
     >
       <span className='text-gray-500'>{leftLabel}</span>

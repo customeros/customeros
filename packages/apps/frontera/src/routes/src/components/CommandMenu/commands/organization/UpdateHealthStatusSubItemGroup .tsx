@@ -2,7 +2,7 @@ import { Activity } from '@ui/media/icons/Activity';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
 
-export const UpdateHealthStatusSubMenu = ({
+export const UpdateHealthStatusSubItemGroup = ({
   selectedIds,
   updateHealth,
   closeMenu,

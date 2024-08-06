@@ -5,16 +5,16 @@ import { User01 } from '@ui/media/icons/User01';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
+import { OrganizationStage } from '@graphql/types';
 import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
-import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { StageSubMenu } from '@shared/components/CommandMenu/commands/shared';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
 import {
-  RelationshipSubMenu,
-  UpdateHealthStatusSubMenu,
+  RelationshipSubItemGroup,
+  UpdateHealthStatusSubItemGroup,
 } from '@shared/components/CommandMenu/commands/organization';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
@@ -22,9 +22,6 @@ export const OrganizationBulkCommands = observer(() => {
   const store = useStore();
   const selectedIds = store.ui.commandMenu.context.ids;
 
-  const organizations = selectedIds?.map((e: string) =>
-    store.organizations.value.get(e),
-  );
   const label = `${selectedIds?.length} organizations`;
 
   return (
@@ -67,28 +64,23 @@ export const OrganizationBulkCommands = observer(() => {
           Change relationship...
         </CommandItem>
 
-        <RelationshipSubMenu
+        <RelationshipSubItemGroup
           selectedIds={selectedIds}
           closeMenu={() => store.ui.commandMenu.setOpen(false)}
           updateRelationship={store.organizations.updateRelationship}
         />
 
-        {organizations?.every(
-          (organization) =>
-            organization?.value?.relationship ===
-            OrganizationRelationship.Prospect,
-        ) && (
-          <CommandItem
-            leftAccessory={<Columns03 />}
-            onSelect={() => {
-              store.ui.commandMenu.setType('ChangeStage');
-            }}
-          >
-            Change org stage...
-          </CommandItem>
-        )}
+        <CommandItem
+          keywords={['stage']}
+          leftAccessory={<Columns03 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('ChangeStage');
+          }}
+        >
+          Change org stage...
+        </CommandItem>
 
-        <StageSubMenu
+        <StageSubItemGroup
           selectedIds={selectedIds}
           updateStage={store.organizations.updateStage}
           closeMenu={() => store.ui.commandMenu.setOpen(false)}
@@ -135,7 +127,7 @@ export const OrganizationBulkCommands = observer(() => {
           Change health status...
         </CommandItem>
 
-        <UpdateHealthStatusSubMenu
+        <UpdateHealthStatusSubItemGroup
           selectedIds={selectedIds}
           updateHealth={store.organizations.updateHealth}
           closeMenu={() => store.ui.commandMenu.setOpen(false)}
