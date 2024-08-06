@@ -2,9 +2,12 @@ package main
 
 import (
 	"context"
+	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 	"github.com/opentracing/opentracing-go"
 	"io"
 
@@ -15,16 +18,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"log"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 )
-
-func InitDB(cfg *config.Config, log logger.Logger) (db *config.StorageDB, err error) {
-	if db, err = config.NewDBConn(cfg); err != nil {
-		log.Fatalf("Coud not open db connection: %s", err.Error())
-	}
-	return
-}
 
 func main() {
 	cfg := loadConfiguration()
@@ -38,17 +32,18 @@ func main() {
 		defer tracingCloser.Close()
 	}
 
-	db, _ := InitDB(cfg, appLogger)
-	defer db.SqlDB.Close()
+	ctx := context.Background()
 
-	neo4jDriver, err := config.NewDriver(cfg)
+	// Initialize postgres db
+	postgresDb, _ := InitDB(cfg, appLogger)
+	defer postgresDb.SqlDB.Close()
+
+	// Setting up Neo4j
+	neo4jDriver, err := commonconf.NewNeo4jDriver(cfg.Neo4j)
 	if err != nil {
 		appLogger.Fatalf("Could not establish connection with neo4j at: %v, error: %v", cfg.Neo4j.Target, err.Error())
 	}
-	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
-
-	services := service.InitServices(cfg, db, &neo4jDriver, appLogger)
 
 	// Setting up Gin
 	r := gin.Default()
@@ -56,6 +51,8 @@ func main() {
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowOrigins = []string{"*"}
 	r.Use(cors.New(corsConfig))
+
+	services := service.InitServices(cfg, postgresDb.GormDB, &neo4jDriver, appLogger)
 
 	r.POST("/validateAddress",
 		handler.TracingEnhancer(ctx, "POST /validateAddress"),
@@ -218,4 +215,11 @@ func initTracing(cfg *config.Config, appLogger logger.Logger) io.Closer {
 		return closer
 	}
 	return nil
+}
+
+func InitDB(cfg *config.Config, log logger.Logger) (db *commonconf.StorageDB, err error) {
+	if db, err = commonconf.NewPostgresDBConn(cfg.Postgres); err != nil {
+		log.Fatalf("Could not open db connection: %s", err.Error())
+	}
+	return
 }
