@@ -6,11 +6,11 @@ import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { X } from '@ui/media/icons/X';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
-import { Command } from '@ui/media/icons/Command';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableInstance } from '@ui/presentation/Table';
+import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
 import { TableIdType, OrganizationStage } from '@graphql/types';
 import { ActionItem } from '@organizations/components/Actions/ActionItem';
 
@@ -162,7 +162,7 @@ export const OrganizationTableActions = ({
                 <div className='flex items-center text-sm'>
                   Open command menu
                   <div className='bg-gray-600 h-5 w-5 rounded-sm ml-3 mr-1 flex justify-center items-center'>
-                    <Command className='size-3' />
+                    {isUserPlatformMac() ? '⌘' : 'Ctrl'}
                   </div>
                   <div className='bg-gray-600 text-xs h-5 w-5 rounded-sm flex justify-center items-center'>
                     K
@@ -202,7 +202,11 @@ export const OrganizationTableActions = ({
           <ActionItem
             onClick={onOpenCommandK}
             dataTest='org-actions-commandk'
-            icon={<Command className='text-inherit size-3' />}
+            icon={
+              <span className='text-inherit'>
+                {isUserPlatformMac() ? '⌘' : 'Ctrl'}
+              </span>
+            }
           >
             Command
           </ActionItem>
