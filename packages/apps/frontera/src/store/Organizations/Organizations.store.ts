@@ -14,6 +14,7 @@ import {
 } from 'mobx';
 
 import {
+  relationshipStageMap,
   stageRelationshipMap,
   validRelationshipsForStage,
 } from '@utils/orgStageAndRelationshipStatusMap.ts';
@@ -27,6 +28,7 @@ import {
   OrganizationInput,
   OrganizationStage,
   OrganizationRelationship,
+  OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
 import mock from './mock.json';
@@ -333,6 +335,16 @@ export class OrganizationsStore extends SyncableGroup<
     });
   };
 
+  removeTags = (ids: string[]) => {
+    ids.forEach((id) => {
+      this.value.get(id)?.update((organization) => {
+        organization.tags = [];
+
+        return organization;
+      });
+    });
+  };
+
   updateStage(ids: string[], stage: OrganizationStage, mutate = true) {
     let invalidCustomerStageCount = 0;
 
@@ -373,6 +385,58 @@ export class OrganizationsStore extends SyncableGroup<
         'stage-update-failed-due-to-relationship-mismatch',
       );
     }
+  }
+
+  updateRelationship(
+    ids: string[],
+    relationship: OrganizationRelationship,
+    mutate = true,
+  ) {
+    const invalidCustomerStageCount = 0;
+
+    ids.forEach((id) => {
+      this.value.get(id)?.update(
+        (org) => {
+          org.relationship = relationship;
+          org.stage = relationshipStageMap[org.relationship];
+
+          return org;
+        },
+        { mutate: mutate },
+      );
+    });
+
+    if (invalidCustomerStageCount) {
+      this.root.ui.toastError(
+        `${invalidCustomerStageCount} customer${
+          invalidCustomerStageCount > 1 ? 's' : ''
+        } remain unchanged`,
+        'stage-update-failed-due-to-relationship-mismatch',
+      );
+    }
+  }
+
+  updateHealth(
+    ids: string[],
+    health: OpportunityRenewalLikelihood,
+    mutate = true,
+  ) {
+    ids.forEach((id) => {
+      this.value.get(id)?.update(
+        (org) => {
+          org.accountDetails = {
+            ...org.accountDetails,
+            renewalSummary: {
+              ...(org.accountDetails?.renewalSummary ?? {}),
+              renewalLikelihood: health,
+            },
+          };
+
+          return org;
+        },
+        { mutate: mutate },
+      );
+    });
   }
 
   async getById(id: string) {

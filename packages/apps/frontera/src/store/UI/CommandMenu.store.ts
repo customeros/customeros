@@ -20,6 +20,7 @@ export type CommandMenuType =
   | 'OrganizationBulkCommands'
   | 'ChooseOpportunityOrganization'
   | 'ChooseOpportunityStage'
+  | 'AddNewOrganization'
   | 'SetOpportunityNextSteps';
 
 type Context = {

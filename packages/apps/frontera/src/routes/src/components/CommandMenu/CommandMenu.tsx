@@ -9,7 +9,7 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
-import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import {
   Modal,
   ModalBody,
@@ -17,7 +17,6 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import { OrganizationBulkCommands } from '@shared/components/CommandMenu/commands/OrganizationBulkCommands.tsx';
 
 import {
   GlobalHub,
@@ -30,6 +29,7 @@ import {
   ChangeArrEstimate,
   ChangeRelationship,
   UpdateHealthStatus,
+  AddNewOrganization,
   OpportunityCommands,
   OrganizationCommands,
   RenameOpportunityName,
@@ -37,6 +37,7 @@ import {
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   AddContactViaLinkedInUrl,
+  OrganizationBulkCommands,
   RenameOrganizationProperty,
   ChooseOpportunityOrganization,
 } from './commands';
@@ -62,6 +63,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   OrganizationBulkCommands: <OrganizationBulkCommands />,
   ChooseOpportunityStage: <ChooseOpportunityStage />,
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
+  AddNewOrganization: <AddNewOrganization />,
 };
 
 export const CommandMenu = observer(() => {

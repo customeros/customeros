@@ -1,5 +1,3 @@
-import { useState } from 'react';
-
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
@@ -8,12 +6,10 @@ import { Plus } from '@ui/media/icons/Plus';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
-import { CreateNewOrganizationModal } from '@organizations/components/shared/CreateNewOrganizationModal.tsx';
 
 export const AvatarHeader = observer(() => {
   const store = useStore();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   return (
     <div className='flex w-[24px] items-center justify-center'>
@@ -32,15 +28,11 @@ export const AvatarHeader = observer(() => {
           icon={<Plus className='text-gray-400 size-5' />}
           className={cn('size-6', enableFeature ? 'visible' : 'hidden')}
           onClick={() => {
-            store.ui.setIsEditingTableCell(true);
-            setIsCreateModalOpen(true);
+            store.ui.commandMenu.setType('AddNewOrganization');
+            store.ui.commandMenu.setOpen(true);
           }}
         />
       </Tooltip>
-      <CreateNewOrganizationModal
-        isOpen={isCreateModalOpen}
-        setIsOpen={setIsCreateModalOpen}
-      />
     </div>
   );
 });
