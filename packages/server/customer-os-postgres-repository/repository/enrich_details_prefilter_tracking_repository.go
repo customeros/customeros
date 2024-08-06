@@ -3,12 +3,12 @@ package repository
 import (
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
-	"time"
 )
 
 type enrichDetailsPrefilterTrackingRepository struct {
@@ -77,7 +77,7 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Co
 	span.LogFields(tracingLog.String("ip", ip))
 
 	request := entity.EnrichDetailsPreFilterTracking{
-		CreatedAt: time.Now(),
+		CreatedAt: utils.Now(),
 		IP:        ip,
 	}
 

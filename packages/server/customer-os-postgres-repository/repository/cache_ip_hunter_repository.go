@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
-	"time"
 )
 
 type CacheIpHunterRepository interface {
@@ -56,8 +56,8 @@ func (r cacheIpHunterRepository) Save(ctx context.Context, cacheIpHunter entity.
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// Record doesn't exist, create a new one
-			cacheIpHunter.CreatedAt = time.Now()
-			cacheIpHunter.UpdatedAt = time.Now()
+			cacheIpHunter.CreatedAt = utils.Now()
+			cacheIpHunter.UpdatedAt = utils.Now()
 			if err := r.db.WithContext(ctx).Create(&cacheIpHunter).Error; err != nil {
 				return nil, err
 			}
@@ -68,7 +68,8 @@ func (r cacheIpHunterRepository) Save(ctx context.Context, cacheIpHunter entity.
 	} else {
 		// Record exists, update it
 		updates := map[string]interface{}{
-			"updated_at": time.Now(),
+			"updated_at": utils.Now(),
+			"data":       cacheIpHunter.Data,
 		}
 		if err := r.db.WithContext(ctx).Model(&existingHunter).Updates(updates).Error; err != nil {
 			return nil, err

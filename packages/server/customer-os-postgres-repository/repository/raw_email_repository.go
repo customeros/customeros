@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -62,7 +63,7 @@ func (repo *rawEmailRepositoryImpl) Store(externalSystem, tenant, username, prov
 	result.ProviderMessageId = providerMessageId
 	result.MessageId = messageId
 
-	result.CreatedAt = time.Now().UTC()
+	result.CreatedAt = utils.Now()
 	result.SentAt = sentAt
 	result.State = state
 	result.ExternalSystem = externalSystem

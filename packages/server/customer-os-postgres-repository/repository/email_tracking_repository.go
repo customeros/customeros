@@ -3,11 +3,11 @@ package repository
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
-	"time"
 )
 
 type EmailTrackingRepository interface {
@@ -53,7 +53,7 @@ func (e emailTrackingRepository) Update(ctx context.Context, emailTracking entit
 
 	// Update only specific fields
 	updates := map[string]interface{}{
-		"updated_at": time.Now(),
+		"updated_at": utils.Now(),
 		"ip":         emailTracking.IP,
 	}
 

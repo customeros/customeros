@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -136,7 +137,7 @@ func (r enrichDetailsBetterContactRepository) GetWithoutResponses(ctx context.Co
 	var entity []*entity.EnrichDetailsBetterContact
 	err := r.gormDb.
 		Where("response = ?", "").
-		Where("created_at < ?", time.Now().Add(-10*time.Minute)).
+		Where("created_at < ?", utils.Now().Add(-10*time.Minute)).
 		Limit(50).
 		Find(&entity).Error
 
