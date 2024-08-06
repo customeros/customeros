@@ -115,6 +115,10 @@ export const ProspectsBoard = observer(() => {
     store.ui.commandMenu.setType('OpportunityHub');
   }, []);
 
+  useEffect(() => {
+    store.ui.setSearchCount(count);
+  }, [count]);
+
   return (
     <>
       <PipelineMetrics

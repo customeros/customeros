@@ -53,8 +53,11 @@ export const Search = observer(() => {
       className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-2'
     >
       <InputGroup className='relative w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
-        <LeftElement className='ml-2'>
+        <LeftElement className='ml-2 flex items-center gap-1'>
           <SearchSm className='size-5' />
+          <span className='text-nowrap font-medium'>
+            {store.ui.searchCount} opps:
+          </span>
         </LeftElement>
         <Input
           size='md'
@@ -63,7 +66,6 @@ export const Search = observer(() => {
           spellCheck={false}
           variant='unstyled'
           onChange={handleChange}
-          placeholder='e.g. Opportunity name...'
           defaultValue={searchParams.get('search') ?? ''}
           onBlur={() => {
             store.ui.setIsSearching(null);
@@ -73,6 +75,11 @@ export const Search = observer(() => {
             store.ui.setIsSearching('opportunities');
             wrapperRef.current?.setAttribute('data-focused', '');
           }}
+          placeholder={
+            store.ui.isSearching
+              ? 'e.g. Opportunity, organization or owner...'
+              : '/ to search'
+          }
           onKeyUp={(e) => {
             if (
               e.code === 'Escape' ||
