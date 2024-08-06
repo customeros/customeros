@@ -14,7 +14,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Seeding } from '@ui/media/icons/Seeding';
 import { Target05 } from '@ui/media/icons/Target05';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { AutoresizeTextarea } from '@ui/form/Textarea';
+import { Textarea } from '@ui/form/Textarea/Textarea';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
@@ -91,7 +91,6 @@ export const AboutPanel = observer(() => {
     const { name, value } = e.target;
 
     organization?.update((org) => {
-      // @ts-expect-error fixme
       org[name] = value;
 
       return org;
@@ -211,6 +210,12 @@ export const AboutPanel = observer(() => {
       return org;
     });
   };
+  const filteredTags = organization?.value.tags
+    ?.filter((e) => e.id)
+    ?.map((tag) => ({
+      label: tag.name,
+      value: tag.id,
+    }));
 
   return (
     <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
@@ -256,26 +261,21 @@ export const AboutPanel = observer(() => {
           onChange={handleChange}
           value={organization?.value?.website || ''}
         />
-        <AutoresizeTextarea
-          size='xs'
-          className='mb-6'
+        <Textarea
+          size='md'
           spellCheck={false}
+          className='mb-6 mt-2'
           name='valueProposition'
           onChange={handleChange}
           placeholder={placeholders.valueProposition}
           value={organization?.value?.valueProposition || ''}
         />
         <Tags
+          value={filteredTags || []}
           placeholder='Organization tags'
           onCreateOption={handleCreateOption}
           icon={
             <Tag01 className='text-gray-500 min-w-[18px] min-h-4 mr-[10px] mt-[6px]' />
-          }
-          value={
-            organization?.value.tags?.map((tag) => ({
-              label: tag.name,
-              value: tag.id,
-            })) || []
           }
           onChange={(e) => {
             organization?.update((org) => {
