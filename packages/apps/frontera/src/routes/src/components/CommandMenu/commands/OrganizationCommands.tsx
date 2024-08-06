@@ -12,11 +12,17 @@ import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
 import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands/GlobalHub.tsx';
+import {
+  RelationshipSubItemGroup,
+  UpdateHealthStatusSubItemGroup,
+} from '@shared/components/CommandMenu/commands/organization';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationCommands = observer(() => {
   const store = useStore();
+  const selectedIds = store.ui.commandMenu.context.ids;
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
   const organization = store.organizations.value.get(id);
   const label = `Organization - ${organization?.value.name}`;
@@ -105,6 +111,11 @@ export const OrganizationCommands = observer(() => {
         >
           Change relationship...
         </CommandItem>
+        <RelationshipSubItemGroup
+          selectedIds={selectedIds}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+          updateRelationship={store.organizations.updateRelationship}
+        />
 
         {organization?.value?.relationship ===
           OrganizationRelationship.Prospect && (
@@ -117,9 +128,15 @@ export const OrganizationCommands = observer(() => {
             Change org stage...
           </CommandItem>
         )}
+        <StageSubItemGroup
+          selectedIds={selectedIds}
+          updateStage={store.organizations.updateStage}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
 
         <CommandItem
           leftAccessory={<Archive />}
+          keywords={['delete', 'archive']}
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
@@ -145,6 +162,11 @@ export const OrganizationCommands = observer(() => {
         >
           Change health status...
         </CommandItem>
+        <UpdateHealthStatusSubItemGroup
+          selectedIds={selectedIds}
+          updateHealth={store.organizations.updateHealth}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
 
         <CommandItem
           leftAccessory={<User01 />}

@@ -1,3 +1,4 @@
 export * from './ChangeStage';
 export * from './DeleteConfirmationModal';
-export * from './AssignOwner.tsx';
+export * from './AssignOwner';
+export * from './StageSubItemGroup.tsx';

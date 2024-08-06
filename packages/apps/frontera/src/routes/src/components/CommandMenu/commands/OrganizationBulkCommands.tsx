@@ -1,25 +1,27 @@
 import { observer } from 'mobx-react-lite';
 
+import { Tag01 } from '@ui/media/icons/Tag01';
 import { User01 } from '@ui/media/icons/User01';
-import { Tag01 } from '@ui/media/icons/Tag01.tsx';
+import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { Copy07 } from '@ui/media/icons/Copy07.tsx';
+import { OrganizationStage } from '@graphql/types';
+import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { Activity } from '@ui/media/icons/Activity.tsx';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
-import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02.tsx';
+import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
+import {
+  RelationshipSubItemGroup,
+  UpdateHealthStatusSubItemGroup,
+} from '@shared/components/CommandMenu/commands/organization';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationBulkCommands = observer(() => {
   const store = useStore();
   const selectedIds = store.ui.commandMenu.context.ids;
 
-  const organizations = selectedIds?.map((e: string) =>
-    store.organizations.value.get(e),
-  );
   const label = `${selectedIds?.length} organizations`;
 
   return (
@@ -62,23 +64,31 @@ export const OrganizationBulkCommands = observer(() => {
           Change relationship...
         </CommandItem>
 
-        {organizations?.every(
-          (organization) =>
-            organization?.value?.relationship ===
-            OrganizationRelationship.Prospect,
-        ) && (
-          <CommandItem
-            leftAccessory={<Columns03 />}
-            onSelect={() => {
-              store.ui.commandMenu.setType('ChangeStage');
-            }}
-          >
-            Change org stage...
-          </CommandItem>
-        )}
+        <RelationshipSubItemGroup
+          selectedIds={selectedIds}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+          updateRelationship={store.organizations.updateRelationship}
+        />
+
+        <CommandItem
+          keywords={['stage']}
+          leftAccessory={<Columns03 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('ChangeStage');
+          }}
+        >
+          Change org stage...
+        </CommandItem>
+
+        <StageSubItemGroup
+          selectedIds={selectedIds}
+          updateStage={store.organizations.updateStage}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
 
         <CommandItem
           leftAccessory={<Archive />}
+          keywords={['delete', 'archive']}
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
@@ -116,6 +126,12 @@ export const OrganizationBulkCommands = observer(() => {
         >
           Change health status...
         </CommandItem>
+
+        <UpdateHealthStatusSubItemGroup
+          selectedIds={selectedIds}
+          updateHealth={store.organizations.updateHealth}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
 
         <CommandItem
           leftAccessory={<User01 />}
