@@ -1,12 +1,16 @@
 import { observer } from 'mobx-react-lite';
 
 import { User01 } from '@ui/media/icons/User01';
+import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { Copy07 } from '@ui/media/icons/Copy07.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { OrganizationRelationship } from '@graphql/types';
+import { Activity } from '@ui/media/icons/Activity.tsx';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
+import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
+import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02.tsx';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationBulkCommands = observer(() => {
@@ -22,45 +26,41 @@ export const OrganizationBulkCommands = observer(() => {
     <Command>
       <CommandInput label={label} placeholder='Type a command or search' />
       <Command.List>
-        {/*<CommandItem*/}
-        {/*  leftAccessory={<Tag01 />}*/}
-        {/*  onSelect={() => {*/}
-        {/*    store.ui.commandMenu.setType('ChangeTags');*/}
-        {/*  }}*/}
-        {/*  // rightAccessory={*/}
-        {/*  //   <>*/}
-        {/*  //     <Kbd className='px-1.5'>*/}
-        {/*  //       <ArrowBlockUp className='size-3' />*/}
-        {/*  //     </Kbd>*/}
-        {/*  //     <Kbd className='px-1.5'>T</Kbd>*/}
-        {/*  //   </>*/}
-        {/*  // }*/}
-        {/*>*/}
-        {/*  Change or add tags...*/}
-        {/*</CommandItem>*/}
+        <CommandItem
+          leftAccessory={<Tag01 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('ChangeTags');
+          }}
+          // rightAccessory={
+          //   <>
+          //     <Kbd className='px-1.5'>
+          //       <ArrowBlockUp className='size-3' />
+          //     </Kbd>
+          //     <Kbd className='px-1.5'>T</Kbd>
+          //   </>
+          // }
+        >
+          Change or add tags...
+        </CommandItem>
 
-        {/*{organizations?.some(*/}
-        {/*  (organization) => !!organization?.value?.tags?.length,*/}
-        {/*) && (*/}
-        {/*  <CommandItem*/}
-        {/*    leftAccessory={<Tag01 />}*/}
-        {/*    onSelect={() => {*/}
-        {/*      // todo*/}
-        {/*      store.ui.commandMenu.setOpen(false);*/}
-        {/*    }}*/}
-        {/*  >*/}
-        {/*    Remove tags*/}
-        {/*  </CommandItem>*/}
-        {/*)}*/}
+        <CommandItem
+          leftAccessory={<Tag01 />}
+          onSelect={() => {
+            store.organizations.removeTags(selectedIds);
+            store.ui.commandMenu.setOpen(false);
+          }}
+        >
+          Remove tags
+        </CommandItem>
 
-        {/*<CommandItem*/}
-        {/*  leftAccessory={<AlignHorizontalCentre02 />}*/}
-        {/*  onSelect={() => {*/}
-        {/*    store.ui.commandMenu.setType('ChangeRelationship');*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  Change relationship...*/}
-        {/*</CommandItem>*/}
+        <CommandItem
+          leftAccessory={<AlignHorizontalCentre02 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('ChangeRelationship');
+          }}
+        >
+          Change relationship...
+        </CommandItem>
 
         {organizations?.every(
           (organization) =>
@@ -108,14 +108,14 @@ export const OrganizationBulkCommands = observer(() => {
           Merge
         </CommandItem>
 
-        {/*<CommandItem*/}
-        {/*  leftAccessory={<Activity />}*/}
-        {/*  onSelect={() => {*/}
-        {/*    store.ui.commandMenu.setType('UpdateHealthStatus');*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  Change health status...*/}
-        {/*</CommandItem>*/}
+        <CommandItem
+          leftAccessory={<Activity />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('UpdateHealthStatus');
+          }}
+        >
+          Change health status...
+        </CommandItem>
 
         <CommandItem
           leftAccessory={<User01 />}
@@ -132,6 +132,19 @@ export const OrganizationBulkCommands = observer(() => {
           // }
         >
           Assign owner...
+        </CommandItem>
+
+        <CommandItem
+          leftAccessory={<CoinsStacked01 />}
+          onSelect={() => {
+            store.organizations.updateStage(
+              selectedIds,
+              OrganizationStage.Engaged,
+            );
+            store.ui.commandMenu.setOpen(false);
+          }}
+        >
+          Create new opportunity...
         </CommandItem>
 
         {/*<CommandItem*/}

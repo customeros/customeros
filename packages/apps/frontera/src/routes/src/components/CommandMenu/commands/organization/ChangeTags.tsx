@@ -1,13 +1,14 @@
 import React, { useMemo } from 'react';
 
+import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { OrganizationStore } from '@store/Organizations/Organization.store';
 
-import { DataSource } from '@graphql/types';
 import { Plus } from '@ui/media/icons/Plus.tsx';
-import { Tag as TagType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { DataSource, Tag as TagType } from '@graphql/types';
 import {
   Command,
   CommandItem,
@@ -19,32 +20,55 @@ export const ChangeTags = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
-  const organization = store.organizations.value.get(
-    context.ids?.[0] as string,
-  );
-  const label = `Organization - ${organization?.value?.name}`;
+  const entity = match(context.entity)
+    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+    .with('Organization', () =>
+      store.organizations.value.get(context.ids?.[0] as string),
+    )
+    .with(
+      'Organizations',
+      () =>
+        context.ids?.map((e: string) =>
+          store.organizations.value.get(e),
+        ) as OrganizationStore[],
+    )
+    .otherwise(() => undefined);
+  const label = match(context.entity)
+    .with(
+      'Organization',
+      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+    )
+    .with('Organizations', () => `${context.ids?.length} organizations`)
+    .otherwise(() => '');
+
   const [search, setSearch] = React.useState('');
 
   const handleSelect = (t: TagType) => () => {
     if (!context.ids?.[0]) return;
 
-    if (!organization) return;
+    if (!entity) return;
 
-    organization?.update((o) => {
-      const existingIndex = o.tags?.find((e) => e.name === t.name);
+    match(context.entity)
+      .with('Organization', () => {
+        (entity as OrganizationStore)?.update((o) => {
+          const existingIndex = o.tags?.find((e) => e.name === t.name);
 
-      if (existingIndex) {
-        const newTags = o.tags?.filter((e) => e.name !== t.name);
+          if (existingIndex) {
+            const newTags = o.tags?.filter((e) => e.name !== t.name);
 
-        o.tags = newTags;
-      }
+            o.tags = newTags;
+          }
 
-      if (!existingIndex) {
-        o.tags = [...(o.tags ?? []), t];
-      }
+          if (!existingIndex) {
+            o.tags = [...(o.tags ?? []), t];
+          }
 
-      return o;
-    });
+          return o;
+        });
+      })
+      .with('Organizations', () => {
+        store.organizations.updateTags(context.ids as string[], [t]);
+      });
   };
 
   const handleCreateOption = (value: string) => {
@@ -58,41 +82,98 @@ export const ChangeTags = observer(() => {
       },
     });
 
-    organization?.update((org) => {
-      org.tags = [
-        ...(org.tags || []),
-        {
-          id: value,
-          name: value,
-          metadata: {
-            id: value,
-            source: DataSource.Openline,
-            sourceOfTruth: DataSource.Openline,
-            appSource: 'organization',
-            created: new Date().toISOString(),
-            lastUpdated: new Date().toISOString(),
-          },
-          appSource: 'organization',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          source: DataSource.Openline,
-        },
-      ];
+    match(context.entity)
+      .with('Organization', () => {
+        (entity as OrganizationStore)?.update((org) => {
+          org.tags = [
+            ...(org.tags || []),
+            {
+              id: value,
+              name: value,
+              metadata: {
+                id: value,
+                source: DataSource.Openline,
+                sourceOfTruth: DataSource.Openline,
+                appSource: 'organization',
+                created: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+              },
+              appSource: 'organization',
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString(),
+              source: DataSource.Openline,
+            },
+          ];
 
-      return org;
-    });
+          return org;
+        });
+      })
+      .with('Organizations', () => {
+        store.organizations.updateTags(context.ids as string[], [
+          {
+            id: value,
+            name: value,
+            metadata: {
+              id: value,
+              source: DataSource.Openline,
+              sourceOfTruth: DataSource.Openline,
+              appSource: 'organization',
+              created: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+            },
+            appSource: 'organization',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            source: DataSource.Openline,
+          },
+        ]);
+      });
 
     // clear search
     setSearch('');
   };
 
-  const newSelectedTags = new Set(
-    (organization?.value?.tags ?? []).map((tag) => tag.name),
-  );
-  const orgTags = useMemo(
-    () => new Set((organization?.value?.tags ?? []).map((tag) => tag.name)),
-    [],
-  );
+  const newSelectedTags = match(context.entity)
+    .with(
+      'Organization',
+      () =>
+        new Set(
+          ((entity as OrganizationStore)?.value?.tags ?? []).map(
+            (tag) => tag?.name,
+          ),
+        ),
+    )
+    .with('Organizations', () => {
+      const mappedTags = (entity as OrganizationStore[])
+        .map((e) => e.value?.tags)
+        .flat()
+        .filter((e) => Boolean(e));
+
+      return new Set((mappedTags ?? []).map((tag) => tag?.name));
+    })
+    .otherwise(() => new Set([]));
+
+  const orgTags = useMemo(() => {
+    return match(context.entity)
+      .with(
+        'Organization',
+        () =>
+          new Set(
+            ((entity as OrganizationStore)?.value?.tags ?? []).map(
+              (tag) => tag?.name,
+            ),
+          ),
+      )
+      .with('Organizations', () => {
+        const mappedTags = (entity as OrganizationStore[])
+          .map((e) => e.value?.tags)
+          .flat()
+          .filter((e) => Boolean(e));
+
+        return new Set(mappedTags.map((tag) => tag?.name));
+      })
+      .otherwise(() => new Set([]));
+  }, []);
 
   const sortedTags = store.tags
     ?.toArray()

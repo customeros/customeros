@@ -1,14 +1,16 @@
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
-import { Seeding } from '@ui/media/icons/Seeding.tsx';
-import { OrganizationRelationship } from '@graphql/types';
-import { BrokenHeart } from '@ui/media/icons/BrokenHeart.tsx';
-import { ActivityHeart } from '@ui/media/icons/ActivityHeart.tsx';
-import { MessageXCircle } from '@ui/media/icons/MessageXCircle.tsx';
+import { Seeding } from '@ui/media/icons/Seeding';
+import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
+import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
+import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
+import { Organization, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { relationshipOptions } from '@organization/components/Tabs/panels/AboutPanel/util.ts';
+import { relationshipOptions } from '@organization/components/Tabs/panels/AboutPanel/util';
 const iconMap = {
   Customer: <ActivityHeart className='text-gray-500' />,
   Prospect: <Seeding className='text-gray-500' />,
@@ -20,36 +22,74 @@ export const ChangeRelationship = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
-  const entity = store.organizations.value.get((context.ids as string[])?.[0]);
-  const label = `Organization - ${entity?.value?.name}`;
+  const entity = match(context.entity)
+    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+    .with('Organization', () =>
+      store.organizations.value.get(context.ids?.[0] as string),
+    )
+    .with(
+      'Organizations',
+      () =>
+        context.ids?.map((e: string) =>
+          store.organizations.value.get(e),
+        ) as OrganizationStore[],
+    )
+    .otherwise(() => undefined);
+  const label = match(context.entity)
+    .with(
+      'Organization',
+      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+    )
+    .with('Organizations', () => `${context.ids?.length} organizations`)
+    .otherwise(() => '');
 
   const handleSelect = (value: OrganizationRelationship) => () => {
     if (!context.ids?.[0]) return;
 
     if (!entity) return;
-    entity?.update((org) => {
-      org.relationship = value;
 
-      return org;
-    });
+    match(context.entity)
+      .with('Organization', () => {
+        (entity as OrganizationStore)?.update((org: Organization) => {
+          org.relationship = value;
+
+          return org;
+        });
+      })
+      .with('Organizations', () => {
+        store.organizations?.updateRelationship(context.ids as string[], value);
+      })
+      .otherwise(() => '');
+
     store.ui.commandMenu.toggle('ChangeRelationship');
   };
 
-  const selectedRelationshipOption = relationshipOptions.find(
-    (option) => option.value === entity?.value.relationship,
-  );
-
-  const options = relationshipOptions.filter(
-    (option) =>
-      !(
-        selectedRelationshipOption?.label === 'Customer' &&
-        option.label === 'Prospect'
-      ) &&
-      !(
-        selectedRelationshipOption?.label === 'Not a fit' &&
-        option.label === 'Prospect'
+  const selectedRelationshipOption = match(context.entity)
+    .with('Organization', () =>
+      relationshipOptions.find(
+        (option) =>
+          option.value === (entity as OrganizationStore)?.value.relationship,
       ),
-  );
+    )
+    .with('Organizations', () => undefined)
+    .otherwise(() => undefined);
+
+  const options = match(context.entity)
+    .with('Organization', () =>
+      relationshipOptions.filter(
+        (option) =>
+          !(
+            selectedRelationshipOption?.label === 'Customer' &&
+            option.label === 'Prospect'
+          ) &&
+          !(
+            selectedRelationshipOption?.label === 'Not a fit' &&
+            option.label === 'Prospect'
+          ),
+      ),
+    )
+    .with('Organizations', () => relationshipOptions)
+    .otherwise(() => []);
 
   return (
     <Command label='Change Relationship'>

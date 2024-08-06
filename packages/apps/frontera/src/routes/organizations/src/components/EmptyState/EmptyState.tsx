@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -7,7 +6,6 @@ import { TableIdType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { EmptyTable } from '@ui/media/logos/EmptyTable';
-import { CreateNewOrganizationModal } from '@organizations/components/shared/CreateNewOrganizationModal.tsx';
 
 import HalfCirclePattern from '../../../../src/assets/HalfCirclePattern';
 
@@ -16,7 +14,6 @@ export const EmptyState = observer(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const preset = searchParams?.get('preset');
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const currentPreset = store.tableViewDefs
     ?.toArray()
@@ -38,7 +35,10 @@ export const EmptyState = observer(() => {
             'Start seeing your customer conversations all in one place by adding an organization',
           buttonLabel: 'Add organization',
           dataTest: 'all-orgs-add-org',
-          onClick: () => setIsCreateModalOpen(true),
+          onClick: () => {
+            store.ui.commandMenu.setType('AddNewOrganization');
+            store.ui.commandMenu.setOpen(true);
+          },
         };
       case 'Contacts':
         return {
@@ -140,10 +140,6 @@ export const EmptyState = observer(() => {
             </Button>
           )}
         </div>
-        <CreateNewOrganizationModal
-          isOpen={isCreateModalOpen}
-          setIsOpen={setIsCreateModalOpen}
-        />
       </div>
     </div>
   );

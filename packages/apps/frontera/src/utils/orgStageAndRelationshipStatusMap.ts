@@ -17,6 +17,16 @@ export const stageRelationshipMap: Record<
   [OrganizationStage.PendingChurn]: OrganizationRelationship.Customer,
 };
 
+export const relationshipStageMap: Record<
+  OrganizationRelationship,
+  OrganizationStage
+> = {
+  [OrganizationRelationship.NotAFit]: OrganizationStage.Unqualified,
+  [OrganizationRelationship.Prospect]: OrganizationStage.Target,
+  [OrganizationRelationship.Customer]: OrganizationStage.Onboarding,
+  [OrganizationRelationship.FormerCustomer]: OrganizationStage.Target,
+};
+
 export const validRelationshipsForStage: Record<
   OrganizationStage,
   Array<OrganizationRelationship>

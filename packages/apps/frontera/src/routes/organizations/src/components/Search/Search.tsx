@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import { useRef, useState, useEffect, startTransition } from 'react';
+import { useRef, useEffect, startTransition } from 'react';
 
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
@@ -23,7 +23,6 @@ import {
 } from '@ui/form/InputGroup/InputGroup';
 import { DownloadCsvButton } from '@organizations/components/DownloadCsvButton/DownloadCsvButton.tsx';
 import { SearchBarFilterData } from '@organizations/components/SearchBarFilterData/SearchBarFilterData.tsx';
-import { CreateNewOrganizationModal } from '@organizations/components/shared/CreateNewOrganizationModal.tsx';
 
 interface SearchProps {
   open: boolean;
@@ -42,7 +41,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const [lastSearchForPreset] = useLocalStorage<{
     [key: string]: string;
   }>(`customeros-last-search-for-preset`, { root: 'root' });
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const displayIcp = useFeatureIsOn('icp');
 
@@ -126,8 +124,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   useKeyBindings(
     {
       Enter: () => {
-        store.ui.setIsEditingTableCell(true);
-        setIsCreateModalOpen(true);
+        store.ui.commandMenu.setType('AddNewOrganization');
+        store.ui.commandMenu.setOpen(true);
       },
     },
     { when: allowCreation },
@@ -216,11 +214,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
         </div>
         {inputRef?.current?.value ?? ''}
       </span>
-
-      <CreateNewOrganizationModal
-        isOpen={isCreateModalOpen}
-        setIsOpen={setIsCreateModalOpen}
-      />
     </div>
   );
 });

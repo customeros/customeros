@@ -1,11 +1,14 @@
 import { observer } from 'mobx-react-lite';
 
+import { useStore } from '@shared/hooks/useStore';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 import { GlobalSharedCommands } from './GlobalHub';
 
 export const OrganizationHub = observer(() => {
+  const store = useStore();
+
   return (
     <Command>
       <CommandInput
@@ -13,7 +16,12 @@ export const OrganizationHub = observer(() => {
         placeholder='Type a command or search'
       />
       <Command.List>
-        <CommandItem onSelect={() => {}} leftAccessory={<PlusCircle />}>
+        <CommandItem
+          leftAccessory={<PlusCircle />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('AddNewOrganization');
+          }}
+        >
           Add new organizations...
         </CommandItem>
 

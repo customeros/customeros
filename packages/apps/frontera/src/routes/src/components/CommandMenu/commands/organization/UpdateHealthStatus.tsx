@@ -1,6 +1,8 @@
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { OrganizationStore } from '@store/Organizations/Organization.store';
 
-import { Check } from '@ui/media/icons/Check.tsx';
+import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
@@ -9,29 +11,66 @@ export const UpdateHealthStatus = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
-  const entity = store.organizations.value.get(context.ids?.[0] as string);
-  const label = `Organization - ${entity?.value?.name}`;
+  const entity = match(context.entity)
+    .returnType<OrganizationStore | OrganizationStore[] | undefined>()
+
+    .with('Organization', () =>
+      store.organizations.value.get(context.ids?.[0] as string),
+    )
+    .with(
+      'Organizations',
+      () =>
+        context.ids?.map((e: string) =>
+          store.organizations.value.get(e),
+        ) as OrganizationStore[],
+    )
+    .otherwise(() => undefined);
+
+  const label = match(context.entity)
+    .with(
+      'Organization',
+      () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
+    )
+    .with('Organizations', () => `${context.ids?.length} organizations`)
+
+    .otherwise(() => '');
 
   const handleSelect =
     (renewalLikelihood: OpportunityRenewalLikelihood) => () => {
       if (!context.ids?.[0]) return;
 
       if (!entity) return;
-      entity?.update((value) => {
-        return {
-          ...value,
-          accountDetails: {
-            ...value.accountDetails,
-            renewalSummary: {
-              ...value.accountDetails?.renewalSummary,
-              renewalLikelihood,
-            },
-          },
-        };
-      });
+
+      match(context.entity)
+        .with('Organization', () => {
+          (entity as OrganizationStore)?.update((value) => {
+            return {
+              ...value,
+              accountDetails: {
+                ...value.accountDetails,
+                renewalSummary: {
+                  ...value.accountDetails?.renewalSummary,
+                  renewalLikelihood,
+                },
+              },
+            };
+          });
+        })
+        .with('Organizations', () =>
+          store.organizations.updateHealth(
+            context.ids as string[],
+            renewalLikelihood,
+          ),
+        )
+        .otherwise(() => undefined);
 
       store.ui.commandMenu.toggle('RenameOrganizationProperty');
     };
+
+  const healthStatus =
+    context.entity === 'Organization' &&
+    (entity as OrganizationStore)?.value.accountDetails?.renewalSummary
+      ?.renewalLikelihood;
 
   return (
     <Command label='Change health status...'>
@@ -42,8 +81,7 @@ export const UpdateHealthStatus = observer(() => {
           key={OpportunityRenewalLikelihood.HighRenewal}
           onSelect={handleSelect(OpportunityRenewalLikelihood.HighRenewal)}
           rightAccessory={
-            entity?.value.accountDetails?.renewalSummary?.renewalLikelihood ===
-            OpportunityRenewalLikelihood.HighRenewal ? (
+            healthStatus === OpportunityRenewalLikelihood.HighRenewal ? (
               <Check />
             ) : null
           }
@@ -54,8 +92,7 @@ export const UpdateHealthStatus = observer(() => {
           key={OpportunityRenewalLikelihood.MediumRenewal}
           onSelect={handleSelect(OpportunityRenewalLikelihood.MediumRenewal)}
           rightAccessory={
-            entity?.value.accountDetails?.renewalSummary?.renewalLikelihood ===
-            OpportunityRenewalLikelihood.MediumRenewal ? (
+            healthStatus === OpportunityRenewalLikelihood.MediumRenewal ? (
               <Check />
             ) : null
           }
@@ -66,8 +103,7 @@ export const UpdateHealthStatus = observer(() => {
           key={OpportunityRenewalLikelihood.LowRenewal}
           onSelect={handleSelect(OpportunityRenewalLikelihood.LowRenewal)}
           rightAccessory={
-            entity?.value.accountDetails?.renewalSummary?.renewalLikelihood ===
-            OpportunityRenewalLikelihood.LowRenewal ? (
+            healthStatus === OpportunityRenewalLikelihood.LowRenewal ? (
               <Check />
             ) : null
           }
