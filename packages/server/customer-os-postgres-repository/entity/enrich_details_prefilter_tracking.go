@@ -50,6 +50,7 @@ type IPDataResponseBody struct {
 	} `json:"time_zone"`
 	Threat struct {
 		IsTor           bool          `json:"is_tor"`
+		IsVpn           bool          `json:"is_vpn"`
 		IsIcloudRelay   bool          `json:"is_icloud_relay"`
 		IsProxy         bool          `json:"is_proxy"`
 		IsDatacenter    bool          `json:"is_datacenter"`
