@@ -344,6 +344,28 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
   };
 
+  const handleOpenCommandKMenu = () => {
+    const selectedIds = Object.keys(selection);
+
+    if (selectedIds.length === 1) {
+      store.ui.commandMenu.setType('OrganizationCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Organization',
+        ids: selectedIds,
+      });
+    }
+
+    if (selectedIds.length > 1) {
+      store.ui.commandMenu.setType('OrganizationBulkCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Organizations',
+        ids: selectedIds,
+      });
+    }
+
+    store.ui.commandMenu.setOpen(true);
+  };
+
   return (
     <div className='flex'>
       <Table<OrganizationStore | ContactStore | InvoiceStore>
@@ -386,12 +408,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               onCreateContact={createSocial}
               onMerge={store.organizations.merge}
               tableId={tableViewDef?.value.tableId}
+              onOpenCommandK={handleOpenCommandKMenu}
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
-              onOpenCommandK={() => {
-                store.ui.commandMenu.setOpen(true);
-              }}
               onHide={() => {
                 store.ui.commandMenu.setOpen(true);
                 store.ui.commandMenu.setType('DeleteConfirmationModal');
