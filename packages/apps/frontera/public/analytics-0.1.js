@@ -1,4 +1,11 @@
 (function (w) {
+  function botd() {
+    return import('https://openfpcdn.io/botd/v1')
+      .then((Botd) => Botd.load())
+      .then((botd) => botd.detect())
+      .then((res) => res.bot);
+  }
+
   function generateUUID() {
     return (
       'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
@@ -15,6 +22,8 @@
       .then((response) => response.json())
       .then((data) => {
         window.cosUserIp = data.ip;
+
+        return data.ip;
       });
   }
 
@@ -59,67 +68,77 @@
   window.cosUserId = cosUserId;
 
   getIp()
-    .then(() => {
-      sendData('page_view', {
-        title: document.title,
-      });
-      window.cosPageLoadTime = new Date().valueOf();
-
-      document.addEventListener('click', function (event) {
-        const target = event.target;
-
-        if (target.tagName === 'BODY') {
-          return;
-        }
-
-        sendData('click', {
-          tag: target.tagName,
-          id: target.id,
-          classes: target.className,
-          dataset: target.dataset,
-          text: target.innerText,
-          url: target.href,
-        });
-      });
-
-      document.addEventListener(
-        'blur',
-        function (event) {
-          const target = event.target;
-
-          if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+    .then((ip) => {
+      return botd()
+        .then((isBot) => {
+          if (isBot) {
             return;
           }
 
-          if (target.type !== 'email') {
-            return;
-          }
-
-          if (!target.value) {
-            return;
-          }
-
-          sendData('identify', {
-            tag: target.tagName,
-            id: target.id,
-            classes: target.className,
-            email: target.value,
-            dataset: target.dataset,
-          });
-        },
-        true,
-      );
-
-      document.addEventListener('visibilitychange', function (event) {
-        if (document.visibilityState === 'hidden') {
-          sendData('page_exit', {
+          sendData('page_view', {
             title: document.title,
-            sessionDuration: new Date().valueOf() - window.cosPageLoadTime,
+          });
+          window.cosPageLoadTime = new Date().valueOf();
+
+          document.addEventListener('click', function (event) {
+            const target = event.target;
+
+            if (target.tagName === 'BODY') {
+              return;
+            }
+
+            sendData('click', {
+              tag: target.tagName,
+              id: target.id,
+              classes: target.className,
+              dataset: target.dataset,
+              text: target.innerText,
+              url: target.href,
+            });
           });
 
-          event.preventDefault();
-        }
-      });
+          document.addEventListener(
+            'blur',
+            function (event) {
+              const target = event.target;
+
+              if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') {
+                return;
+              }
+
+              if (target.type !== 'email') {
+                return;
+              }
+
+              if (!target.value) {
+                return;
+              }
+
+              sendData('identify', {
+                tag: target.tagName,
+                id: target.id,
+                classes: target.className,
+                email: target.value,
+                dataset: target.dataset,
+              });
+            },
+            true,
+          );
+
+          document.addEventListener('visibilitychange', function (event) {
+            if (document.visibilityState === 'hidden') {
+              sendData('page_exit', {
+                title: document.title,
+                sessionDuration: new Date().valueOf() - window.cosPageLoadTime,
+              });
+
+              event.preventDefault();
+            }
+          });
+        })
+        .catch((error) => {
+          console.error('Error verifying IP:', error);
+        });
     })
     .catch((error) => {
       console.error('Error fetching IP:', error);
