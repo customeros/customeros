@@ -42,8 +42,8 @@ func NewTrackingService(cfg *config.Config, services *Services) TrackingService 
 	}
 }
 
-func (s *trackingService) ProcessNewRecords(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ProcessNewRecords")
+func (s *trackingService) ProcessNewRecords(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ProcessNewRecords")
 	defer span.Finish()
 
 	newRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetNewRecords(ctx)
@@ -63,8 +63,8 @@ func (s *trackingService) ProcessNewRecords(c context.Context) error {
 	return nil
 }
 
-func (s *trackingService) ProcessIPDataRequests(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ProcessIPDataRequests")
+func (s *trackingService) ProcessIPDataRequests(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ProcessIPDataRequests")
 	defer span.Finish()
 
 	sendRequestsRecords, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests(ctx)
@@ -84,8 +84,8 @@ func (s *trackingService) ProcessIPDataRequests(c context.Context) error {
 	return nil
 }
 
-func (s *trackingService) ProcessIPDataResponses(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.ProcessIPDataResponses")
+func (s *trackingService) ProcessIPDataResponses(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.ProcessIPDataResponses")
 	defer span.Finish()
 
 	trackingRecordsWithIPData, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForPrefilter(ctx)
@@ -105,8 +105,8 @@ func (s *trackingService) ProcessIPDataResponses(c context.Context) error {
 	return nil
 }
 
-func (s *trackingService) IdentifyTrackingRecords(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.IdentifyTrackingRecords")
+func (s *trackingService) IdentifyTrackingRecords(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.IdentifyTrackingRecords")
 	defer span.Finish()
 
 	notIdentifiedTrackingRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetReadyForIdentification(ctx)
@@ -127,8 +127,8 @@ func (s *trackingService) IdentifyTrackingRecords(c context.Context) error {
 	return nil
 }
 
-func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.CreateOrganizationsFromTrackedData")
+func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.CreateOrganizationsFromTrackedData")
 	defer span.Finish()
 
 	identifiedRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetIdentifiedWithDistinctIP(ctx)
@@ -232,8 +232,8 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(c context.Context) 
 	return nil
 }
 
-func (s *trackingService) NotifyOnSlack(c context.Context) error {
-	span, ctx := tracing.StartTracerSpan(c, "TrackingService.NotifyOnSlack")
+func (s *trackingService) NotifyOnSlack(ctx context.Context) error {
+	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.NotifyOnSlack")
 	defer span.Finish()
 
 	if s.cfg.SlackBotApiKey == "" {
