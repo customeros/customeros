@@ -25,6 +25,10 @@ const (
 	SpanTagRedundantEventSkipped = "redundantEventSkipped"
 )
 
+const (
+	SpanTagComponentPostgresRepository = "postgresRepository"
+)
+
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
 	return func(c *gin.Context) {
 		ctxWithSpan, span := StartHttpServerTracerSpanWithHeader(ctx, endpoint, c.Request.Header)
@@ -150,4 +154,8 @@ func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapC
 		return make(opentracing.TextMapCarrier)
 	}
 	return textMapCarrier
+}
+
+func TagComponentPostgresRepository(span opentracing.Span) {
+	span.SetTag(SpanTagComponent, SpanTagComponentPostgresRepository)
 }

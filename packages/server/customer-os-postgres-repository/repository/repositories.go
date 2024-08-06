@@ -47,6 +47,8 @@ type Repositories struct {
 	EmailLookupRepository                    EmailLookupRepository
 	EmailTrackingRepository                  EmailTrackingRepository
 	TenantRepository                         TenantRepository
+	CacheIpDataRepository                    CacheIpDataRepository
+	CacheIpHunterRepository                  CacheIpHunterRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -92,6 +94,8 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		EmailLookupRepository:                    NewEmailLookupRepository(db),
 		EmailTrackingRepository:                  NewEmailTrackingRepository(db),
 		TenantRepository:                         NewTenantRepository(db),
+		CacheIpDataRepository:                    NewCacheIpDataRepository(db),
+		CacheIpHunterRepository:                  NewCacheIpHunterRepository(db),
 	}
 
 	return repositories
@@ -282,6 +286,16 @@ func (r *Repositories) Migration(db *gorm.DB) {
 	}
 
 	err = db.AutoMigrate(&entity.FlowSequenceStepTemplateVariable{}, &entity.Flow{}, &entity.FlowSequence{}, &entity.FlowSequenceStep{}, &entity.FlowSequenceContact{}, &entity.FlowSequenceSender{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.CacheIpData{})
+	if err != nil {
+		panic(err)
+	}
+
+	err = db.AutoMigrate(&entity.CacheIpHunter{})
 	if err != nil {
 		panic(err)
 	}
