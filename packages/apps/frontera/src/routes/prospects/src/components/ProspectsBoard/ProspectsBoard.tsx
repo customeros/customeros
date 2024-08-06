@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
@@ -5,8 +6,7 @@ import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 
 import { useStore } from '@shared/hooks/useStore';
-import { ViewSettings } from '@shared/components/ViewSettings';
-import { Currency, InternalStage, TableViewType } from '@graphql/types';
+import { Currency, InternalStage } from '@graphql/types';
 
 import { getColumns } from './columns';
 import { PipelineMetrics } from '../PipelineMetrics';
@@ -14,6 +14,7 @@ import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 
 export const ProspectsBoard = observer(() => {
   const store = useStore();
+  const [searchParams] = useSearchParams();
   const [focused, setFocused] = useState<string | null>(null);
 
   const opportunitiesPresetId = store.tableViewDefs.opportunitiesPreset;
@@ -24,11 +25,32 @@ export const ProspectsBoard = observer(() => {
       s.likelihoodRate,
     ]),
   );
+
   const opportunities = store.opportunities.toComputedArray((arr) => {
     arr = arr.filter((opp) => opp.value.internalType === 'NBO');
 
+    if (searchParams.has('search')) {
+      const search = searchParams.get('search')?.toLowerCase() ?? '';
+
+      if (!search) return arr;
+
+      arr = arr.filter((opp) => {
+        return (
+          opp.value.name.toLowerCase().includes(search) ||
+          opp.organization?.value?.name.toLowerCase().includes(search) ||
+          (
+            opp.value.owner?.name ||
+            [opp.value.owner?.firstName, opp.value.owner?.lastName].join(' ')
+          )
+            ?.toLowerCase()
+            .includes(search)
+        );
+      });
+    }
+
     return arr;
   });
+
   const currency = store.settings.tenant.value?.baseCurrency ?? Currency.Usd;
   const count = opportunities.length;
   const totalArr = opportunities.reduce(
@@ -94,12 +116,7 @@ export const ProspectsBoard = observer(() => {
   }, []);
 
   return (
-    <div className='flex flex-col text-gray-700 overflow-auto'>
-      <div className='px-4 mt-3 flex justify-between'>
-        <h1 className='text-xl font-bold'>Opportunities</h1>
-        <ViewSettings type={TableViewType.Opportunities} />
-      </div>
-
+    <>
       <PipelineMetrics
         count={count}
         currency={currency}
@@ -126,6 +143,6 @@ export const ProspectsBoard = observer(() => {
           <div className='flex-shrink-0 w-6'></div>
         </div>
       </DragDropContext>
-    </div>
+    </>
   );
 });
