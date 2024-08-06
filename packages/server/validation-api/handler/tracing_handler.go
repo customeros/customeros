@@ -3,7 +3,7 @@ package handler
 import (
 	"context"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go/log"
 )
 

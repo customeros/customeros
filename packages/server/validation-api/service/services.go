@@ -15,6 +15,7 @@ type Services struct {
 	AddressValidationService     AddressValidationService
 	PhoneNumberValidationService PhoneNumberValidationService
 	EmailValidationService       EmailValidationService
+	IpIntelligenceService        IpIntelligenceService
 }
 
 func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, log logger.Logger) *Services {
@@ -25,6 +26,7 @@ func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWi
 	services.AddressValidationService = NewAddressValidationService(config, services)
 	services.PhoneNumberValidationService = NewPhoneNumberValidationService(services)
 	services.EmailValidationService = NewEmailValidationService(config, services, log)
+	services.IpIntelligenceService = NewIpIntelligenceService(config, services, log)
 
 	return services
 }
