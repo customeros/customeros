@@ -91,6 +91,7 @@ export const AboutPanel = observer(() => {
     const { name, value } = e.target;
 
     organization?.update((org) => {
+      // @ts-expect-error fixme
       org[name] = value;
 
       return org;
