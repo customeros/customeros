@@ -2,6 +2,7 @@ import { Command, useCommandState } from 'cmdk';
 
 import { cn } from '@ui/utils/cn';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
+import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
 
 interface CommandInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -43,6 +44,7 @@ export const CommandInput = ({
 };
 
 interface CommandItemProps extends React.HTMLAttributes<HTMLDivElement> {
+  keywords?: string[];
   onSelect?: () => void;
   children: React.ReactNode;
   leftAccessory?: React.ReactNode;
@@ -61,6 +63,37 @@ export const CommandItem = ({
       {children}
       <div className='flex gap-1 items-center ml-auto'>{rightAccessory}</div>
     </Command.Item>
+  );
+};
+
+interface CommandSubItemProps {
+  leftLabel: string;
+  rightLabel: string;
+  keywords?: string[];
+  icon: React.ReactNode;
+  onSelectAction: () => void;
+}
+
+export const CommandSubItem: React.FC<CommandSubItemProps> = ({
+  icon,
+  onSelectAction,
+  leftLabel,
+  rightLabel,
+  ...rest
+}) => {
+  const search = useCommandState((state) => state.search);
+
+  return (
+    <CommandItem
+      leftAccessory={icon}
+      onSelect={onSelectAction}
+      className={cn(search.length === 0 && 'hidden')}
+      {...rest}
+    >
+      <span className='text-gray-500'>{leftLabel}</span>
+      <ChevronRight className='mx-1' />
+      <span>{rightLabel}</span>
+    </CommandItem>
   );
 };
 

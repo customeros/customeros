@@ -1,16 +1,21 @@
 import { observer } from 'mobx-react-lite';
 
+import { Tag01 } from '@ui/media/icons/Tag01';
 import { User01 } from '@ui/media/icons/User01';
-import { Tag01 } from '@ui/media/icons/Tag01.tsx';
+import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { Copy07 } from '@ui/media/icons/Copy07.tsx';
+import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { Activity } from '@ui/media/icons/Activity.tsx';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02.tsx';
+import { StageSubMenu } from '@shared/components/CommandMenu/commands/shared';
+import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import {
+  RelationshipSubMenu,
+  UpdateHealthStatusSubMenu,
+} from '@shared/components/CommandMenu/commands/organization';
 
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationBulkCommands = observer(() => {
@@ -62,6 +67,12 @@ export const OrganizationBulkCommands = observer(() => {
           Change relationship...
         </CommandItem>
 
+        <RelationshipSubMenu
+          selectedIds={selectedIds}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+          updateRelationship={store.organizations.updateRelationship}
+        />
+
         {organizations?.every(
           (organization) =>
             organization?.value?.relationship ===
@@ -77,8 +88,15 @@ export const OrganizationBulkCommands = observer(() => {
           </CommandItem>
         )}
 
+        <StageSubMenu
+          selectedIds={selectedIds}
+          updateStage={store.organizations.updateStage}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
+
         <CommandItem
           leftAccessory={<Archive />}
+          keywords={['delete', 'archive']}
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
@@ -116,6 +134,12 @@ export const OrganizationBulkCommands = observer(() => {
         >
           Change health status...
         </CommandItem>
+
+        <UpdateHealthStatusSubMenu
+          selectedIds={selectedIds}
+          updateHealth={store.organizations.updateHealth}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
 
         <CommandItem
           leftAccessory={<User01 />}
