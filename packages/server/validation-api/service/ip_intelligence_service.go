@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
@@ -39,14 +40,42 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*model
 	defer span.Finish()
 	span.LogFields(log.String("ip", ip))
 
-	result := model.IpLookupData{
-		Ip: ip,
+	cacheIpData, err := s.Services.CommonServices.PostgresRepositories.CacheIpDataRepository.Get(ctx, ip)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
+		return nil, err
+	}
+	var data *postgresentity.IPDataResponseBody
+
+	// if cached data is missing or last time fetched > 90 days ago
+	if cacheIpData == nil || cacheIpData.UpdatedAt.AddDate(0, 0, s.config.IpDataConfig.InvalidateCacheAfterDays).Before(utils.Now()) {
+		// get data from IPData
+		if data, err = s.askIpData(ctx, ip); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get IPData"))
+			return nil, err
+		}
+		// save to db
+		dataAsString, err := json.Marshal(data)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
+			return nil, err
+		}
+		s.Services.CommonServices.PostgresRepositories.CacheIpDataRepository.Save(ctx, postgresentity.CacheIpData{
+			Ip:   ip,
+			Data: string(dataAsString),
+		})
+	} else {
+		// unmarshal cached data
+		if err = json.Unmarshal([]byte(cacheIpData.Data), &data); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal cache data"))
+			return nil, err
+		}
 	}
 
-	// TODO Get data from cache
-	// if not found store data in cache
+	result := mapIpDataFromPostgresEntity(data)
+	result.Ip = ip
 
-	return &result, nil
+	return result, nil
 }
 
 func (s *ipIntelligenceService) askIpData(ctx context.Context, ip string) (*postgresentity.IPDataResponseBody, error) {
@@ -96,10 +125,23 @@ func (s *ipIntelligenceService) askIpData(ctx context.Context, ip string) (*post
 	return &ipDataResponseBody, nil
 }
 
-func mapIpDataResponseToPostgresEntity(ipDataResponseBody postgresentity.IPDataResponseBody) *entity.EnrichDetailsPreFilterTracking {
-	return &entity.EnrichDetailsPreFilterTracking{
-		IP:             ipDataResponseBody.Ip,
-		ShouldIdentify: nil,
-		Response:       nil,
+func mapIpDataFromPostgresEntity(entity *postgresentity.IPDataResponseBody) *model.IpLookupData {
+	return &model.IpLookupData{
+		Ip:            entity.Ip,
+		City:          entity.City,
+		Region:        entity.Region,
+		RegionCode:    entity.RegionCode,
+		RegionType:    entity.RegionType,
+		CountryName:   entity.CountryName,
+		CountryCode:   entity.CountryCode,
+		ContinentName: entity.ContinentName,
+		ContinentCode: entity.ContinentCode,
+		Latitude:      entity.Latitude,
+		Longitude:     entity.Longitude,
+		Asn:           entity.Asn,
+		Carrier:       entity.Carrier,
+		TimeZone:      entity.TimeZone,
+		Threat:        entity.Threat,
+		Count:         entity.Count,
 	}
 }

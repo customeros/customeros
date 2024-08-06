@@ -1,17 +1,26 @@
 package rest
 
 import (
+	"bytes"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"net"
 	"net/http"
 	"time"
 )
 
 type IpIntelligenceResponse struct {
+	Status       string                     `json:"status"`
+	Message      string                     `json:"message,omitempty"`
 	IP           string                     `json:"ip"`
 	Threats      IpIntelligenceThreats      `json:"threats"`
 	Geolocation  IpIntelligenceGeolocation  `json:"geolocation"`
@@ -86,48 +95,95 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// TODO: Implement the actual logic to gather IP intelligence
+		requestJSON, err := json.Marshal(validationmodel.IpLookupRequest{
+			Ip: ipAddress,
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			return
+		}
+		requestBody := []byte(string(requestJSON))
+		req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/ipLookup", bytes.NewBuffer(requestBody))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			return
+		}
+		// Inject span context into the HTTP request
+		req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
+
+		// Set the request headers
+		req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
+		req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
+
+		// Make the HTTP request
+		client := &http.Client{}
+		response, err := client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+		}
+		defer response.Body.Close()
+
+		var result validationmodel.IpLookupResponse
+		err = json.NewDecoder(response.Body).Decode(&result)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			return
+		}
 
 		// This is a placeholder response
-		response := IpIntelligenceResponse{
-			IP: ipAddress,
+		ipIntelligenceResponse := IpIntelligenceResponse{
+			Status: "success",
+			IP:     ipAddress,
 			Threats: IpIntelligenceThreats{
-				IsProxy:      true,
-				IsVpn:        false,
-				IsTor:        false,
-				IsBot:        true,
-				IsDatacenter: false,
-				IsCloudRelay: false,
-				IsMobile:     true,
+				IsProxy: result.Data.Threat.IsProxy,
+				//IsVpn:        TBD,
+				IsTor: result.Data.Threat.IsTor,
+				//IsBot:        TBD,
+				IsDatacenter: result.Data.Threat.IsDatacenter,
+				IsCloudRelay: result.Data.Threat.IsIcloudRelay,
+				//IsMobile:     TBD,
 			},
 			Geolocation: IpIntelligenceGeolocation{
-				City:            "Berlin",
-				Country:         "Germany",
-				CountryIso:      "DEU",
-				IsEuropeanUnion: true,
+				City:            result.Data.City,
+				Country:         result.Data.CountryName,
+				CountryIso:      result.Data.CountryCode,
+				IsEuropeanUnion: isEuropeanUnion(result.Data.CountryCode),
 			},
 			TimeZone: IpIntelligenceTimeZone{
-				Name:        "Europe/London",
-				Abbr:        "BST",
-				Offset:      "+0100",
-				IsDst:       true,
-				CurrentTime: time.Now(),
+				Name:        result.Data.TimeZone.Name,
+				Abbr:        result.Data.TimeZone.Abbr,
+				Offset:      result.Data.TimeZone.Offset,
+				IsDst:       result.Data.TimeZone.IsDst,
+				CurrentTime: utils.GetCurrentTimeInTimeZone(result.Data.TimeZone.Name),
 			},
 			Network: IpIntelligenceNetwork{
-				ASN:    "AS5089",
-				Name:   "Virgin Media Limited",
-				Domain: "virginmedia.com",
-				Route:  "92.238.0.0/15",
-				Type:   "business",
+				ASN:    result.Data.Asn.Asn,
+				Name:   result.Data.Asn.Name,
+				Domain: result.Data.Asn.Domain,
+				Route:  result.Data.Asn.Route,
+				Type:   result.Data.Asn.Type,
 			},
 			Organization: IpIntelligenceOrganization{
-				Name:     "Knowsley",
-				Domain:   "knowsley.gov.uk",
-				LinkedIn: "https://linkedin.com/in/knowsley",
+				//Name:     TBD,
+				//Domain:   TBD,
+				//LinkedIn: TBD,
 			},
 		}
 
-		c.JSON(http.StatusOK, response)
+		c.JSON(http.StatusOK, ipIntelligenceResponse)
+	}
+}
+
+func isEuropeanUnion(countryCodeA2 string) bool {
+	switch countryCodeA2 {
+	case "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU", "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK":
+		return true
+	default:
+		return false
 	}
 }
 
@@ -149,48 +205,3 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		c.JSON(http.StatusOK, "")
 	}
 }
-
-//func tp_be_deleted() {
-//	findEmailRequest := FindEmailRequest{
-//		FirstName: firstName,
-//		LastName:  lastName,
-//		Domain:    (*domainEntitiesPtr)[0].Domain,
-//	}
-//
-//	efJSON, err := json.Marshal(findEmailRequest)
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		graphql.AddErrorf(ctx, "Internal error")
-//		return "", nil
-//	}
-//	requestBody := []byte(string(efJSON))
-//	req, err := http.NewRequest("POST", r.cfg.Services.ValidationApi+"/findEmail", bytes.NewBuffer(requestBody))
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		graphql.AddErrorf(ctx, "Internal error")
-//		return "", nil
-//	}
-//	// Inject span context into the HTTP request
-//	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
-//
-//	// Set the request headers
-//	req.Header.Set(security.ApiKeyHeader, r.cfg.Services.ValidationApiKey)
-//	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
-//
-//	// Make the HTTP request
-//	client := &http.Client{}
-//	response, err := client.Do(req)
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		graphql.AddErrorf(ctx, "Internal error")
-//		return "", nil
-//	}
-//	defer response.Body.Close()
-//	var result FindEmailResponse
-//	err = json.NewDecoder(response.Body).Decode(&result)
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		graphql.AddErrorf(ctx, "Internal error")
-//		return "", nil
-//	}
-//}
