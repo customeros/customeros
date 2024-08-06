@@ -4,11 +4,11 @@ import (
 	"context"
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
-	"time"
 )
 
 type CacheIpDataRepository interface {
@@ -56,8 +56,8 @@ func (r cacheIpDataRepository) Save(ctx context.Context, cacheIpData entity.Cach
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// Record doesn't exist, create a new one
-			cacheIpData.CreatedAt = time.Now()
-			cacheIpData.UpdatedAt = time.Now()
+			cacheIpData.CreatedAt = utils.Now()
+			cacheIpData.UpdatedAt = utils.Now()
 			if err := r.db.WithContext(ctx).Create(&cacheIpData).Error; err != nil {
 				return nil, err
 			}
@@ -68,7 +68,8 @@ func (r cacheIpDataRepository) Save(ctx context.Context, cacheIpData entity.Cach
 	} else {
 		// Record exists, update it
 		updates := map[string]interface{}{
-			"updated_at": time.Now(),
+			"updated_at": utils.Now(),
+			"data":       cacheIpData.Data,
 		}
 		if err := r.db.WithContext(ctx).Model(&existingData).Updates(updates).Error; err != nil {
 			return nil, err

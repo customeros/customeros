@@ -3,6 +3,7 @@ package repository
 import (
 	"errors"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"gorm.io/gorm"
 	"time"
@@ -135,7 +136,7 @@ func (repo *userEmailImportStateImpl) DeactivateEmailImportState(tenantName, pro
 
 func (repo *userEmailImportStateImpl) InsertHistoryRecord(record *entity.UserEmailImportState) error {
 	history := entity.UserEmailImportStateHistory{}
-	history.CreatedAt = time.Now().UTC()
+	history.CreatedAt = utils.Now()
 	history.Tenant = record.Tenant
 	history.Username = record.Username
 	history.Provider = record.Provider
