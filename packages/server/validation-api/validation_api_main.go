@@ -4,9 +4,7 @@ import (
 	"context"
 	commonconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
 	"github.com/opentracing/opentracing-go"
 	"io"
@@ -15,7 +13,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"log"
 )
@@ -54,129 +51,7 @@ func main() {
 
 	services := service.InitServices(cfg, postgresDb.GormDB, &neo4jDriver, appLogger)
 
-	r.POST("/validateAddress",
-		handler.TracingEnhancer(ctx, "POST /validateAddress"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
-		func(c *gin.Context) {
-			var request model.ValidationAddressRequest
-			if err := c.BindJSON(&request); err != nil {
-				errorMessage := "Invalid request body"
-				c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
-				return
-			}
-			if request.International {
-				internationalAddressLookup, err := services.AddressValidationService.ValidateInternationalAddress(request.Address, request.Country)
-				if err != nil {
-					errorMessage := err.Error()
-					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
-					return
-				}
-
-				if internationalAddressLookup == nil {
-					errorMessage := "Invalid address"
-					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
-					return
-				}
-
-				addressVerified := false
-				for _, v := range internationalAddressLookup.Results {
-					if v.Analysis.VerificationStatus == "Verified" {
-						addressVerified = true
-						break
-					}
-				}
-
-				if !addressVerified {
-					errorMessage := "Address could not be verified"
-					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
-					return
-				}
-
-				c.JSON(200, model.MapValidationInternationalAddressResponse(internationalAddressLookup, nil, true))
-			} else {
-				validatedAddressResponse, err := services.AddressValidationService.ValidateUsAddress(request.Address)
-				if err != nil {
-					errorMessage := err.Error()
-					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
-					return
-				}
-
-				if validatedAddressResponse == nil {
-					errorMessage := "Invalid address"
-					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
-					return
-				}
-
-				addressVerified := false
-				for _, v := range validatedAddressResponse.Result.Addresses {
-					if v.Verified {
-						addressVerified = true
-						break
-					}
-				}
-
-				if !addressVerified {
-					errorMessage := "Address could not be verified"
-					c.JSON(400, model.MapValidationNoAddressResponse(&errorMessage))
-					return
-				}
-
-				c.JSON(200, model.MapValidationUsAddressResponse(validatedAddressResponse, nil, true))
-			}
-		})
-
-	r.POST("/validatePhoneNumber",
-		handler.TracingEnhancer(ctx, "POST /validatePhoneNumber"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
-		func(c *gin.Context) {
-			var request model.ValidationPhoneNumberRequest
-
-			if err := c.BindJSON(&request); err != nil {
-				errorMessage := "Invalid request body"
-				c.JSON(400, model.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
-				return
-			}
-
-			e164, country, err := services.PhoneNumberValidationService.ValidatePhoneNumber(ctx, request.Country, request.PhoneNumber)
-			if err != nil {
-				errorMessage := err.Error()
-				c.JSON(500, model.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
-				return
-			}
-
-			if e164 == nil {
-				errorMessage := "Invalid phone number"
-				c.JSON(400, model.MapValidationPhoneNumberResponse(nil, nil, &errorMessage, false))
-				return
-			}
-
-			c.JSON(200, model.MapValidationPhoneNumberResponse(e164, country, nil, true))
-		})
-
-	r.POST("/validateEmail",
-		handler.TracingEnhancer(ctx, "POST /validateEmail"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
-		func(c *gin.Context) {
-			var request model.ValidationEmailRequest
-
-			if err := c.BindJSON(&request); err != nil {
-				appLogger.Errorf("Fail reading request: %v", err.Error())
-				c.AbortWithStatus(500) //todo
-				return
-			}
-
-			response, err := services.EmailValidationService.ValidateEmail(ctx, request.Email)
-			if err != nil {
-				appLogger.Errorf("Error validating email: %v", err.Error())
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, model.MapValidationEmailResponse(response, nil))
-		})
-
-	r.GET("/health", healthCheckHandler)
-	r.GET("/readiness", healthCheckHandler)
+	registerRoutes(ctx, r, services, cfg, appLogger)
 
 	r.Run(":" + cfg.ApiPort)
 }
@@ -192,10 +67,6 @@ func loadConfiguration() *config.Config {
 	}
 
 	return &cfg
-}
-
-func healthCheckHandler(c *gin.Context) {
-	c.JSON(200, gin.H{"status": "OK"})
 }
 
 func initLogger(cfg *config.Config) logger.Logger {

@@ -59,9 +59,9 @@ type IpIntelligenceOrganization struct {
 	LinkedIn string `json:"linkedin"`
 }
 
-func IpInteligence(services *service.Services) gin.HandlerFunc {
+func IpIntelligence(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GenerateEmailTrackingUrls", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpIntelligence", c.Request.Header)
 		defer span.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
