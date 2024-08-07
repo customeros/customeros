@@ -37,5 +37,4 @@ type IpDataConfig struct {
 }
 
 type IpHunterConfig struct {
-	ApiKey string `env:"IPHUNTER_API_KEY" validate:"required"`
 }
