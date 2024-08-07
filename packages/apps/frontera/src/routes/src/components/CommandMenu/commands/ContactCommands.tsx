@@ -20,64 +20,97 @@ export const ContactCommands = observer(() => {
     <Command>
       <CommandInput label={label} placeholder='Type a command or search' />
       <Command.List>
-        <CommandItem
-          leftAccessory={<Tag01 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditPersonaTag');
-          }}
-        >
-          Edit Persona tag...
-        </CommandItem>
+        <Command.Group>
+          <CommandItem
+            leftAccessory={<Tag01 />}
+            keywords={['change', 'eidt', 'update', 'tag', 'label', 'profile']}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditPersonaTag');
+            }}
+          >
+            Edit Persona tag...
+          </CommandItem>
 
-        <CommandItem
-          leftAccessory={<Mail01 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditEmail');
-          }}
-        >
-          Edit email
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<Mail01 />}
+            keywords={['change', 'edit', 'update', 'email', 'address', '@']}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditEmail');
+            }}
+          >
+            Edit email
+          </CommandItem>
 
-        <CommandItem
-          leftAccessory={<Edit03 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditName');
-          }}
-        >
-          Edit name
-        </CommandItem>
-        <CommandItem
-          leftAccessory={<Phone />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditPhoneNumber');
-          }}
-        >
-          Edit phone number
-        </CommandItem>
-        <CommandItem
-          leftAccessory={<Certificate02 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditJobTitle');
-          }}
-        >
-          Edit job title
-        </CommandItem>
-        <CommandItem
-          leftAccessory={<Certificate02 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('ChangeOrAddJobRoles');
-          }}
-        >
-          Change or add job roles...
-        </CommandItem>
-        <CommandItem
-          leftAccessory={<Clock />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('EditTimeZone');
-          }}
-        >
-          Edit time zone...
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<Edit03 />}
+            keywords={['change', 'edit', 'update', 'name', 'rename', 'contact']}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditName');
+            }}
+          >
+            Edit name
+          </CommandItem>
+          <CommandItem
+            leftAccessory={<Phone />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditPhoneNumber');
+            }}
+            keywords={[
+              'change',
+              'edit',
+              'update',
+              'phone',
+              'number',
+              'mobile',
+              'telephone',
+            ]}
+          >
+            Edit phone number
+          </CommandItem>
+          <CommandItem
+            leftAccessory={<Certificate02 />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditJobTitle');
+            }}
+            keywords={[
+              'change',
+              'edit',
+              'update',
+              'job',
+              'title',
+              'position',
+              'designation',
+            ]}
+          >
+            Edit job title
+          </CommandItem>
+          <CommandItem
+            leftAccessory={<Certificate02 />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('ChangeOrAddJobRoles');
+            }}
+            keywords={[
+              'change',
+              'edit',
+              'update',
+              'job',
+              'roles',
+              'position',
+              'function',
+            ]}
+          >
+            Change or add job roles...
+          </CommandItem>
+          <CommandItem
+            leftAccessory={<Clock />}
+            keywords={['change', 'edit', 'update', 'timezone', 'location']}
+            onSelect={() => {
+              store.ui.commandMenu.setType('EditTimeZone');
+            }}
+          >
+            Edit time zone...
+          </CommandItem>
+        </Command.Group>
 
         <Command.Group heading='Navigate'>
           <GlobalSharedCommands />
