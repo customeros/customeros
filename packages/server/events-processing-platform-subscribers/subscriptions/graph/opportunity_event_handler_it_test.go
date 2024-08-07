@@ -261,7 +261,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 		constants.SourceOpenline,
 		commonmodel.ExternalSystem{},
 		now,
-		[]string{model.FieldMaskName, model.FieldMaskAmount, model.FieldMaskMaxAmount})
+		[]string{opportunityevent.FieldMaskName, opportunityevent.FieldMaskAmount, opportunityevent.FieldMaskMaxAmount})
 	require.Nil(t, err, "failed to create event")
 
 	// EXECUTE
@@ -896,7 +896,7 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AdjustedRateChanged(t *testing.
 		float64(0),
 		false,
 		now,
-		[]string{model.FieldMaskAdjustedRate},
+		[]string{opportunityevent.FieldMaskAdjustedRate},
 		"user-123",
 		nil,
 		50)
