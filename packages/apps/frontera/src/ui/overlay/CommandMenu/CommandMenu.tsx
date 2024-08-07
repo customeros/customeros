@@ -44,6 +44,7 @@ export const CommandInput = ({
 };
 
 interface CommandItemProps extends React.HTMLAttributes<HTMLDivElement> {
+  disabled?: boolean;
   keywords?: string[];
   onSelect?: () => void;
   children: React.ReactNode;
@@ -53,12 +54,13 @@ interface CommandItemProps extends React.HTMLAttributes<HTMLDivElement> {
 
 export const CommandItem = ({
   children,
+  disabled,
   leftAccessory,
   rightAccessory,
   ...props
 }: CommandItemProps) => {
   return (
-    <Command.Item {...props}>
+    <Command.Item disabled={disabled} {...props}>
       {leftAccessory}
       {children}
       <div className='flex gap-1 items-center ml-auto'>{rightAccessory}</div>

@@ -44,8 +44,10 @@ export const ChooseOpportunityOrganization = observer(() => {
       <CommandInput
         value={search}
         label='Organization'
-        onValueChange={setSearch}
         placeholder='Choose organization'
+        onValueChange={(v) =>
+          setSearch(v.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+        }
       />
 
       <Command.List>

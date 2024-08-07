@@ -161,16 +161,44 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
     } finally {
       runInAction(() => {
         this.isLoading = false;
-
-        this.sync({
-          action: 'APPEND',
-          ids: [serverId],
-        });
-
-        setTimeout(() => {
-          this.value.get(serverId)?.invalidate();
-        }, 1000);
       });
+      this.sync({
+        action: 'APPEND',
+        ids: [serverId],
+      });
+
+      const opportunity = this.value.get(serverId);
+
+      this.root.ui.toastSuccess(
+        `Opportunity created for ${opportunity?.organization?.value.name}`,
+        'create-opportunity-success',
+      );
+
+      setTimeout(() => {
+        opportunity?.invalidate();
+      }, 1000);
+    }
+  }
+
+  async archive(id: string) {
+    this.value.delete(id);
+
+    try {
+      this.isLoading = true;
+      await this.service.archiveOpportunity({
+        id,
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+
+      this.sync({ action: 'DELETE', ids: [id] });
+      this.root.ui.toastSuccess('Opportunity archived', 'archive-opportunity');
     }
   }
 }

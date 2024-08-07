@@ -57,6 +57,7 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
       mask={`${symbol}num`}
       placeholder='ARR estimate'
       defaultValue={defaultValue.toString()}
+      onClick={(e) => (e.target as HTMLInputElement).select()}
       onAccept={(v, instance) => {
         setValue(v);
         handleAccept(instance._unmaskedValue);
@@ -64,13 +65,13 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
       blocks={{
         num: {
           mask: Number,
-          scale: 2,
+          scale: 0,
           lazy: false,
+          min: 0,
           placeholderChar: '#',
           thousandsSeparator: ',',
           normalizeZeros: true,
           padFractionalZeros: true,
-          radix: '.',
           autofix: true,
         },
       }}

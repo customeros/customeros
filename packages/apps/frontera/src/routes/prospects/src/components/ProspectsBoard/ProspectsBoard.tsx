@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom';
 import { useMemo, useState, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
@@ -14,7 +13,6 @@ import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 
 export const ProspectsBoard = observer(() => {
   const store = useStore();
-  const [searchParams] = useSearchParams();
   const [focused, setFocused] = useState<string | null>(null);
 
   const opportunitiesPresetId = store.tableViewDefs.opportunitiesPreset;
@@ -28,25 +26,6 @@ export const ProspectsBoard = observer(() => {
 
   const opportunities = store.opportunities.toComputedArray((arr) => {
     arr = arr.filter((opp) => opp.value.internalType === 'NBO');
-
-    if (searchParams.has('search')) {
-      const search = searchParams.get('search')?.toLowerCase() ?? '';
-
-      if (!search) return arr;
-
-      arr = arr.filter((opp) => {
-        return (
-          opp.value.name.toLowerCase().includes(search) ||
-          opp.organization?.value?.name.toLowerCase().includes(search) ||
-          (
-            opp.value.owner?.name ||
-            [opp.value.owner?.firstName, opp.value.owner?.lastName].join(' ')
-          )
-            ?.toLowerCase()
-            .includes(search)
-        );
-      });
-    }
 
     return arr;
   });

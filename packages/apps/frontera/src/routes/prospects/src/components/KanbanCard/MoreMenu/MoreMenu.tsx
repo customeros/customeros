@@ -4,6 +4,7 @@ import { User01 } from '@ui/media/icons/User01';
 import { IconButton } from '@ui/form/IconButton';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { useStore } from '@shared/hooks/useStore';
+import { Archive } from '@ui/media/icons/Archive';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
@@ -43,6 +44,14 @@ export const MoreMenu = observer(
           >
             <CurrencyDollarCircle />
             Change currency
+          </MenuItem>
+          <MenuItem
+            onClick={() =>
+              store.ui.commandMenu.toggle('DeleteConfirmationModal')
+            }
+          >
+            <Archive />
+            Archive
           </MenuItem>
         </MenuList>
       </Menu>

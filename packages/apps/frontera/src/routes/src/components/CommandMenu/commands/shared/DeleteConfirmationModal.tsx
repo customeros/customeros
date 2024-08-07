@@ -1,4 +1,6 @@
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 
 import { XClose } from '@ui/media/icons/XClose';
 import { Button } from '@ui/form/Button/Button';
@@ -10,17 +12,44 @@ export const DeleteConfirmationModal = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
 
+  const entity = match(context.entity)
+    .returnType<OpportunityStore | undefined>()
+    .with('Opportunity', () => store.opportunities.value.get(context.ids?.[0]))
+    .otherwise(() => undefined);
+
   const handleClose = () => {
     store.ui.commandMenu.toggle('DeleteConfirmationModal');
   };
 
+  const handleConfirm = () => {
+    match(context.entity)
+      .with('Organization', () => {
+        store.organizations.hide(context.ids as string[]);
+      })
+      .with('Opportunity', () => {
+        store.opportunities.archive(context.ids?.[0]);
+      })
+      .otherwise(() => {});
+
+    handleClose();
+  };
+
+  const title = match(context.entity)
+    .with(
+      'Organization',
+      () => `Delete selected ${context.entity?.toLowerCase()}`,
+    )
+    .with(
+      'Opportunity',
+      () => `Archive ${(entity as OpportunityStore)?.value.name}`,
+    )
+    .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
+
   return (
-    <Command label='Change Stage'>
+    <Command>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-base font-semibold '>
-            Archive selected {context.entity?.toLowerCase()}
-          </h1>
+          <h1 className='text-base font-semibold'>{title}</h1>
           <IconButton
             size='xs'
             variant='ghost'
@@ -44,10 +73,7 @@ export const DeleteConfirmationModal = observer(() => {
             variant='outline'
             className='w-full'
             colorScheme='error'
-            onClick={() => {
-              store.organizations.hide(context.ids as string[]);
-              handleClose();
-            }}
+            onClick={handleConfirm}
           >
             Archive
           </Button>

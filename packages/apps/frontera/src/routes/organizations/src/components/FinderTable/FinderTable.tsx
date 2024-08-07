@@ -14,7 +14,6 @@ import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
-import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { Invoice, WorkflowType, TableViewType } from '@graphql/types';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
@@ -444,7 +443,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         hideCloseButton
         isOpen={isConfirming}
         onConfirm={onConfirm}
-        icon={<SlashCircle01 />}
         confirmButtonLabel='Void invoice'
         label={`Void invoice ${targetInvoiceNumber}`}
         description={`Voiding this invoice will send an email notification to ${targetInvoiceEmail}`}
