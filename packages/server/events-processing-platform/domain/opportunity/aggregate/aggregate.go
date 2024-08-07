@@ -475,35 +475,35 @@ func extractFieldsMask(requestMaskFields []opportunitypb.OpportunityMaskField) [
 	for _, field := range requestMaskFields {
 		switch field {
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NAME:
-			maskFields = append(maskFields, model.FieldMaskName)
+			maskFields = append(maskFields, opportunityevent.FieldMaskName)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_AMOUNT:
-			maskFields = append(maskFields, model.FieldMaskAmount)
+			maskFields = append(maskFields, opportunityevent.FieldMaskAmount)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_COMMENTS:
-			maskFields = append(maskFields, model.FieldMaskComments)
+			maskFields = append(maskFields, opportunityevent.FieldMaskComments)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWAL_LIKELIHOOD:
-			maskFields = append(maskFields, model.FieldMaskRenewalLikelihood)
+			maskFields = append(maskFields, opportunityevent.FieldMaskRenewalLikelihood)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_MAX_AMOUNT:
-			maskFields = append(maskFields, model.FieldMaskMaxAmount)
+			maskFields = append(maskFields, opportunityevent.FieldMaskMaxAmount)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_RENEWED_AT:
-			maskFields = append(maskFields, model.FieldMaskRenewedAt)
+			maskFields = append(maskFields, opportunityevent.FieldMaskRenewedAt)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ADJUSTED_RATE:
-			maskFields = append(maskFields, model.FieldMaskAdjustedRate)
+			maskFields = append(maskFields, opportunityevent.FieldMaskAdjustedRate)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_TYPE:
-			maskFields = append(maskFields, model.FieldMaskExternalType)
+			maskFields = append(maskFields, opportunityevent.FieldMaskExternalType)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_EXTERNAL_STAGE:
-			maskFields = append(maskFields, model.FieldMaskExternalStage)
+			maskFields = append(maskFields, opportunityevent.FieldMaskExternalStage)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_INTERNAL_STAGE:
-			maskFields = append(maskFields, model.FieldMaskInternalStage)
+			maskFields = append(maskFields, opportunityevent.FieldMaskInternalStage)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_ESTIMATED_CLOSE_DATE:
-			maskFields = append(maskFields, model.FieldMaskEstimatedClosedAt)
+			maskFields = append(maskFields, opportunityevent.FieldMaskEstimatedClosedAt)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_OWNER_USER_ID:
-			maskFields = append(maskFields, model.FieldMaskOwnerUserId)
+			maskFields = append(maskFields, opportunityevent.FieldMaskOwnerUserId)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_CURRENCY:
-			maskFields = append(maskFields, model.FieldMaskCurrency)
+			maskFields = append(maskFields, opportunityevent.FieldMaskCurrency)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_NEXT_STEPS:
-			maskFields = append(maskFields, model.FieldMaskNextSteps)
+			maskFields = append(maskFields, opportunityevent.FieldMaskNextSteps)
 		case opportunitypb.OpportunityMaskField_OPPORTUNITY_PROPERTY_LIKELIHOOD_RATE:
-			maskFields = append(maskFields, model.FieldMaskLikelihoodRate)
+			maskFields = append(maskFields, opportunityevent.FieldMaskLikelihoodRate)
 		}
 	}
 	return utils.RemoveDuplicates(maskFields)
