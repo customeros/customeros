@@ -34,7 +34,7 @@ export const ActionItem = ({
           <>
             <div className='flex items-center text-sm'>
               Open command menu
-              <div className='bg-gray-600 h-5 w-5 rounded-sm ml-3 mr-1 flex flex justify-center items-center'>
+              <div className='bg-gray-600 h-5 w-5 rounded-sm ml-3 mr-1 flex justify-center items-center'>
                 <Command className='size-3' />
               </div>
               <div className='bg-gray-600 text-xs h-5 w-5 rounded-sm flex justify-center items-center'>

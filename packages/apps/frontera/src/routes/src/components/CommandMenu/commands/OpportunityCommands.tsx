@@ -28,9 +28,9 @@ export const OpportunityCommands = observer(() => {
           }}
           keywords={[
             'change',
+            'stage',
             'edit',
             'update',
-            'stage',
             'status',
             'pipeline',
             'phase',
@@ -46,9 +46,10 @@ export const OpportunityCommands = observer(() => {
           }}
           keywords={[
             'set',
+            'next',
+            'step',
             'edit',
             'update',
-            'next step',
             'action',
             'reminder',
             'follow up',
@@ -65,13 +66,15 @@ export const OpportunityCommands = observer(() => {
           }}
           keywords={[
             'change',
+            'arr',
+            'estimate',
             'edit',
             'update',
-            'arr',
-            'annual recurring revenue',
+            'annual',
+            'recurring',
+            'revenue',
             'forecast',
             'projection',
-            'estimate',
           ]}
         >
           Change ARR estimate
@@ -84,11 +87,13 @@ export const OpportunityCommands = observer(() => {
           }}
           keywords={[
             'change',
+            'arr',
+            'currency',
             'edit',
             'update',
-            'arr',
-            'annual recurring revenue',
-            'currency',
+            'annual',
+            'recurring',
+            'revenue',
             'usd',
             'eur',
             'gbp',
@@ -107,10 +112,10 @@ export const OpportunityCommands = observer(() => {
           }}
           keywords={[
             'rename',
+            'opportunity',
             'edit',
             'change',
             'update',
-            'opportunity',
             'deal',
             'name',
             'title',
@@ -122,7 +127,7 @@ export const OpportunityCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<User01 />}
-          keywords={['assign', 'change', 'update', 'edit', 'owner']}
+          keywords={['assign', 'owner', 'change', 'update', 'edit']}
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
@@ -137,10 +142,10 @@ export const OpportunityCommands = observer(() => {
           }}
           keywords={[
             'archive',
+            'opportunity',
             'delete',
             'remove',
             'hide',
-            'opportunity',
             'deal',
           ]}
         >

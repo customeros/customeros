@@ -24,12 +24,22 @@ export const ContactCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('EditPersonaTag');
           }}
+          keywords={[
+            'edit',
+            'persona',
+            'tag',
+            'change',
+            'update',
+            'label',
+            'profile',
+          ]}
         >
           Edit Persona tag...
         </CommandItem>
 
         <CommandItem
           leftAccessory={<Mail01 />}
+          keywords={['edit', 'email', 'change', 'update', 'address', '@']}
           onSelect={() => {
             store.ui.commandMenu.setType('EditEmail');
           }}
@@ -39,6 +49,7 @@ export const ContactCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Edit03 />}
+          keywords={['edit', 'name', 'change', 'update', 'rename', 'contact']}
           onSelect={() => {
             store.ui.commandMenu.setType('EditName');
           }}
@@ -50,6 +61,15 @@ export const ContactCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('EditPhoneNumber');
           }}
+          keywords={[
+            'edit',
+            'phone',
+            'number',
+            'change',
+            'update',
+            'mobile',
+            'telephone',
+          ]}
         >
           Edit phone number
         </CommandItem>
@@ -58,11 +78,21 @@ export const ContactCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('EditJobTitle');
           }}
+          keywords={[
+            'edit',
+            'job',
+            'title',
+            'change',
+            'update',
+            'position',
+            'designation',
+          ]}
         >
           Edit job title
         </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}
+          keywords={['edit', 'job', 'roles', 'update', 'position', 'function']}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeOrAddJobRoles');
           }}
@@ -71,6 +101,7 @@ export const ContactCommands = observer(() => {
         </CommandItem>
         <CommandItem
           leftAccessory={<Clock />}
+          keywords={['edit', 'timezone', 'change', 'update', 'location']}
           onSelect={() => {
             store.ui.commandMenu.setType('EditTimeZone');
           }}

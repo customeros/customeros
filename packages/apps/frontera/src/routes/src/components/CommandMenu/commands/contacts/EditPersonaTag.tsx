@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
@@ -17,32 +17,62 @@ import {
 
 export const EditPersonaTag = observer(() => {
   const store = useStore();
+  const [search, setSearch] = useState('');
+
   const context = store.ui.commandMenu.context;
 
   const contact = store.contacts.value.get(context.ids?.[0] as string);
-  const label = `Contact - ${contact?.value?.name}`;
-  const [search, setSearch] = React.useState('');
+
+  const selectedIds = context.ids;
+  const label =
+    selectedIds?.length === 1
+      ? `Contact - ${contact?.value.name}`
+      : `${selectedIds?.length} contacts`;
 
   const handleSelect = (t: TagType) => () => {
     if (!context.ids?.[0]) return;
 
     if (!contact) return;
 
-    contact?.update((o) => {
-      const existingIndex = o.tags?.find((e) => e.name === t.name);
+    if (selectedIds?.length === 1) {
+      contact?.update((o) => {
+        const existingIndex = o.tags?.find((e) => e.name === t.name);
 
-      if (existingIndex) {
-        const newTags = o.tags?.filter((e) => e.name !== t.name);
+        if (existingIndex) {
+          const newTags = o.tags?.filter((e) => e.name !== t.name);
 
-        o.tags = newTags;
-      }
+          o.tags = newTags;
+        }
 
-      if (!existingIndex) {
-        o.tags = [...(o.tags ?? []), t];
-      }
+        if (!existingIndex) {
+          o.tags = [...(o.tags ?? []), t];
+        }
 
-      return o;
-    });
+        return o;
+      });
+    } else {
+      selectedIds.forEach((id) => {
+        const contact = store.contacts.value.get(id);
+
+        if (contact) {
+          contact.update((o) => {
+            const existingIndex = o.tags?.find((e) => e.name === t.name);
+
+            if (existingIndex) {
+              const newTags = o.tags?.filter((e) => e.name !== t.name);
+
+              o.tags = newTags;
+            }
+
+            if (!existingIndex) {
+              o.tags = [...(o.tags ?? []), t];
+            }
+
+            return o;
+          });
+        }
+      });
+    }
   };
 
   const handleCreateOption = (value: string) => {

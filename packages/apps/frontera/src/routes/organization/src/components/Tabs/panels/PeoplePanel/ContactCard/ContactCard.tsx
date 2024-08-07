@@ -274,6 +274,7 @@ export const ContactCard = observer(
                 size='xs'
                 name='role'
                 options={roleOptions}
+                placeholder='Choose job roles'
                 value={
                   contactStore?.value?.jobRoles?.[0]?.description
                     ?.split(',')

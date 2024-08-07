@@ -20,31 +20,53 @@ const roleOptions = [
 
 export const ChangeOrAddJobRoles = observer(() => {
   const store = useStore();
+  const [search, setSearch] = useState('');
+
   const context = store.ui.commandMenu.context;
 
   const contact = store.contacts.value.get(context.ids?.[0] as string);
-  const label = `Contact - ${contact?.value?.name}`;
-  const [search, setSearch] = useState('');
+  const selectedIds = context.ids;
+
+  const label =
+    selectedIds?.length === 1
+      ? `Contact - ${contact?.value.name}`
+      : `${selectedIds?.length} contacts`;
 
   const handleSelect = (opt: SelectOption[]) => {
     if (!context.ids?.[0] || !contact) return;
 
-    contact.update((value) => {
-      const selectedValues = opt.map((v) => v.value).join(',');
+    if (selectedIds?.length === 1) {
+      contact.update((value) => {
+        const selectedValues = opt.map((v) => v.value).join(',');
 
-      set(value, 'jobRoles[0].description', selectedValues);
+        set(value, 'jobRoles[0].description', selectedValues);
 
-      return value;
-    });
+        return value;
+      });
+    } else {
+      selectedIds.forEach((id) => {
+        const contact = store.contacts.value.get(id);
+
+        if (contact) {
+          contact.update((value) => {
+            const selectedValues = opt.map((v) => v.value).join(',');
+
+            set(value, 'jobRoles[0].description', selectedValues);
+
+            return value;
+          });
+        }
+      });
+    }
   };
 
   return (
-    <Command label='Change or add job roles...'>
+    <Command label='Edit job roles...'>
       <CommandInput
         label={label}
         value={search}
         onValueChange={setSearch}
-        placeholder='Change or add job roles...'
+        placeholder='Edit job roles...'
       />
 
       <Command.List>
