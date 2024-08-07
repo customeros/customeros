@@ -6,7 +6,6 @@ import { useSearchParams } from 'react-router-dom';
 import { useRemirror } from '@remirror/react';
 import { htmlToProsemirrorNode } from 'remirror';
 
-import { Send03 } from '@ui/media/icons/Send03';
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { EmailParticipant, InteractionEvent } from '@graphql/types';
@@ -347,7 +346,6 @@ export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
           label={`Send this email?`}
           cancelButtonLabel='Discard'
           onClose={handleExitEditorAndCleanData}
-          icon={<Send03 className='text-primary-700' />}
           description={`You have typed an unsent email. Do you want to send it, or discard it?`}
         />
       </div>

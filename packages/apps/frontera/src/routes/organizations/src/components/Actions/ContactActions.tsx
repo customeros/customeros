@@ -5,7 +5,6 @@ import { ContactStore } from '@store/Contacts/Contact.store';
 
 import { X } from '@ui/media/icons/X';
 import { Tag, DataSource } from '@graphql/types';
-import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Archive } from '@ui/media/icons/Archive';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { User02 } from '@ui/media/icons/User02.tsx';
@@ -134,7 +133,6 @@ export const ContactTableActions = ({
       </ButtonGroup>
 
       <ConfirmDeleteDialog
-        icon={<Tag01 />}
         colorScheme='primary'
         isOpen={isTagEditOpen}
         onConfirm={handleAddTags}
@@ -164,7 +162,6 @@ export const ContactTableActions = ({
       <ConfirmDeleteDialog
         isOpen={isOpen}
         onClose={onClose}
-        icon={<Archive />}
         confirmButtonLabel={'Archive'}
         onConfirm={handleHideContacts}
         loadingButtonLabel='Archiving'
