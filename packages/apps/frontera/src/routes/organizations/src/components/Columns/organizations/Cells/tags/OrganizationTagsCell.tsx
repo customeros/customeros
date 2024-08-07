@@ -38,15 +38,7 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
   }, [isEdit]);
 
   const handleCreateOption = (value: string) => {
-    store.tags?.create(undefined, {
-      onSucces: (serverId) => {
-        store.tags?.value.get(serverId)?.update((tag) => {
-          tag.name = value;
-
-          return tag;
-        });
-      },
-    });
+    store.tags?.create({ name: value });
 
     organizationstore?.update((org) => {
       org.tags = [

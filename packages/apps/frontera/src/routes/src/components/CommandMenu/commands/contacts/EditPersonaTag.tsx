@@ -46,15 +46,7 @@ export const EditPersonaTag = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    store.tags?.create(undefined, {
-      onSucces: (serverId) => {
-        store.tags?.value.get(serverId)?.update((tag) => {
-          tag.name = value;
-
-          return tag;
-        });
-      },
-    });
+    store.tags?.create({ name: value });
 
     contact?.update((c) => {
       c.tags = [
