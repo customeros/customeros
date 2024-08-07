@@ -13,6 +13,7 @@ import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
 import {
+  organizationKeywords,
   RelationshipSubItemGroup,
   UpdateHealthStatusSubItemGroup,
 } from '@shared/components/CommandMenu/commands/organization';
@@ -30,6 +31,7 @@ export const OrganizationBulkCommands = observer(() => {
       <Command.List>
         <CommandItem
           leftAccessory={<Tag01 />}
+          keywords={organizationKeywords.change_or_add_tags}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeTags');
           }}
@@ -47,6 +49,7 @@ export const OrganizationBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Tag01 />}
+          keywords={organizationKeywords.change_or_add_tags}
           onSelect={() => {
             store.organizations.removeTags(selectedIds);
             store.ui.commandMenu.setOpen(false);
@@ -57,6 +60,7 @@ export const OrganizationBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<AlignHorizontalCentre02 />}
+          keywords={organizationKeywords.change_relationship}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeRelationship');
           }}
@@ -71,8 +75,8 @@ export const OrganizationBulkCommands = observer(() => {
         />
 
         <CommandItem
-          keywords={['stage']}
           leftAccessory={<Columns03 />}
+          keywords={organizationKeywords.change_org_stage}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeStage');
           }}
@@ -88,7 +92,7 @@ export const OrganizationBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Archive />}
-          keywords={['delete', 'archive']}
+          keywords={organizationKeywords.archive_org}
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
@@ -120,6 +124,7 @@ export const OrganizationBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Activity />}
+          keywords={organizationKeywords.change_health_status}
           onSelect={() => {
             store.ui.commandMenu.setType('UpdateHealthStatus');
           }}
@@ -135,6 +140,7 @@ export const OrganizationBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<User01 />}
+          keywords={organizationKeywords.assign_owner}
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
@@ -152,6 +158,7 @@ export const OrganizationBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<CoinsStacked01 />}
+          keywords={organizationKeywords.create_new_opportunity}
           onSelect={() => {
             store.organizations.updateStage(
               selectedIds,

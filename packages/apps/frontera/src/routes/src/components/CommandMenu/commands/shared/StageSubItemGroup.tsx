@@ -1,6 +1,7 @@
 import { OrganizationStage } from '@graphql/types';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
+import { organizationKeywords } from '@shared/components/CommandMenu/commands';
 
 export const StageSubItemGroup = ({
   selectedIds,
@@ -16,8 +17,8 @@ export const StageSubItemGroup = ({
       <CommandSubItem
         rightLabel='Lead'
         icon={<Columns03 />}
-        keywords={['stage ']}
         leftLabel='Change org stage'
+        keywords={organizationKeywords.change_org_stage_to_lead}
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Lead);
           closeMenu();
@@ -27,8 +28,8 @@ export const StageSubItemGroup = ({
       <CommandSubItem
         rightLabel='Target'
         icon={<Columns03 />}
-        keywords={['stage ']}
         leftLabel='Change org stage'
+        keywords={organizationKeywords.change_org_stage_to_target}
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Target);
           closeMenu();
@@ -38,8 +39,8 @@ export const StageSubItemGroup = ({
       <CommandSubItem
         rightLabel='Engaged'
         icon={<Columns03 />}
-        keywords={['stage ']}
         leftLabel='Change org stage'
+        keywords={organizationKeywords.change_org_stage_to_engaged}
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Engaged);
           closeMenu();
@@ -48,10 +49,21 @@ export const StageSubItemGroup = ({
       <CommandSubItem
         rightLabel='Trial'
         icon={<Columns03 />}
-        keywords={['stage ']}
         leftLabel='Change org stage'
+        keywords={organizationKeywords.change_org_stage_to_trial}
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Trial);
+          closeMenu();
+        }}
+      />
+
+      <CommandSubItem
+        icon={<Columns03 />}
+        rightLabel='Unqualified'
+        leftLabel='Change org stage'
+        keywords={organizationKeywords.change_org_stage_to_not_a_fit}
+        onSelectAction={() => {
+          updateStage(selectedIds, OrganizationStage.Unqualified);
           closeMenu();
         }}
       />
