@@ -4,5 +4,6 @@ export * from './UpdateHealthStatus';
 export * from './AddContactViaLinkedInUrl';
 export * from './RenameOrganizationProperty';
 export * from './AddNewOrganizations';
-export * from './RelationshipSubItemGroup.tsx';
-export * from './UpdateHealthStatusSubItemGroup .tsx';
+export * from './RelationshipSubItemGroup';
+export * from './UpdateHealthStatusSubItemGroup ';
+export * from './keywords.ts';

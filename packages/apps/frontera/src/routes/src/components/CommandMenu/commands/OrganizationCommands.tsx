@@ -14,6 +14,7 @@ import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
 import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands/GlobalHub.tsx';
+import { organizationKeywords } from '@shared/components/CommandMenu/commands/organization/keywords.ts';
 import {
   RelationshipSubItemGroup,
   UpdateHealthStatusSubItemGroup,
@@ -33,6 +34,7 @@ export const OrganizationCommands = observer(() => {
       <Command.List>
         <CommandItem
           leftAccessory={<User01 />}
+          keywords={organizationKeywords.add_contact}
           // rightAccessory={<Kbd className='px-1.5'>C</Kbd>}
           onSelect={() => {
             store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
@@ -43,6 +45,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Tag01 />}
+          keywords={organizationKeywords.change_or_add_tags}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeTags');
           }}
@@ -61,6 +64,7 @@ export const OrganizationCommands = observer(() => {
         {!!organization?.value?.tags?.length && (
           <CommandItem
             leftAccessory={<Tag01 />}
+            keywords={organizationKeywords.change_or_add_tags}
             onSelect={() => {
               organization?.removeAllTagsFromOrganization();
               store.ui.commandMenu.setOpen(false);
@@ -72,6 +76,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Edit03 />}
+          keywords={organizationKeywords.rename_org}
           // rightAccessory={
           //   <>
           //     <Kbd className='px-1.5'>
@@ -93,6 +98,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Globe01 />}
+          keywords={organizationKeywords.edit_website}
           onSelect={() => {
             store.ui.commandMenu.setType('RenameOrganizationProperty');
             store.ui.commandMenu.setContext({
@@ -105,6 +111,7 @@ export const OrganizationCommands = observer(() => {
         </CommandItem>
         <CommandItem
           leftAccessory={<AlignHorizontalCentre02 />}
+          keywords={organizationKeywords.change_relationship}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeRelationship');
           }}
@@ -121,6 +128,7 @@ export const OrganizationCommands = observer(() => {
           OrganizationRelationship.Prospect && (
           <CommandItem
             leftAccessory={<Columns03 />}
+            keywords={organizationKeywords.change_org_stage}
             onSelect={() => {
               store.ui.commandMenu.setType('ChangeStage');
             }}
@@ -136,7 +144,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Archive />}
-          keywords={['delete', 'archive']}
+          keywords={organizationKeywords.archive_org}
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
@@ -156,6 +164,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Activity />}
+          keywords={organizationKeywords.change_health_status}
           onSelect={() => {
             store.ui.commandMenu.setType('UpdateHealthStatus');
           }}
@@ -170,6 +179,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<User01 />}
+          keywords={organizationKeywords.assign_owner}
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
@@ -187,6 +197,7 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<CoinsStacked01 />}
+          keywords={organizationKeywords.create_new_opportunity}
           onSelect={() => {
             store.organizations.updateStage(
               [organization?.id as string],
