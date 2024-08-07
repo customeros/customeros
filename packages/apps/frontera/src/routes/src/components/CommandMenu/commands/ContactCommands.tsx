@@ -6,9 +6,9 @@ import { Clock } from '@ui/media/icons/Clock';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
+import { CommandItem } from '@ui/overlay/CommandMenu';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
-import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
-import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands/GlobalHub.tsx';
+import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
 export const ContactCommands = observer(() => {
   const store = useStore();
@@ -17,9 +17,8 @@ export const ContactCommands = observer(() => {
   const label = `Contact - ${contact?.value.name}`;
 
   return (
-    <Command>
-      <CommandInput label={label} placeholder='Type a command or search' />
-      <Command.List>
+    <CommandsContainer label={label}>
+      <>
         <CommandItem
           leftAccessory={<Tag01 />}
           onSelect={() => {
@@ -78,11 +77,7 @@ export const ContactCommands = observer(() => {
         >
           Edit time zone...
         </CommandItem>
-
-        <Command.Group heading='Navigate'>
-          <GlobalSharedCommands />
-        </Command.Group>
-      </Command.List>
-    </Command>
+      </>
+    </CommandsContainer>
   );
 });

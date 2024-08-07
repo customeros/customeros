@@ -7,14 +7,16 @@ import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { Globe01 } from '@ui/media/icons/Globe01.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
+import { CommandItem } from '@ui/overlay/CommandMenu';
 import { Activity } from '@ui/media/icons/Activity.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
-import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
-import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
-import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands/GlobalHub.tsx';
 import { organizationKeywords } from '@shared/components/CommandMenu/commands/organization/keywords.ts';
+import {
+  CommandsContainer,
+  StageSubItemGroup,
+} from '@shared/components/CommandMenu/commands/shared';
 import {
   RelationshipSubItemGroup,
   UpdateHealthStatusSubItemGroup,
@@ -29,9 +31,8 @@ export const OrganizationCommands = observer(() => {
   const label = `Organization - ${organization?.value.name}`;
 
   return (
-    <Command>
-      <CommandInput label={label} placeholder='Type a command or search' />
-      <Command.List>
+    <CommandsContainer label={label}>
+      <>
         <CommandItem
           leftAccessory={<User01 />}
           keywords={organizationKeywords.add_contact}
@@ -208,6 +209,7 @@ export const OrganizationCommands = observer(() => {
         >
           Create new opportunity...
         </CommandItem>
+
         {/*<CommandItem*/}
         {/*  leftAccessory={<Trophy01 />}*/}
         {/*  onSelect={() => {*/}
@@ -216,10 +218,7 @@ export const OrganizationCommands = observer(() => {
         {/*>*/}
         {/*  Change onboarding stage*/}
         {/*</CommandItem>*/}
-        <Command.Group heading='Navigate'>
-          <GlobalSharedCommands />
-        </Command.Group>
-      </Command.List>
-    </Command>
+      </>
+    </CommandsContainer>
   );
 });

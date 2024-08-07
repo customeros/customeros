@@ -8,10 +8,13 @@ import { useStore } from '@shared/hooks/useStore';
 import { OrganizationStage } from '@graphql/types';
 import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
+import { CommandItem } from '@ui/overlay/CommandMenu';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
-import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
-import { StageSubItemGroup } from '@shared/components/CommandMenu/commands/shared';
+import {
+  CommandsContainer,
+  StageSubItemGroup,
+} from '@shared/components/CommandMenu/commands/shared';
 import {
   organizationKeywords,
   RelationshipSubItemGroup,
@@ -26,9 +29,8 @@ export const OrganizationBulkCommands = observer(() => {
   const label = `${selectedIds?.length} organizations`;
 
   return (
-    <Command>
-      <CommandInput label={label} placeholder='Type a command or search' />
-      <Command.List>
+    <CommandsContainer label={label}>
+      <>
         <CommandItem
           leftAccessory={<Tag01 />}
           keywords={organizationKeywords.change_or_add_tags}
@@ -190,7 +192,7 @@ export const OrganizationBulkCommands = observer(() => {
         {/*>*/}
         {/*  Change onboarding stage*/}
         {/*</CommandItem>*/}
-      </Command.List>
-    </Command>
+      </>
+    </CommandsContainer>
   );
 });

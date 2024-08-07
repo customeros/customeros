@@ -5,5 +5,5 @@ export * from './AddContactViaLinkedInUrl';
 export * from './RenameOrganizationProperty';
 export * from './AddNewOrganizations';
 export * from './RelationshipSubItemGroup';
-export * from './UpdateHealthStatusSubItemGroup ';
+export * from './UpdateHealthStatusSubItemGroup';
 export * from './keywords.ts';
