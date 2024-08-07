@@ -48,7 +48,7 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*model
 	var data *postgresentity.IPDataResponseBody
 
 	// if cached data is missing or last time fetched > 90 days ago
-	if cacheIpData == nil || cacheIpData.UpdatedAt.AddDate(0, 0, s.config.IpDataConfig.InvalidateCacheAfterDays).Before(utils.Now()) {
+	if cacheIpData == nil || cacheIpData.UpdatedAt.AddDate(0, 0, s.config.IpDataConfig.IpDataCacheTtlDays).Before(utils.Now()) {
 		// get data from IPData
 		if data, err = s.askIpData(ctx, ip); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get IPData"))

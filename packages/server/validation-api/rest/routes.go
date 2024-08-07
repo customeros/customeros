@@ -21,7 +21,8 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 	r.GET("/readiness", healthCheckHandler)
 	validateAddress(ctx, r, services)
 	validatePhoneNumber(ctx, r, services)
-	validateEmail(ctx, r, services, logger)
+	validateEmailWithReacher(ctx, r, services, logger)
+	validateEmailV2(ctx, r, services, logger)
 	ipLookup(ctx, r, services, logger)
 }
 
@@ -29,12 +30,12 @@ func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func validateEmail(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
+func validateEmailWithReacher(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
 	r.POST("/validateEmail",
 		handler.TracingEnhancer(ctx, "POST /validateEmail"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
-			var request model.ValidationEmailRequest
+			var request model.ValidateEmailRequest
 
 			if err := c.BindJSON(&request); err != nil {
 				l.Errorf("Fail reading request: %v", err.Error())
@@ -42,7 +43,7 @@ func validateEmail(ctx context.Context, r *gin.Engine, services *service.Service
 				return
 			}
 
-			response, err := services.EmailValidationService.ValidateEmail(ctx, request.Email)
+			response, err := services.EmailValidationService.ValidateEmailWithReacher(ctx, request.Email)
 			if err != nil {
 				l.Errorf("Error validating email: %v", err.Error())
 				c.JSON(500, gin.H{"error": err.Error()})
@@ -50,6 +51,55 @@ func validateEmail(ctx context.Context, r *gin.Engine, services *service.Service
 			}
 
 			c.JSON(200, model.MapValidationEmailResponse(response, nil))
+		})
+}
+
+func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
+	r.POST("/validateEmailV2",
+		handler.TracingEnhancer(ctx, "POST /validateEmailV2"),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
+		func(c *gin.Context) {
+			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ValidateEmailV2", c.Request.Header)
+			defer span.Finish()
+
+			var request model.ValidateEmailRequest
+
+			if err := c.BindJSON(&request); err != nil {
+				l.Errorf("Fail reading request: %v", err.Error())
+				c.JSON(http.StatusBadRequest, model.ValidateEmailResponse{
+					Status:  "error",
+					Message: "Invalid request body",
+				})
+				return
+			}
+
+			// check ip is present
+			if request.Email == "" {
+				tracing.TraceErr(span, errors.New("Missing email parameter"))
+				l.Errorf("Missing email parameter")
+				c.JSON(http.StatusBadRequest, model.ValidateEmailResponse{
+					Status:  "error",
+					Message: "Missing email parameter",
+				})
+				return
+			}
+			span.LogFields(log.String("request.email", request.Email))
+
+			response, err := services.EmailValidationService.ValidateEmailWithMailsherpa(ctx, request.Email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				l.Errorf("Error on : %v", err.Error())
+				c.JSON(http.StatusInternalServerError, model.ValidateEmailResponse{
+					Status:  "error",
+					Message: "Internal server error",
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, model.ValidateEmailResponse{
+				Status: "success",
+				Data:   response,
+			})
 		})
 }
 

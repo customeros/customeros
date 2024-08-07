@@ -13,6 +13,7 @@ type Config struct {
 	SmartyConfig   SmartyConfig
 	IpDataConfig   IpDataConfig
 	IpHunterConfig IpHunterConfig
+	EmailConfig    EmailConfig
 
 	Postgres config.PostgresConfig
 	Neo4j    config.Neo4jConfig
@@ -31,10 +32,16 @@ type SmartyConfig struct {
 }
 
 type IpDataConfig struct {
-	ApiUrl                   string `env:"IPDATA_API_URL" validate:"required"`
-	ApiKey                   string `env:"IPDATA_API_KEY" validate:"required"`
-	InvalidateCacheAfterDays int    `env:"IPDATA_INVALIDATE_CACHE_AFTER_IN_DAYS" default:"90"  validate:"required"`
+	ApiUrl             string `env:"IPDATA_API_URL" validate:"required"`
+	ApiKey             string `env:"IPDATA_API_KEY" validate:"required"`
+	IpDataCacheTtlDays int    `env:"IPDATA_CACHE_TTL_DAYS" default:"90"  validate:"required"`
 }
 
 type IpHunterConfig struct {
+}
+
+type EmailConfig struct {
+	EmailValidationFromDomain         string `env:"EMAIL_VALIDATION_FROM_DOMAIN"`
+	EmailDomainValidationCacheTtlDays int    `env:"EMAIL_DOMAIN_VALIDATION_CACHE_TTL_DAYS" default:"90" validate:"required"`
+	EmailValidationCacheTtlDays       int    `env:"EMAIL_VALIDATION_CACHE_TTL_DAYS" default:"14" validate:"required"`
 }

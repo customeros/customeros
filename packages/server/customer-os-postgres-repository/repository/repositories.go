@@ -49,6 +49,8 @@ type Repositories struct {
 	TenantRepository                         TenantRepository
 	CacheIpDataRepository                    CacheIpDataRepository
 	CacheIpHunterRepository                  CacheIpHunterRepository
+	CacheEmailValidationRepository           CacheEmailValidationRepository
+	CacheEmailValidationDomainRepository     CacheEmailValidationDomainRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -96,6 +98,8 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		TenantRepository:                         NewTenantRepository(db),
 		CacheIpDataRepository:                    NewCacheIpDataRepository(db),
 		CacheIpHunterRepository:                  NewCacheIpHunterRepository(db),
+		CacheEmailValidationRepository:           NewCacheEmailValidationRepository(db),
+		CacheEmailValidationDomainRepository:     NewCacheEmailValidationDomainRepository(db),
 	}
 
 	return repositories
@@ -103,199 +107,57 @@ func InitRepositories(db *gorm.DB) *Repositories {
 
 func (r *Repositories) Migration(db *gorm.DB) {
 
-	var err error
-
 	//err = db.AutoMigrate(&entity.AppKey{})
 	//if err != nil {
 	//	panic(err)
 	//}
 
-	err = db.AutoMigrate(&entity.Tenant{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.AiLocationMapping{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.AiPromptLog{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.PersonalIntegration{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.PersonalEmailProvider{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TenantWebhookApiKey{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TenantWebhook{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.SlackChannel{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.PostmarkApiKey{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.GoogleServiceAccountKey{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.CurrencyRate{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EventBuffer{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TableViewDefinition{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TechLimit{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TrackingAllowedOrigin{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TenantSettingsEmailExclusion{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.ExternalAppKeys{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EnrichDetailsBetterContact{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EnrichDetailsScrapIn{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.UserEmailImportState{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.UserEmailImportStateHistory{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.RawEmail{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.OAuthTokenEntity{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.SlackSettingsEntity{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.SlackChannelNotification{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.ApiCache{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.Workflow{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.IndustryMapping{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.Tracking{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EnrichDetailsPreFilterTracking{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EnrichDetailsTracking{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TenantSettingsOpportunityStage{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.TenantSettingsMailbox{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EmailLookup{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.EmailTracking{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.FlowSequenceStepTemplateVariable{}, &entity.Flow{}, &entity.FlowSequence{}, &entity.FlowSequenceStep{}, &entity.FlowSequenceContact{}, &entity.FlowSequenceSender{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.CacheIpData{})
-	if err != nil {
-		panic(err)
-	}
-
-	err = db.AutoMigrate(&entity.CacheIpHunter{})
+	err := db.AutoMigrate(
+		&entity.Tenant{},
+		&entity.AiLocationMapping{},
+		&entity.AiPromptLog{},
+		&entity.PersonalIntegration{},
+		&entity.PersonalEmailProvider{},
+		&entity.TenantWebhookApiKey{},
+		&entity.TenantWebhook{},
+		&entity.SlackChannel{},
+		&entity.PostmarkApiKey{},
+		&entity.GoogleServiceAccountKey{},
+		&entity.CurrencyRate{},
+		&entity.EventBuffer{},
+		&entity.TableViewDefinition{},
+		&entity.TechLimit{},
+		&entity.TrackingAllowedOrigin{},
+		&entity.TenantSettingsEmailExclusion{},
+		&entity.ExternalAppKeys{},
+		&entity.EnrichDetailsBetterContact{},
+		&entity.EnrichDetailsScrapIn{},
+		&entity.UserEmailImportState{},
+		&entity.UserEmailImportStateHistory{},
+		&entity.RawEmail{},
+		&entity.OAuthTokenEntity{},
+		&entity.SlackSettingsEntity{},
+		&entity.SlackChannelNotification{},
+		&entity.ApiCache{},
+		&entity.Workflow{},
+		&entity.IndustryMapping{},
+		&entity.Tracking{},
+		&entity.EnrichDetailsPreFilterTracking{},
+		&entity.EnrichDetailsTracking{},
+		&entity.TenantSettingsOpportunityStage{},
+		&entity.TenantSettingsMailbox{},
+		&entity.FlowSequenceStepTemplateVariable{},
+		&entity.Flow{},
+		&entity.FlowSequence{},
+		&entity.FlowSequenceStep{},
+		&entity.FlowSequenceContact{},
+		&entity.FlowSequenceSender{},
+		&entity.EmailLookup{},
+		&entity.EmailTracking{},
+		&entity.CacheIpData{},
+		&entity.CacheIpHunter{},
+		&entity.CacheEmailValidation{},
+		&entity.CacheEmailValidationDomain{})
 	if err != nil {
 		panic(err)
 	}

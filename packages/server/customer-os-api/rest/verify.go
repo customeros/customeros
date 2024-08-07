@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -68,6 +69,38 @@ type IpIntelligenceOrganization struct {
 	LinkedIn string `json:"linkedin"`
 }
 
+type EmailVerificationResponse struct {
+	Status        string                  `json:"status"`
+	Message       string                  `json:"message,omitempty"`
+	Email         string                  `json:"email"`
+	IsDeliverable bool                    `json:"isDeliverable"`
+	Provider      string                  `json:"provider"`
+	IsRisky       bool                    `json:"isRisky"`
+	Risk          EmailVerificationRisk   `json:"risk"`
+	Syntax        EmailVerificationSyntax `json:"syntax"`
+	Smtp          EmailVerificationSmtp   `json:"smtp"`
+}
+
+type EmailVerificationRisk struct {
+	IsFirewalled   bool `json:"isFirewalled"`
+	IsRoleMailbox  bool `json:"isRoleMailbox"`
+	IsFreeProvider bool `json:"isFreeProvider"`
+	IsMailboxFull  bool `json:"isMailboxFull"`
+	IsCatchAll     bool `json:"isCatchAll"`
+}
+
+type EmailVerificationSyntax struct {
+	IsValid bool   `json:"isValid"`
+	Domain  string `json:"domain"`
+	User    string `json:"user"`
+}
+
+type EmailVerificationSmtp struct {
+	ResponseCode string `json:"responseCode"`
+	ErrorCode    string `json:"errorCode"`
+	Description  string `json:"description"`
+}
+
 func IpIntelligence(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpIntelligence", c.Request.Header)
@@ -81,13 +114,13 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 		logger := services.Log
 
-		// Check if ip_address is provided
-		ipAddress := c.Query("ip_address")
+		// Check if address is provided
+		ipAddress := c.Query("address")
 		if ipAddress == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing ip_address parameter"})
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing address parameter"})
 			return
 		}
-		span.LogFields(log.String("ip_address", ipAddress))
+		span.LogFields(log.String("address", ipAddress))
 
 		if net.ParseIP(ipAddress) == nil {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid IP address format"})
@@ -190,7 +223,7 @@ func isEuropeanUnion(countryCodeA2 string) bool {
 
 func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GenerateEmailTrackingUrls", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "VerifyEmailAddress", c.Request.Header)
 		defer span.Finish()
 
 		tenant := common.GetTenantFromContext(ctx)
@@ -199,10 +232,97 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
+		logger := services.Log
 
-		// TODO implement me
-		//log := services.Log
+		// Check if email address is provided
+		emailAddress := c.Query("address")
+		if emailAddress == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing address parameter"})
+			return
+		}
+		span.LogFields(log.String("address", emailAddress))
 
-		c.JSON(http.StatusOK, "")
+		syntaxValidation := mailsherpa.ValidateEmailSyntax(emailAddress)
+		if !syntaxValidation.IsValid {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid email address syntax"})
+			logger.Warnf("Invalid email address format: %s", emailAddress)
+			return
+		}
+
+		// prepare validation api request
+		requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequest{
+			Email: emailAddress,
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			return
+		}
+		requestBody := []byte(string(requestJSON))
+		req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			return
+		}
+		// Inject span context into the HTTP request
+		req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
+
+		// Set the request headers
+		req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
+		req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
+
+		// Make the HTTP request
+		client := &http.Client{}
+		response, err := client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+		}
+		defer response.Body.Close()
+
+		var result validationmodel.ValidateEmailResponse
+		err = json.NewDecoder(response.Body).Decode(&result)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			return
+		}
+
+		if result.Status != "success" {
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": result.Message})
+			return
+		}
+
+		emailVerificationResponse := EmailVerificationResponse{
+			Status:   "success",
+			Email:    emailAddress,
+			Provider: result.Data.DomainData.Provider,
+			IsRisky: result.Data.DomainData.IsFirewalled ||
+				result.Data.EmailData.IsRoleAccount ||
+				result.Data.EmailData.IsFreeAccount ||
+				result.Data.EmailData.IsMailboxFull ||
+				result.Data.DomainData.IsCatchAll,
+			Syntax: EmailVerificationSyntax{
+				IsValid: syntaxValidation.IsValid,
+				Domain:  syntaxValidation.Domain,
+				User:    syntaxValidation.User,
+			},
+			Risk: EmailVerificationRisk{
+				IsFirewalled:   result.Data.DomainData.IsFirewalled,
+				IsRoleMailbox:  result.Data.EmailData.IsRoleAccount,
+				IsFreeProvider: result.Data.EmailData.IsFreeAccount,
+				IsMailboxFull:  result.Data.EmailData.IsMailboxFull,
+				IsCatchAll:     result.Data.DomainData.IsCatchAll,
+			},
+			Smtp: EmailVerificationSmtp{
+				Description:  result.Data.EmailData.Description,
+				ErrorCode:    result.Data.EmailData.ErrorCode,
+				ResponseCode: result.Data.EmailData.ResponseCode,
+			},
+			IsDeliverable: result.Data.EmailData.IsDeliverable,
+		}
+
+		c.JSON(http.StatusOK, emailVerificationResponse)
 	}
 }
