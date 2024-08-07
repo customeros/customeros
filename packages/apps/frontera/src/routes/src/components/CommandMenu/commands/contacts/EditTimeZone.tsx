@@ -12,11 +12,13 @@ export const EditTimeZone = observer(() => {
   const context = store.ui.commandMenu.context;
   const [search, setSearch] = useState('');
 
-  const label = `Contact - ${
-    store.contacts.value.get(context.ids?.[0] as string)?.value.name
-  }`;
-
   const contact = store.contacts.value.get(context.ids?.[0] as string);
+
+  const selectedIds = context.ids;
+  const label =
+    selectedIds?.length === 1
+      ? `Contact - ${contact?.value.name}`
+      : `${selectedIds?.length} contacts`;
 
   const contactTimeZone = timezoneOptions.find(
     (v) => v.value === contact?.value?.timezone,
@@ -26,13 +28,27 @@ export const EditTimeZone = observer(() => {
     if (!context.ids?.[0]) return;
 
     if (!contact) return;
-    contact?.update((o) => {
-      o.timezone = timezone;
 
-      return o;
-    });
+    if (selectedIds?.length === 1) {
+      contact?.update((o) => {
+        o.timezone = timezone;
+
+        return o;
+      });
+    } else {
+      selectedIds.forEach((id) => {
+        const contact = store.contacts.value.get(id);
+
+        if (contact) {
+          contact.update((o) => {
+            o.timezone = timezone;
+
+            return o;
+          });
+        }
+      });
+    }
     store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('ContactHub');
   };
 
   return (

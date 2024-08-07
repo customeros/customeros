@@ -31,7 +31,8 @@ export type CommandMenuType =
   | 'EditPhoneNumber'
   | 'EditJobTitle'
   | 'ChangeOrAddJobRoles'
-  | 'EditTimeZone';
+  | 'EditTimeZone'
+  | 'ContactBulkCommands';
 
 type Context = {
   ids: Array<string>;

@@ -7,14 +7,15 @@ import { X } from '@ui/media/icons/X';
 import { Tag, DataSource } from '@graphql/types';
 import { Archive } from '@ui/media/icons/Archive';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
-import { User02 } from '@ui/media/icons/User02.tsx';
 import { Tags } from '@organization/components/Tabs';
 import { TableInstance } from '@ui/presentation/Table';
+import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ActionItem } from '@organizations/components/Actions/ActionItem.tsx';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
 interface TableActionsProps {
+  onOpenCommandK: () => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<ContactStore>;
   onHideContacts: (ids: string[]) => void;
@@ -25,6 +26,7 @@ export const ContactTableActions = ({
   table,
   enableKeyboardShortcuts,
   onAddTags,
+  onOpenCommandK,
   onHideContacts,
 }: TableActionsProps) => {
   const { open: isOpen, onOpen, onClose } = useDisclosure();
@@ -123,12 +125,15 @@ export const ContactTableActions = ({
           Archive
         </ActionItem>
         <ActionItem
-          shortcutKey='P'
-          onClick={onOpenTagEdit}
-          tooltip='Edit persona tags'
-          icon={<User02 className='text-inherit size-3' />}
+          onClick={onOpenCommandK}
+          dataTest='org-actions-commandk'
+          icon={
+            <span className='text-inherit'>
+              {isUserPlatformMac() ? '⌘' : 'Ctrl'}
+            </span>
+          }
         >
-          Edit persona
+          Command
         </ActionItem>
       </ButtonGroup>
 

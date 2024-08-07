@@ -246,26 +246,49 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   useEffect(() => {
     tableRef.current?.resetRowSelection();
-    store.ui.commandMenu.setType('OrganizationHub');
+
+    if (tableType === TableViewType.Organizations) {
+      store.ui.commandMenu.setType('OrganizationHub');
+    } else {
+      store.ui.commandMenu.setType('ContactHub');
+    }
   }, [tableViewDef?.value.id]);
 
   useEffect(() => {
     const selectedIds = Object.keys(selection);
 
-    if (selectedIds.length === 1) {
-      store.ui.commandMenu.setType('OrganizationCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Organization',
-        ids: selectedIds,
-      });
-    }
+    if (tableType === TableViewType.Organizations) {
+      if (selectedIds.length === 1) {
+        store.ui.commandMenu.setType('OrganizationCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organization',
+          ids: selectedIds,
+        });
+      }
 
-    if (selectedIds.length > 1) {
-      store.ui.commandMenu.setType('OrganizationBulkCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Organizations',
-        ids: selectedIds,
-      });
+      if (selectedIds.length > 1) {
+        store.ui.commandMenu.setType('OrganizationBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organizations',
+          ids: selectedIds,
+        });
+      }
+    } else {
+      if (selectedIds.length === 1) {
+        store.ui.commandMenu.setType('ContactCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selectedIds,
+        });
+      }
+
+      if (selectedIds.length > 1) {
+        store.ui.commandMenu.setType('ContactBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selectedIds,
+        });
+      }
     }
   }, [selection]);
 
@@ -362,20 +385,38 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const handleOpenCommandKMenu = () => {
     const selectedIds = Object.keys(selection);
 
-    if (selectedIds.length === 1) {
-      store.ui.commandMenu.setType('OrganizationCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Organization',
-        ids: selectedIds,
-      });
-    }
+    if (tableType === TableViewType.Organizations) {
+      if (selectedIds.length === 1) {
+        store.ui.commandMenu.setType('OrganizationCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organization',
+          ids: selectedIds,
+        });
+      }
 
-    if (selectedIds.length > 1) {
-      store.ui.commandMenu.setType('OrganizationBulkCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Organizations',
-        ids: selectedIds,
-      });
+      if (selectedIds.length > 1) {
+        store.ui.commandMenu.setType('OrganizationBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organizations',
+          ids: selectedIds,
+        });
+      }
+    } else {
+      if (selectedIds.length === 1) {
+        store.ui.commandMenu.setType('ContactCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selectedIds,
+        });
+      }
+
+      if (selectedIds.length > 1) {
+        store.ui.commandMenu.setType('ContactBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selectedIds,
+        });
+      }
     }
 
     store.ui.commandMenu.setOpen(true);
@@ -442,6 +483,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             <ContactTableActions
               onAddTags={store.contacts.updateTags}
               onHideContacts={store.contacts.archive}
+              onOpenCommandK={handleOpenCommandKMenu}
               table={table as TableInstance<ContactStore>}
               enableKeyboardShortcuts={
                 !isSearching &&
