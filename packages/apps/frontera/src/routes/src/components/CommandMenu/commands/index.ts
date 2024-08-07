@@ -7,3 +7,6 @@ export * from './OrganizationHub';
 export * from './OpportunityCommands';
 export * from './OrganizationCommands';
 export * from './OrganizationBulkCommands';
+export * from './contacts';
+export * from './ContactHub';
+export * from './ContactCommands';

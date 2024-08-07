@@ -341,6 +341,22 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         });
       }
     }
+
+    if (tableType === TableViewType.Contacts) {
+      if (typeof index !== 'number') {
+        store.ui.commandMenu.setType('ContactHub');
+
+        return;
+      }
+
+      if (index > -1 && Object.keys(selection).length === 0) {
+        store.ui.commandMenu.setType('ContactCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: [data?.[index]?.id],
+        });
+      }
+    }
   };
 
   const handleOpenCommandKMenu = () => {

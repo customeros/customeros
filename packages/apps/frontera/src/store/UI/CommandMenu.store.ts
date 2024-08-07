@@ -21,14 +21,24 @@ export type CommandMenuType =
   | 'ChooseOpportunityOrganization'
   | 'ChooseOpportunityStage'
   | 'AddNewOrganization'
-  | 'SetOpportunityNextSteps';
+  | 'SetOpportunityNextSteps'
+  | 'SetOpportunityNextSteps'
+  | 'EditPersonaTag'
+  | 'ContactHub'
+  | 'ContactCommands'
+  | 'EditEmail'
+  | 'EditName'
+  | 'EditPhoneNumber'
+  | 'EditJobTitle'
+  | 'ChangeOrAddJobRoles'
+  | 'EditTimeZone';
 
 type Context = {
   ids: Array<string>;
   property?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: Record<string, any>;
-  entity: 'Opportunity' | 'Organization' | 'Organizations' | null;
+  entity: 'Opportunity' | 'Organization' | 'Organizations' | 'Contact' | null;
 };
 
 const makeDefaultContext = () => ({
