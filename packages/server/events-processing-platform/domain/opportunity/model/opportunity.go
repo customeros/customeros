@@ -7,26 +7,6 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 )
 
-const (
-	FieldMaskName              = "name"
-	FieldMaskAmount            = "amount"
-	FieldMaskMaxAmount         = "maxAmount"
-	FieldMaskComments          = "comments"
-	FieldMaskRenewalLikelihood = "renewalLikelihood"
-	FieldMaskRenewalApproved   = "renewalApproved"
-	FieldMaskRenewedAt         = "renewedAt"
-	FieldMaskAdjustedRate      = "adjustedRate"
-	FieldMaskExternalType      = "externalType"
-	FieldMaskInternalType      = "internalType"
-	FieldMaskExternalStage     = "externalStage"
-	FieldMaskInternalStage     = "internalStage"
-	FieldMaskEstimatedClosedAt = "estimatedClosedAt"
-	FieldMaskOwnerUserId       = "ownerUserId"
-	FieldMaskCurrency          = "currency"
-	FieldMaskNextSteps         = "nextSteps"
-	FieldMaskLikelihoodRate    = "likelihoodRate"
-)
-
 type RenewalDetails struct {
 	RenewedAt              *time.Time `json:"renewedAt,omitempty"`
 	RenewalLikelihood      string     `json:"renewalLikelihood,omitempty"`

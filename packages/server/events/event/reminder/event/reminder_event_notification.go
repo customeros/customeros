@@ -16,4 +16,5 @@ func (e ReminderNotificationEvent) GetBaseEvent() event.BaseEvent {
 }
 
 func (e ReminderNotificationEvent) SetEntityId(entityId string) {
+	e.EntityId = entityId
 }

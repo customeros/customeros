@@ -10,3 +10,23 @@ const (
 	OpportunityCloseLooseV1          = "V1_OPPORTUNITY_CLOSE_LOOSE"
 	OpportunityArchiveV1             = "V1_OPPORTUNITY_ARCHIVE"
 )
+
+const (
+	FieldMaskName              = "name"
+	FieldMaskAmount            = "amount"
+	FieldMaskMaxAmount         = "maxAmount"
+	FieldMaskComments          = "comments"
+	FieldMaskRenewalLikelihood = "renewalLikelihood"
+	FieldMaskRenewalApproved   = "renewalApproved"
+	FieldMaskRenewedAt         = "renewedAt"
+	FieldMaskAdjustedRate      = "adjustedRate"
+	FieldMaskExternalType      = "externalType"
+	FieldMaskInternalType      = "internalType"
+	FieldMaskExternalStage     = "externalStage"
+	FieldMaskInternalStage     = "internalStage"
+	FieldMaskEstimatedClosedAt = "estimatedClosedAt"
+	FieldMaskOwnerUserId       = "ownerUserId"
+	FieldMaskCurrency          = "currency"
+	FieldMaskNextSteps         = "nextSteps"
+	FieldMaskLikelihoodRate    = "likelihoodRate"
+)

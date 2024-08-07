@@ -106,6 +106,7 @@ func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*
 			AppSource:  constants.AppSourceCustomerOsApi,
 			Source:     neo4jentity.DataSourceOpenline.String(),
 			EntityType: commonmodel.OPPORTUNITY,
+			EntityId:   id,
 		},
 	})
 

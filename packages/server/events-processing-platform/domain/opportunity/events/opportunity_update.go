@@ -63,45 +63,45 @@ func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.
 }
 
 func (e OpportunityUpdateEvent) UpdateName() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskName)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskName)
 }
 
 func (e OpportunityUpdateEvent) UpdateAmount() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskAmount)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskAmount)
 }
 
 func (e OpportunityUpdateEvent) UpdateMaxAmount() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskMaxAmount)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskMaxAmount)
 }
 
 func (e OpportunityUpdateEvent) UpdateExternalStage() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskExternalStage)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskExternalStage)
 }
 
 func (e OpportunityUpdateEvent) UpdateExternalType() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskExternalType)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskExternalType)
 }
 
 func (e OpportunityUpdateEvent) UpdateEstimatedClosedAt() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskEstimatedClosedAt)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskEstimatedClosedAt)
 }
 
 func (e OpportunityUpdateEvent) UpdateOwnerUserId() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskOwnerUserId)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskOwnerUserId)
 }
 
 func (e OpportunityUpdateEvent) UpdateInternalStage() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskInternalStage) && e.InternalStage != ""
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskInternalStage) && e.InternalStage != ""
 }
 
 func (e OpportunityUpdateEvent) UpdateCurrency() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskCurrency)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskCurrency)
 }
 
 func (e OpportunityUpdateEvent) UpdateNextSteps() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskNextSteps)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskNextSteps)
 }
 
 func (e OpportunityUpdateEvent) UpdateLikelihoodRate() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskLikelihoodRate)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskLikelihoodRate)
 }

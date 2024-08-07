@@ -3,7 +3,6 @@ package events
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
@@ -40,7 +39,7 @@ func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLik
 		RenewedAt:         renewedAt,
 	}
 
-	if utils.Contains(fieldsMask, model.FieldMaskAdjustedRate) {
+	if utils.Contains(fieldsMask, opportunityevent.FieldMaskAdjustedRate) {
 		eventData.RenewalAdjustedRate = adjustedRate
 	}
 
@@ -56,25 +55,25 @@ func NewOpportunityUpdateRenewalEvent(aggregate eventstore.Aggregate, renewalLik
 }
 
 func (e OpportunityUpdateRenewalEvent) UpdateAmount() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskAmount)
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, opportunityevent.FieldMaskAmount)
 }
 
 func (e OpportunityUpdateRenewalEvent) UpdateComments() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskComments)
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, opportunityevent.FieldMaskComments)
 }
 
 func (e OpportunityUpdateRenewalEvent) UpdateRenewalLikelihood() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, model.FieldMaskRenewalLikelihood)
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, opportunityevent.FieldMaskRenewalLikelihood)
 }
 
 func (e OpportunityUpdateRenewalEvent) UpdateRenewalApproved() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskRenewalApproved)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskRenewalApproved)
 }
 
 func (e OpportunityUpdateRenewalEvent) UpdateRenewedAt() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskRenewedAt)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskRenewedAt)
 }
 
 func (e OpportunityUpdateRenewalEvent) UpdateRenewalAdjustedRate() bool {
-	return utils.Contains(e.FieldsMask, model.FieldMaskAdjustedRate)
+	return utils.Contains(e.FieldsMask, opportunityevent.FieldMaskAdjustedRate)
 }
