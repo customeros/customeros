@@ -68,6 +68,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ContactCommands: <ContactCommands />,
   EditPhoneNumber: <EditPhoneNumber />,
   ChangeArrEstimate: <ChangeArrEstimate />,
+  AddNewOrganization: <AddNewOrganization />,
   ChangeRelationship: <ChangeRelationship />,
   UpdateHealthStatus: <UpdateHealthStatus />,
   ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
@@ -81,7 +82,6 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
-  AddNewOrganization: <AddNewOrganization />,
 };
 
 export const CommandMenu = observer(() => {
