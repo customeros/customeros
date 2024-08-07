@@ -72,15 +72,7 @@ export const ChangeTags = observer(() => {
   };
 
   const handleCreateOption = (value: string) => {
-    store.tags?.create(undefined, {
-      onSucces: (serverId) => {
-        store.tags?.value.get(serverId)?.update((tag) => {
-          tag.name = value;
-
-          return tag;
-        });
-      },
-    });
+    store.tags?.create({ name: value });
 
     match(context.entity)
       .with('Organization', () => {

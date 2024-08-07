@@ -38,15 +38,7 @@ export const ContactsTagsCell = observer(({ id }: ContactCardProps) => {
   }, [isEdit]);
 
   const handleCreateOption = (value: string) => {
-    store.tags?.create(undefined, {
-      onSucces: (serverId) => {
-        store.tags?.value.get(serverId)?.update((tag) => {
-          tag.name = value;
-
-          return tag;
-        });
-      },
-    });
+    store.tags?.create({ name: value });
 
     contactStore?.update((contact) => {
       contact.tags = [
