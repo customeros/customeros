@@ -8,9 +8,9 @@ import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const RenameOpportunityName = observer(() => {
   const store = useStore();
-  const [value, setValue] = useState('');
   const context = store.ui.commandMenu.context;
   const opportunity = store.opportunities.value.get(context.ids?.[0]);
+  const [value, setValue] = useState(() => opportunity?.value.name ?? '');
 
   const label = `Opportunity - ${opportunity?.value.name}`;
 

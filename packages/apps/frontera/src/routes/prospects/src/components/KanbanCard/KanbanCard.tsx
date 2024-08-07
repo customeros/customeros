@@ -81,9 +81,8 @@ export const KanbanCard = observer(
     const navigate = useNavigate();
     const containerRef = useRef<HTMLDivElement>(null);
     const nextStepsRef = useRef<HTMLTextAreaElement>(null);
+    const mergedRef = useMergeRefs(provided?.innerRef, containerRef);
     const [showNextSteps, setShowNextSteps] = useState(!!card.value.nextSteps);
-
-    if (!card.value.metadata.id) return null;
 
     const organization = card.organization;
     const logo = organization?.value.icon;
@@ -93,6 +92,8 @@ export const KanbanCard = observer(
           card.value?.stageLastUpdated,
         )
       : 0;
+
+    if (!card.value.metadata.id) return null;
 
     const handleNextStepsClick = () => {
       if (card.value.nextSteps) {
@@ -116,8 +117,6 @@ export const KanbanCard = observer(
       enabled: isFocused,
       ref: containerRef,
     });
-
-    const mergedRef = useMergeRefs(provided?.innerRef, containerRef);
 
     return (
       <div

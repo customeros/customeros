@@ -4,6 +4,7 @@ import GetOpportunityDocument from './getOpportunity.graphql';
 import GetOpportunitiesDocument from './getOpportunities.graphql';
 import CreateOpportunityDocument from './createOpportunity.graphql';
 import UpdateOpportunityDocument from './updateOpportunity.graphql';
+import ArchiveOpportunityDocument from './archiveOpportunity.graphql';
 import UpdateOpportunityOwnerDocument from './updateOpportunityOwner.graphql';
 import UpdateOpportunityRenewalDocument from './updateOpportunityRenewal.graphql';
 import UpdateOpportunityToCloseWonDocument from './updateOpportunityToCloseWon.graphql';
@@ -24,6 +25,10 @@ import {
   UpdateOpportunityMutation,
   UpdateOpportunityMutationVariables,
 } from './updateOpportunity.generated';
+import {
+  ArchiveOpportunityMutation,
+  ArchiveOpportunityMutationVariables,
+} from './archiveOpportunity.generated';
 import {
   UpdateOpportunityOwnerMutation,
   UpdateOpportunityOwnerMutationVariables,
@@ -127,5 +132,14 @@ export class OpportunitiesService {
       UpdateOpportunityToCloseWonMutation,
       UpdateOpportunityToCloseWonMutationVariables
     >(UpdateOpportunityToCloseWonDocument, variables);
+  }
+
+  async archiveOpportunity(
+    variables: ArchiveOpportunityMutationVariables,
+  ): Promise<ArchiveOpportunityMutation> {
+    return this.transport.graphql.request<
+      ArchiveOpportunityMutation,
+      ArchiveOpportunityMutationVariables
+    >(ArchiveOpportunityDocument, variables);
   }
 }

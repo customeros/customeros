@@ -1040,6 +1040,7 @@ export const getDefaultValue = (): Organization => ({
     source: DataSource.Openline,
     sourceOfTruth: DataSource.Openline,
   },
+  icpFit: false,
   owner: null,
   contactCount: 0,
   contacts: {

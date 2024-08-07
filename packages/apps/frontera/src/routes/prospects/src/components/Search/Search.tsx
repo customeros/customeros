@@ -17,7 +17,10 @@ export const Search = observer(() => {
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     startTransition(() => {
-      const value = event.target.value;
+      const value = event.target.value
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
 
       setSearchParams(
         (prev) => {

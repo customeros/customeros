@@ -1,0 +1,5 @@
+mutation archiveOpportunity($id: ID!) {
+  opportunity_Archive(id: $id) {
+    accepted
+  }
+}

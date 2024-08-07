@@ -404,7 +404,6 @@ export const BillingPanel = observer(() => {
         confirmButtonLabel='Disable'
         label='Disable Customer billing?'
         onConfirm={handleDisableBillingDetails}
-        icon={<SlashOctagon color='error.600' />}
         isLoading={updateTenantSettingsMutation.isPending}
         body='Disabling Customer billing will stop the sending of invoices, and prevent customers from being able to pay.'
       />

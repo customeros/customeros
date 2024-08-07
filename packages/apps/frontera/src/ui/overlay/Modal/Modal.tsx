@@ -55,7 +55,7 @@ export const ModalHeader = ({
   ...props
 }: DialogTitleProps) => {
   return (
-    <Dialog.Title className={twMerge('px-6 pt-6 pb-5', className)} {...props}>
+    <Dialog.Title className={twMerge('px-6 pt-6 pb-4', className)} {...props}>
       {children}
     </Dialog.Title>
   );
@@ -144,7 +144,7 @@ export const ModalFooter = ({
   ...props
 }: React.HTMLAttributes<HTMLDivElement>) => {
   return (
-    <div className={twMerge('px-6 pb-6 pt-8', className)} {...props}>
+    <div className={twMerge('p-6', className)} {...props}>
       {children}
     </div>
   );

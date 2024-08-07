@@ -11,11 +11,13 @@ import { Command, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const ChangeArrEstimate = observer(() => {
   const store = useStore();
-  const [value, setValue] = useState('');
-  const [unmaskedValue, setUnmaskedValue] = useState('');
   const context = store.ui.commandMenu.context;
   const opportunity = store.opportunities.value.get(
     (context.ids as string[])?.[0],
+  );
+  const [unmaskedValue, setUnmaskedValue] = useState('');
+  const [value, setValue] = useState(
+    () => opportunity?.value.maxAmount.toString() ?? '',
   );
 
   const label = match(context.entity)
@@ -65,13 +67,13 @@ export const ChangeArrEstimate = observer(() => {
           blocks={{
             num: {
               mask: Number,
-              scale: 2,
+              scale: 0,
               lazy: false,
+              min: 0,
               placeholderChar: '#',
               thousandsSeparator: ',',
               normalizeZeros: true,
               padFractionalZeros: true,
-              radix: '.',
               autofix: true,
             },
           }}

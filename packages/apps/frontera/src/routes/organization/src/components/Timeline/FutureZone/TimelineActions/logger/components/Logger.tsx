@@ -7,7 +7,6 @@ import noteIcon from '@assets/images/event-ill-log.png';
 import { Button } from '@ui/form/Button/Button';
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
-import { MessageChatSquare } from '@ui/media/icons/MessageChatSquare';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { useTimelineActionLogEntryContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
 
@@ -139,7 +138,6 @@ export const Logger = observer(({ hide }: LoggerProps) => {
         confirmButtonLabel='Log it'
         cancelButtonLabel='Discard'
         isOpen={store.ui.activeConfirmation === 'log-entry'}
-        icon={<MessageChatSquare className='text-primary-700' />}
         description='You have typed an unlogged entry. Do you want to log it to the timeline, or discard it?'
       />
     </div>

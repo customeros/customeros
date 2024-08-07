@@ -5,8 +5,10 @@ import { observer } from 'mobx-react-lite';
 
 import { Editor } from '@ui/form/Editor/Editor';
 import { useStore } from '@shared/hooks/useStore';
-import { Command, CommandInput } from '@ui/overlay/CommandMenu';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
+import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml';
 
 export const SetOpportunityNextSteps = observer(() => {
   const store = useStore();
@@ -43,10 +45,20 @@ export const SetOpportunityNextSteps = observer(() => {
           usePlainText
           namespace='opportunity-next-step'
           onChange={(html) => setValue(extractPlainText(html))}
+          defaultHtmlValue={convertPlainTextToHtml(
+            opportunity?.value?.nextSteps ?? '',
+          )}
         />
       </CommandInput>
 
-      <Command.List className='p-0'></Command.List>
+      <Command.List className='p-0'>
+        <CommandItem
+          leftAccessory={<InfoCircle />}
+          className='data-[selected=true]:bg-white'
+        >
+          Use <code>⌘ + Enter</code> to save.
+        </CommandItem>
+      </Command.List>
     </Command>
   );
 });

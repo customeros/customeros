@@ -516,6 +516,7 @@ export type Contact = ExtensibleEntity &
      */
     title?: Maybe<Scalars['String']['output']>;
     updatedAt: Scalars['Time']['output'];
+    username?: Maybe<Scalars['String']['output']>;
   };
 
 /**
@@ -578,6 +579,7 @@ export type ContactInput = {
   /** Deprecated */
   templateId?: InputMaybe<Scalars['ID']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
+  username?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type ContactOrganizationInput = {
@@ -610,6 +612,7 @@ export type ContactUpdateInput = {
   prefix?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
+  username?: InputMaybe<Scalars['String']['input']>;
 };
 
 /**
@@ -2323,6 +2326,7 @@ export type Mutation = {
   contact_Archive: Result;
   contact_Create: Scalars['ID']['output'];
   contact_CreateForOrganization: Contact;
+  /** @deprecated Decommissioned */
   contact_FindEmail: Scalars['String']['output'];
   contact_HardDelete: Result;
   contact_Merge: Contact;
@@ -3668,6 +3672,7 @@ export type Organization = MetadataInterface & {
   headquarters?: Maybe<Scalars['String']['output']>;
   hide: Scalars['Boolean']['output'];
   icon?: Maybe<Scalars['String']['output']>;
+  icpFit: Scalars['Boolean']['output'];
   /**
    * Deprecated
    * @deprecated Use metadata.id
@@ -4012,6 +4017,7 @@ export type OrganizationUpdateInput = {
   employees?: InputMaybe<Scalars['Int64']['input']>;
   headquarters?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
+  icpFit?: InputMaybe<Scalars['Boolean']['input']>;
   id: Scalars['ID']['input'];
   industry?: InputMaybe<Scalars['String']['input']>;
   industryGroup?: InputMaybe<Scalars['String']['input']>;

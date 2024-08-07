@@ -23,63 +23,133 @@ export const OpportunityCommands = observer(() => {
     <Command>
       <CommandInput label={label} placeholder='Type a command or search' />
       <Command.List>
-        <CommandItem
-          leftAccessory={<Columns03 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('ChangeStage');
-          }}
-        >
-          Change stage...
-        </CommandItem>
+        <Command.Group>
+          <CommandItem
+            leftAccessory={<Columns03 />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('ChangeStage');
+            }}
+            keywords={[
+              'change',
+              'edit',
+              'update',
+              'stage',
+              'status',
+              'pipeline',
+              'phase',
+            ]}
+          >
+            Change stage...
+          </CommandItem>
 
-        <CommandItem
-          leftAccessory={<ArrowsRight />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('SetOpportunityNextSteps');
-          }}
-        >
-          Set next step
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<ArrowsRight />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('SetOpportunityNextSteps');
+            }}
+            keywords={[
+              'set',
+              'edit',
+              'update',
+              'next step',
+              'action',
+              'reminder',
+              'follow up',
+              'task',
+            ]}
+          >
+            Set next step
+          </CommandItem>
 
-        <CommandItem
-          leftAccessory={<Calculator />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('ChangeArrEstimate');
-          }}
-        >
-          Change ARR estimate
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<Calculator />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('ChangeArrEstimate');
+            }}
+            keywords={[
+              'change',
+              'edit',
+              'update',
+              'arr',
+              'annual recurring revenue',
+              'forecast',
+              'projection',
+              'estimate',
+            ]}
+          >
+            Change ARR estimate
+          </CommandItem>
 
-        <CommandItem
-          leftAccessory={<CurrencyDollarCircle />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('ChangeCurrency');
-          }}
-        >
-          Change ARR currency...
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<CurrencyDollarCircle />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('ChangeCurrency');
+            }}
+            keywords={[
+              'change',
+              'edit',
+              'update',
+              'arr',
+              'annual recurring revenue',
+              'currency',
+              'usd',
+              'eur',
+              'gbp',
+              'dollar',
+              'euro',
+              'great british pound',
+            ]}
+          >
+            Change ARR currency...
+          </CommandItem>
 
-        <CommandItem
-          leftAccessory={<Edit03 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('RenameOpportunityName');
-          }}
-        >
-          Rename opportunity
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<Edit03 />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('RenameOpportunityName');
+            }}
+            keywords={[
+              'rename',
+              'edit',
+              'change',
+              'update',
+              'opportunity',
+              'deal',
+              'name',
+              'title',
+              'label',
+            ]}
+          >
+            Rename opportunity
+          </CommandItem>
 
-        <CommandItem
-          leftAccessory={<User01 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('AssignOwner');
-          }}
-        >
-          Assign owner...
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<User01 />}
+            keywords={['assign', 'change', 'update', 'edit', 'owner']}
+            onSelect={() => {
+              store.ui.commandMenu.setType('AssignOwner');
+            }}
+          >
+            Assign owner...
+          </CommandItem>
 
-        <CommandItem onSelect={() => {}} leftAccessory={<Archive />}>
-          Archive opportunity
-        </CommandItem>
+          <CommandItem
+            leftAccessory={<Archive />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('DeleteConfirmationModal');
+            }}
+            keywords={[
+              'archive',
+              'delete',
+              'remove',
+              'hide',
+              'opportunity',
+              'deal',
+            ]}
+          >
+            Archive opportunity
+          </CommandItem>
+        </Command.Group>
 
         <Command.Group heading='Navigate'>
           <GlobalSharedCommands />

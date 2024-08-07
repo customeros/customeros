@@ -2,6 +2,7 @@ import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { Currency } from '@graphql/types';
+import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
 import { CurrencyEuro } from '@ui/media/icons/CurrencyEuro';
 import { CurrencyPound } from '@ui/media/icons/CurrencyPound';
@@ -37,18 +38,27 @@ export const ChangeCurrency = observer(() => {
         <CommandItem
           leftAccessory={<CurrencyDollar />}
           onSelect={() => handleSelect(Currency.Usd)}
+          rightAccessory={
+            opportunity?.value?.currency === Currency.Usd && <Check />
+          }
         >
           USD
         </CommandItem>
         <CommandItem
           leftAccessory={<CurrencyEuro />}
           onSelect={() => handleSelect(Currency.Eur)}
+          rightAccessory={
+            opportunity?.value?.currency === Currency.Eur && <Check />
+          }
         >
           EUR
         </CommandItem>
         <CommandItem
           leftAccessory={<CurrencyPound />}
           onSelect={() => handleSelect(Currency.Gbp)}
+          rightAccessory={
+            opportunity?.value?.currency === Currency.Gbp && <Check />
+          }
         >
           GBP
         </CommandItem>

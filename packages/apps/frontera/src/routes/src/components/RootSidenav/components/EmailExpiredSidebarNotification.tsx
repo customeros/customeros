@@ -9,7 +9,6 @@ import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { AlertCircle } from '@ui/media/icons/AlertCircle';
 import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
-import { RefreshCcw01 } from '@ui/media/icons/RefreshCcw01';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog/ConfirmDeleteDialog';
 
@@ -30,7 +29,6 @@ export const EmailExpiredSidebarNotification = observer(() => {
         store.globalCache.value?.inactiveEmailTokens.length > 0 && (
           <>
             <ConfirmDeleteDialog
-              icon={<RefreshCcw01 />}
               isOpen={infoModal.open}
               hideCloseButton={false}
               onConfirm={requestAccess}

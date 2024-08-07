@@ -4,7 +4,6 @@ import { useRef, useState, useEffect } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { Button } from '@ui/form/Button/Button';
-import { Send03 } from '@ui/media/icons/Send03';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { useStore } from '@shared/hooks/useStore';
 import { AlarmClockPlus } from '@ui/media/icons/AlarmClockPlus';
@@ -187,7 +186,6 @@ export const TimelineActionButtons = observer(
           cancelButtonLabel='Discard'
           onConfirm={handleConfirmEmail}
           isOpen={showEmailConfirmationDialog}
-          icon={<Send03 className='text-primary-700' />}
           description={`You have typed an unsent email. Do you want to send it, or discard it?`}
         />
 
@@ -200,7 +198,6 @@ export const TimelineActionButtons = observer(
           cancelButtonLabel='Discard'
           onConfirm={handleConfirmLogEntry}
           isOpen={showLogEntryConfirmationDialog}
-          icon={<MessageChatSquare className='text-primary-700' />}
           description='You have typed an unlogged entry. Do you want to log it to the timeline, or discard it?'
         />
       </>

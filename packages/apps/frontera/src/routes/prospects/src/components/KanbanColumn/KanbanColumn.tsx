@@ -153,6 +153,7 @@ export const KanbanColumn = observer(
                   value={column?.name}
                   onBlur={handleNameBlur}
                   onChange={handleNameChange}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
                   className={cn(
                     'h-auto font-semibold min-h-[unset]',
                     !canEdit && 'cursor-not-allowed',

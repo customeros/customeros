@@ -5,7 +5,6 @@ import { observer } from 'mobx-react-lite';
 import { InternalStage } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Percent03 } from '@ui/media/icons/Percent03';
 import {
   RangeSlider,
   RangeSliderThumb,
@@ -17,10 +16,10 @@ import {
   ModalBody,
   ModalClose,
   ModalFooter,
+  ModalHeader,
   ModalOverlay,
+  ModalContent,
   ModalCloseButton,
-  ModalFeaturedHeader,
-  ModalFeaturedContent,
 } from '@ui/overlay/Modal/Modal';
 
 interface WinProbabilityModalProps {
@@ -91,27 +90,29 @@ export const WinProbabilityModal = observer(
     return (
       <Modal open={open} onOpenChange={onToggle}>
         <ModalOverlay />
-        <ModalFeaturedContent>
-          <ModalFeaturedHeader featuredIcon={<Percent03 />}>
-            <p className='text-lg font-semibold mb-1'>
+        <ModalContent>
+          <ModalHeader>
+            <p className='text-md font-semibold mb-1'>
               Set win probability for stage, {columnName}
             </p>
             <p className='text-sm'>
               Based on historical data or projections, what percentage of
               opportunities in the <b>{columnName}</b> stage is typically Won?
             </p>
-          </ModalFeaturedHeader>
-          <ModalBody className='flex flex-col gap-4'>
+          </ModalHeader>
+          <ModalBody className='flex flex-col gap-2'>
             <ModalCloseButton />
             <div className='flex justify-between w-full'>
-              <label htmlFor='range-slider' className='font-semibold'>
+              <label htmlFor='range-slider' className='font-medium text-sm'>
                 Probability to win
               </label>
-              <span className='font-semibold'>{stageLikelihoodRate}%</span>
+              <span className='font-medium text-sm'>
+                {stageLikelihoodRate}%
+              </span>
             </div>
             <RangeSlider
               min={0}
-              step={1}
+              step={5}
               max={100}
               id='range-slider'
               className='w-full'
@@ -127,7 +128,7 @@ export const WinProbabilityModal = observer(
           <ModalFooter className='flex gap-3'>
             <ModalClose className='w-full'>
               <Button className='w-full' onClick={handleReset}>
-                Close
+                Cancel
               </Button>
             </ModalClose>
             <Button
@@ -135,10 +136,10 @@ export const WinProbabilityModal = observer(
               onClick={handleSave}
               colorScheme='primary'
             >
-              Set probability
+              Confirm
             </Button>
           </ModalFooter>
-        </ModalFeaturedContent>
+        </ModalContent>
       </Modal>
     );
   },
