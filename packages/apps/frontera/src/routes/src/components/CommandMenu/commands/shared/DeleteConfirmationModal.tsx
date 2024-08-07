@@ -1,6 +1,7 @@
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
+import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { XClose } from '@ui/media/icons/XClose';
 import { Button } from '@ui/form/Button/Button';
@@ -13,8 +14,9 @@ export const DeleteConfirmationModal = observer(() => {
   const context = store.ui.commandMenu.context;
 
   const entity = match(context.entity)
-    .returnType<OpportunityStore | undefined>()
+    .returnType<OpportunityStore | OrganizationStore | undefined>()
     .with('Opportunity', () => store.opportunities.value.get(context.ids?.[0]))
+    .with('Organization', () => store.organizations.value.get(context.ids?.[0]))
     .otherwise(() => undefined);
 
   const handleClose = () => {
@@ -24,6 +26,9 @@ export const DeleteConfirmationModal = observer(() => {
   const handleConfirm = () => {
     match(context.entity)
       .with('Organization', () => {
+        store.organizations.hide(context.ids as string[]);
+      })
+      .with('Organizations', () => {
         store.organizations.hide(context.ids as string[]);
       })
       .with('Opportunity', () => {
@@ -37,7 +42,11 @@ export const DeleteConfirmationModal = observer(() => {
   const title = match(context.entity)
     .with(
       'Organization',
-      () => `Delete selected ${context.entity?.toLowerCase()}`,
+      () => `Archive ${(entity as OrganizationStore)?.value.name}?`,
+    )
+    .with(
+      'Organizations',
+      () => `Archive ${context.ids?.length} organizations?`,
     )
     .with(
       'Opportunity',

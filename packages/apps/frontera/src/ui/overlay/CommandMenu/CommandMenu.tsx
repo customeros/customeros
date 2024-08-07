@@ -89,6 +89,7 @@ export const CommandSubItem: React.FC<CommandSubItemProps> = ({
     <CommandItem
       leftAccessory={icon}
       onSelect={onSelectAction}
+      disabled={search.length <= 3}
       className={cn(search.length <= 3 && 'hidden')}
       {...rest}
     >

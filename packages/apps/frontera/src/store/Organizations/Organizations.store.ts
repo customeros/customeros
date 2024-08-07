@@ -345,7 +345,7 @@ export class OrganizationsStore extends SyncableGroup<
     });
   };
 
-  updateStage(ids: string[], stage: OrganizationStage, mutate = true) {
+  updateStage = (ids: string[], stage: OrganizationStage, mutate = true) => {
     let invalidCustomerStageCount = 0;
 
     ids.forEach((id) => {
@@ -385,13 +385,13 @@ export class OrganizationsStore extends SyncableGroup<
         'stage-update-failed-due-to-relationship-mismatch',
       );
     }
-  }
+  };
 
-  updateRelationship(
+  updateRelationship = (
     ids: string[],
     relationship: OrganizationRelationship,
     mutate = true,
-  ) {
+  ) => {
     const invalidCustomerStageCount = 0;
 
     ids.forEach((id) => {
@@ -414,13 +414,13 @@ export class OrganizationsStore extends SyncableGroup<
         'stage-update-failed-due-to-relationship-mismatch',
       );
     }
-  }
+  };
 
-  updateHealth(
+  updateHealth = (
     ids: string[],
     health: OpportunityRenewalLikelihood,
     mutate = true,
-  ) {
+  ) => {
     ids.forEach((id) => {
       this.value.get(id)?.update(
         (org) => {
@@ -437,7 +437,7 @@ export class OrganizationsStore extends SyncableGroup<
         { mutate: mutate },
       );
     });
-  }
+  };
 
   async getById(id: string) {
     try {
