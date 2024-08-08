@@ -44,6 +44,7 @@ import {
   OrganizationCommands,
   RenameOpportunityName,
   ChooseOpportunityStage,
+  MergeConfirmationModal,
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   AddContactViaLinkedInUrl,
@@ -84,6 +85,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
+  MergeConfirmationModal: <MergeConfirmationModal />,
 };
 
 export const CommandMenu = observer(() => {
@@ -103,6 +105,7 @@ export const CommandMenu = observer(() => {
         store.ui.commandMenu.setOpen(false);
         store.ui.commandMenu.setType('OpportunityHub');
       })
+
       .otherwise(() => {
         store.ui.commandMenu.setOpen(false);
       });

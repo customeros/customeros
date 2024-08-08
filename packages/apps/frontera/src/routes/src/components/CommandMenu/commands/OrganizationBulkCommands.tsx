@@ -115,10 +115,7 @@ export const OrganizationBulkCommands = observer(() => {
         <CommandItem
           leftAccessory={<Copy07 />}
           onSelect={() => {
-            const [primaryId, ...restIds] = selectedIds;
-
-            store.organizations.merge(primaryId, restIds);
-            store.ui.commandMenu.setOpen(false);
+            store.ui.commandMenu.setType('MergeConfirmationModal');
           }}
         >
           Merge
@@ -169,21 +166,9 @@ export const OrganizationBulkCommands = observer(() => {
             store.ui.commandMenu.setOpen(false);
           }}
         >
-          Create new opportunity...
+          Create new opportunity
         </CommandItem>
 
-        {/*<CommandItem*/}
-        {/*  leftAccessory={<CoinsStacked01 />}*/}
-        {/*  onSelect={() => {*/}
-        {/*    // store.organizations.updateStage(*/}
-        {/*    //   [organizations?.id as string],*/}
-        {/*    //   OrganizationStage.Engaged,*/}
-        {/*    // );*/}
-        {/*    store.ui.commandMenu.setOpen(false);*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  Create new opportunity...*/}
-        {/*</CommandItem>*/}
         {/*<CommandItem*/}
         {/*  leftAccessory={<Trophy01 />}*/}
         {/*  onSelect={() => {*/}

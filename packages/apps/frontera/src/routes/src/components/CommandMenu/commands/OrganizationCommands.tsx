@@ -207,7 +207,7 @@ export const OrganizationCommands = observer(() => {
             store.ui.commandMenu.setOpen(false);
           }}
         >
-          Create new opportunity...
+          Create new opportunity
         </CommandItem>
 
         {/*<CommandItem*/}
