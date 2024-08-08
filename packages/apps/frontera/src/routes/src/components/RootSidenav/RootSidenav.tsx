@@ -14,6 +14,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { LogOut01 } from '@ui/media/icons/LogOut01';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
+import { Users01 } from '@ui/media/icons/Users01.tsx';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building07 } from '@ui/media/icons/Building07';
@@ -22,7 +23,6 @@ import { Settings01 } from '@ui/media/icons/Settings01';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { AlertSquare } from '@ui/media/icons/AlertSquare';
-import { BookClosed } from '@ui/media/icons/BookClosed.tsx';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';
@@ -50,7 +50,7 @@ const iconMap: Record<
   HeartHand: (props) => <HeartHand {...props} />,
   Triage: (props) => <Triage {...props} />,
   SwitchHorizontal01: (props) => <SwitchHorizontal01 {...props} />,
-  Churn: (props) => <BrokenHeart {...props} />,
+  BrokenHeart: (props) => <BrokenHeart {...props} />,
 };
 
 export const RootSidenav = observer(() => {
@@ -74,10 +74,10 @@ export const RootSidenav = observer(() => {
   const [preferences, setPreferences] = useLocalStorage(
     'customeros-preferences',
     {
-      isInvoicesOpen: true,
-      isGrowthOpen: true,
-      isAcquisitionOpen: true,
+      isLifecycleViewsOpen: true,
       isMyViewsOpen: true,
+      isViewsOpen: true,
+      isFavoritesOpen: true,
     },
   );
 
@@ -93,20 +93,30 @@ export const RootSidenav = observer(() => {
     tableViewDefsList.filter(
       (c) => c.value.tableType === TableViewType.Invoices,
     ) ?? [];
-  const growthView =
-    tableViewDefsList.filter((c) =>
-      [TableIdType.Customers].includes(c.value.tableId),
-    ) ?? [];
 
-  const acquisitionView =
+  const lifecycleStagesView =
     tableViewDefsList
-      .filter((c) =>
-        [TableIdType.Leads, TableIdType.Nurture].includes(c.value.tableId),
+      .filter(
+        (c) =>
+          [
+            TableIdType.Leads,
+            TableIdType.Nurture,
+            TableIdType.Customers,
+          ].includes(c.value.tableId) && c.value.isPreset,
       )
+      .sort((a, b) => a.value.order - b.value.order) ?? [];
+
+  const favoritesView =
+    tableViewDefsList
+      .filter((c) => !c.value.isPreset)
       .sort((a, b) => a.value.order - b.value.order) ?? [];
 
   const allOrganizationsView = tableViewDefsList.filter(
     (c) => c.value.tableId === TableIdType.Organizations,
+  );
+
+  const allContactsView = tableViewDefsList.find(
+    (e) => e.value.tableId === TableIdType.Contacts,
   );
 
   const churnView = tableViewDefsList.filter(
@@ -176,11 +186,7 @@ export const RootSidenav = observer(() => {
 
   const noOfOrganizationsMovedByICP = store.ui.movedIcpOrganization;
 
-  const allOrganizationsActivePreset = [
-    allOrganizationsView?.[0]?.value?.id,
-    tableViewDefsList.find((e) => e.value.tableId === TableIdType.Contacts)
-      ?.value.id as string,
-  ];
+  const allOrganizationsActivePreset = [allOrganizationsView?.[0]?.value?.id];
 
   return (
     <div className='pb-4 h-full w-12.5 bg-white flex flex-col border-r border-gray-200 overflow-hidden'>
@@ -202,8 +208,8 @@ export const RootSidenav = observer(() => {
         )}
       </div>
 
-      <div className='px-2 pt-2.5 overflow-y-auto flex flex-col flex-1'>
-        <div className='space-y-1 w-full mb-4'>
+      <div className='px-2 pt-2.5 gap-4 overflow-y-auto flex flex-col flex-1'>
+        <div className='w-full'>
           <SidenavItem
             label='Customer map'
             data-test={`side-nav-item-customer-map`}
@@ -218,74 +224,28 @@ export const RootSidenav = observer(() => {
               />
             )}
           />
-          <div
-            className='w-full pt-3 gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
-            onClick={() =>
-              setPreferences((prev) => ({
-                ...prev,
-                isGrowthOpen: !prev.isGrowthOpen,
-              }))
-            }
-          >
-            <span className='text-sm text-gray-500'>Growth</span>
-            <ArrowDropdown
-              className={cn('w-5 h-5', {
-                'transform -rotate-90': !preferences.isGrowthOpen,
-              })}
-            />
-          </div>
-
-          {preferences.isGrowthOpen && (
-            <>
-              {growthView.map((view) => (
-                <SidenavItem
-                  key={view.value.id}
-                  label={view.value.name}
-                  dataTest={`side-nav-item-${view.value.name}`}
-                  isActive={checkIsActive('finder', {
-                    preset: view.value.id,
-                  })}
-                  onClick={() =>
-                    handleItemClick(`finder?preset=${view.value.id}`)
-                  }
-                  icon={(isActive) => {
-                    const Icon = iconMap?.[view.value.icon];
-
-                    return (
-                      <Icon
-                        className={cn(
-                          'w-5 h-5 text-gray-500',
-                          isActive && 'text-gray-700',
-                        )}
-                      />
-                    );
-                  }}
-                />
-              ))}
-            </>
-          )}
 
           <div
             className='w-full pt-3 gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
             onClick={() =>
               setPreferences((prev) => ({
                 ...prev,
-                isAcquisitionOpen: !prev.isAcquisitionOpen,
+                isLifecycleViewsOpen: !prev.isLifecycleViewsOpen,
               }))
             }
           >
-            <span className='text-sm text-gray-500'>Acquisition</span>
+            <span className='text-sm text-gray-500'>Lifecycle stages</span>
 
             <ArrowDropdown
               className={cn('w-5 h-5', {
-                'transform -rotate-90': !preferences.isAcquisitionOpen,
+                'transform -rotate-90': !preferences.isLifecycleViewsOpen,
               })}
             />
           </div>
 
-          {preferences.isAcquisitionOpen && (
+          {preferences.isLifecycleViewsOpen && (
             <>
-              {acquisitionView.reduce<JSX.Element[]>((acc, view, index) => {
+              {lifecycleStagesView.reduce<JSX.Element[]>((acc, view, index) => {
                 const contractsPreset = tableViewDefsList.find(
                   (e) =>
                     e.value.tableId ===
@@ -377,69 +337,76 @@ export const RootSidenav = observer(() => {
               }, [])}
             </>
           )}
-
-          {showInvoices && (
-            <>
-              <div
-                className='w-full pt-3 gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
-                onClick={() =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    isInvoicesOpen: !prev.isInvoicesOpen,
-                  }))
-                }
-              >
-                <span className='text-sm text-gray-500'>Invoices</span>
-                <ArrowDropdown
-                  className={cn('w-5 h-5', {
-                    'transform -rotate-90': !preferences.isInvoicesOpen,
-                  })}
-                />
-              </div>
-
-              {preferences.isInvoicesOpen && (
-                <>
-                  {invoicesViews.map((view) => (
-                    <SidenavItem
-                      key={view.value.id}
-                      label={view.value.name}
-                      data-test={`side-nav-item-${view.value.name}`}
-                      isActive={checkIsActive('finder', {
-                        preset: view.value.id,
-                      })}
-                      onClick={() =>
-                        handleItemClick(`finder?preset=${view.value.id}`)
-                      }
-                      icon={(isActive) => {
-                        const Icon = iconMap[view.value.icon];
-
-                        return (
-                          <Icon
-                            className={cn(
-                              'w-5 h-5 text-gray-500',
-                              isActive && 'text-gray-700',
-                            )}
-                          />
-                        );
-                      }}
-                    />
-                  ))}
-                </>
-              )}
-            </>
-          )}
         </div>
 
-        <div className='space-y-1 w-full'>
-          {(isOwner || showMyViewsItems) && (
+        {favoritesView.length > 0 && (
+          <div className='w-full'>
             <div
-              className='w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors'
+              onClick={() =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  isFavoritesOpen: !prev.isFavoritesOpen,
+                }))
+              }
+              className={cn(
+                'w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors',
+                {
+                  'mb-1': preferences.isFavoritesOpen,
+                },
+              )}
+            >
+              <span className='text-sm text-gray-500'>Favorites</span>
+              <ArrowDropdown
+                className={cn('w-5 h-5', {
+                  'transform -rotate-90': !preferences.isFavoritesOpen,
+                })}
+              />
+            </div>
+
+            {preferences.isFavoritesOpen &&
+              favoritesView.map((view) => (
+                <SidenavItem
+                  key={view.value.id}
+                  label={view.value.name}
+                  data-test={`side-nav-item-${view.value.name}`}
+                  isActive={checkIsActive('finder', {
+                    preset: view.value.id,
+                  })}
+                  onClick={() =>
+                    handleItemClick(`finder?preset=${view.value.id}`)
+                  }
+                  icon={(isActive) => {
+                    const Icon = iconMap[view.value.icon];
+
+                    return (
+                      <Icon
+                        className={cn(
+                          'w-5 h-5 text-gray-500',
+                          isActive && 'text-gray-700',
+                        )}
+                      />
+                    );
+                  }}
+                />
+              ))}
+          </div>
+        )}
+
+        {(isOwner || showMyViewsItems) && (
+          <div className='w-full'>
+            <div
               onClick={() =>
                 setPreferences((prev) => ({
                   ...prev,
                   isMyViewsOpen: !prev.isMyViewsOpen,
                 }))
               }
+              className={cn(
+                'w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors',
+                {
+                  'mb-1': preferences.isMyViewsOpen,
+                },
+              )}
             >
               <span className='text-sm text-gray-500'>My views</span>
               <ArrowDropdown
@@ -448,23 +415,47 @@ export const RootSidenav = observer(() => {
                 })}
               />
             </div>
-          )}
+            {preferences.isMyViewsOpen && (
+              <>
+                {isOwner &&
+                  lifecycleStagesView
+                    .filter((o) => o.value.name === 'My portfolio')
+                    .map((view) => (
+                      <SidenavItem
+                        key={view.value.id}
+                        label={view.value.name}
+                        data-test={`side-nav-item-${view.value.name}`}
+                        isActive={checkIsActive('finder', {
+                          preset: view.value.id,
+                        })}
+                        onClick={() =>
+                          handleItemClick(`finder?preset=${view.value.id}`)
+                        }
+                        icon={(isActive) => {
+                          const Icon = iconMap[view.value.icon];
 
-          {preferences.isMyViewsOpen && (
-            <>
-              {isOwner &&
-                acquisitionView
-                  .filter((o) => o.value.name === 'My portfolio')
-                  .map((view) => (
+                          return (
+                            <Icon
+                              className={cn(
+                                'w-5 h-5 text-gray-500',
+                                isActive && 'text-gray-700',
+                              )}
+                            />
+                          );
+                        }}
+                      />
+                    ))}
+                {showMyViewsItems &&
+                  myViews.map((view) => (
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
                       data-test={`side-nav-item-${view.value.name}`}
-                      isActive={checkIsActive('finder', {
+                      isActive={checkIsActive('renewals', {
                         preset: view.value.id,
                       })}
                       onClick={() =>
-                        handleItemClick(`finder?preset=${view.value.id}`)
+                        handleItemClick(`renewals?preset=${view.value.id}`)
                       }
                       icon={(isActive) => {
                         const Icon = iconMap[view.value.icon];
@@ -480,17 +471,106 @@ export const RootSidenav = observer(() => {
                       }}
                     />
                   ))}
-              {showMyViewsItems &&
-                myViews.map((view) => (
+                <SidenavItem
+                  label={churnView.map((c) => c.value.name).join('')}
+                  isActive={checkIsActive('finder', {
+                    preset: churnView?.[0]?.value?.id,
+                  })}
+                  onClick={() =>
+                    handleItemClick(
+                      `finder?preset=${churnView?.[0]?.value?.id}`,
+                    )
+                  }
+                  icon={(isActive) => (
+                    <BrokenHeart
+                      className={cn(
+                        'w-5 h-5 text-gray-500',
+                        isActive && 'text-gray-700',
+                      )}
+                    />
+                  )}
+                />
+              </>
+            )}
+          </div>
+        )}
+
+        <div
+          onClick={() =>
+            setPreferences((prev) => ({
+              ...prev,
+              isViewsOpen: !prev.isViewsOpen,
+            }))
+          }
+          className={cn(
+            'w-full gap-1 flex justify-flex-start pl-3.5 cursor-pointer text-gray-500 hover:text-gray-700 transition-colors',
+            {
+              'mb-1': preferences.isViewsOpen,
+            },
+          )}
+        >
+          <span className='text-sm text-gray-500'>Views</span>
+
+          <ArrowDropdown
+            className={cn('w-5 h-5', {
+              'transform -rotate-90': !preferences.isViewsOpen,
+            })}
+          />
+        </div>
+
+        <div className='w-full'>
+          {preferences.isViewsOpen && (
+            <>
+              <SidenavItem
+                label='Organizations'
+                dataTest={`side-nav-item-all-orgs`}
+                isActive={checkIsActive('finder', {
+                  preset: allOrganizationsActivePreset,
+                })}
+                onClick={() =>
+                  handleItemClick(
+                    `finder?preset=${allOrganizationsView?.[0]?.value?.id}`,
+                  )
+                }
+                icon={(isActive) => (
+                  <Building07
+                    className={cn(
+                      'w-5 h-5 text-gray-500',
+                      isActive && 'text-gray-700',
+                    )}
+                  />
+                )}
+              />
+              <SidenavItem
+                label='Contacts'
+                dataTest={`side-nav-item-all-contacts`}
+                onClick={() =>
+                  handleItemClick(`finder?preset=${allContactsView?.value?.id}`)
+                }
+                isActive={checkIsActive('finder', {
+                  preset: allContactsView?.value?.id ?? '',
+                })}
+                icon={(isActive) => (
+                  <Users01
+                    className={cn(
+                      'w-5 h-5 text-gray-500',
+                      isActive && 'text-gray-700',
+                    )}
+                  />
+                )}
+              />
+
+              {showInvoices &&
+                invoicesViews.map((view) => (
                   <SidenavItem
                     key={view.value.id}
-                    label={view.value.name}
+                    label={`${view.value.name} Invoices`}
                     data-test={`side-nav-item-${view.value.name}`}
-                    isActive={checkIsActive('renewals', {
+                    isActive={checkIsActive('finder', {
                       preset: view.value.id,
                     })}
                     onClick={() =>
-                      handleItemClick(`renewals?preset=${view.value.id}`)
+                      handleItemClick(`finder?preset=${view.value.id}`)
                     }
                     icon={(isActive) => {
                       const Icon = iconMap[view.value.icon];
@@ -506,48 +586,8 @@ export const RootSidenav = observer(() => {
                     }}
                   />
                 ))}
-              <SidenavItem
-                label={churnView.map((c) => c.value.name).join('')}
-                isActive={checkIsActive('finder', {
-                  preset: churnView?.[0]?.value?.id,
-                })}
-                onClick={() =>
-                  handleItemClick(`finder?preset=${churnView?.[0]?.value?.id}`)
-                }
-                icon={(isActive) => (
-                  <BrokenHeart
-                    className={cn(
-                      'w-5 h-5 text-gray-500',
-                      isActive && 'text-gray-700',
-                    )}
-                  />
-                )}
-              />
             </>
           )}
-        </div>
-
-        <div className='space-y-1 w-full mt-2'>
-          <SidenavItem
-            label='Address book'
-            dataTest={`side-nav-item-all-orgs`}
-            isActive={checkIsActive('finder', {
-              preset: allOrganizationsActivePreset,
-            })}
-            onClick={() =>
-              handleItemClick(
-                `finder?preset=${allOrganizationsView?.[0]?.value?.id}`,
-              )
-            }
-            icon={(isActive) => (
-              <BookClosed
-                className={cn(
-                  'w-5 h-5 text-gray-500',
-                  isActive && 'text-gray-700',
-                )}
-              />
-            )}
-          />
         </div>
       </div>
 

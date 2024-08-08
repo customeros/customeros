@@ -1,0 +1,5 @@
+mutation updateTableViewDef($input: TableViewDefUpdateInput!) {
+  tableViewDef_Update(input: $input) {
+    id
+  }
+}

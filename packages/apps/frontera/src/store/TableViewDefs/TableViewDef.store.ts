@@ -18,7 +18,7 @@ import {
 } from '@graphql/types';
 
 export class TableViewDefStore implements Store<TableViewDef> {
-  value: TableViewDef = defaultValue;
+  value: TableViewDef = getDefaultValue();
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -231,6 +231,10 @@ export class TableViewDefStore implements Store<TableViewDef> {
       return value;
     });
   }
+
+  getPayloadToCopy = () => {
+    return omit(this.value, 'id', 'createdAt', 'updatedAt');
+  };
 }
 
 type PAYLOAD = { input: TableViewDefUpdateInput };
@@ -250,7 +254,7 @@ const UPDATE_TABLE_VIEW_DEF_SHARED = gql`
   }
 `;
 
-const defaultValue: TableViewDef = {
+export const getDefaultValue = (): TableViewDef => ({
   tableId: TableIdType.Organizations,
   columns: [],
   createdAt: '',
@@ -264,4 +268,4 @@ const defaultValue: TableViewDef = {
   isPreset: false,
   isShared: false,
   tableType: TableViewType.Organizations,
-};
+});

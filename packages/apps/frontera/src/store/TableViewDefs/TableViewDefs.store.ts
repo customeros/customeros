@@ -10,7 +10,8 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import { TableIdType, type TableViewDef } from '@graphql/types';
 
 import mock from './mock.json';
-import { TableViewDefStore } from './TableViewDef.store';
+import { getDefaultValue, TableViewDefStore } from './TableViewDef.store';
+import { TableViewDefsService } from './__services__/TableViewDef.service';
 
 export class TableViewDefsStore implements GroupStore<TableViewDef> {
   value: Map<string, TableViewDefStore> = new Map();
@@ -23,8 +24,10 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<TableViewDef>();
+  private service: TableViewDefsService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = TableViewDefsService.getInstance(transport);
     makeAutoSyncableGroup(this, {
       channelName: 'TableViewDefs',
       ItemStore: TableViewDefStore,
@@ -58,6 +61,24 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
+  }
+
+  async invalidate() {
+    try {
+      this.isLoading = true;
+
+      const { tableViewDefs } = await this.service.getTableViewDefs();
+
+      this.load(tableViewDefs);
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error)?.message;
       });
     } finally {
       runInAction(() => {
@@ -108,6 +129,64 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
       (t) => t.value.tableId === TableIdType.Organizations,
     )?.value.id;
   }
+
+  createFavorite = async (
+    favoritePresetId: string,
+    options?: { onSuccess?: (serverId: string) => void },
+  ) => {
+    const favoritePreset = this.getById(favoritePresetId)?.getPayloadToCopy();
+
+    const newTableViewDef = new TableViewDefStore(this.root, this.transport);
+
+    newTableViewDef.value = {
+      ...getDefaultValue(),
+      ...favoritePreset,
+      isPreset: false,
+    };
+
+    const { id: _id, createdAt, updatedAt, ...payload } = newTableViewDef.value;
+
+    const tempId = newTableViewDef.id;
+    let serverId = '';
+
+    this.value.set(tempId, newTableViewDef);
+    this.isLoading = true;
+
+    try {
+      const { tableViewDef_Create } = await this.service.createTableViewDef({
+        input: {
+          ...payload,
+        },
+      });
+
+      runInAction(() => {
+        serverId = tableViewDef_Create.id;
+
+        newTableViewDef.value.id = serverId;
+
+        this.value.set(serverId, newTableViewDef);
+        this.value.delete(tempId);
+
+        this.sync({
+          action: 'APPEND',
+          ids: [serverId],
+        });
+      });
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+      });
+    } finally {
+      this.isLoading = false;
+
+      if (serverId) {
+        setTimeout(() => {
+          this.invalidate();
+          options?.onSuccess?.(serverId);
+        }, 1000);
+      }
+    }
+  };
 }
 
 type TABLE_VIEW_DEFS_QUERY_RESULT = { tableViewDefs: TableViewDef[] };
