@@ -34,7 +34,7 @@ export const ContactCommands = observer(() => {
             'profile',
           ]}
         >
-          Edit Persona tag...
+          Edit persona tag...
         </CommandItem>
 
         <CommandItem
