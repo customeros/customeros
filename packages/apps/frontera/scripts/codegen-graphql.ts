@@ -19,7 +19,7 @@ const config: CodegenConfig = {
       },
     },
   ],
-  documents: './src/**/*.graphql',
+  documents: './src/routes/**/*.graphql',
   generates: {
     'src/routes/src/types/__generated__/graphql.types.ts': {
       plugins: ['typescript'],

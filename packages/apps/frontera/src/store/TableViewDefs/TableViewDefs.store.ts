@@ -84,7 +84,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
   get opportunitiesPreset() {
     return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Opportunities && t.value.isPreset,
+      (t) => t.value.tableId === TableIdType.Opportunities && t.value.isShared,
     )?.value.id;
   }
 
@@ -131,6 +131,7 @@ const TABLE_VIEW_DEFS_QUERY = gql`
         filter
       }
       isPreset
+      isShared
       createdAt
       updatedAt
     }
