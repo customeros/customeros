@@ -1,0 +1,5 @@
+mutation createTableViewDef($input: TableViewDefCreateInput!) {
+  tableViewDef_Create(input: $input) {
+    id
+  }
+}

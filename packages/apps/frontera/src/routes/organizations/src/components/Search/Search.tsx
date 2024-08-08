@@ -16,12 +16,12 @@ import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
 import { ContactOrgViewToggle } from '@organizations/components/ContactOrgViewToggle';
+import { TableViewMenu } from '@organizations/components/TableViewMenu/TableViewMenu.tsx';
 import {
   InputGroup,
   LeftElement,
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
-import { DownloadCsvButton } from '@organizations/components/DownloadCsvButton/DownloadCsvButton.tsx';
 import { SearchBarFilterData } from '@organizations/components/SearchBarFilterData/SearchBarFilterData.tsx';
 
 interface SearchProps {
@@ -207,7 +207,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           onClick={handleToogleFlow}
         />
       )}
-      {tableType !== TableViewType.Invoices && <DownloadCsvButton />}
+      <TableViewMenu />
       <span ref={measureRef} className={`z-[-1] absolute h-0 invisible flex`}>
         <div className='ml-2'>
           <SearchBarFilterData />

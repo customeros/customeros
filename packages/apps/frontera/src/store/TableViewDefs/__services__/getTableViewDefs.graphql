@@ -1,0 +1,24 @@
+query tableViewDefs {
+  tableViewDefs {
+    id
+    name
+    tableType
+    tableId
+    order
+    icon
+    filters
+    sorting
+    columns {
+      columnId
+      columnType
+      name
+      width
+      visible
+      filter
+    }
+    isPreset
+    isShared
+    createdAt
+    updatedAt
+  }
+}

@@ -1,21 +1,18 @@
 import { useSearchParams } from 'react-router-dom';
 
-import { observer } from 'mobx-react-lite';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
-import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { ColumnView, ColumnViewType } from '@graphql/types';
-import { Download02 } from '@ui/media/icons/Download02.tsx';
 import { csvDataMapper as contactCsvDataMapper } from '@organizations/components/Columns/contacts';
 import { csvDataMapper as orgCsvDataMapper } from '@organizations/components/Columns/organizations';
 
-export enum AdditionalColumnViewType {
+enum AdditionalColumnViewType {
   ContactsFirstName = 'CONTACTS_FIRST_NAME',
   ContactsLastName = 'CONTACTS_LAST_NAME',
 }
+
 interface IColumnView extends Omit<ColumnView, 'columnType'> {
   columnType: ColumnViewType | AdditionalColumnViewType;
 }
@@ -54,20 +51,19 @@ const convertToCSV = (objArray: Array<Array<string>>): string => {
     )
     .join('\r\n');
 };
-export const DownloadCsvButton = observer(() => {
+
+export const useDownloadCsv = () => {
   const store = useStore();
   const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
-  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-  const tableViewName = tableViewDef?.value.name;
-  const tableName = getTableName(tableViewName);
-
-  const csvDataMapper =
-    tableViewDef?.value.tableType === 'CONTACTS'
-      ? contactCsvDataMapper
-      : orgCsvDataMapper;
 
   const handleGetData = (): Array<Array<string>> => {
+    const preset = searchParams.get('preset');
+    const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+    const csvDataMapper =
+      tableViewDef?.value.tableType === 'CONTACTS'
+        ? contactCsvDataMapper
+        : orgCsvDataMapper;
+
     const visibleColumns = tableViewDef?.value.columns?.filter(
       (column) =>
         column.visible &&
@@ -84,7 +80,6 @@ export const DownloadCsvButton = observer(() => {
 
       if (nameColumnIndex !== -1) {
         visibleColumns.splice(nameColumnIndex, 1);
-
         visibleColumns.splice(
           nameColumnIndex,
           0,
@@ -107,6 +102,7 @@ export const DownloadCsvButton = observer(() => {
         );
       }
     }
+
     const headers = visibleColumns?.map((column) =>
       column.columnType.split('_').join(' '),
     ) as Array<string>;
@@ -126,6 +122,11 @@ export const DownloadCsvButton = observer(() => {
   };
 
   const downloadCSV = () => {
+    const preset = searchParams.get('preset');
+    const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+    const tableViewName = tableViewDef?.value.name;
+    const tableName = getTableName(tableViewName);
+
     const data = handleGetData();
     const csvData = new Blob([convertToCSV(data)], { type: 'text/csv' });
     const csvURL = URL.createObjectURL(csvData);
@@ -138,17 +139,5 @@ export const DownloadCsvButton = observer(() => {
     document.body.removeChild(link);
   };
 
-  return (
-    <Tooltip label='Export view as CSV'>
-      <IconButton
-        size='xs'
-        variant='ghost'
-        className={'mr-3'}
-        icon={<Download02 />}
-        onClick={downloadCSV}
-        data-test='download-csv'
-        aria-label='Download CSV'
-      />
-    </Tooltip>
-  );
-});
+  return { downloadCSV };
+};
