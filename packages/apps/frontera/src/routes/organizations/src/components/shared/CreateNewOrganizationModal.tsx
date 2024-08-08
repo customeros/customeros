@@ -164,7 +164,6 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
                 onClick={handleSubmit}
                 isLoading={organizations.isLoading}
                 loadingText='Creating organization'
-                data-test='address-book-empty-create-org'
                 spinner={
                   <Spinner
                     size='sm'

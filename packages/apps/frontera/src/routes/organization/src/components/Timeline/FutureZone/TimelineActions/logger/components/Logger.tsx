@@ -114,6 +114,7 @@ export const Logger = observer(({ hide }: LoggerProps) => {
           mentionsOptions={mentions}
           hashtagsOptions={hashtags}
           namespace='LogEntryCreator'
+          dataTest='timeline-log-editor'
           onHashtagSearch={setHashtagSearch}
           onMentionsSearch={setMentionsSearch}
           placeholder='Log a conversation you had with a customer'
@@ -126,6 +127,7 @@ export const Logger = observer(({ hide }: LoggerProps) => {
           variant='outline'
           onClick={handleSave}
           className='absolute bottom-0 right-0'
+          data-test='timeline-log-confirmation-button'
         >
           Log
         </Button>

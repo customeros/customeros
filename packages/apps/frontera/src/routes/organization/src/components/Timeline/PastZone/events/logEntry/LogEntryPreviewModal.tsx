@@ -114,6 +114,7 @@ export const LogEntryPreviewModal = ({
                   onClick={closeModal}
                   aria-label='Close preview'
                   className='text-sm text-gray-500'
+                  data-test='timeline-popped-up-log-entry-close'
                   icon={<XClose className='text-gray-500 size-5' />}
                 />
               </div>
@@ -156,6 +157,7 @@ export const LogEntryPreviewModal = ({
                 mentionsOptions={mentions}
                 onHashtagSearch={setHashtagsQuery}
                 onMentionsSearch={setMentionsQuery}
+                dataTest='timeline-popped-up-log-entry-text'
                 defaultHtmlValue={event.content ?? undefined}
                 onBlur={() => {
                   setTimeout(() => {

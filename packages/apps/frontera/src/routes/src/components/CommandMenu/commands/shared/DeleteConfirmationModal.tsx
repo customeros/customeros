@@ -83,6 +83,7 @@ export const DeleteConfirmationModal = observer(() => {
             className='w-full'
             colorScheme='error'
             onClick={handleConfirm}
+            data-test='org-actions-confirm-archive'
           >
             Archive
           </Button>

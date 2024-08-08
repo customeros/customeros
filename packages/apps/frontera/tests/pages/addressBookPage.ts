@@ -1,12 +1,18 @@
 import { Page, expect } from '@playwright/test';
 
-import { retryOperation, assertWithRetry } from '../helper';
+import {
+  retryOperation,
+  assertWithRetry,
+  clickLocatorsThatAreVisible,
+} from '../helper';
 
 export class AddressBookPage {
   private page: Page;
 
   private sideNavItemAllOrgs = 'button[data-test="side-nav-item-all-orgs"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
+  private addressBookCreateNewOrgOrgName =
+    'input[data-test="address-book-create-new-org-org-name"]';
   private organizationNameInAllOrgsTable =
     'p[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
@@ -37,31 +43,22 @@ export class AddressBookPage {
   private orgActionsArchive = 'button[data-test="org-actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
-  private addressBookEmptyCreateOrg =
-    'button[data-test="address-book-empty-create-org"]';
 
   constructor(page: Page) {
     this.page = page;
   }
 
   async waitForPageLoad() {
-    const allOrgsMenubutton = this.page.locator(this.sideNavItemAllOrgs);
-
-    await allOrgsMenubutton.waitFor({ state: 'visible' });
-    await expect(allOrgsMenubutton).toBeVisible();
-    await allOrgsMenubutton.click();
+    await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
   async addOrganization() {
-    const addOrganizationButton = this.page.locator(this.allOrgsAddOrg);
-
-    await addOrganizationButton.click();
-
-    const addressBookEmptyCreateOrg = this.page.locator(
-      this.addressBookEmptyCreateOrg,
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.allOrgsAddOrg,
+      this.addressBookCreateNewOrgOrgName,
     );
-
-    await addressBookEmptyCreateOrg.click();
+    await this.page.keyboard.press('Enter');
 
     const orgCreationResp = await this.page.waitForResponse(
       '**/customer-os-api',
@@ -262,26 +259,26 @@ export class AddressBookPage {
   }
 
   async goToCustomersPage() {
-    await this.page.click(this.sideNavItemCustomers);
+    await clickLocatorsThatAreVisible(this.page, this.sideNavItemCustomers);
   }
 
   async goToAllOrgsPage() {
-    const allOrgsMenubutton = this.page.locator(this.sideNavItemAllOrgs);
-
-    await allOrgsMenubutton.click();
+    await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
   async updateOrgToCustomer() {
-    await this.page.click(this.organizationRelationshipButtonInAllOrgsTable);
-    await this.page.click(this.relationshipCustomer);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.organizationRelationshipButtonInAllOrgsTable,
+      this.relationshipCustomer,
+    );
   }
 
   async goToOrganization() {
-    await this.page.waitForSelector(this.organizationNameInAllOrgsTable, {
-      state: 'visible',
-    });
-
-    await this.page.click(this.organizationNameInAllOrgsTable);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.organizationNameInAllOrgsTable,
+    );
   }
 
   async selectAllOrgs() {
@@ -297,18 +294,10 @@ export class AddressBookPage {
   }
 
   async archiveOrgs() {
-    const orgActionsArchive = this.page.locator(this.orgActionsArchive);
-
-    await orgActionsArchive.waitFor({ state: 'visible' });
-    await this.page.click(this.orgActionsArchive);
+    await clickLocatorsThatAreVisible(this.page, this.orgActionsArchive);
   }
 
   async confirmArchiveOrgs() {
-    const orgActionsConfirmArchive = this.page.locator(
-      this.orgActionsConfirmArchive,
-    );
-
-    await orgActionsConfirmArchive.waitFor({ state: 'visible' });
-    await this.page.click(this.orgActionsConfirmArchive);
+    await clickLocatorsThatAreVisible(this.page, this.orgActionsConfirmArchive);
   }
 }

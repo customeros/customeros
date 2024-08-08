@@ -116,6 +116,7 @@ export const ReminderItem = observer(
           onBlur={() => setIsFocused(false)}
           onFocus={() => setIsFocused(true)}
           maxRows={isFocused ? undefined : 3}
+          data-test='timeline-reminder-editor'
           value={reminder?.value.content ?? ''}
           placeholder='What should we remind you about?'
           className='px-2 pb-0 text-sm font-light font-sticky hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
@@ -131,6 +132,7 @@ export const ReminderItem = observer(
             variant='ghost'
             colorScheme='warning'
             onClick={handleDismiss}
+            data-test='timeline-reminder-dismiss'
             className='text-[#B7791F] hover:bg-transparent hover:text-warning-900 focus:shadow-ringWarning'
           >
             Dismiss

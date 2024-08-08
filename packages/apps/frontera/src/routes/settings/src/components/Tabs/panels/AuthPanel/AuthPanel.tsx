@@ -36,7 +36,12 @@ export const AuthPanel = observer(() => {
       <div className='bg-gray-25 flex-col flex relative max-w-[550px] px-6 py-4 '>
         <div className='flex gap-4 flex-col'>
           <div className='flex flex-col'>
-            <h1 className='text-gray-700 text-lg font-semibold '>Accounts</h1>
+            <h1
+              data-test='settings-accounts-header'
+              className='text-gray-700 text-lg font-semibold '
+            >
+              Accounts
+            </h1>
           </div>
         </div>
       </div>
