@@ -51,6 +51,7 @@ type Repositories struct {
 	CacheIpHunterRepository                  CacheIpHunterRepository
 	CacheEmailValidationRepository           CacheEmailValidationRepository
 	CacheEmailValidationDomainRepository     CacheEmailValidationDomainRepository
+	StatsApiCallsRepository                  StatsApiCallsRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -100,6 +101,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		CacheIpHunterRepository:                  NewCacheIpHunterRepository(db),
 		CacheEmailValidationRepository:           NewCacheEmailValidationRepository(db),
 		CacheEmailValidationDomainRepository:     NewCacheEmailValidationDomainRepository(db),
+		StatsApiCallsRepository:                  NewStatsApiCallsRepository(db),
 	}
 
 	return repositories
@@ -157,7 +159,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.CacheIpData{},
 		&entity.CacheIpHunter{},
 		&entity.CacheEmailValidation{},
-		&entity.CacheEmailValidationDomain{})
+		&entity.CacheEmailValidationDomain{},
+		&entity.StatsApiCalls{})
 	if err != nil {
 		panic(err)
 	}
