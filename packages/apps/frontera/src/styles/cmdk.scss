@@ -51,7 +51,7 @@
 }
 
 [cmdk-group-heading] {
-  @apply p-2 px-4 h-8 w-full text-sm flex items-center gap-2 select-none cursor-pointer transition-all hover:bg-gray-100;
+  @apply pt-4 pb-2 px-4 h-8 w-full text-sm flex items-center gap-2 select-none cursor-pointer transition-all text-gray-500;
 }
 
 [cmdk-empty] {
