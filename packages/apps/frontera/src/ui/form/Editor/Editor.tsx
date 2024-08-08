@@ -57,6 +57,7 @@ const contentEditableVariants = cva('focus:outline-none', {
 
 interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   namespace: string;
+  dataTest?: string;
   className?: string;
   placeholder?: string;
   usePlainText?: boolean;
@@ -78,6 +79,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
     {
       size,
       onBlur,
+      dataTest,
       children,
       onChange,
       className,
@@ -182,6 +184,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
                 <ContentEditable
                   onBlur={onBlur}
                   spellCheck='false'
+                  data-test={dataTest}
                   className={twMerge(
                     contentEditableVariants({ size, className }),
                   )}

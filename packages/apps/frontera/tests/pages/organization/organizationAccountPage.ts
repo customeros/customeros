@@ -1,6 +1,13 @@
 import { Page, expect } from '@playwright/test';
 
-import { retryOperation, assertWithRetry } from '../../helper';
+import {
+  retryOperation,
+  assertWithRetry,
+  clickLocatorsThatAreVisible,
+  clickLocatorThatIsVisibleWithIndex,
+  clickLocatorThatIsVisibleAndHasText,
+  clickLocatorWithSublocatorThatIsVisible,
+} from '../../helper';
 
 export class OrganizationAccountPage {
   constructor(page: Page) {
@@ -13,8 +20,6 @@ export class OrganizationAccountPage {
     'button[data-test="org-account-empty-new-contract"]';
   private orgAccountNonEmptyAddContract =
     'button[data-test="org-account-nonempty-new-contract"]';
-  private orgAccountAddServices =
-    'button[data-test="org-account-add-services"]';
   private contractCardHeader = 'article[data-test="contract-card-header"]';
   private contractMenuDots = 'button[data-test="contract-menu-dots"]';
   private contractBillingDetailsAddress =
@@ -39,21 +44,48 @@ export class OrganizationAccountPage {
   private oneTimeInAccountPanel =
     'h1[data-test="account-panel-contract-one-time"]';
   private billingAddressSave = 'button[data-test="billing-address-save"]';
+  private organizationAccountNotesEditor =
+    'div[data-test="organization-account-notes-editor"]';
+  private organizationAccountRelationship =
+    'div[data-test="organization-account-relationship"]';
+  private relationshipCustomer = 'div[data-test="relationship-CUSTOMER"]';
 
   async addContractEmpty() {
-    await this.page.click(this.orgAccountEmptyAddContract);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.orgAccountEmptyAddContract,
+    );
+
+    const response = await this.page.waitForResponse(
+      (response) =>
+        response.url().includes('customer-os-api') &&
+        response
+          .json()
+          .then((body) => body.data && body.data.contract_Update !== undefined)
+          .catch(() => false),
+    );
+
+    // Optional: You can log or assert the response data if needed
+    await response.json();
+    // await this.page.waitForResponse('**/customer-os-api');
   }
 
   async addContractNonEmpty() {
-    await this.page.click(this.orgAccountNonEmptyAddContract);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.orgAccountNonEmptyAddContract,
+    );
   }
 
   async addBillingAddress(contractIndex: number) {
     await this.page.waitForResponse('**/customer-os-api');
     await this.openContractDotsMenu(contractIndex);
-    await this.page.click(this.contractMenuEditContract);
-    await this.page.click(this.contractBillingDetailsAddress);
-    await this.page.click(this.contractBillingDetailsAddressCountry);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.contractMenuEditContract,
+      this.contractBillingDetailsAddress,
+      this.contractBillingDetailsAddressCountry,
+    );
 
     const countryInput = this.page.locator(
       this.contractBillingDetailsAddressCountry,
@@ -63,29 +95,27 @@ export class OrganizationAccountPage {
       'South Georgia and the South Sandwich Islands',
     );
     await countryInput.press('Enter');
-    await this.page.click(this.billingAddressSave);
+    await clickLocatorsThatAreVisible(this.page, this.billingAddressSave);
     await this.page.waitForResponse('**/customer-os-api');
-    await this.page.click(this.contractDetailsSaveDraft);
+    await clickLocatorsThatAreVisible(this.page, this.contractDetailsSaveDraft);
     await this.page.waitForResponse('**/customer-os-api');
   }
 
   async openContractDotsMenu(contractIndex: number) {
-    // await this.page.click(this.contractMenuDots);
-    const firstContract = this.page
-      .locator(this.contractMenuDots)
-      .nth(contractIndex);
-
-    await firstContract.click();
+    await clickLocatorThatIsVisibleWithIndex(
+      this.page,
+      this.contractMenuDots,
+      contractIndex,
+    );
   }
 
   async deleteContract(contractIndex: number) {
     await this.openContractDotsMenu(contractIndex);
-    await this.page.click(this.contractMenuDeleteContract);
-    await this.page.click(this.contractCardConfirmContractDeletion);
-  }
-
-  async addServices() {
-    await this.page.click(this.orgAccountAddServices);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.contractMenuDeleteContract,
+      this.contractCardConfirmContractDeletion,
+    );
   }
 
   async checkContractsCount(expectedNumberOfContracts: number) {
@@ -112,12 +142,15 @@ export class OrganizationAccountPage {
 
   async addSLIsToContract(contractIndex: number) {
     await this.openContractDotsMenu(contractIndex);
-    await this.page.click(this.contractMenuEditContract);
-    await this.page.click(this.contractCardAddSli);
-    await this.page.click(this.addNewServiceMenuSubscription);
-    await this.page.click(this.contractCardAddSli);
-    await this.page.click(this.addNewServiceMenuOneTime);
-    await this.page.click(this.contractDetailsSaveDraft);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.contractMenuEditContract,
+      this.contractCardAddSli,
+      this.addNewServiceMenuSubscription,
+      this.contractCardAddSli,
+      this.addNewServiceMenuOneTime,
+      this.contractDetailsSaveDraft,
+    );
   }
 
   async checkSLIsInAccountPanel() {
@@ -149,5 +182,83 @@ export class OrganizationAccountPage {
       oneTimeUnnamed,
       `Expected to have 1 One-time SLI(s) and found ${actualsubscriptionUnnamed}`,
     ).toHaveCount(1);
+  }
+
+  async updateOrgToCustomer() {
+    await clickLocatorThatIsVisibleAndHasText(
+      this.page,
+      this.organizationAccountRelationship,
+      'Prospect',
+    );
+
+    await clickLocatorThatIsVisibleAndHasText(
+      this.page,
+      this.relationshipCustomer,
+      'Customer',
+    );
+  }
+
+  async addNoteToOrg() {
+    const editor = await clickLocatorWithSublocatorThatIsVisible(
+      this.page,
+      this.organizationAccountNotesEditor,
+      '.ProseMirror',
+    );
+
+    // Set up the request listener before typing
+    const requestPromise = this.page.waitForRequest((request) => {
+      if (
+        request.method() === 'POST' &&
+        request.url().includes('customer-os-api')
+      ) {
+        const postData = request.postData();
+
+        if (postData) {
+          const parsedData = JSON.parse(postData);
+
+          return parsedData.variables.input.notes === '<p>Test Note!</p>';
+        }
+      }
+
+      return false;
+    });
+
+    // Set up the response listener
+    const responsePromise = this.page.waitForResponse(async (response) => {
+      if (
+        response.request().method() === 'POST' &&
+        response.url().includes('customer-os-api')
+      ) {
+        const responseBody = await response.json();
+
+        // Adjust this condition based on your API response structure
+        return (
+          responseBody.data?.organization_Update?.metadata?.id !== undefined
+        );
+      }
+
+      return false;
+    });
+
+    // Type the note
+    await editor.pressSequentially('Test Note!', { delay: 500 });
+
+    // Wait for both the request to be sent and the response to be received
+    await Promise.all([requestPromise, responsePromise]);
+
+    // Wait a bit to ensure the UI has updated
+    await this.page.waitForTimeout(1000);
+
+    await this.page.reload();
+
+    // Wait for the editor to be visible after reload
+    await expect(editor).toBeVisible({ timeout: 20000 });
+
+    // Use a retry mechanism for checking the text
+    await expect(async () => {
+      const text = await editor.innerText();
+
+      expect(text).toBe('Test Note!');
+    }).toPass({ timeout: 10000 });
   }
 }

@@ -65,7 +65,7 @@ export const RelationshipButton = observer(() => {
   return (
     <div>
       <Menu>
-        <MenuButton asChild>
+        <MenuButton asChild data-test={`organization-account-relationship`}>
           <Tag
             size={'sm'}
             variant='outline'
@@ -109,7 +109,11 @@ export const RelationshipButton = observer(() => {
                 ),
             )
             .map((option) => (
-              <MenuItem key={option.value} onClick={() => handleSelect(option)}>
+              <MenuItem
+                key={option.value}
+                onClick={() => handleSelect(option)}
+                data-test={`relationship-${option.value}`}
+              >
                 {iconMap[option.label as keyof typeof iconMap]}
                 {option.label}
               </MenuItem>

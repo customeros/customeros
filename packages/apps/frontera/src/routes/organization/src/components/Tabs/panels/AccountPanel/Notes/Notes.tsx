@@ -58,6 +58,7 @@ export const Notes = observer(({ id }: NotesProps) => {
           size={100}
           editor={editor}
           className='min-h-[100px] cursor-text w-full'
+          data-test='organization-account-notes-editor'
         />
       </CardFooter>
     </Card>

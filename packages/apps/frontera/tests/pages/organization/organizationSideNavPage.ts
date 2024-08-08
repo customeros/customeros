@@ -1,5 +1,7 @@
 import { Page } from '@playwright/test';
 
+import { clickLocatorsThatAreVisible } from '../../helper';
+
 export class OrganizationSideNavPage {
   constructor(page: Page) {
     this.page = page;
@@ -27,7 +29,10 @@ export class OrganizationSideNavPage {
   }
 
   async goToAccount() {
-    await this.page.click(this.accountInTheOrganizationPage);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.accountInTheOrganizationPage,
+    );
   }
 
   async goToSuccess() {
