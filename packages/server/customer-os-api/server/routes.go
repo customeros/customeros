@@ -47,7 +47,8 @@ func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, ser
 	r.Handle(method, path,
 		cosHandler.TracingEnhancer(ctx, method+":"+path),
 		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
-		enrichContextMiddleware(services),
+		enrichContextMiddleware(),
+		cosHandler.StatsSuccessHandler(method+":"+path, services),
 		handler)
 }
 

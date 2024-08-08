@@ -433,7 +433,7 @@ func extractGraphQLMethodName(req *http.Request) string {
 	return ""
 }
 
-func enrichContextMiddleware(services *service.Services) gin.HandlerFunc {
+func enrichContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{}
 
