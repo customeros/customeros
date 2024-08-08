@@ -4,10 +4,9 @@ import (
 	"context"
 	"github.com/gin-gonic/gin"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/email-tracking-api/tracing"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
@@ -16,13 +15,13 @@ import (
 
 func AddEmailTrackRoute(ctx context.Context, route *gin.Engine, log logger.Logger, commonServices *commonservice.Services) {
 	route.GET("/v1/l",
-		handler.TracingEnhancer(ctx, "/v1/l"),
+		tracing.TracingEnhancer(ctx, "/v1/l"),
 		trackLinkRequest(commonServices, log))
 	route.GET("/v1/s",
-		handler.TracingEnhancer(ctx, "/v1/s"),
+		tracing.TracingEnhancer(ctx, "/v1/s"),
 		trackOpenRequest(commonServices, log))
 	route.GET("/v1/u",
-		handler.TracingEnhancer(ctx, "/v1/u"),
+		tracing.TracingEnhancer(ctx, "/v1/u"),
 		trackUnsubscribeRequest(commonServices, log))
 }
 
