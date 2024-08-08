@@ -69,7 +69,7 @@ func (t tableViewDefinitionRepository) CreateTableViewDefinition(ctx context.Con
 	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
 
 	// if the view is a preset, set the UserId to empty string
-	if viewDefinition.IsPreset {
+	if viewDefinition.IsShared {
 		viewDefinition.UserId = ""
 	}
 
