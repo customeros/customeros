@@ -26,6 +26,7 @@ const (
 	AI_API               App = "ai-api"
 	PLATFORM_ADMIN_API   App = "platform-admin-api"
 	USER_ADMIN_API       App = "user-admin-api"
+	ENRICHMENT_API       App = "enrichment-api"
 )
 
 const ApiKeyHeader = "X-Openline-API-KEY"

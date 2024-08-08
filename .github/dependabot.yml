@@ -291,6 +291,20 @@ updates:
     rebase-strategy: "auto"
 
   - package-ecosystem: "gomod"
+    directory: "/packages/server/enrichment-api"
+    schedule:
+      interval: "daily"
+      time: "06:00"
+    open-pull-requests-limit: 5
+    labels:
+      - "gomod"
+      - "dependencies"
+      - "app/enrichment-api"
+    pull-request-branch-name:
+      separator: "-"
+    rebase-strategy: "auto"
+
+  - package-ecosystem: "gomod"
     directory: "/packages/server/user-admin-api"
     schedule:
       interval: "daily"
