@@ -338,15 +338,17 @@ func (s *trackingService) askAndStoreIPData(c context.Context, request *entity.E
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		tracing.TraceErr(span, errors.New("bad response status"))
-		return fmt.Errorf("bad response status: %v", resp.StatusCode)
-	}
-
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return fmt.Errorf("failed to read response body: %v", err)
+	}
+
+	if resp.StatusCode != http.StatusOK {
+		span.LogFields(log.Int("response.status", resp.StatusCode))
+		span.LogFields(log.String("response.body", string(responseBody)))
+		tracing.TraceErr(span, errors.New(fmt.Sprintf("bad response status: %v", resp.StatusCode)))
+		return fmt.Errorf("bad response status: %v", resp.StatusCode)
 	}
 
 	// Parse the JSON request body
