@@ -21,12 +21,22 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	panic(fmt.Errorf("not implemented: TableViewDefUpdate - tableViewDef_Update"))
 }
 
-// TableViewDefUpdatePreset is the resolver for the tableViewDef_UpdatePreset field.
-func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
-	panic(fmt.Errorf("not implemented: TableViewDefUpdatePreset - tableViewDef_UpdatePreset"))
+// TableViewDefUpdateShared is the resolver for the tableViewDef_UpdateShared field.
+func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
+	panic(fmt.Errorf("not implemented: TableViewDefUpdateShared - tableViewDef_UpdateShared"))
 }
 
 // TableViewDefs is the resolver for the tableViewDefs field.
 func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error) {
 	panic(fmt.Errorf("not implemented: TableViewDefs - tableViewDefs"))
+}
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
+	panic(fmt.Errorf("not implemented: TableViewDefUpdatePreset - tableViewDef_UpdatePreset"))
 }

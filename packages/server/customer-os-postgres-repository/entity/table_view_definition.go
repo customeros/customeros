@@ -30,6 +30,7 @@ type TableViewDefinition struct {
 	Sorting     string    `gorm:"column:sorting;type:text" json:"sorting"`
 	ColumnsJson string    `gorm:"column:columns;type:text" json:"columns"`
 	IsPreset    bool      `gorm:"column:is_preset;type:boolean;NOT NULL;DEFAULT:false" json:"isPreset"`
+	IsShared    bool      `gorm:"column:is_shared;type:boolean;NOT NULL;DEFAULT:false" json:"isShared"`
 }
 
 func (TableViewDefinition) TableName() string {

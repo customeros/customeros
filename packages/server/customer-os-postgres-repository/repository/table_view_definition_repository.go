@@ -20,7 +20,7 @@ type TableViewDefinitionRepository interface {
 	GetTableViewDefinitions(ctx context.Context, tenant, userId string) helper.QueryResult
 	CreateTableViewDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 	UpdateTableViewDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
-	UpdateTableViewPresetDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
+	UpdateTableViewSharedDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 }
 
 func NewTableViewDefinitionRepository(gormDb *gorm.DB) TableViewDefinitionRepository {
@@ -43,17 +43,17 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 		Order("position asc").
 		Find(&tableViewDefinitions).Error
 
-	presetsErr := t.gormDb.
+	sharedErr := t.gormDb.
 		Where("tenant = ?", tenant).
-		Where("is_preset = ?", true).
+		Where("is_shared = ?", true).
 		Order("position asc").
 		Find(&tableViewPresetDefinitions).Error
 
 	if defsErr != nil {
 		return helper.QueryResult{Error: defsErr}
 	}
-	if presetsErr != nil {
-		return helper.QueryResult{Error: presetsErr}
+	if sharedErr != nil {
+		return helper.QueryResult{Error: sharedErr}
 	}
 
 	allTableViewDefinitions := append(tableViewDefinitions, tableViewPresetDefinitions...)
@@ -99,9 +99,9 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 		return helper.QueryResult{Error: err}
 	}
 
-	// Verify that the tableViewDef is not a preset
-	if existing.IsPreset {
-		return helper.QueryResult{Error: errors.New("record is a preset. use tableViewDef_UpdatePreset instead")}
+	// Verify that the tableViewDef is not shared
+	if existing.IsShared {
+		return helper.QueryResult{Error: errors.New("record is shared. use tableViewDef_UpdateShared instead")}
 	}
 	// Verify that UserId and TenantName are unchanged
 	if existing.UserId != viewDefinition.UserId || existing.Tenant != viewDefinition.Tenant {
@@ -128,8 +128,8 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 	return helper.QueryResult{Result: existing}
 }
 
-func (t tableViewDefinitionRepository) UpdateTableViewPresetDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.UpdateTableViewPresetDefinition")
+func (t tableViewDefinitionRepository) UpdateTableViewSharedDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.UpdateTableViewSharedDefinition")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
 	span.SetTag(tracing.SpanTagTenant, viewDefinition.Tenant)
@@ -145,9 +145,9 @@ func (t tableViewDefinitionRepository) UpdateTableViewPresetDefinition(ctx conte
 		return helper.QueryResult{Error: err}
 	}
 
-	// Verify that the tableViewDef is a preset
-	if !existing.IsPreset {
-		return helper.QueryResult{Error: errors.New("record is not a preset. use tableViewDef_Update instead")}
+	// Verify that the tableViewDef is shared
+	if !existing.IsShared {
+		return helper.QueryResult{Error: errors.New("record is not shared. use tableViewDef_Update instead")}
 	}
 	// Verify that tenantName is unchanged
 	if existing.Tenant != viewDefinition.Tenant {

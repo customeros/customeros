@@ -133,7 +133,8 @@ func DefaultTableViewDefinitionMonthlyRenewals(span opentracing.Span) (postgresE
 		Icon:        "ClockFastForward",
 		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"MONTHLY","operation":"EQ","includeEmpty":false}}]}`,
 		Sorting:     ``,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -155,7 +156,8 @@ func DefaultTableViewDefinitionQuarterlyRenewals(span opentracing.Span) (postgre
 		Icon:        "ClockFastForward",
 		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"QUARTERLY","operation":"EQ","includeEmpty":false}}]}`,
 		Sorting:     ``,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -177,7 +179,8 @@ func DefaultTableViewDefinitionAnnualRenewals(span opentracing.Span) (postgresEn
 		Icon:        "ClockFastForward",
 		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"ANNUALLY","operation":"EQ","includeEmpty":false}}]}`,
 		Sorting:     "",
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -199,7 +202,8 @@ func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgresEnti
 		Icon:        "InvoiceCheck",
 		Filters:     `{"AND":[{"filter":{"property":"INVOICE_DRY_RUN","value":false}}]}`,
 		Sorting:     ``,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -221,7 +225,8 @@ func DefaultTableViewDefinitionUpcomingInvoices(span opentracing.Span) (postgres
 		Icon:        "InvoiceUpcoming",
 		Filters:     `{"AND":[{"filter":{"property":"INVOICE_PREVIEW","value":true}}]}`,
 		Sorting:     ``,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -243,7 +248,8 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 		Icon:        "Building07",
 		Filters:     ``,
 		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -265,7 +271,8 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 		Icon:        "CheckHeart",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Customer.String()),
 		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -287,7 +294,8 @@ func DefaultTableViewDefinitionMyPortfolio(userId string, span opentracing.Span)
 		Icon:        "Briefcase01",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"OWNER_ID","value":["%s"]}}]}`, userId),
 		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -309,7 +317,8 @@ func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.Tabl
 		Icon:        "SwitchHorizontal01",
 		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["LEAD"]}}]}`,
 		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -331,7 +340,8 @@ func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.Ta
 		Icon:        "HeartHand",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
 		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -353,7 +363,8 @@ func DefaultTableViewDefinitionChurn(span opentracing.Span) (postgresEntity.Tabl
 		Icon:        "BrokenHeart",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.FormerCustomer.String()),
 		Sorting:     `{"id": "ORGANIZATIONS_CHURN_DATE", "desc": true}`,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -375,7 +386,8 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 		Icon:        "HeartHand",
 		Filters:     ``,
 		Sorting:     ``,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -397,7 +409,8 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span
 		Icon:        "HeartHand",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
 		Sorting:     ``,
-		IsPreset:    false,
+		IsPreset:    true,
+		IsShared:    false,
 	}, nil
 }
 
@@ -420,6 +433,7 @@ func DefaultTableViewDefinitionOpportunities(span opentracing.Span) (postgresEnt
 		Filters:     ``,
 		Sorting:     ``,
 		IsPreset:    true,
+		IsShared:    true,
 	}, nil
 }
 
