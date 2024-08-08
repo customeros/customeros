@@ -37,6 +37,7 @@ export type CommandMenuType =
 
 type Context = {
   ids: Array<string>;
+  callback?: () => void;
   property?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: Record<string, any>;
@@ -117,6 +118,18 @@ export class CommandMenuStore {
   clearContext() {
     runInAction(() => {
       Object.assign(this.context, makeDefaultContext());
+    });
+  }
+
+  setCallback(callback: () => void) {
+    runInAction(() => {
+      this.context.callback = callback;
+    });
+  }
+
+  clearCallback() {
+    runInAction(() => {
+      this.context.callback = undefined;
     });
   }
 }

@@ -29,12 +29,14 @@ export const DeleteConfirmationModal = observer(() => {
 
   const handleClose = () => {
     store.ui.commandMenu.toggle('DeleteConfirmationModal');
+    store.ui.commandMenu.clearCallback();
   };
 
   const handleConfirm = () => {
     match(context.entity)
       .with('Organization', () => {
         store.organizations.hide(context.ids as string[]);
+        context.callback?.();
       })
       .with('Organizations', () => {
         store.organizations.hide(context.ids as string[]);

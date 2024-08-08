@@ -37,6 +37,18 @@ export const ContactCommands = observer(() => {
           Edit persona tag...
         </CommandItem>
 
+        {!!contact?.value?.tags?.length && (
+          <CommandItem
+            leftAccessory={<Tag01 />}
+            onSelect={() => {
+              contact?.removeAllTagsFromContact();
+              store.ui.commandMenu.setOpen(false);
+            }}
+          >
+            Remove tags
+          </CommandItem>
+        )}
+
         <CommandItem
           leftAccessory={<Mail01 />}
           keywords={['edit', 'email', 'change', 'update', 'address', '@']}
@@ -97,7 +109,7 @@ export const ContactCommands = observer(() => {
             store.ui.commandMenu.setType('ChangeOrAddJobRoles');
           }}
         >
-          Change or add job roles...
+          Edit job roles...
         </CommandItem>
         <CommandItem
           leftAccessory={<Clock />}

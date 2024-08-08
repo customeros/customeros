@@ -408,6 +408,9 @@ export class ContactStore implements Store<Contact>, ContractStore {
           },
         },
       });
+      runInAction(() => {
+        this.root.ui.toastSuccess('Tag has been added', 'tags-added-success');
+      });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error).message;
@@ -424,6 +427,27 @@ export class ContactStore implements Store<Contact>, ContractStore {
             id: tagId,
           },
         },
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    }
+  }
+
+  async removeAllTagsFromContact() {
+    const tags =
+      this.value?.tags?.map((tag) => this.removeTagFromContact(tag.id)) || [];
+
+    try {
+      await Promise.all(tags);
+
+      runInAction(() => {
+        this.value.tags = [];
+        this.root.ui.toastSuccess(
+          'All tags were removed',
+          'tags-remove-success',
+        );
       });
     } catch (e) {
       runInAction(() => {
