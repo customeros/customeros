@@ -45,7 +45,10 @@ export const Reminders = observer(() => {
   if (isPending) return null;
 
   return (
-    <div className='flex flex-col items-start gap-[0.5rem]'>
+    <div
+      data-test={'timeline-reminder-list'}
+      className='flex flex-col items-start gap-[0.5rem]'
+    >
       {reminders
         ?.filter((r) => !r.dismissed)
         .sort((a, b) => {

@@ -34,6 +34,7 @@ export class OrganizationTimelinePage {
     'button[data-test="timeline-reminder-button"]';
   private timelineReminderEditor =
     'textarea[data-test="timeline-reminder-editor"]';
+  private timelineReminderList = 'div[data-test="timeline-reminder-list"]';
   private timelineReminderDismiss =
     'button[data-test="timeline-reminder-dismiss"]';
 
@@ -134,6 +135,8 @@ export class OrganizationTimelinePage {
 
   async ensureReminderCanBeAdded() {
     await this.addReminder();
+    await this.ensureReminderWasCreated();
+    await clickLocatorsThatAreVisible(this.page, this.timelineReminderDismiss);
   }
 
   private async addReminder() {
@@ -143,18 +146,17 @@ export class OrganizationTimelinePage {
       this.page,
       this.timelineReminderEditor,
     );
+
+    await this.page.waitForResponse('**/customer-os-api');
+
     const requestPromise = this.page.waitForRequest((request) => {
       if (
         request.method() === 'POST' &&
         request.url().includes('customer-os-api')
       ) {
-        const postData = request.postData();
+        const payload = JSON.parse(request.postData() || '{}');
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables.input.notes === '<p>Test Note!</p>';
-        }
+        return payload.variables?.input?.content === 'Test Reminder!';
       }
 
       return false;
@@ -167,5 +169,32 @@ export class OrganizationTimelinePage {
 
     // Wait for both the request to be sent and the response to be received
     await Promise.all([requestPromise]);
+  }
+
+  private async ensureReminderWasCreated() {
+    const parentDiv = this.page.locator(this.timelineReminderList);
+
+    // Ensure that the parent div has only one child
+    const remindersCount = await parentDiv.evaluate(
+      (node) => node.children.length,
+    );
+
+    expect(
+      remindersCount,
+      `Expected to find exactly 1 Reminder but found ${remindersCount}`,
+    ).toBe(1);
+
+    if (remindersCount === 1) {
+      // Locate the textarea within the child
+      const textarea = parentDiv.locator(this.timelineReminderEditor);
+
+      // Ensure the textarea contains the text "Test Reminder!"
+      await expect(textarea).toHaveValue('Test Reminder!');
+    } else {
+      expect(
+        remindersCount,
+        `Expected to find exactly 0 Reminder but found ${remindersCount}`,
+      ).toBe(0);
+    }
   }
 }

@@ -11,6 +11,8 @@ export class AddressBookPage {
 
   private sideNavItemAllOrgs = 'button[data-test="side-nav-item-all-orgs"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
+  private addressBookCreateNewOrgOrgName =
+    'input[data-test="address-book-create-new-org-org-name"]';
   private organizationNameInAllOrgsTable =
     'p[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
@@ -41,27 +43,22 @@ export class AddressBookPage {
   private orgActionsArchive = 'button[data-test="org-actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
-  private addressBookEmptyCreateOrg =
-    'button[data-test="address-book-empty-create-org"]';
 
   constructor(page: Page) {
     this.page = page;
   }
 
   async waitForPageLoad() {
-    const allOrgsMenubutton = this.page.locator(this.sideNavItemAllOrgs);
-
-    await allOrgsMenubutton.waitFor({ state: 'visible' });
-    await expect(allOrgsMenubutton).toBeVisible();
-    await allOrgsMenubutton.click();
+    await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
   async addOrganization() {
     await clickLocatorsThatAreVisible(
       this.page,
       this.allOrgsAddOrg,
-      this.addressBookEmptyCreateOrg,
+      this.addressBookCreateNewOrgOrgName,
     );
+    await this.page.keyboard.press('Enter');
 
     const orgCreationResp = await this.page.waitForResponse(
       '**/customer-os-api',
@@ -102,8 +99,6 @@ export class AddressBookPage {
 
       expect(website).toBe('Unknown');
     });
-
-    // await this.page.waitForResponse('**/customer-os-api');
 
     await assertWithRetry(async () => {
       const relationship = await newEntry

@@ -82,8 +82,8 @@ export const DeleteConfirmationModal = observer(() => {
             variant='outline'
             className='w-full'
             colorScheme='error'
-            data-test='org-actions-confirm-archive'
             onClick={handleConfirm}
+            data-test='org-actions-confirm-archive'
           >
             Archive
           </Button>

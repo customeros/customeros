@@ -90,6 +90,7 @@ export async function clickLocatorsThatAreVisible(
   ...selectors: string[]
 ) {
   for (const selector of selectors) {
+    await page.locator(selector).scrollIntoViewIfNeeded();
     await ensureLocatorIsVisible(page, selector);
 
     await page.click(selector);
