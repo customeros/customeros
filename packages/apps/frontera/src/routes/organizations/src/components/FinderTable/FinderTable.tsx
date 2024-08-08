@@ -475,10 +475,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
                 !isCommandMenuPrompted
               }
               onHide={() => {
-                store.ui.commandMenu.setOpen(true);
                 store.ui.commandMenu.setCallback(() =>
                   table.resetRowSelection(),
                 );
+                store.ui.commandMenu.setOpen(true);
                 store.ui.commandMenu.setType('DeleteConfirmationModal');
               }}
             />
