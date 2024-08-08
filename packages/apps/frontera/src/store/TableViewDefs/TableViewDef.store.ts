@@ -23,7 +23,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
   isLoading = false;
   history: Operation[] = [];
   error: string | null = null;
-  channel?: Channel | undefined;
+  channel: Channel | undefined;
   subscribe = makeAutoSyncable.subscribe;
   load = makeAutoSyncable.load<TableViewDef>();
   update = makeAutoSyncable.update<TableViewDef>();
@@ -102,8 +102,8 @@ export class TableViewDefStore implements Store<TableViewDef> {
   async invalidate() {}
 
   async save() {
-    const mutation = this.value.isPreset
-      ? UPDATE_TABLE_VIEW_DEF_PRESET
+    const mutation = this.value.isShared
+      ? UPDATE_TABLE_VIEW_DEF_SHARED
       : UPDATE_TABLE_VIEW_DEF;
 
     const payload: PAYLOAD = {
@@ -114,6 +114,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
         'tableType',
         'tableId',
         'isPreset',
+        'isShared',
       ),
     };
 
@@ -241,9 +242,9 @@ const UPDATE_TABLE_VIEW_DEF = gql`
   }
 `;
 
-const UPDATE_TABLE_VIEW_DEF_PRESET = gql`
-  mutation updateTableViewDef($input: TableViewDefUpdateInput!) {
-    tableViewDef_UpdatePreset(input: $input) {
+const UPDATE_TABLE_VIEW_DEF_SHARED = gql`
+  mutation updateTableViewDefShared($input: TableViewDefUpdateInput!) {
+    tableViewDef_UpdateShared(input: $input) {
       id
     }
   }
@@ -261,5 +262,6 @@ const defaultValue: TableViewDef = {
   sorting: '',
   updatedAt: '',
   isPreset: false,
+  isShared: false,
   tableType: TableViewType.Organizations,
 };

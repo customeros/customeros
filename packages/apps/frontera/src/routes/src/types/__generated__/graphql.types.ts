@@ -2481,7 +2481,7 @@ export type Mutation = {
   social_Update: Social;
   tableViewDef_Create: TableViewDef;
   tableViewDef_Update: TableViewDef;
-  tableViewDef_UpdatePreset: TableViewDef;
+  tableViewDef_UpdateShared: TableViewDef;
   tag_Create: Tag;
   tag_Delete?: Maybe<Result>;
   tag_Update?: Maybe<Tag>;
@@ -3271,7 +3271,7 @@ export type MutationTableViewDef_UpdateArgs = {
   input: TableViewDefUpdateInput;
 };
 
-export type MutationTableViewDef_UpdatePresetArgs = {
+export type MutationTableViewDef_UpdateSharedArgs = {
   input: TableViewDefUpdateInput;
 };
 
@@ -4857,6 +4857,7 @@ export type TableViewDef = Node & {
   icon: Scalars['String']['output'];
   id: Scalars['ID']['output'];
   isPreset: Scalars['Boolean']['output'];
+  isShared: Scalars['Boolean']['output'];
   name: Scalars['String']['output'];
   order: Scalars['Int']['output'];
   sorting: Scalars['String']['output'];
@@ -4870,6 +4871,7 @@ export type TableViewDefCreateInput = {
   filters: Scalars['String']['input'];
   icon: Scalars['String']['input'];
   isPreset: Scalars['Boolean']['input'];
+  isShared: Scalars['Boolean']['input'];
   name: Scalars['String']['input'];
   order: Scalars['Int']['input'];
   sorting: Scalars['String']['input'];
