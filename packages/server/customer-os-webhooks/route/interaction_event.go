@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
@@ -20,24 +21,22 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/tracing"
 )
 
 func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services *service.Services, cfg *config.Config, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/sync/interaction-events",
-		handler.TracingEnhancer(ctx, "/sync/interaction-events"),
+		tracing.TracingEnhancer(ctx, "/sync/interaction-events"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
 		syncInteractionEventsHandler(services, log))
 	route.POST("/sync/interaction-event",
-		handler.TracingEnhancer(ctx, "/sync/interaction-event"),
+		tracing.TracingEnhancer(ctx, "/sync/interaction-event"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
 		syncInteractionEventHandler(services, log))
 	route.POST("/sync/postmark-interaction-event",
-		handler.TracingEnhancer(ctx, "/sync/postmark-interaction-event"),
+		tracing.TracingEnhancer(ctx, "/sync/postmark-interaction-event"),
 		syncPostmarkInteractionEventHandler(services, cfg, log))
 }
 

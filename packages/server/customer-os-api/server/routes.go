@@ -10,6 +10,7 @@ import (
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 )
 
 const (
@@ -45,7 +46,7 @@ func registerOutreachRoutes(ctx context.Context, r *gin.Engine, services *servic
 
 func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, services *service.Services, cache *commoncaches.Cache, handler gin.HandlerFunc) {
 	r.Handle(method, path,
-		cosHandler.TracingEnhancer(ctx, method+":"+path),
+		tracing.TracingEnhancer(ctx, method+":"+path),
 		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
 		enrichContextMiddleware(),
 		cosHandler.StatsSuccessHandler(method+":"+path, services),
@@ -54,19 +55,19 @@ func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, ser
 
 func registerWhoamiRoutes(ctx context.Context, r *gin.Engine, serviceContainer *service.Services, cache *commoncaches.Cache) {
 	r.GET("/whoami",
-		cosHandler.TracingEnhancer(ctx, "GET:/whoami"),
+		tracing.TracingEnhancer(ctx, "GET:/whoami"),
 		security.ApiKeyCheckerHTTP(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
 		rest.WhoamiHandler(serviceContainer))
 }
 
 func registerStreamRoutes(ctx context.Context, r *gin.Engine, serviceContainer *service.Services, cache *commoncaches.Cache) {
 	r.GET("GET /stream/organizations-cache",
-		cosHandler.TracingEnhancer(ctx, "GET:/stream/organizations-cache"),
+		tracing.TracingEnhancer(ctx, "GET:/stream/organizations-cache"),
 		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, serviceContainer.Repositories.Neo4jRepositories, security.WithCache(cache)),
 		rest.OrganizationsCacheHandler(serviceContainer))
 	r.GET("GET /stream/organizations-cache-diff",
-		cosHandler.TracingEnhancer(ctx, "GET:/stream/organizations-cache-diff"),
+		tracing.TracingEnhancer(ctx, "GET:/stream/organizations-cache-diff"),
 		apiKeyCheckerHTTPMiddleware(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, serviceContainer.Repositories.Neo4jRepositories, security.WithCache(cache)),
 		rest.OrganizationsPatchesCacheHandler(serviceContainer))

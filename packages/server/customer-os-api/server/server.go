@@ -139,12 +139,12 @@ func (server *server) Run(parentCtx context.Context) error {
 
 	// graphql routes
 	r.POST("/query",
-		cosHandler.TracingEnhancer(ctx, "/query"),
+		tracing.TracingEnhancer(ctx, "/query"),
 		apiKeyCheckerHTTPMiddleware(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(commonCache)),
 		tenantUserContextEnhancerMiddleware(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 	r.POST("/admin/query",
-		cosHandler.TracingEnhancer(ctx, "/admin/query"),
+		tracing.TracingEnhancer(ctx, "/admin/query"),
 		adminApiHandler.GetAdminApiHandlerEnhancer(),
 		server.graphqlHandler(grpcContainer, serviceContainer))
 
@@ -152,7 +152,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	if server.cfg.GraphQL.PlaygroundEnabled {
 		r.GET("/playground", playgroundHandler())
 		r.GET("/admin/playground",
-			cosHandler.TracingEnhancer(ctx, "/admin"),
+			tracing.TracingEnhancer(ctx, "/admin"),
 			playgroundAdminHandler())
 	}
 

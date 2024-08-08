@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
@@ -32,7 +31,7 @@ func healthCheckHandler(c *gin.Context) {
 
 func validateEmailWithReacher(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
 	r.POST("/validateEmail",
-		handler.TracingEnhancer(ctx, "POST /validateEmail"),
+		tracing.TracingEnhancer(ctx, "POST /validateEmail"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request model.ValidateEmailRequest
@@ -56,7 +55,7 @@ func validateEmailWithReacher(ctx context.Context, r *gin.Engine, services *serv
 
 func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
 	r.POST("/validateEmailV2",
-		handler.TracingEnhancer(ctx, "POST /validateEmailV2"),
+		tracing.TracingEnhancer(ctx, "POST /validateEmailV2"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ValidateEmailV2", c.Request.Header)
@@ -105,7 +104,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 
 func validatePhoneNumber(ctx context.Context, r *gin.Engine, services *service.Services) {
 	r.POST("/validatePhoneNumber",
-		handler.TracingEnhancer(ctx, "POST /validatePhoneNumber"),
+		tracing.TracingEnhancer(ctx, "POST /validatePhoneNumber"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request model.ValidationPhoneNumberRequest
@@ -135,7 +134,7 @@ func validatePhoneNumber(ctx context.Context, r *gin.Engine, services *service.S
 
 func validateAddress(ctx context.Context, r *gin.Engine, services *service.Services) {
 	r.POST("/validateAddress",
-		handler.TracingEnhancer(ctx, "POST /validateAddress"),
+		tracing.TracingEnhancer(ctx, "POST /validateAddress"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			var request model.ValidationAddressRequest
@@ -208,7 +207,7 @@ func validateAddress(ctx context.Context, r *gin.Engine, services *service.Servi
 
 func ipLookup(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
 	r.POST("/ipLookup",
-		handler.TracingEnhancer(ctx, "POST /ipLookup"),
+		tracing.TracingEnhancer(ctx, "POST /ipLookup"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
 			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpLookup", c.Request.Header)

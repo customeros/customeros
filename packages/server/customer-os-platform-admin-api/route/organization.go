@@ -2,6 +2,7 @@ package route
 
 import (
 	"context"
+	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"net/http"
 	"sync"
 	"time"
@@ -10,7 +11,6 @@ import (
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/tracing"
@@ -19,7 +19,7 @@ import (
 
 func AddOrganizationRoutes(ctx context.Context, route *gin.Engine, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
 	route.POST("/organization/refreshLastTouchpoint",
-		handler.TracingEnhancer(ctx, "/organization/refreshLastTouchpoint"),
+		commontracing.TracingEnhancer(ctx, "/organization/refreshLastTouchpoint"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.PLATFORM_ADMIN_API, security.WithCache(cache)),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories, security.WithCache(cache)),
 		refreshLastTouchpointHandler(services, log))
