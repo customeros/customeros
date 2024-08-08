@@ -60,6 +60,7 @@ func (r *mutationResolver) TableViewDefCreate(ctx context.Context, input model.T
 		Filters:     input.Filters,
 		Sorting:     input.Sorting,
 		IsPreset:    input.IsPreset,
+		IsShared:    input.IsShared,
 		Tenant:      tenant,
 		UserId:      userId,
 	}
@@ -124,7 +125,7 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 		Icon:        input.Icon,
 		Filters:     input.Filters,
 		Sorting:     input.Sorting,
-		IsPreset:    false,
+		IsPreset:    true,
 		Tenant:      tenant,
 		UserId:      userId,
 	}
@@ -146,9 +147,9 @@ func (r *mutationResolver) TableViewDefUpdate(ctx context.Context, input model.T
 	return mapper.MapTableViewDefinitionToModel(viewDefinition, nil), nil
 }
 
-// TableViewDefUpdatePreset is the resolver for the tableViewDef_UpdatePreset field.
-func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefPresetUpdate", graphql.GetOperationContext(ctx))
+// TableViewDefUpdateShared is the resolver for the tableViewDef_UpdateShared field.
+func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input model.TableViewDefUpdateInput) (*model.TableViewDef, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefSharedUpdate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
@@ -193,20 +194,21 @@ func (r *mutationResolver) TableViewDefUpdatePreset(ctx context.Context, input m
 		Sorting:     input.Sorting,
 		Tenant:      tenant,
 		IsPreset:    true,
+		IsShared:    true,
 		UserId:      "",
 	}
 
-	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewPresetDefinition(ctx, viewDefinition)
+	result := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.UpdateTableViewSharedDefinition(ctx, viewDefinition)
 	if result.Error != nil {
 		tracing.TraceErr(span, result.Error)
-		graphql.AddErrorf(ctx, "Failed to update table view preset definition")
+		graphql.AddErrorf(ctx, "Failed to update table view shared definition")
 		graphql.AddError(ctx, result.Error)
 		return nil, nil
 	}
 
 	viewDefinition, ok := result.Result.(postgresEntity.TableViewDefinition)
 	if !ok {
-		graphql.AddErrorf(ctx, "Failed to update table view preset definition")
+		graphql.AddErrorf(ctx, "Failed to update table view shared definition")
 		return nil, nil
 	}
 

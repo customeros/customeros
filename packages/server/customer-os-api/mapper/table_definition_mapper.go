@@ -40,6 +40,7 @@ func MapTableViewDefinitionToModel(entity postgresEntity.TableViewDefinition, sp
 		Filters:   entity.Filters,
 		Sorting:   entity.Sorting,
 		IsPreset:  entity.IsPreset,
+		IsShared:  entity.IsShared,
 		CreatedAt: entity.CreatedAt,
 		UpdatedAt: entity.UpdatedAt,
 		Columns:   columns,

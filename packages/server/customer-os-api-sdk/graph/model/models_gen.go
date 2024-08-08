@@ -2798,6 +2798,7 @@ type TableViewDef struct {
 	Filters   string        `json:"filters"`
 	Sorting   string        `json:"sorting"`
 	IsPreset  bool          `json:"isPreset"`
+	IsShared  bool          `json:"isShared"`
 	CreatedAt time.Time     `json:"createdAt"`
 	UpdatedAt time.Time     `json:"updatedAt"`
 }
@@ -2815,6 +2816,7 @@ type TableViewDefCreateInput struct {
 	Filters   string             `json:"filters"`
 	Sorting   string             `json:"sorting"`
 	IsPreset  bool               `json:"isPreset"`
+	IsShared  bool               `json:"isShared"`
 }
 
 type TableViewDefUpdateInput struct {
