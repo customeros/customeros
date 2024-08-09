@@ -19,8 +19,8 @@ type EnrichPersonResponse struct {
 	Status        string           `json:"status"`
 	Message       string           `json:"message,omitempty"`
 	IsComplete    bool             `json:"isComplete"`
-	PendingFields []string         `json:"pendingFields"`
-	ResultURL     *string          `json:"resultUrl"`
+	PendingFields []string         `json:"pendingFields,omitempty"`
+	ResultURL     *string          `json:"resultUrl,omitempty"`
 	Data          EnrichPersonData `json:"data"`
 }
 
@@ -135,7 +135,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 
 		requestJSON, err := json.Marshal(enrichmentmodel.EnrichPersonRequest{
 			Email:       email,
-			LinkedInUrl: linkedinUrl,
+			LinkedinUrl: linkedinUrl,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
@@ -177,6 +177,87 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			Status: "success",
 		}
 
+		mapData(result, &enrichPersonResponse)
+
 		c.JSON(http.StatusOK, enrichPersonResponse)
 	}
+}
+
+func mapData(source enrichmentmodel.EnrichPersonResponse, target *EnrichPersonResponse) {
+	if source.Data == nil {
+		return
+	}
+	if source.Data.PersonProfile == nil {
+		return
+	}
+	target.IsComplete = true          // TODO when adding async check better contact results
+	target.PendingFields = []string{} // TODO when adding async check better contact results
+	target.ResultURL = nil            // TODO when adding async check better contact results
+	target.Data = EnrichPersonData{}
+
+	// set emails
+	if source.Data.PersonProfile.Email != "" {
+		target.Data.Emails = append(target.Data.Emails, EnrichPersonEmail{
+			Address: source.Data.PersonProfile.Email,
+			//IsDeliverable: true, // TODO implement me
+			//IsRisky:       false, // TODO implement me
+			Type: source.Data.PersonProfile.EmailType,
+		})
+	}
+
+	// set name
+	target.Data.Name = EnrichPersonName{
+		FirstName: source.Data.PersonProfile.Person.FirstName,
+		LastName:  source.Data.PersonProfile.Person.LastName,
+		//PreferredName: source.Data.PersonProfile.Person.PreferredName, // TODO clarify preferred name
+	}
+	if source.Data.PersonProfile.Person.FirstName != "" && source.Data.PersonProfile.Person.LastName != "" {
+		target.Data.Name.FullName = source.Data.PersonProfile.Person.FirstName + " " + source.Data.PersonProfile.Person.LastName
+	}
+
+	// set jobs
+	for _, position := range source.Data.PersonProfile.Person.Positions.PositionHistory {
+		enrichPersonJob := EnrichPersonJob{
+			Title: position.Title,
+			//Seniority:       position.Seniority, // TODO clarify seniority
+			Duration: EnrichPersonJobDuration{
+				StartMonth: position.StartEndDate.Start.Month,
+				StartYear:  position.StartEndDate.Start.Year,
+			},
+			Company:         position.CompanyName,
+			CompanyLinkedin: position.LinkedInUrl,
+			//CompanyWebsite:  position.CompanyWebsite, // TODO implement with company enrichment
+			IsCurrent: position.StartEndDate.End == nil,
+		}
+		if position.StartEndDate.End != nil {
+			enrichPersonJob.Duration.EndMonth = &position.StartEndDate.End.Month
+			enrichPersonJob.Duration.EndYear = &position.StartEndDate.End.Year
+		}
+		target.Data.Jobs = append(target.Data.Jobs, enrichPersonJob)
+	}
+
+	// set profile picture
+	target.Data.ProfilePic = source.Data.PersonProfile.Person.PhotoUrl
+
+	// set social
+	target.Data.Social = EnrichPersonSocial{
+		Linkedin: EnrichPersonLinkedIn{
+			ID:            source.Data.PersonProfile.Person.LinkedInIdentifier,
+			PublicID:      source.Data.PersonProfile.Person.PublicIdentifier,
+			URL:           source.Data.PersonProfile.Person.LinkedInUrl,
+			FollowerCount: source.Data.PersonProfile.Person.FollowerCount,
+		},
+		// TODO add X, github, other
+	}
+
+	// set location // TODO implement AI lookup to get details
+	target.Data.Location = EnrichPersonLocation{
+		City: source.Data.PersonProfile.Person.Location,
+		//Region:   source.Data.PersonProfile.Person.Region, // TODO implement region
+		//Country:  source.Data.PersonProfile.Person.Country, // TODO implement country
+		//Timezone: source.Data.PersonProfile.Person.Timezone, // TODO implement timezone
+	}
+
+	// set phone numbers
+	// TODO implement phone numbers
 }

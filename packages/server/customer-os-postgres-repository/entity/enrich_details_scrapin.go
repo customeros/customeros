@@ -62,11 +62,11 @@ type ScrapinPersonDetails struct {
 			CompanyName  string `json:"companyName"`
 			Description  string `json:"description"`
 			StartEndDate struct {
-				Start struct {
+				Start *struct {
 					Month int `json:"month"`
 					Year  int `json:"year"`
 				} `json:"start"`
-				End struct {
+				End *struct {
 					Month int `json:"month"`
 					Year  int `json:"year"`
 				} `json:"end"`
