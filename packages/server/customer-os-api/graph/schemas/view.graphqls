@@ -6,6 +6,7 @@ extend type Mutation {
     tableViewDef_Create(input: TableViewDefCreateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tableViewDef_Update(input: TableViewDefUpdateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tableViewDef_UpdateShared(input: TableViewDefUpdateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tableViewDef_Archive(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type TableViewDef implements Node {

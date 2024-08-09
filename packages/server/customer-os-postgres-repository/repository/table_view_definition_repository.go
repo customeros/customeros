@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -21,6 +22,7 @@ type TableViewDefinitionRepository interface {
 	CreateTableViewDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 	UpdateTableViewDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 	UpdateTableViewSharedDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
+	ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId string) error
 }
 
 func NewTableViewDefinitionRepository(gormDb *gorm.DB) TableViewDefinitionRepository {
@@ -35,7 +37,7 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 	span.SetTag(tracing.SpanTagUserId, userId)
 
 	var tableViewDefinitions []entity.TableViewDefinition
-	var tableViewPresetDefinitions []entity.TableViewDefinition
+	var tableViewSharedDefinitions []entity.TableViewDefinition
 
 	defsErr := t.gormDb.
 		Where("tenant = ?", tenant).
@@ -47,7 +49,7 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 		Where("tenant = ?", tenant).
 		Where("is_shared = ?", true).
 		Order("position asc").
-		Find(&tableViewPresetDefinitions).Error
+		Find(&tableViewSharedDefinitions).Error
 
 	if defsErr != nil {
 		return helper.QueryResult{Error: defsErr}
@@ -56,7 +58,7 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 		return helper.QueryResult{Error: sharedErr}
 	}
 
-	allTableViewDefinitions := append(tableViewDefinitions, tableViewPresetDefinitions...)
+	allTableViewDefinitions := append(tableViewDefinitions, tableViewSharedDefinitions...)
 
 	return helper.QueryResult{Result: allTableViewDefinitions}
 }
@@ -172,4 +174,26 @@ func (t tableViewDefinitionRepository) UpdateTableViewSharedDefinition(ctx conte
 	}
 
 	return helper.QueryResult{Result: existing}
+}
+
+func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.ArchiveTableViewDefinition")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+
+	result := t.gormDb.
+		Where("tenant = ?", common.GetTenantFromContext(ctx)).
+		Where("user_id = ?", common.GetUserIdFromContext(ctx)).
+		Where("id = ?", viewDefinitionId).
+		Delete(&entity.TableViewDefinition{})
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected < 1 {
+		return errors.New("TableViewDef not found")
+	}
+
+	return nil
 }

@@ -159,7 +159,7 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 	id, err := strconv.ParseUint(input.ID, 10, 64)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update table view preset definition")
+		graphql.AddErrorf(ctx, "Failed to update table view shared definition")
 		return nil, nil
 	}
 
@@ -180,7 +180,7 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 	columnsJsonData, err := json.Marshal(columnsStruct)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create table view definition")
+		graphql.AddErrorf(ctx, "Failed to create table view shared definition")
 		return nil, nil
 	}
 
@@ -213,6 +213,22 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 	}
 
 	return mapper.MapTableViewDefinitionToModel(viewDefinition, nil), nil
+}
+
+// TableViewDefArchive is the resolver for the tableViewDef_Archive field.
+func (r *mutationResolver) TableViewDefArchive(ctx context.Context, id string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefArchive", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	err := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.ArchiveTableViewDefinition(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, err.Error())
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
 }
 
 // TableViewDefs is the resolver for the tableViewDefs field.
