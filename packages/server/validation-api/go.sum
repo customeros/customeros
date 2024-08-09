@@ -56,8 +56,8 @@ github.com/cucumber/godog v0.14.1 h1:HGZhcOyyfaKclHjJ+r/q93iaTJZLKYW6Tv3HkmUE6+M
 github.com/cucumber/godog v0.14.1/go.mod h1:FX3rzIDybWABU4kuIXLZ/qtqEe1Ac5RdXmqvACJOces=
 github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM+RuOwHZiMI=
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
-github.com/customeros/mailsherpa v0.0.8 h1:FywWsOHP2++vGz56xUmE5aXlxXEzSv9an9Mxn8l5aQ4=
-github.com/customeros/mailsherpa v0.0.8/go.mod h1:jcLjHrBzJyFsksCQ7zcsAec25lnImOoXKN6lraJWNMQ=
+github.com/customeros/mailsherpa v0.0.9 h1:29wSX6JbKr3HmuX8stYfGsChp1hlwiJFcKmzKN+dM9g=
+github.com/customeros/mailsherpa v0.0.9/go.mod h1:jcLjHrBzJyFsksCQ7zcsAec25lnImOoXKN6lraJWNMQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
