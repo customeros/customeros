@@ -50,7 +50,7 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
-    command: ["bash", "-c", "apt-get update && apt-get install -y wget && wget -O /tmp/setup.sql https://raw.githubusercontent.com/openline-ai/openline-customer-os/otter/deployment/provision/postgresql.sql && PGPASSWORD=password psql -U postgres -d openline -h postgres -p 5432 -W -f /tmp/setup.sql"]
+    command: ["bash", "-c", "apt-get update && apt-get install -y wget && wget -O /tmp/setup.sql https://raw.githubusercontent.com/customeros/customeros/otter/deployment/provision/postgresql.sql && PGPASSWORD=password psql -U postgres -d openline -h postgres -p 5432 -W -f /tmp/setup.sql"]
 
   neo4j:
     image: neo4j:latest
@@ -74,7 +74,7 @@ services:
       start_period: 5s
 
   neo4j-sidecar:
-    image: ghcr.io/openline-ai/openline-customer-os/neo4j-sidecar:latest
+    image: ghcr.io/customeros/customeros/neo4j-sidecar:latest
     container_name: neo4j-sidecar
     networks:
       - openline
@@ -163,7 +163,7 @@ services:
       - "11006:3000"
 
   customer-os-platform-admin-api:
-    image: ghcr.io/openline-ai/openline-customer-os/customer-os-platform-admin-api:latest
+    image: ghcr.io/customeros/customeros/customer-os-platform-admin-api:latest
     networks:
       - openline
     ports:
@@ -178,7 +178,7 @@ services:
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
 
   customer-os-api:
-    image: ghcr.io/openline-ai/openline-customer-os/customer-os-api:latest
+    image: ghcr.io/customeros/customeros/customer-os-api:latest
     networks:
       - openline
     ports:
@@ -191,7 +191,7 @@ services:
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
 
   events-processing-platform:
-    image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform:latest
+    image: ghcr.io/customeros/customeros/events-processing-platform:latest
     networks:
       - openline
     ports:
@@ -207,7 +207,7 @@ services:
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
 
   events-processing-platform-subscribers:
-    image: ghcr.io/openline-ai/openline-customer-os/events-processing-platform-subscribers:latest
+    image: ghcr.io/customeros/customeros/events-processing-platform-subscribers:latest
     networks:
       - openline
     depends_on:
@@ -220,7 +220,7 @@ services:
       - AI_API_PATH=http://host.docker.internal:10101
 
   customer-os-webhooks:
-    image: ghcr.io/openline-ai/openline-customer-os/customer-os-webhooks:latest
+    image: ghcr.io/customeros/customeros/customer-os-webhooks:latest
     networks:
       - openline
     ports:
@@ -233,7 +233,7 @@ services:
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
 
   user-admin-api:
-    image: ghcr.io/openline-ai/openline-customer-os/user-admin-api:latest
+    image: ghcr.io/customeros/customeros/user-admin-api:latest
     networks:
       - openline
     ports:
@@ -247,7 +247,7 @@ services:
       - CUSTOMER_OS_API=http://host.docker.internal:10000/admin/query
 
   file-store-api:
-    image: ghcr.io/openline-ai/openline-customer-os/file-store-api:latest
+    image: ghcr.io/customeros/customeros/file-store-api:latest
     networks:
       - openline
     ports:
@@ -262,7 +262,7 @@ services:
       - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
 
   validation-api:
-    image: ghcr.io/openline-ai/openline-customer-os/validation-api:latest
+    image: ghcr.io/customeros/customeros/validation-api:latest
     networks:
       - openline
     ports:
@@ -274,7 +274,7 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
 
   settings-api:
-    image: ghcr.io/openline-ai/openline-customer-os/settings-api:latest
+    image: ghcr.io/customeros/customeros/settings-api:latest
     networks:
       - openline
     ports:
@@ -286,7 +286,7 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
 
   ai-api:
-    image: ghcr.io/openline-ai/openline-customer-os/ai-api:latest
+    image: ghcr.io/customeros/customeros/ai-api:latest
     networks:
       - openline
     ports:
@@ -298,7 +298,7 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
 
   comms-api:
-    image: ghcr.io/openline-ai/openline-customer-os/comms-api:latest
+    image: ghcr.io/customeros/customeros/comms-api:latest
     networks:
       - openline
     ports:
