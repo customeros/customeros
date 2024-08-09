@@ -200,7 +200,10 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    patch:                  Boolean
+    """
+    Deprecated
+    """
+    patch:                  Boolean @deprecated(reason: "Not used")
     logoUrl:                String
     logoRepositoryFileId:   String
     baseCurrency:           Currency

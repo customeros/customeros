@@ -48,25 +48,25 @@ func NewTenantSettingsUpdateEvent(aggregate eventstore.Aggregate, request *tenan
 }
 
 func (e TenantSettingsUpdateEvent) UpdateInvoicingEnabled() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoicingEnabled)
+	return utils.Contains(e.FieldsMask, FieldMaskInvoicingEnabled)
 }
 
 func (e TenantSettingsUpdateEvent) UpdateInvoicingPostpaid() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskInvoicingPostpaid)
+	return utils.Contains(e.FieldsMask, FieldMaskInvoicingPostpaid)
 }
 
 func (e TenantSettingsUpdateEvent) UpdateLogoRepositoryFileId() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskLogoRepositoryFileId)
+	return utils.Contains(e.FieldsMask, FieldMaskLogoRepositoryFileId)
 }
 
 func (e TenantSettingsUpdateEvent) UpdateBaseCurrency() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskBaseCurrency)
+	return utils.Contains(e.FieldsMask, FieldMaskBaseCurrency)
 }
 
 func (e TenantSettingsUpdateEvent) UpdateWorkspaceLogo() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceLogo)
+	return utils.Contains(e.FieldsMask, FieldMaskWorkspaceLogo)
 }
 
 func (e TenantSettingsUpdateEvent) UpdateWorkspaceName() bool {
-	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceName)
+	return utils.Contains(e.FieldsMask, FieldMaskWorkspaceName)
 }

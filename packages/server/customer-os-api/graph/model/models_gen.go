@@ -2998,6 +2998,7 @@ type TenantSettings struct {
 }
 
 type TenantSettingsInput struct {
+	// Deprecated
 	Patch                *bool     `json:"patch,omitempty"`
 	LogoURL              *string   `json:"logoUrl,omitempty"`
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`

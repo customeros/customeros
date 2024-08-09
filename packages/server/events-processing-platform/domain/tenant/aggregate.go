@@ -498,6 +498,10 @@ func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFi
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_POSTPAID:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingPostpaid)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_LOGO:
+			fieldsMask = append(fieldsMask, event.FieldMaskWorkspaceLogo)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_NAME:
+			fieldsMask = append(fieldsMask, event.FieldMaskWorkspaceName)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

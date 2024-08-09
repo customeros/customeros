@@ -377,24 +377,22 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		InvoicingEnabled:     utils.IfNotNilBool(input.BillingEnabled),
 	}
 
-	if input.Patch != nil && *input.Patch {
-		if input.LogoRepositoryFileID != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
-		}
-		if input.BaseCurrency != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY)
-		}
-		if input.BillingEnabled != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)
-		}
-		if input.WorkspaceLogo != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_LOGO)
-		}
-		if input.WorkspaceName != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_NAME)
-		}
-		updateRequest.FieldsMask = fieldMask
+	if input.LogoRepositoryFileID != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
 	}
+	if input.BaseCurrency != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY)
+	}
+	if input.BillingEnabled != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)
+	}
+	if input.WorkspaceLogo != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_LOGO)
+	}
+	if input.WorkspaceName != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_NAME)
+	}
+	updateRequest.FieldsMask = fieldMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
