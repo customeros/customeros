@@ -36,7 +36,7 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 		}
 
 		// for now linkedin url is mandatory
-		if request.LinkedinUrl != "" {
+		if request.LinkedinUrl == "" {
 			tracing.TraceErr(span, errors.New("Missing linkedin parameter"))
 			services.Logger.Errorf("Missing ip parameter")
 			c.JSON(http.StatusBadRequest, model.EnrichPersonResponse{
