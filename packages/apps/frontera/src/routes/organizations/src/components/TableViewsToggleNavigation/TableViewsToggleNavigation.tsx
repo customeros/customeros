@@ -9,7 +9,7 @@ import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { Button } from '@ui/form/Button/Button.tsx';
 import { TableIdType, TableViewType } from '@graphql/types';
 
-export const ContactOrgViewToggle = observer(() => {
+export const TableViewsToggleNavigation = observer(() => {
   const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
@@ -34,36 +34,32 @@ export const ContactOrgViewToggle = observer(() => {
     return presetTable ? presetTable.value.id : null;
   };
 
-  const getTargetTable = (): string | null => {
+  const getTablePair = (): [string | null, string | null] => {
     switch (tableViewId) {
       case TableIdType.Nurture:
       case TableIdType.ContactsForTargetOrganizations:
-        return findPresetTable([
-          TableIdType.Nurture,
-          TableIdType.ContactsForTargetOrganizations,
-        ]);
+        return [
+          findPresetTable([TableIdType.Nurture]),
+          findPresetTable([TableIdType.ContactsForTargetOrganizations]),
+        ];
       case TableIdType.Organizations:
       case TableIdType.Contacts:
-        return findPresetTable([TableIdType.Organizations]);
+        return [
+          findPresetTable([TableIdType.Organizations]),
+          findPresetTable([TableIdType.Contacts]),
+        ];
+      case TableIdType.UpcomingInvoices:
+      case TableIdType.PastInvoices:
+        return [
+          findPresetTable([TableIdType.UpcomingInvoices]),
+          findPresetTable([TableIdType.PastInvoices]),
+        ];
       default:
-        return null;
+        return [null, null];
     }
   };
 
-  const getContactTable = (): string | null => {
-    switch (tableViewId) {
-      case TableIdType.Nurture:
-      case TableIdType.ContactsForTargetOrganizations:
-        return findPresetTable([TableIdType.ContactsForTargetOrganizations]);
-      case TableIdType.Organizations:
-      case TableIdType.Contacts:
-        return findPresetTable([TableIdType.Contacts]);
-      default:
-        return null;
-    }
-  };
-  const targetTableDef = getTargetTable();
-  const contactTableDef = getContactTable();
+  const [firstTableDef, secondTableDef] = getTablePair();
 
   const handleNavigate = (newPreset: string) => {
     const newParams = new URLSearchParams(searchParams.toString());
@@ -84,32 +80,53 @@ export const ContactOrgViewToggle = observer(() => {
   };
 
   const showToggle =
-    (tableViewType && [TableViewType.Contacts].includes(tableViewType)) ||
+    (tableViewType &&
+      [TableViewType.Contacts, TableViewType.Invoices].includes(
+        tableViewType,
+      )) ||
     (tableViewId &&
-      [TableIdType.Organizations, TableIdType.Nurture].includes(tableViewId));
+      [
+        TableIdType.Organizations,
+        TableIdType.Nurture,
+        TableIdType.UpcomingInvoices,
+        TableIdType.PastInvoices,
+      ].includes(tableViewId));
+
+  const getButtonLabels = (): [string, string] => {
+    if (
+      [TableIdType.UpcomingInvoices, TableIdType.PastInvoices].includes(
+        tableViewId as TableIdType,
+      )
+    ) {
+      return ['Upcoming', 'Past'];
+    }
+
+    return ['Orgs', 'Contacts'];
+  };
+
+  const [firstButtonLabel, secondButtonLabel] = getButtonLabels();
 
   return (
     <>
-      {showToggle && (
+      {showToggle && firstTableDef && secondTableDef && (
         <ButtonGroup className='flex items-center'>
           <Button
             size='xs'
-            onClick={() => targetTableDef && handleNavigate(targetTableDef)}
+            onClick={() => firstTableDef && handleNavigate(firstTableDef)}
             className={cn('bg-white !border-r px-4', {
-              'bg-gray-50 text-gray-500 font-normal': preset !== targetTableDef,
+              'bg-gray-50 text-gray-500 font-normal': preset !== firstTableDef,
             })}
           >
-            Orgs
+            {firstButtonLabel}
           </Button>
           <Button
             size='xs'
-            onClick={() => contactTableDef && handleNavigate(contactTableDef)}
+            onClick={() => secondTableDef && handleNavigate(secondTableDef)}
             className={cn('bg-white px-4', {
-              'bg-gray-50 text-gray-500 font-normal':
-                preset !== contactTableDef,
+              'bg-gray-50 text-gray-500 font-normal': preset !== secondTableDef,
             })}
           >
-            Contacts
+            {secondButtonLabel}
           </Button>
         </ButtonGroup>
       )}
