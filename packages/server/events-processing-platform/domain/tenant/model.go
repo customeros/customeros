@@ -1,8 +1,9 @@
 package invoice
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 )
 
 type Tenant struct {
@@ -22,6 +23,8 @@ type TenantSettings struct {
 	BaseCurrency         string `json:"baseCurrency"`
 	LogoUrl              string `json:"logoUrl"`
 	LogoRepositoryFileId string `json:"logoRepositoryFileId"`
+	WorkspaceLogo        string `json:"workspaceLogo"`
+	WorkspaceName        string `json:"workspaceName"`
 }
 
 type TenantBillingProfile struct {

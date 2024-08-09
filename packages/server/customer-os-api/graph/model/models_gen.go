@@ -2991,6 +2991,8 @@ type TenantSettings struct {
 	BaseCurrency         *Currency                                      `json:"baseCurrency,omitempty"`
 	BillingEnabled       bool                                           `json:"billingEnabled"`
 	OpportunityStages    []*TenantSettingsOpportunityStageConfiguration `json:"opportunityStages"`
+	WorkspaceLogo        *string                                        `json:"workspaceLogo,omitempty"`
+	WorkspaceName        *string                                        `json:"workspaceName,omitempty"`
 	// Deprecated
 	LogoURL string `json:"logoUrl"`
 }
@@ -3000,6 +3002,8 @@ type TenantSettingsInput struct {
 	LogoURL              *string   `json:"logoUrl,omitempty"`
 	LogoRepositoryFileID *string   `json:"logoRepositoryFileId,omitempty"`
 	BaseCurrency         *Currency `json:"baseCurrency,omitempty"`
+	WorkspaceLogo        *string   `json:"workspaceLogo,omitempty"`
+	WorkspaceName        *string   `json:"workspaceName,omitempty"`
 	BillingEnabled       *bool     `json:"billingEnabled,omitempty"`
 }
 

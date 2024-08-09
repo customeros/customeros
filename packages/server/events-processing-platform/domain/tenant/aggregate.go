@@ -2,6 +2,8 @@ package invoice
 
 import (
 	"context"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
@@ -13,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -344,6 +345,12 @@ func (a *TenantAggregate) onUpdateTenantSettings(evt eventstore.Event) error {
 	}
 	if eventData.UpdateLogoRepositoryFileId() {
 		a.TenantDetails.TenantSettings.LogoRepositoryFileId = eventData.LogoRepositoryFileId
+	}
+	if eventData.UpdateWorkspaceLogo() {
+		a.TenantDetails.TenantSettings.WorkspaceLogo = eventData.WorkspaceLogo
+	}
+	if eventData.UpdateWorkspaceName() {
+		a.TenantDetails.TenantSettings.WorkspaceName = eventData.WorkspaceName
 	}
 	return nil
 }

@@ -1,12 +1,13 @@
 package event
 
 import (
+	"time"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type TenantSettingsUpdateEvent struct {
@@ -16,6 +17,8 @@ type TenantSettingsUpdateEvent struct {
 	InvoicingEnabled     bool      `json:"invoicingEnabled,omitempty"`
 	InvoicingPostpaid    bool      `json:"invoicingPostpaid,omitempty"`
 	LogoRepositoryFileId string    `json:"logoRepositoryFileId,omitempty"`
+  WorkspaceLogo        string    `json:"workspaceLogo,omitempty"`
+  WorkspaceName        string    `json:"workspaceName,omitempty"`
 	FieldsMask           []string  `json:"fieldsMask,omitempty"`
 }
 
@@ -27,6 +30,7 @@ func NewTenantSettingsUpdateEvent(aggregate eventstore.Aggregate, request *tenan
 		InvoicingEnabled:     request.InvoicingEnabled,
 		InvoicingPostpaid:    request.InvoicingPostpaid,
 		LogoRepositoryFileId: request.LogoRepositoryFileId,
+    WorkspaceName: request.,
 		FieldsMask:           fieldsMaks,
 	}
 
@@ -56,4 +60,12 @@ func (e TenantSettingsUpdateEvent) UpdateLogoRepositoryFileId() bool {
 
 func (e TenantSettingsUpdateEvent) UpdateBaseCurrency() bool {
 	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskBaseCurrency)
+}
+
+func (e TenantSettingsUpdateEvent) UpdateWorkspaceLogo() bool {
+  return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceLogo)
+}
+
+func (e TenantSettingsUpdateEvent) UpdateWorkspaceName() bool {
+  return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceName)
 }
