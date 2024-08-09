@@ -12,8 +12,8 @@ import (
 )
 
 type Config struct {
-	ApiPort       string `env:"PORT" envDefault:"10006" validate:"required"`
-	MetricsPort   string `env:"PORT_METRICS" envDefault:"10006" validate:"required"`
+	ApiPort       string `env:"PORT" envDefault:"10007" validate:"required"`
+	MetricsPort   string `env:"PORT_METRICS" envDefault:"10007" validate:"required"`
 	Logger        logger.Config
 	Postgres      config.PostgresConfig
 	Neo4j         config.Neo4jConfig

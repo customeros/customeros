@@ -66,10 +66,9 @@ type EnrichPersonLocation struct {
 }
 
 type EnrichPersonName struct {
-	FirstName     string `json:"firstName"`
-	LastName      string `json:"lastName"`
-	FullName      string `json:"fullName"`
-	PreferredName string `json:"preferredName"`
+	FirstName string `json:"firstName"`
+	LastName  string `json:"lastName"`
+	FullName  string `json:"fullName"`
 }
 
 type EnrichPersonPhoneNumber struct {
@@ -143,7 +142,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		requestBody := []byte(string(requestJSON))
-		req, err := http.NewRequest("POST", services.Cfg.Services.EnrichmentApiUrl+"/enrichPerson", bytes.NewBuffer(requestBody))
+		req, err := http.NewRequest("GET", services.Cfg.Services.EnrichmentApiUrl+"/enrichPerson", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
@@ -164,6 +163,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
 		}
 		defer response.Body.Close()
+		span.LogFields(log.Int("response.status", response.StatusCode))
 
 		var result enrichmentmodel.EnrichPersonResponse
 		err = json.NewDecoder(response.Body).Decode(&result)
@@ -199,9 +199,9 @@ func mapData(source enrichmentmodel.EnrichPersonResponse, target *EnrichPersonRe
 	if source.Data.PersonProfile.Email != "" {
 		target.Data.Emails = append(target.Data.Emails, EnrichPersonEmail{
 			Address: source.Data.PersonProfile.Email,
-			//IsDeliverable: true, // TODO implement me
+			//IsDeliverable: true, // TODO implement me with verify API
 			//IsRisky:       false, // TODO implement me
-			Type: source.Data.PersonProfile.EmailType,
+			//Type: source.Data.PersonProfile.EmailType, // TODO use verify response, if free -> personal, else -> professional
 		})
 	}
 
@@ -209,7 +209,6 @@ func mapData(source enrichmentmodel.EnrichPersonResponse, target *EnrichPersonRe
 	target.Data.Name = EnrichPersonName{
 		FirstName: source.Data.PersonProfile.Person.FirstName,
 		LastName:  source.Data.PersonProfile.Person.LastName,
-		//PreferredName: source.Data.PersonProfile.Person.PreferredName, // TODO clarify preferred name
 	}
 	if source.Data.PersonProfile.Person.FirstName != "" && source.Data.PersonProfile.Person.LastName != "" {
 		target.Data.Name.FullName = source.Data.PersonProfile.Person.FirstName + " " + source.Data.PersonProfile.Person.LastName
@@ -218,16 +217,16 @@ func mapData(source enrichmentmodel.EnrichPersonResponse, target *EnrichPersonRe
 	// set jobs
 	for _, position := range source.Data.PersonProfile.Person.Positions.PositionHistory {
 		enrichPersonJob := EnrichPersonJob{
-			Title: position.Title,
-			//Seniority:       position.Seniority, // TODO clarify seniority
-			Duration: EnrichPersonJobDuration{
-				StartMonth: position.StartEndDate.Start.Month,
-				StartYear:  position.StartEndDate.Start.Year,
-			},
+			Title:           position.Title,
 			Company:         position.CompanyName,
 			CompanyLinkedin: position.LinkedInUrl,
 			//CompanyWebsite:  position.CompanyWebsite, // TODO implement with company enrichment
 			IsCurrent: position.StartEndDate.End == nil,
+			//Seniority:       position.Seniority, // TODO will be implemented later after clarifications
+			Duration: EnrichPersonJobDuration{
+				StartMonth: position.StartEndDate.Start.Month,
+				StartYear:  position.StartEndDate.Start.Year,
+			},
 		}
 		if position.StartEndDate.End != nil {
 			enrichPersonJob.Duration.EndMonth = &position.StartEndDate.End.Month
@@ -247,15 +246,15 @@ func mapData(source enrichmentmodel.EnrichPersonResponse, target *EnrichPersonRe
 			URL:           source.Data.PersonProfile.Person.LinkedInUrl,
 			FollowerCount: source.Data.PersonProfile.Person.FollowerCount,
 		},
-		// TODO add X, github, other
+		// TODO add X, github, other from Customer OS
 	}
 
 	// set location // TODO implement AI lookup to get details
 	target.Data.Location = EnrichPersonLocation{
-		City: source.Data.PersonProfile.Person.Location,
-		//Region:   source.Data.PersonProfile.Person.Region, // TODO implement region
-		//Country:  source.Data.PersonProfile.Person.Country, // TODO implement country
-		//Timezone: source.Data.PersonProfile.Person.Timezone, // TODO implement timezone
+		//City: source.Data.PersonProfile.Person.Location,
+		Region: source.Data.PersonProfile.Person.Location,
+		//Country:  source.Data.PersonProfile.Person.Country,
+		//Timezone: source.Data.PersonProfile.Person.Timezone,
 	}
 
 	// set phone numbers
