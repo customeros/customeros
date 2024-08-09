@@ -2479,6 +2479,7 @@ export type Mutation = {
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
   social_Update: Social;
+  tableViewDef_Archive: ActionResponse;
   tableViewDef_Create: TableViewDef;
   tableViewDef_Update: TableViewDef;
   tableViewDef_UpdateShared: TableViewDef;
@@ -3261,6 +3262,10 @@ export type MutationSocial_RemoveArgs = {
 
 export type MutationSocial_UpdateArgs = {
   input: SocialUpdateInput;
+};
+
+export type MutationTableViewDef_ArchiveArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationTableViewDef_CreateArgs = {

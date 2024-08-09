@@ -1,0 +1,5 @@
+mutation archiveTableViewDef($id: ID!) {
+  tableViewDef_Archive(id: $id) {
+    accepted
+  }
+}

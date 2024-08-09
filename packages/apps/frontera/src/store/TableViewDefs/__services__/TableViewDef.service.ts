@@ -3,6 +3,7 @@ import GetTableViewDefs from '@store/TableViewDefs/__services__/getTableViewDefs
 import { TableViewDefsQuery } from '@store/TableViewDefs/__services__/getTableViewDefs.generated.ts';
 import CreateTableViewDefDocument from '@store/TableViewDefs/__services__/createTableViewDef.graphql';
 import UpdateTableViewDefDocument from '@store/TableViewDefs/__services__/updateTableViewDef.graphql';
+import ArchiveTableViewDefDocument from '@store/TableViewDefs/__services__/archiveTableViewDef.graphql';
 import {
   UpdateTableViewDefMutation,
   UpdateTableViewDefMutationVariables,
@@ -11,6 +12,10 @@ import {
   CreateTableViewDefMutation,
   CreateTableViewDefMutationVariables,
 } from '@store/TableViewDefs/__services__/createTableViewDef.generated.ts';
+import {
+  ArchiveTableViewDefMutation,
+  ArchiveTableViewDefMutationVariables,
+} from '@store/TableViewDefs/__services__/archiveTableViewDef.generated.ts';
 
 export class TableViewDefsService {
   private static instance: TableViewDefsService | null = null;
@@ -39,6 +44,15 @@ export class TableViewDefsService {
       CreateTableViewDefMutation,
       CreateTableViewDefMutationVariables
     >(CreateTableViewDefDocument, variables);
+  }
+
+  async archiveTableViewDef(
+    variables: ArchiveTableViewDefMutationVariables,
+  ): Promise<ArchiveTableViewDefMutation> {
+    return this.transport.graphql.request<
+      ArchiveTableViewDefMutation,
+      ArchiveTableViewDefMutationVariables
+    >(ArchiveTableViewDefDocument, variables);
   }
 
   async updateTableViewDef(
