@@ -9,14 +9,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
+	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
 )
 
 type EnrichPersonResponse struct {
+	Status        string           `json:"status"`
+	Message       string           `json:"message,omitempty"`
 	IsComplete    bool             `json:"isComplete"`
 	PendingFields []string         `json:"pendingFields"`
 	ResultURL     *string          `json:"resultUrl"`
@@ -115,7 +116,6 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
-		//logger := services.Log
 
 		// Check if address is provided
 		linkedinUrl := c.Query("linkedinUrl")
@@ -133,8 +133,9 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		span.LogFields(log.String("request.linkedinUrl", linkedinUrl))
 		span.LogFields(log.Bool("request.searchPhoneNumber", searchPhoneNumber))
 
-		requestJSON, err := json.Marshal(validationmodel.IpLookupRequest{
-			//Ip: ipAddress,
+		requestJSON, err := json.Marshal(enrichmentmodel.EnrichPersonRequest{
+			Email:       email,
+			LinkedInUrl: linkedinUrl,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
@@ -142,7 +143,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		requestBody := []byte(string(requestJSON))
-		req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/ipLookup", bytes.NewBuffer(requestBody))
+		req, err := http.NewRequest("POST", services.Cfg.Services.EnrichmentApiUrl+"/enrichPerson", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
@@ -152,7 +153,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 		// Set the request headers
-		req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
+		req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.EnrichmentApiKey)
 		req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
 
 		// Make the HTTP request
@@ -164,7 +165,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		}
 		defer response.Body.Close()
 
-		var result validationmodel.IpLookupResponse
+		var result enrichmentmodel.EnrichPersonResponse
 		err = json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
@@ -172,57 +173,10 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		var ipIntelligenceResponse IpIntelligenceResponse
-		if result.IpData.StatusCode == 400 {
-			ipIntelligenceResponse = IpIntelligenceResponse{
-				Status: "success",
-				//IP:     ipAddress,
-				Threats: IpIntelligenceThreats{
-					IsUnallocated: true,
-				},
-			}
-		} else {
-			ipIntelligenceResponse = IpIntelligenceResponse{
-				Status: "success",
-				//IP:     ipAddress,
-				Threats: IpIntelligenceThreats{
-					IsProxy:       result.IpData.Threat.IsProxy,
-					IsVpn:         result.IpData.Threat.IsVpn,
-					IsTor:         result.IpData.Threat.IsTor,
-					IsUnallocated: result.IpData.Threat.IsBogon,
-					IsDatacenter:  result.IpData.Threat.IsDatacenter,
-					IsCloudRelay:  result.IpData.Threat.IsIcloudRelay,
-					IsMobile:      result.IpData.Carrier != nil,
-				},
-				Geolocation: IpIntelligenceGeolocation{
-					City:            result.IpData.City,
-					Country:         result.IpData.CountryName,
-					CountryIso:      result.IpData.CountryCode,
-					IsEuropeanUnion: isEuropeanUnion(result.IpData.CountryCode),
-				},
-				TimeZone: IpIntelligenceTimeZone{
-					Name:        result.IpData.TimeZone.Name,
-					Abbr:        result.IpData.TimeZone.Abbr,
-					Offset:      result.IpData.TimeZone.Offset,
-					IsDst:       result.IpData.TimeZone.IsDst,
-					CurrentTime: utils.GetCurrentTimeInTimeZone(result.IpData.TimeZone.Name),
-				},
-				Network: IpIntelligenceNetwork{
-					ASN:    result.IpData.Asn.Asn,
-					Name:   result.IpData.Asn.Name,
-					Domain: result.IpData.Asn.Domain,
-					Route:  result.IpData.Asn.Route,
-					Type:   result.IpData.Asn.Type,
-				},
-				Organization: IpIntelligenceOrganization{
-					// TBD: Snitcher
-					//Name:     TBD,
-					//Domain:   TBD,
-					//LinkedIn: TBD,
-				},
-			}
+		enrichPersonResponse := EnrichPersonResponse{
+			Status: "success",
 		}
 
-		c.JSON(http.StatusOK, ipIntelligenceResponse)
+		c.JSON(http.StatusOK, enrichPersonResponse)
 	}
 }
