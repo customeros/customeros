@@ -10,8 +10,9 @@ import (
 )
 
 type Services struct {
-	Logger         logger.Logger
-	CommonServices *commonservice.Services
+	Logger                logger.Logger
+	CommonServices        *commonservice.Services
+	PersonScrapeInService ScrapinPersonService
 }
 
 func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
@@ -19,6 +20,7 @@ func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWi
 		CommonServices: commonservice.InitServices(&commonconfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil),
 	}
 	services.Logger = logger
+	services.PersonScrapeInService = NewPersonScrapeInService(config, services, logger)
 
 	return services
 }

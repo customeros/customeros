@@ -29,8 +29,8 @@ func (EnrichDetailsScrapIn) TableName() string {
 	return "enrich_details_scrapin"
 }
 
-// ScrapInContactResponse is getting serialized in the Data field
-type ScrapInContactResponse struct {
+// ScrapInPersonResponse is getting serialized in the Data field
+type ScrapInPersonResponse struct {
 	Success       bool                   `json:"success"`
 	Email         string                 `json:"email"`
 	EmailType     string                 `json:"emailType"`

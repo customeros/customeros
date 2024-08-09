@@ -81,7 +81,9 @@ func NewScrapInService(log logger.Logger, cfg *config.Config, postgresRepository
 	}
 }
 
-func (h *ScrapInService) ScrapInPersonProfile(ctx context.Context, tenant, linkedInUrl string) (postgresentity.ScrapInContactResponse, error) {
+// TODO switch to enrich api
+// Deprecated
+func (h *ScrapInService) ScrapInPersonProfile(ctx context.Context, tenant, linkedInUrl string) (postgresentity.ScrapInPersonResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.ScrapInPersonProfile")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -92,14 +94,14 @@ func (h *ScrapInService) ScrapInPersonProfile(ctx context.Context, tenant, linke
 		err := errors.New("ScrapIn URL not set")
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Brandfetch URL not set")
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 	scrapInApiKey := h.cfg.Services.ScrapInApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Scrapin Api key not set")
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 
 	url := baseUrl + "/enrichment/profile" + "?apikey=" + scrapInApiKey + "&linkedInUrl=" + linkedInUrl
@@ -109,16 +111,16 @@ func (h *ScrapInService) ScrapInPersonProfile(ctx context.Context, tenant, linke
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		h.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 
-	var scrapinResponse postgresentity.ScrapInContactResponse
+	var scrapinResponse postgresentity.ScrapInPersonResponse
 	err = json.Unmarshal(body, &scrapinResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
 		span.LogFields(log.String("response.body", string(body)))
 		h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 
 	bodyAsString := string(body)
@@ -129,9 +131,9 @@ func (h *ScrapInService) ScrapInPersonProfile(ctx context.Context, tenant, linke
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "json.Marshal"))
 		h.log.Errorf("Error marshalling request params: %s", err.Error())
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
-	queryResult := h.postgresRepository.EnrichDetailsScrapInRepository.Add(ctx, postgresentity.EnrichDetailsScrapIn{
+	_, err = h.postgresRepository.EnrichDetailsScrapInRepository.Create(ctx, postgresentity.EnrichDetailsScrapIn{
 		Param1:        linkedInUrl,
 		Flow:          postgresentity.ScrapInFlowPersonProfile,
 		AllParamsJson: string(requestJson),
@@ -140,15 +142,15 @@ func (h *ScrapInService) ScrapInPersonProfile(ctx context.Context, tenant, linke
 		PersonFound:   scrapinResponse.Person != nil,
 		CompanyFound:  scrapinResponse.Company != nil,
 	})
-	if queryResult.Error != nil {
-		tracing.TraceErr(span, errors.Wrap(queryResult.Error, "EnrichDetailsScrapInRepository.Add"))
-		h.log.Errorf("Error saving enriching domain results: %v", queryResult.Error.Error())
-		return postgresentity.ScrapInContactResponse{}, queryResult.Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.Create"))
+		h.log.Errorf("Error saving enriching domain results: %v", err.Error())
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 	return scrapinResponse, nil
 }
 
-func (h *ScrapInService) ScrapInPersonSearch(ctx context.Context, tenant, email, firstName, lastName, domain string) (postgresentity.ScrapInContactResponse, error) {
+func (h *ScrapInService) ScrapInPersonSearch(ctx context.Context, tenant, email, firstName, lastName, domain string) (postgresentity.ScrapInPersonResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.ScrapInPersonSearch")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -159,14 +161,14 @@ func (h *ScrapInService) ScrapInPersonSearch(ctx context.Context, tenant, email,
 		err := errors.New("ScrapIn URL not set")
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Brandfetch URL not set")
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 	scrapInApiKey := h.cfg.Services.ScrapInApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Scrapin Api key not set")
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 
 	url := baseUrl + "/enrichment" + "?apikey=" + scrapInApiKey + "&email=" + email
@@ -185,16 +187,16 @@ func (h *ScrapInService) ScrapInPersonSearch(ctx context.Context, tenant, email,
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		h.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 
-	var scrapinResponse postgresentity.ScrapInContactResponse
+	var scrapinResponse postgresentity.ScrapInPersonResponse
 	err = json.Unmarshal(body, &scrapinResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
 		span.LogFields(log.String("response.body", string(body)))
 		h.log.Errorf("Error unmarshalling scrapin response: %s", err.Error())
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 
 	bodyAsString := string(body)
@@ -208,9 +210,9 @@ func (h *ScrapInService) ScrapInPersonSearch(ctx context.Context, tenant, email,
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "json.Marshal"))
 		h.log.Errorf("Error marshalling request params: %s", err.Error())
-		return postgresentity.ScrapInContactResponse{}, err
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
-	queryResult := h.postgresRepository.EnrichDetailsScrapInRepository.Add(ctx, postgresentity.EnrichDetailsScrapIn{
+	_, err = h.postgresRepository.EnrichDetailsScrapInRepository.Create(ctx, postgresentity.EnrichDetailsScrapIn{
 		Param1:        email,
 		Param2:        firstName,
 		Param3:        lastName,
@@ -222,10 +224,10 @@ func (h *ScrapInService) ScrapInPersonSearch(ctx context.Context, tenant, email,
 		PersonFound:   scrapinResponse.Person != nil,
 		CompanyFound:  scrapinResponse.Company != nil,
 	})
-	if queryResult.Error != nil {
-		tracing.TraceErr(span, errors.Wrap(queryResult.Error, "EnrichDetailsScrapInRepository.Add"))
-		h.log.Errorf("Error saving enriching domain results: %v", queryResult.Error.Error())
-		return postgresentity.ScrapInContactResponse{}, queryResult.Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.Create"))
+		h.log.Errorf("Error saving enriching domain results: %v", err.Error())
+		return postgresentity.ScrapInPersonResponse{}, err
 	}
 	return scrapinResponse, nil
 }

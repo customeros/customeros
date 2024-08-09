@@ -1,15 +1,18 @@
 package model
 
+import postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+
 type EnrichPersonRequest struct {
-	Email       string `json:"ip"`
-	LinkedInUrl string `json:"linkedinUrl"`
+	Email       string `json:"email"`
+	LinkedinUrl string `json:"linkedinUrl"`
 }
 
 type EnrichPersonResponse struct {
-	Status  string            `json:"status"`
-	Message string            `json:"message,omitempty"`
-	Data    *EnrichPersonData `json:"data,omitempty"`
+	Status  string              `json:"status"`
+	Message string              `json:"message,omitempty"`
+	Data    *EnrichedPersonData `json:"data,omitempty"`
 }
 
-type EnrichPersonData struct {
+type EnrichedPersonData struct {
+	PersonProfile *postgresEntity.ScrapInPersonResponse `json:"scrapinPersonProfile,omitempty"`
 }
