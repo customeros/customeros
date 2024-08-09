@@ -17,6 +17,7 @@ const (
 	outreachV1Path     = "/outreach/v1"
 	customerBaseV1Path = "/customerbase/v1"
 	verifyV1Path       = "/verify/v1"
+	enrichV1Path       = "/enrich/v1"
 )
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
@@ -25,6 +26,11 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 	registerOutreachRoutes(ctx, r, services, cache)
 	registerCustomerBaseRoutes(ctx, r, services, grpcClients, cache)
 	registerVerifyRoutes(ctx, r, services, cache)
+	registerEnrichRoutes(ctx, r, services, cache)
+}
+
+func registerEnrichRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person", enrichV1Path), services, cache, rest.EnrichPerson(services))
 }
 
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
