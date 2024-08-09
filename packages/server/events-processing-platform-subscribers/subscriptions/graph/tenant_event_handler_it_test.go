@@ -128,9 +128,18 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 			BaseCurrency:         neo4jenum.CurrencyAUD.String(),
 			InvoicingEnabled:     true,
 			InvoicingPostpaid:    true,
+			WorkspaceLogo:        "workspaceLogo",
+			WorkspaceName:        "workspaceName",
 		},
 		timeNow,
-		[]string{},
+		[]string{
+			event.FieldMaskLogoRepositoryFileId,
+			event.FieldMaskBaseCurrency,
+			event.FieldMaskInvoicingEnabled,
+			event.FieldMaskInvoicingPostpaid,
+			event.FieldMaskWorkspaceLogo,
+			event.FieldMaskWorkspaceName,
+		},
 	)
 	require.Nil(t, err)
 
