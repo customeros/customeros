@@ -15,14 +15,14 @@ import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { UserPresence } from '@shared/components/UserPresence';
-import { ContactOrgViewToggle } from '@organizations/components/ContactOrgViewToggle';
-import { TableViewMenu } from '@organizations/components/TableViewMenu/TableViewMenu.tsx';
+import { TableViewMenu } from '@organizations/components/TableViewMenu/TableViewMenu';
 import {
   InputGroup,
   LeftElement,
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
-import { SearchBarFilterData } from '@organizations/components/SearchBarFilterData/SearchBarFilterData.tsx';
+import { TableViewsToggleNavigation } from '@organizations/components/TableViewsToggleNavigation';
+import { SearchBarFilterData } from '@organizations/components/SearchBarFilterData/SearchBarFilterData';
 
 interface SearchProps {
   open: boolean;
@@ -195,7 +195,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       </InputGroup>
       <UserPresence channelName={`finder:${store.session.value.tenant}`} />
 
-      <ContactOrgViewToggle />
+      <TableViewsToggleNavigation />
 
       {tableViewType && <ViewSettings type={tableViewType} />}
 

@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom';
 import React, { useState, ReactElement, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -18,6 +17,7 @@ import {
 } from '@ui/overlay/Menu/Menu.tsx';
 
 interface EditableSideNavItemProps {
+  id: string;
   href?: string;
   label: string;
   dataTest?: string;
@@ -27,12 +27,16 @@ interface EditableSideNavItemProps {
 }
 
 export const EditableSideNavItem = observer(
-  ({ label, icon, onClick, isActive, dataTest }: EditableSideNavItemProps) => {
+  ({
+    label,
+    icon,
+    onClick,
+    isActive,
+    dataTest,
+    id,
+  }: EditableSideNavItemProps) => {
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
-    const [searchParams] = useSearchParams();
-
-    const preset = searchParams.get('preset') ?? '1';
 
     const handleClick: MouseEventHandler = (e) => {
       e.preventDefault();
@@ -52,12 +56,12 @@ export const EditableSideNavItem = observer(
         colorScheme='gray'
         data-test={dataTest}
         onClick={handleClick}
-        className={`w-full justify-start px-3 text-gray-700 group focus:shadow-EditableSideNavItemFocus ${dynamicClasses} relative`}
+        className={`w-full justify-start px-3 text-gray-700 group focus:shadow-EditableSideNavItemFocus ${dynamicClasses}`}
       >
         <div>{typeof icon === 'function' ? icon(!!isActive) : icon}</div>
         <div
           className={cn(
-            'w-full flex  overflow-ellipsis group-hover:overflow-hidden group-focus:overflow-hidden',
+            'w-full flex overflow-ellipsis group-hover:overflow-hidden group-focus:overflow-hidden',
             {
               'overflow-hidden': isEditing,
             },
@@ -68,7 +72,7 @@ export const EditableSideNavItem = observer(
 
         <div
           className={cn(
-            'flex justify-end opacity-0 group-hover:opacity-100 group-focus:opacity-100 ',
+            'justify-end opacity-0 group-hover:opacity-100 group-focus:opacity-100 ',
             {
               'opacity-100': isEditing,
             },
@@ -76,7 +80,7 @@ export const EditableSideNavItem = observer(
         >
           <Menu open={isEditing} onOpenChange={setIsEditing}>
             <Tooltip label={label}>
-              <MenuButton className='min-w-6 h-6 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500'>
+              <MenuButton className='min-w-6 h-5 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500'>
                 <DotsVertical className='text-inherit' />
               </MenuButton>
             </Tooltip>
@@ -100,7 +104,7 @@ export const EditableSideNavItem = observer(
                   e.preventDefault();
 
                   store.ui.commandMenu.setContext({
-                    ids: [preset],
+                    ids: [id],
                     entity: 'TableViewDef',
                   });
                   store.ui.commandMenu.setType('DeleteConfirmationModal');
