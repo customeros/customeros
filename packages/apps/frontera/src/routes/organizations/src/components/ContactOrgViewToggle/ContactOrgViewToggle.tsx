@@ -22,49 +22,46 @@ export const ContactOrgViewToggle = observer(() => {
   }>(`customeros-last-search-for-preset`, { root: 'root' });
 
   const tableViewDefs = store.tableViewDefs.toArray();
-
   const tableViewDef = store.tableViewDefs.getById(preset || '')?.value;
   const tableViewId = tableViewDef?.tableId;
   const tableViewType = tableViewDef?.tableType;
 
-  const tableDefsMap = tableViewDefs.reduce((map, def) => {
-    map[def.value.tableId] = def.value.id;
+  const findPresetTable = (tableIdTypes: TableIdType[]): string | null => {
+    const presetTable = tableViewDefs.find(
+      (def) => tableIdTypes.includes(def.value.tableId) && def.value.isPreset,
+    );
 
-    return map;
-  }, {} as { [key: string]: string });
+    return presetTable ? presetTable.value.id : null;
+  };
 
-  const nurtureTableDef = tableDefsMap[TableIdType.Nurture];
-  const contactsForTargetOrgsTableDef =
-    tableDefsMap[TableIdType.ContactsForTargetOrganizations];
-  const orgTableDef = tableDefsMap[TableIdType.Organizations];
-  const contactsTableDef = tableDefsMap[TableIdType.Contacts];
-
-  const getTargetTable = () => {
+  const getTargetTable = (): string | null => {
     switch (tableViewId) {
       case TableIdType.Nurture:
       case TableIdType.ContactsForTargetOrganizations:
-        return nurtureTableDef;
+        return findPresetTable([
+          TableIdType.Nurture,
+          TableIdType.ContactsForTargetOrganizations,
+        ]);
       case TableIdType.Organizations:
       case TableIdType.Contacts:
-        return orgTableDef;
+        return findPresetTable([TableIdType.Organizations]);
       default:
         return null;
     }
   };
 
-  const getContactTable = () => {
+  const getContactTable = (): string | null => {
     switch (tableViewId) {
       case TableIdType.Nurture:
       case TableIdType.ContactsForTargetOrganizations:
-        return contactsForTargetOrgsTableDef;
+        return findPresetTable([TableIdType.ContactsForTargetOrganizations]);
       case TableIdType.Organizations:
       case TableIdType.Contacts:
-        return contactsTableDef;
+        return findPresetTable([TableIdType.Contacts]);
       default:
         return null;
     }
   };
-
   const targetTableDef = getTargetTable();
   const contactTableDef = getContactTable();
 

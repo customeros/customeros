@@ -187,6 +187,44 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
       }
     }
   };
+
+  archive = async (id: string, options?: { onSuccess?: () => void }) => {
+    this.isLoading = true;
+
+    const viewName = this.getById(id)?.value.name;
+
+    try {
+      const { tableViewDef_Archive } = await this.service.archiveTableViewDef({
+        id,
+      });
+
+      if (tableViewDef_Archive.accepted) {
+        runInAction(() => {
+          this.value.delete(id);
+
+          this.sync({
+            action: 'DELETE',
+            ids: [id],
+          });
+        });
+        this.root.ui.toastSuccess(
+          `${viewName} is now archived`,
+          'archive-view-success',
+        );
+      }
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+        this.root.ui.toastError(
+          `We couldn't archive ${viewName} view`,
+          'archive-view-error',
+        );
+      });
+    } finally {
+      this.isLoading = false;
+      options?.onSuccess?.();
+    }
+  };
 }
 
 type TABLE_VIEW_DEFS_QUERY_RESULT = { tableViewDefs: TableViewDef[] };

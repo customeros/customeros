@@ -1,8 +1,12 @@
+import { useNavigate } from 'react-router-dom';
+
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
+import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
+import { TableIdType } from '@graphql/types';
 import { XClose } from '@ui/media/icons/XClose';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
@@ -12,11 +16,15 @@ import { useStore } from '@shared/hooks/useStore';
 export const DeleteConfirmationModal = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
+  const navigate = useNavigate();
 
   const entity = match(context.entity)
-    .returnType<OpportunityStore | OrganizationStore | undefined>()
+    .returnType<
+      OpportunityStore | OrganizationStore | TableViewDefStore | undefined
+    >()
     .with('Opportunity', () => store.opportunities.value.get(context.ids?.[0]))
     .with('Organization', () => store.organizations.value.get(context.ids?.[0]))
+    .with('TableViewDef', () => store.tableViewDefs.getById(context.ids?.[0]))
     .otherwise(() => undefined);
 
   const handleClose = () => {
@@ -33,6 +41,18 @@ export const DeleteConfirmationModal = observer(() => {
       })
       .with('Opportunity', () => {
         store.opportunities.archive(context.ids?.[0]);
+      })
+      .with('TableViewDef', () => {
+        store.tableViewDefs.archive(context.ids?.[0], {
+          onSuccess: () => {
+            const allOrgsViewId = store.tableViewDefs
+              ?.toArray()
+              .find((e) => e.value.tableId === TableIdType.Organizations)
+              ?.value.id;
+
+            navigate(`/finder?preset=${allOrgsViewId}`);
+          },
+        });
       })
       .otherwise(() => {});
 
@@ -51,6 +71,10 @@ export const DeleteConfirmationModal = observer(() => {
     .with(
       'Opportunity',
       () => `Archive ${(entity as OpportunityStore)?.value.name}`,
+    )
+    .with(
+      'TableViewDef',
+      () => `Archive ${(entity as TableViewDefStore)?.value.name}?`,
     )
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
 

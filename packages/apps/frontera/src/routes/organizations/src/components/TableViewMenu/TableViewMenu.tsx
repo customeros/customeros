@@ -6,6 +6,7 @@ import { observer } from 'mobx-react-lite';
 import { TableViewType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { Star01 } from '@ui/media/icons/Star01.tsx';
+import { Archive } from '@ui/media/icons/Archive.tsx';
 import { Download02 } from '@ui/media/icons/Download02.tsx';
 import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
 import {
@@ -21,10 +22,13 @@ interface TableViewMenuProps {}
 export const TableViewMenu: React.FC<TableViewMenuProps> = observer(() => {
   const { downloadCSV } = useDownloadCsv();
   const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
+  const preset = searchParams.get('preset') ?? '1';
+
   const store = useStore();
-  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+  const tableViewDef = store.tableViewDefs.getById(preset);
   const tableType = tableViewDef?.value?.tableType;
+
+  const isPreset = tableViewDef?.value?.isPreset;
 
   return (
     <Menu>
@@ -34,7 +38,7 @@ export const TableViewMenu: React.FC<TableViewMenuProps> = observer(() => {
       <MenuList align='end' side='bottom'>
         <MenuItem
           className='py-2.5'
-          onClick={() => store.tableViewDefs.createFavorite(preset ?? '')}
+          onClick={() => store.tableViewDefs.createFavorite(preset)}
         >
           <Star01 className='text-gray-500' />
           Save to favorites
@@ -45,10 +49,22 @@ export const TableViewMenu: React.FC<TableViewMenuProps> = observer(() => {
             Export view as CSV
           </MenuItem>
         )}
-        {/*<MenuItem onClick={todo}>*/}
-        {/*  <Archive />*/}
-        {/*  Archive view*/}
-        {/*</MenuItem>*/}
+
+        {!isPreset && (
+          <MenuItem
+            onClick={() => {
+              store.ui.commandMenu.setContext({
+                ids: [preset],
+                entity: 'TableViewDef',
+              });
+              store.ui.commandMenu.setType('DeleteConfirmationModal');
+              store.ui.commandMenu.setOpen(true);
+            }}
+          >
+            <Archive />
+            Archive view
+          </MenuItem>
+        )}
       </MenuList>
     </Menu>
   );
