@@ -18,6 +18,8 @@ func (EnrichDetailsPreFilterTracking) TableName() string {
 }
 
 type IPDataResponseBody struct {
+	StatusCode    int     `json:"status_code"`
+	Message       string  `json:"message"`
 	Ip            string  `json:"ip"`
 	City          string  `json:"city"`
 	Region        string  `json:"region"`

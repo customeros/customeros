@@ -260,7 +260,7 @@ func ipLookup(ctx context.Context, r *gin.Engine, services *service.Services, l 
 
 			c.JSON(http.StatusOK, model.IpLookupResponse{
 				Status: "success",
-				Data:   response,
+				IpData: response,
 			})
 		})
 }

@@ -7,6 +7,8 @@ type IpLookupRequest struct {
 }
 
 type IpLookupData struct {
+	StatusCode    int     `json:"status_code"`
+	Message       string  `json:"message"`
 	Ip            string  `json:"ip"`
 	City          string  `json:"city"`
 	Region        string  `json:"region"`
@@ -56,5 +58,5 @@ type IpLookupData struct {
 type IpLookupResponse struct {
 	Status  string        `json:"status"`
 	Message string        `json:"message,omitempty"`
-	Data    *IpLookupData `json:"data,omitempty"`
+	IpData  *IpLookupData `json:"ipdata,omitempty"`
 }
