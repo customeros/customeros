@@ -87,12 +87,12 @@ export const RootSidenav = observer(() => {
   const myViews = store.demoMode
     ? []
     : tableViewDefsList.filter(
-        (c) => c.value.tableType === TableViewType.Renewals,
+        (c) => c.value.tableType === TableViewType.Renewals && c.value.isPreset,
       ) ?? [];
 
   const invoicesViews =
     tableViewDefsList.filter(
-      (c) => c.value.tableType === TableViewType.Invoices,
+      (c) => c.value.tableType === TableViewType.Invoices && c.value.isPreset,
     ) ?? [];
 
   const lifecycleStagesView =
@@ -113,15 +113,15 @@ export const RootSidenav = observer(() => {
       .sort((a, b) => a.value.order - b.value.order) ?? [];
 
   const allOrganizationsView = tableViewDefsList.filter(
-    (c) => c.value.tableId === TableIdType.Organizations,
+    (c) => c.value.tableId === TableIdType.Organizations && c.value.isPreset,
   );
 
   const allContactsView = tableViewDefsList.find(
-    (e) => e.value.tableId === TableIdType.Contacts,
+    (e) => e.value.tableId === TableIdType.Contacts && e.value.isPreset,
   );
 
   const churnView = tableViewDefsList.filter(
-    (c) => c.value.tableId === TableIdType.Churn,
+    (c) => c.value.tableId === TableIdType.Churn && c.value.isPreset,
   );
 
   const handleItemClick = (path: string) => {

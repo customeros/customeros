@@ -40,7 +40,13 @@ type Context = {
   property?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: Record<string, any>;
-  entity: 'Opportunity' | 'Organization' | 'Organizations' | 'Contact' | null;
+  entity:
+    | 'Opportunity'
+    | 'Organization'
+    | 'Organizations'
+    | 'Contact'
+    | 'TableViewDef'
+    | null;
 };
 
 const makeDefaultContext = () => ({

@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import React, { useState, ReactElement, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -5,6 +6,7 @@ import { observer } from 'mobx-react-lite';
 import { cn } from '@ui/utils/cn';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
+import { Archive } from '@ui/media/icons/Archive.tsx';
 import { TextInput } from '@ui/media/icons/TextInput';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
@@ -28,6 +30,9 @@ export const EditableSideNavItem = observer(
   ({ label, icon, onClick, isActive, dataTest }: EditableSideNavItemProps) => {
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
+    const [searchParams] = useSearchParams();
+
+    const preset = searchParams.get('preset') ?? '1';
 
     const handleClick: MouseEventHandler = (e) => {
       e.preventDefault();
@@ -79,7 +84,9 @@ export const EditableSideNavItem = observer(
             <MenuList align='end' side='bottom'>
               <MenuItem
                 className='py-2.5'
-                onClick={() => {
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
                   store.ui.commandMenu.setType('RenameTableViewDef');
                   store.ui.commandMenu.setOpen(true);
                 }}
@@ -87,11 +94,22 @@ export const EditableSideNavItem = observer(
                 <TextInput className='text-gray-500' />
                 Rename view
               </MenuItem>
+              <MenuItem
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
 
-              {/*<MenuItem onClick={todo}>*/}
-              {/*  <Archive />*/}
-              {/*  Archive view*/}
-              {/*</MenuItem>*/}
+                  store.ui.commandMenu.setContext({
+                    ids: [preset],
+                    entity: 'TableViewDef',
+                  });
+                  store.ui.commandMenu.setType('DeleteConfirmationModal');
+                  store.ui.commandMenu.setOpen(true);
+                }}
+              >
+                <Archive />
+                Archive view
+              </MenuItem>
             </MenuList>
           </Menu>
         </div>
