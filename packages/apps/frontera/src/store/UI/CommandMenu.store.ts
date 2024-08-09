@@ -32,6 +32,7 @@ export type CommandMenuType =
   | 'EditJobTitle'
   | 'ChangeOrAddJobRoles'
   | 'EditTimeZone'
+  | 'RenameTableViewDef'
   | 'ContactBulkCommands';
 
 type Context = {

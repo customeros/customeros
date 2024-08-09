@@ -38,6 +38,7 @@ import {
   ChangeRelationship,
   UpdateHealthStatus,
   AddNewOrganization,
+  RenameTableViewDef,
   OpportunityCommands,
   ChangeOrAddJobRoles,
   ContactBulkCommands,
@@ -86,6 +87,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
   MergeConfirmationModal: <MergeConfirmationModal />,
+  RenameTableViewDef: <RenameTableViewDef />,
 };
 
 export const CommandMenu = observer(() => {

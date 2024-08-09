@@ -32,6 +32,7 @@ import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { SwitchHorizontal01 } from '@ui/media/icons/SwitchHorizontal01.tsx';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
+import { EditableSideNavItem } from '@shared/components/RootSidenav/components/EditableSidenavItem.tsx';
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
@@ -212,7 +213,7 @@ export const RootSidenav = observer(() => {
         <div className='w-full'>
           <SidenavItem
             label='Customer map'
-            data-test={`side-nav-item-customer-map`}
+            dataTest={`side-nav-item-customer-map`}
             isActive={checkIsActive('customer-map')}
             onClick={() => handleItemClick('customer-map')}
             icon={(isActive) => (
@@ -277,7 +278,7 @@ export const RootSidenav = observer(() => {
                   <SidenavItem
                     key={view.value.id}
                     label={view.value.name}
-                    data-test={`side-nav-item-${view.value.name}`}
+                    dataTest={`side-nav-item-${view.value.name}`}
                     isActive={checkIsActive('finder', {
                       preset,
                     })}
@@ -317,7 +318,7 @@ export const RootSidenav = observer(() => {
                       label='Opportunities'
                       key={'kanban-experimental-view'}
                       isActive={checkIsActive('prospects')}
-                      data-test={`side-nav-item-opportunities`}
+                      dataTest={`side-nav-item-opportunities`}
                       onClick={() => handleItemClick(`prospects`)}
                       icon={(isActive) => {
                         return (
@@ -365,10 +366,10 @@ export const RootSidenav = observer(() => {
 
             {preferences.isFavoritesOpen &&
               favoritesView.map((view) => (
-                <SidenavItem
+                <EditableSideNavItem
                   key={view.value.id}
                   label={view.value.name}
-                  data-test={`side-nav-item-${view.value.name}`}
+                  dataTest={`side-nav-item-${view.value.name}`}
                   isActive={checkIsActive('finder', {
                     preset: view.value.id,
                   })}
@@ -381,7 +382,7 @@ export const RootSidenav = observer(() => {
                     return (
                       <Icon
                         className={cn(
-                          'w-5 h-5 text-gray-500',
+                          'text-md text-gray-500',
                           isActive && 'text-gray-700',
                         )}
                       />
@@ -424,7 +425,7 @@ export const RootSidenav = observer(() => {
                       <SidenavItem
                         key={view.value.id}
                         label={view.value.name}
-                        data-test={`side-nav-item-${view.value.name}`}
+                        dataTest={`side-nav-item-${view.value.name}`}
                         isActive={checkIsActive('finder', {
                           preset: view.value.id,
                         })}
@@ -450,7 +451,7 @@ export const RootSidenav = observer(() => {
                     <SidenavItem
                       key={view.value.id}
                       label={view.value.name}
-                      data-test={`side-nav-item-${view.value.name}`}
+                      dataTest={`side-nav-item-${view.value.name}`}
                       isActive={checkIsActive('renewals', {
                         preset: view.value.id,
                       })}
@@ -565,7 +566,7 @@ export const RootSidenav = observer(() => {
                   <SidenavItem
                     key={view.value.id}
                     label={`${view.value.name} Invoices`}
-                    data-test={`side-nav-item-${view.value.name}`}
+                    dataTest={`side-nav-item-${view.value.name}`}
                     isActive={checkIsActive('finder', {
                       preset: view.value.id,
                     })}
@@ -597,7 +598,7 @@ export const RootSidenav = observer(() => {
 
         <SidenavItem
           label='Settings'
-          data-test={`side-nav-item-settings`}
+          dataTest={`side-nav-item-settings`}
           isActive={checkIsActive('settings')}
           onClick={() => navigate('/settings')}
           icon={(isActive) => (
@@ -629,7 +630,7 @@ export const RootSidenav = observer(() => {
           label='Sign out'
           isActive={false}
           onClick={handleSignOutClick}
-          data-test={`side-nav-item-sign-out`}
+          dataTest={`side-nav-item-sign-out`}
           icon={(isActive) => (
             <LogOut01
               className={cn(
