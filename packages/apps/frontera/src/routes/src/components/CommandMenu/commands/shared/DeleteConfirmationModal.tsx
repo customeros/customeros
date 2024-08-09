@@ -82,7 +82,7 @@ export const DeleteConfirmationModal = observer(() => {
     )
     .with(
       'Opportunity',
-      () => `Archive ${(entity as OpportunityStore)?.value.name} ?`,
+      () => `Archive ${(entity as OpportunityStore)?.value.name}?`,
     )
     .with(
       'TableViewDef',

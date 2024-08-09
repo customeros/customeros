@@ -67,7 +67,7 @@ export const ChooseOpportunityOrganization = observer(() => {
                 className='mr-2'
                 name={org.value.name}
                 variant='outlineSquare'
-                src={org.value.icon || ''}
+                src={org.value.logo || ''}
               />
               {org.value.name}
             </div>

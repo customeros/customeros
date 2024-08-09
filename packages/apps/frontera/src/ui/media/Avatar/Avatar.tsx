@@ -95,7 +95,7 @@ const avatarStyle = cva(
           'ring-primary-100/50',
         ],
         roundedSquareSmall: ['rounded-sm', 'text-primary-700', 'bg-primary-50'],
-        roundedSquare: ['rounded-md', 'text-primary-700', 'bg-primary-50'],
+        roundedSquare: ['rounded-[4px]', 'text-primary-700', 'bg-primary-50'],
         roundedSquareShadowed: [
           'rounded-lg',
           'bg-primary-100',
@@ -210,7 +210,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           {...props}
           src={src}
           onLoadedData={handleImageLoad}
-          className={'h-full w-full relative rounded-[inherit] object-cover'}
+          className={'h-full w-full relative rounded-[inherit] object-cover '}
         />
       )}
       {icon && !name && !src && (

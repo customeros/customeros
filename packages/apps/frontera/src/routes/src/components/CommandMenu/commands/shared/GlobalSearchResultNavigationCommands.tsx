@@ -99,8 +99,8 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
           >
             <div className='flex items-center'>
               <Avatar
-                size='xs'
-                textSize='xs'
+                size='xxs'
+                textSize='xxs'
                 name={contactStore.name}
                 icon={<User03 className='text-primary-700  ' />}
                 src={
@@ -109,9 +109,11 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
                     : undefined
                 }
               />
-              <span className='ml-2 capitalize'>{contactStore.name}</span>
+              <span className='ml-2 capitalize line-clamp-1 '>
+                {contactStore.name}
+              </span>
 
-              <span className='ml-1.5 text-gray-500'>
+              <span className='ml-1.5 text-gray-500 line-clamp-1 max-w-[250px]'>
                 ·{' '}
                 {contactStore.organizationId
                   ? organizations.value.get(contactStore.organizationId)?.value

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { set } from 'lodash';
+import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -11,7 +11,7 @@ export const EditEmail = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const contact = store.contacts.value.get(context.ids?.[0] as string);
-  const [value, setValue] = useState(
+  const [email, setEmail] = useState(
     () => contact?.value.emails?.[0]?.email ?? '',
   );
   const emailAdress = contact?.value?.emails?.[0]?.email ?? '';
@@ -19,48 +19,41 @@ export const EditEmail = observer(() => {
   const label = `Contact - ${contact?.value.name}`;
 
   const handleChangeEmail = () => {
-    if (!context.ids?.[0]) return;
-
     if (!contact) return;
 
     if (emailAdress?.length === 0) {
       contact?.addEmail();
     } else {
       contact?.update((o) => {
-        o.emails[0].email = value;
+        o.emails[0].email = email;
 
         return o;
       });
     }
 
-    if (value.length === 0) {
+    if (email.length === 0) {
       contact?.removeEmail();
     }
-    contact?.update(
-      (value) => {
-        set(value, 'emails[0].email', value);
 
-        return value;
-      },
-      { mutate: false },
-    );
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.setType('ContactCommands');
   };
+
+  useKey('Enter', handleChangeEmail);
 
   return (
     <Command>
       <CommandInput
         label={label}
-        value={value || ''}
+        value={email || ''}
         placeholder='Edit email'
-        onValueChange={(value) => setValue(value)}
+        onValueChange={(value) => setEmail(value)}
       />
       <Command.List>
         <CommandItem
           leftAccessory={<Edit03 />}
           onSelect={handleChangeEmail}
-        >{`Rename email to "${value}"`}</CommandItem>
+        >{`Rename email to "${email}"`}</CommandItem>
       </Command.List>
     </Command>
   );

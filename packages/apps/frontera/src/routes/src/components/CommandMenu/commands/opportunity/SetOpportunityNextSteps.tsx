@@ -58,7 +58,9 @@ export const SetOpportunityNextSteps = observer(() => {
           leftAccessory={<InfoCircle />}
           className='data-[selected=true]:bg-white'
         >
-          Use <code className='text-[18px] mt-[4px]'>⌘ </code>+ Enter to save
+          Use
+          <code className='text-[18px] mt-[3px] ml-[-4px] mr-[-3px]'>⌘ </code>+
+          Enter to save
         </CommandItem>
       </Command.List>
     </Command>
