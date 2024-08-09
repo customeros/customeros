@@ -15,7 +15,10 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
+	"strings"
 )
+
+var knowIpDataBadResponseMessages = []string{"is a reserved IP address"}
 
 type IpIntelligenceService interface {
 	LookupIp(ctx context.Context, ip string) (*model.IpLookupData, error)
@@ -104,15 +107,26 @@ func (s *ipIntelligenceService) askIpData(ctx context.Context, ip string) (*post
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		tracing.TraceErr(span, errors.New("bad response status"))
-		return nil, err
-	}
-
 	responseBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
 		return nil, err
+	}
+
+	knownBadResponse := false
+	if resp.StatusCode != http.StatusOK {
+		if resp.StatusCode == http.StatusBadRequest {
+			for _, msg := range knowIpDataBadResponseMessages {
+				if strings.Contains(string(responseBody), msg) {
+					knownBadResponse = true
+					break
+				}
+			}
+		}
+		if !knownBadResponse {
+			span.LogFields(log.String("response.body", string(responseBody)))
+			tracing.TraceErr(span, errors.Errorf("IPData returned status code %d", resp.StatusCode))
+		}
 	}
 
 	// Parse the JSON request body
@@ -121,6 +135,7 @@ func (s *ipIntelligenceService) askIpData(ctx context.Context, ip string) (*post
 		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response body"))
 		return nil, err
 	}
+	ipDataResponseBody.StatusCode = resp.StatusCode
 
 	return &ipDataResponseBody, nil
 }

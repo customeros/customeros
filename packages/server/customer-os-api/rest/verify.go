@@ -167,45 +167,55 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// This is a placeholder response
-		ipIntelligenceResponse := IpIntelligenceResponse{
-			Status: "success",
-			IP:     ipAddress,
-			Threats: IpIntelligenceThreats{
-				IsProxy:       result.Data.Threat.IsProxy,
-				IsVpn:         result.Data.Threat.IsVpn,
-				IsTor:         result.Data.Threat.IsTor,
-				IsUnallocated: result.Data.Threat.IsBogon,
-				IsDatacenter:  result.Data.Threat.IsDatacenter,
-				IsCloudRelay:  result.Data.Threat.IsIcloudRelay,
-				IsMobile:      result.Data.Carrier != nil,
-			},
-			Geolocation: IpIntelligenceGeolocation{
-				City:            result.Data.City,
-				Country:         result.Data.CountryName,
-				CountryIso:      result.Data.CountryCode,
-				IsEuropeanUnion: isEuropeanUnion(result.Data.CountryCode),
-			},
-			TimeZone: IpIntelligenceTimeZone{
-				Name:        result.Data.TimeZone.Name,
-				Abbr:        result.Data.TimeZone.Abbr,
-				Offset:      result.Data.TimeZone.Offset,
-				IsDst:       result.Data.TimeZone.IsDst,
-				CurrentTime: utils.GetCurrentTimeInTimeZone(result.Data.TimeZone.Name),
-			},
-			Network: IpIntelligenceNetwork{
-				ASN:    result.Data.Asn.Asn,
-				Name:   result.Data.Asn.Name,
-				Domain: result.Data.Asn.Domain,
-				Route:  result.Data.Asn.Route,
-				Type:   result.Data.Asn.Type,
-			},
-			Organization: IpIntelligenceOrganization{
-				// TBD: Snitcher
-				//Name:     TBD,
-				//Domain:   TBD,
-				//LinkedIn: TBD,
-			},
+		var ipIntelligenceResponse IpIntelligenceResponse
+		if result.IpData.StatusCode == 400 {
+			ipIntelligenceResponse = IpIntelligenceResponse{
+				Status: "success",
+				IP:     ipAddress,
+				Threats: IpIntelligenceThreats{
+					IsUnallocated: true,
+				},
+			}
+		} else {
+			ipIntelligenceResponse = IpIntelligenceResponse{
+				Status: "success",
+				IP:     ipAddress,
+				Threats: IpIntelligenceThreats{
+					IsProxy:       result.IpData.Threat.IsProxy,
+					IsVpn:         result.IpData.Threat.IsVpn,
+					IsTor:         result.IpData.Threat.IsTor,
+					IsUnallocated: result.IpData.Threat.IsBogon,
+					IsDatacenter:  result.IpData.Threat.IsDatacenter,
+					IsCloudRelay:  result.IpData.Threat.IsIcloudRelay,
+					IsMobile:      result.IpData.Carrier != nil,
+				},
+				Geolocation: IpIntelligenceGeolocation{
+					City:            result.IpData.City,
+					Country:         result.IpData.CountryName,
+					CountryIso:      result.IpData.CountryCode,
+					IsEuropeanUnion: isEuropeanUnion(result.IpData.CountryCode),
+				},
+				TimeZone: IpIntelligenceTimeZone{
+					Name:        result.IpData.TimeZone.Name,
+					Abbr:        result.IpData.TimeZone.Abbr,
+					Offset:      result.IpData.TimeZone.Offset,
+					IsDst:       result.IpData.TimeZone.IsDst,
+					CurrentTime: utils.GetCurrentTimeInTimeZone(result.IpData.TimeZone.Name),
+				},
+				Network: IpIntelligenceNetwork{
+					ASN:    result.IpData.Asn.Asn,
+					Name:   result.IpData.Asn.Name,
+					Domain: result.IpData.Asn.Domain,
+					Route:  result.IpData.Asn.Route,
+					Type:   result.IpData.Asn.Type,
+				},
+				Organization: IpIntelligenceOrganization{
+					// TBD: Snitcher
+					//Name:     TBD,
+					//Domain:   TBD,
+					//LinkedIn: TBD,
+				},
+			}
 		}
 
 		c.JSON(http.StatusOK, ipIntelligenceResponse)
