@@ -26,6 +26,11 @@ func (r *mutationResolver) TableViewDefUpdateShared(ctx context.Context, input m
 	panic(fmt.Errorf("not implemented: TableViewDefUpdateShared - tableViewDef_UpdateShared"))
 }
 
+// TableViewDefArchive is the resolver for the tableViewDef_Archive field.
+func (r *mutationResolver) TableViewDefArchive(ctx context.Context, id string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: TableViewDefArchive - tableViewDef_Archive"))
+}
+
 // TableViewDefs is the resolver for the tableViewDefs field.
 func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDef, error) {
 	panic(fmt.Errorf("not implemented: TableViewDefs - tableViewDefs"))
