@@ -17,8 +17,8 @@ type TenantSettingsUpdateEvent struct {
 	InvoicingEnabled     bool      `json:"invoicingEnabled,omitempty"`
 	InvoicingPostpaid    bool      `json:"invoicingPostpaid,omitempty"`
 	LogoRepositoryFileId string    `json:"logoRepositoryFileId,omitempty"`
-  WorkspaceLogo        string    `json:"workspaceLogo,omitempty"`
-  WorkspaceName        string    `json:"workspaceName,omitempty"`
+	WorkspaceLogo        string    `json:"workspaceLogo,omitempty"`
+	WorkspaceName        string    `json:"workspaceName,omitempty"`
 	FieldsMask           []string  `json:"fieldsMask,omitempty"`
 }
 
@@ -30,7 +30,8 @@ func NewTenantSettingsUpdateEvent(aggregate eventstore.Aggregate, request *tenan
 		InvoicingEnabled:     request.InvoicingEnabled,
 		InvoicingPostpaid:    request.InvoicingPostpaid,
 		LogoRepositoryFileId: request.LogoRepositoryFileId,
-    WorkspaceName: request.,
+		WorkspaceLogo:        request.WorkspaceLogo,
+		WorkspaceName:        request.WorkspaceName,
 		FieldsMask:           fieldsMaks,
 	}
 
@@ -63,9 +64,9 @@ func (e TenantSettingsUpdateEvent) UpdateBaseCurrency() bool {
 }
 
 func (e TenantSettingsUpdateEvent) UpdateWorkspaceLogo() bool {
-  return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceLogo)
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceLogo)
 }
 
 func (e TenantSettingsUpdateEvent) UpdateWorkspaceName() bool {
-  return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceName)
+	return len(e.FieldsMask) == 0 || utils.Contains(e.FieldsMask, FieldMaskWorkspaceName)
 }

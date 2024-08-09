@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -13,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
 type TenantBillingProfileCreateFields struct {
@@ -76,10 +77,14 @@ type TenantSettingsFields struct {
 	BaseCurrency               enum.Currency `json:"baseCurrency"`
 	InvoicingEnabled           bool          `json:"invoicingEnabled"`
 	InvoicingPostpaid          bool          `json:"invoicingPostpaid"`
+	WorkspaceLogo              string        `json:"workspaceLogo"`
+	WorkspaceName              string        `json:"workspaceName"`
 	UpdateLogoRepositoryFileId bool          `json:"updateLogoRepositoryFileId"`
 	UpdateInvoicingEnabled     bool          `json:"updateInvoicingEnabled"`
 	UpdateInvoicingPostpaid    bool          `json:"updateInvoicingPostpaid"`
 	UpdateBaseCurrency         bool          `json:"updateBaseCurrency"`
+	UpdateWorkspaceLogo        bool          `json:"updateWorkspaceLogo"`
+	UpdateWorkspaceName        bool          `json:"updateWorkspaceName"`
 }
 
 type TenantWriteRepository interface {
@@ -333,6 +338,14 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 	if data.UpdateLogoRepositoryFileId {
 		cypher += ", ts.logoRepositoryFileId=$logoRepositoryFileId"
 		params["logoRepositoryFileId"] = data.LogoRepositoryFileId
+	}
+	if data.UpdateWorkspaceLogo {
+		cypher += ", ts.workspaceLogo=$workspaceLogo"
+		params["workspaceLogo"] = data.WorkspaceLogo
+	}
+	if data.UpdateWorkspaceName {
+		cypher += ", ts.workspaceName=$workspaceName"
+		params["workspaceName"] = data.WorkspaceName
 	}
 
 	span.LogFields(log.String("cypher", cypher))

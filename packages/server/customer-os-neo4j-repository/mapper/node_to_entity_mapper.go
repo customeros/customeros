@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"encoding/json"
+
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -309,6 +310,8 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 		LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyLogoRepositoryFileId)),
 		InvoicingEnabled:     utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingEnabled)),
 		InvoicingPostpaid:    utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingPostpaid)),
+		WorkspaceLogo:        utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceLogo)),
+		WorkspaceName:        utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceName)),
 		BaseCurrency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyBaseCurrency))),
 		EnrichContacts:       utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyEnrichContacts)),
 	}

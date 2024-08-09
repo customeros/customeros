@@ -2,6 +2,7 @@ package graph
 
 import (
 	"context"
+
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -146,11 +147,15 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 		LogoRepositoryFileId:       eventData.LogoRepositoryFileId,
 		InvoicingEnabled:           eventData.InvoicingEnabled,
 		InvoicingPostpaid:          eventData.InvoicingPostpaid,
+		WorkspaceLogo:              eventData.WorkspaceLogo,
+		WorkspaceName:              eventData.WorkspaceName,
 		BaseCurrency:               neo4jenum.DecodeCurrency(eventData.BaseCurrency),
 		UpdateInvoicingEnabled:     eventData.UpdateInvoicingEnabled(),
 		UpdateBaseCurrency:         eventData.UpdateBaseCurrency(),
 		UpdateInvoicingPostpaid:    eventData.UpdateInvoicingPostpaid(),
 		UpdateLogoRepositoryFileId: eventData.UpdateLogoRepositoryFileId(),
+		UpdateWorkspaceLogo:        eventData.UpdateWorkspaceLogo(),
+		UpdateWorkspaceName:        eventData.UpdateWorkspaceName(),
 	}
 	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenantName, data)
 	if err != nil {

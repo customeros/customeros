@@ -17,6 +17,8 @@ func MapEntityToTenantSettings(entity *neo4jentity.TenantSettingsEntity) *model.
 		LogoRepositoryFileID: utils.StringPtrNillable(entity.LogoRepositoryFileId),
 		BaseCurrency:         utils.ToPtr(mapper.MapCurrencyToModel(entity.BaseCurrency)),
 		LogoURL:              entity.LogoRepositoryFileId,
+		WorkspaceLogo:        utils.StringPtrNillable(entity.WorkspaceLogo),
+		WorkspaceName:        utils.StringPtrNillable(entity.WorkspaceName),
 	}
 }
 
