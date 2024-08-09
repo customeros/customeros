@@ -99,7 +99,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
   get defaultPreset() {
     return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Customers,
+      (t) => t.value.tableId === TableIdType.Customers && t.value.isPreset,
     )?.value.id;
   }
 
@@ -110,23 +110,39 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   }
 
   get leadsPreset() {
-    return this?.toArray().find((t) => t.value.tableId === TableIdType.Leads)
-      ?.value.id;
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Leads && t.value.isPreset,
+    )?.value.id;
   }
 
   get targetsPreset() {
-    return this?.toArray().find((t) => t.value.tableId === TableIdType.Nurture)
-      ?.value.id;
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Nurture && t.value.isPreset,
+    )?.value.id;
   }
 
   get churnedPreset() {
-    return this?.toArray().find((t) => t.value.tableId === TableIdType.Churn)
-      ?.value.id;
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Churn && t.value.isPreset,
+    )?.value.id;
   }
 
   get addressBookPreset() {
     return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Organizations,
+      (t) => t.value.tableId === TableIdType.Organizations && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get upcomingInvoicesPreset() {
+    return this?.toArray().find(
+      (t) =>
+        t.value.tableId === TableIdType.UpcomingInvoices && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get myPortfolioPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.MyPortfolio && t.value.isPreset,
     )?.value.id;
   }
 
