@@ -30,6 +30,8 @@ type Config struct {
 	Services         struct {
 		ValidationApi    string `env:"VALIDATION_API" validate:"required"`
 		ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
+		EnrichmentApi    string `env:"ENRICHMENT_API" validate:"required"`
+		EnrichmentApiKey string `env:"ENRICHMENT_API_KEY" validate:"required"`
 	}
 	AppConfig struct {
 		TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
