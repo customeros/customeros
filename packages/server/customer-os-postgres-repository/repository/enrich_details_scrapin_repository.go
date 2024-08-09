@@ -1,8 +1,9 @@
 package repository
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -11,25 +12,25 @@ import (
 )
 
 type enrichDetailsScrapInRepository struct {
-	gormDb *gorm.DB
+	db *gorm.DB
 }
 
 type EnrichDetailsScrapInRepository interface {
-	Add(ctx context.Context, data entity.EnrichDetailsScrapIn) helper.QueryResult
+	Create(ctx context.Context, data entity.EnrichDetailsScrapIn) (*entity.EnrichDetailsScrapIn, error)
 	GetAllByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) ([]entity.EnrichDetailsScrapIn, error)
 	GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 }
 
 func NewEnrichDetailsScrapInRepository(gormDb *gorm.DB) EnrichDetailsScrapInRepository {
-	return &enrichDetailsScrapInRepository{gormDb: gormDb}
+	return &enrichDetailsScrapInRepository{db: gormDb}
 }
 
-func (e enrichDetailsScrapInRepository) GetAllByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) ([]entity.EnrichDetailsScrapIn, error) {
+func (r enrichDetailsScrapInRepository) GetAllByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) ([]entity.EnrichDetailsScrapIn, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetAllByParam1AndFlow")
 	defer span.Finish()
 
 	var data []entity.EnrichDetailsScrapIn
-	err := e.gormDb.Where("param1 = ? AND flow = ?", param, flow).Find(&data).Error
+	err := r.db.Where("param1 = ? AND flow = ?", param, flow).Find(&data).Error
 	if err != nil {
 		return nil, err
 	}
@@ -39,29 +40,32 @@ func (e enrichDetailsScrapInRepository) GetAllByParam1AndFlow(ctx context.Contex
 	return data, nil
 }
 
-func (e enrichDetailsScrapInRepository) Add(ctx context.Context, data entity.EnrichDetailsScrapIn) helper.QueryResult {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.Add")
-	defer span.Finish()
-
-	err := e.gormDb.Create(&data).Error
-	if err != nil {
-		return helper.QueryResult{Error: err}
-	}
-
-	return helper.QueryResult{Result: data}
-}
-
-func (e enrichDetailsScrapInRepository) GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
+func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow")
 	defer span.Finish()
 
 	var data entity.EnrichDetailsScrapIn
-	err := e.gormDb.Where("param1 = ? AND flow = ?", param, flow).Order("created_at desc").First(&data).Error
+	err := r.db.Where("param1 = ? AND flow = ?", param, flow).Order("created_at desc").First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
 		return nil, err // Return other errors as usual
+	}
+
+	return &data, nil
+}
+
+func (r enrichDetailsScrapInRepository) Create(ctx context.Context, data entity.EnrichDetailsScrapIn) (*entity.EnrichDetailsScrapIn, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.Create")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.LogObjectAsJson(span, "data", data)
+
+	data.CreatedAt = utils.Now()
+	data.UpdatedAt = utils.Now()
+	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
+		return nil, err
 	}
 
 	return &data, nil

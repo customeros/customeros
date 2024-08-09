@@ -148,7 +148,7 @@ func (h *ContactEventHandler) enrichContactByEmail(ctx context.Context, tenant s
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.email already enriched", true))
 
-		var scrapinContactResponse postgresentity.ScrapInContactResponse
+		var scrapinContactResponse postgresentity.ScrapInPersonResponse
 		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
@@ -201,7 +201,7 @@ func (h *ContactEventHandler) enrichContactByLinkedInProfile(ctx context.Context
 		// enrich contact with the data found
 		span.LogFields(log.Bool("result.linkedin profile already enriched", true))
 
-		var scrapinContactResponse postgresentity.ScrapInContactResponse
+		var scrapinContactResponse postgresentity.ScrapInPersonResponse
 		err := json.Unmarshal([]byte(record.Data), &scrapinContactResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
@@ -245,7 +245,7 @@ func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant, conta
 	return foundEmailAddress, nil
 }
 
-func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, flow *additional_services.ScrapInEnrichContactFlow, contact *neo4jentity.ContactEntity, scrapinContactResponse postgresentity.ScrapInContactResponse) error {
+func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, flow *additional_services.ScrapInEnrichContactFlow, contact *neo4jentity.ContactEntity, scrapinContactResponse postgresentity.ScrapInPersonResponse) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
 
