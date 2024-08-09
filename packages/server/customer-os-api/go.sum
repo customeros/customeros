@@ -1299,6 +1299,8 @@ github.com/opencontainers/runc v1.1.5 h1:L44KXEpKmfWDcS02aeGm8QNTFXTo2D+8MYGDIJ/
 github.com/opencontainers/runc v1.1.5/go.mod h1:1J5XiS+vdZ3wCyZybsuxXZWGrgSr8fFJHLXuG2PsnNg=
 github.com/opencontainers/runtime-spec v1.0.3-0.20210326190908-1c3f411f0417/go.mod h1:jwyrGlmzljRJv/Fgzds9SsS/C5hL+LL3ko9hs6T5lQ0=
 github.com/opencontainers/selinux v1.10.0/go.mod h1:2i0OySw99QjzBBQByd1Gr9gSjvuho1lHsJxIJ3gGbJI=
+github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20240809100739-f28b7cd9aa2e h1:vN+o33jWh51X9Qniubt+nvz0y3XdTDh/7QHOIyAX8RM=
+github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20240809100739-f28b7cd9aa2e/go.mod h1:WpPix9LtEivw/Itjo+tNHveFpYgKTUyttfjYISvskpQ=
 github.com/opentracing/opentracing-go v1.2.0 h1:uEJPy/1a5RIPAJ0Ov+OIO8OxWu77jEv+1B0VhjKrZUs=
 github.com/opentracing/opentracing-go v1.2.0/go.mod h1:GxEUsuufX4nBwe+T+Wl9TAgYrxe9dPLANfrWvHYVTgc=
 github.com/ory/dockertest/v3 v3.6.3 h1:L8JWiGgR+fnj90AEOkTFIEp4j5uWAK72P3IUsYgn2cs=

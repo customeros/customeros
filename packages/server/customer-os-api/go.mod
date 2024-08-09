@@ -14,6 +14,8 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events => ..
 
 replace github.com/openline-ai/openline-customer-os/packages/server/validation-api => ../validation-api
 
+replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
+
 require (
 	github.com/99designs/gqlgen v0.17.49
 	github.com/caarlos0/env/v6 v6.10.1
@@ -29,9 +31,9 @@ require (
 	github.com/neo4j/neo4j-go-driver/v5 v5.23.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240305183844-4e6aa5b2c822
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240410144729-44cbe53c019c
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240710133651-a82bf94a04e7
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240731112436-8aa56804b2e9
 	github.com/openline-ai/openline-customer-os/packages/server/events v0.0.0-20240413132139-bfffc416fdeb
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240723183528-e1ad8abb70ba
 	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20240808154624-eddfcb0715b5
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
@@ -126,6 +128,7 @@ require (
 	github.com/nyaruka/phonenumbers v1.4.0 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0 // indirect
+	github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20240809100739-f28b7cd9aa2e // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
