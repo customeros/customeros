@@ -32,6 +32,7 @@ import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { SwitchHorizontal01 } from '@ui/media/icons/SwitchHorizontal01.tsx';
 import { useOrganizationsMeta } from '@shared/state/OrganizationsMeta.atom';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
+import { EditableSideNavItem } from '@shared/components/RootSidenav/components/EditableSidenavItem.tsx';
 
 import { SidenavItem } from './components/SidenavItem';
 import logoCustomerOs from './assets/logo-customeros.png';
@@ -365,7 +366,7 @@ export const RootSidenav = observer(() => {
 
             {preferences.isFavoritesOpen &&
               favoritesView.map((view) => (
-                <SidenavItem
+                <EditableSideNavItem
                   key={view.value.id}
                   label={view.value.name}
                   data-test={`side-nav-item-${view.value.name}`}
@@ -381,7 +382,7 @@ export const RootSidenav = observer(() => {
                     return (
                       <Icon
                         className={cn(
-                          'w-5 h-5 text-gray-500',
+                          'text-md text-gray-500',
                           isActive && 'text-gray-700',
                         )}
                       />

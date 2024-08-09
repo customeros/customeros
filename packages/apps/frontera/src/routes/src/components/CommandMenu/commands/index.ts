@@ -11,3 +11,4 @@ export * from './contacts';
 export * from './ContactHub';
 export * from './ContactCommands';
 export * from './ContactBulkCommands';
+export * from './tableViewDef';
