@@ -4,7 +4,12 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
-import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
+import {
+  Kbd,
+  Command,
+  CommandItem,
+  CommandInput,
+} from '@ui/overlay/CommandMenu';
 
 export const GlobalHub = () => {
   return (
@@ -38,6 +43,7 @@ export const GlobalSharedCommands = observer(() => {
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
         keywords={navigationKeywords.go_to_leads}
+        rightAccessory={<KeyboardShortcut shortcut='L' />}
         onSelect={() => handleGoTo('/finder', leadsPreset)}
       >
         Go to Leads
@@ -45,6 +51,7 @@ export const GlobalSharedCommands = observer(() => {
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
         keywords={navigationKeywords.go_to_targets}
+        rightAccessory={<KeyboardShortcut shortcut='T' />}
         onSelect={() => handleGoTo('/finder', targetsPreset)}
       >
         Go to Targets
@@ -53,18 +60,21 @@ export const GlobalSharedCommands = observer(() => {
         leftAccessory={<ArrowNarrowRight />}
         onSelect={() => handleGoTo('/prospects')}
         keywords={navigationKeywords.go_to_customers}
+        rightAccessory={<KeyboardShortcut shortcut='O' />}
       >
         Go to Opportunities
       </CommandItem>
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
         keywords={navigationKeywords.go_to_customers}
+        rightAccessory={<KeyboardShortcut shortcut='C' />}
         onSelect={() => handleGoTo('/finder', customersPreset)}
       >
         Go to Customers
       </CommandItem>
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
+        rightAccessory={<KeyboardShortcut shortcut='F' />}
         keywords={navigationKeywords.go_to_former_customers}
         onSelect={() => handleGoTo('/finder', churnedPreset)}
       >
@@ -73,6 +83,7 @@ export const GlobalSharedCommands = observer(() => {
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
         keywords={navigationKeywords.go_to_address_book}
+        rightAccessory={<KeyboardShortcut shortcut='A' />}
         onSelect={() => handleGoTo('/finder', addressBookPreset)}
       >
         Go to Address book
@@ -81,6 +92,7 @@ export const GlobalSharedCommands = observer(() => {
         leftAccessory={<ArrowNarrowRight />}
         onSelect={() => handleGoTo('/settings')}
         keywords={navigationKeywords.go_to_opportunities}
+        rightAccessory={<KeyboardShortcut shortcut='S' />}
       >
         Go to Settings
       </CommandItem>
@@ -88,12 +100,23 @@ export const GlobalSharedCommands = observer(() => {
         leftAccessory={<ArrowNarrowRight />}
         onSelect={() => handleGoTo('/customer-map')}
         keywords={navigationKeywords.go_to_customer_map}
+        rightAccessory={<KeyboardShortcut shortcut='D' />}
       >
         Go to Customer map
       </CommandItem>
     </>
   );
 });
+
+const KeyboardShortcut = ({ shortcut }: { shortcut: string }) => {
+  return (
+    <>
+      <Kbd className='px-1.5'>G</Kbd>
+      <span className='text-gray-500'>then</span>
+      <Kbd className='px-1.5'>{shortcut}</Kbd>
+    </>
+  );
+};
 
 const navigationKeywords = {
   go_to_leads: ['go to', 'navigate', 'leads', 'prospect'],
