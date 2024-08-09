@@ -189,6 +189,8 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
+      - VALIDATION_API_URL=http://host.docker.internal:10003
+      - ENRICHMENT_API_URL=http://host.docker.internal:10007
 
   events-processing-platform:
     image: ghcr.io/customeros/customeros/events-processing-platform:latest
@@ -203,6 +205,7 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
       - VALIDATION_API_URL=http://host.docker.internal:10003
+      - ENRICHMENT_API_URL=http://host.docker.internal:10007
       - FILE_STORE_API_URL=http://host.docker.internal:10001
       - EVENTS_PROCESSING_PLATFORM_URL=host.docker.internal:5001
 
@@ -267,6 +270,18 @@ services:
       - openline
     ports:
       - "10003:10003"
+    depends_on:
+      - customer-os-platform-admin-api
+    environment:
+      - POSTGRES_HOST=postgres
+      - NEO4J_TARGET=neo4j://neo4j:7687
+
+  enrichment-api:
+    image: ghcr.io/openline-ai/openline-customer-os/enrichment-api:latest
+    networks:
+      - openline
+    ports:
+      - "10007:10007"
     depends_on:
       - customer-os-platform-admin-api
     environment:
