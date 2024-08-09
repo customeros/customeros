@@ -2,6 +2,8 @@ package invoice
 
 import (
 	"context"
+	"strings"
+
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
@@ -13,7 +15,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"strings"
 )
 
 const (
@@ -345,6 +346,12 @@ func (a *TenantAggregate) onUpdateTenantSettings(evt eventstore.Event) error {
 	if eventData.UpdateLogoRepositoryFileId() {
 		a.TenantDetails.TenantSettings.LogoRepositoryFileId = eventData.LogoRepositoryFileId
 	}
+	if eventData.UpdateWorkspaceLogo() {
+		a.TenantDetails.TenantSettings.WorkspaceLogo = eventData.WorkspaceLogo
+	}
+	if eventData.UpdateWorkspaceName() {
+		a.TenantDetails.TenantSettings.WorkspaceName = eventData.WorkspaceName
+	}
 	return nil
 }
 
@@ -491,6 +498,10 @@ func extractTenantSettingsFieldsMask(inputFieldsMask []tenantpb.TenantSettingsFi
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingEnabled)
 		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_POSTPAID:
 			fieldsMask = append(fieldsMask, event.FieldMaskInvoicingPostpaid)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_LOGO:
+			fieldsMask = append(fieldsMask, event.FieldMaskWorkspaceLogo)
+		case tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_NAME:
+			fieldsMask = append(fieldsMask, event.FieldMaskWorkspaceName)
 		}
 	}
 	fieldsMask = utils.RemoveDuplicates(fieldsMask)

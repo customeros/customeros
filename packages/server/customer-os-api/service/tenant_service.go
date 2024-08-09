@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
+	"math/rand"
+	"strings"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -22,8 +25,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/emptypb"
-	"math/rand"
-	"strings"
 )
 
 type TenantService interface {
@@ -370,22 +371,28 @@ func (s *tenantService) UpdateTenantSettings(ctx context.Context, input *model.T
 		LoggedInUserId:       common.GetUserIdFromContext(ctx),
 		AppSource:            constants.AppSourceCustomerOsApi,
 		LogoRepositoryFileId: utils.IfNotNilString(input.LogoRepositoryFileID),
+		WorkspaceLogo:        utils.IfNotNilString(input.WorkspaceLogo),
+		WorkspaceName:        utils.IfNotNilString(input.WorkspaceName),
 		BaseCurrency:         baseCurrency,
 		InvoicingEnabled:     utils.IfNotNilBool(input.BillingEnabled),
 	}
 
-	if input.Patch != nil && *input.Patch {
-		if input.LogoRepositoryFileID != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
-		}
-		if input.BaseCurrency != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY)
-		}
-		if input.BillingEnabled != nil {
-			fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)
-		}
-		updateRequest.FieldsMask = fieldMask
+	if input.LogoRepositoryFileID != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID)
 	}
+	if input.BaseCurrency != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_BASE_CURRENCY)
+	}
+	if input.BillingEnabled != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_INVOICING_ENABLED)
+	}
+	if input.WorkspaceLogo != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_LOGO)
+	}
+	if input.WorkspaceName != nil {
+		fieldMask = append(fieldMask, tenantpb.TenantSettingsFieldMask_TENANT_SETTINGS_FIELD_WORKSPACE_NAME)
+	}
+	updateRequest.FieldsMask = fieldMask
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := utils.CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {

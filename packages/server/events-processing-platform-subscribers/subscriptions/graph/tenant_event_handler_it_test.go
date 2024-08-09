@@ -2,6 +2,8 @@ package graph
 
 import (
 	"context"
+	"testing"
+
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -13,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
 	tenantpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/tenant"
 	"github.com/stretchr/testify/require"
-	"testing"
 )
 
 func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
@@ -127,9 +128,18 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 			BaseCurrency:         neo4jenum.CurrencyAUD.String(),
 			InvoicingEnabled:     true,
 			InvoicingPostpaid:    true,
+			WorkspaceLogo:        "workspaceLogo",
+			WorkspaceName:        "workspaceName",
 		},
 		timeNow,
-		[]string{},
+		[]string{
+			event.FieldMaskLogoRepositoryFileId,
+			event.FieldMaskBaseCurrency,
+			event.FieldMaskInvoicingEnabled,
+			event.FieldMaskInvoicingPostpaid,
+			event.FieldMaskWorkspaceLogo,
+			event.FieldMaskWorkspaceName,
+		},
 	)
 	require.Nil(t, err)
 
@@ -155,4 +165,6 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 	require.Equal(t, true, tenantSettingsEntity.InvoicingEnabled)
 	require.Equal(t, true, tenantSettingsEntity.InvoicingPostpaid)
 	require.Equal(t, neo4jenum.CurrencyAUD, tenantSettingsEntity.BaseCurrency)
+	require.Equal(t, "workspaceLogo", tenantSettingsEntity.WorkspaceLogo)
+	require.Equal(t, "workspaceName", tenantSettingsEntity.WorkspaceName)
 }

@@ -23,6 +23,8 @@ type TenantSettings {
     baseCurrency:           Currency
     billingEnabled:         Boolean!
     opportunityStages:      [TenantSettingsOpportunityStageConfiguration!]!
+    workspaceLogo:          String
+    workspaceName:          String
 
     """
     Deprecated
@@ -198,9 +200,14 @@ input TenantBillingProfileUpdateInput {
 }
 
 input TenantSettingsInput {
-    patch:                  Boolean
+    """
+    Deprecated
+    """
+    patch:                  Boolean @deprecated(reason: "Not used")
     logoUrl:                String
     logoRepositoryFileId:   String
     baseCurrency:           Currency
+    workspaceLogo:          String
+    workspaceName:          String
     billingEnabled:         Boolean
 }

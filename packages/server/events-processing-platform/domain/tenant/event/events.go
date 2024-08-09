@@ -30,6 +30,8 @@ const (
 	FieldMaskBaseCurrency         = "baseCurrency"
 	FieldMaskInvoicingEnabled     = "invoicingEnabled"
 	FieldMaskInvoicingPostpaid    = "invoicingPostpaid"
+	FieldMaskWorkspaceLogo        = "workspaceLogo"
+	FieldMaskWorkspaceName        = "workspaceName"
 
 	FieldMaskBankAccountBankName            = "bankAccountBankName"
 	FieldMaskBankAccountBankTransferEnabled = "bankAccountBankTransferEnabled"

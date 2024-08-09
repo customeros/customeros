@@ -82,6 +82,8 @@ enum TenantSettingsFieldMask {
   TENANT_SETTINGS_FIELD_INVOICING_POSTPAID = 4;
   TENANT_SETTINGS_FIELD_LOGO_REPOSITORY_FILE_ID = 5;
   TENANT_SETTINGS_FIELD_BASE_CURRENCY = 6;
+  TENANT_SETTINGS_FIELD_WORKSPACE_LOGO = 7;
+  TENANT_SETTINGS_FIELD_WORKSPACE_NAME= 8;
 }
 
 message UpdateTenantSettingsRequest {
@@ -95,6 +97,8 @@ message UpdateTenantSettingsRequest {
   bool invoicingPostpaid = 10;
   string logoRepositoryFileId = 11;
   string baseCurrency = 12;
+  string workspaceLogo = 13;
+  string workspaceName = 14;
 }
 
 message AddBankAccountGrpcRequest {
