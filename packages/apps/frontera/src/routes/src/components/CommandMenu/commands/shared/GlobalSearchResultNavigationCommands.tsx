@@ -131,7 +131,7 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
           >
             <div className='flex items-center'>
               <Avatar
-                size='xs'
+                size='xxs'
                 textSize='xs'
                 name={org.name}
                 className='mr-2'

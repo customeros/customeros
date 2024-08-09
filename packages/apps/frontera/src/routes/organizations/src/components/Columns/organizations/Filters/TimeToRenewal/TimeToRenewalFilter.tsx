@@ -69,10 +69,11 @@ export const TimeToRenewalFilter = observer(() => {
       />
       <div className='flex justify-between'>
         <div className='flex flex-col'>
-          <label className='font-semibold'>From</label>
+          <label className='font-semibold text-sm'>From</label>
           <div className='flex items-center'>
             <Calendar className='mr-1 text-gray-500' />
             <DatePickerUnderline
+              size='sm'
               value={filter.value[0]}
               onChange={(value) => {
                 if (value) handleChange(value, false);
@@ -81,10 +82,11 @@ export const TimeToRenewalFilter = observer(() => {
           </div>
         </div>
         <div className='flex flex-col'>
-          <label className='font-semibold'>To</label>
+          <label className='font-semibold text-sm'>To</label>
           <div className='flex items-center'>
             <Calendar className='mr-1 text-gray-500' />
             <DatePickerUnderline
+              size='sm'
               value={filter.value[1]}
               minDate={new Date(filter.value[0])}
               onChange={(value) => {

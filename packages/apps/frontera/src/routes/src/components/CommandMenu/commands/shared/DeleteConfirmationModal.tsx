@@ -32,10 +32,20 @@ export const DeleteConfirmationModal = observer(() => {
     store.ui.commandMenu.clearCallback();
   };
 
+  const oppoortunityOfOrgSelected = store.opportunities
+    .toArray()
+    .filter((o) => o.value.organization?.metadata.id === context.ids[0]);
+
+  const oppotunityIdOfOrgSelected = oppoortunityOfOrgSelected.map(
+    (o) => o.value.id,
+  );
+
   const handleConfirm = () => {
     match(context.entity)
       .with('Organization', () => {
         store.organizations.hide(context.ids as string[]);
+        store.opportunities.archive(oppotunityIdOfOrgSelected[0]);
+
         context.callback?.();
       })
       .with('Organizations', () => {
@@ -72,7 +82,7 @@ export const DeleteConfirmationModal = observer(() => {
     )
     .with(
       'Opportunity',
-      () => `Archive ${(entity as OpportunityStore)?.value.name}`,
+      () => `Archive ${(entity as OpportunityStore)?.value.name} ?`,
     )
     .with(
       'TableViewDef',

@@ -43,7 +43,9 @@ export const SetOpportunityNextSteps = observer(() => {
         <Editor
           size='md'
           usePlainText
+          className='cursor-text'
           namespace='opportunity-next-step'
+          placeholderClassName='cursor-text'
           onChange={(html) => setValue(extractPlainText(html))}
           defaultHtmlValue={convertPlainTextToHtml(
             opportunity?.value?.nextSteps ?? '',
@@ -56,7 +58,7 @@ export const SetOpportunityNextSteps = observer(() => {
           leftAccessory={<InfoCircle />}
           className='data-[selected=true]:bg-white'
         >
-          Use <code>⌘ + Enter</code> to save.
+          Use <code className='text-[18px] mt-[4px]'>⌘ </code>+ Enter to save
         </CommandItem>
       </Command.List>
     </Command>

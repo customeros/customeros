@@ -8,6 +8,7 @@ import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import { DataSource, Tag as TagType } from '@graphql/types';
 import {
   Command,
@@ -179,6 +180,10 @@ export const ChangeTags = observer(() => {
 
       return 0;
     });
+
+  useModKey('Enter', () => {
+    store.ui.commandMenu.setOpen(false);
+  });
 
   return (
     <Command label='Change or add tags...'>

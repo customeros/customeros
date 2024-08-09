@@ -52,8 +52,8 @@ export const EditEmail = observer(() => {
     <Command>
       <CommandInput
         label={label}
+        value={value || ''}
         placeholder='Edit email'
-        value={emailAdress || ''}
         onValueChange={(value) => setValue(value)}
       />
       <Command.List>

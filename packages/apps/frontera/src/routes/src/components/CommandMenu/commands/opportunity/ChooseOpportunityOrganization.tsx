@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { Avatar } from '@ui/media/Avatar';
 import { useStore } from '@shared/hooks/useStore';
 import { InternalType, InternalStage } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
@@ -14,7 +15,9 @@ export const ChooseOpportunityOrganization = observer(() => {
   const filteredOrganizations =
     search.length > 0
       ? store.organizations.toComputedArray((arr) => {
-          return arr.filter((org) => org.value.name.includes(search));
+          return arr.filter((org) =>
+            org.value.name.toLowerCase().includes(search),
+          );
         })
       : [];
 
@@ -46,14 +49,28 @@ export const ChooseOpportunityOrganization = observer(() => {
         label='Organization'
         placeholder='Choose organization'
         onValueChange={(v) =>
-          setSearch(v.normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+          setSearch(
+            v
+              .toLowerCase()
+              .normalize('NFD')
+              .replace(/[\u0300-\u036f]/g, ''),
+          )
         }
       />
 
       <Command.List>
         {filteredOrganizations.map((org) => (
           <CommandItem key={org.getId()} onSelect={handleSelect(org.getId())}>
-            {org.value.name}
+            <div className='flex items-center'>
+              <Avatar
+                size='xxs'
+                className='mr-2'
+                name={org.value.name}
+                variant='outlineSquare'
+                src={org.value.icon || ''}
+              />
+              {org.value.name}
+            </div>
           </CommandItem>
         ))}
       </Command.List>
