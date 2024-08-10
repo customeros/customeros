@@ -91,7 +91,13 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	opportunitiesTableViewDeifnition, err := DefaultTableViewDefinitionOpportunities(span)
+	opportunitiesTableViewDefinition, err := DefaultTableViewDefinitionOpportunities(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
+	contractsTableViewDefinition, err := DefaultTableViewDefinitionContracts(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
@@ -111,7 +117,8 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		churnTableViewDefinition,
 		contactsTableViewDefinition,
 		targetOrganizationContactsTableViewDefinition,
-		opportunitiesTableViewDeifnition,
+		opportunitiesTableViewDefinition,
+		contractsTableViewDefinition,
 	}
 }
 
@@ -437,6 +444,29 @@ func DefaultTableViewDefinitionOpportunities(span opentracing.Span) (postgresEnt
 	}, nil
 }
 
+func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := DefaultColumns(model.TableIDTypeContracts.String())
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeContracts.String(),
+		TableId:     model.TableIDTypeContracts.String(),
+		Name:        "Contracts",
+		ColumnsJson: string(jsonData),
+		Order:       7,
+		Icon:        "Signature",
+		Filters:     ``,
+		Sorting:     ``,
+		IsPreset:    true,
+		IsShared:    false,
+	}, nil
+}
+
 func DefaultColumns(tableId string) postgresEntity.Columns {
 	switch tableId {
 	case model.TableIDTypeChurn.String():
@@ -656,6 +686,19 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 3, ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Committed", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"externalStage","value":"STAGE3"}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"internalStage","value":"OPEN"}}]}`},
 				{ColumnId: 4, ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Won", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"internalStage","value":"CLOSED_WON"}}]}`},
 				{ColumnId: 5, ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Lost", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"internalStage","value":"CLOSED_LOST"}}]}`},
+			},
+		}
+	case model.TableIDTypeContracts.String():
+		return postgresEntity.Columns{
+			Columns: []postgresEntity.ColumnView{
+				{ColumnId: 1, ColumnType: model.ColumnViewTypeContractsName.String(), Width: 100, Visible: true, Name: "Name", Filter: ""},
+				{ColumnId: 2, ColumnType: model.ColumnViewTypeContractsEnded.String(), Width: 100, Visible: true, Name: "Ended", Filter: ""},
+				{ColumnId: 3, ColumnType: model.ColumnViewTypeContractsPeriod.String(), Width: 100, Visible: true, Name: "Period", Filter: ""},
+				{ColumnId: 4, ColumnType: model.ColumnViewTypeContractsSignDate.String(), Width: 100, Visible: true, Name: "Sign Date", Filter: ""},
+				{ColumnId: 5, ColumnType: model.ColumnViewTypeContractsCurrency.String(), Width: 100, Visible: true, Name: "Currency", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeContractsStatus.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
+				{ColumnId: 7, ColumnType: model.ColumnViewTypeContractsRenewal.String(), Width: 100, Visible: true, Name: "Renewal", Filter: ""},
+				{ColumnId: 8, ColumnType: model.ColumnViewTypeContractsLtv.String(), Width: 100, Visible: true, Name: "LTV", Filter: ""},
 			},
 		}
 	}
