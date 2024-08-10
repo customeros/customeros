@@ -7,6 +7,7 @@ COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY events-processing-proto/. ./events-processing-proto/
 COPY events/. ./events/
 COPY validation-api/. ./validation-api/
+COPY enrichment-api/. ./enrichment-api/
 COPY customer-os-api/. ./customer-os-api
 
 WORKDIR /app/customer-os-api
