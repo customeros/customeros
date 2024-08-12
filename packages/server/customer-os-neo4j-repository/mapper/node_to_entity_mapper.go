@@ -12,6 +12,21 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+func MapDbNodeToWorkspaceEntity(dbNode dbtype.Node) *entity.WorkspaceEntity {
+	props := utils.GetPropsFromNode(dbNode)
+	domain := entity.WorkspaceEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Name:          utils.GetStringPropOrEmpty(props, "domain"),
+		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &domain
+}
+
 func MapDbNodeToPlayerEntity(node neo4j.Node) *entity.PlayerEntity {
 	props := utils.GetPropsFromNode(node)
 

@@ -280,9 +280,6 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 	domain := commonUtils.ExtractDomain(signInRequest.LoggedInEmail)
 	span.LogFields(tracingLog.String("domain", domain))
 
-	var tenantName *string
-	var err error
-
 	isPersonalEmail := false
 	//check if the user is using a personal email provider
 	for _, personalEmailProviderItem := range personalEmailProvider {
@@ -320,28 +317,28 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 				}
 
 				tenantFromLabel := model2.GetTenantFromLabels(usersDb[0].Node.Labels, model2.NodeLabelUser)
-				tenantName = &tenantFromLabel
 
-				if tenantName == nil || *tenantName == "" {
+				if tenantFromLabel == "" {
 					tracing.TraceErr(span, fmt.Errorf("tenant not found"))
 					return nil, false, fmt.Errorf("tenant not found")
 				}
+
+				span.LogFields(tracingLog.String("tenantIdentifiedFromPlayer", tenantFromLabel))
+				return &tenantFromLabel, false, nil
 			}
 		} else {
 			span.LogFields(tracingLog.Object("playerIdentified", false))
 		}
 	} else {
-		tenantName, err = services.CustomerOsClient.GetTenantByWorkspace(&model.WorkspaceInput{
-			Name:     domain,
-			Provider: signInRequest.Provider,
-		})
+		tenantNode, err := services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, signInRequest.Provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
 		}
-		if tenantName != nil {
-			span.LogFields(tracingLog.String("tenantIdentifiedSameWorkspace", *tenantName))
-			return tenantName, false, nil
+		if tenantNode != nil {
+			tenant := neo4jmapper.MapDbNodeToTenantEntity(tenantNode)
+			span.LogFields(tracingLog.String("tenantIdentifiedSameWorkspace", tenant.Name))
+			return &tenant.Name, false, nil
 		}
 
 		//tenant not found by the requested login info, try to find it by another workspace with the same domain
@@ -351,60 +348,63 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		} else if signInRequest.Provider == "azure-ad" {
 			provider = "google"
 		}
-		tenantName, err = services.CustomerOsClient.GetTenantByWorkspace(&model.WorkspaceInput{
-			Name:     domain,
-			Provider: provider,
-		})
+		tenantNode, err = services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantForWorkspaceProvider(ctx, domain, provider)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, false, err
 		}
 
-		if tenantName != nil {
-			span.LogFields(tracingLog.String("tenantIdentifiedDifferentWorkspace", *tenantName))
+		if tenantNode != nil {
+			tenant := neo4jmapper.MapDbNodeToTenantEntity(tenantNode)
+			span.LogFields(tracingLog.String("tenantIdentifiedDifferentWorkspace", tenant.Name))
 
-			err = createWorkspaceInTenant(ginContext, services.CustomerOsClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
+			_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neo4jentity.WorkspaceEntity{
+				Name:     domain,
+				Provider: signInRequest.Provider,
+			}, tenant.Name)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, false, err
 			}
 
-			return tenantName, false, nil
+			return &tenant.Name, false, nil
 		}
 	}
 
-	if tenantName == nil {
-		var tenantStr string
-		if isPersonalEmail {
-			tenantStr = utils.GenerateName()
-		} else {
-			tenantStr = utils.Sanitize(domain)
-		}
-
-		span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
-
-		tenantName, err = createTenant(services.CustomerOsClient, tenantStr, APP_SOURCE)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, false, err
-		}
-
-		if !isPersonalEmail {
-			err = createWorkspaceInTenant(ginContext, services.CustomerOsClient, *tenantName, signInRequest.Provider, domain, APP_SOURCE)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, false, err
-			}
-		}
-
-		if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
-			commonUtils.SendSlackMessage(ctx, config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
-		}
-
-		return tenantName, true, nil
+	var tenantStr string
+	if isPersonalEmail {
+		tenantStr = utils.GenerateName()
 	} else {
-		return tenantName, false, nil
+		tenantStr = utils.Sanitize(domain)
 	}
+
+	span.LogFields(tracingLog.String("newTenantCreationWith", tenantStr))
+
+	tenantEntity, err := services.CommonServices.TenantService.Merge(ctx, neo4jentity.TenantEntity{
+		Name: tenantStr,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, false, err
+	}
+
+	if !isPersonalEmail {
+		_, err := services.CommonServices.WorkspaceService.MergeToTenant(ctx, neo4jentity.WorkspaceEntity{
+			Name:      domain,
+			Provider:  signInRequest.Provider,
+			AppSource: APP_SOURCE,
+		}, tenantEntity.Name)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, false, err
+		}
+	}
+
+	if config.Slack.NotifyNewTenantRegisteredWebhook != "" {
+		commonUtils.SendSlackMessage(ctx, config.Slack.NotifyNewTenantRegisteredWebhook, tenantStr+" tenant registered by "+signInRequest.LoggedInEmail)
+	}
+
+	return &tenantEntity.Name, true, nil
 }
 
 func validateRequestAtProvider(c context.Context, config *config.Config, signInRequest model.SignInRequest) (*string, *string, error) {
@@ -452,31 +452,6 @@ func validateRequestAtProvider(c context.Context, config *config.Config, signInR
 		tracing.TraceErr(nil, fmt.Errorf("provider not supported"))
 		return nil, nil, fmt.Errorf("provider not supported")
 	}
-}
-
-func createTenant(cosClient service.CustomerOsClient, tenant string, appSource string) (*string, error) {
-	tenant, err := cosClient.MergeTenant(&model.TenantInput{
-		Name:      tenant,
-		AppSource: &appSource})
-	if err != nil {
-		return nil, err
-	}
-	return &tenant, nil
-}
-
-func createWorkspaceInTenant(c *gin.Context, cosClient service.CustomerOsClient, tenant, provider, domain string, appSource string) error {
-	mergeWorkspaceRes, err := cosClient.MergeTenantToWorkspace(&model.WorkspaceInput{
-		Name:      domain,
-		Provider:  provider,
-		AppSource: &appSource,
-	}, tenant)
-	if err != nil {
-		return err
-	}
-	if !mergeWorkspaceRes {
-		return fmt.Errorf("unable to merge workspace")
-	}
-	return nil
 }
 
 func getUserInfoFromGoogle(c context.Context, config *config.Config, signInRequest model.SignInRequest) (*googleOauth.Userinfo, error) {

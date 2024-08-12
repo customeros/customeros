@@ -160,7 +160,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		createContractRequest.Currency = contractDetails.Input.Currency.String()
 	} else {
 		// if not provided, get default currency from tenant settings
-		tenantSettingsEntity, err := s.services.TenantService.GetTenantSettings(ctx)
+		tenantSettingsEntity, err := s.services.CommonServices.TenantService.GetTenantSettings(ctx)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
@@ -170,7 +170,7 @@ func (s *contractService) createContractWithEvents(ctx context.Context, contract
 		}
 	}
 
-	tenantBillingProfileEntity, err := s.services.TenantService.GetDefaultTenantBillingProfile(ctx)
+	tenantBillingProfileEntity, err := s.services.CommonServices.TenantService.GetDefaultTenantBillingProfile(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", err

@@ -1,5 +1,0 @@
-mutation CreateTenant ($name: String!) {
-  tenant_Merge(tenant: {
-        name: $name
-       })
-}

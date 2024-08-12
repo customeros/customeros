@@ -146,6 +146,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.Tracking{},
 		&entity.EnrichDetailsPreFilterTracking{},
 		&entity.EnrichDetailsTracking{},
+		&entity.TenantSettings{},
 		&entity.TenantSettingsOpportunityStage{},
 		&entity.TenantSettingsMailbox{},
 		&entity.FlowSequenceStepTemplateVariable{},

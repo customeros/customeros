@@ -74,6 +74,7 @@ type Repositories struct {
 	UserReadRepository                    UserReadRepository
 	UserWriteRepository                   UserWriteRepository
 	WorkspaceReadRepository               WorkspaceReadRepository
+	WorkspaceWriteRepository              WorkspaceWriteRepository
 }
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
@@ -147,6 +148,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		UserReadRepository:                    NewUserReadRepository(driver, neo4jDatabase),
 		UserWriteRepository:                   NewUserWriteRepository(driver, neo4jDatabase),
 		WorkspaceReadRepository:               NewWorkspaceReadRepository(driver, neo4jDatabase),
+		WorkspaceWriteRepository:              NewWorkspaceWriteRepository(driver, neo4jDatabase),
 	}
 	return &repositories
 }

@@ -163,7 +163,6 @@ type SourceData struct {
 
 type TenantDataInjector interface {
 	InjectTenantData(context context.Context, tenant, username string, sourceData *SourceData) error
-	CleanupTenantData(context context.Context, tenant, username, reqTenant, reqConfirmTenant string) error
 }
 
 type tenantDataInjector struct {
@@ -793,13 +792,6 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 	}
 
 	return nil
-}
-
-func (t *tenantDataInjector) CleanupTenantData(ctx context.Context, tenant, username, reqTenant, reqConfirmTenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantDataInjector.CleanupTenantData")
-	defer span.Finish()
-
-	return t.services.CustomerOsClient.HardDeleteTenant(ctx, tenant, username, reqTenant, reqConfirmTenant)
 }
 
 func toParticipantInputArr(from []string, participantType *string) []cosModel.InteractionEventParticipantInput {

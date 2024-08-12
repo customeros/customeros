@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -95,6 +96,8 @@ type TenantWriteRepository interface {
 	UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error
 
 	HardDeleteTenant(ctx context.Context, tenant string) error
+
+	LinkWithWorkspace(ctx context.Context, tenant string, workspace neo4jentity.WorkspaceEntity) (bool, error)
 }
 
 type tenantWriteRepository struct {
@@ -465,4 +468,39 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 	}
 
 	return err
+}
+
+func (r *tenantWriteRepository) LinkWithWorkspace(ctx context.Context, tenant string, workspace neo4jentity.WorkspaceEntity) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.LinkWithWorkspace")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+	query := `
+			MATCH (t:Tenant {name:$tenant})
+			MATCH (w:Workspace {name:$name, provider:$provider})
+			WHERE NOT ()-[:HAS_WORKSPACE]->(w)
+			CREATE (t)-[:HAS_WORKSPACE]->(w)
+			RETURN t`
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant":   tenant,
+				"name":     workspace.Name,
+				"provider": workspace.Provider,
+			})
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+	if err != nil {
+		return false, err
+	}
+	convertedResult, isOk := result.([]*dbtype.Node)
+	if !isOk {
+		return false, errors.New("unexpected result type")
+	}
+	if len(convertedResult) == 0 {
+		return false, nil
+	}
+	return true, nil
 }
