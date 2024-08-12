@@ -52,6 +52,7 @@ type Repositories struct {
 	CacheEmailValidationRepository           CacheEmailValidationRepository
 	CacheEmailValidationDomainRepository     CacheEmailValidationDomainRepository
 	StatsApiCallsRepository                  StatsApiCallsRepository
+	CosApiEnrichPersonTempResultRepository   CosApiEnrichPersonTempResultRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -102,6 +103,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		CacheEmailValidationRepository:           NewCacheEmailValidationRepository(db),
 		CacheEmailValidationDomainRepository:     NewCacheEmailValidationDomainRepository(db),
 		StatsApiCallsRepository:                  NewStatsApiCallsRepository(db),
+		CosApiEnrichPersonTempResultRepository:   NewCosApiEnrichPersonTempResultRepository(db),
 	}
 
 	return repositories
@@ -146,7 +148,6 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.Tracking{},
 		&entity.EnrichDetailsPreFilterTracking{},
 		&entity.EnrichDetailsTracking{},
-		&entity.TenantSettings{},
 		&entity.TenantSettingsOpportunityStage{},
 		&entity.TenantSettingsMailbox{},
 		&entity.FlowSequenceStepTemplateVariable{},
@@ -161,7 +162,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.CacheIpHunter{},
 		&entity.CacheEmailValidation{},
 		&entity.CacheEmailValidationDomain{},
-		&entity.StatsApiCalls{})
+		&entity.StatsApiCalls{},
+		&entity.CosApiEnrichPersonTempResult{})
 	if err != nil {
 		panic(err)
 	}

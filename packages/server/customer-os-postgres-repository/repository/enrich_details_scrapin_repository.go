@@ -19,6 +19,7 @@ type EnrichDetailsScrapInRepository interface {
 	Create(ctx context.Context, data entity.EnrichDetailsScrapIn) (*entity.EnrichDetailsScrapIn, error)
 	GetAllByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) ([]entity.EnrichDetailsScrapIn, error)
 	GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
+	GetById(ctx context.Context, id uint64) (*entity.EnrichDetailsScrapIn, error)
 }
 
 func NewEnrichDetailsScrapInRepository(gormDb *gorm.DB) EnrichDetailsScrapInRepository {
@@ -66,6 +67,22 @@ func (r enrichDetailsScrapInRepository) Create(ctx context.Context, data entity.
 	data.UpdatedAt = utils.Now()
 	if err := r.db.WithContext(ctx).Create(&data).Error; err != nil {
 		return nil, err
+	}
+
+	return &data, nil
+}
+
+func (r enrichDetailsScrapInRepository) GetById(ctx context.Context, id uint64) (*entity.EnrichDetailsScrapIn, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetById")
+	defer span.Finish()
+
+	var data entity.EnrichDetailsScrapIn
+	err := r.db.Where("id = ?", id).First(&data).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Return nil if no record found
+		}
+		return nil, err // Return other errors as usual
 	}
 
 	return &data, nil

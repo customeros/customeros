@@ -31,6 +31,7 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 
 func registerEnrichRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person", enrichV1Path), services, cache, rest.EnrichPerson(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person/results/:id", enrichV1Path), services, cache, rest.EnrichPersonCallback(services))
 }
 
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {

@@ -6,6 +6,7 @@ type FindWorkEmailRequest struct {
 	LinkedinUrl   string `json:"linkedinUrl"`
 	FirstName     string `json:"firstName"`
 	LastName      string `json:"lastName"`
+	CompanyName   string `json:"companyName"`
 	CompanyDomain string `json:"companyDomain"`
 }
 

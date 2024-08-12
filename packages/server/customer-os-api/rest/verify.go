@@ -12,8 +12,10 @@ import (
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"net"
 	"net/http"
 	"time"
@@ -259,42 +261,9 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// prepare validation api request
-		requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequest{
-			Email: emailAddress,
-		})
+		// call validation api
+		result, err := callApiValidateEmail(ctx, services, span, emailAddress)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
-			return
-		}
-		requestBody := []byte(string(requestJSON))
-		req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
-			return
-		}
-		// Inject span context into the HTTP request
-		req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
-
-		// Set the request headers
-		req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
-		req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
-
-		// Make the HTTP request
-		client := &http.Client{}
-		response, err := client.Do(req)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
-		}
-		defer response.Body.Close()
-
-		var result validationmodel.ValidateEmailResponse
-		err = json.NewDecoder(response.Body).Decode(&result)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
 			return
 		}
@@ -335,4 +304,44 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 
 		c.JSON(http.StatusOK, emailVerificationResponse)
 	}
+}
+
+func callApiValidateEmail(ctx context.Context, services *service.Services, span opentracing.Span, emailAddress string) (*validationmodel.ValidateEmailResponse, error) {
+	// prepare validation api request
+	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequest{
+		Email: emailAddress,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+		return nil, err
+	}
+	requestBody := []byte(string(requestJSON))
+	req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		return nil, err
+	}
+	// Inject span context into the HTTP request
+	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
+
+	// Set the request headers
+	req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
+	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	var result validationmodel.ValidateEmailResponse
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
+		return nil, err
+	}
+	return &result, nil
 }
