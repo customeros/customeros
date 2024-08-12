@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
@@ -20,10 +21,15 @@ export const DeleteConfirmationModal = observer(() => {
 
   const entity = match(context.entity)
     .returnType<
-      OpportunityStore | OrganizationStore | TableViewDefStore | undefined
+      | OpportunityStore
+      | OrganizationStore
+      | TableViewDefStore
+      | ContactStore
+      | undefined
     >()
     .with('Opportunity', () => store.opportunities.value.get(context.ids?.[0]))
     .with('Organization', () => store.organizations.value.get(context.ids?.[0]))
+    .with('Contact', () => store.contacts.value.get(context.ids?.[0]))
     .with('TableViewDef', () => store.tableViewDefs.getById(context.ids?.[0]))
     .otherwise(() => undefined);
 
@@ -51,6 +57,7 @@ export const DeleteConfirmationModal = observer(() => {
       .with('Organizations', () => {
         store.organizations.hide(context.ids as string[]);
       })
+      .with('Contact', () => store.contacts.archive(context.ids))
       .with('Opportunity', () => {
         store.opportunities.archive(context.ids?.[0]);
       })
@@ -83,6 +90,12 @@ export const DeleteConfirmationModal = observer(() => {
     .with(
       'Opportunity',
       () => `Archive ${(entity as OpportunityStore)?.value.name}?`,
+    )
+
+    .with('Contact', () =>
+      context.ids?.length > 1
+        ? `Archive ${context.ids?.length} contacts?`
+        : `Archive ${(entity as ContactStore)?.value.name}?`,
     )
     .with(
       'TableViewDef',

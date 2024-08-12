@@ -10,6 +10,7 @@ import { OnChangeFn } from '@tanstack/table-core';
 import { InvoiceStore } from '@store/Invoices/Invoice.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
@@ -254,42 +255,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
   }, [tableViewDef?.value.id]);
 
-  const selectedIds = Object.keys(selection);
-
-  if (tableType === TableViewType.Organizations) {
-    if (selectedIds.length === 1) {
-      store.ui.commandMenu.setType('OrganizationCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Organization',
-        ids: selectedIds,
-      });
-    }
-
-    if (selectedIds.length > 1) {
-      store.ui.commandMenu.setType('OrganizationBulkCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Organizations',
-        ids: selectedIds,
-      });
-    }
-  } else {
-    if (selectedIds.length === 1) {
-      store.ui.commandMenu.setType('ContactCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Contact',
-        ids: selectedIds,
-      });
-    }
-
-    if (selectedIds.length > 1) {
-      store.ui.commandMenu.setType('ContactBulkCommands');
-      store.ui.commandMenu.setContext({
-        entity: 'Contact',
-        ids: selectedIds,
-      });
-    }
-  }
-
   useEffect(() => {
     store.ui.setSearchCount(data.length);
     store.ui.setFilteredTable(data);
@@ -346,7 +311,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     setFocusIndex(index);
 
-    // Todo replace with match when command k actions are available for other table types
     if (tableType === TableViewType.Organizations) {
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('OrganizationHub');
@@ -465,9 +429,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
-              onMerge={() => {
-                store.ui.commandMenu.setOpen(true);
-                store.ui.commandMenu.setType('MergeConfirmationModal');
+              handleOpen={(type: CommandMenuType) => {
+                handleOpenCommandKMenu();
+                store.ui.commandMenu.setType(type);
               }}
               enableKeyboardShortcuts={
                 !isEditing &&
@@ -479,22 +443,33 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
                 store.ui.commandMenu.setCallback(() =>
                   table.resetRowSelection(),
                 );
-                store.ui.commandMenu.setOpen(true);
+                handleOpenCommandKMenu();
                 store.ui.commandMenu.setType('DeleteConfirmationModal');
               }}
             />
           ) : (
             <ContactTableActions
+              focusedId={focusedId}
               onAddTags={store.contacts.updateTags}
-              onHideContacts={store.contacts.archive}
               onOpenCommandK={handleOpenCommandKMenu}
               table={table as TableInstance<ContactStore>}
+              handleOpen={(type: CommandMenuType) => {
+                handleOpenCommandKMenu();
+                store.ui.commandMenu.setType(type);
+              }}
               enableKeyboardShortcuts={
                 !isSearching &&
                 !isFiltering &&
                 !isEditing &&
                 !isCommandMenuPrompted
               }
+              onHideContacts={() => {
+                store.ui.commandMenu.setCallback(() =>
+                  table.resetRowSelection(),
+                );
+                handleOpenCommandKMenu();
+                store.ui.commandMenu.setType('DeleteConfirmationModal');
+              }}
             />
           )
         }

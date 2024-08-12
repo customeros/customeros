@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { observer } from 'mobx-react-lite';
 
 import { Tag01 } from '@ui/media/icons/Tag01';
@@ -6,9 +8,12 @@ import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { OrganizationStage } from '@graphql/types';
+import { Delete } from '@ui/media/icons/Delete.tsx';
 import { Activity } from '@ui/media/icons/Activity';
+import { Command } from '@ui/media/icons/Command.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
@@ -37,14 +42,14 @@ export const OrganizationBulkCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeTags');
           }}
-          // rightAccessory={
-          //   <>
-          //     <Kbd className='px-1.5'>
-          //       <ArrowBlockUp className='size-3' />
-          //     </Kbd>
-          //     <Kbd className='px-1.5'>T</Kbd>
-          //   </>
-          // }
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='size-3' />
+              </Kbd>
+              <Kbd>T</Kbd>
+            </>
+          }
         >
           Change or add tags...
         </CommandItem>
@@ -98,16 +103,16 @@ export const OrganizationBulkCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
-          // rightAccessory={
-          //   <>
-          //     <Kbd className='px-1.5'>
-          //       <CommandIcon className='size-3' />
-          //     </Kbd>
-          //     <Kbd className='px-1.5'>
-          //       <Delete className='size-3' />
-          //     </Kbd>
-          //   </>
-          // }
+          rightAccessory={
+            <>
+              <Kbd>
+                <Command className='size-3' />
+              </Kbd>
+              <Kbd>
+                <Delete className='size-3' />
+              </Kbd>
+            </>
+          }
         >
           Archive org
         </CommandItem>
@@ -143,19 +148,20 @@ export const OrganizationBulkCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
-          // rightAccessory={
-          //   <>
-          //     <Kbd className='px-1.5'>
-          //       <ArrowBlockUp className='size-3' />
-          //     </Kbd>
-          //     <Kbd className='px-1.5'>O</Kbd>
-          //   </>
-          // }
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='size-3' />
+              </Kbd>
+              <Kbd>O</Kbd>
+            </>
+          }
         >
           Assign owner...
         </CommandItem>
 
         <CommandItem
+          rightAccessory={<Kbd>O</Kbd>}
           leftAccessory={<CoinsStacked01 />}
           keywords={organizationKeywords.create_new_opportunity}
           onSelect={() => {
