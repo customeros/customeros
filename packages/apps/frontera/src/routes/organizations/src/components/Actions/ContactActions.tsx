@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { useKey, useKeyBindings } from 'rooks';
+import { useKeys, useKeyBindings } from 'rooks';
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 
@@ -48,7 +48,7 @@ export const ContactTableActions = ({
     }
   }, [selectCount]);
 
-  useKey(
+  useKeys(
     ['Shift', 'T'],
     (e) => {
       e.stopPropagation();
@@ -57,7 +57,7 @@ export const ContactTableActions = ({
     },
     { when: enableKeyboardShortcuts },
   );
-  useKey(
+  useKeys(
     ['Shift', 'E'],
     (e) => {
       e.stopPropagation();
@@ -67,7 +67,7 @@ export const ContactTableActions = ({
     { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
   );
 
-  useKey(
+  useKeys(
     ['Shift', 'R'],
     (e) => {
       e.stopPropagation();

@@ -1,13 +1,18 @@
+import React from 'react';
+
 import { observer } from 'mobx-react-lite';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { User01 } from '@ui/media/icons/User01';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
+import { Delete } from '@ui/media/icons/Delete.tsx';
+import { Command } from '@ui/media/icons/Command.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { CommandItem } from '@ui/overlay/CommandMenu';
 import { Calculator } from '@ui/media/icons/Calculator';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
+import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
@@ -35,6 +40,14 @@ export const OpportunityCommands = observer(() => {
             'pipeline',
             'phase',
           ]}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>S</Kbd>
+            </>
+          }
         >
           Change stage...
         </CommandItem>
@@ -110,6 +123,14 @@ export const OpportunityCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('RenameOpportunityName');
           }}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>R</Kbd>
+            </>
+          }
           keywords={[
             'rename',
             'opportunity',
@@ -131,6 +152,14 @@ export const OpportunityCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>O</Kbd>
+            </>
+          }
         >
           Assign owner...
         </CommandItem>
@@ -148,6 +177,16 @@ export const OpportunityCommands = observer(() => {
             'hide',
             'deal',
           ]}
+          rightAccessory={
+            <>
+              <Kbd>
+                <Command className='size-3' />
+              </Kbd>
+              <Kbd>
+                <Delete className='size-3' />
+              </Kbd>
+            </>
+          }
         >
           Archive opportunity
         </CommandItem>
