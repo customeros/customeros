@@ -3173,23 +3173,6 @@ type WorkflowUpdateInput struct {
 	ActionParam1 *string `json:"actionParam1,omitempty"`
 }
 
-type Workspace struct {
-	ID            string     `json:"id"`
-	Name          string     `json:"name"`
-	Provider      string     `json:"provider"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	UpdatedAt     time.Time  `json:"updatedAt"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
-}
-
-type WorkspaceInput struct {
-	Name      string  `json:"name"`
-	Provider  string  `json:"provider"`
-	AppSource *string `json:"appSource,omitempty"`
-}
-
 type ActionType string
 
 const (
