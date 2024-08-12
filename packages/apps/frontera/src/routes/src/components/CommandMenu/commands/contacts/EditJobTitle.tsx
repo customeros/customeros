@@ -1,35 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 
 import { set } from 'lodash';
-import { CommandList } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 
+import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
-import { Command, CommandInput } from '@ui/overlay/CommandMenu';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const EditJobTitle = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
-  const [name, setName] = useState('');
   const selectedIds = context.ids;
   const contact = store.contacts.value.get(context.ids?.[0] as string);
 
   const contactJobTitle =
     contact?.value?.jobRoles?.map((jobRole) => jobRole.jobTitle)?.[0] ?? '';
+  const [name, setName] = useState(() => contactJobTitle);
 
   const label =
     selectedIds?.length === 1
       ? `Contact - ${contact?.value.name}`
       : `${selectedIds?.length} contacts`;
 
-  const handleChangeJobTitle = (jobTitle: string) => {
-    if (!context.ids?.[0]) return;
-
+  const handleChangeJobTitle = () => {
     if (!contact) return;
 
     if (selectedIds?.length === 1) {
       contact?.update((value) => {
-        set(value, 'jobRoles[0].jobTitle', jobTitle);
+        set(value, 'jobRoles[0].jobTitle', name);
 
         return value;
       });
@@ -46,25 +44,24 @@ export const EditJobTitle = observer(() => {
         }
       });
     }
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.setType('ContactCommands');
   };
-
-  useEffect(() => {
-    if (name.length !== 0) {
-      handleChangeJobTitle(name);
-    }
-  }, [name]);
 
   return (
     <Command label={label}>
       <CommandInput
         label={label}
+        value={name || ''}
         placeholder='Edit job title'
-        value={selectedIds.length === 1 ? contactJobTitle : name}
-        onValueChange={
-          selectedIds.length === 1 ? handleChangeJobTitle : setName
-        }
+        onValueChange={(value) => setName(value)}
       />
-      <CommandList></CommandList>
+      <Command.List>
+        <CommandItem
+          leftAccessory={<Edit03 />}
+          onSelect={handleChangeJobTitle}
+        >{`Rename job title to "${name}"`}</CommandItem>
+      </Command.List>
     </Command>
   );
 });

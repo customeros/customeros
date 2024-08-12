@@ -226,11 +226,22 @@ export class OrganizationStore extends Syncable<Organization> {
           userId: this.value.owner?.id || '',
         },
       );
+
+      const numberOfSelectedOrganizations =
+        this.root.ui.commandMenu.context.ids?.length;
+
       runInAction(() => {
-        this.root.ui.toastSuccess(
-          `Owner assigned to ${this.value.name}`,
-          'owner-update-success',
-        );
+        if (numberOfSelectedOrganizations === 1) {
+          this.root.ui.toastSuccess(
+            `Owner assigned to ${this.value.name}`,
+            'owner-update-success',
+          );
+        } else {
+          this.root.ui.toastSuccess(
+            `Owner assigned to ${numberOfSelectedOrganizations} organizations`,
+            'owner-update-success',
+          );
+        }
       });
     } catch (e) {
       runInAction(() => {

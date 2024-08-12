@@ -42,8 +42,11 @@ export const OrganizationTableActions = ({
   const [targetId, setTargetId] = useState<string | null>(null);
 
   const selection = table.getState().rowSelection;
+
   const selectedIds = Object.keys(selection);
-  const selectCount = selectedIds.length;
+
+  const selectCount = selectedIds?.length;
+
   const clearSelection = () => table.resetRowSelection();
 
   const handleMergeOrganizations = () => {
@@ -56,14 +59,15 @@ export const OrganizationTableActions = ({
   };
 
   useEffect(() => {
-    if (selectCount === 1) {
+    if (selectCount === 1 && focusedId === selectedIds[0]) {
       setTargetId(selectedIds[0]);
     }
 
     if (selectCount < 1) {
       setTargetId(null);
+      clearSelection();
     }
-  }, [selectCount]);
+  }, [selectCount, focusedId]);
 
   const moveToAllOrgs = () => {
     if (!selectCount && !focusedId) return;

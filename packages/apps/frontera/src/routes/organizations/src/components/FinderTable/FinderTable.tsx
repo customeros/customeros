@@ -468,16 +468,19 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
-              onHide={() => {
-                store.ui.commandMenu.setOpen(true);
-                store.ui.commandMenu.setType('DeleteConfirmationModal');
-              }}
               enableKeyboardShortcuts={
                 !isEditing &&
                 !isFiltering &&
                 !isSearching &&
                 !isCommandMenuPrompted
               }
+              onHide={() => {
+                store.ui.commandMenu.setCallback(() =>
+                  table.resetRowSelection(),
+                );
+                store.ui.commandMenu.setOpen(true);
+                store.ui.commandMenu.setType('DeleteConfirmationModal');
+              }}
             />
           ) : (
             <ContactTableActions

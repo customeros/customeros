@@ -8,6 +8,7 @@ import { cva, VariantProps } from 'class-variance-authority';
 const avatarBadgeSize = cva([], {
   variants: {
     badgeSize: {
+      xxs: ['w-[4px] h-[4px]'],
       xs: ['w-[6px] h-[6px]'],
       sm: ['w-[8px] h-[8px]'],
       md: ['w-[10px] h-[10px]'],
@@ -16,6 +17,7 @@ const avatarBadgeSize = cva([], {
       '2xl': ['w-[16px] h-[16px]'],
     },
     borderRadius: {
+      xxs: ['ring-[2px] ring-white'],
       xs: ['ring-[2px] ring-white'],
       sm: ['ring-[2px] ring-white'],
       md: ['ring-[2px] ring-white'],
@@ -24,6 +26,7 @@ const avatarBadgeSize = cva([], {
       '2xl': ['border-[8px] ring-white'],
     },
     badgePosition: {
+      xxs: ['transform -translate-x-[-12px] -translate-y-[-10px]'],
       xs: ['transform -translate-x-[-12px] -translate-y-[-10px]'],
       sm: ['transform -translate-x-[-12px] -translate-y-[-13px]'],
       md: ['transform -translate-x-[-20px] -translate-y-[-15px]'],
@@ -33,6 +36,7 @@ const avatarBadgeSize = cva([], {
     },
   },
   compoundVariants: [
+    { badgePosition: 'xxs', borderRadius: 'xxs', badgeSize: 'xxs' },
     {
       badgeSize: 'xs',
       borderRadius: 'xs',
@@ -91,7 +95,7 @@ const avatarStyle = cva(
           'ring-primary-100/50',
         ],
         roundedSquareSmall: ['rounded-sm', 'text-primary-700', 'bg-primary-50'],
-        roundedSquare: ['rounded-md', 'text-primary-700', 'bg-primary-50'],
+        roundedSquare: ['rounded-[4px]', 'text-primary-700', 'bg-primary-50'],
         roundedSquareShadowed: [
           'rounded-lg',
           'bg-primary-100',
@@ -123,6 +127,7 @@ const avatarStyle = cva(
       },
 
       size: {
+        xxs: ['w-4 h-4'],
         xs: ['w-6 h-6'],
         sm: ['w-8 h-8'],
         md: ['w-10 h-10'],
@@ -205,7 +210,7 @@ export const Avatar: React.FC<AvatarProps> = ({
           {...props}
           src={src}
           onLoadedData={handleImageLoad}
-          className={'h-full w-full relative rounded-[inherit] object-cover'}
+          className={'h-full w-full relative rounded-[inherit] object-cover '}
         />
       )}
       {icon && !name && !src && (

@@ -10,8 +10,12 @@ import { Columns03 } from '@ui/media/icons/Columns03';
 import { CommandItem } from '@ui/overlay/CommandMenu';
 import { Activity } from '@ui/media/icons/Activity.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
-import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
+import {
+  InternalType,
+  InternalStage,
+  OrganizationRelationship,
+} from '@graphql/types';
 import { organizationKeywords } from '@shared/components/CommandMenu/commands/organization/keywords.ts';
 import {
   CommandsContainer,
@@ -200,10 +204,15 @@ export const OrganizationCommands = observer(() => {
           leftAccessory={<CoinsStacked01 />}
           keywords={organizationKeywords.create_new_opportunity}
           onSelect={() => {
-            store.organizations.updateStage(
-              [organization?.id as string],
-              OrganizationStage.Engaged,
-            );
+            store.opportunities.create({
+              organization: organization?.value,
+              name: `${organization?.value.name}'s opportunity`,
+              internalType: InternalType.Nbo,
+              externalStage: String(
+                store.settings.tenant.value?.opportunityStages[0].value,
+              ),
+              internalStage: InternalStage.Open,
+            });
             store.ui.commandMenu.setOpen(false);
           }}
         >

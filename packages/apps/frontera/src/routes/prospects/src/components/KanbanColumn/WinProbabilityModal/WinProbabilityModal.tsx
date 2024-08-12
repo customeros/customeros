@@ -93,11 +93,11 @@ export const WinProbabilityModal = observer(
         <ModalContent>
           <ModalHeader>
             <p className='text-md font-semibold mb-1'>
-              Set win probability for stage, {columnName}
+              Set win probability for stage {columnName}
             </p>
             <p className='text-sm'>
               Based on historical data or projections, what percentage of
-              opportunities in the <b>{columnName}</b> stage is typically Won?
+              opportunities in the <b>{columnName}</b> stage is typically won?
             </p>
           </ModalHeader>
           <ModalBody className='flex flex-col gap-2'>

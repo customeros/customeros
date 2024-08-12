@@ -8,6 +8,7 @@ import { Plus } from '@ui/media/icons/Plus.tsx';
 import { Tag as TagType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import {
   Command,
   CommandItem,
@@ -102,7 +103,6 @@ export const EditPersonaTag = observer(() => {
       return c;
     });
 
-    // clear search
     setSearch('');
   };
 
@@ -126,6 +126,10 @@ export const EditPersonaTag = observer(() => {
 
       return 0;
     });
+
+  useModKey('Enter', () => {
+    store.ui.commandMenu.setOpen(false);
+  });
 
   return (
     <Command label='Change or add tags...'>

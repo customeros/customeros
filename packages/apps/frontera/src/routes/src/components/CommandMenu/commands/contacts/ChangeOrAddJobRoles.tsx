@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 
 import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
@@ -59,6 +60,10 @@ export const ChangeOrAddJobRoles = observer(() => {
       });
     }
   };
+
+  useModKey('Enter', () => {
+    store.ui.commandMenu.setOpen(false);
+  });
 
   return (
     <Command label='Edit job roles...'>
