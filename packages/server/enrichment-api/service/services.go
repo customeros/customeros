@@ -13,6 +13,7 @@ type Services struct {
 	Logger                logger.Logger
 	CommonServices        *commonservice.Services
 	PersonScrapeInService ScrapinPersonService
+	BettercontactService  BettercontactService
 }
 
 func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
@@ -21,6 +22,7 @@ func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWi
 	}
 	services.Logger = logger
 	services.PersonScrapeInService = NewPersonScrapeInService(config, services, logger)
+	services.BettercontactService = NewBettercontactService(config, services, logger)
 
 	return services
 }

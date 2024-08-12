@@ -16,7 +16,7 @@ import (
 )
 
 type ScrapinPersonService interface {
-	ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (*postgresentity.ScrapInPersonResponse, error)
+	ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *postgresentity.ScrapInPersonResponse, error)
 }
 
 type scrapinPersonService struct {
@@ -33,7 +33,7 @@ func NewPersonScrapeInService(config *config.Config, services *Services, log log
 	}
 }
 
-func (s scrapinPersonService) ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (*postgresentity.ScrapInPersonResponse, error) {
+func (s scrapinPersonService) ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *postgresentity.ScrapInPersonResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapinPersonService.ScrapInPersonProfile")
 	defer span.Finish()
 	span.LogFields(log.String("linkedInUrl", linkedInUrl))
@@ -41,25 +41,26 @@ func (s scrapinPersonService) ScrapInPersonProfile(ctx context.Context, linkedIn
 	scrapinPersonProfileData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, linkedInUrl, postgresentity.ScrapInFlowPersonProfile)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
-		return nil, err
+		return 0, nil, err
 	}
 
 	var data *postgresentity.ScrapInPersonResponse
+	var recordId uint64
 
 	// if cached data is missing or last time fetched > ttl refresh
-	if scrapinPersonProfileData == nil || scrapinPersonProfileData.UpdatedAt.AddDate(0, 0, s.config.ScrapinConfig.ScrapInTtlDays).Before(utils.Now()) {
+	if scrapinPersonProfileData == nil || scrapinPersonProfileData.UpdatedAt.AddDate(0, 0, s.config.ScrapinConfig.TtlDays).Before(utils.Now()) {
 
 		// get data from scrapin
 		if data, err = s.callScrapinPersonProfile(ctx, linkedInUrl); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
-			return nil, err
+			return 0, nil, err
 		}
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal data"))
-			return nil, err
+			return 0, nil, err
 		}
 		paramsAsString, err := json.Marshal(ScrapInPersonSearchRequestParams{
 			LinkedInUrl: linkedInUrl,
@@ -67,7 +68,7 @@ func (s scrapinPersonService) ScrapInPersonProfile(ctx context.Context, linkedIn
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal params"))
 		}
-		_, err = s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.Create(ctx, postgresentity.EnrichDetailsScrapIn{
+		dbRecord, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.Create(ctx, postgresentity.EnrichDetailsScrapIn{
 			Param1:        linkedInUrl,
 			Flow:          postgresentity.ScrapInFlowPersonProfile,
 			AllParamsJson: string(paramsAsString),
@@ -79,15 +80,19 @@ func (s scrapinPersonService) ScrapInPersonProfile(ctx context.Context, linkedIn
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save scrapin data in db"))
 		}
+		if dbRecord != nil {
+			recordId = dbRecord.ID
+		}
 	} else {
+		recordId = scrapinPersonProfileData.ID
 		// unmarshal cached data
 		if err = json.Unmarshal([]byte(scrapinPersonProfileData.Data), &data); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
-			return nil, err
+			return 0, nil, err
 		}
 	}
 
-	return data, nil
+	return recordId, data, nil
 }
 
 func (s *scrapinPersonService) callScrapinPersonProfile(ctx context.Context, linkedInUrl string) (*postgresentity.ScrapInPersonResponse, error) {
@@ -95,14 +100,14 @@ func (s *scrapinPersonService) callScrapinPersonProfile(ctx context.Context, lin
 	defer span.Finish()
 	span.LogFields(log.String("linkedInUrl", linkedInUrl))
 
-	baseUrl := s.config.ScrapinConfig.ScrapInApiUrl
+	baseUrl := s.config.ScrapinConfig.Url
 	if baseUrl == "" {
 		err := errors.New("ScrapIn URL not set")
 		tracing.TraceErr(span, err)
 		s.log.Errorf("ScrapIn URL not set")
 		return &postgresentity.ScrapInPersonResponse{}, err
 	}
-	scrapInApiKey := s.config.ScrapinConfig.ScrapInApiKey
+	scrapInApiKey := s.config.ScrapinConfig.ApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
 		tracing.TraceErr(span, err)

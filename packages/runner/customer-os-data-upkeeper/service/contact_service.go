@@ -747,7 +747,7 @@ func (s *contactService) requestBetterContactToFindEmail(ctx context.Context, de
 		return "", fmt.Errorf("failed to decode response body: %v", err)
 	}
 
-	err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
+	_, err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, entity.EnrichDetailsBetterContact{
 		RequestID:          responseBody.ID,
 		ContactFirstName:   details.ContactFirstName,
 		ContactLastName:    details.ContactLastName,

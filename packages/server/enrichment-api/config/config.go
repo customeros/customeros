@@ -12,20 +12,27 @@ import (
 )
 
 type Config struct {
-	ApiPort       string `env:"PORT" envDefault:"10007" validate:"required"`
-	MetricsPort   string `env:"PORT_METRICS" envDefault:"10007" validate:"required"`
-	Logger        logger.Config
-	Postgres      config.PostgresConfig
-	Neo4j         config.Neo4jConfig
-	Jaeger        tracing.JaegerConfig
-	Metrics       metrics.Config
-	ScrapinConfig ScrapinConfig
+	ApiPort             string `env:"PORT" envDefault:"10007" validate:"required"`
+	MetricsPort         string `env:"PORT_METRICS" envDefault:"10007" validate:"required"`
+	Logger              logger.Config
+	Postgres            config.PostgresConfig
+	Neo4j               config.Neo4jConfig
+	Jaeger              tracing.JaegerConfig
+	Metrics             metrics.Config
+	ScrapinConfig       ScrapinConfig
+	BetterContactConfig BetterContactConfig
 }
 
 type ScrapinConfig struct {
-	ScrapInApiUrl  string `env:"SCRAPIN_API_URL" envDefault:"https://api.scrapin.io" required:"true"`
-	ScrapInApiKey  string `env:"SCRAPIN_API_KEY" required:"true"`
-	ScrapInTtlDays int    `env:"SCRAPIN_TTL_DAYS" envDefault:"90" required:"true"`
+	Url     string `env:"SCRAPIN_API_URL" envDefault:"https://api.scrapin.io" required:"true"`
+	ApiKey  string `env:"SCRAPIN_API_KEY" required:"true"`
+	TtlDays int    `env:"SCRAPIN_TTL_DAYS" envDefault:"90" required:"true"`
+}
+
+type BetterContactConfig struct {
+	Url         string `env:"BETTER_CONTACT_API_URL" required:"true"`
+	ApiKey      string `env:"BETTER_CONTACT_API_KEY" required:"true"`
+	CallbackUrl string `env:"BETTER_CONTACT_CALLBACK_URL" required:"true"`
 }
 
 func InitConfig() (*Config, error) {
