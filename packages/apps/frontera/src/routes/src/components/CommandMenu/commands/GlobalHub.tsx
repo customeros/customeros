@@ -38,6 +38,15 @@ export const GlobalSharedCommands = observer(() => {
     store.ui.commandMenu.setOpen(false);
   };
 
+  document.addEventListener('keydown', (e) => {
+    if (e.type === 'keydown') {
+      if (e.metaKey && e.key === 'k' && e.shiftKey) {
+        store.ui.commandMenu.setType('GlobalHub');
+        store.ui.commandMenu.setOpen(true);
+      }
+    }
+  });
+
   return (
     <>
       <CommandItem
@@ -112,7 +121,7 @@ const KeyboardShortcut = ({ shortcut }: { shortcut: string }) => {
   return (
     <>
       <Kbd className='px-1.5'>G</Kbd>
-      <span className='text-gray-500'>then</span>
+      <span className='text-gray-500 text-[12px]'>then</span>
       <Kbd className='px-1.5'>{shortcut}</Kbd>
     </>
   );

@@ -245,6 +245,44 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
   };
 
+  const selectedIds = Object.keys(selection);
+
+  if (selectedIds.length > 0) {
+    if (tableType === TableViewType.Organizations) {
+      if (selectedIds.length === 1 && !isCommandMenuPrompted) {
+        store.ui.commandMenu.setType('OrganizationCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organization',
+          ids: selectedIds,
+        });
+      }
+
+      if (selectedIds.length > 1 && !isCommandMenuPrompted) {
+        store.ui.commandMenu.setType('OrganizationBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organizations',
+          ids: selectedIds,
+        });
+      }
+    } else {
+      if (selectedIds.length === 1 && !isCommandMenuPrompted) {
+        store.ui.commandMenu.setType('ContactCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selectedIds,
+        });
+      }
+
+      if (selectedIds.length > 1 && !isCommandMenuPrompted) {
+        store.ui.commandMenu.setType('ContactBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selectedIds,
+        });
+      }
+    }
+  }
+
   useEffect(() => {
     tableRef.current?.resetRowSelection();
 

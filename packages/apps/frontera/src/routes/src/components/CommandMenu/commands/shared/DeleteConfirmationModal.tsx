@@ -1,3 +1,4 @@
+import { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
@@ -18,6 +19,9 @@ export const DeleteConfirmationModal = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const navigate = useNavigate();
+
+  const confirmButtonRef = useRef<HTMLButtonElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
 
   const entity = match(context.entity)
     .returnType<
@@ -103,6 +107,10 @@ export const DeleteConfirmationModal = observer(() => {
     )
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
 
+  useEffect(() => {
+    closeButtonRef.current?.focus();
+  }, []);
+
   return (
     <Command>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
@@ -122,6 +130,7 @@ export const DeleteConfirmationModal = observer(() => {
             size='sm'
             variant='outline'
             className='w-full'
+            ref={closeButtonRef}
             onClick={handleClose}
           >
             Cancel
@@ -131,8 +140,14 @@ export const DeleteConfirmationModal = observer(() => {
             variant='outline'
             className='w-full'
             colorScheme='error'
+            ref={confirmButtonRef}
             onClick={handleConfirm}
             data-test='org-actions-confirm-archive'
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleConfirm();
+              }
+            }}
           >
             Archive
           </Button>

@@ -17,11 +17,10 @@ export const CommandsContainer = ({
       <CommandInput label={label} placeholder='Type a command or search' />
       <Command.List>
         <Command.Group>{children}</Command.Group>
+        <GlobalSearchResultNavigationCommands />
         <Command.Group heading='Navigate'>
           <GlobalSharedCommands />
         </Command.Group>
-
-        <GlobalSearchResultNavigationCommands />
       </Command.List>
     </Command>
   );
