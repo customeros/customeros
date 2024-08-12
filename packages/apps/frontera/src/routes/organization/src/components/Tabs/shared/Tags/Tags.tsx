@@ -82,7 +82,7 @@ export const Tags = observer(
           menuList: () => getMenuListClassNames('w-fit'),
           multiValue: () =>
             getMultiValueClassNames(
-              'border-1 border-gray-300 flex items-center rounded-md bg-gray-100 px-0.5 text-gray-500',
+              'border-1 border-gray-300 flex items-center rounded-md bg-gray-100 px-0.75 text-gray-500',
             ),
           container: () =>
             hideBorder
@@ -95,7 +95,6 @@ export const Tags = observer(
                 ),
           multiValueRemove: () => 'max-h-4',
           control: () => 'max-h-4',
-          input: () => 'max-h-4',
         }}
       />
     );
