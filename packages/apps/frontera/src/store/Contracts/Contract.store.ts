@@ -448,6 +448,7 @@ const CONTRACT_QUERY = gql`
       currency
       invoiceEmail
       autoRenew
+      ltv
 
       billingDetails {
         nextInvoicing

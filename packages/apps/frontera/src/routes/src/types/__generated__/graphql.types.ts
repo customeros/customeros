@@ -355,6 +355,14 @@ export enum ColumnViewType {
   ContactsSkills = 'CONTACTS_SKILLS',
   ContactsTags = 'CONTACTS_TAGS',
   ContactsTimeInCurrentRole = 'CONTACTS_TIME_IN_CURRENT_ROLE',
+  ContractsCurrency = 'CONTRACTS_CURRENCY',
+  ContractsEnded = 'CONTRACTS_ENDED',
+  ContractsLtv = 'CONTRACTS_LTV',
+  ContractsName = 'CONTRACTS_NAME',
+  ContractsPeriod = 'CONTRACTS_PERIOD',
+  ContractsRenewal = 'CONTRACTS_RENEWAL',
+  ContractsSignDate = 'CONTRACTS_SIGN_DATE',
+  ContractsStatus = 'CONTRACTS_STATUS',
   InvoicesAmount = 'INVOICES_AMOUNT',
   InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
   InvoicesContract = 'INVOICES_CONTRACT',
@@ -2487,7 +2495,6 @@ export type Mutation = {
   tag_Delete?: Maybe<Result>;
   tag_Update?: Maybe<Tag>;
   tenant_AddBillingProfile: TenantBillingProfile;
-  tenant_Merge: Scalars['String']['output'];
   tenant_UpdateBillingProfile: TenantBillingProfile;
   tenant_UpdateSettings: TenantSettings;
   tenant_UpdateSettingsOpportunityStage: ActionResponse;
@@ -2502,8 +2509,6 @@ export type Mutation = {
   user_Update: User;
   workflow_Create: Workflow;
   workflow_Update: ActionResponse;
-  workspace_Merge: Result;
-  workspace_MergeToTenant: Result;
 };
 
 export type MutationAnalysis_CreateArgs = {
@@ -3296,10 +3301,6 @@ export type MutationTenant_AddBillingProfileArgs = {
   input: TenantBillingProfileInput;
 };
 
-export type MutationTenant_MergeArgs = {
-  tenant: TenantInput;
-};
-
 export type MutationTenant_UpdateBillingProfileArgs = {
   input: TenantBillingProfileUpdateInput;
 };
@@ -3362,15 +3363,6 @@ export type MutationWorkflow_CreateArgs = {
 
 export type MutationWorkflow_UpdateArgs = {
   input: WorkflowUpdateInput;
-};
-
-export type MutationWorkspace_MergeArgs = {
-  workspace: WorkspaceInput;
-};
-
-export type MutationWorkspace_MergeToTenantArgs = {
-  tenant: Scalars['String']['input'];
-  workspace: WorkspaceInput;
 };
 
 export type Node = {
@@ -4345,8 +4337,6 @@ export type Query = {
   tenantBillingProfile: TenantBillingProfile;
   tenantBillingProfiles: Array<TenantBillingProfile>;
   tenantSettings: TenantSettings;
-  tenant_ByEmail?: Maybe<Scalars['String']['output']>;
-  tenant_ByWorkspace?: Maybe<Scalars['String']['output']>;
   timelineEvents: Array<TimelineEvent>;
   user: User;
   user_ByEmail: User;
@@ -4575,14 +4565,6 @@ export type QuerySlack_ChannelsArgs = {
 
 export type QueryTenantBillingProfileArgs = {
   id: Scalars['ID']['input'];
-};
-
-export type QueryTenant_ByEmailArgs = {
-  email: Scalars['String']['input'];
-};
-
-export type QueryTenant_ByWorkspaceArgs = {
-  workspace: WorkspaceInput;
 };
 
 export type QueryTimelineEventsArgs = {
@@ -4842,6 +4824,7 @@ export enum TableIdType {
   Contacts = 'CONTACTS',
   ContactsForTargerOrganizations = 'CONTACTS_FOR_TARGER_ORGANIZATIONS',
   ContactsForTargetOrganizations = 'CONTACTS_FOR_TARGET_ORGANIZATIONS',
+  Contracts = 'CONTRACTS',
   Customers = 'CUSTOMERS',
   Leads = 'LEADS',
   MonthlyRenewals = 'MONTHLY_RENEWALS',
@@ -4896,6 +4879,7 @@ export type TableViewDefUpdateInput = {
 
 export enum TableViewType {
   Contacts = 'CONTACTS',
+  Contracts = 'CONTRACTS',
   Invoices = 'INVOICES',
   Opportunities = 'OPPORTUNITIES',
   Organizations = 'ORGANIZATIONS',
@@ -5090,6 +5074,8 @@ export type TenantSettings = {
    */
   logoUrl: Scalars['String']['output'];
   opportunityStages: Array<TenantSettingsOpportunityStageConfiguration>;
+  workspaceLogo?: Maybe<Scalars['String']['output']>;
+  workspaceName?: Maybe<Scalars['String']['output']>;
 };
 
 export type TenantSettingsInput = {
@@ -5097,7 +5083,10 @@ export type TenantSettingsInput = {
   billingEnabled?: InputMaybe<Scalars['Boolean']['input']>;
   logoRepositoryFileId?: InputMaybe<Scalars['String']['input']>;
   logoUrl?: InputMaybe<Scalars['String']['input']>;
+  /** Deprecated */
   patch?: InputMaybe<Scalars['Boolean']['input']>;
+  workspaceLogo?: InputMaybe<Scalars['String']['input']>;
+  workspaceName?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type TenantSettingsOpportunityStageConfiguration = {
@@ -5317,22 +5306,4 @@ export type WorkflowUpdateInput = {
   id: Scalars['ID']['input'];
   live?: InputMaybe<Scalars['Boolean']['input']>;
   name?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type Workspace = {
-  __typename?: 'Workspace';
-  appSource: Scalars['String']['output'];
-  createdAt: Scalars['Time']['output'];
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  provider: Scalars['String']['output'];
-  source: DataSource;
-  sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time']['output'];
-};
-
-export type WorkspaceInput = {
-  appSource?: InputMaybe<Scalars['String']['input']>;
-  name: Scalars['String']['input'];
-  provider: Scalars['String']['input'];
 };
