@@ -127,8 +127,8 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
       <Command.Group>
         {filteredOrgs?.map((org) => (
           <Command.Item
-            value={org.name}
             key={org.metadata.id}
+            value={`${org.name}-${org.metadata.id}`}
             onSelect={() => handleGoTo(org.metadata.id, 'about')}
           >
             <div className='flex items-center'>
