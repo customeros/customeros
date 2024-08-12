@@ -1,0 +1,137 @@
+name: Playwright Tests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: ./packages/apps/frontera
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps
+        working-directory: ./packages/apps/frontera
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        working-directory: ./packages/apps/frontera
+        env:
+          PROD_FE_TEST_USER_URL: ${{ PROD_FE_TEST_USER_URL }}
+
+      - name: Read test results
+        if: always()
+        id: test_results
+        run: |
+          TEST_RESULTS=$(cat test-results.txt)
+          echo "results<<EOF" >> $GITHUB_OUTPUT
+          echo "$TEST_RESULTS" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        working-directory: ./packages/apps/frontera
+
+      - name: Create Linear issues for failed tests
+        if: failure()
+        env:
+          LINEAR_API_KEY_SILVIU_FE_TESTS: ${{ secrets.FE_TESTS_LINEAR_API_KEY_SILVIU }}
+          LINEAR_PRODUCT_TEAMID: ${{ secrets.LINEAR_PRODUCT_TEAMID }}
+          LINEAR_LABEL_BUG: ${{ secrets.LINEAR_LABEL_BUG }}
+          LINEAR_USER_SILVIU: ${{ secrets.LINEAR_USER_SILVIU }}
+        run: |
+          cd ./packages/apps/frontera
+          
+          FAILED_TESTS_FILE="failed-tests.txt"
+          if [ ! -f "$FAILED_TESTS_FILE" ] || [ ! -s "$FAILED_TESTS_FILE" ]; then
+            echo "failed-tests.txt not found or empty, using test-results.txt"
+            FAILED_TESTS_FILE="test-results.txt"
+          fi
+          
+          echo "---Content of $FAILED_TESTS_FILE:---"
+          cat "$FAILED_TESTS_FILE"
+          echo "---End of file content---"
+          
+          ISSUE_COUNT=0
+          ISSUE_INFO=""
+          while IFS= read -r line || [ -n "$line" ]; do
+            echo "Processing line: $line"
+            if [[ $line == *"❌"* ]]; then
+              TEST_NAME=$(echo "$line" | sed 's/.*❌[^:]*: //')
+              echo "Creating issue for test: $TEST_NAME"
+              
+              JSON_DATA="{\"query\":\"mutation IssueCreate(\$input: IssueCreateInput!) { issueCreate(input: \$input) { success issue { id title identifier url } } }\",\"variables\":{\"input\":{\"title\":\"$TEST_NAME\",\"description\":\"$TEST_NAME\",\"teamId\":\"$LINEAR_PRODUCT_TEAMID\",\"labelIds\":[\"$LINEAR_LABEL_BUG\"],\"assigneeId\":\"$LINEAR_USER_SILVIU\"}}}"
+              
+              echo "Sending request to Linear API..."
+              RESPONSE=$(curl -s \
+              -X POST \
+              -H "Content-Type: application/json" \
+              -H "Authorization: LINEAR_API_KEY_SILVIU_FE_TESTS" \
+              --data "$JSON_DATA" \
+              https://api.linear.app/graphql)
+              
+              echo "Linear API Response: $RESPONSE"
+          
+              if echo "$RESPONSE" | grep -q '"success":true'; then
+                echo "Successfully created issue for: $TEST_NAME"
+                ISSUE_COUNT=$((ISSUE_COUNT + 1))
+                IDENTIFIER=$(echo "$RESPONSE" | jq -r '.data.issueCreate.issue.identifier')
+                URL=$(echo "$RESPONSE" | jq -r '.data.issueCreate.issue.url')
+                ISSUE_INFO="${ISSUE_INFO}<${URL}|${IDENTIFIER}: ${TEST_NAME}>\n"
+              else
+                echo "Failed to create issue for: $TEST_NAME"
+                echo "Error response: $RESPONSE"
+                ISSUE_INFO="${ISSUE_INFO}Failed to create Linear issue: ${TEST_NAME}\n"
+              fi
+            else
+              echo "Line does not match pattern, skipping: $line"
+            fi
+          done < "$FAILED_TESTS_FILE"
+          
+          echo "Finished processing failed tests"
+          echo "Total issues created: $ISSUE_COUNT"
+          echo "ISSUE_INFO<<EOF" >> $GITHUB_ENV
+          echo "$ISSUE_INFO" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send test results to Slack
+        if: always()
+        env:
+          GITHUB_CONTEXT: ${{ toJson(github) }}
+        run: |
+          BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          RESULTS="${{ steps.test_results.outputs.results }}"
+
+          # Count passed and failed tests
+          PASSED_TESTS=$(echo "$RESULTS" | grep -c "✅")
+          FAILED_TESTS=$(echo "$RESULTS" | grep -c "❌")
+          TOTAL_TESTS=$((PASSED_TESTS + FAILED_TESTS))
+
+          # Create summary statistic
+          SUMMARY="✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
+
+          # Format Linear Issues
+          LINEAR_ISSUES=$(echo -e "${{ env.ISSUE_INFO }}" | sed '/^$/d' | sort)
+
+          MESSAGE="<$BUILD_URL|Playwright Test Results>:\n$SUMMARY\n\nLinear Issues:\n$LINEAR_ISSUES"
+          curl -X POST -H 'Content-type: application/json' --data "{
+            \"text\": \"$MESSAGE\"
+          }" ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: playwright-report
+          path: ./packages/apps/frontera/playwright-report
+
+      - uses: actions/upload-artifact@v2
+        if: failure()
+        with:
+          name: playwright-trace
+          path: ./packages/apps/frontera/playwright-trace
