@@ -198,9 +198,10 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		}
 
 		// call email verify
-		for _, email := range response.Data.Emails {
-			if email.Address != "" {
-				emailValidationResult, err := callApiValidateEmail(ctx, services, span, email.Address)
+		for i := range response.Data.Emails {
+			emailRecord := &response.Data.Emails[i]
+			if emailRecord.Address != "" {
+				emailValidationResult, err := callApiValidateEmail(ctx, services, span, emailRecord.Address)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 					continue
@@ -209,16 +210,16 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 					tracing.TraceErr(span, errors.New("failed to validate email"))
 					continue
 				}
-				email.IsDeliverable = utils.BoolPtr(emailValidationResult.Data.EmailData.IsDeliverable)
-				email.IsRisky = utils.BoolPtr(emailValidationResult.Data.DomainData.IsFirewalled ||
+				emailRecord.IsDeliverable = utils.BoolPtr(emailValidationResult.Data.EmailData.IsDeliverable)
+				emailRecord.IsRisky = utils.BoolPtr(emailValidationResult.Data.DomainData.IsFirewalled ||
 					emailValidationResult.Data.EmailData.IsRoleAccount ||
 					emailValidationResult.Data.EmailData.IsFreeAccount ||
 					emailValidationResult.Data.EmailData.IsMailboxFull ||
 					emailValidationResult.Data.DomainData.IsCatchAll)
 				if emailValidationResult.Data.EmailData.IsFreeAccount {
-					email.Type = utils.StringPtr(emailTypePersonal)
+					emailRecord.Type = utils.StringPtr(emailTypePersonal)
 				} else {
-					email.Type = utils.StringPtr(emailTypeProfessional)
+					emailRecord.Type = utils.StringPtr(emailTypeProfessional)
 				}
 			}
 		}
