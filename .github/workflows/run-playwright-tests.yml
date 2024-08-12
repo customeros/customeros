@@ -41,7 +41,7 @@ jobs:
       - name: Create Linear issues for failed tests
         if: failure()
         env:
-          LINEAR_API_KEY_SILVIU_FE_TESTS: ${{ secrets.FE_TESTS_LINEAR_API_KEY_SILVIU }}
+          LINEAR_API_KEY_SILVIU_FE_TESTS: ${{ secrets.LINEAR_API_KEY_SILVIU_FE_TESTS }}
           LINEAR_PRODUCT_TEAMID: ${{ secrets.LINEAR_PRODUCT_TEAMID }}
           LINEAR_LABEL_BUG: ${{ secrets.LINEAR_LABEL_BUG }}
           LINEAR_USER_SILVIU: ${{ secrets.LINEAR_USER_SILVIU }}
