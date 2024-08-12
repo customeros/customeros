@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -38,14 +39,20 @@ export const GlobalSharedCommands = observer(() => {
     store.ui.commandMenu.setOpen(false);
   };
 
-  document.addEventListener('keydown', (e) => {
-    if (e.type === 'keydown') {
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey && e.key === 'k' && e.shiftKey) {
         store.ui.commandMenu.setType('GlobalHub');
         store.ui.commandMenu.setOpen(true);
       }
-    }
-  });
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <>
