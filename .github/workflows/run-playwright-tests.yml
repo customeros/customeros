@@ -72,7 +72,7 @@ jobs:
               RESPONSE=$(curl -s \
               -X POST \
               -H "Content-Type: application/json" \
-              -H "Authorization: LINEAR_API_KEY_SILVIU_FE_TESTS" \
+              -H "Authorization: $LINEAR_API_KEY_SILVIU_FE_TESTS" \
               --data "$JSON_DATA" \
               https://api.linear.app/graphql)
               
