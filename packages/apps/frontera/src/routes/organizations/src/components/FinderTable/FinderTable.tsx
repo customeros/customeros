@@ -254,43 +254,41 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
   }, [tableViewDef?.value.id]);
 
-  useEffect(() => {
-    const selectedIds = Object.keys(selection);
+  const selectedIds = Object.keys(selection);
 
-    if (tableType === TableViewType.Organizations) {
-      if (selectedIds.length === 1) {
-        store.ui.commandMenu.setType('OrganizationCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Organization',
-          ids: selectedIds,
-        });
-      }
-
-      if (selectedIds.length > 1) {
-        store.ui.commandMenu.setType('OrganizationBulkCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Organizations',
-          ids: selectedIds,
-        });
-      }
-    } else {
-      if (selectedIds.length === 1) {
-        store.ui.commandMenu.setType('ContactCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Contact',
-          ids: selectedIds,
-        });
-      }
-
-      if (selectedIds.length > 1) {
-        store.ui.commandMenu.setType('ContactBulkCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Contact',
-          ids: selectedIds,
-        });
-      }
+  if (tableType === TableViewType.Organizations) {
+    if (selectedIds.length === 1) {
+      store.ui.commandMenu.setType('OrganizationCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Organization',
+        ids: selectedIds,
+      });
     }
-  }, [selection]);
+
+    if (selectedIds.length > 1) {
+      store.ui.commandMenu.setType('OrganizationBulkCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Organizations',
+        ids: selectedIds,
+      });
+    }
+  } else {
+    if (selectedIds.length === 1) {
+      store.ui.commandMenu.setType('ContactCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Contact',
+        ids: selectedIds,
+      });
+    }
+
+    if (selectedIds.length > 1) {
+      store.ui.commandMenu.setType('ContactBulkCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Contact',
+        ids: selectedIds,
+      });
+    }
+  }
 
   useEffect(() => {
     store.ui.setSearchCount(data.length);
