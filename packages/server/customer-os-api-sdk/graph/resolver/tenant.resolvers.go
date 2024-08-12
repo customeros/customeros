@@ -11,11 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
-// TenantMerge is the resolver for the tenant_Merge field.
-func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error) {
-	panic(fmt.Errorf("not implemented: TenantMerge - tenant_Merge"))
-}
-
 // TenantAddBillingProfile is the resolver for the tenant_AddBillingProfile field.
 func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (*model.TenantBillingProfile, error) {
 	panic(fmt.Errorf("not implemented: TenantAddBillingProfile - tenant_AddBillingProfile"))
@@ -44,16 +39,6 @@ func (r *mutationResolver) TenantHardDelete(ctx context.Context, tenant string, 
 // Tenant is the resolver for the tenant field.
 func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	panic(fmt.Errorf("not implemented: Tenant - tenant"))
-}
-
-// TenantByWorkspace is the resolver for the tenant_ByWorkspace field.
-func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error) {
-	panic(fmt.Errorf("not implemented: TenantByWorkspace - tenant_ByWorkspace"))
-}
-
-// TenantByEmail is the resolver for the tenant_ByEmail field.
-func (r *queryResolver) TenantByEmail(ctx context.Context, email string) (*string, error) {
-	panic(fmt.Errorf("not implemented: TenantByEmail - tenant_ByEmail"))
 }
 
 // TenantBillingProfiles is the resolver for the tenantBillingProfiles field.

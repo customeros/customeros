@@ -63,7 +63,28 @@ func AddDemoTenantRoutes(rg *gin.RouterGroup, config *config.Config, services *s
 				})
 				return
 			}
-			err := services.TenantDataInjector.CleanupTenantData(ctx, tenant, username, req.Tenant, req.ConfirmTenant)
+
+			if req.Tenant != req.ConfirmTenant {
+				c.JSON(http.StatusBadRequest, gin.H{
+					"result": "tenant and confirmTenant do not match",
+				})
+				return
+			}
+
+			userByEmail, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, username)
+			if err != nil {
+				c.JSON(500, gin.H{
+					"error": err.Error(),
+				})
+				return
+			}
+
+			if userByEmail == nil {
+				c.JSON(404, gin.H{})
+				return
+			}
+
+			err = services.CommonServices.Neo4jRepositories.TenantWriteRepository.HardDeleteTenant(ctx, req.Tenant)
 			if err != nil {
 				c.JSON(500, gin.H{
 					"error": err.Error(),

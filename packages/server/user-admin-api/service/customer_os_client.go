@@ -1,31 +1,19 @@
 package service
 
 import (
-	"errors"
+	"context"
 	"fmt"
 	"github.com/machinebox/graphql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/model"
-	"github.com/opentracing/opentracing-go"
-	tracingLog "github.com/opentracing/opentracing-go/log"
-
-	"context"
 
 	"time"
 )
 
 type CustomerOsClient interface {
-	GetTenantByWorkspace(workspace *model.WorkspaceInput) (*string, error)
-	GetTenantByUserEmail(email string) (*string, error)
-	MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error)
-	MergeTenant(tenant *model.TenantInput) (string, error)
-	HardDeleteTenant(context context.Context, tenant, username, reqTenant, reqConfirmTenant string) error
-
-	GetPlayer(authId string, provider string) (*model.GetPlayerResponse, error)
 	CreatePlayer(tenant, userId, identityId, authId, provider string) error
 
 	GetUserById(tenant, userId string) (*model.UserResponse, error)
@@ -83,107 +71,6 @@ func NewCustomerOsClient(cfg *config.Config, driver *neo4j.DriverWithContext) Cu
 	}
 }
 
-func (s *customerOsClient) GetTenantByWorkspace(workspace *model.WorkspaceInput) (*string, error) {
-	if workspace == nil {
-		return nil, errors.New("GetTenantByWorkspace: workspace is nil")
-	}
-	graphqlRequest := graphql.NewRequest(
-		`
-		query GetTenantByWorkspace ($name: String!, $provider: String!) {
-				tenant_ByWorkspace(workspace: {
-			  name: $name,
-			  provider: $provider
-			}) 
-		}
-	`)
-	graphqlRequest.Var("name", workspace.Name)
-	graphqlRequest.Var("provider", workspace.Provider)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, err
-	}
-	defer cancel()
-
-	var graphqlResponse model.GetTenantByWorkspaceResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
-	}
-	return graphqlResponse.Name, nil
-}
-
-func (s *customerOsClient) GetTenantByUserEmail(email string) (*string, error) {
-	if email == "" {
-		return nil, errors.New("GetTenantByUserEmail: email is empty")
-	}
-	graphqlRequest := graphql.NewRequest(
-		`
-		query GetTenantByEmail ($email: String!) {
-				tenant_ByEmail(email: $email) 
-		}
-	`)
-	graphqlRequest.Var("email", email)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, err
-	}
-	defer cancel()
-
-	var graphqlResponse struct {
-		Tenant_ByEmail *string
-	}
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
-	}
-	return graphqlResponse.Tenant_ByEmail, nil
-}
-
-func (s *customerOsClient) MergeTenantToWorkspace(workspace *model.WorkspaceInput, tenant string) (bool, error) {
-	if workspace == nil {
-		return false, errors.New("MergeTenantToWorkspace: workspace is nil")
-	}
-	graphqlRequest := graphql.NewRequest(
-		`
-			mutation MergeWorkspaceToTenant($tenant: String!, $name: String!, $provider: String!, $appSource: String) {
-			   workspace_MergeToTenant(tenant: $tenant, 
-										workspace: {name: $name,
-										provider: $provider,
-										appSource: $appSource}) {
-				result
-			  }
-			}
-	`)
-	graphqlRequest.Var("tenant", tenant)
-	graphqlRequest.Var("name", workspace.Name)
-	graphqlRequest.Var("provider", workspace.Provider)
-	graphqlRequest.Var("appSource", workspace.AppSource)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
-	if err != nil {
-		return false, err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return false, err
-	}
-	defer cancel()
-
-	var graphqlResponse model.MergeTenantToWorkspaceResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return false, err
-	}
-	return graphqlResponse.Workspace.Result, nil
-}
-
 func (s *customerOsClient) AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error) {
 	graphqlRequest := graphql.NewRequest(
 		`
@@ -226,108 +113,6 @@ func (s *customerOsClient) AddUserRoles(tenant, userId string, roles []model.Rol
 	}
 
 	return s.GetUserById(tenant, userId)
-}
-
-func (s *customerOsClient) MergeTenant(tenant *model.TenantInput) (string, error) {
-	if tenant == nil {
-		return "", errors.New("MergeTenant: tenant is nil")
-	}
-	graphqlRequest := graphql.NewRequest(
-		`
-			mutation CreateTenant($tenant: TenantInput!) {
-			   tenant_Merge(
-					tenant: $tenant) 
-			}
-	`)
-	graphqlRequest.Var("tenant", *tenant)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
-	if err != nil {
-		return "", err
-	}
-
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return "", err
-	}
-	defer cancel()
-
-	var graphqlResponse model.CreateTenantResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", err
-	}
-	return graphqlResponse.Tenant, nil
-}
-
-func (s *customerOsClient) HardDeleteTenant(ctx context.Context, tenant, username, reqTenant, reqConfirmTenant string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomerOsClient.HardDeleteTenant")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-
-	span.LogFields(tracingLog.String("username", username), tracingLog.String("reqTenant", reqTenant), tracingLog.String("reqConfirmTenant", reqConfirmTenant))
-
-	graphqlRequest := graphql.NewRequest(
-		`
-			mutation HardDeleteTenant($reqTenant: String!, $reqConfirmTenant: String!) {
-			   tenant_hardDelete(
-					tenant: $reqTenant,
-					confirmTenant: $reqConfirmTenant)
-			}
-	`)
-	graphqlRequest.Var("reqTenant", reqTenant)
-	graphqlRequest.Var("reqConfirmTenant", reqConfirmTenant)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
-
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return err
-	}
-	defer cancel()
-
-	var graphqlResponse model.TenantHardDeleteResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *customerOsClient) GetPlayer(authId string, provider string) (*model.GetPlayerResponse, error) {
-
-	graphqlRequest := graphql.NewRequest(
-		`
-		query GetPlayer ($authId: String!, $provider: String!) {
-				player_ByAuthIdProvider(
-					  authId: $authId,
-					  provider: $provider
-				) { 
-					id
-					users {
-						tenant
-					}
-				   }
-		}
-	`)
-	graphqlRequest.Var("authId", authId)
-	graphqlRequest.Var("provider", provider)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, nil, nil)
-
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, err
-	}
-	defer cancel()
-
-	var graphqlResponse model.GetPlayerResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		if err.Error() == "graphql: Failed to get player by authId and provider" {
-			return nil, nil
-		} else {
-			return nil, err
-		}
-	}
-	return &graphqlResponse, nil
 }
 
 func (s *customerOsClient) CreatePlayer(tenant, userId, identityId, authId, provider string) error {

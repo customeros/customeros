@@ -7,7 +7,6 @@ package resolver
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -16,20 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/opentracing/opentracing-go/log"
 )
-
-// TenantMerge is the resolver for the tenant_Merge field.
-func (r *mutationResolver) TenantMerge(ctx context.Context, tenant model.TenantInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TenantMerge", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", tenant)
-
-	newTenant, err := r.Services.TenantService.Merge(ctx, mapper.MapTenantInputToEntity(tenant))
-	if err != nil {
-		return "", fmt.Errorf("TenantMerge: %w", err)
-	}
-	return newTenant.Name, nil
-}
 
 // TenantAddBillingProfile is the resolver for the tenant_AddBillingProfile field.
 func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input model.TenantBillingProfileInput) (*model.TenantBillingProfile, error) {
@@ -45,7 +30,7 @@ func (r *mutationResolver) TenantAddBillingProfile(ctx context.Context, input mo
 		return &model.TenantBillingProfile{ID: profileId}, err
 	}
 
-	createdTenantBillingProfileEntity, err := r.Services.TenantService.GetTenantBillingProfile(ctx, profileId)
+	createdTenantBillingProfileEntity, err := r.Services.CommonServices.TenantService.GetTenantBillingProfile(ctx, profileId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Tenant billing profile not yet available.")
@@ -76,7 +61,7 @@ func (r *mutationResolver) TenantUpdateBillingProfile(ctx context.Context, input
 		return nil, err
 	}
 
-	updatedTenantBillingProfileEntity, err := r.Services.TenantService.GetTenantBillingProfile(ctx, input.ID)
+	updatedTenantBillingProfileEntity, err := r.Services.CommonServices.TenantService.GetTenantBillingProfile(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant billing profile details")
@@ -99,7 +84,7 @@ func (r *mutationResolver) TenantUpdateSettings(ctx context.Context, input *mode
 		return nil, err
 	}
 
-	updatedTenantSettingsEntity, err := r.Services.TenantService.GetTenantSettings(ctx)
+	updatedTenantSettingsEntity, err := r.Services.CommonServices.TenantService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant settings")
@@ -144,7 +129,7 @@ func (r *mutationResolver) TenantHardDelete(ctx context.Context, tenant string, 
 		return false, nil
 	}
 
-	err := r.Services.TenantService.HardDelete(ctx, tenant)
+	err := r.Services.CommonServices.TenantService.HardDelete(ctx, tenant)
 	if err != nil {
 		return false, err
 	}
@@ -160,47 +145,13 @@ func (r *queryResolver) Tenant(ctx context.Context) (string, error) {
 	return common.GetTenantFromContext(ctx), nil
 }
 
-// TenantByWorkspace is the resolver for the tenant_ByWorkspace field.
-func (r *queryResolver) TenantByWorkspace(ctx context.Context, workspace model.WorkspaceInput) (*string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantByWorkspace", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.workspace", workspace.Name))
-
-	tenant, err := r.Services.TenantService.GetTenantForWorkspace(ctx, mapper.MapWorkspaceInputToEntity(workspace))
-	if err != nil {
-		return nil, err
-	}
-	if tenant == nil || tenant.Name == "" {
-		return nil, nil
-	}
-	return &tenant.Name, nil
-}
-
-// TenantByEmail is the resolver for the tenant_ByEmail field.
-func (r *queryResolver) TenantByEmail(ctx context.Context, email string) (*string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantByEmail", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.email", email))
-
-	tenant, err := r.Services.TenantService.GetTenantForUserEmail(ctx, email)
-	if err != nil {
-		return nil, err
-	}
-	if tenant == nil || tenant.Name == "" {
-		return nil, nil
-	}
-	return &tenant.Name, nil
-}
-
 // TenantBillingProfiles is the resolver for the tenantBillingProfiles field.
 func (r *queryResolver) TenantBillingProfiles(ctx context.Context) ([]*model.TenantBillingProfile, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.TenantBillingProfiles", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	tenantBillingProfileEntities, err := r.Services.TenantService.GetTenantBillingProfiles(ctx)
+	tenantBillingProfileEntities, err := r.Services.CommonServices.TenantService.GetTenantBillingProfiles(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch billing profiles")
@@ -216,7 +167,7 @@ func (r *queryResolver) TenantBillingProfile(ctx context.Context, id string) (*m
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.tenantBillingProfileId", id))
 
-	tenantBillingProfileEntity, err := r.Services.TenantService.GetTenantBillingProfile(ctx, id)
+	tenantBillingProfileEntity, err := r.Services.CommonServices.TenantService.GetTenantBillingProfile(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant billing profile details")
@@ -231,7 +182,7 @@ func (r *queryResolver) TenantSettings(ctx context.Context) (*model.TenantSettin
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	tenantSettingsEntity, err := r.Services.TenantService.GetTenantSettings(ctx)
+	tenantSettingsEntity, err := r.Services.CommonServices.TenantService.GetTenantSettings(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tenant settings")

@@ -1,7 +1,5 @@
 extend type Query {
     tenant: String!
-    tenant_ByWorkspace(workspace: WorkspaceInput!): String @hasRole(roles: [USER, ADMIN])
-    tenant_ByEmail(email: String!): String @hasRole(roles: [ADMIN])
 
     tenantBillingProfiles: [TenantBillingProfile!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenantBillingProfile(id: ID!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -9,7 +7,6 @@ extend type Query {
 }
 
 extend type Mutation {
-    tenant_Merge(tenant: TenantInput!): String! @hasRole(roles: [ADMIN])
     tenant_AddBillingProfile(input: TenantBillingProfileInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateBillingProfile(input: TenantBillingProfileUpdateInput!): TenantBillingProfile! @hasRole(roles: [ADMIN, USER]) @hasTenant
     tenant_UpdateSettings(input: TenantSettingsInput): TenantSettings! @hasRole(roles: [ADMIN, USER]) @hasTenant
