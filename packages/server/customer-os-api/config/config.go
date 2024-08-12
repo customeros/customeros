@@ -28,6 +28,7 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Metrics          metrics.Config
 	Services         struct {
+		CustomerOsApiUrl string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
 		ValidationApi    string `env:"VALIDATION_API" validate:"required"`
 		ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
 		EnrichmentApiUrl string `env:"ENRICHMENT_API_URL" validate:"required"`
