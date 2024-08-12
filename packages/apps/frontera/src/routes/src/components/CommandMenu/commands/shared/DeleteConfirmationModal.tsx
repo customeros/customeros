@@ -32,19 +32,19 @@ export const DeleteConfirmationModal = observer(() => {
     store.ui.commandMenu.clearCallback();
   };
 
-  const oppoortunityOfOrgSelected = store.opportunities
-    .toArray()
-    .filter((o) => o.value.organization?.metadata.id === context.ids[0]);
-
-  const oppotunityIdOfOrgSelected = oppoortunityOfOrgSelected.map(
-    (o) => o.value.id,
-  );
-
   const handleConfirm = () => {
     match(context.entity)
       .with('Organization', () => {
+        const oppoortunityOfOrgSelected = store.opportunities
+          .toArray()
+          .filter((o) => o.value.organization?.metadata.id === context.ids[0]);
+
+        const oppotunityIdOfOrgSelected = oppoortunityOfOrgSelected.map(
+          (o) => o.value.id,
+        );
+
         store.organizations.hide(context.ids as string[]);
-        store.opportunities.archive(oppotunityIdOfOrgSelected[0]);
+        store.opportunities.value.delete(oppotunityIdOfOrgSelected[0]);
 
         context.callback?.();
       })
