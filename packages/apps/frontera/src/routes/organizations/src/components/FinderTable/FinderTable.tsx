@@ -462,12 +462,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             <OrganizationTableActions
               focusedId={focusedId}
               onCreateContact={createSocial}
-              onMerge={store.organizations.merge}
               tableId={tableViewDef?.value.tableId}
               onOpenCommandK={handleOpenCommandKMenu}
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
+              onMerge={() => {
+                store.ui.commandMenu.setOpen(true);
+                store.ui.commandMenu.setType('MergeConfirmationModal');
+              }}
               enableKeyboardShortcuts={
                 !isEditing &&
                 !isFiltering &&
