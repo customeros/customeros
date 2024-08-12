@@ -42,12 +42,7 @@ export const TableViewsToggleNavigation = observer(() => {
           findPresetTable([TableIdType.Nurture]),
           findPresetTable([TableIdType.ContactsForTargetOrganizations]),
         ];
-      case TableIdType.Organizations:
-      case TableIdType.Contacts:
-        return [
-          findPresetTable([TableIdType.Organizations]),
-          findPresetTable([TableIdType.Contacts]),
-        ];
+
       case TableIdType.UpcomingInvoices:
       case TableIdType.PastInvoices:
         return [

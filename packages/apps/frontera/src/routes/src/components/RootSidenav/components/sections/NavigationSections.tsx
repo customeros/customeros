@@ -5,7 +5,6 @@ import { Bubbles } from '@ui/media/icons/Bubbles';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 
-import { MyViewsSection } from './MyViewsSection';
 import { FavoritesSection } from './FavoritesSection';
 import { GeneralViewsSection } from './GeneralViewsSection';
 import { LifecycleStagesSection } from './LifecycleStagesSection';
@@ -52,12 +51,7 @@ export const NavigationSections = ({
         handleItemClick={handleItemClick}
         togglePreference={togglePreference}
       />
-      <MyViewsSection
-        preferences={preferences}
-        checkIsActive={checkIsActive}
-        handleItemClick={handleItemClick}
-        togglePreference={togglePreference}
-      />
+
       <GeneralViewsSection
         preferences={preferences}
         checkIsActive={checkIsActive}
