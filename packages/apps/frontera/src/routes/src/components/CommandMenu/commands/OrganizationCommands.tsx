@@ -4,6 +4,7 @@ import { Tag01 } from '@ui/media/icons/Tag01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { User01 } from '@ui/media/icons/User01';
 import { Delete } from '@ui/media/icons/Delete';
+import { User03 } from '@ui/media/icons/User03';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { Command } from '@ui/media/icons/Command';
@@ -41,7 +42,7 @@ export const OrganizationCommands = observer(() => {
     <CommandsContainer label={label}>
       <>
         <CommandItem
-          leftAccessory={<User01 />}
+          leftAccessory={<User03 />}
           rightAccessory={<Kbd>C</Kbd>}
           keywords={organizationKeywords.add_contact}
           onSelect={() => {

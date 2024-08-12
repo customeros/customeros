@@ -88,7 +88,7 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
 
   return (
     <>
-      <Command.Group>
+      <Command.Group heading={filteredContacts.length > 0 && 'Contacts'}>
         {filteredContacts?.map((contactStore) => (
           <Command.Item
             key={contactStore.value.metadata.id}
@@ -124,7 +124,8 @@ export const GlobalSearchResultNavigationCommands = observer(() => {
           </Command.Item>
         ))}
       </Command.Group>
-      <Command.Group>
+
+      <Command.Group heading={filteredOrgs.length > 0 && 'Organizations'}>
         {filteredOrgs?.map((org) => (
           <Command.Item
             key={org.metadata.id}

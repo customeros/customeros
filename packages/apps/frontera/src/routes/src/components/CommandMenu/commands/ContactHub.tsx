@@ -9,10 +9,7 @@ import { CommandsContainer } from '@shared/components/CommandMenu/commands/share
 export const ContactHub = observer(() => {
   const store = useStore();
 
-  const context = store.ui.commandMenu.context;
-  const contact = store.contacts.value.get(context.ids?.[0] as string);
-
-  const label = `Contact - ${contact?.value.name}`;
+  const label = `Contact`;
 
   return (
     <CommandsContainer label={label}>
