@@ -26,7 +26,7 @@ jobs:
         run: npx playwright test
         working-directory: ./packages/apps/frontera
         env:
-          PROD_FE_TEST_USER_URL: ${{ PROD_FE_TEST_USER_URL }}
+          PROD_FE_TEST_USER_URL: ${{ secrets.PROD_FE_TEST_USER_URL }}
 
       - name: Read test results
         if: always()
