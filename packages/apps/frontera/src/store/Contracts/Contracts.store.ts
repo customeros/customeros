@@ -43,6 +43,16 @@ export class ContractsStore implements GroupStore<Contract> {
     );
   }
 
+  toArray() {
+    return Array.from(this.value.values()) as ContractStore[];
+  }
+
+  toComputedArray(compute: (arr: ContractStore[]) => ContractStore[]) {
+    const arr = this.toArray();
+
+    return compute(arr);
+  }
+
   async bootstrap() {
     if (this.root.demoMode) {
       this.load(mock.data.contracts.content as unknown as Contract[]);
@@ -284,6 +294,7 @@ const CONTRACTS_QUERY = gql`
         contractStatus
         committedPeriodInMonths
         approved
+        ltv
 
         contractUrl
         billingCycle

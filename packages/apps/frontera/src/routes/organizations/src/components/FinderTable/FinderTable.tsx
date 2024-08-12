@@ -1,17 +1,19 @@
 import { useSearchParams } from 'react-router-dom';
-import { useRef, useState, useEffect } from 'react';
+import { useRef, useMemo, useState, useEffect } from 'react';
 
 import { useKey } from 'rooks';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 import difference from 'lodash/difference';
 import intersection from 'lodash/intersection';
+import { ColumnDef } from '@tanstack/react-table';
 import { OnChangeFn } from '@tanstack/table-core';
 import { InvoiceStore } from '@store/Invoices/Invoice.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { useTableActions } from '@invoices/hooks/useTableActions';
+import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -23,11 +25,14 @@ import {
   TableInstance,
   RowSelectionState,
 } from '@ui/presentation/Table';
+import {
+  getContractSortFn,
+  getContractColumnsConfig,
+} from '@organizations/components/Columns/contracts';
 
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
 import { getColumnSortFn } from '../Columns/invoices/sortFns';
-import { MergedColumnDefs } from '../Columns/shared/util/types';
 import { getInvoiceFilterFns } from '../Columns/invoices/filterFns';
 import { getInvoiceColumnsConfig } from '../Columns/invoices/columns';
 import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
@@ -52,7 +57,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const tableRef = useRef<TableInstance<
-    OrganizationStore | ContactStore | InvoiceStore
+    OrganizationStore | ContactStore | InvoiceStore | ContractStore
   > | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
@@ -76,15 +81,23 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const flowFiltersStatus = store.ui.isFilteringICP;
 
   const contactColumns = getContactColumnsConfig(tableViewDef?.value);
+  const contractColumns = getContractColumnsConfig(tableViewDef?.value);
   const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
   const invoiceColumns = getInvoiceColumnsConfig(tableViewDef?.value);
-  const tableColumns = (
-    tableType === TableViewType.Organizations
-      ? organizationColumns
-      : tableType === TableViewType.Contacts
-      ? contactColumns
-      : invoiceColumns
-  ) as MergedColumnDefs;
+  const tableColumns = useMemo(() => {
+    switch (tableType) {
+      case TableViewType.Organizations:
+        return organizationColumns;
+      case TableViewType.Contacts:
+        return contactColumns;
+      case TableViewType.Contracts:
+        return contractColumns;
+      default:
+        return invoiceColumns;
+    }
+  }, [tableType]) as ColumnDef<
+    OrganizationStore | ContactStore | InvoiceStore | ContractStore
+  >[];
   const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
 
   const removeAccents = (str: string) => {
@@ -164,6 +177,38 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     return arr;
   });
 
+  const contractsData = store.contracts?.toComputedArray((arr) => {
+    if (tableType !== TableViewType.Contracts) return arr;
+
+    // todo uncommment when filters are added
+    // const filters = getContactFilterFns(tableViewDef?.getFilters());
+    // if (filters) {
+    //   arr = arr.filter((v) => filters.every((fn) => fn(v)));
+    // }
+    if (searchTerm) {
+      const normalizedSearchTerm = removeAccents(searchTerm);
+
+      arr = arr.filter((entity) => {
+        const name = entity.value?.contractName || '';
+
+        return removeAccents(name).includes(normalizedSearchTerm);
+      });
+    }
+
+    if (tableType) {
+      const columnId = sorting[0]?.id;
+      const isDesc = sorting[0]?.desc;
+
+      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
+        getContractSortFn(columnId),
+      );
+
+      return computed;
+    }
+
+    return arr;
+  });
+
   const invoicesData = store.invoices.toComputedArray((arr) => {
     if (tableType !== TableViewType.Invoices) return arr;
     const filters = getInvoiceFilterFns(tableViewDef?.getFilters());
@@ -199,6 +244,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       ? organizationsData
       : tableType === TableViewType.Contacts
       ? contactsData
+      : tableType === TableViewType.Contracts
+      ? contractsData
       : invoicesData;
 
   const handleSelectionChange: OnChangeFn<RowSelectionState> = (
@@ -386,7 +433,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   return (
     <div className='flex'>
-      <Table<OrganizationStore | ContactStore | InvoiceStore>
+      <Table<OrganizationStore | ContactStore | InvoiceStore | ContractStore>
         data={data}
         manualFiltering
         sorting={sorting}
@@ -405,15 +452,17 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
-        enableTableActions={
-          tableType === TableViewType.Invoices
+        enableRowSelection={
+          tableType &&
+          [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
             ? false
             : enableFeature !== null
             ? enableFeature
             : true
         }
-        enableRowSelection={
-          tableType === TableViewType.Invoices
+        enableTableActions={
+          tableType &&
+          [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
             ? false
             : enableFeature !== null
             ? enableFeature

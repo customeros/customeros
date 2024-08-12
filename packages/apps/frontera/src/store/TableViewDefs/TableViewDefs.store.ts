@@ -105,7 +105,10 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
   get opportunitiesPreset() {
     return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Opportunities && t.value.isShared,
+      (t) =>
+        t.value.tableId === TableIdType.Opportunities &&
+        t.value.isShared &&
+        t.value.isPreset,
     )?.value.id;
   }
 
@@ -137,6 +140,24 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     return this?.toArray().find(
       (t) =>
         t.value.tableId === TableIdType.UpcomingInvoices && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get pastInvoicesPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.PastInvoices && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get contactsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Contacts && t.value.isPreset,
+    )?.value.id;
+  }
+
+  get contractsPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.Contracts && t.value.isPreset,
     )?.value.id;
   }
 

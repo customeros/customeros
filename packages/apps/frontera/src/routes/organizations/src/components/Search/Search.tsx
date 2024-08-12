@@ -107,6 +107,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
   const placeholder = match(tableType)
     .with(TableViewType.Contacts, () => 'e.g. Isabella Evans')
+    .with(TableViewType.Contracts, () => 'e.g. CustomerOS contract...')
     .with(TableViewType.Organizations, () => 'e.g. CustomerOS...')
     .with(TableViewType.Invoices, () => 'e.g. My contract')
     .otherwise(() => 'e.g. Organization name...');
@@ -119,7 +120,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     }
   };
 
-  const allowCreation = totalResults === 0 && !!searchParams.get('search');
+  const allowCreation =
+    tableViewDef?.value.tableId !== TableIdType.Contracts &&
+    totalResults === 0 &&
+    !!searchParams.get('search');
 
   useKeyBindings(
     {

@@ -191,3 +191,25 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsExperience]: 'E.g. 4 yrs',
   [ColumnViewType.ContactsRegion]: 'E.g. California',
 };
+
+export const contractsMap: Record<string, string> = {
+  [ColumnViewType.ContractsName]: 'Contract Name',
+  [ColumnViewType.ContractsPeriod]: 'Period',
+  [ColumnViewType.ContractsEnded]: 'Ended',
+  [ColumnViewType.ContractsSignDate]: 'Sign Date',
+  [ColumnViewType.ContractsCurrency]: 'Currency',
+  [ColumnViewType.ContractsStatus]: 'Status',
+  [ColumnViewType.ContractsRenewal]: 'Renewal',
+  [ColumnViewType.ContractsLtv]: 'LTV',
+};
+
+export const contractsHelperTextMap: Record<string, string> = {
+  [ColumnViewType.ContractsName]: 'E.g. CustomerOs contract',
+  [ColumnViewType.ContractsPeriod]: 'E.g. month',
+  [ColumnViewType.ContractsEnded]: 'E.g. 06 Aug `24',
+  [ColumnViewType.ContractsSignDate]: 'E.g. 01 Jun `22',
+  [ColumnViewType.ContractsCurrency]: 'E.g. USD',
+  [ColumnViewType.ContractsStatus]: 'E.g. Live',
+  [ColumnViewType.ContractsRenewal]: 'E.g. Auto-renewing',
+  [ColumnViewType.ContractsLtv]: 'E.g. 3000',
+};

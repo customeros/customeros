@@ -8,6 +8,7 @@ import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
 import { InvoiceUpcoming } from '@ui/media/icons/InvoiceUpcoming';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { SwitchHorizontal01 } from '@ui/media/icons/SwitchHorizontal01';
 export const iconMap: Record<
@@ -25,4 +26,5 @@ export const iconMap: Record<
   Triage: (props) => <Triage {...props} />,
   SwitchHorizontal01: (props) => <SwitchHorizontal01 {...props} />,
   BrokenHeart: (props) => <BrokenHeart {...props} />,
+  CoinsStacked01: (props) => <CoinsStacked01 {...props} />,
 };
