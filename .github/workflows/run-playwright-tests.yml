@@ -65,9 +65,9 @@ jobs:
             if [[ $line == *"❌"* ]]; then
               TEST_NAME=$(echo "$line" | sed 's/.*❌[^:]*: //')
               echo "Creating issue for test: $TEST_NAME"
-              
+          
               JSON_DATA="{\"query\":\"mutation IssueCreate(\$input: IssueCreateInput!) { issueCreate(input: \$input) { success issue { id title identifier url } } }\",\"variables\":{\"input\":{\"title\":\"$TEST_NAME\",\"description\":\"$TEST_NAME\",\"teamId\":\"$LINEAR_PRODUCT_TEAMID\",\"labelIds\":[\"$LINEAR_LABEL_BUG\"],\"assigneeId\":\"$LINEAR_USER_SILVIU\"}}}"
-              
+          
               echo "Sending request to Linear API..."
               RESPONSE=$(curl -s \
               -X POST \
@@ -75,7 +75,7 @@ jobs:
               -H "Authorization: $LINEAR_API_KEY_SILVIU_FE_TESTS" \
               --data "$JSON_DATA" \
               https://api.linear.app/graphql)
-              
+          
               echo "Linear API Response: $RESPONSE"
           
               if echo "$RESPONSE" | grep -q '"success":true'; then
@@ -107,6 +107,7 @@ jobs:
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           RESULTS="${{ steps.test_results.outputs.results }}"
+          echo "$RESULTS: $RESULTS"
 
           # Count passed and failed tests
           PASSED_TESTS=$(echo "$RESULTS" | grep -c "✅")
@@ -118,8 +119,10 @@ jobs:
 
           # Format Linear Issues
           LINEAR_ISSUES=$(echo -e "${{ env.ISSUE_INFO }}" | sed '/^$/d' | sort)
+          echo "LINEAR_ISSUES: $LINEAR_ISSUES"
 
           MESSAGE="<$BUILD_URL|Playwright Test Results>:\n$SUMMARY\n\nLinear Issues:\n$LINEAR_ISSUES"
+          echo "MESSAGE: $MESSAGE"
           curl -X POST -H 'Content-type: application/json' --data "{
             \"text\": \"$MESSAGE\"
           }" ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
