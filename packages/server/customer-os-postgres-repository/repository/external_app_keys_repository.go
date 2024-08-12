@@ -2,6 +2,7 @@ package repository
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/opentracing/opentracing-go"
@@ -63,7 +64,7 @@ func (e externalAppKeysRepository) IncrementUsageCount(ctx context.Context, id u
 		Model(&entity.ExternalAppKeys{}).
 		Where("id = ?", id).
 		UpdateColumn("usage_count", gorm.Expr("usage_count + 1")).
-		UpdateColumn("updated_at", gorm.Expr("current_timestamp")).
+		UpdateColumn("updated_at", utils.Now()).
 		Error
 	if err != nil {
 		return helper.QueryResult{Error: err}

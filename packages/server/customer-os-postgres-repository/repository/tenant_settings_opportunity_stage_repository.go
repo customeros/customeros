@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -178,7 +179,7 @@ func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, t
 		Model(&entity.TenantSettingsOpportunityStage{}).
 		Where("tenant = ? AND id = ?", tenant, id).
 		Updates(updateFields).
-		UpdateColumn("updated_at", gorm.Expr("current_timestamp")).
+		UpdateColumn("updated_at", utils.Now()).
 		Error
 
 	if err != nil {
