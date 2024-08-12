@@ -148,7 +148,7 @@ export class AddressBookPage {
             .locator(this.organizationOwnerInAllOrgsTable)
             .innerText();
 
-          expect(owner).toBe('Silviu Basu');
+          expect(owner).toBe('customeros.fe.testing');
         });
       },
       maxAttempts,
