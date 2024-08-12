@@ -8,9 +8,10 @@ type EnrichPersonRequest struct {
 }
 
 type EnrichPersonResponse struct {
-	Status  string              `json:"status"`
-	Message string              `json:"message,omitempty"`
-	Data    *EnrichedPersonData `json:"data,omitempty"`
+	Status   string              `json:"status"`
+	Message  string              `json:"message,omitempty"`
+	RecordId uint64              `json:"recordId,omitempty"`
+	Data     *EnrichedPersonData `json:"data,omitempty"`
 }
 
 type EnrichedPersonData struct {

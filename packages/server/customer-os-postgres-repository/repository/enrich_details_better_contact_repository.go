@@ -2,6 +2,7 @@ package repository
 
 import (
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -16,7 +17,7 @@ type enrichDetailsBetterContactRepository struct {
 }
 
 type EnrichDetailsBetterContactRepository interface {
-	RegisterRequest(ctx context.Context, request entity.EnrichDetailsBetterContact) error
+	RegisterRequest(ctx context.Context, data entity.EnrichDetailsBetterContact) (*entity.EnrichDetailsBetterContact, error)
 	AddResponse(ctx context.Context, requestId, response string) error
 	GetByLinkedInUrl(ctx context.Context, linkedInUrl string) (*entity.EnrichDetailsBetterContact, error)
 	GetById(ctx context.Context, id string) (*entity.EnrichDetailsBetterContact, error)
@@ -29,16 +30,17 @@ func NewEnrichDetailsBetterContactRepository(gormDb *gorm.DB) EnrichDetailsBette
 	return &enrichDetailsBetterContactRepository{gormDb: gormDb}
 }
 
-func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Context, request entity.EnrichDetailsBetterContact) error {
+func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Context, data entity.EnrichDetailsBetterContact) (*entity.EnrichDetailsBetterContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsBetterContactRepository.RegisterRequest")
 	defer span.Finish()
+	tracing.LogObjectAsJson(span, "data", data)
 
-	err := r.gormDb.Create(&request).Error
+	err := r.gormDb.Create(&data).Error
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	return &data, nil
 }
 
 func (e enrichDetailsBetterContactRepository) AddResponse(ctx context.Context, requestId, response string) error {
