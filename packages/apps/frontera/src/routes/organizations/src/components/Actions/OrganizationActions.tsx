@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { useKey, useKeyBindings } from 'rooks';
+import { useKeys, useKeyBindings } from 'rooks';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
@@ -110,7 +110,7 @@ export const OrganizationTableActions = ({
     clearSelection();
   };
 
-  useKey(
+  useKeys(
     ['Shift', 'O'],
     () => {
       handleOpen('AssignOwner');
@@ -139,7 +139,7 @@ export const OrganizationTableActions = ({
     },
     { when: enableKeyboardShortcuts },
   );
-  useKey(
+  useKeys(
     ['Shift', 'O'],
     (e) => {
       e.stopPropagation();

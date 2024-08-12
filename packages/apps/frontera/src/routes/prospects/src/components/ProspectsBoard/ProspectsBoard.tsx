@@ -1,10 +1,12 @@
 import { useMemo, useState, useEffect } from 'react';
 
+import { useKeys } from 'rooks';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { DropResult, DragDropContext } from '@hello-pangea/dnd';
 
 import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import { Currency, InternalStage } from '@graphql/types';
 
 import { getColumns } from './columns';
@@ -97,6 +99,47 @@ export const ProspectsBoard = observer(() => {
   useEffect(() => {
     store.ui.setSearchCount(count);
   }, [count]);
+
+  useKeys(
+    ['Shift', 'S'],
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      store.ui.commandMenu.setType('ChangeStage');
+      store.ui.commandMenu.setOpen(true);
+    },
+    { when: !!focused },
+  );
+
+  useKeys(
+    ['Shift', 'R'],
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      store.ui.commandMenu.setType('RenameOpportunityName');
+      store.ui.commandMenu.setOpen(true);
+    },
+    { when: !!focused },
+  );
+  useKeys(
+    ['Shift', 'O'],
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      store.ui.commandMenu.setType('AssignOwner');
+      store.ui.commandMenu.setOpen(true);
+    },
+    { when: !!focused },
+  );
+
+  useModKey(
+    'Backspace',
+    () => {
+      store.ui.commandMenu.setType('DeleteConfirmationModal');
+      store.ui.commandMenu.setOpen(true);
+    },
+    { when: !!focused },
+  );
 
   return (
     <>
