@@ -1,15 +1,18 @@
 import { observer } from 'mobx-react-lite';
 
+import { Tag01 } from '@ui/media/icons/Tag01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { User01 } from '@ui/media/icons/User01';
-import { Tag01 } from '@ui/media/icons/Tag01.tsx';
+import { Delete } from '@ui/media/icons/Delete';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { Globe01 } from '@ui/media/icons/Globe01.tsx';
+import { Command } from '@ui/media/icons/Command';
+import { Globe01 } from '@ui/media/icons/Globe01';
+import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { CommandItem } from '@ui/overlay/CommandMenu';
-import { Activity } from '@ui/media/icons/Activity.tsx';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
+import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   InternalType,
@@ -39,8 +42,8 @@ export const OrganizationCommands = observer(() => {
       <>
         <CommandItem
           leftAccessory={<User01 />}
+          rightAccessory={<Kbd>C</Kbd>}
           keywords={organizationKeywords.add_contact}
-          // rightAccessory={<Kbd className='px-1.5'>C</Kbd>}
           onSelect={() => {
             store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
           }}
@@ -54,14 +57,14 @@ export const OrganizationCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeTags');
           }}
-          // rightAccessory={
-          //   <>
-          //     <Kbd className='px-1.5'>
-          //       <ArrowBlockUp className='size-3' />
-          //     </Kbd>
-          //     <Kbd className='px-1.5'>T</Kbd>
-          //   </>
-          // }
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>T</Kbd>
+            </>
+          }
         >
           Change or add tags...
         </CommandItem>
@@ -82,14 +85,14 @@ export const OrganizationCommands = observer(() => {
         <CommandItem
           leftAccessory={<Edit03 />}
           keywords={organizationKeywords.rename_org}
-          // rightAccessory={
-          //   <>
-          //     <Kbd className='px-1.5'>
-          //       <ArrowBlockUp className='size-3' />
-          //     </Kbd>
-          //     <Kbd className='px-1.5'>R</Kbd>
-          //   </>
-          // }
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='size-3' />
+              </Kbd>
+              <Kbd>R</Kbd>
+            </>
+          }
           onSelect={() => {
             store.ui.commandMenu.setType('RenameOrganizationProperty');
             store.ui.commandMenu.setContext({
@@ -153,16 +156,16 @@ export const OrganizationCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
-          // rightAccessory={
-          //   <>
-          //     <Kbd className='px-1.5'>
-          //       <CommandIcon className='size-3' />
-          //     </Kbd>
-          //     <Kbd className='px-1.5'>
-          //       <Delete className='size-3' />
-          //     </Kbd>
-          //   </>
-          // }
+          rightAccessory={
+            <>
+              <Kbd>
+                <Command className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>
+                <Delete className='text-inherit size-3' />
+              </Kbd>
+            </>
+          }
         >
           Archive org
         </CommandItem>
@@ -188,19 +191,20 @@ export const OrganizationCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('AssignOwner');
           }}
-          // rightAccessory={
-          //   <>
-          //     <Kbd className='px-1.5'>
-          //       <ArrowBlockUp className='size-3' />
-          //     </Kbd>
-          //     <Kbd className='px-1.5'>O</Kbd>
-          //   </>
-          // }
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>O</Kbd>
+            </>
+          }
         >
           Assign owner...
         </CommandItem>
 
         <CommandItem
+          rightAccessory={<Kbd>O</Kbd>}
           leftAccessory={<CoinsStacked01 />}
           keywords={organizationKeywords.create_new_opportunity}
           onSelect={() => {

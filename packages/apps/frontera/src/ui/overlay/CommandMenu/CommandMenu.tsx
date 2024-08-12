@@ -68,7 +68,7 @@ export const CommandItem = ({
   );
 };
 
-interface CommandSubItemProps {
+interface CommandSubItemProps extends Partial<CommandItemProps> {
   leftLabel: string;
   rightLabel: string;
   keywords?: string[];
@@ -124,7 +124,7 @@ export const Kbd = ({ children, className, ...props }: KbdProps) => {
     <kbd
       {...props}
       className={cn(
-        'bg-gray-100 text-gray-700 px-2 py-1 rounded-md text-xs',
+        'bg-gray-100 text-gray-700 size-5 flex items-center justify-center rounded-md text-xs',
         className,
       )}
     >

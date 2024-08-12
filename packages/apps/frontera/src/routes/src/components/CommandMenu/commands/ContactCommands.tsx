@@ -6,8 +6,9 @@ import { Clock } from '@ui/media/icons/Clock';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { useStore } from '@shared/hooks/useStore';
-import { CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
+import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
 export const ContactCommands = observer(() => {
@@ -33,6 +34,14 @@ export const ContactCommands = observer(() => {
             'label',
             'profile',
           ]}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>T</Kbd>
+            </>
+          }
         >
           Edit persona tag...
         </CommandItem>
@@ -55,6 +64,14 @@ export const ContactCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('EditEmail');
           }}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>E</Kbd>
+            </>
+          }
         >
           Edit email
         </CommandItem>
@@ -65,6 +82,14 @@ export const ContactCommands = observer(() => {
           onSelect={() => {
             store.ui.commandMenu.setType('EditName');
           }}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>R</Kbd>
+            </>
+          }
         >
           Edit name
         </CommandItem>

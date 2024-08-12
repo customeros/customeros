@@ -1,6 +1,6 @@
 import { OrganizationStage } from '@graphql/types';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { CommandSubItem } from '@ui/overlay/CommandMenu';
+import { Kbd, CommandSubItem } from '@ui/overlay/CommandMenu';
 import { organizationKeywords } from '@shared/components/CommandMenu/commands';
 
 export const StageSubItemGroup = ({
@@ -18,6 +18,7 @@ export const StageSubItemGroup = ({
         rightLabel='Lead'
         icon={<Columns03 />}
         leftLabel='Change org stage'
+        rightAccessory={<Kbd className='px-1.5'>L</Kbd>}
         keywords={organizationKeywords.change_org_stage_to_lead}
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Lead);
@@ -29,6 +30,7 @@ export const StageSubItemGroup = ({
         rightLabel='Target'
         icon={<Columns03 />}
         leftLabel='Change org stage'
+        rightAccessory={<Kbd className='px-1.5'>T</Kbd>}
         keywords={organizationKeywords.change_org_stage_to_target}
         onSelectAction={() => {
           updateStage(selectedIds, OrganizationStage.Target);

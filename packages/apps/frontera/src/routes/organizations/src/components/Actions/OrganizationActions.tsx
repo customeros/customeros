@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 
-import { useKeyBindings } from 'rooks';
+import { useKey, useKeyBindings } from 'rooks';
+import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { X } from '@ui/media/icons/X';
@@ -23,14 +24,13 @@ interface TableActionsProps {
   onCreateContact: () => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<OrganizationStore>;
-  onMerge: (primaryId: string, mergeIds: string[]) => void;
+  handleOpen: (type: CommandMenuType) => void;
   onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
 }
 
 export const OrganizationTableActions = ({
   table,
   onHide,
-  onMerge,
   tableId,
   onUpdateStage,
   enableKeyboardShortcuts,
@@ -38,6 +38,7 @@ export const OrganizationTableActions = ({
   focusedId,
   isCommandMenuOpen,
   onOpenCommandK,
+  handleOpen,
 }: TableActionsProps) => {
   const [targetId, setTargetId] = useState<string | null>(null);
 
@@ -50,12 +51,7 @@ export const OrganizationTableActions = ({
   const clearSelection = () => table.resetRowSelection();
 
   const handleMergeOrganizations = () => {
-    const mergeIds = selectedIds.filter((id) => id !== targetId);
-
-    if (!targetId || !mergeIds.length) return;
-
-    onMerge(targetId, mergeIds);
-    clearSelection();
+    handleOpen('MergeConfirmationModal');
   };
 
   useEffect(() => {
@@ -114,6 +110,14 @@ export const OrganizationTableActions = ({
     clearSelection();
   };
 
+  useKey(
+    ['Shift', 'O'],
+    () => {
+      handleOpen('AssignOwner');
+    },
+    { when: enableKeyboardShortcuts },
+  );
+
   useKeyBindings(
     {
       u: moveToAllOrgs,
@@ -128,10 +132,27 @@ export const OrganizationTableActions = ({
         if (!targetId && focusedId) {
           setTargetId(focusedId);
         }
-        tableId === TableIdType.Nurture && onCreateContact();
+        onCreateContact();
       },
       l: (e) => tableId === TableIdType.Nurture && moveToLeads(e),
       Escape: clearSelection,
+    },
+    { when: enableKeyboardShortcuts },
+  );
+  useKey(
+    ['Shift', 'O'],
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      handleOpen('AssignOwner');
+    },
+    { when: enableKeyboardShortcuts },
+  );
+
+  useModKey(
+    'Backspace',
+    () => {
+      onHide();
     },
     { when: enableKeyboardShortcuts },
   );
@@ -148,7 +169,6 @@ export const OrganizationTableActions = ({
     },
     {
       when:
-        tableId === TableIdType.Nurture &&
         enableKeyboardShortcuts &&
         selectCount <= 1 &&
         typeof focusedId === 'string',
