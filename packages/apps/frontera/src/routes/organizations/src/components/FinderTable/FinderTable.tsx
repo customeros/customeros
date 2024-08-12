@@ -462,7 +462,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             <OrganizationTableActions
               focusedId={focusedId}
               onCreateContact={createSocial}
-              onMerge={store.organizations.merge}
               tableId={tableViewDef?.value.tableId}
               onOpenCommandK={handleOpenCommandKMenu}
               isCommandMenuOpen={isCommandMenuPrompted}
@@ -474,6 +473,11 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
                 !isSearching &&
                 !isCommandMenuPrompted
               }
+              onMerge={() => {
+                store.organizations.merge;
+                store.ui.commandMenu.setOpen(true);
+                store.ui.commandMenu.setType('MergeConfirmationModal');
+              }}
               onHide={() => {
                 store.ui.commandMenu.setCallback(() =>
                   table.resetRowSelection(),
