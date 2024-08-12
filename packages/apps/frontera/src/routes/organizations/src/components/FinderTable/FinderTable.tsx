@@ -467,17 +467,16 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
+              onMerge={() => {
+                store.ui.commandMenu.setOpen(true);
+                store.ui.commandMenu.setType('MergeConfirmationModal');
+              }}
               enableKeyboardShortcuts={
                 !isEditing &&
                 !isFiltering &&
                 !isSearching &&
                 !isCommandMenuPrompted
               }
-              onMerge={() => {
-                store.organizations.merge;
-                store.ui.commandMenu.setOpen(true);
-                store.ui.commandMenu.setType('MergeConfirmationModal');
-              }}
               onHide={() => {
                 store.ui.commandMenu.setCallback(() =>
                   table.resetRowSelection(),
