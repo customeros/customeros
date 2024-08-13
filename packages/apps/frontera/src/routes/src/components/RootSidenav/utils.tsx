@@ -4,6 +4,7 @@ import { Triage } from '@ui/media/icons/Triage';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building07 } from '@ui/media/icons/Building07';
 import { CheckHeart } from '@ui/media/icons/CheckHeart';
+import { Signature } from '@ui/media/icons/Signature.tsx';
 import { Briefcase01 } from '@ui/media/icons/Briefcase01';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { InvoiceCheck } from '@ui/media/icons/InvoiceCheck';
@@ -27,4 +28,5 @@ export const iconMap: Record<
   SwitchHorizontal01: (props) => <SwitchHorizontal01 {...props} />,
   BrokenHeart: (props) => <BrokenHeart {...props} />,
   CoinsStacked01: (props) => <CoinsStacked01 {...props} />,
+  Signature: (props) => <Signature {...props} />,
 };
