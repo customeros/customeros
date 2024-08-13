@@ -3,6 +3,7 @@ package graph
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -206,8 +207,8 @@ func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventsto
 	return err
 }
 
-func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnAddRole")
+func (h *UserEventHandler) OnAddRole(c context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserEventHandler.OnAddRole")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -217,8 +218,10 @@ func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) 
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: eventData.Tenant})
+
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, eventData.Tenant, userId, eventData.Role)
+	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, userId, eventData.Role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding role %s to user %s: %s", eventData.Role, userId, err.Error())

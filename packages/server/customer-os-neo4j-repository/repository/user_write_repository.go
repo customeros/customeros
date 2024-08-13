@@ -45,7 +45,7 @@ type UserWriteRepository interface {
 
 	UpdateUser(ctx context.Context, tenant, userId string, data UserUpdateFields) error
 
-	AddRole(ctx context.Context, tenant, userId, role string) error
+	AddRole(ctx context.Context, userId, role string) error
 	AddRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, userId, role string) error
 	RemoveRole(ctx context.Context, tenant, userId, role string) error
 }
@@ -192,7 +192,7 @@ func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId strin
 	return err
 }
 
-func (r *userWriteRepository) AddRole(c context.Context, tenant, userId, role string) error {
+func (r *userWriteRepository) AddRole(c context.Context, userId, role string) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.AddRole")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -208,7 +208,21 @@ func (r *userWriteRepository) AddRole(c context.Context, tenant, userId, role st
 		return err
 	}
 
-	return r.AddRoleInTx(ctx, tx, userId, role)
+	err = r.AddRoleInTx(ctx, tx, userId, role)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	err = tx.Commit(ctx)
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return err
 }
 
 func (r *userWriteRepository) AddRoleInTx(c context.Context, tx neo4j.ManagedTransaction, userId, role string) error {
