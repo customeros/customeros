@@ -694,11 +694,14 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 1, ColumnType: model.ColumnViewTypeContractsName.String(), Width: 100, Visible: true, Name: "Name", Filter: ""},
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeContractsEnded.String(), Width: 100, Visible: true, Name: "Ended", Filter: ""},
 				{ColumnId: 3, ColumnType: model.ColumnViewTypeContractsPeriod.String(), Width: 100, Visible: true, Name: "Period", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeContractsSignDate.String(), Width: 100, Visible: true, Name: "Sign Date", Filter: ""},
 				{ColumnId: 5, ColumnType: model.ColumnViewTypeContractsCurrency.String(), Width: 100, Visible: true, Name: "Currency", Filter: ""},
 				{ColumnId: 6, ColumnType: model.ColumnViewTypeContractsStatus.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
 				{ColumnId: 7, ColumnType: model.ColumnViewTypeContractsRenewal.String(), Width: 100, Visible: true, Name: "Renewal", Filter: ""},
 				{ColumnId: 8, ColumnType: model.ColumnViewTypeContractsLtv.String(), Width: 100, Visible: true, Name: "LTV", Filter: ""},
+				{ColumnId: 9, ColumnType: model.ColumnViewTypeContractsRenewalDate.String(), Width: 100, Visible: true, Name: "Renewal Date", Filter: ""},
+				{ColumnId: 10, ColumnType: model.ColumnViewTypeContractsForecastArr.String(), Width: 100, Visible: true, Name: "ARR Forecast", Filter: ""},
+				{ColumnId: 11, ColumnType: model.ColumnViewTypeContractsHealth.String(), Width: 100, Visible: true, Name: "Health", Filter: ""},
+				{ColumnId: 12, ColumnType: model.ColumnViewTypeContractsOwner.String(), Width: 100, Visible: true, Name: "Owner", Filter: ""},
 			},
 		}
 	}
