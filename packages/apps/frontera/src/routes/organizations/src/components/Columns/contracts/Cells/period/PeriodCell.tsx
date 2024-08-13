@@ -5,18 +5,18 @@ interface PeriodCellProps {
 
 export function getCommittedPeriodLabel(months: string | number) {
   if (`${months}` === '1') {
-    return 'Month';
+    return 'Monthly';
   }
 
   if (`${months}` === '3') {
-    return 'Quarter';
+    return 'Quarterly';
   }
 
   if (`${months}` === '12') {
-    return 'Annual';
+    return 'Annually';
   }
 
-  return `${months}-month`;
+  return `${months}-monthly`;
 }
 
 export const PeriodCell = ({ committedPeriodInMonths }: PeriodCellProps) => {

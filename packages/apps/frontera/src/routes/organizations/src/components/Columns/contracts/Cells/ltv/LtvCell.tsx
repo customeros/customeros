@@ -12,7 +12,7 @@ export const LtvCell = ({ currency, ltv }: LtvCellProps) => {
 
   return (
     <div className='flex items-center'>
-      {formatCurrency(ltv, 2, currency || 'USD')}
+      {formatCurrency(ltv, 0, currency || 'USD')}
     </div>
   );
 };

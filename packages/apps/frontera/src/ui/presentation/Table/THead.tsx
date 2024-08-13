@@ -84,16 +84,18 @@ const THead = observer(
           {canSort ? (
             isSorted === 'asc' ? (
               <ArrowUp
+                role='button'
                 id='sort-icon'
                 onClick={onToggleSort}
                 className={cn(
-                  isSorted || isOpen ? 'w-3 inline-block' : 'w-0 ',
+                  isSorted || isOpen ? 'w-3 ' : 'w-0 ',
                   !isSorted ? 'text-gray-400' : 'text-gray-700',
                   'mx-1 w-3 h-3 cursor-pointer group-hover:transition-opacity group-hover:opacity-100 group-hover:w-3 group-hover:duration-200 group-hover:ease-in-out',
                 )}
               />
             ) : (
               <ArrowDown
+                role='button'
                 id='sort-icon'
                 onClick={onToggleSort}
                 className={cn(

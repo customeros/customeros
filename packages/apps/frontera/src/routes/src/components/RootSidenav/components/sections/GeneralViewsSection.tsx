@@ -102,24 +102,6 @@ export const GeneralViewsSection = observer(
                 />
               )}
             />
-            <SidenavItem
-              label='Contracts'
-              dataTest={`side-nav-item-all-contracts`}
-              onClick={() =>
-                handleItemClick(`finder?preset=${contractsView?.value?.id}`)
-              }
-              isActive={checkIsActive('finder', {
-                preset: contractsView?.value?.id ?? '',
-              })}
-              icon={(isActive) => (
-                <Signature
-                  className={cn(
-                    'w-5 h-5 text-gray-500',
-                    isActive && 'text-gray-700',
-                  )}
-                />
-              )}
-            />
 
             {showInvoices && upcomingInvoices && (
               <SidenavItem
@@ -144,6 +126,24 @@ export const GeneralViewsSection = observer(
                 }}
               />
             )}
+            <SidenavItem
+              label='Contracts'
+              dataTest={`side-nav-item-all-contracts`}
+              onClick={() =>
+                handleItemClick(`finder?preset=${contractsView?.value?.id}`)
+              }
+              isActive={checkIsActive('finder', {
+                preset: contractsView?.value?.id ?? '',
+              })}
+              icon={(isActive) => (
+                <Signature
+                  className={cn(
+                    'w-5 h-5 text-gray-500',
+                    isActive && 'text-gray-700',
+                  )}
+                />
+              )}
+            />
           </>
         )}
       </CollapsibleSection>

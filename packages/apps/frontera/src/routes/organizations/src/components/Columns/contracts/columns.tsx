@@ -164,8 +164,9 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsCurrency]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsCurrency,
-    minSize: 150,
-    maxSize: 650,
+    minSize: 100,
+    size: 100,
+    maxSize: 350,
     enableResizing: true,
     enableColumnFilter: true,
     enableSorting: true,
@@ -214,7 +215,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsRenewal]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsRenewal,
-    minSize: 230,
+    minSize: 150,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: true,
@@ -225,7 +226,7 @@ const columns: Record<string, Column> = {
           text={
             props.getValue().value.autoRenew
               ? 'Auto-renews'
-              : 'Non auto-renewing'
+              : 'Not auto-renewing'
           }
         />
       );
