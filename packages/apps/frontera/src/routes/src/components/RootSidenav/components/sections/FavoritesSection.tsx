@@ -55,7 +55,7 @@ export const FavoritesSection = observer(
                 preset: view.value.id,
               })}
               icon={(isActive) => {
-                const Icon = iconMap[view.value.icon];
+                const Icon = iconMap?.[view.value.icon];
 
                 return (
                   <Icon
