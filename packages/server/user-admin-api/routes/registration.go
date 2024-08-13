@@ -600,8 +600,8 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 	return nil
 }
 
-func addDefaultMissingRoles(ctx context.Context, services *service.Services, tenant, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Registration.addDefaultMissingRoles")
+func addDefaultMissingRoles(c context.Context, services *service.Services, tenant, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "Registration.addDefaultMissingRoles")
 	defer span.Finish()
 
 	userRoleFound := false
@@ -631,14 +631,14 @@ func addDefaultMissingRoles(ctx context.Context, services *service.Services, ten
 	}
 
 	if !userRoleFound {
-		err := services.CommonServices.Neo4jRepositories.UserWriteRepository.AddRole(ctx, tenant, existingUser.Id, "USER")
+		err := services.CommonServices.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, "USER")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 	}
 	if !ownerRoleFound {
-		err := services.CommonServices.Neo4jRepositories.UserWriteRepository.AddRole(ctx, tenant, existingUser.Id, "OWNER")
+		err := services.CommonServices.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, "OWNER")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
