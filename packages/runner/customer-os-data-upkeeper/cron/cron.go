@@ -215,7 +215,7 @@ func updateContractsStatusAndRenewal(cont *container.Container) {
 }
 
 func updateOrganizations(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).UpkeepOrganizations()
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).UpkeepOrganizations()
 }
 
 func upkeepContacts(cont *container.Container) {
@@ -271,7 +271,7 @@ func sendPayInvoiceNotifications(cont *container.Container) {
 }
 
 func refreshLastTouchpoint(cont *container.Container) {
-	service.NewOrganizationService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).RefreshLastTouchpoint()
+	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).RefreshLastTouchpoint()
 }
 
 func getCurrencyRatesECB(cont *container.Container) {

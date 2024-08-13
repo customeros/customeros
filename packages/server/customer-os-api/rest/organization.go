@@ -63,22 +63,19 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 		}
 
 		// step 1 validate no organization exist with given domain
-		websiteDomain := ""
-		if request.Website != "" {
-			websiteDomain = utils.ExtractDomain(request.Website)
-			if websiteDomain != "" {
-				orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, websiteDomain)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to check organization domain"})
-					return
-				}
-				if orgDbNode != nil {
-					orgId := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*orgDbNode), "id")
-					span.LogFields(tracingLog.String("result", "Organization already exists with given domain"))
-					c.JSON(http.StatusConflict, gin.H{"status": "error", "message": "Organization already exists with given domain", "id": orgId})
-					return
-				}
+		websiteDomain := services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, request.Website)
+		if websiteDomain != "" {
+			orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, websiteDomain)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to check organization domain"})
+				return
+			}
+			if orgDbNode != nil {
+				orgId := utils.GetStringPropOrEmpty(utils.GetPropsFromNode(*orgDbNode), "id")
+				span.LogFields(tracingLog.String("result", "Organization already exists with given domain"))
+				c.JSON(http.StatusConflict, gin.H{"status": "error", "message": "Organization already exists with given domain", "id": orgId})
+				return
 			}
 		}
 

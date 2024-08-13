@@ -1022,11 +1022,7 @@ func (h *OrganizationEventHandler) addDomainToOrg(ctx context.Context, tenant st
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("website", website))
 
-	if strings.TrimSpace(website) == "" {
-		return
-	}
-
-	domain := utils.ExtractDomain(website)
+	domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, website)
 	if domain == "" {
 		return
 	}

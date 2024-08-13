@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"io"
@@ -129,9 +130,10 @@ type organizationEventHandler struct {
 	caches       caches.Cache
 	aiModel      ai.AiModel
 	grpcClients  *grpc_client.Clients
+	services     *service.Services
 }
 
-func NewOrganizationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, aiModel ai.AiModel, grpcClients *grpc_client.Clients) *organizationEventHandler {
+func NewOrganizationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, aiModel ai.AiModel, grpcClients *grpc_client.Clients, services *service.Services) *organizationEventHandler {
 	return &organizationEventHandler{
 		repositories: repositories,
 		log:          log,
@@ -139,6 +141,7 @@ func NewOrganizationEventHandler(repositories *repository.Repositories, log logg
 		caches:       caches,
 		aiModel:      aiModel,
 		grpcClients:  grpcClients,
+		services:     services,
 	}
 }
 
@@ -173,18 +176,12 @@ func (h *organizationEventHandler) EnrichOrganizationByRequest(ctx context.Conte
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	if eventData.Website == "" {
-		return nil
-	}
-
-	domain := utils.ExtractDomain(eventData.Website)
+	domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, eventData.Website)
 	if domain == "" {
 		return nil
 	}
 
 	return h.enrichOrganization(ctx, eventData.Tenant, organizationId, domain)
-
-	return nil
 }
 
 func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenant, organizationId, domain string) error {

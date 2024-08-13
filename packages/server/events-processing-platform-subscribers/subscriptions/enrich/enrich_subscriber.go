@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -28,12 +29,12 @@ type EnrichSubscriber struct {
 	contactEventHandler *contact.ContactEventHandler
 }
 
-func NewEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients) *EnrichSubscriber {
+func NewEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients, services *commonService.Services) *EnrichSubscriber {
 	return &EnrichSubscriber{
 		log:                 log,
 		db:                  db,
 		cfg:                 cfg,
-		contactEventHandler: contact.NewContactEventHandler(repositories, log, cfg, caches, grpcClients),
+		contactEventHandler: contact.NewContactEventHandler(repositories, log, cfg, caches, grpcClients, services),
 	}
 }
 

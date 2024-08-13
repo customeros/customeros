@@ -530,11 +530,10 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 				return
 			}
 
-			if scrapinContactResponse.Company.WebsiteUrl == "" {
+			domain := s.commonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+			if domain == "" {
 				continue
 			}
-
-			domain := utils.ExtractDomain(scrapinContactResponse.Company.WebsiteUrl)
 
 			organizationByDomainNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 			if err != nil {

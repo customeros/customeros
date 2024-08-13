@@ -1,8 +1,10 @@
 package repository
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/sirupsen/logrus"
+	"github.com/opentracing/opentracing-go"
+	"golang.org/x/net/context"
 	"gorm.io/gorm"
 )
 
@@ -19,11 +21,15 @@ func NewPersonalEmailProviderRepository(gormDb *gorm.DB) PersonalEmailProviderRe
 }
 
 func (repo *personalEmailProviderRepositoryImpl) GetPersonalEmailProviders() ([]entity.PersonalEmailProvider, error) {
-	result := []entity.PersonalEmailProvider{}
-	err := repo.gormDb.Find(&result).Limit(1000).Error
+	span, _ := opentracing.StartSpanFromContext(context.Background(), "PersonalEmailProviderRepository.GetPersonalEmailProviders")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var result []entity.PersonalEmailProvider
+	err := repo.gormDb.Find(&result).Error
 
 	if err != nil {
-		logrus.Errorf("error while getting personal email provider list: %v", err)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 

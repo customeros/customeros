@@ -3,6 +3,7 @@ package caches
 import (
 	"encoding/json"
 	"github.com/coocood/freecache"
+	"strconv"
 	"sync"
 )
 
@@ -26,11 +27,12 @@ type UserDetail struct {
 }
 
 type Cache struct {
-	mu                sync.RWMutex
-	apiKeyCache       *freecache.Cache
-	tenantApiKeyCache *freecache.Cache
-	tenantCache       *freecache.Cache
-	userDetailCache   *freecache.Cache
+	mu                                        sync.RWMutex
+	apiKeyCache                               *freecache.Cache
+	tenantApiKeyCache                         *freecache.Cache
+	tenantCache                               *freecache.Cache
+	userDetailCache                           *freecache.Cache
+	organizationWebsiteHostingUrlPattersCache *freecache.Cache
 }
 
 func NewCommonCache() *Cache {
@@ -39,6 +41,7 @@ func NewCommonCache() *Cache {
 		tenantApiKeyCache: freecache.NewCache(cache1MB),
 		tenantCache:       freecache.NewCache(cache1MB),
 		userDetailCache:   freecache.NewCache(cache10MB),
+		organizationWebsiteHostingUrlPattersCache: freecache.NewCache(cache10MB),
 	}
 }
 
@@ -153,4 +156,68 @@ func (c *Cache) AddUserDetailsToCache(username string, userId string, tenant str
 	valueBytes, _ := json.Marshal(userDetail)
 
 	_ = c.userDetailCache.Set(keyBytes, valueBytes, expire15Min)
+}
+
+func (c *Cache) GetOrganizationWebsiteHostingUrlPatters() []string {
+	c.mu.RLock()
+	defer c.mu.RUnlock()
+
+	var urlPatterns []string
+	keyIndex := 1
+
+	for {
+		// Generate the key based on index
+		key := strconv.Itoa(keyIndex)
+
+		// Attempt to get the domains chunk from the cache
+		chunkBytes, err := c.organizationWebsiteHostingUrlPattersCache.Get([]byte(key))
+		if err != nil {
+			break // If a key is not found, assume no more chunks are available
+		}
+
+		var chunk []string
+		err = json.Unmarshal(chunkBytes, &chunk)
+		if err != nil {
+			// If there is an error unmarshalling, decide how to handle it
+			// For simplicity, we stop and return what we have so far
+			break
+		}
+
+		// Append this chunk of domains to the allDomains slice
+		urlPatterns = append(urlPatterns, chunk...)
+
+		keyIndex++ // Increment key index for next iteration
+	}
+
+	return urlPatterns
+}
+
+func (c *Cache) SetOrganizationWebsiteHostingUrlPatters(urlPatterns []string) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+
+	const chunkSize = 100 // Size of each domain chunk
+	for i, j := 0, chunkSize; i < len(urlPatterns); i, j = i+chunkSize, j+chunkSize {
+		// This ensures we don't go past the end of the slice
+		if j > len(urlPatterns) {
+			j = len(urlPatterns)
+		}
+
+		// Get the current chunk and marshal it
+		chunk := urlPatterns[i:j]
+		chunkBytes, err := json.Marshal(chunk)
+		if err != nil {
+			c.organizationWebsiteHostingUrlPattersCache.Clear() // Clear the cache
+			return
+		}
+
+		// Generate a key based on the index
+		key := strconv.Itoa(i/chunkSize + 1) // Convert the integer to a string
+
+		// Store the chunk in the cache
+		err = c.organizationWebsiteHostingUrlPattersCache.Set([]byte(key), chunkBytes, expire1Hour)
+		if err != nil {
+			c.organizationWebsiteHostingUrlPattersCache.Clear()
+		}
+	}
 }

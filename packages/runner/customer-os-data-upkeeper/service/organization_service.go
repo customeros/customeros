@@ -5,10 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
-	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -25,15 +25,15 @@ type OrganizationService interface {
 type organizationService struct {
 	cfg                    *config.Config
 	log                    logger.Logger
-	repositories           *repository.Repositories
+	commonServices         *commonService.Services
 	eventsProcessingClient *grpc_client.Clients
 }
 
-func NewOrganizationService(cfg *config.Config, log logger.Logger, repositories *repository.Repositories, client *grpc_client.Clients) OrganizationService {
+func NewOrganizationService(cfg *config.Config, log logger.Logger, commonServices *commonService.Services, client *grpc_client.Clients) OrganizationService {
 	return &organizationService{
 		cfg:                    cfg,
 		log:                    log,
-		repositories:           repositories,
+		commonServices:         commonServices,
 		eventsProcessingClient: client,
 	}
 }
@@ -62,7 +62,7 @@ func (s *organizationService) RefreshLastTouchpoint() {
 		}
 
 		delayFromPreviousCheck := 5 * 60
-		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint(ctx, limit, delayFromPreviousCheck)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint(ctx, limit, delayFromPreviousCheck)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations for renewals: %v", err)
@@ -88,7 +88,7 @@ func (s *organizationService) RefreshLastTouchpoint() {
 				s.log.Errorf("Error refreshing last touchpoint for organization {%s}: %s", record.OrganizationId, err.Error())
 			}
 
-			err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyLastTouchpointRequestedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyLastTouchpointRequestedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating refresh last touchpoint requested at: %s", err.Error())
@@ -139,7 +139,7 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context,
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate(ctx, limit)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate(ctx, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations for renewals: %v", err)
@@ -194,7 +194,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains(ctx, limit, 360)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains(ctx, limit, 360)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
@@ -208,15 +208,14 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 
 		//process organizations
 		for _, record := range records {
-			organizationDbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, record.Tenant, record.OrganizationId)
+			organizationDbNode, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, record.Tenant, record.OrganizationId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error getting organization {%s}: %s", record.OrganizationId, err.Error())
 			}
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-			domain := utils.ExtractDomain(organizationEntity.Website)
-
+			domain := s.commonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, organizationEntity.Website)
 			if domain != "" {
 				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 					return s.eventsProcessingClient.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
@@ -231,7 +230,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 					s.log.Errorf("Error linking with domain {%s}: %s", record.OrganizationId, err.Error())
 				}
 			}
-			err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())
@@ -266,7 +265,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrich(ctx, limit, 360)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrich(ctx, limit, 360)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
@@ -292,7 +291,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error enriching organization {%s}: %s", record.OrganizationId, err.Error())
 			}
-			err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())
@@ -325,7 +324,7 @@ func (s *organizationService) removeEmptySocials(ctx context.Context) {
 		}
 
 		minutesSinceLastUpdate := 180
-		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelOrganization, minutesSinceLastUpdate, limit)
+		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetEmptySocialsForEntityType(ctx, model.NodeLabelOrganization, minutesSinceLastUpdate, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -378,7 +377,7 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context, now t
 			// continue as normal
 		}
 
-		records, err := s.repositories.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelOrganization, 180, limit)
+		records, err := s.commonServices.Neo4jRepositories.SocialReadRepository.GetDuplicatedSocialsForEntityType(ctx, model.NodeLabelOrganization, 180, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -433,7 +432,7 @@ func (s *organizationService) adjustIndustries(ctx context.Context) {
 		}
 
 		minutesSinceLastCheck := 60 * 12 // 12 hours
-		records, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForAdjustIndustry(ctx, minutesSinceLastCheck, limit, data.GICSIndustryValues)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForAdjustIndustry(ctx, minutesSinceLastCheck, limit, data.GICSIndustryValues)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
@@ -459,7 +458,7 @@ func (s *organizationService) adjustIndustries(ctx context.Context) {
 				s.log.Errorf("Error adjusting industry for organization {%s}: %s", record.OrganizationId, err.Error())
 			}
 
-			err = s.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyIndustryCheckedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyIndustryCheckedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating industry checked at: %s", err.Error())
