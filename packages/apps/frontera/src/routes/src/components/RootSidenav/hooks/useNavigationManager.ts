@@ -11,8 +11,23 @@ export const useNavigationManager = () => {
     { root: 'organization' },
   );
 
+  const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
+    [key: string]: string;
+  }>(`customeros-last-search-for-preset`, { root: 'root' });
+
   const handleItemClick = (path: string) => {
+    const preset = searchParams.get('preset');
+
     setLastActivePosition({ ...lastActivePosition, root: path });
+
+    if (preset) {
+      const search = searchParams.get('search');
+
+      setLastSearchForPreset({
+        ...lastSearchForPreset,
+        [preset]: search ?? '',
+      });
+    }
     navigate(`/${path}`);
   };
 
