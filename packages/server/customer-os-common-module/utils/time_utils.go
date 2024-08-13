@@ -32,6 +32,13 @@ func Now() time.Time {
 	return time.Now().UTC()
 }
 
+func TimeOrNow(t time.Time) time.Time {
+	if t.IsZero() {
+		return Now()
+	}
+	return t
+}
+
 func Today() time.Time {
 	return ToDate(Now())
 }

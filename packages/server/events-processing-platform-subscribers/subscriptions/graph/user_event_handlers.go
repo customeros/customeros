@@ -3,8 +3,10 @@ package graph
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
@@ -48,23 +50,22 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
-		userCreateData := neo4jrepository.UserCreateFields{
-			Name:      eventData.Name,
-			FirstName: eventData.FirstName,
-			LastName:  eventData.LastName,
-			SourceFields: neo4jmodel.Source{
-				Source:        helper.GetSource(eventData.SourceFields.Source),
-				SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
-				AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
-			},
+
+		err = h.repositories.Neo4jRepositories.UserWriteRepository.CreateUserInTx(ctx, tx, eventData.Tenant, neo4jentity.UserEntity{
+			Id:              userId,
+			Name:            eventData.Name,
+			FirstName:       eventData.FirstName,
+			LastName:        eventData.LastName,
 			CreatedAt:       eventData.CreatedAt,
 			UpdatedAt:       eventData.UpdatedAt,
 			Internal:        eventData.Internal,
 			Bot:             eventData.Bot,
 			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
 			Timezone:        eventData.Timezone,
-		}
-		err = h.repositories.Neo4jRepositories.UserWriteRepository.CreateUserInTx(ctx, tx, eventData.Tenant, userId, userCreateData)
+			Source:          helper.GetSource(eventData.SourceFields.Source),
+			SourceOfTruth:   helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+			AppSource:       helper.GetAppSource(eventData.SourceFields.AppSource),
+		})
 		if err != nil {
 			h.log.Errorf("Error while saving user %s: %s", userId, err.Error())
 			return nil, err
@@ -206,40 +207,8 @@ func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventsto
 	return err
 }
 
-func (h *UserEventHandler) OnAddPlayer(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnAddPlayer")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UserAddPlayerInfoEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	data := neo4jrepository.PlayerFields{
-		AuthId:     eventData.AuthId,
-		Provider:   eventData.Provider,
-		IdentityId: eventData.IdentityId,
-		SourceFields: neo4jmodel.Source{
-			Source:        helper.GetSource(eventData.SourceFields.Source),
-			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
-			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
-		},
-		CreatedAt: eventData.CreatedAt,
-	}
-	err := h.repositories.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, eventData.Tenant, userId, data)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error while adding player %s to user %s: %s", eventData.AuthId, userId, err.Error())
-	}
-
-	return err
-}
-
-func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnAddRole")
+func (h *UserEventHandler) OnAddRole(c context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserEventHandler.OnAddRole")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -249,8 +218,10 @@ func (h *UserEventHandler) OnAddRole(ctx context.Context, evt eventstore.Event) 
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
+	ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: eventData.Tenant})
+
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, eventData.Tenant, userId, eventData.Role)
+	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, userId, eventData.Role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding role %s to user %s: %s", eventData.Role, userId, err.Error())

@@ -15,18 +15,21 @@ type Services struct {
 
 	GrpcClients *grpc_client.Clients
 
-	TenantService          TenantService
-	ExternalSystemService  ExternalSystemService
 	ContractService        ContractService
-	ServiceLineItemService ServiceLineItemService
+	CommonService          CommonService
+	CurrencyService        CurrencyService
+	EmailService           EmailService
+	EmailingService        EmailingService
+	ExternalSystemService  ExternalSystemService
 	FlowService            FlowService
 	InvoiceService         InvoiceService
 	SlackChannelService    SlackChannelService
-	CurrencyService        CurrencyService
+	ServiceLineItemService ServiceLineItemService
+	TenantService          TenantService
+	UserService            UserService
 	WorkflowService        WorkflowService
 	WorkspaceService       WorkspaceService
 	SocialService          SocialService
-	EmailingService        EmailingService
 
 	GoogleService GoogleService
 	AzureService  AzureService
@@ -41,6 +44,8 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
 	}
 
+	services.CommonService = NewCommonService(services)
+	services.EmailService = NewEmailService(services)
 	services.TenantService = NewTenantService(nil, services)
 	services.ExternalSystemService = NewExternalSystemService(nil, services)
 	services.ContractService = NewContractService(nil, services)
@@ -53,6 +58,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.WorkspaceService = NewWorkspaceService(services)
 	services.SocialService = NewSocialService(nil, services)
 	services.EmailingService = NewEmailingService(nil, services)
+	services.UserService = NewUserService(services)
 
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)

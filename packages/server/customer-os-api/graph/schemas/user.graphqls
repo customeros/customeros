@@ -47,9 +47,6 @@ type User {
     timezone: String
     profilePhotoUrl: String
 
-    player: Player! @goField(forceResolver: true)
-
-
     roles: [Role!]! @goField(forceResolver: true)
 
     """
@@ -125,12 +122,6 @@ input UserInput {
     **Required**
     """
     email: EmailInput!
-
-    """
-    Player to associate with the user with. If the person does not exist, it will be created.
-    **Required**
-    """
-    player: PlayerInput!
 
     """
     The name of the app performing the create.

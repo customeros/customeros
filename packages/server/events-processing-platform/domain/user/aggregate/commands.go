@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	local_errors "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -27,8 +26,6 @@ func (a *UserAggregate) HandleCommand(ctx context.Context, cmd eventstore.Comman
 		} else {
 			return a.updateUser(ctx, c)
 		}
-	case *command.AddPlayerInfoCommand:
-		return a.addPlayerInfo(ctx, c)
 	case *command.AddRoleCommand:
 		return a.addRole(ctx, c)
 	case *command.RemoveRoleCommand:
@@ -107,30 +104,6 @@ func (a *UserAggregate) updateUser(ctx context.Context, cmd *command.UpsertUserC
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.Source.AppSource,
 	})
-
-	return a.Apply(event)
-}
-
-func (a *UserAggregate) addPlayerInfo(ctx context.Context, cmd *command.AddPlayerInfoCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.addPlayerInfo")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
-
-	timestampNotNil := utils.IfNotNilTimeWithDefault(cmd.Timestamp, utils.Now())
-	cmd.Source.SetDefaultValues()
-
-	event, err := events.NewUserAddPlayerInfoEvent(a, models.PlayerInfo{
-		Provider:   cmd.Provider,
-		AuthId:     cmd.AuthId,
-		IdentityId: cmd.IdentityId,
-	}, cmd.Source, timestampNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUserAddPlayerInfoEvent")
-	}
-	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

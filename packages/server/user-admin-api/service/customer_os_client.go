@@ -14,15 +14,8 @@ import (
 )
 
 type CustomerOsClient interface {
-	CreatePlayer(tenant, userId, identityId, authId, provider string) error
-
 	GetUserById(tenant, userId string) (*model.UserResponse, error)
 	GetUserByEmail(tenant, email string) (*model.UserResponse, error)
-
-	CreateUser(user *model.UserInput, tenant string, roles []model.Role) (*model.UserResponse, error)
-	AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error)
-	AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error)
-	//CreateContact(tenant, username, firstName, lastname, email string, profilePhotoUrl *string) (string, error)
 
 	AddSocialContact(tenant, username, contactId string, socialInput model.SocialInput) (string, error)
 	CreateNoteForContact(tenant, username, contactId string, socialInput model.NoteInput) (string, error)
@@ -69,123 +62,6 @@ func NewCustomerOsClient(cfg *config.Config, driver *neo4j.DriverWithContext) Cu
 		graphqlClient: graphql.NewClient(cfg.CustomerOS.CustomerOsAPI),
 		driver:        driver,
 	}
-}
-
-func (s *customerOsClient) AddUserRole(tenant, userId string, role model.Role) (*model.UserResponse, error) {
-	graphqlRequest := graphql.NewRequest(
-		`
-			mutation user_AddRole($id: ID!, $role: Role!) {
-			  user_AddRole(id: $id, role: $role) {
-				id
-				roles
-			  }
-			}
-	`)
-	graphqlRequest.Var("id", userId)
-	graphqlRequest.Var("role", role)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
-	if err != nil {
-		return nil, err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, err
-	}
-	defer cancel()
-
-	var userAddRoleResponse model.UserAddRoleResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &userAddRoleResponse); err != nil {
-		return nil, err
-	}
-	return &model.UserResponse{
-		ID:    userAddRoleResponse.UserAddRole.ID,
-		Roles: userAddRoleResponse.UserAddRole.Roles,
-	}, nil
-}
-
-func (s *customerOsClient) AddUserRoles(tenant, userId string, roles []model.Role) (*model.UserResponse, error) {
-	for _, role := range roles {
-		_, err := s.AddUserRole(tenant, userId, role)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return s.GetUserById(tenant, userId)
-}
-
-func (s *customerOsClient) CreatePlayer(tenant, userId, identityId, authId, provider string) error {
-
-	graphqlRequest := graphql.NewRequest(
-		`
-		mutation MergePlayer ($userId: ID!, $identityId: String!, $authId: String!, $provider: String!) {
-				player_Merge(userId: $userId, input: {
-					  identityId: $identityId,
-					  authId: $authId,
-					  provider: $provider
-				}) { result }
-		}
-	`)
-	graphqlRequest.Var("userId", userId)
-	graphqlRequest.Var("identityId", identityId)
-	graphqlRequest.Var("authId", authId)
-	graphqlRequest.Var("provider", provider)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
-
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return err
-	}
-	defer cancel()
-
-	var graphqlResponse model.Result
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (s *customerOsClient) CreateUser(user *model.UserInput, tenant string, roles []model.Role) (*model.UserResponse, error) {
-	graphqlRequest := graphql.NewRequest(
-		`
-			mutation AddUser($user: UserInput!) {
-			   user_Create(
-					input: $user) {
-				id
-				roles
-			  }
-			}
-	`)
-	graphqlRequest.Var("tenant", tenant)
-	graphqlRequest.Var("user", *user)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, nil)
-	if err != nil {
-		return nil, err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, err
-	}
-	defer cancel()
-
-	var graphqlResponse model.CreateUserResponse
-	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, err
-	}
-
-	for _, role := range roles {
-		_, err = s.AddUserRole(tenant, graphqlResponse.User.ID, role)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return &model.UserResponse{
-		ID:    graphqlResponse.User.ID,
-		Roles: graphqlResponse.User.Roles,
-	}, nil
 }
 
 func (cosService *customerOsClient) AddSocialContact(tenant, username, contactId string, socialInput model.SocialInput) (string, error) {

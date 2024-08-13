@@ -71,28 +71,6 @@ func (s *userService) UpsertUser(ctx context.Context, request *userpb.UpsertUser
 	return &userpb.UserIdGrpcResponse{Id: userInputId}, nil
 }
 
-func (s *userService) AddPlayerInfo(ctx context.Context, request *userpb.AddPlayerInfoGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.LogFields(log.String("request", fmt.Sprintf("%+v", request)))
-
-	sourceFields := commonmodel.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
-
-	cmd := command.NewAddPlayerInfoCommand(request.UserId, request.Tenant, request.LoggedInUserId, sourceFields,
-		request.Provider, request.AuthId, request.IdentityId, utils.TimestampProtoToTimePtr(request.Timestamp))
-	if err := s.userCommands.AddPlayerInfo.Handle(ctx, cmd); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddPlayerInfoCommand.Handle) tenant:{%s}, user input id:{%s}, err: %s", request.Tenant, request.UserId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	s.log.Infof("Added player info to user {%s}", request.UserId)
-
-	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
-}
-
 func (s *userService) LinkJobRoleToUser(ctx context.Context, request *userpb.LinkJobRoleToUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.AddPlayerInfo")
 	defer span.Finish()

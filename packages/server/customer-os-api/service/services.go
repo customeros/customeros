@@ -49,7 +49,6 @@ type Services struct {
 	AttachmentService          AttachmentService
 	MeetingService             MeetingService
 	TenantService              TenantService
-	PlayerService              PlayerService
 	ExternalSystemService      ExternalSystemService
 	ActionService              ActionService
 	CountryService             CountryService
@@ -118,7 +117,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.InteractionSessionService = NewInteractionSessionService(log, repositories, &services)
 	services.AnalysisService = NewAnalysisService(log, repositories, &services)
 	services.MeetingService = NewMeetingService(log, repositories, &services)
-	services.PlayerService = NewPlayerService(repositories, &services)
 	services.ContractService = NewContractService(log, repositories, grpcClients, &services)
 	services.ServiceLineItemService = NewServiceLineItemService(log, repositories, grpcClients, &services)
 	services.OpportunityService = NewOpportunityService(log, repositories, grpcClients, &services)

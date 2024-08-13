@@ -26,17 +26,6 @@ message UpsertUserGrpcRequest {
   bool bot = 17;
 }
 
-message AddPlayerInfoGrpcRequest {
-  string userId = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string authId = 4;
-  string provider = 5;
-  string identityId = 6;
-  google.protobuf.Timestamp timestamp = 7;
-  SourceFields sourceFields = 8;
-}
-
 message LinkJobRoleToUserGrpcRequest {
   string tenant = 1;
   string userId = 2;
@@ -88,7 +77,6 @@ message UserIdGrpcResponse {
 // User gRPC service
 service userGrpcService {
   rpc UpsertUser(UpsertUserGrpcRequest) returns (UserIdGrpcResponse);
-  rpc AddPlayerInfo(AddPlayerInfoGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkJobRoleToUser(LinkJobRoleToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkPhoneNumberToUser(LinkPhoneNumberToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkEmailToUser(LinkEmailToUserGrpcRequest) returns (UserIdGrpcResponse);

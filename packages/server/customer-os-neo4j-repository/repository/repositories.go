@@ -5,6 +5,8 @@ import (
 )
 
 type Repositories struct {
+	Neo4jDriver *neo4j.DriverWithContext
+
 	ActionReadRepository                  ActionReadRepository
 	ActionWriteRepository                 ActionWriteRepository
 	BankAccountReadRepository             BankAccountReadRepository
@@ -79,6 +81,7 @@ type Repositories struct {
 
 func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string) *Repositories {
 	repositories := Repositories{
+		Neo4jDriver:                           driver,
 		ActionReadRepository:                  NewActionReadRepository(driver, neo4jDatabase),
 		ActionWriteRepository:                 NewActionWriteRepository(driver, neo4jDatabase),
 		BankAccountReadRepository:             NewBankAccountReadRepository(driver, neo4jDatabase),

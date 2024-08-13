@@ -22,8 +22,6 @@ import (
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -44,26 +42,6 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	}
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	if input.Player != nil {
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return r.Clients.UserClient.AddPlayerInfo(ctx, &userpb.AddPlayerInfoGrpcRequest{
-				UserId:         userId,
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AuthId:         input.Player.AuthID,
-				Provider:       input.Player.Provider,
-				IdentityId:     utils.IfNotNilString(input.Player.IdentityID),
-				SourceFields: &commongrpc.SourceFields{
-					Source:    string(neo4jentity.DataSourceOpenline),
-					AppSource: utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
-				},
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			r.log.Errorf("Failed to add player info for user %s: %s", userId, err.Error())
-		}
-	}
 
 	if input.Email != nil {
 		emailId, err := r.Services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, common.GetTenantFromContext(ctx), input.Email.Email)
@@ -269,22 +247,6 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 		return nil, err
 	}
 	return mapper.MapEntityToUser(userEntity), nil
-}
-
-// Player is the resolver for the player field.
-func (r *userResolver) Player(ctx context.Context, obj *model.User) (*model.Player, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "UserResolver.Player", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.user", obj.ID))
-
-	playerEntity, err := r.Services.PlayerService.GetPlayerForUser(ctx, common.GetContext(ctx).Tenant, obj.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get player for user %s", obj.ID)
-		return nil, err
-	}
-	return mapper.MapEntityToPlayer(playerEntity), nil
 }
 
 // Roles is the resolver for the roles field.

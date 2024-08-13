@@ -114,7 +114,7 @@ func CreateDefaultPlayer(ctx context.Context, driver *neo4j.DriverWithContext, a
 	return CreatePlayerWithId(ctx, driver, "", neo4jentity.PlayerEntity{
 		AuthId:     authId,
 		Provider:   provider,
-		IdentityId: utils.StringPtr("test-player-id"),
+		IdentityId: "test-player-id",
 	})
 }
 

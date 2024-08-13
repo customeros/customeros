@@ -8,7 +8,6 @@ import (
 
 type CommandHandlers struct {
 	UpsertUser         UpsertUserCommandHandler
-	AddPlayerInfo      AddPlayerInfoCommandHandler
 	AddRole            AddRoleCommandHandler
 	RemoveRole         RemoveRoleCommandHandler
 	LinkJobRoleCommand LinkJobRoleCommandHandler
@@ -17,7 +16,6 @@ type CommandHandlers struct {
 func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.AggregateStore) *CommandHandlers {
 	return &CommandHandlers{
 		UpsertUser:         NewUpsertUserCommandHandler(log, cfg, es),
-		AddPlayerInfo:      NewAddPlayerInfoCommandHandler(log, cfg, es),
 		LinkJobRoleCommand: NewLinkJobRoleCommandHandler(log, cfg, es),
 		AddRole:            NewAddRoleCommandHandler(log, cfg, es),
 		RemoveRole:         NewRemoveRoleCommandHandler(log, cfg, es),

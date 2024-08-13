@@ -2524,37 +2524,6 @@ type PhoneNumberUpdateInput struct {
 	CountryCodeA2 *string `json:"countryCodeA2,omitempty"`
 }
 
-type Player struct {
-	ID            string        `json:"id"`
-	IdentityID    *string       `json:"identityId,omitempty"`
-	AuthID        string        `json:"authId"`
-	Users         []*PlayerUser `json:"users"`
-	Provider      string        `json:"provider"`
-	CreatedAt     time.Time     `json:"createdAt"`
-	UpdatedAt     time.Time     `json:"updatedAt"`
-	Source        DataSource    `json:"source"`
-	SourceOfTruth DataSource    `json:"sourceOfTruth"`
-	AppSource     string        `json:"appSource"`
-}
-
-type PlayerInput struct {
-	IdentityID *string `json:"identityId,omitempty"`
-	AuthID     string  `json:"authId"`
-	Provider   string  `json:"provider"`
-	AppSource  *string `json:"appSource,omitempty"`
-}
-
-type PlayerUpdate struct {
-	IdentityID *string `json:"identityId,omitempty"`
-	AppSource  *string `json:"appSource,omitempty"`
-}
-
-type PlayerUser struct {
-	User    *User  `json:"user"`
-	Default bool   `json:"default"`
-	Tenant  string `json:"tenant"`
-}
-
 type PriceCalculation struct {
 	CalculationType        *CalculationType `json:"calculationType,omitempty"`
 	RevenueSharePercentage float64          `json:"revenueSharePercentage"`
@@ -3050,7 +3019,6 @@ type User struct {
 	Bot             bool    `json:"bot"`
 	Timezone        *string `json:"timezone,omitempty"`
 	ProfilePhotoURL *string `json:"profilePhotoUrl,omitempty"`
-	Player          *Player `json:"player"`
 	Roles           []Role  `json:"roles"`
 	// All email addresses associated with a user in customerOS.
 	// **Required.  If no values it returns an empty array.**
@@ -3082,9 +3050,6 @@ type UserInput struct {
 	// The email address of the customerOS user.
 	// **Required**
 	Email *EmailInput `json:"email"`
-	// Player to associate with the user with. If the person does not exist, it will be created.
-	// **Required**
-	Player *PlayerInput `json:"player"`
 	// The name of the app performing the create.
 	// **Optional**
 	AppSource *string `json:"appSource,omitempty"`

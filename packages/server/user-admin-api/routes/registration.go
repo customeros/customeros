@@ -8,12 +8,13 @@ import (
 	"github.com/gin-gonic/gin"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
@@ -302,30 +303,28 @@ func getTenant(c context.Context, services *service.Services, personalEmailProvi
 		if playerNode != nil {
 			span.LogFields(tracingLog.Object("playerIdentified", true))
 
-			playerId := commonUtils.GetStringPropOrNil(playerNode.Props, "id")
+			playerId := neo4jmapper.MapDbNodeToPlayerEntity(playerNode).Id
 
-			if playerId != nil {
-				usersDb, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{*playerId})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, false, err
-				}
-
-				if usersDb == nil || len(usersDb) == 0 {
-					tracing.TraceErr(span, fmt.Errorf("users not found"))
-					return nil, false, fmt.Errorf("users not found")
-				}
-
-				tenantFromLabel := model2.GetTenantFromLabels(usersDb[0].Node.Labels, model2.NodeLabelUser)
-
-				if tenantFromLabel == "" {
-					tracing.TraceErr(span, fmt.Errorf("tenant not found"))
-					return nil, false, fmt.Errorf("tenant not found")
-				}
-
-				span.LogFields(tracingLog.String("tenantIdentifiedFromPlayer", tenantFromLabel))
-				return &tenantFromLabel, false, nil
+			usersDb, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetUsersForPlayer(ctx, []string{playerId})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, false, err
 			}
+
+			if usersDb == nil || len(usersDb) == 0 {
+				tracing.TraceErr(span, fmt.Errorf("users not found"))
+				return nil, false, fmt.Errorf("users not found")
+			}
+
+			tenantFromLabel := commonModel.GetTenantFromLabels(usersDb[0].Node.Labels, commonModel.NodeLabelUser)
+
+			if tenantFromLabel == "" {
+				tracing.TraceErr(span, fmt.Errorf("tenant not found"))
+				return nil, false, fmt.Errorf("tenant not found")
+			}
+
+			span.LogFields(tracingLog.String("tenantIdentifiedFromPlayer", tenantFromLabel))
+			return &tenantFromLabel, false, nil
 		} else {
 			span.LogFields(tracingLog.Object("playerIdentified", false))
 		}
@@ -496,20 +495,20 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 
 	appSource := APP_SOURCE
 
-	playerExists := false
-	userExists := false
-	var user *neo4jentity.UserEntity
+	userId := ""
+	emailId := ""
+	playerId := ""
 
-	playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, email, provider)
+	emailNode, err := services.CommonServices.Neo4jRepositories.EmailReadRepository.GetFirstByEmail(ctx, tenant, email)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
-	if playerNode != nil {
-		playerExists = true
-		span.LogFields(tracingLog.Object("player", "found"))
+	if emailNode != nil {
+		emailId = neo4jmapper.MapDbNodeToEmailEntity(emailNode).Id
+		span.LogFields(tracingLog.Object("email", "found"))
 	} else {
-		span.LogFields(tracingLog.Object("player", "not found"))
+		span.LogFields(tracingLog.Object("email", "not found"))
 	}
 
 	userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
@@ -518,95 +517,110 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		return err
 	}
 	if userNode != nil {
-		user = neo4jmapper.MapDbNodeToUserEntity(userNode)
-
-		userExists = true
+		userId = neo4jmapper.MapDbNodeToUserEntity(userNode).Id
 		span.LogFields(tracingLog.Object("user", "found"))
 	} else {
 		span.LogFields(tracingLog.Object("user", "not found"))
 	}
 
-	if !playerExists && !userExists {
-		_, err := services.CustomerOsClient.CreateUser(&model.UserInput{
-			FirstName: *firstName,
-			LastName:  *lastName,
-			Email: model.EmailInput{
-				Email:     email,
-				Primary:   true,
-				AppSource: &appSource,
-			},
-			Player: model.PlayerInput{
-				IdentityId: providerAccountId,
-				AuthId:     email,
-				Provider:   provider,
-				AppSource:  &appSource,
-			},
-			AppSource: &appSource,
-		}, tenant, []model.Role{model.RoleUser, model.RoleOwner})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		retries := 0
-
-		for {
-			userId, _, _, err := services.CommonServices.Neo4jRepositories.UserReadRepository.FindFirstUserWithRolesByEmail(ctx, email)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-
-			if userId != "" || retries > 25 {
-				break
-			}
-
-			retries++
-			time.Sleep(1 * time.Second)
-		}
-
-		userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		if userNode != nil {
-			user = neo4jmapper.MapDbNodeToUserEntity(userNode)
-		} else {
-			tracing.TraceErr(span, fmt.Errorf("user not created"))
-			return fmt.Errorf("user not created")
-		}
-	} else {
-		if !playerExists {
-			err = services.CustomerOsClient.CreatePlayer(tenant, user.Id, providerAccountId, email, provider)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-		}
-	}
-
-	err = addDefaultMissingRoles(ctx, services, user, &tenant)
+	playerNode, err := services.CommonServices.Neo4jRepositories.PlayerReadRepository.GetPlayerByAuthIdProvider(ctx, email, provider)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+	if playerNode != nil {
+		playerId = neo4jmapper.MapDbNodeToPlayerEntity(playerNode).Id
+		span.LogFields(tracingLog.Object("player", "found"))
+	} else {
+		span.LogFields(tracingLog.Object("player", "not found"))
+	}
+
+	if emailId == "" {
+		emailId, err = services.CommonServices.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelEmail)
+		err := services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailId, neo4jrepository.EmailCreateFields{
+			RawEmail:  email,
+			CreatedAt: commonUtils.Now(),
+			SourceFields: neo4jmodel.Source{
+				AppSource: appSource,
+			},
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	if userId == "" {
+		userId, err = services.CommonServices.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		err = services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{
+			Id:        userId,
+			FirstName: *firstName,
+			LastName:  *lastName,
+			Roles:     []string{"USER", "OWNER"},
+			AppSource: appSource,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		err := services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, userId, commonModel.USER, "HAS", emailId, commonModel.EMAIL)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+	} else {
+
+		err = addDefaultMissingRoles(ctx, services, tenant, userId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	if playerId == "" {
+		err := services.CommonServices.Neo4jRepositories.PlayerWriteRepository.Merge(ctx, userId, neo4jentity.PlayerEntity{
+			AuthId:     email,
+			Provider:   provider,
+			IdentityId: providerAccountId,
+			AppSource:  appSource,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	return nil
 }
 
-func addDefaultMissingRoles(ctx context.Context, services *service.Services, user *neo4jentity.UserEntity, tenant *string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "Registration.addDefaultMissingRoles")
+func addDefaultMissingRoles(c context.Context, services *service.Services, tenant, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "Registration.addDefaultMissingRoles")
 	defer span.Finish()
 
-	var rolesToAdd []model.Role
+	userRoleFound := false
+	ownerRoleFound := false
 
-	if user.Roles == nil || len(user.Roles) == 0 {
-		rolesToAdd = []model.Role{model.RoleUser, model.RoleOwner}
-	} else {
-		userRoleFound := false
-		ownerRoleFound := false
-		for _, role := range user.Roles {
+	userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if userNode == nil {
+		tracing.TraceErr(span, fmt.Errorf("user not found"))
+		return fmt.Errorf("user not found")
+	}
+
+	existingUser := neo4jmapper.MapDbNodeToUserEntity(userNode)
+
+	if existingUser.Roles != nil && len(existingUser.Roles) > 0 {
+		for _, role := range existingUser.Roles {
 			if role == "USER" {
 				userRoleFound = true
 			}
@@ -614,18 +628,17 @@ func addDefaultMissingRoles(ctx context.Context, services *service.Services, use
 				ownerRoleFound = true
 			}
 		}
-		if !userRoleFound {
-			rolesToAdd = append(rolesToAdd, model.RoleUser)
-		}
-		if !ownerRoleFound {
-			rolesToAdd = append(rolesToAdd, model.RoleOwner)
-		}
 	}
 
-	span.LogFields(tracingLog.Object("rolesToAdd", rolesToAdd))
-
-	if len(rolesToAdd) > 0 {
-		_, err := services.CustomerOsClient.AddUserRoles(*tenant, user.Id, rolesToAdd)
+	if !userRoleFound {
+		err := services.CommonServices.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, "USER")
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+	if !ownerRoleFound {
+		err := services.CommonServices.Neo4jRepositories.UserWriteRepository.AddRole(ctx, existingUser.Id, "OWNER")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -817,6 +830,6 @@ func waitForOrganizationAndContactToBeCreated(ctx context.Context, services *ser
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registration.waitForOrganizationAndContactToBeCreated")
 	defer span.Finish()
 
-	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *organizationId, model2.NodeLabelOrganization, 30*time.Second)
-	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *contactId, model2.NodeLabelContact, 30*time.Second)
+	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *organizationId, commonModel.NodeLabelOrganization, 30*time.Second)
+	neo4jrepository.WaitForNodeCreatedInNeo4jWithConfig(ctx, span, services.CommonServices.Neo4jRepositories, *contactId, commonModel.NodeLabelContact, 30*time.Second)
 }

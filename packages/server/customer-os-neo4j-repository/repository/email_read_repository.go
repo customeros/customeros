@@ -143,8 +143,8 @@ func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email
 	tracing.SetNeo4jRepositorySpanTags(span, tenant)
 	span.LogFields(log.String("email", email))
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) "+
-		"WHERE e.rawEmail = $email OR e.email = $email RETURN e ORDER BY e.createdAt LIMIT 1`
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) 
+		       WHERE e.rawEmail = $email OR e.email = $email RETURN e ORDER BY e.createdAt LIMIT 1`
 	params := map[string]any{
 		"tenant": tenant,
 		"email":  email,
@@ -159,9 +159,20 @@ func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email
 		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
-	if err != nil {
+
+	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
+
+	if dbRecord == nil {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	}
+
+	span.LogFields(log.Bool("result.found", true))
 	return dbRecord.(*dbtype.Node), err
 }
 
