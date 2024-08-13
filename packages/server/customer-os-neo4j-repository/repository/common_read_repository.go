@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -12,6 +13,8 @@ import (
 )
 
 type CommonReadRepository interface {
+	GenerateId(ctx context.Context, tenant, label string) (string, error)
+
 	ExistsById(ctx context.Context, tenant, id, label string) (bool, error)
 	IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error)
 	ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error)
@@ -33,6 +36,26 @@ func NewCommonReadRepository(driver *neo4j.DriverWithContext, database string) C
 
 func (r *commonReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+}
+
+func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.GenerateId")
+	defer span.Finish()
+	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+
+	id := ""
+	for true {
+		id = uuid.New().String()
+		exists, err := r.ExistsById(ctx, tenant, id, label)
+		if err != nil {
+			return "", err
+		}
+		if !exists {
+			break
+		}
+	}
+
+	return id, nil
 }
 
 func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label string) (bool, error) {

@@ -22,14 +22,7 @@ type User struct {
 	JobRoles        map[string]bool              `json:"jobRoles"`
 	Source          commonmodel.Source           `json:"source"`
 	ExternalSystems []commonmodel.ExternalSystem `json:"externalSystems"`
-	Players         []PlayerInfo                 `json:"players"`
 	Roles           []string                     `json:"roles"`
-}
-
-type PlayerInfo struct {
-	Provider   string `json:"provider"`
-	AuthId     string `json:"authId"`
-	IdentityId string `json:"identityId"`
 }
 
 type UserPhoneNumber struct {

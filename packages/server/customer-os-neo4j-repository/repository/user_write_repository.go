@@ -3,10 +3,12 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -38,10 +40,13 @@ type UserUpdateFields struct {
 }
 
 type UserWriteRepository interface {
-	CreateUser(ctx context.Context, tenant, userId string, data UserCreateFields) error
-	CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, userId string, data UserCreateFields) error
+	CreateUser(ctx context.Context, input neo4jentity.UserEntity) error
+	CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, input neo4jentity.UserEntity) error
+
 	UpdateUser(ctx context.Context, tenant, userId string, data UserUpdateFields) error
+
 	AddRole(ctx context.Context, tenant, userId, role string) error
+	AddRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, userId, role string) error
 	RemoveRole(ctx context.Context, tenant, userId, role string) error
 }
 
@@ -61,28 +66,32 @@ func (r *userWriteRepository) prepareWriteSession(ctx context.Context) neo4j.Ses
 	return utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *userWriteRepository) CreateUser(ctx context.Context, tenant, userId string, data UserCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.CreateUser")
+func (r *userWriteRepository) CreateUser(c context.Context, input neo4jentity.UserEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.CreateUser")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	tracing.LogObjectAsJson(span, "data", data)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, input.Id)
+
+	tracing.LogObjectAsJson(span, "input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	session := r.prepareWriteSession(ctx)
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		return nil, r.CreateUserInTx(ctx, tx, tenant, userId, data)
+		return nil, r.CreateUserInTx(ctx, tx, tenant, input)
 	})
 	return err
 }
 
-func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, userId string, data UserCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.CreateUserInTx")
+func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.ManagedTransaction, tenant string, input neo4jentity.UserEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.CreateUserInTx")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, userId)
-	tracing.LogObjectAsJson(span, "data", data)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, input.Id)
+
+	tracing.LogObjectAsJson(span, "input", input)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
@@ -95,6 +104,7 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 						u.createdAt = $createdAt,
 						u.updatedAt = datetime(),
 						u.internal = $internal,
+						u.roles = $roles,
 						u.bot = $bot,
 						u.profilePhotoUrl = $profilePhotoUrl,
 						u.timezone = $timezone,
@@ -103,6 +113,7 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 						u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
 						u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
 						u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
+						u.roles = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.roles is null THEN $roles ELSE u.roles END,
 						u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
 						u.internal = $internal,
 						u.bot = $bot,
@@ -111,19 +122,20 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 						u.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"tenant":          tenant,
-		"id":              userId,
-		"name":            data.Name,
-		"firstName":       data.FirstName,
-		"lastName":        data.LastName,
-		"internal":        data.Internal,
-		"bot":             data.Bot,
-		"profilePhotoUrl": data.ProfilePhotoUrl,
-		"timezone":        data.Timezone,
-		"source":          data.SourceFields.Source,
-		"sourceOfTruth":   data.SourceFields.SourceOfTruth,
-		"appSource":       data.SourceFields.AppSource,
-		"createdAt":       data.CreatedAt,
-		"overwrite":       data.SourceFields.SourceOfTruth == constants.SourceOpenline,
+		"id":              input.Id,
+		"name":            input.Name,
+		"firstName":       input.FirstName,
+		"lastName":        input.LastName,
+		"internal":        input.Internal,
+		"roles":           input.Roles,
+		"bot":             input.Bot,
+		"profilePhotoUrl": input.ProfilePhotoUrl,
+		"timezone":        input.Timezone,
+		"source":          utils.StringFirstNonEmpty(input.Source, constants.SourceOpenline),
+		"sourceOfTruth":   utils.StringFirstNonEmpty(input.SourceOfTruth, constants.SourceOpenline),
+		"appSource":       input.AppSource,
+		"createdAt":       utils.TimeOrNow(input.CreatedAt),
+		"overwrite":       input.SourceOfTruth == constants.SourceOpenline,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -135,10 +147,10 @@ func (r *userWriteRepository) CreateUserInTx(ctx context.Context, tx neo4j.Manag
 	return nil
 }
 
-func (r *userWriteRepository) UpdateUser(ctx context.Context, tenant, userId string, data UserUpdateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.UpdateUser")
+func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId string, data UserUpdateFields) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.UpdateUser")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, userId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -180,12 +192,33 @@ func (r *userWriteRepository) UpdateUser(ctx context.Context, tenant, userId str
 	return err
 }
 
-func (r *userWriteRepository) AddRole(ctx context.Context, tenant, userId, role string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.AddRole")
+func (r *userWriteRepository) AddRole(c context.Context, tenant, userId, role string) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.AddRole")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, userId)
 	span.LogFields(log.String("role", role))
+
+	session := r.prepareWriteSession(ctx)
+	defer session.Close(ctx)
+
+	tx, err := session.BeginTransaction(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return r.AddRoleInTx(ctx, tx, userId, role)
+}
+
+func (r *userWriteRepository) AddRoleInTx(c context.Context, tx neo4j.ManagedTransaction, userId, role string) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.AddRoleInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, userId)
+	span.LogFields(log.String("role", role))
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	cypher := `MATCH (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
 		 	SET u.roles = CASE
@@ -204,17 +237,17 @@ func (r *userWriteRepository) AddRole(ctx context.Context, tenant, userId, role 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
+	if err := utils.ExecuteQueryInTx(ctx, tx, cypher, params); err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+	return nil
 }
 
-func (r *userWriteRepository) RemoveRole(ctx context.Context, tenant, userId, role string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserWriteRepository.RemoveRole")
+func (r *userWriteRepository) RemoveRole(c context.Context, tenant, userId, role string) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "UserWriteRepository.RemoveRole")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, userId)
 	span.LogFields(log.String("role", role))
 

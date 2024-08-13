@@ -21,7 +21,6 @@ const (
 )
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
-	registerWhoamiRoutes(ctx, r, services, cache)
 	registerStreamRoutes(ctx, r, services, cache)
 	registerOutreachRoutes(ctx, r, services, cache)
 	registerCustomerBaseRoutes(ctx, r, services, grpcClients, cache)
@@ -58,13 +57,6 @@ func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, ser
 		enrichContextMiddleware(),
 		cosHandler.StatsSuccessHandler(method+":"+path, services),
 		handler)
-}
-
-func registerWhoamiRoutes(ctx context.Context, r *gin.Engine, serviceContainer *service.Services, cache *commoncaches.Cache) {
-	r.GET("/whoami",
-		tracing.TracingEnhancer(ctx, "GET:/whoami"),
-		security.ApiKeyCheckerHTTP(serviceContainer.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, serviceContainer.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
-		rest.WhoamiHandler(serviceContainer))
 }
 
 func registerStreamRoutes(ctx context.Context, r *gin.Engine, serviceContainer *service.Services, cache *commoncaches.Cache) {

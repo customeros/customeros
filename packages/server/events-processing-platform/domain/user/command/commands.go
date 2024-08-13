@@ -28,26 +28,6 @@ func NewUpsertUserCommand(objectID, tenant, userId string, source cmnmod.Source,
 	}
 }
 
-type AddPlayerInfoCommand struct {
-	eventstore.BaseCommand
-	Provider   string `json:"provider" validate:"required"`
-	AuthId     string `json:"authId" validate:"required"`
-	IdentityId string
-	Source     cmnmod.Source
-	Timestamp  *time.Time
-}
-
-func NewAddPlayerInfoCommand(objectID, tenant, userId string, source cmnmod.Source, provider, authId, identityId string, timestamp *time.Time) *AddPlayerInfoCommand {
-	return &AddPlayerInfoCommand{
-		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId),
-		Source:      source,
-		Timestamp:   timestamp,
-		Provider:    provider,
-		AuthId:      authId,
-		IdentityId:  identityId,
-	}
-}
-
 type LinkJobRoleCommand struct {
 	eventstore.BaseCommand
 	JobRoleId string

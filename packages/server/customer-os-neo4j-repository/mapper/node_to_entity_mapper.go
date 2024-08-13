@@ -27,16 +27,19 @@ func MapDbNodeToWorkspaceEntity(dbNode dbtype.Node) *entity.WorkspaceEntity {
 	return &domain
 }
 
-func MapDbNodeToPlayerEntity(node neo4j.Node) *entity.PlayerEntity {
-	props := utils.GetPropsFromNode(node)
+func MapDbNodeToPlayerEntity(node *neo4j.Node) *entity.PlayerEntity {
+	if node == nil {
+		return &entity.PlayerEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
 
 	return &entity.PlayerEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		AuthId:        utils.GetStringPropOrEmpty(props, "authId"),
 		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
-		IdentityId:    utils.GetStringPropOrNil(props, "identityId"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		IdentityId:    utils.GetStringPropOrEmpty(props, "identityId"),
+		Source:        utils.GetStringPropOrEmpty(props, "source"),
+		SourceOfTruth: utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -190,8 +193,8 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          utils.GetStringPropOrEmpty(props, "source"),
+		SourceOfTruth:   utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),

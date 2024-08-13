@@ -2,10 +2,14 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -20,7 +24,11 @@ type PlayerFields struct {
 }
 
 type PlayerWriteRepository interface {
-	Merge(ctx context.Context, tenant, userId string, data PlayerFields) error
+	Merge(ctx context.Context, userId string, data entity.PlayerEntity) error
+
+	SetDefaultUser(ctx context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error
+	LinkWithUser(ctx context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error
+	UnlinkUser(ctx context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error
 }
 
 type playerWriteRepository struct {
@@ -35,10 +43,13 @@ func NewPlayerWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r *playerWriteRepository) Merge(ctx context.Context, tenant, userId string, data PlayerFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerWriteRepository.Merge")
+func (r *playerWriteRepository) Merge(c context.Context, userId string, data entity.PlayerEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.Merge")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
 	span.LogFields(log.String("userId", userId))
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -60,10 +71,10 @@ func (r *playerWriteRepository) Merge(ctx context.Context, tenant, userId string
 		"authId":        data.AuthId,
 		"provider":      data.Provider,
 		"identityId":    data.IdentityId,
-		"createdAt":     data.CreatedAt,
-		"appSource":     data.SourceFields.AppSource,
-		"source":        data.SourceFields.Source,
-		"sourceOfTruth": data.SourceFields.SourceOfTruth,
+		"createdAt":     utils.TimeOrNow(data.CreatedAt),
+		"appSource":     data.AppSource,
+		"source":        utils.StringFirstNonEmpty(data.Source, constants.SourceOpenline),
+		"sourceOfTruth": utils.StringFirstNonEmpty(data.SourceOfTruth, constants.SourceOpenline),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -73,4 +84,88 @@ func (r *playerWriteRepository) Merge(ctx context.Context, tenant, userId string
 		tracing.TraceErr(span, err)
 	}
 	return err
+}
+
+func (r *playerWriteRepository) SetDefaultUser(c context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.SetDefaultUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`
+			MATCH (p:Player {id:$playerId})-[r:%s]->(u:User_%s)
+			SET r.default=
+				CASE u.id
+					WHEN $userId THEN true
+					ELSE false
+				END
+			RETURN DISTINCT(p)`, relation, tenant)
+	params := map[string]any{
+		"playerId": playerId,
+		"userId":   userId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *playerWriteRepository) LinkWithUser(c context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.LinkWithUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`
+			MATCH (p:Player {id:$playerId}), (u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MERGE (p)-[r:%s]->(u)
+			SET r.default= CASE
+				WHEN NOT EXISTS((p)-[:%s {default: true}]->(:User)) THEN true
+				ELSE false
+			END
+			RETURN p`, relation, tenant)
+	params := map[string]any{
+		"playerId": playerId,
+		"userId":   userId,
+		"tenant":   tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *playerWriteRepository) UnlinkUser(c context.Context, tenant, userId, playerId string, relation entity.PlayerRelation) error {
+	span, ctx := opentracing.StartSpanFromContext(c, "PlayerWriteRepository.UnlinkUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`
+			MATCH (p:Player {id:$playerId}), (u:User_%s {id:$userId})
+							MATCH (p)-[r:%s]->(u)
+							DELETE r return p`, relation, tenant)
+	params := map[string]any{
+		"playerId": playerId,
+		"userId":   userId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

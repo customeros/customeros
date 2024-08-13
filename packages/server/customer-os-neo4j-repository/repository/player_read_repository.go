@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -16,6 +17,8 @@ import (
 type PlayerReadRepository interface {
 	GetPlayerByAuthIdProvider(ctx context.Context, authId string, provider string) (*dbtype.Node, error)
 	GetUsersForPlayer(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error)
+	GetPlayerByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error)
+	GetPlayerForUser(ctx context.Context, userId string, relation entity.PlayerRelation) (*dbtype.Node, error)
 }
 
 type playerReadRepository struct {
@@ -46,25 +49,25 @@ func (r *playerReadRepository) GetPlayerByAuthIdProvider(ctx context.Context, au
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
-		}
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	})
-	if err != nil {
-		tracing.TraceErr(span, err)
+
+	if err != nil && err.Error() == "Result contains no more records" {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, nil
+	} else if err != nil {
 		return nil, err
 	}
 
-	if result == nil {
+	if dbRecord == nil {
 		span.LogFields(log.Bool("result.found", false))
 		return nil, nil
 	}
 
 	span.LogFields(log.Bool("result.found", true))
-	return result.(*dbtype.Node), nil
+	return dbRecord.(*dbtype.Node), err
 }
 
 func (r *playerReadRepository) GetUsersForPlayer(ctx context.Context, ids []string) ([]*utils.DbNodeWithRelationIdAndTenant, error) {
@@ -100,4 +103,63 @@ func (r *playerReadRepository) GetUsersForPlayer(ctx context.Context, ids []stri
 	span.LogFields(log.Int("result.found", len(data)))
 
 	return data, nil
+}
+
+func (r *playerReadRepository) GetPlayerForUser(ctx context.Context, userId string, relation entity.PlayerRelation) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerReadRepository.GetPlayerForUser")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (p:Player)-[:%s]->(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}) RETURN p`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, relation),
+			map[string]any{
+				"userId": userId,
+				"tenant": tenant,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error getting player for user: %w", err)
+	}
+
+	return result.(*dbtype.Node), nil
+
+}
+
+func (r *playerReadRepository) GetPlayerByIdentityId(ctx context.Context, identityId string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PlayerReadRepository.GetPlayerByIdentityId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := `MATCH (p:Player {identityId:$identityId}) RETURN p`
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query),
+			map[string]any{
+				"identityId": identityId,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, fmt.Errorf("error getting player by identityId: %w", err)
+	}
+
+	return result.(*dbtype.Node), nil
+
 }

@@ -8,6 +8,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	issuepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/issue"
@@ -191,22 +194,26 @@ func (t *tenantDataInjector) InjectTenantData(ctx context.Context, tenant, usern
 			return err
 		}
 		if userResponse == nil {
-			userResponse, err := t.services.CustomerOsClient.CreateUser(&cosModel.UserInput{
-				FirstName: user.FirstName,
-				LastName:  user.LastName,
-				Email: cosModel.EmailInput{
-					Email: user.Email,
+			uid, err := t.services.CommonServices.UserService.Create(ctx, commonService.UserCreateData{
+				UserInput: neo4jentity.UserEntity{
+					FirstName:       user.FirstName,
+					LastName:        user.LastName,
+					Roles:           []string{"USER", "OWNER"},
+					ProfilePhotoUrl: utils.StringPtrFirstNonEmpty(user.ProfilePhotoURL),
+					AppSource:       appSource,
 				},
-				AppSource:       &appSource,
-				ProfilePhotoURL: user.ProfilePhotoURL,
-			}, tenant, []cosModel.Role{cosModel.RoleUser, cosModel.RoleOwner})
+				EmailInput: neo4jentity.EmailEntity{
+					Email:     user.Email,
+					AppSource: appSource,
+				},
+			})
 			if err != nil {
 				return err
 			}
 
 			userIds = append(userIds, EmailAddressWithId{
 				Email: user.Email,
-				Id:    userResponse.ID,
+				Id:    *uid,
 			})
 		} else {
 			userIds = append(userIds, EmailAddressWithId{

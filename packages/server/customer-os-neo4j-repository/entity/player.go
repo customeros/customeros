@@ -13,11 +13,11 @@ const (
 
 type PlayerEntity struct {
 	Id            string
-	IdentityId    *string
+	IdentityId    string
 	AuthId        string
 	Provider      string
-	Source        DataSource
-	SourceOfTruth DataSource
+	Source        string
+	SourceOfTruth string
 	AppSource     string
 	CreatedAt     time.Time
 	UpdatedAt     time.Time

@@ -72,11 +72,6 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 	panic(fmt.Errorf("not implemented: UserByEmail - user_ByEmail"))
 }
 
-// Player is the resolver for the player field.
-func (r *userResolver) Player(ctx context.Context, obj *model.User) (*model.Player, error) {
-	panic(fmt.Errorf("not implemented: Player - player"))
-}
-
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
 	panic(fmt.Errorf("not implemented: Roles - roles"))

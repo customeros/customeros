@@ -12,7 +12,6 @@ import (
 const (
 	UserCreateV1          = "V1_USER_CREATE"
 	UserUpdateV1          = "V1_USER_UPDATE"
-	UserAddPlayerV1       = "V1_USER_ADD_PLAYER"
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
 	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
 	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
@@ -182,36 +181,6 @@ func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, labe
 	event := eventstore.NewBaseEvent(aggregate, UserEmailLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserLinkEmailEvent")
-	}
-	return event, nil
-}
-
-type UserAddPlayerInfoEvent struct {
-	Tenant       string        `json:"tenant" validate:"required"`
-	Provider     string        `json:"provider" validate:"required"`
-	AuthId       string        `json:"authId" validate:"required"`
-	IdentityId   string        `json:"identityId"`
-	CreatedAt    time.Time     `json:"createdAt"`
-	SourceFields cmnmod.Source `json:"sourceFields"`
-}
-
-func NewUserAddPlayerInfoEvent(aggregate eventstore.Aggregate, dataFields models.PlayerInfo, source cmnmod.Source, createdAt time.Time) (eventstore.Event, error) {
-	eventData := UserAddPlayerInfoEvent{
-		Tenant:       aggregate.GetTenant(),
-		Provider:     dataFields.Provider,
-		AuthId:       dataFields.AuthId,
-		IdentityId:   dataFields.IdentityId,
-		CreatedAt:    createdAt,
-		SourceFields: source,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserAddPlayerInfoEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, UserAddPlayerV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserAddPlayerInfoEvent")
 	}
 	return event, nil
 }

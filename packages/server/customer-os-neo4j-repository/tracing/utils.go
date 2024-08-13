@@ -16,6 +16,7 @@ func setTenantSpanTag(span opentracing.Span, tenant string) {
 	}
 }
 
+// deprecated
 func SetNeo4jRepositorySpanTags(span opentracing.Span, tenant string) {
 	setTenantSpanTag(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, neo4jRepository)
