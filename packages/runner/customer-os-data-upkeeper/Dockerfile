@@ -11,6 +11,7 @@ COPY server/customer-os-postgres-repository/. /app/packages/server/customer-os-p
 COPY server/events-processing-proto/. /app/packages/server/events-processing-proto/
 COPY server/events/. /app/packages/server/events/
 COPY server/customer-os-api-sdk/. /app/packages/server/customer-os-api-sdk/
+COPY server/enrichment-api/. /app/packages/server/enrichment-api/
 COPY runner/customer-os-data-upkeeper/. /app/packages/runner/customer-os-data-upkeeper
 
 WORKDIR /app/packages/runner/customer-os-data-upkeeper

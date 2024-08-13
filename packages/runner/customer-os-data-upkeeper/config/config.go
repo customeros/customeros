@@ -25,10 +25,13 @@ type Config struct {
 		Url    string `env:"PLATFORM_ADMIN_API_URL"`
 		ApiKey string `env:"PLATFORM_ADMIN_API_KEY"`
 	}
+	EnrichmentApi struct {
+		Url    string `env:"ENRICHMENT_API_URL" validate:"required"`
+		ApiKey string `env:"ENRICHMENT_API_KEY" validate:"required"`
+	}
 	BetterContactApi struct {
-		Url         string `env:"BETTER_CONTACT_API_URL"`
-		ApiKey      string `env:"BETTER_CONTACT_API_KEY"`
-		CallbackUrl string `env:"BETTER_CONTACT_CALLBACK_URL"`
+		Url    string `env:"BETTER_CONTACT_API_URL" validate:"required"`
+		ApiKey string `env:"BETTER_CONTACT_API_KEY" validate:"required"`
 	}
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
