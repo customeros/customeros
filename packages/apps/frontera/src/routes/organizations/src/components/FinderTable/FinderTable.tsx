@@ -519,10 +519,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
               table={table as TableInstance<OrganizationStore>}
-              handleOpen={(type: CommandMenuType) => {
-                handleOpenCommandKMenu();
-                store.ui.commandMenu.setType(type);
-              }}
               enableKeyboardShortcuts={
                 !isEditing &&
                 !isFiltering &&
@@ -535,6 +531,17 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
                 );
                 handleOpenCommandKMenu();
                 store.ui.commandMenu.setType('DeleteConfirmationModal');
+              }}
+              handleOpen={(type: CommandMenuType, context) => {
+                handleOpenCommandKMenu();
+                store.ui.commandMenu.setType(type);
+
+                if (context) {
+                  store.ui.commandMenu.setContext({
+                    ...store.ui.commandMenu.context,
+                    ...context,
+                  });
+                }
               }}
             />
           ) : (

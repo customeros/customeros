@@ -259,7 +259,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsPersona]: columnHelper.accessor('value.tags', {
     id: ColumnViewType.ContactsPersona,
-    minSize: 200,
+    minSize: 120,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: true,
@@ -289,7 +289,7 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.ContactsJobTitle]: columnHelper.accessor('value.jobRoles', {
     id: ColumnViewType.ContactsJobTitle,
-    minSize: 250,
+    minSize: 120,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: true,
@@ -534,7 +534,7 @@ const columns: Record<string, Column> = {
   ),
   [ColumnViewType.ContactsLastInteraction]: columnHelper.accessor('value', {
     id: ColumnViewType.ContactsLastInteraction,
-    minSize: 200,
+    minSize: 125,
     maxSize: 600,
     enableResizing: true,
     cell: (_props) => {

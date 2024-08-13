@@ -35,7 +35,7 @@ export type CommandMenuType =
   | 'RenameTableViewDef'
   | 'ContactBulkCommands';
 
-type Context = {
+export type Context = {
   ids: Array<string>;
   callback?: () => void;
   property?: string | null;

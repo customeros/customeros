@@ -271,7 +271,7 @@ export const Table = <T extends object>({
   }, [rowVirtualizer.range, focusedRowIndex]);
 
   const THeaderMinW =
-    table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
+    table.getCenterTotalSize() + (enableRowSelection ? 32 : 22);
 
   return (
     <div className={cn('flex flex-col relative w-full min-w-[300px]')}>
@@ -331,13 +331,14 @@ export const Table = <T extends object>({
                     return (
                       <THeaderCell
                         key={header.id}
-                        style={{
-                          width: `calc(var(--header-${header?.id}-size) * 1px)`,
-                        }}
                         className={cn(`relative group/header-item`, {
                           'cursor-col-resize': header.column.getIsResizing(),
                           'pl-6': index === 1,
                         })}
+                        style={{
+                          width: `calc(var(--header-${header?.id}-size) * 1px)`,
+                          minWidth: `calc(var(--header-${header?.id}-size) * 1px)`,
+                        }}
                       >
                         {header.isPlaceholder
                           ? null

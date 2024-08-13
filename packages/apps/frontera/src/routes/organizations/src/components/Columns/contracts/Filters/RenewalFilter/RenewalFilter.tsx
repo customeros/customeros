@@ -59,7 +59,7 @@ export const RenewalFilter = observer(() => {
           onChange={handleSelect(false)}
           isChecked={filter.value.includes(false)}
         >
-          <span className='text-sm'>Non auto-renewing</span>
+          <span className='text-sm'>Not auto-renewing</span>
         </Checkbox>
       </div>
     </>

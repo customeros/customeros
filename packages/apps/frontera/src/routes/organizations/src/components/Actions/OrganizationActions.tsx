@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 import { useKeys, useKeyBindings } from 'rooks';
-import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
+import { Context, CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { X } from '@ui/media/icons/X';
@@ -24,8 +24,8 @@ interface TableActionsProps {
   onCreateContact: () => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<OrganizationStore>;
-  handleOpen: (type: CommandMenuType) => void;
   onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
+  handleOpen: (type: CommandMenuType, context?: Partial<Context>) => void;
 }
 
 export const OrganizationTableActions = ({
@@ -110,14 +110,6 @@ export const OrganizationTableActions = ({
     clearSelection();
   };
 
-  useKeys(
-    ['Shift', 'O'],
-    () => {
-      handleOpen('AssignOwner');
-    },
-    { when: enableKeyboardShortcuts },
-  );
-
   useKeyBindings(
     {
       u: moveToAllOrgs,
@@ -145,6 +137,26 @@ export const OrganizationTableActions = ({
       e.stopPropagation();
       e.preventDefault();
       handleOpen('AssignOwner');
+    },
+    { when: enableKeyboardShortcuts },
+  );
+  useKeys(
+    ['Shift', 'T'],
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      handleOpen('ChangeTags');
+    },
+    { when: enableKeyboardShortcuts },
+  );
+  useKeys(
+    ['Shift', 'R'],
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      handleOpen('RenameOrganizationProperty', {
+        property: 'name',
+      });
     },
     { when: enableKeyboardShortcuts },
   );

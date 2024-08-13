@@ -91,6 +91,10 @@ export const EditableSideNavItem = observer(
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
+                  store.ui.commandMenu.setContext({
+                    ids: [id],
+                    entity: 'TableViewDef',
+                  });
                   store.ui.commandMenu.setType('RenameTableViewDef');
                   store.ui.commandMenu.setOpen(true);
                 }}

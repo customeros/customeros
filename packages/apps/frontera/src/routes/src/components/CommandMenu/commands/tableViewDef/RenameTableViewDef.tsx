@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
 
@@ -9,9 +8,9 @@ import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const RenameTableViewDef = observer(() => {
   const store = useStore();
-  const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
-  const tableViewDef = store.tableViewDefs.getById(preset || '');
+
+  const id = store.ui.commandMenu.context.ids?.[0] ?? '';
+  const tableViewDef = store.tableViewDefs.getById(id);
   const tableViewName = tableViewDef?.value.name;
   const [value, setValue] = useState(() => tableViewName ?? '');
 
