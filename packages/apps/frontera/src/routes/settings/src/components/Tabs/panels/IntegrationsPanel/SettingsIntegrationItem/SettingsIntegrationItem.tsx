@@ -67,17 +67,17 @@ export const SettingsIntegrationItem = ({
       className='flex space-y-1 flex-col'
       onOpenChange={(value) => !isIntegrationApp && setCollapsed(!value)}
     >
-      <div className='flex flex-row justify-between my-2'>
+      <div className='flex flex-row justify-between my-1'>
         <div className='flex items-center'>
           <img alt='' src={icon} width={20} height={20} className='mr-2' />
-          <span className='self-center text-md font-medium'>{name}</span>
+          <span className='self-center text-[14px]'>{name}</span>
         </div>
         <CollapsibleTrigger asChild={false} className='w-fit'>
           {collapsed && (
             <div className='flex space-x-1'>
               {state === 'ACTIVE' && collapsed && (
                 <Button
-                  size='sm'
+                  size='xs'
                   variant='outline'
                   colorScheme='gray'
                   onClick={() => {
@@ -94,7 +94,7 @@ export const SettingsIntegrationItem = ({
 
               {state === 'INACTIVE' && (
                 <Button
-                  size='sm'
+                  size='xs'
                   variant='outline'
                   colorScheme='gray'
                   onClick={() => {
@@ -116,7 +116,7 @@ export const SettingsIntegrationItem = ({
               {state === 'ACTIVE' && (
                 <>
                   <Button
-                    size='sm'
+                    size='xs'
                     variant='outline'
                     colorScheme='gray'
                     style={{ marginRight: '10px' }}
@@ -129,7 +129,7 @@ export const SettingsIntegrationItem = ({
                     Cancel
                   </Button>
                   <Button
-                    size='sm'
+                    size='xs'
                     variant='outline'
                     onClick={onRevoke}
                     colorScheme='error'
@@ -138,7 +138,7 @@ export const SettingsIntegrationItem = ({
                     Revoke
                   </Button>
                   <Button
-                    size='sm'
+                    size='xs'
                     onClick={onSave}
                     variant='outline'
                     colorScheme='success'
@@ -151,7 +151,7 @@ export const SettingsIntegrationItem = ({
               {state === 'INACTIVE' && (
                 <>
                   <Button
-                    size='sm'
+                    size='xs'
                     variant='outline'
                     colorScheme='gray'
                     style={{ marginRight: '10px' }}
@@ -164,7 +164,7 @@ export const SettingsIntegrationItem = ({
                     Cancel
                   </Button>
                   <Button
-                    size='sm'
+                    size='xs'
                     onClick={onSave}
                     variant='outline'
                     colorScheme='success'

@@ -28,7 +28,7 @@ export const SidenavItem = ({
 
   const dynamicClasses = cn(
     isActive
-      ? ['font-semibold', 'bg-gray-100']
+      ? ['font-semibold', 'bg-grayModern-100']
       : ['font-normal', 'bg-transparent'],
   );
 

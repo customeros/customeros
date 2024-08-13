@@ -18,7 +18,7 @@ export const MenuItem = forwardRef<HTMLDivElement, MenuItemProps>(
         {...props}
         ref={forwardedRef}
         className={twMerge(
-          'font-normal flex gap-2 items-center text-start py-[6px] px-[10px] leading-[18px] text-gray-700  rounded-sm outline-none cursor-pointer hover:bg-gray-50 hover:rounded-md ',
+          'flex gap-2 items-center text-sm text-start py-[6px] px-[10px] leading-[18px] text-gray-700  rounded-sm outline-none cursor-pointer hover:bg-grayModern-100 hover:rounded-[4px] ',
           'data-[highlighted]:bg-gray-50 data-[highlighted]:text-gray-700 data-[disabled]:opacity-50 data-[disabled]:cursor-not-allowed hover:data-[disabled]:bg-transparent',
           className,
         )}
@@ -51,7 +51,7 @@ export const MenuList = forwardRef<HTMLDivElement, MenuListProps>(
         ref={forwardedRef}
         className={twMerge(
           className,
-          'bg-white min-w-[auto] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-10',
+          'bg-white min-w-[auto] py-1 px-1 shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-10',
         )}
       >
         {children}

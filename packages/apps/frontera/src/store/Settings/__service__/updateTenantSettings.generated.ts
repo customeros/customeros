@@ -12,5 +12,7 @@ export type UpdateTenantSettingsMutation = {
     logoRepositoryFileId?: string | null;
     baseCurrency?: Types.Currency | null;
     billingEnabled: boolean;
+    workspaceName?: string | null;
+    workspaceLogo?: string | null;
   };
 };

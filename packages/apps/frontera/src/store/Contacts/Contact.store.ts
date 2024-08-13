@@ -243,7 +243,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   }
 
   async addEmail() {
-    const email = this.value.emails?.[0].email ?? '';
+    const email = this.value.emails?.[0]?.email ?? '';
 
     try {
       const { emailMergeToContact } = await this.service.addContactEmail({
