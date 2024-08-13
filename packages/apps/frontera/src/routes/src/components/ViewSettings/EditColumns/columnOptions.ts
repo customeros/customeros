@@ -138,6 +138,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsCity]: 'Headquarters',
   [ColumnViewType.OrganizationsIsPublic]: 'Ownership Type',
   [ColumnViewType.OrganizationsContactCount]: 'Contacts',
+  [ColumnViewType.OrganizationsHeadquarters]: 'Country',
 };
 
 export const organizationsHelperTextMap: Record<
@@ -169,6 +170,7 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsStage]: 'E.g. Lead',
   [ColumnViewType.OrganizationsChurnDate]: 'E.g. 15 Aug 2024',
   [ColumnViewType.OrganizationsLtv]: 'E.g. $109,280',
+  [ColumnViewType.OrganizationsHeadquarters]: 'E.g. Germany',
 };
 
 export const contactsHelperTextMap: Record<string, string> = {
@@ -212,4 +214,8 @@ export const contractsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContractsStatus]: 'E.g. Live',
   [ColumnViewType.ContractsRenewal]: 'E.g. Auto-renewing',
   [ColumnViewType.ContractsLtv]: 'E.g. 3000',
+  [ColumnViewType.ContractsOwner]: 'E.g. Sam Douglas',
+  [ColumnViewType.ContractsHealth]: 'E.g. High',
+  [ColumnViewType.ContractsRenewalDate]: 'E.g 12 Oct 2026',
+  [ColumnViewType.ContractsForecastArr]: 'E.g. $120,930',
 };

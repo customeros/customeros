@@ -8,8 +8,13 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { Contract, TableViewDef, ColumnViewType } from '@graphql/types';
 import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
+import {
+  Contract,
+  Opportunity,
+  TableViewDef,
+  ColumnViewType,
+} from '@graphql/types';
 import {
   LtvFilter,
   DateFilter,
@@ -20,7 +25,15 @@ import {
 
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
-import { LtvCell, PeriodCell, StatusCell, ContractCell } from './Cells';
+import {
+  LtvCell,
+  OwnerCell,
+  PeriodCell,
+  StatusCell,
+  HealthCell,
+  ContractCell,
+  ArrForecastCell,
+} from './Cells';
 
 type ColumnDatum = Store<Contract>;
 
@@ -265,6 +278,116 @@ const columns: Record<string, Column> = {
         title='LTV'
         filterWidth='14rem'
         id={ColumnViewType.ContractsLtv}
+        renderFilter={(initialFocusRef) => (
+          <LtvFilter initialFocusRef={initialFocusRef} />
+        )}
+        {...getTHeadProps<Store<Contract>>(props)}
+      />
+    ),
+  }),
+  [ColumnViewType.ContractsOwner]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.ContractsOwner,
+    minSize: 150,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    cell: (props) => {
+      return <OwnerCell id={props.getValue()?.value?.metadata?.id} />;
+    },
+    skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
+
+    header: (props) => (
+      <THead<HTMLInputElement>
+        title='Owner'
+        filterWidth='14rem'
+        id={ColumnViewType.ContractsOwner}
+        renderFilter={(initialFocusRef) => (
+          <LtvFilter initialFocusRef={initialFocusRef} />
+        )}
+        {...getTHeadProps<Store<Contract>>(props)}
+      />
+    ),
+  }),
+  [ColumnViewType.ContractsRenewalDate]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.ContractsRenewalDate,
+    minSize: 150,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    cell: (props) => {
+      const renewsAt = props
+        .getValue()
+        ?.value?.opportunities?.find(
+          (e: Opportunity) => e.internalStage === 'OPEN',
+        )?.renewedAt;
+
+      if (!renewsAt) {
+        return <p className='text-gray-400'>Unknown</p>;
+      }
+      const formatted = DateTimeUtils.format(
+        renewsAt,
+        DateTimeUtils.defaultFormatShortString,
+      );
+
+      return <TextCell text={formatted} />;
+    },
+    skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
+
+    header: (props) => (
+      <THead<HTMLInputElement>
+        filterWidth='14rem'
+        title='Renewal Date'
+        id={ColumnViewType.ContractsRenewalDate}
+        renderFilter={(initialFocusRef) => (
+          <LtvFilter initialFocusRef={initialFocusRef} />
+        )}
+        {...getTHeadProps<Store<Contract>>(props)}
+      />
+    ),
+  }),
+  [ColumnViewType.ContractsHealth]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.ContractsHealth,
+    minSize: 150,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    cell: (props) => {
+      return <HealthCell id={props.getValue()?.value?.metadata?.id} />;
+    },
+    skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
+
+    header: (props) => (
+      <THead<HTMLInputElement>
+        title='Health'
+        filterWidth='14rem'
+        id={ColumnViewType.ContractsHealth}
+        renderFilter={(initialFocusRef) => (
+          <LtvFilter initialFocusRef={initialFocusRef} />
+        )}
+        {...getTHeadProps<Store<Contract>>(props)}
+      />
+    ),
+  }),
+  [ColumnViewType.ContractsForecastArr]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.ContractsForecastArr,
+    minSize: 150,
+    maxSize: 650,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    cell: (props) => {
+      return <ArrForecastCell id={props.getValue()?.value?.metadata?.id} />;
+    },
+    skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
+
+    header: (props) => (
+      <THead<HTMLInputElement>
+        filterWidth='14rem'
+        title='ARR Forecast'
+        id={ColumnViewType.ContractsForecastArr}
         renderFilter={(initialFocusRef) => (
           <LtvFilter initialFocusRef={initialFocusRef} />
         )}

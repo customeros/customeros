@@ -234,7 +234,15 @@ export class OpportunityStore implements Store<Opportunity> {
         this.updateOpportunityRenewal();
       })
       .with(['owner', ...P.array()], () => {
-        this.updateOpportunityOwner(value as string);
+        if (typeof value === 'string') {
+          this.updateOpportunityOwner(value as string);
+
+          return;
+        }
+
+        if (value?.id) {
+          this.updateOpportunityOwner(value.id);
+        }
       })
       .otherwise(() => {
         const property = path?.[0] as keyof Opportunity;
