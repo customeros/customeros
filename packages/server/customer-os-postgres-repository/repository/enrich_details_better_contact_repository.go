@@ -36,6 +36,9 @@ func (r enrichDetailsBetterContactRepository) RegisterRequest(ctx context.Contex
 	tracing.TagComponentPostgresRepository(span)
 	tracing.LogObjectAsJson(span, "data", data)
 
+	now := utils.Now()
+	data.CreatedAt = now
+	data.UpdatedAt = now
 	err := r.gormDb.Create(&data).Error
 	if err != nil {
 		return nil, err
