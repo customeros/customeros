@@ -1,21 +1,28 @@
 import React from 'react';
 
-import { ContractStore } from '@store/Contracts/Contract.store';
+import { Store } from '@store/store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
+import { currencyIcon } from '@settings/components/Tabs/panels/BillingPanel/components/utils.tsx';
 
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
-import { TableViewDef, ColumnViewType } from '@graphql/types';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { PeriodCell } from '@organizations/components/Columns/contracts/period';
-import { StatusCell } from '@organizations/components/Columns/contracts/status';
+import { Contract, TableViewDef, ColumnViewType } from '@graphql/types';
 import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
+import {
+  LtvFilter,
+  DateFilter,
+  StatusFilter,
+  RenewalFilter,
+  CurrencyFilter,
+} from '@organizations/components/Columns/contracts/Filters';
 
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
+import { LtvCell, PeriodCell, StatusCell, ContractCell } from './Cells';
 
-type ColumnDatum = ContractStore;
+type ColumnDatum = Store<Contract>;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,18 +36,18 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
       return (
-        <TextCell {...props} text={props.getValue()?.value?.contractName} />
+        <ContractCell contractId={props.getValue()?.value?.metadata?.id} />
       );
     },
     header: (props) => (
       <THead<HTMLInputElement>
         filterWidth='14rem'
         title='  Contract Name'
-        id={ColumnViewType.ContactsName}
+        id={ColumnViewType.ContractsName}
         renderFilter={(initialFocusRef) => (
           <SearchTextFilter
             initialFocusRef={initialFocusRef}
@@ -48,7 +55,7 @@ const columns: Record<string, Column> = {
             placeholder={'e.g. CustomerOS contract'}
           />
         )}
-        {...getTHeadProps<ContractStore>(props)}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
@@ -59,7 +66,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
       const contractEnded = props.getValue()?.value?.contractEnded;
@@ -72,7 +79,7 @@ const columns: Record<string, Column> = {
         DateTimeUtils.defaultFormatShortString,
       );
 
-      return <TextCell {...props} text={formatted} />;
+      return <TextCell text={formatted} />;
     },
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
 
@@ -81,14 +88,10 @@ const columns: Record<string, Column> = {
         title='Ended'
         filterWidth='14rem'
         id={ColumnViewType.ContractsEnded}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            placeholder={'e.g. Yes/No'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsEnded}
-          />
+        renderFilter={() => (
+          <DateFilter property={ColumnViewType.ContractsEnded} />
         )}
-        {...getTHeadProps<ContractStore>(props)}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
   }),
@@ -120,7 +123,7 @@ const columns: Record<string, Column> = {
             property={ColumnViewType.ContractsPeriod}
           />
         )}
-        {...getTHeadProps<ContractStore>(props)}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
   }),
@@ -130,7 +133,7 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
       const contractEnded = props.getValue()?.value?.contractSigned;
@@ -143,7 +146,7 @@ const columns: Record<string, Column> = {
         DateTimeUtils.defaultFormatShortString,
       );
 
-      return <TextCell {...props} text={formatted} />;
+      return <TextCell text={formatted} />;
     },
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
     header: (props) => (
@@ -151,14 +154,10 @@ const columns: Record<string, Column> = {
         title='Sign Date'
         filterWidth='14rem'
         id={ColumnViewType.ContractsSignDate}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            placeholder={'e.g. 2023-01-01'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsSignDate}
-          />
+        renderFilter={() => (
+          <DateFilter property={ColumnViewType.ContractsSignDate} />
         )}
-        {...getTHeadProps<ContractStore>(props)}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
   }),
@@ -168,10 +167,14 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
-      return <TextCell {...props} text={props.getValue().value.currency} />;
+      const currency = props.getValue().value.currency;
+
+      return (
+        <TextCell text={currency} leftIcon={currencyIcon?.[currency || '']} />
+      );
     },
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
 
@@ -180,14 +183,8 @@ const columns: Record<string, Column> = {
         title='Currency'
         filterWidth='14rem'
         id={ColumnViewType.ContractsCurrency}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            placeholder={'e.g. USD'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsCurrency}
-          />
-        )}
-        {...getTHeadProps<ContractStore>(props)}
+        renderFilter={() => <CurrencyFilter />}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
   }),
@@ -197,7 +194,7 @@ const columns: Record<string, Column> = {
     minSize: 100,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
       return <StatusCell status={props.getValue().value.contractStatus} />;
@@ -209,24 +206,18 @@ const columns: Record<string, Column> = {
         title='Status'
         filterWidth='14rem'
         id={ColumnViewType.ContractsStatus}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            placeholder={'e.g. Active'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsStatus}
-          />
-        )}
-        {...getTHeadProps<ContractStore>(props)}
+        renderFilter={() => <StatusFilter />}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
   }),
 
   [ColumnViewType.ContractsRenewal]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsRenewal,
-    minSize: 150,
+    minSize: 230,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
       return (
@@ -245,14 +236,8 @@ const columns: Record<string, Column> = {
         title='Renewal'
         filterWidth='14rem'
         id={ColumnViewType.ContractsRenewal}
-        renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            placeholder={'e.g. Auto-renews'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsRenewal}
-          />
-        )}
-        {...getTHeadProps<ContractStore>(props)}
+        renderFilter={() => <RenewalFilter />}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
   }),
@@ -262,10 +247,15 @@ const columns: Record<string, Column> = {
     minSize: 150,
     maxSize: 650,
     enableResizing: true,
-    enableColumnFilter: false,
+    enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
-      return <TextCell {...props} text={props.getValue().value.ltv} />;
+      return (
+        <LtvCell
+          ltv={props.getValue()?.value?.ltv}
+          currency={props.getValue()?.value?.currency}
+        />
+      );
     },
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
 
@@ -275,13 +265,9 @@ const columns: Record<string, Column> = {
         filterWidth='14rem'
         id={ColumnViewType.ContractsLtv}
         renderFilter={(initialFocusRef) => (
-          <SearchTextFilter
-            placeholder={'e.g. 10000'}
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.ContractsLtv}
-          />
+          <LtvFilter initialFocusRef={initialFocusRef} />
         )}
-        {...getTHeadProps<ContractStore>(props)}
+        {...getTHeadProps<Store<Contract>>(props)}
       />
     ),
   }),

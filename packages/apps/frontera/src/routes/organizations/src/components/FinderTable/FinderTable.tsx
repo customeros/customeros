@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import { useRef, useMemo, useState, useEffect } from 'react';
+import { useRef, useState, useEffect } from 'react';
 
 import { useKey } from 'rooks';
 import { inPlaceSort } from 'fast-sort';
@@ -27,6 +27,7 @@ import {
 } from '@ui/presentation/Table';
 import {
   getContractSortFn,
+  getContractFilterFns,
   getContractColumnsConfig,
 } from '@organizations/components/Columns/contracts';
 
@@ -84,20 +85,19 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const contractColumns = getContractColumnsConfig(tableViewDef?.value);
   const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
   const invoiceColumns = getInvoiceColumnsConfig(tableViewDef?.value);
-  const tableColumns = useMemo(() => {
-    switch (tableType) {
-      case TableViewType.Organizations:
-        return organizationColumns;
-      case TableViewType.Contacts:
-        return contactColumns;
-      case TableViewType.Contracts:
-        return contractColumns;
-      default:
-        return invoiceColumns;
-    }
-  }, [tableType]) as ColumnDef<
+
+  const tableColumns = (
+    tableType === TableViewType.Organizations
+      ? organizationColumns
+      : tableType === TableViewType.Contacts
+      ? contactColumns
+      : tableType === TableViewType.Contracts
+      ? contractColumns
+      : invoiceColumns
+  ) as ColumnDef<
     OrganizationStore | ContactStore | InvoiceStore | ContractStore
   >[];
+
   const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
 
   const removeAccents = (str: string) => {
@@ -180,11 +180,12 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const contractsData = store.contracts?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Contracts) return arr;
 
-    // todo uncommment when filters are added
-    // const filters = getContactFilterFns(tableViewDef?.getFilters());
-    // if (filters) {
-    //   arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    // }
+    const filters = getContractFilterFns(tableViewDef?.getFilters());
+
+    if (filters) {
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
+    }
+
     if (searchTerm) {
       const normalizedSearchTerm = removeAccents(searchTerm);
 

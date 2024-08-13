@@ -287,6 +287,7 @@ const CONTRACTS_QUERY = gql`
           source
           lastUpdated
         }
+
         contractName
         serviceStarted
         contractSigned
