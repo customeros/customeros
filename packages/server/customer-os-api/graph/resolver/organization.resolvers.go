@@ -61,8 +61,10 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	// Before creating organization check that same organization does not exist by domain
 	domains := input.Domains
 	if input.Website != nil && *input.Website != "" {
-		websiteDomain := utils.ExtractDomain(*input.Website)
-		domains = append(domains, websiteDomain)
+		websiteDomain := r.Services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, *input.Website)
+		if websiteDomain != "" {
+			domains = append(domains, websiteDomain)
+		}
 	}
 	domains = utils.RemoveEmpties(domains)
 

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -42,9 +43,10 @@ type ContactEventHandler struct {
 	grpcClients          *grpc_client.Clients
 	scrapInService       *additional_services.ScrapInService
 	locationEventHandler *location.LocationEventHandler
+	services             *commonService.Services
 }
 
-func NewContactEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients) *ContactEventHandler {
+func NewContactEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients, services *commonService.Services) *ContactEventHandler {
 	contactEventHandler := ContactEventHandler{
 		repositories:         repositories,
 		log:                  log,
@@ -53,6 +55,7 @@ func NewContactEventHandler(repositories *repository.Repositories, log logger.Lo
 		grpcClients:          grpcClients,
 		scrapInService:       additional_services.NewScrapInService(log, cfg, repositories.PostgresRepositories),
 		locationEventHandler: location.NewLocationEventHandler(repositories, log, cfg, grpcClients),
+		services:             services,
 	}
 
 	return &contactEventHandler
@@ -446,73 +449,73 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		return err
 	}
 
-	if organizationNode == nil && scrapinContactResponse.Company != nil && scrapinContactResponse.Company.WebsiteUrl != "" {
+	if organizationNode == nil && scrapinContactResponse.Company != nil {
+		domain := h.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+		span.LogFields(log.String("extractedDomainFromWebsite", domain))
+		if domain != "" {
+			var organizationId string
 
-		domain := utils.ExtractDomain(scrapinContactResponse.Company.WebsiteUrl)
-
-		var organizationId string
-
-		organizationByDomainNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
-			h.log.Errorf("Error getting organization by domain: %s", err.Error())
-			return err
-		}
-
-		if organizationByDomainNode == nil {
-			upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
-				Tenant:       tenant,
-				Name:         scrapinContactResponse.Company.Name,
-				Website:      scrapinContactResponse.Company.WebsiteUrl,
-				Relationship: neo4jenum.Prospect.String(),
-				Stage:        neo4jenum.Lead.String(),
-				SourceFields: &commonpb.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppScrapin,
-				},
-			}
-
-			organizationCreateResponse, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return h.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
-			})
+			organizationByDomainNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.UpsertOrganization"))
-				h.log.Errorf("Error upserting organization: %s", err.Error())
+				tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
+				h.log.Errorf("Error getting organization by domain: %s", err.Error())
 				return err
 			}
 
-			organizationId = organizationCreateResponse.Id
-		} else {
-			organizationId = utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
-		}
+			if organizationByDomainNode == nil {
+				upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
+					Tenant:       tenant,
+					Name:         scrapinContactResponse.Company.Name,
+					Website:      scrapinContactResponse.Company.WebsiteUrl,
+					Relationship: neo4jenum.Prospect.String(),
+					Stage:        neo4jenum.Lead.String(),
+					SourceFields: &commonpb.SourceFields{
+						Source:    constants.SourceOpenline,
+						AppSource: constants.AppScrapin,
+					},
+				}
 
-		positionName := ""
-		if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
-			for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
-				if position.Title != "" && position.CompanyName != "" && position.CompanyName == scrapinContactResponse.Company.Name {
-					positionName = position.Title
-					break
+				organizationCreateResponse, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+					return h.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.UpsertOrganization"))
+					h.log.Errorf("Error upserting organization: %s", err.Error())
+					return err
+				}
+
+				organizationId = organizationCreateResponse.Id
+			} else {
+				organizationId = utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
+			}
+
+			positionName := ""
+			if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
+				for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
+					if position.Title != "" && position.CompanyName != "" && position.CompanyName == scrapinContactResponse.Company.Name {
+						positionName = position.Title
+						break
+					}
 				}
 			}
-		}
 
-		//minimize the impact on the batch processing
-		time.Sleep(3 * time.Second)
+			//minimize the impact on the batch processing
+			time.Sleep(3 * time.Second)
 
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return h.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
-				Tenant:         tenant,
-				ContactId:      contact.Id,
-				OrganizationId: organizationId,
-				JobTitle:       positionName,
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return h.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
+					Tenant:         tenant,
+					ContactId:      contact.Id,
+					OrganizationId: organizationId,
+					JobTitle:       positionName,
+				})
 			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
-			h.log.Errorf("Error upserting organization: %s", err.Error())
-			return err
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
+				h.log.Errorf("Error upserting organization: %s", err.Error())
+				return err
+			}
 		}
-
 	}
 
 	return nil

@@ -26,6 +26,7 @@ func NewCosApiEnrichPersonTempResultRepository(gormDb *gorm.DB) CosApiEnrichPers
 func (r cosApiEnrichPersonTempResultRepository) GetById(ctx context.Context, id, tenant string) (*entity.CosApiEnrichPersonTempResult, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CosApiEnrichPersonTempResultRepository.GetById")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var data entity.CosApiEnrichPersonTempResult
 	err := r.db.Where("id = ? AND tenant = ?", id, tenant).First(&data).Error

@@ -407,9 +407,7 @@ func callApiFindWorkEmail(ctx context.Context, services *service.Services, span 
 	companyName, companyDomain := "", ""
 	if enrichPersonApiResponse.Data.PersonProfile.Company != nil {
 		companyName = enrichPersonApiResponse.Data.PersonProfile.Company.Name
-		if enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl != "" {
-			companyDomain = utils.ExtractDomain(enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl)
-		}
+		companyDomain = services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl)
 	}
 	requestJSON, err := json.Marshal(enrichmentmodel.FindWorkEmailRequest{
 		LinkedinUrl:   enrichPersonApiResponse.Data.PersonProfile.Person.LinkedInUrl,

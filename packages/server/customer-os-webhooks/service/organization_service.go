@@ -170,7 +170,10 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 		for _, domainInput := range orgInput.Domains {
 			orgDomains = append(orgDomains, utils.ExtractDomain(domainInput))
 		}
-		orgDomains = append(orgDomains, utils.ExtractDomain(orgInput.Website))
+		domainFromWebsite := s.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, orgInput.Website)
+		if domainFromWebsite != "" {
+			orgDomains = append(orgDomains, domainFromWebsite)
+		}
 		orgInput.Domains = orgDomains
 		orgInput.NormalizeDomains()
 	}

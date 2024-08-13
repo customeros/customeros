@@ -249,7 +249,7 @@ func DefaultTableViewDefinitionOrganization(span opentracing.Span) (postgresEnti
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeOrganizations.String(),
 		TableId:     model.TableIDTypeOrganizations.String(),
-		Name:        "All orgs",
+		Name:        "Organizations",
 		ColumnsJson: string(jsonData),
 		Order:       5,
 		Icon:        "Building07",
@@ -387,7 +387,7 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeContacts.String(),
 		TableId:     model.TableIDTypeContacts.String(),
-		Name:        "All Contacts",
+		Name:        "Contacts",
 		ColumnsJson: string(jsonData),
 		Order:       0,
 		Icon:        "HeartHand",

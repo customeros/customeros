@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -30,6 +31,7 @@ type Services struct {
 	WorkflowService        WorkflowService
 	WorkspaceService       WorkspaceService
 	SocialService          SocialService
+	DomainService          DomainService
 
 	GoogleService GoogleService
 	AzureService  AzureService
@@ -43,6 +45,8 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 		PostgresRepositories: postgresRepository.InitRepositories(db),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
 	}
+
+	cache := caches.NewCommonCache()
 
 	services.CommonService = NewCommonService(services)
 	services.EmailService = NewEmailService(services)
@@ -58,11 +62,10 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.WorkspaceService = NewWorkspaceService(services)
 	services.SocialService = NewSocialService(nil, services)
 	services.EmailingService = NewEmailingService(nil, services)
+	services.DomainService = NewDomainService(nil, services, cache)
 	services.UserService = NewUserService(services)
-
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
-
 	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
 
 	return services
