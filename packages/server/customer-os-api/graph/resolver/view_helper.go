@@ -564,6 +564,18 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 12, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 13, ColumnType: model.ColumnViewTypeOrganizationsChurnDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 14, ColumnType: model.ColumnViewTypeOrganizationsLtv.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 15, ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 16, ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 17, ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 18, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpointDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 19, ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 20, ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 21, ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 22, ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 23, ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 24, ColumnType: model.ColumnViewTypeOrganizationsHeadquarters.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeUpcomingInvoices.String():
