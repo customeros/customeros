@@ -12,9 +12,6 @@ interface ContractCellProps {
 }
 
 export const ContractCell = observer(({ contractId }: ContractCellProps) => {
-  const [tabs] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-player-last-position`, { root: 'organization' });
   const navigate = useNavigate();
 
   const store = useStore();
@@ -35,8 +32,7 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
   const handleNavigate = () => {
     if (!id) return;
 
-    const lastPositionParams = tabs[id];
-    const href = getHref(id, lastPositionParams);
+    const href = getHref(id);
 
     if (!href) return;
 
@@ -72,6 +68,6 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
   );
 });
 
-function getHref(id: string, lastPositionParams: string | undefined) {
-  return `/organization/${id}?${lastPositionParams || 'tab=account'}`;
+function getHref(id: string) {
+  return `/organization/${id}?tab=account`;
 }
