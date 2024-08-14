@@ -288,7 +288,7 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
-  async merge(primaryId: string, mergeIds: string[]) {
+  async merge(primaryId: string, mergeIds: string[], callback?: () => void) {
     mergeIds.forEach((id) => {
       this.value.delete(id);
     });
@@ -304,6 +304,7 @@ export class OrganizationsStore extends SyncableGroup<
       });
 
       runInAction(() => {
+        callback?.();
         this.sync({ action: 'DELETE', ids: mergeIds });
         this.sync({ action: 'INVALIDATE', ids: mergeIds });
       });

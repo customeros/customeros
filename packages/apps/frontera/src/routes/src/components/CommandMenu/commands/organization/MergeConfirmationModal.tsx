@@ -12,12 +12,17 @@ export const MergeConfirmationModal = observer(() => {
 
   const handleClose = () => {
     store.ui.commandMenu.toggle('MergeConfirmationModal');
+    store.ui.commandMenu.clearContext();
   };
 
   const handleConfirm = () => {
     const [primary, ...rest] = context.ids as string[];
 
-    store.organizations.merge(primary, rest);
+    store.organizations.merge(
+      primary,
+      rest,
+      store.ui.commandMenu?.context?.callback,
+    );
 
     handleClose();
   };
