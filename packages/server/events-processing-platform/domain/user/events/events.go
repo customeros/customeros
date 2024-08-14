@@ -17,6 +17,8 @@ const (
 	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
 	UserAddRoleV1         = "V1_USER_ADD_ROLE"
 	UserRemoveRoleV1      = "V1_USER_REMOVE_ROLE"
+	//Deprecated
+	UserAddPlayerV1 = "V1_USER_ADD_PLAYER"
 )
 
 type UserCreateEvent struct {
