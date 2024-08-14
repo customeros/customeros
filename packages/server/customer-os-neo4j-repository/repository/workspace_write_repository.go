@@ -37,7 +37,7 @@ func (r *workspaceWriteRepository) Merge(ctx context.Context, workspace entity.W
 	query := "MERGE (w:Workspace {name:$name, provider:$provider}) " +
 		" ON CREATE SET " +
 		"  w.id=randomUUID(), " +
-		"  w.createdAt=$now, " +
+		"  w.createdAt=datetime(), " +
 		"  w.updatedAt=datetime(), " +
 		"  w.source=$source, " +
 		"  w.sourceOfTruth=$sourceOfTruth, " +
@@ -49,10 +49,9 @@ func (r *workspaceWriteRepository) Merge(ctx context.Context, workspace entity.W
 			map[string]any{
 				"name":          workspace.Name,
 				"provider":      workspace.Provider,
-				"source":        workspace.Source,
-				"sourceOfTruth": workspace.SourceOfTruth,
+				"source":        utils.StringFirstNonEmpty(workspace.Source.String(), entity.DataSourceOpenline.String()),
+				"sourceOfTruth": utils.StringFirstNonEmpty(workspace.SourceOfTruth.String(), entity.DataSourceOpenline.String()),
 				"appSource":     workspace.AppSource,
-				"now":           utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {
