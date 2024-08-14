@@ -161,14 +161,11 @@ export const ModalFeaturedContent = forwardRef<
   return (
     <ModalContent
       ref={ref}
+      className={cn(`rounded-2xl `, className)}
       style={{
         backgroundPositionX: '1px',
         backgroundPositionY: '-7px',
       }}
-      className={cn(
-        `rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat`,
-        className,
-      )}
       {...props}
     >
       {props.children}
@@ -181,7 +178,7 @@ export const ModalFeaturedHeader = ({
   featuredIconProps,
   ...props
 }: DialogTitleProps & {
-  featuredIcon: React.ReactElement;
+  featuredIcon?: React.ReactElement;
   featuredIconProps?: FeaturedIconStyleProps;
 }) => {
   return (
