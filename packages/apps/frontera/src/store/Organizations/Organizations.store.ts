@@ -288,10 +288,15 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 
-  async merge(primaryId: string, mergeIds: string[]) {
+  async merge(
+    primaryId: string,
+    mergeIds: string[],
+    callback?: (id: string) => void,
+  ) {
     mergeIds.forEach((id) => {
       this.value.delete(id);
     });
+    callback?.(primaryId);
 
     try {
       this.isLoading = true;

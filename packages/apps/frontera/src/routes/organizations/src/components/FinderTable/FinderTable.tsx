@@ -297,9 +297,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   useEffect(() => {
     if (selectedIds.length > 0 && !isCommandMenuPrompted) {
-      store.ui.commandMenu.setCallback(() =>
-        tableRef?.current?.resetRowSelection(),
-      );
+      store.ui.commandMenu.setCallback((id?: string) => {
+        tableRef?.current?.resetRowSelection();
+
+        if (id) {
+          setSelection(() => ({ [id]: true }));
+        }
+      });
 
       if (tableType === TableViewType.Organizations) {
         if (selectedIds.length === 1) {
@@ -439,9 +443,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const handleOpenCommandKMenu = () => {
     const selectedIds = Object.keys(selection);
     const reset = () =>
-      store.ui.commandMenu.setCallback(() =>
-        tableRef?.current?.resetRowSelection(),
-      );
+      store.ui.commandMenu.setCallback((id?: string) => {
+        tableRef?.current?.resetRowSelection();
+
+        if (id) {
+          setSelection(() => ({ [id]: true }));
+        }
+      });
 
     if (tableType === TableViewType.Organizations) {
       if (selectedIds.length === 1) {
