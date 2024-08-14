@@ -61,10 +61,7 @@ export const EditableSideNavItem = observer(
         <div>{typeof icon === 'function' ? icon(!!isActive) : icon}</div>
         <div
           className={cn(
-            'w-full flex overflow-ellipsis group-hover:overflow-hidden group-focus:overflow-hidden',
-            {
-              'overflow-hidden': isEditing,
-            },
+            'w-full text-justify overflow-hidden overflow-ellipsis',
           )}
         >
           {label}
@@ -72,9 +69,9 @@ export const EditableSideNavItem = observer(
 
         <div
           className={cn(
-            'justify-end opacity-0 group-hover:opacity-100 group-focus:opacity-100 ',
+            'justify-end opacity-0 w-0 group-hover:opacity-100 group-focus:opacity-100 group-hover:w-6 group-focus:w-6',
             {
-              'opacity-100': isEditing,
+              'opacity-100 w-6': isEditing,
             },
           )}
         >
