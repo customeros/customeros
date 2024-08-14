@@ -660,7 +660,7 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, s.cfg.EnrichmentApi.Url)
+	req.Header.Set(security.ApiKeyHeader, s.cfg.EnrichmentApi.ApiKey)
 	req.Header.Set(security.TenantHeader, details.Tenant)
 
 	// Make the HTTP request
