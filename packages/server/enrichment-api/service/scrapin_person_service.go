@@ -17,7 +17,7 @@ import (
 
 type ScrapinPersonService interface {
 	ScrapInPersonProfile(ctx context.Context, linkedInUrl string) (uint64, *postgresentity.ScrapInPersonResponse, error)
-	ScrapInSearchPerson(ctx context.Context, email, fistName, lastName string) (uint64, *postgresentity.ScrapInPersonResponse, error)
+	ScrapInSearchPerson(ctx context.Context, email, fistName, lastName, domain string) (uint64, *postgresentity.ScrapInPersonResponse, error)
 }
 
 type ScrapInPersonSearchRequestParams struct {
@@ -146,12 +146,11 @@ func (s *scrapinPersonService) callScrapinPersonProfile(ctx context.Context, lin
 	return &scrapinResponse, nil
 }
 
-func (s scrapinPersonService) ScrapInSearchPerson(ctx context.Context, email, firstName, lastName string) (uint64, *postgresentity.ScrapInPersonResponse, error) {
+func (s scrapinPersonService) ScrapInSearchPerson(ctx context.Context, email, firstName, lastName, domain string) (uint64, *postgresentity.ScrapInPersonResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapinPersonService.ScrapInSearchPerson")
 	defer span.Finish()
-	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName))
+	span.LogFields(log.String("email", email), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
 
-	domain := ""
 	scrapinPersonProfileData, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlow(ctx, email, firstName, lastName, domain, postgresentity.ScrapInFlowPersonSearch)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))

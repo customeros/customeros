@@ -10,11 +10,7 @@ type ContactProperty string
 
 const (
 	ContactPropertyEnrichedAt                                ContactProperty = "enrichedAt"
-	ContactPropertyEnrichedFailedAtScrapInPersonSearch       ContactProperty = "enrichedFailedAtScrapInPersonSearch"
-	ContactPropertyEnrichedAtScrapInPersonSearch             ContactProperty = "enrichedAtScrapInPersonSearch"
-	ContactPropertyEnrichedAtScrapInProfile                  ContactProperty = "enrichedAtScrapInProfile"
-	ContactPropertyEnrichedScrapInPersonSearchParam          ContactProperty = "enrichedScrapInPersonSearchParam"
-	ContactPropertyEnrichedScrapInProfileParam               ContactProperty = "enrichedScrapInProfileParam"
+	ContactPropertyEnrichFailedAt                            ContactProperty = "enrichFailedAt"
 	ContactPropertyBettercontactFoundEmailAt                 ContactProperty = "bettercontactFoundEmailAt"
 	ContactPropertyFindWorkEmailWithBetterContactRequestedId ContactProperty = "techFindWorkEmailWithBetterContactRequestId"
 	ContactPropertyFindWorkEmailWithBetterContactRequestedAt ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
@@ -29,6 +25,15 @@ const (
 	ContactPropertyProfilePhotoUrl                           ContactProperty = "profilePhotoUrl"
 	ContactPropertyHide                                      ContactProperty = "hide"
 	ContactPropertyUsername                                  ContactProperty = "username"
+	ContactPropertyEnrichedScrapinRecordId                   ContactProperty = "enrichedScrapinRecordId"
+	// Deprecated
+	ContactPropertyEnrichedAtScrapInPersonSearch ContactProperty = "enrichedAtScrapInPersonSearch"
+	// Deprecated
+	ContactPropertyEnrichedAtScrapInProfile ContactProperty = "enrichedAtScrapInProfile"
+	// Deprecated
+	ContactPropertyEnrichedScrapInPersonSearchParam ContactProperty = "enrichedScrapInPersonSearchParam"
+	// Deprecated
+	ContactPropertyEnrichedScrapInProfileParam ContactProperty = "enrichedScrapInProfileParam"
 )
 
 type ContactEntity struct {
@@ -66,13 +71,10 @@ type ContactInternalFields struct {
 }
 
 type ContactEnrichDetails struct {
-	BettercontactFoundEmailAt           *time.Time
-	EnrichedAt                          *time.Time
-	EnrichedAtScrapInPersonSearch       *time.Time
-	EnrichedFailedAtScrapInPersonSearch *time.Time
-	EnrichedScrapInPersonSearchParam    string
-	EnrichedAtScrapInProfile            *time.Time
-	EnrichedScrapInProfileParam         string
+	BettercontactFoundEmailAt *time.Time
+	EnrichedAt                *time.Time
+	EnrichedFailedAt          *time.Time
+	EnrichedScrapinRecordId   string
 }
 
 type ContactEntities []ContactEntity
