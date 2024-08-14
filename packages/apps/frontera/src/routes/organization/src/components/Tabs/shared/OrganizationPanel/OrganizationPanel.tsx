@@ -45,7 +45,7 @@ export const OrganizationPanel = ({
       className={cn('flex flex-1 flex-col h-full p-0 bg-no-repeat bg-contain')}
       {...props}
     >
-      <div className='flex justify-between pt-4 pb-4 px-6'>
+      <div className='flex justify-between pt-2 pb-4 px-6'>
         <div className='flex items-center relative'>
           {leftActionItem && leftActionItem}
           <span className='text-lg text-gray-700 font-semibold'>{title}</span>

@@ -211,7 +211,7 @@ export const AboutPanel = observer(() => {
     }));
 
   return (
-    <div className=' flex pt-4 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
+    <div className=' flex pt-2 px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
         <div className='flex items-center justify-between'>
           <Input
