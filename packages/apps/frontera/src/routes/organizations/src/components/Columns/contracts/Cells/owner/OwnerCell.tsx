@@ -24,7 +24,7 @@ export const OwnerCell = observer(({ id }: OwnerProps) => {
 
   const opportunity = store.opportunities.value.get(opportunityId ?? '');
 
-  const owner = opportunity?.value;
+  const owner = opportunity?.value?.owner;
 
   const users = store.users.toComputedArray((arr) => {
     return arr.filter(
@@ -75,7 +75,7 @@ export const OwnerCell = observer(({ id }: OwnerProps) => {
           // onDoubleClick={open}
           className={cn(
             value ? 'text-gray-700' : 'text-gray-400',
-            'cursor-default',
+            'cursor-default overflow-hidden overflow-ellipsis',
           )}
         >
           {value?.label ?? 'No owner'}

@@ -1,9 +1,9 @@
 export { LtvFilter } from './LTV';
-export { OwnerFilter } from './Owner';
+export { OwnerFilter } from '../../shared/Filters/Owner';
 export { SourceFilter } from './Source';
 export { WebsiteFilter } from './Website';
 export { ChurnedFilter } from './Churned';
-export { ForecastFilter } from './Forecast';
+export { ForecastFilter } from '../../shared/Filters/Forecast';
 export { OnboardingFilter } from './Onboarding';
 export { IndustryFilter } from './Industry';
 export { CreatedDateFilter } from './CreatedDate';
@@ -12,4 +12,4 @@ export { RelationshipFilter } from './Relationship';
 export { TimeToRenewalFilter } from './TimeToRenewal';
 export { LastInteractedFilter } from './LastInteracted';
 export { LastTouchpointFilter } from './LastTouchpoint';
-export { RenewalLikelihoodFilter } from './RenewalLikelihood';
+export { RenewalLikelihoodFilter } from '../../shared/Filters/RenewalLikelihood';

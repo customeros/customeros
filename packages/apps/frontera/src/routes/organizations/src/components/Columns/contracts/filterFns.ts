@@ -63,6 +63,24 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
+      { property: ColumnViewType.ContractsRenewalDate },
+      (filter) => (row: ContractStore) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const nextRenewalDate = row?.openOpportunity?.renewedAt;
+
+        if (!filterValue) return true;
+        if (filterValue?.[1] === null)
+          return filterValue?.[0] <= nextRenewalDate;
+        if (filterValue?.[0] === null)
+          return filterValue?.[1] >= nextRenewalDate;
+
+        return (
+          filterValue[0] <= nextRenewalDate && filterValue[1] >= nextRenewalDate
+        );
+      },
+    )
+    .with(
       { property: ColumnViewType.ContractsCurrency },
       (filter) => (row: ContractStore) => {
         if (!filter.active) return true;
@@ -112,7 +130,57 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         );
       },
     )
+    .with(
+      { property: ColumnViewType.ContractsOwner },
+      (filter) => (row: ContractStore) => {
+        if (!filter.active) return true;
+        const owner = row?.openOpportunity?.owner;
 
+        const filterValue = filter?.value;
+
+        if (filterValue === '__EMPTY__' && !owner) {
+          return true;
+        }
+
+        return filterValue.includes(owner?.id);
+      },
+    )
+    .with(
+      { property: ColumnViewType.ContractsHealth },
+      (filter) => (row: ContractStore) => {
+        if (!filter.active) return true;
+        const renewalLikelihood = row?.openOpportunity?.renewalLikelihood;
+
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+
+        return filterValue.includes(renewalLikelihood);
+      },
+    )
+    .with(
+      { property: ColumnViewType.ContractsForecastArr },
+      (filter) => (row: ContractStore) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const forecastValue = row?.openOpportunity?.amount;
+
+        if (!forecastValue) return false;
+
+        return (
+          forecastValue >= filterValue[0] && forecastValue <= filterValue[1]
+        );
+      },
+    )
+    .with(
+      { property: ColumnViewType.ContractsPeriod },
+      (filter) => (row: ContractStore) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value;
+        const committedPeriodInMonths = row?.value.committedPeriodInMonths;
+
+        return filterValue.includes(committedPeriodInMonths);
+      },
+    )
     .otherwise(() => noop);
 };
 

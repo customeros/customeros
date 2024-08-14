@@ -17,6 +17,7 @@ import {
   Contract,
   Currency,
   DataSource,
+  Opportunity,
   ContractStatus,
   ContractUpdateInput,
   ContractRenewalCycle,
@@ -106,6 +107,12 @@ export class ContractStore implements Store<Contract> {
             (d) => d.metadata.id === item.value.metadata.id,
           ),
       );
+  }
+
+  get openOpportunity() {
+    return this.value?.opportunities?.find(
+      (e: Opportunity) => e.internalStage === 'OPEN',
+    );
   }
 
   async invalidate() {
