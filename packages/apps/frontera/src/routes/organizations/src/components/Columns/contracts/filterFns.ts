@@ -27,24 +27,6 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
-      { property: ColumnViewType.ContractsSignDate },
-      (filter) => (row: ContractStore) => {
-        if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const nextRenewalDate = row.value?.contractSigned?.split('T')?.[0];
-
-        if (!filterValue) return true;
-        if (filterValue?.[1] === null)
-          return filterValue?.[0] <= nextRenewalDate;
-        if (filterValue?.[0] === null)
-          return filterValue?.[1] >= nextRenewalDate;
-
-        return (
-          filterValue[0] <= nextRenewalDate && filterValue[1] >= nextRenewalDate
-        );
-      },
-    )
-    .with(
       { property: ColumnViewType.ContractsEnded },
       (filter) => (row: ContractStore) => {
         if (!filter.active) return true;

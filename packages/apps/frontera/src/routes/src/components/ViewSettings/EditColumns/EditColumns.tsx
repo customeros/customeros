@@ -124,7 +124,7 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
           </Button>
         </MenuButton>
         <DragDropContext onDragEnd={handleDragEnd}>
-          <MenuList className='w-[350px]'>
+          <MenuList className='w-[350px] max-h-[600px] overflow-y-auto'>
             {leadingPinnedColumns.map((col) => (
               <ColumnItem
                 isPinned
