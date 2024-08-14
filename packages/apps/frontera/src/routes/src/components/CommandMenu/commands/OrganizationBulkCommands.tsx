@@ -10,11 +10,10 @@ import { useStore } from '@shared/hooks/useStore';
 import { OrganizationStage } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { Activity } from '@ui/media/icons/Activity';
-import { Command } from '@ui/media/icons/Command.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
+import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   CommandsContainer,
@@ -105,9 +104,7 @@ export const OrganizationBulkCommands = observer(() => {
           }}
           rightAccessory={
             <>
-              <Kbd>
-                <Command className='size-3' />
-              </Kbd>
+              <CommandKbd />
               <Kbd>
                 <Delete className='size-3' />
               </Kbd>

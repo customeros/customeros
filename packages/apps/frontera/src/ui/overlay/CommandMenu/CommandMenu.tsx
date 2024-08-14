@@ -3,6 +3,8 @@ import { Command, useCommandState } from 'cmdk';
 import { cn } from '@ui/utils/cn';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
+import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
+import { Command as CommandIcon } from '@ui/media/icons/Command';
 
 interface CommandInputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {
@@ -129,6 +131,29 @@ export const Kbd = ({ children, className, ...props }: KbdProps) => {
       )}
     >
       {children}
+    </kbd>
+  );
+};
+
+export const CommandKbd = ({
+  className,
+}: React.HTMLAttributes<HTMLDivElement>) => {
+  if (isUserPlatformMac()) {
+    return (
+      <Kbd className={className}>
+        <CommandIcon className='size-3' />
+      </Kbd>
+    );
+  }
+
+  return (
+    <kbd
+      className={cn(
+        'bg-gray-100 text-gray-700 flex p-1 py-0.5 items-center justify-center rounded-[4px] text-xs',
+        className,
+      )}
+    >
+      Ctrl
     </kbd>
   );
 };

@@ -1,5 +1,7 @@
+import React from 'react';
+
 import { Button } from '@ui/form/Button/Button';
-import { Command } from '@ui/media/icons/Command.tsx';
+import { CommandKbd } from '@ui/overlay/CommandMenu';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 
 interface ActionItemProps {
@@ -34,9 +36,7 @@ export const ActionItem = ({
           <>
             <div className='flex items-center text-sm'>
               Open command menu
-              <div className='bg-gray-600 h-5 w-5 rounded-sm ml-3 mr-1 flex justify-center items-center'>
-                <Command className='size-3' />
-              </div>
+              <CommandKbd className='bg-gray-600 text-gray-25 mx-1' />
               <div className='bg-gray-600 text-xs h-5 w-5 rounded-sm flex justify-center items-center'>
                 K
               </div>

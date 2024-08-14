@@ -1,3 +1,5 @@
+import React from 'react';
+
 import { observer } from 'mobx-react-lite';
 
 import { Tag01 } from '@ui/media/icons/Tag01';
@@ -7,13 +9,12 @@ import { Delete } from '@ui/media/icons/Delete';
 import { User03 } from '@ui/media/icons/User03';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
-import { Command } from '@ui/media/icons/Command';
 import { Globe01 } from '@ui/media/icons/Globe01';
 import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
-import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
+import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   InternalType,
@@ -159,9 +160,7 @@ export const OrganizationCommands = observer(() => {
           }}
           rightAccessory={
             <>
-              <Kbd>
-                <Command className='text-inherit size-3' />
-              </Kbd>
+              <CommandKbd />
               <Kbd>
                 <Delete className='text-inherit size-3' />
               </Kbd>
