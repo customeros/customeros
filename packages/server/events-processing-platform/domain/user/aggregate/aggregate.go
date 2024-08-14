@@ -49,7 +49,8 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onAddRole(event)
 	case events.UserRemoveRoleV1:
 		return a.onRemoveRole(event)
-
+	case events.UserAddPlayerV1:
+		return nil
 	default:
 		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil
