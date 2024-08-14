@@ -128,24 +128,32 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 
 		linkedinUrl := c.Query("linkedinUrl")
 		email := c.Query("email")
+		firstName := c.Query("firstName")
+		lastName := c.Query("lastName")
 		searchPhoneNumberParam := c.Query("phoneNumber")
 		// convert to boolean
 		searchPhoneNumber := searchPhoneNumberParam == "true"
 
-		// TODO add enrichment based on email + first and last names + other scrapin data
-		if linkedinUrl == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing linkedin url parameter"})
+		if linkedinUrl == "" || email == "" || firstName == "" || lastName == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing required parameters linkedinUrl or email"})
 			return
 		}
 
-		span.LogFields(log.String("request.email", email))
-		span.LogFields(log.String("request.linkedinUrl", linkedinUrl))
-		span.LogFields(log.Bool("request.searchPhoneNumber", searchPhoneNumber))
+		span.LogFields(
+			log.String("request.email", email),
+			log.String("request.linkedinUrl", linkedinUrl),
+			log.Bool("request.searchPhoneNumber", searchPhoneNumber),
+			log.String("request.firstName", firstName),
+			log.String("request.lastName", lastName))
 
 		// Call enrichPerson API
-		enrichPersonApiResponse, err := callApiEnrichPerson(ctx, services, span, email, linkedinUrl)
-		if err != nil || enrichPersonApiResponse == nil {
+		enrichPersonApiResponse, err := callApiEnrichPerson(ctx, services, span, email, linkedinUrl, firstName, lastName)
+		if err != nil || enrichPersonApiResponse == nil || enrichPersonApiResponse.Status == "error" {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			return
+		}
+		if enrichPersonApiResponse.Data == nil || enrichPersonApiResponse.PersonFound == false {
+			c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Person not found"})
 			return
 		}
 
@@ -362,10 +370,12 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func callApiEnrichPerson(ctx context.Context, services *service.Services, span opentracing.Span, email, linkedinUrl string) (*enrichmentmodel.EnrichPersonResponse, error) {
+func callApiEnrichPerson(ctx context.Context, services *service.Services, span opentracing.Span, email, linkedinUrl, firstName, lastName string) (*enrichmentmodel.EnrichPersonResponse, error) {
 	requestJSON, err := json.Marshal(enrichmentmodel.EnrichPersonRequest{
 		Email:       email,
 		LinkedinUrl: linkedinUrl,
+		FirstName:   firstName,
+		LastName:    lastName,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
