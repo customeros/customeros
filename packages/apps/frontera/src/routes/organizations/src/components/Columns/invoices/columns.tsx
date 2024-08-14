@@ -10,7 +10,6 @@ import { getColumnConfig } from '@organizations/components/Columns/shared/util/g
 import {
   IssueDateFilter,
   BillingCycleFilter,
-  InvoiceStatusFilter,
   PaymentStatusFilter,
 } from './Filters';
 import {
@@ -19,8 +18,6 @@ import {
   ContractCell,
   IssueDateCell,
   BillingCycleCell,
-  InvoiceNumberCell,
-  InvoiceStatusCell,
   PaymentStatusCell,
   InvoicePreviewCell,
 } from './Cells';
@@ -147,8 +144,8 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  [ColumnViewType.InvoicesPaymentStatus]: columnHelper.accessor((row) => row, {
-    id: ColumnViewType.InvoicesPaymentStatus,
+  [ColumnViewType.InvoicesInvoiceStatus]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesInvoiceStatus,
     size: 175,
     minSize: 175,
     maxSize: 300,
@@ -157,8 +154,8 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
-        title='Payment Status'
-        id={ColumnViewType.InvoicesPaymentStatus}
+        title='Invoice Status'
+        id={ColumnViewType.InvoicesInvoiceStatus}
         renderFilter={() => <PaymentStatusFilter />}
         {...getTHeadProps(props)}
       />
@@ -210,34 +207,14 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <InvoiceNumberCell
+      <InvoicePreviewCell
         value={props.getValue()?.value?.invoiceNumber}
         invoiceId={props.getValue()?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
-  [ColumnViewType.InvoicesInvoiceStatus]: columnHelper.accessor((row) => row, {
-    id: ColumnViewType.InvoicesInvoiceStatus,
-    size: 150,
-    minSize: 150,
-    maxSize: 300,
-    enableResizing: true,
-    enableColumnFilter: true,
-    enableSorting: true,
-    header: (props) => (
-      <THead
-        title='Invoice Status'
-        id={ColumnViewType.InvoicesInvoiceStatus}
-        renderFilter={() => <InvoiceStatusFilter />}
-        {...getTHeadProps(props)}
-      />
-    ),
-    cell: (props) => (
-      <InvoiceStatusCell status={props.getValue()?.value?.status} />
-    ),
-    skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
-  }),
+
   [ColumnViewType.InvoicesInvoicePreview]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoicePreview,
     size: 130,
@@ -248,7 +225,7 @@ const columns: Record<string, Column> = {
     enableSorting: false,
     header: (props) => (
       <THead
-        title='Invoice Preview'
+        title='Upcoming Invoices'
         id={ColumnViewType.InvoicesInvoicePreview}
         {...getTHeadProps(props)}
       />

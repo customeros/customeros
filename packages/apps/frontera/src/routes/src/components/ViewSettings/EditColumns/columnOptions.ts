@@ -17,12 +17,11 @@ export const invoicesOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.InvoicesBillingCycle]: 'Billing Cycle',
   [ColumnViewType.InvoicesContract]: 'Contract',
   [ColumnViewType.InvoicesDueDate]: 'Due Date',
-  [ColumnViewType.InvoicesInvoicePreview]: 'Invoice Preview',
+  [ColumnViewType.InvoicesInvoicePreview]: 'Upcoming Invoices',
   [ColumnViewType.InvoicesInvoiceNumber]: 'Invoice',
   [ColumnViewType.InvoicesIssueDate]: 'Issue Date',
   [ColumnViewType.InvoicesIssueDatePast]: 'Created At',
   [ColumnViewType.InvoicesInvoiceStatus]: 'Invoice Status',
-  [ColumnViewType.InvoicesPaymentStatus]: 'Payment Status',
 };
 
 export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
