@@ -314,8 +314,8 @@ export const BillingPanel = observer(() => {
     <div className='flex'>
       <BankTransferSelectionContextProvider>
         <div className='flex-1 w-full h-[100vh] bg-gray-25 flex-col shadow-none max-w-[400px] min-w-[400px] border-r border-gray-300 overflow-y-scroll pr-0 '>
-          <div className='flex items-center justify-between px-6 pb-0 pt-4'>
-            <h1 className='text-lg text-gray-700 pt-1'>
+          <div className='flex items-center justify-between px-6 pb-0 pt-1.5'>
+            <h1 className=' text-gray-700'>
               <b>Billing</b>
             </h1>
 

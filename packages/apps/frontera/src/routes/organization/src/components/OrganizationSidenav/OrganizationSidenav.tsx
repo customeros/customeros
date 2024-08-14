@@ -48,7 +48,7 @@ export const OrganizationSidenav = observer(() => {
   const parentOrgId = parentOrg?.metadata?.id;
 
   return (
-    <div className='px-2 py-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
+    <div className='px-2 pt-2 pb-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
       <div className='flex gap-2 items-center mb-4'>
         <IconButton
           size='xs'

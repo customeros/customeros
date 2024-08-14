@@ -3,6 +3,8 @@ query TenantSettings {
     logoUrl
     logoRepositoryFileId
     baseCurrency
+    workspaceName
+    workspaceLogo
     billingEnabled
     opportunityStages {
       id

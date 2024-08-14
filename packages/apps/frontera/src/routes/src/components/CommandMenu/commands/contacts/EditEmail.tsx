@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { set } from 'lodash';
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
@@ -19,8 +20,6 @@ export const EditEmail = observer(() => {
   const label = `Contact - ${contact?.value.name}`;
 
   const handleChangeEmail = () => {
-    if (!contact) return;
-
     if (emailAdress?.length === 0) {
       contact?.addEmail();
     } else {
@@ -34,6 +33,14 @@ export const EditEmail = observer(() => {
     if (email.length === 0) {
       contact?.removeEmail();
     }
+    contact?.update(
+      (value) => {
+        set(value, 'emails[0].email', email);
+
+        return value;
+      },
+      { mutate: false },
+    );
 
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.setType('ContactCommands');

@@ -11,6 +11,8 @@ export type TenantSettingsQuery = {
     logoUrl: string;
     logoRepositoryFileId?: string | null;
     baseCurrency?: Types.Currency | null;
+    workspaceName?: string | null;
+    workspaceLogo?: string | null;
     billingEnabled: boolean;
     opportunityStages: Array<{
       __typename?: 'TenantSettingsOpportunityStageConfiguration';

@@ -6,6 +6,7 @@ import { cn } from '@ui/utils/cn';
 import { Link01 } from '@ui/media/icons/Link01';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { Dataflow03 } from '@ui/media/icons/Dataflow03';
+import { Building03 } from '@ui/media/icons/Building03';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
@@ -30,22 +31,36 @@ export const SettingsSidenav = () => {
   };
 
   return (
-    <div className='px-2 py-4 h-full w-[200px] bg-gray-25 flex flex-col relative border-r border-gray-200'>
+    <div className='px-2 pt-[6px] h-full w-[200px] bg-white flex flex-col relative border-r border-gray-200'>
       <div className='flex gap-2 items-center mb-4'>
         <IconButton
           size='xs'
           variant='ghost'
           aria-label='Go back'
+          icon={<ArrowNarrowLeft className='text-gray-700' />}
           onClick={() => navigate(`/${lastActivePosition.root}`)}
-          icon={<ArrowNarrowLeft className='text-gray-700 size-5' />}
         />
 
-        <p className='text-lg font-semibold text-gray-700 break-keep line-clamp-1'>
+        <p className='font-semibold text-gray-700 break-keep line-clamp-1'>
           Settings
         </p>
       </div>
 
       <div className='flex flex-col space-y-2 w-full'>
+        <SidenavItem
+          label='Workspace'
+          isActive={checkIsActive('workspace')}
+          onClick={handleItemClick('workspace')}
+          icon={
+            <Building03
+              className={cn(
+                checkIsActive('workspace') ? 'text-gray-700' : 'text-gray-500',
+                'size-5',
+              )}
+            />
+          }
+        />
+
         <SidenavItem
           label='Accounts'
           onClick={handleItemClick('oauth')}

@@ -118,8 +118,8 @@ export const IntegrationsPanel = observer(() => {
   return (
     <>
       <div className='flex h-[calc(100vh-1rem)] max-w-[600px] bg-gray-25 rounded-2xl flex-col max-h-[calc(100vh - 1rem)] relative'>
-        <div className='pb-1 pt-5 px-6'>
-          <h1 className='text-2xl font-bold'>Data Integrations</h1>
+        <div className='pb-1 pt-2  px-6'>
+          <h1 className='font-semibold'>Data Integrations</h1>
           <Input
             value={state.searchTerm}
             placeholder={'Search...'}
@@ -127,7 +127,7 @@ export const IntegrationsPanel = observer(() => {
           />
         </div>
         <div className='overflow-auto pt-1 px-5 pb-5 w-full'>
-          <h3 className='text-lg font-medium'>Active integrations</h3>
+          <h3 className='font-medium'>Active integrations</h3>
           {mixedActiveIntegrations.map((integration) => {
             const option = integration.key;
             const isFromIApp = iAppConnections.includes(option);
@@ -153,7 +153,7 @@ export const IntegrationsPanel = observer(() => {
             </p>
           )}
 
-          <h3 className='text-lg font-medium mt-4'>Inactive integrations</h3>
+          <h3 className='font-medium mt-4'>Inactive integrations</h3>
           {searchedIntegrations.map((integration) => {
             const option = integration.key;
             const isFromIApp = integration.isFromIntegrationApp;
