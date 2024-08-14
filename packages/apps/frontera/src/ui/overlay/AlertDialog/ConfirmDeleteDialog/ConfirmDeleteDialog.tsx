@@ -53,9 +53,9 @@ export const ConfirmDeleteDialog = ({
     <AlertDialog isOpen={isOpen} onClose={onClose} className='z-[99999]'>
       <AlertDialogPortal>
         <AlertDialogOverlay>
-          <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
+          <AlertDialogContent className='rounded-xl'>
             {!hideCloseButton && <AlertDialogCloseIconButton />}
-            <AlertDialogHeader className='text-lg font-bold mt-4'>
+            <AlertDialogHeader className='text-lg font-bold'>
               <p className='pb-0 font-semibold'>{label}</p>
               {description && (
                 <p className='mt-1 text-base text-gray-700 font-normal'>

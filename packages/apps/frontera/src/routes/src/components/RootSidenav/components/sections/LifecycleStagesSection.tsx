@@ -38,7 +38,6 @@ export const LifecycleStagesSection = observer(
     const noOfOrganizationsMovedByICP = store.ui.movedIcpOrganization;
 
     const lifecycleStagesView: TableViewDefStore[] = [
-      store.tableViewDefs.getById(store.tableViewDefs.leadsPreset ?? ''),
       store.tableViewDefs.getById(store.tableViewDefs.targetsPreset ?? ''),
       store.tableViewDefs.getById(
         store.tableViewDefs.opportunitiesPreset ?? '',

@@ -31,7 +31,7 @@ export const PanelContainer = ({
       {...props}
     >
       <div className='flex justify-between pt-2 pb-4 px-6'>
-        <p className='text-lg text-gray-700 font-semibold'>{title}</p>
+        <p className='text-[16px] text-gray-700 font-semibold'>{title}</p>
 
         {actionItem}
       </div>

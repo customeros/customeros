@@ -203,7 +203,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       {tableViewType && <ViewSettings type={tableViewType} />}
 
-      {TableIdType.Leads === tableId && displayIcp && (
+      {TableIdType.Nurture === tableId && displayIcp && (
         <IconButton
           size='xs'
           icon={<Star06 />}

@@ -1,5 +1,4 @@
 import { useState, useCallback } from 'react';
-import { useSearchParams } from 'react-router-dom';
 
 import { toJS } from 'mobx';
 import { observer } from 'mobx-react-lite';
@@ -15,7 +14,6 @@ import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
 import { Globe05 } from '@ui/media/icons/Globe05';
 import { Linkedin } from '@ui/media/icons/Linkedin';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableViewType } from '@shared/types/tableDef';
 import { Building05 } from '@ui/media/icons/Building05';
@@ -40,7 +38,6 @@ const options = ['between', 'less than', 'more than'];
 
 export const Icp = observer(() => {
   const store = useStore();
-  const [searchParams] = useSearchParams();
   const getWorkFlow = store.workFlows
     .toArray()
     .filter((wf) => toJS(wf.value.type === WorkflowType.IdealCustomerProfile));
@@ -50,6 +47,7 @@ export const Icp = observer(() => {
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
 
   const { onOpen, onClose, open } = useDisclosure();
+
   const [employeesFilter, setEmployeesFilter] = useState(
     workFlow?.getFilter(`${ColumnViewType.OrganizationsEmployeeCount}`)
       ?.operation === ComparisonOperator.Between
@@ -82,9 +80,7 @@ export const Icp = observer(() => {
       : 'more than' ?? options[1],
   );
 
-  const preset = searchParams?.get('preset');
-  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-  const tableType = tableViewDef?.value?.tableType;
+  const leadsPreset = store.tableViewDefs.leadsPreset;
 
   const handleEmployeesFilter = () => {
     const currentIndex = options.indexOf(employeesFilter);
@@ -171,12 +167,17 @@ export const Icp = observer(() => {
     return filter ? filter.value : [];
   };
 
+  const tableViewDef = store.tableViewDefs.getById(leadsPreset ?? '1');
+
+  const tableType = tableViewDef?.value.tableType;
+
   const toatalResults = store.organizations
     ?.toArray()
     .filter((v) => v.value.stage === OrganizationStage.Lead).length;
 
   const organizationsData = store.organizations?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Organizations) return arr;
+
     const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
 
     const flowFilters = getFlowFilterFns(workFlow?.getFilters());
@@ -271,7 +272,8 @@ export const Icp = observer(() => {
         Create your <span className='font-medium'>Ideal Company Profile </span>{' '}
         and automatically qualify
         <span className='font-medium'> Leads </span>
-        into <span className='font-medium'>Targets</span>
+        from the Organizations view into
+        <span className='font-medium'> Targets</span>
       </p>
       <p className='font-medium leading-5 text-gray-500 mt-4 mb-2'>WHEN</p>
 
@@ -458,12 +460,12 @@ export const Icp = observer(() => {
               </span>{' '}
               into <span className='font-medium'>Targets</span>
             </p>
-            <Checkbox
+            {/* <Checkbox
               isChecked={store.ui.isFilteringICP as boolean}
               onChange={(v) => store.ui.setIsFilteringICP(v as boolean)}
             >
               Show leads that will not be qualified
-            </Checkbox>
+            </Checkbox> */}
           </div>
         </div>
       )}
