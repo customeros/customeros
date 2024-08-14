@@ -178,11 +178,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     newTableViewDef.value = {
       ...getDefaultValue(),
       ...favoritePreset,
-      name: `Copy of ${
-        favoritePreset?.tableId === TableIdType.UpcomingInvoices
-          ? 'Invoices'
-          : favoritePreset?.name
-      }`,
+      name: `Copy of ${favoritePreset?.name?.toLowerCase()}`,
       isPreset: false,
     };
 

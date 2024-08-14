@@ -26,7 +26,7 @@ export const NavigationSections = ({
   checkIsActive,
 }: NavigationSectionsProps) => {
   return (
-    <div className='px-2 pt-2.5 gap-4 overflow-y-auto flex flex-col flex-1'>
+    <div className='px-2 pt-2.5 gap-4 overflow-y-auto overflow-hidden flex flex-col flex-1'>
       <SidenavItem
         label='Customer map'
         dataTest={`side-nav-item-customer-map`}
