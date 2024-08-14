@@ -49,8 +49,8 @@ export const SettingsSidenav = () => {
       <div className='flex flex-col space-y-2 w-full'>
         <SidenavItem
           label='Workspace'
-          isActive={checkIsActive('workspace')}
           onClick={handleItemClick('workspace')}
+          isActive={checkIsActive('workspace') || !searchParams?.get('tab')}
           icon={
             <Building03
               className={cn(
@@ -63,8 +63,8 @@ export const SettingsSidenav = () => {
 
         <SidenavItem
           label='Accounts'
+          isActive={checkIsActive('oauth')}
           onClick={handleItemClick('oauth')}
-          isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           icon={
             <Link01
               className={cn(
