@@ -54,6 +54,7 @@ import {
   ChooseOpportunityOrganization,
 } from './commands';
 
+//can we keep this in a nice order ? Thanks
 const Commands: Record<CommandMenuType, ReactElement> = {
   EditName: <EditName />,
   GlobalHub: <GlobalHub />,
@@ -71,6 +72,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ContactCommands: <ContactCommands />,
   EditPhoneNumber: <EditPhoneNumber />,
   ChangeArrEstimate: <ChangeArrEstimate />,
+  RenameTableViewDef: <RenameTableViewDef />,
   AddNewOrganization: <AddNewOrganization />,
   ChangeRelationship: <ChangeRelationship />,
   UpdateHealthStatus: <UpdateHealthStatus />,
@@ -79,6 +81,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   OpportunityCommands: <OpportunityCommands />,
   OrganizationCommands: <OrganizationCommands />,
   RenameOpportunityName: <RenameOpportunityName />,
+  MergeConfirmationModal: <MergeConfirmationModal />,
   ChooseOpportunityStage: <ChooseOpportunityStage />,
   SetOpportunityNextSteps: <SetOpportunityNextSteps />,
   DeleteConfirmationModal: <DeleteConfirmationModal />,
@@ -86,8 +89,6 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
-  MergeConfirmationModal: <MergeConfirmationModal />,
-  RenameTableViewDef: <RenameTableViewDef />,
 };
 
 export const CommandMenu = observer(() => {

@@ -14,6 +14,7 @@ import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
+import { useKeyboardNavigation } from '@shared/components/RootSidenav/hooks/useKeyboardNavigation';
 
 export const OrganizationSidenav = observer(() => {
   const navigate = useNavigate();
@@ -46,6 +47,23 @@ export const OrganizationSidenav = observer(() => {
   const parentOrg = organization?.parentCompanies?.[0];
   const parentOrgName = parentOrg?.name;
   const parentOrgId = parentOrg?.metadata?.id;
+
+  const presets = {
+    leadsPreset: store.tableViewDefs.leadsPreset,
+    targetsPreset: store.tableViewDefs.targetsPreset,
+    churnedPreset: store.tableViewDefs.churnedPreset,
+    customersPreset: store.tableViewDefs.defaultPreset,
+    addressBookPreset: store.tableViewDefs.addressBookPreset,
+    upcomingInvoicesPreset: store.tableViewDefs.upcomingInvoicesPreset,
+    myPortfolioPreset: store.tableViewDefs.myPortfolioPreset,
+  };
+
+  useKeyboardNavigation(presets, {
+    when:
+      !store.ui.commandMenu.isOpen &&
+      !store.ui.isEditingTableCell &&
+      !store.ui.isFilteringTable,
+  });
 
   return (
     <div className='px-2 pt-[6px] pb-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
