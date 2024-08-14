@@ -392,11 +392,22 @@ export class OrganizationsStore extends SyncableGroup<
     relationship: OrganizationRelationship,
     mutate = true,
   ) => {
-    const invalidCustomerStageCount = 0;
+    let invalidCustomerStageCount = 0;
 
     ids.forEach((id) => {
       this.value.get(id)?.update(
         (org) => {
+          if (
+            org.relationship === OrganizationRelationship.Customer &&
+            ![
+              OrganizationRelationship.FormerCustomer,
+              OrganizationRelationship.NotAFit,
+            ].includes(relationship)
+          ) {
+            invalidCustomerStageCount++;
+
+            return org; // Do not update if current is customer and new is not formet customer or not a fit
+          }
           org.relationship = relationship;
           org.stage = relationshipStageMap[org.relationship];
 
