@@ -18,13 +18,8 @@ export const MergeConfirmationModal = observer(() => {
   const handleConfirm = () => {
     const [primary, ...rest] = context.ids as string[];
 
-    store.organizations.merge(
-      primary,
-      rest,
-      store.ui.commandMenu?.context?.callback,
-    );
-
-    handleClose();
+    store.organizations.merge(primary, rest);
+    store.ui.commandMenu?.context?.callback?.(), handleClose();
   };
 
   return (
