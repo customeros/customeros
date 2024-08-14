@@ -1,24 +1,25 @@
 import { useSearchParams } from 'react-router-dom';
 import { useRef, useState, useEffect, forwardRef, ChangeEvent } from 'react';
 
-import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
+import { FilterItem } from '@store/types.ts';
 
-import { Input } from '@ui/form/Input/Input';
+import { Input } from '@ui/form/Input/Input.tsx';
 import { useStore } from '@shared/hooks/useStore';
-import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar';
+import { CurrencyDollar } from '@ui/media/icons/CurrencyDollar.tsx';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
-import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
+import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup.tsx';
 import {
   RangeSlider,
   RangeSliderTrack,
   RangeSliderThumb,
   RangeSliderFilledTrack,
-} from '@ui/form/RangeSlider/RangeSlider';
+} from '@ui/form/RangeSlider/RangeSlider.tsx';
 
-import { FilterHeader } from '../../../shared/Filters/abstract/FilterHeader';
+import { FilterHeader } from '../abstract/FilterHeader';
 
 interface ForecastFilterProps {
+  property?: ColumnViewType;
   initialFocusRef: React.RefObject<HTMLInputElement>;
 }
 
@@ -32,14 +33,15 @@ const defaultFilter: FilterItem = {
 };
 
 export const ForecastFilter = observer(
-  ({ initialFocusRef }: ForecastFilterProps) => {
+  ({ initialFocusRef, property }: ForecastFilterProps) => {
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
 
     const store = useStore();
     const tableViewDef = store.tableViewDefs.getById(preset ?? '');
-    const filter =
-      tableViewDef?.getFilter(defaultFilter.property) ?? defaultFilter;
+    const filter = tableViewDef?.getFilter(
+      property || defaultFilter.property,
+    ) ?? { ...defaultFilter, property: property || defaultFilter.property };
 
     const toggle = () => {
       tableViewDef?.toggleFilter(filter);
