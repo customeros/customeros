@@ -8,8 +8,8 @@ import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
 import { rdiffResult } from 'recursive-diff';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
 
 import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';

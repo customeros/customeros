@@ -20,11 +20,6 @@ export const EditPhoneNumber = observer(() => {
   const handleChangePhoneNumber = () => {
     if (!contact) return;
 
-    if (!contact?.value.phoneNumbers?.[0]?.id) {
-      contact?.addPhoneNumber();
-    } else {
-      contact?.updatePhoneNumber();
-    }
     contact?.update(
       (value) => {
         set(value, 'phoneNumbers[0].rawPhoneNumber', number);
@@ -33,6 +28,13 @@ export const EditPhoneNumber = observer(() => {
       },
       { mutate: false },
     );
+
+    if (!contact?.value.phoneNumbers?.[0]?.id) {
+      contact?.addPhoneNumber();
+    } else {
+      contact?.updatePhoneNumber();
+    }
+
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.setType('ContactCommands');
   };
