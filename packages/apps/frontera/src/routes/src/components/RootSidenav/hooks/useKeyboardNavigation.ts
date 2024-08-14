@@ -24,15 +24,6 @@ export const useKeyboardNavigation = (
 
   useSequentialShortcut(
     'G',
-    'L',
-    () => {
-      if (!presets.leadsPreset) return;
-      navigate(`/finder?preset=${presets.leadsPreset}`);
-    },
-    options,
-  );
-  useSequentialShortcut(
-    'G',
     'T',
     () => {
       if (!presets.targetsPreset) return;

@@ -28,7 +28,6 @@ export const GlobalSharedCommands = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
 
-  const leadsPreset = store.tableViewDefs.leadsPreset;
   const targetsPreset = store.tableViewDefs.targetsPreset;
   const churnedPreset = store.tableViewDefs.churnedPreset;
   const customersPreset = store.tableViewDefs.defaultPreset;
@@ -56,14 +55,6 @@ export const GlobalSharedCommands = observer(() => {
 
   return (
     <>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        keywords={navigationKeywords.go_to_leads}
-        rightAccessory={<KeyboardShortcut shortcut='L' />}
-        onSelect={() => handleGoTo('/finder', leadsPreset)}
-      >
-        Go to Leads
-      </CommandItem>
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
         keywords={navigationKeywords.go_to_targets}

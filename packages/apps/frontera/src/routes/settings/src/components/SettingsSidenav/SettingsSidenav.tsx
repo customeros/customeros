@@ -5,15 +5,18 @@ import { useLocalStorage } from 'usehooks-ts';
 import { cn } from '@ui/utils/cn';
 import { Link01 } from '@ui/media/icons/Link01';
 import { Receipt } from '@ui/media/icons/Receipt';
+import { useStore } from '@shared/hooks/useStore';
 import { Dataflow03 } from '@ui/media/icons/Dataflow03';
 import { Building03 } from '@ui/media/icons/Building03';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
+import { useKeyboardNavigation } from '@shared/components/RootSidenav/hooks/useKeyboardNavigation';
 
 export const SettingsSidenav = () => {
   const navigate = useNavigate();
+  const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
@@ -29,6 +32,23 @@ export const SettingsSidenav = () => {
     setLastActivePosition({ ...lastActivePosition, settings: tab });
     setSearchParams(params.toString());
   };
+
+  const presets = {
+    leadsPreset: store.tableViewDefs.leadsPreset,
+    targetsPreset: store.tableViewDefs.targetsPreset,
+    churnedPreset: store.tableViewDefs.churnedPreset,
+    customersPreset: store.tableViewDefs.defaultPreset,
+    addressBookPreset: store.tableViewDefs.addressBookPreset,
+    upcomingInvoicesPreset: store.tableViewDefs.upcomingInvoicesPreset,
+    myPortfolioPreset: store.tableViewDefs.myPortfolioPreset,
+  };
+
+  useKeyboardNavigation(presets, {
+    when:
+      !store.ui.commandMenu.isOpen &&
+      !store.ui.isEditingTableCell &&
+      !store.ui.isFilteringTable,
+  });
 
   return (
     <div className='px-2 pt-[6px] h-full w-[200px] bg-white flex flex-col relative border-r border-gray-200'>
