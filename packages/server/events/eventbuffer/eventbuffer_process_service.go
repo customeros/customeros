@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
@@ -31,7 +32,7 @@ func NewEventBufferProcessService(ebr postgresRepository.EventBufferRepository, 
 }
 
 func (eb *EventBufferProcessService) Start(ctx context.Context) {
-	eb.logger.Info("EventBufferWatcher started")
+	eb.logger.Info("EventBufferProcessService started")
 
 	eb.ticker = time.NewTicker(time.Second * 30)
 	eb.signalChannel = make(chan os.Signal, 1)
@@ -67,9 +68,10 @@ func (eb *EventBufferProcessService) Stop() {
 
 // Dispatch dispatches all expired events from event_buffer table, and delete them after dispatching
 func (eb *EventBufferProcessService) Dispatch(ctx context.Context) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.Dispatch")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferProcessService.Dispatch")
 	defer span.Finish()
-	now := time.Now().UTC()
+
+	now := utils.Now()
 	eventBuffers, err := eb.eventBufferRepository.GetByExpired(now)
 	if err != nil {
 		return err
@@ -93,7 +95,7 @@ func (eb *EventBufferProcessService) Dispatch(ctx context.Context) error {
 }
 
 func (eb *EventBufferProcessService) HandleEvent(ctx context.Context, eventBuffer postgresEntity.EventBuffer) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.handleEvent")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferProcessService.HandleEvent")
 	defer span.Finish()
 
 	//skip these 2 events that are handled by subscribers until we migrate and test them
