@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 
 import { Contact } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
+import { IconButton } from '@ui/form/IconButton';
 import { Users03 } from '@ui/media/icons/Users03';
 import { useStore } from '@shared/hooks/useStore';
 import { UsersPlus } from '@ui/media/icons/UsersPlus';
@@ -52,13 +53,13 @@ export const PeoplePanel = observer(() => {
       }
       actionItem={
         !!contacts.length && (
-          <Button
-            size='sm'
+          <IconButton
+            size='xs'
             variant='outline'
-            loadingText='Adding'
+            aria-label='Add contact'
             className='text-gray-500'
             onClick={handleAddContact}
-            leftIcon={<UsersPlus className='text-gray-500' />}
+            icon={<UsersPlus className='text-gray-500' />}
             spinner={
               <Spinner
                 size='sm'
@@ -68,7 +69,7 @@ export const PeoplePanel = observer(() => {
             }
           >
             Add
-          </Button>
+          </IconButton>
         )
       }
     >

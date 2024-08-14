@@ -70,7 +70,7 @@ export const ChannelLinkSelect = observer(() => {
     if (!value) {
       return (
         <Button
-          size='sm'
+          size='xs'
           variant='ghost'
           leftIcon={<Link01 color='gray.500' />}
           onClick={() => {

@@ -11,7 +11,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { InfoSquare } from '@ui/media/icons/InfoSquare';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
-import { ArrowNarrowRight } from '@ui/media/icons/ArrowNarrowRight';
+import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
 import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 
@@ -48,19 +48,16 @@ export const OrganizationSidenav = observer(() => {
   const parentOrgId = parentOrg?.metadata?.id;
 
   return (
-    <div className='px-2 pt-2 pb-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
+    <div className='px-2 pt-[6px] pb-4 h-full w-200 flex flex-col grid-area-sidebar bg-white relative border-r border-gray-200'>
       <div className='flex gap-2 items-center mb-4'>
         <IconButton
           size='xs'
           variant='ghost'
-          className='p-0.5'
           aria-label='Go back'
+          icon={<ArrowNarrowLeft className=' text-gray-700 ' />}
           onClick={() => {
             navigate(`/${lastActivePosition?.root || 'finder'}`);
           }}
-          icon={
-            <ArrowNarrowRight className='rotate-180 text-gray-700 size-6' />
-          }
         />
 
         <div className='flex flex-col line-clamp-1'>
@@ -73,7 +70,7 @@ export const OrganizationSidenav = observer(() => {
             </a>
           )}
           <Tooltip label={organization?.value.name ?? ''}>
-            <span className='max-w-150px text-lg font-semibold text-gray-700 truncate whitespace-nowrap '>
+            <span className='max-w-150px  font-semibold text-gray-700 truncate whitespace-nowrap '>
               {organization?.value.name || 'Organization'}
             </span>
           </Tooltip>
