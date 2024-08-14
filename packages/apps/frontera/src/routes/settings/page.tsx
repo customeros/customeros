@@ -8,7 +8,7 @@ import { TabsContainer } from './src/components/Tabs/TabsContainer';
 export const SettingsPage = () => {
   const [searchParams] = useSearchParams();
   const store = useStore();
-  const tab = searchParams?.get('tab') ?? 'oauth';
+  const tab = searchParams?.get('tab') ?? 'workspace';
 
   store.ui.commandMenu.setType('GlobalHub');
 
