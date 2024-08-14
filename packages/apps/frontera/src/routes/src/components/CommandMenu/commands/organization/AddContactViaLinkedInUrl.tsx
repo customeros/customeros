@@ -1,13 +1,10 @@
 import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { useDidMount, useKeyBindings } from 'rooks';
 
-import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
-import { Command } from '@ui/overlay/CommandMenu';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { getExternalUrl } from '@utils/getExternalLink.ts';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 function validateLinkedInProfileUrl(url: string): boolean {
   const linkedInProfileRegex =
@@ -20,20 +17,11 @@ export const AddContactViaLinkedInUrl = observer(() => {
   const context = store.ui.commandMenu.context;
   const [url, setUrl] = useState('');
   const [validationError, setValidationError] = useState(false);
-  const [allowSubmit, setAllowSubmit] = useState(false);
 
   const entity = store.organizations.value.get((context.ids as string[])?.[0]);
   const label = `Organization - ${entity?.value?.name}`;
 
-  useDidMount(() => {
-    setTimeout(() => {
-      setAllowSubmit(true);
-    }, 100);
-  });
-
-  const handleConfirm = (e: KeyboardEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleConfirm = () => {
     setValidationError(false);
 
     const isValidUrl = validateLinkedInProfileUrl(url);
@@ -55,50 +43,29 @@ export const AddContactViaLinkedInUrl = observer(() => {
     setValidationError(true);
   };
 
-  useKeyBindings(
-    {
-      Enter: handleConfirm,
-    },
-    {
-      when: allowSubmit,
-    },
-  );
-
   return (
-    <Command label={`Rename `}>
-      <div className='p-6 pb-4 flex flex-col gap-2 border-b border-b-gray-100'>
-        {label && (
-          <Tag size='md' variant='subtle' colorScheme='gray'>
-            <TagLabel>{label}</TagLabel>
-          </Tag>
-        )}
-        <Input
-          autoFocus
-          value={url}
-          autoComplete='off'
-          variant='unstyled'
-          name='linkedin-input'
-          placeholder='Add contact via LinkedIn'
-          onChange={(e) => {
-            setUrl(e.target.value);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === '/') {
-              e.stopPropagation();
-            }
-          }}
-          onKeyUp={(e) => {
-            if (e.key === 'Backspace' && url.length === 0) {
-              setValidationError(false);
-            }
-          }}
-        />
-        {validationError && (
-          <p className='text-xs text-error-600'>
-            Enter a valid LinkedIn profile URL (e.g. linkedin.com/in/identifier)
-          </p>
-        )}
-      </div>
+    <Command label={`Add contact via LinkedIn`}>
+      <CommandInput
+        value={url}
+        label={label}
+        placeholder='Add contact via LinkedIn'
+        onValueChange={(value) => setUrl(value)}
+        onKeyUp={(e) => {
+          if (e.key === 'Backspace' && url.length === 0) {
+            setValidationError(false);
+          }
+        }}
+      />
+      {validationError && (
+        <p className='ml-5 text-xs text-error-600 mt-2'>
+          Enter a valid LinkedIn profile URL (e.g. linkedin.com/in/identifier)
+        </p>
+      )}
+      <Command.List>
+        <CommandItem
+          onSelect={handleConfirm}
+        >{`Add contact via LinkedIn "${url}"`}</CommandItem>
+      </Command.List>
     </Command>
   );
 });

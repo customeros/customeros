@@ -60,10 +60,15 @@ export const DeleteConfirmationModal = observer(() => {
       })
       .with('Organizations', () => {
         store.organizations.hide(context.ids as string[]);
+        context.callback?.();
       })
-      .with('Contact', () => store.contacts.archive(context.ids))
+      .with('Contact', () => {
+        store.contacts.archive(context.ids);
+        context.callback?.();
+      })
       .with('Opportunity', () => {
         store.opportunities.archive(context.ids?.[0]);
+        context.callback?.();
       })
       .with('TableViewDef', () => {
         store.tableViewDefs.archive(context.ids?.[0], {
@@ -85,7 +90,8 @@ export const DeleteConfirmationModal = observer(() => {
   const title = match(context.entity)
     .with(
       'Organization',
-      () => `Archive ${(entity as OrganizationStore)?.value.name}?`,
+      () =>
+        `Archive ${(entity as OrganizationStore)?.value.name || 'Unnamed'}?`,
     )
     .with(
       'Organizations',

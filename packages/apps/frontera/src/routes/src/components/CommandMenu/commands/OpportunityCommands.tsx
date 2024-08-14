@@ -7,12 +7,11 @@ import { User01 } from '@ui/media/icons/User01';
 import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { Delete } from '@ui/media/icons/Delete.tsx';
-import { Command } from '@ui/media/icons/Command.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { Calculator } from '@ui/media/icons/Calculator';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
-import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
+import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
@@ -179,9 +178,7 @@ export const OpportunityCommands = observer(() => {
           ]}
           rightAccessory={
             <>
-              <Kbd>
-                <Command className='size-3' />
-              </Kbd>
+              <CommandKbd />
               <Kbd>
                 <Delete className='size-3' />
               </Kbd>
