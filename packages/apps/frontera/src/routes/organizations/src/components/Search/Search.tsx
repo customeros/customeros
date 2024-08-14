@@ -101,7 +101,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       },
     },
     {
-      when: !store.ui.isEditingTableCell && !store.ui.isFilteringTable,
+      when:
+        !store.ui.isEditingTableCell &&
+        !store.ui.isFilteringTable &&
+        !store.ui.commandMenu.isOpen,
     },
   );
 
