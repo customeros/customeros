@@ -80,7 +80,7 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 
 		// Step 2 - Scrapin by email
 		if !foundByLinkedInUrl && request.Email != "" {
-			recordId, response, err := services.PersonScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName)
+			recordId, response, err := services.PersonScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName, request.Domain)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, model.EnrichPersonResponse{

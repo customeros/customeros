@@ -10,6 +10,7 @@ type EnrichPersonRequest struct {
 	LinkedinUrl string `json:"linkedinUrl"`
 	FirstName   string `json:"firstName"`
 	LastName    string `json:"lastName"`
+	Domain      string `json:"domain"`
 }
 
 func (e *EnrichPersonRequest) Normalize() {
@@ -17,6 +18,7 @@ func (e *EnrichPersonRequest) Normalize() {
 	e.LinkedinUrl = strings.TrimSpace(e.LinkedinUrl)
 	e.FirstName = strings.TrimSpace(e.FirstName)
 	e.LastName = strings.TrimSpace(e.LastName)
+	e.Domain = strings.TrimSpace(e.Domain)
 }
 
 type EnrichPersonResponse struct {
