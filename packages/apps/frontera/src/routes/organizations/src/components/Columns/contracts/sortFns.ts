@@ -16,10 +16,6 @@ export const getContractSortFn = (columnId: string) =>
       ColumnViewType.ContractsPeriod,
       () => (row: ContractStore) => row.value?.committedPeriodInMonths,
     )
-    .with(
-      ColumnViewType.ContractsSignDate,
-      () => (row: ContractStore) => row.value?.signedAt || null,
-    )
     .with(ColumnViewType.ContractsCurrency, () => (row: ContractStore) => {
       return row.value?.currency?.toLowerCase() || null;
     })

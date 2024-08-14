@@ -141,40 +141,6 @@ const columns: Record<string, Column> = {
     ),
   }),
 
-  [ColumnViewType.ContractsSignDate]: columnHelper.accessor((row) => row, {
-    id: ColumnViewType.ContractsSignDate,
-    minSize: 150,
-    maxSize: 650,
-    enableResizing: true,
-    enableColumnFilter: true,
-    enableSorting: true,
-    cell: (props) => {
-      const contractEnded = props.getValue()?.value?.contractSigned;
-
-      if (!contractEnded) {
-        return <p className='text-gray-400'>Unknown</p>;
-      }
-      const formatted = DateTimeUtils.format(
-        contractEnded,
-        DateTimeUtils.defaultFormatShortString,
-      );
-
-      return <TextCell text={formatted} />;
-    },
-    skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
-    header: (props) => (
-      <THead<HTMLInputElement>
-        title='Sign Date'
-        filterWidth='14rem'
-        id={ColumnViewType.ContractsSignDate}
-        renderFilter={() => (
-          <DateFilter property={ColumnViewType.ContractsSignDate} />
-        )}
-        {...getTHeadProps<Store<Contract>>(props)}
-      />
-    ),
-  }),
-
   [ColumnViewType.ContractsCurrency]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsCurrency,
     minSize: 100,
