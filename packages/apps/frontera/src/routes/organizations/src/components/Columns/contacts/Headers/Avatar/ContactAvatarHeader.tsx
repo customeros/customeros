@@ -7,7 +7,6 @@ import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { Plus } from '@ui/media/icons/Plus';
 import { Button } from '@ui/form/Button/Button';
-import { User03 } from '@ui/media/icons/User03';
 import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
@@ -131,7 +130,7 @@ export const ContactAvatarHeader = observer(() => {
       <ModalPortal>
         <ModalOverlay />
         <ModalFeaturedContent>
-          <ModalFeaturedHeader featuredIcon={<User03 />}>
+          <ModalFeaturedHeader>
             <p className='text-lg font-semibold mb-1'>Create new contact</p>
             <p className='text-sm'>
               We’ll auto-enrich this contact using its LinkedIn
