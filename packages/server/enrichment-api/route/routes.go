@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/service"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
 )
@@ -33,33 +32,61 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 		if err := c.BindJSON(&request); err != nil {
 			services.Logger.Errorf("Fail reading request: %v", err.Error())
 			c.JSON(http.StatusBadRequest, model.EnrichPersonResponse{
-				Status:  "error",
-				Message: "Invalid request body",
+				Status:      "error",
+				Message:     "Invalid request body",
+				PersonFound: false,
 			})
 			return
 		}
+		request.Normalize()
 
-		// for now linkedin url is mandatory
-		if request.LinkedinUrl == "" {
-			tracing.TraceErr(span, errors.New("Missing linkedin parameter"))
-			services.Logger.Errorf("Missing ip parameter")
+		tracing.LogObjectAsJson(span, "request", request)
+
+		// validate mandatory parameters
+		if request.LinkedinUrl == "" && request.Email == "" {
+			tracing.TraceErr(span, errors.New("Missing linkedin and email parameters"))
+			services.Logger.Errorf("Missing linkedin and email parameters")
 			c.JSON(http.StatusBadRequest, model.EnrichPersonResponse{
-				Status:  "error",
-				Message: "Missing ip parameter",
+				Status:      "error",
+				Message:     "Missing linkedin and email parameters",
+				PersonFound: false,
 			})
 			return
 		}
-		span.LogFields(log.String("request.linkedin", request.LinkedinUrl))
 
 		var scrapinRecordId uint64
 		var enrichPersonData *model.EnrichedPersonData
+
+		// Step 1 - Scrapin by linked in url
 		if request.LinkedinUrl != "" {
 			recordId, response, err := services.PersonScrapeInService.ScrapInPersonProfile(ctx, request.LinkedinUrl)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, model.EnrichPersonResponse{
-					Status:  "error",
-					Message: "Internal server error",
+					Status:      "error",
+					Message:     "Internal server error",
+					PersonFound: false,
+				})
+				return
+			}
+			enrichPersonData = &model.EnrichedPersonData{
+				PersonProfile: response,
+			}
+			scrapinRecordId = recordId
+		}
+
+		foundByLinkedInUrl := enrichPersonData.PersonProfile != nil &&
+			enrichPersonData.PersonProfile.Person != nil
+
+		// Step 2 - Scrapin by email
+		if !foundByLinkedInUrl && request.Email != "" {
+			recordId, response, err := services.PersonScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				c.JSON(http.StatusInternalServerError, model.EnrichPersonResponse{
+					Status:      "error",
+					Message:     "Internal server error",
+					PersonFound: false,
 				})
 				return
 			}
@@ -70,9 +97,10 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, model.EnrichPersonResponse{
-			Status:   "success",
-			RecordId: scrapinRecordId,
-			Data:     enrichPersonData,
+			Status:      "success",
+			RecordId:    scrapinRecordId,
+			PersonFound: enrichPersonData.PersonProfile != nil && enrichPersonData.PersonProfile.Person != nil,
+			Data:        enrichPersonData,
 		})
 	}
 }
