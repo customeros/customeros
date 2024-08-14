@@ -20,6 +20,7 @@ import {
   ColumnViewType,
 } from '@graphql/types';
 import { AvatarHeader } from '@organizations/components/Columns/organizations/Headers/Avatar';
+import { DateCell } from '@organizations/components/Columns/shared/Cells/DateCell/DateCell.tsx';
 import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
 import { NumericValueFilter } from '@organizations/components/Columns/shared/Filters/NumericValueFilter';
 
@@ -382,18 +383,7 @@ export const columns: Record<string, Column> = {
       cell: (props) => {
         const value = props.getValue();
 
-        if (!value) {
-          return <p className='text-gray-400'>Unknown</p>;
-        }
-
-        return (
-          <p className='text-gray-700 cursor-default truncate'>
-            {DateTimeUtils.format(
-              value,
-              DateTimeUtils.defaultFormatShortString,
-            )}
-          </p>
-        );
+        return <DateCell value={value} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>
@@ -857,6 +847,41 @@ export const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
+
+  [ColumnViewType.OrganizationsHeadquarters]: columnHelper.accessor(
+    'value.metadata',
+    {
+      id: ColumnViewType.OrganizationsHeadquarters,
+      size: 210,
+      minSize: 210,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: true,
+      cell: (props) => {
+        const value = props.getValue()?.id;
+
+        return <CountryCell id={value} type='organization' />;
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          title='Country'
+          filterWidth='auto'
+          id={ColumnViewType.OrganizationsHeadquarters}
+          renderFilter={(initialFocusRef) => (
+            <LocationFilter
+              type='organizations'
+              locationType='countryCodeA2'
+              initialFocusRef={initialFocusRef}
+              property={ColumnViewType.OrganizationsHeadquarters}
+            />
+          )}
+          {...getTHeadProps<Store<Organization>>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+    },
+  ),
 };
 
 export const getOrganizationColumnsConfig = (

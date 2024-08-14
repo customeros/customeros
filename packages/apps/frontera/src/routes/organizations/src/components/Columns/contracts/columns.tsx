@@ -93,7 +93,7 @@ const columns: Record<string, Column> = {
       }
       const formatted = DateTimeUtils.format(
         contractEnded,
-        DateTimeUtils.defaultFormatShortString,
+        DateTimeUtils.dateWithAbreviatedMonth,
       );
 
       return <TextCell text={formatted} />;
@@ -297,7 +297,7 @@ const columns: Record<string, Column> = {
       }
       const formatted = DateTimeUtils.format(
         renewsAt,
-        DateTimeUtils.defaultFormatShortString,
+        DateTimeUtils.dateWithAbreviatedMonth,
       );
 
       return <TextCell text={formatted} />;

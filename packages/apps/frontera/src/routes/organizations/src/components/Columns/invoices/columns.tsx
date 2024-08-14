@@ -5,6 +5,7 @@ import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { TableViewDef, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import { DateCell } from '@organizations/components/Columns/shared/Cells/DateCell/DateCell.tsx';
 import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
 
 import {
@@ -14,9 +15,7 @@ import {
 } from './Filters';
 import {
   AmountCell,
-  DueDateCell,
   ContractCell,
-  IssueDateCell,
   BillingCycleCell,
   PaymentStatusCell,
   InvoicePreviewCell,
@@ -50,7 +49,7 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <IssueDateCell value={props.getValue()?.value?.issued} />,
+    cell: (props) => <DateCell value={props.getValue()?.value?.issued} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   // this needs to be removed - INVOICES_ISSUE_DATE is the good one.
@@ -73,7 +72,7 @@ const columns: Record<string, Column> = {
         {...getTHeadProps(props)}
       />
     ),
-    cell: (props) => <IssueDateCell value={props.getValue()?.value?.issued} />,
+    cell: (props) => <DateCell value={props.getValue()?.value?.issued} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   [ColumnViewType.InvoicesDueDate]: columnHelper.accessor((row) => row, {
@@ -95,7 +94,7 @@ const columns: Record<string, Column> = {
         )}
       />
     ),
-    cell: (props) => <DueDateCell value={props.getValue()?.value?.due} />,
+    cell: (props) => <DateCell value={props.getValue()?.value?.due} />,
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
   [ColumnViewType.InvoicesContract]: columnHelper.accessor((row) => row, {
@@ -217,8 +216,8 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.InvoicesInvoicePreview]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoicePreview,
-    size: 130,
-    minSize: 130,
+    size: 150,
+    minSize: 150,
     maxSize: 300,
     enableResizing: true,
     enableColumnFilter: false,
