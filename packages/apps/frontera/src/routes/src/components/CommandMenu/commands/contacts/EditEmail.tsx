@@ -20,19 +20,6 @@ export const EditEmail = observer(() => {
   const label = `Contact - ${contact?.value.name}`;
 
   const handleChangeEmail = () => {
-    if (emailAdress?.length === 0) {
-      contact?.addEmail();
-    } else {
-      contact?.update((o) => {
-        o.emails[0].email = email;
-
-        return o;
-      });
-    }
-
-    if (email.length === 0) {
-      contact?.removeEmail();
-    }
     contact?.update(
       (value) => {
         set(value, 'emails[0].email', email);
@@ -41,6 +28,16 @@ export const EditEmail = observer(() => {
       },
       { mutate: false },
     );
+
+    if (emailAdress?.length === 0) {
+      contact?.addEmail();
+    } else {
+      contact?.updateEmail();
+    }
+
+    if (email.length === 0) {
+      contact?.removeEmail();
+    }
 
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.setType('ContactCommands');
@@ -54,7 +51,17 @@ export const EditEmail = observer(() => {
         label={label}
         value={email || ''}
         placeholder='Edit email'
-        onValueChange={(value) => setEmail(value)}
+        onValueChange={(value) => {
+          setEmail(value);
+          contact?.update(
+            (value) => {
+              set(value, 'emails[0].email', email);
+
+              return value;
+            },
+            { mutate: false },
+          );
+        }}
       />
       <Command.List>
         <CommandItem
