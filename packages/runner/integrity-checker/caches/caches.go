@@ -48,7 +48,8 @@ func (c *Cache) GetPreviousAlertMessages() ([]string, error) {
 
 	data, err := c.previousAlertMessages.Get([]byte("previousAlertMessages"))
 	if err != nil {
-		return nil, err
+		// Record not found, return empty slice
+		return []string{}, nil
 	}
 
 	var results []string
