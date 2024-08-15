@@ -33,6 +33,7 @@ var jobLocks = struct {
 		contactGroup:               {},
 		contactBettercontactGroup:  {},
 		contactWeconnectGroup:      {},
+		contactEnrichGroup:         {},
 		orphanContactsGroup:        {},
 		contractGroup:              {},
 		invoiceGroup:               {},
