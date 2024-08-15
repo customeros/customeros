@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -74,7 +74,8 @@ func NewOfferingWriteRepository(driver *neo4j.DriverWithContext, database string
 func (r *offeringWriteRepository) CreateOffering(ctx context.Context, tenant string, data OfferingCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingWriteRepository.CreateOffering")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							MERGE (t)-[:HAS_BANK_ACCOUNT]->(ba:Offering {id:$offeringId}) 
@@ -127,7 +128,8 @@ func (r *offeringWriteRepository) CreateOffering(ctx context.Context, tenant str
 func (r *offeringWriteRepository) UpdateOffering(ctx context.Context, tenant string, data OfferingUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingWriteRepository.UpdateOffering")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BANK_ACCOUNT]->(ba:Offering {id:$offeringId}) 
@@ -190,7 +192,8 @@ func (r *offeringWriteRepository) UpdateOffering(ctx context.Context, tenant str
 func (r *offeringWriteRepository) DeleteOffering(ctx context.Context, tenant, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingWriteRepository.DeleteOffering")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[r:HAS_BANK_ACCOUNT]->(ba:Offering {id:$offeringId}) 
 							DELETE r, ba`

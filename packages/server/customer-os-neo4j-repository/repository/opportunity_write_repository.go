@@ -3,11 +3,11 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -116,7 +116,8 @@ func NewOpportunityWriteRepository(driver *neo4j.DriverWithContext, database str
 func (r *opportunityWriteRepository) CreateForOrganization(ctx context.Context, tenant, opportunityId string, data OpportunityCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CreateForOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -181,7 +182,8 @@ func (r *opportunityWriteRepository) CreateForOrganization(ctx context.Context, 
 func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Update")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -247,7 +249,8 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.ReplaceOwner")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	span.LogFields(log.String("userId", userId))
 
@@ -279,7 +282,8 @@ func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, o
 func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.RemoveOwner")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId})<-[rel:OWNS]-(:User)-->(:Tenant {name:$tenant})
@@ -303,7 +307,8 @@ func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tenant, op
 func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CreateRenewal")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -367,7 +372,8 @@ func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, 
 func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateRenewal")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -424,7 +430,8 @@ func (r *opportunityWriteRepository) UpdateRenewal(ctx context.Context, tenant, 
 func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.UpdateNextRenewalDate")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
@@ -450,7 +457,8 @@ func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, 
 func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseWin")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
@@ -481,7 +489,8 @@ func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, oppor
 func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseLoose")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId}) 
@@ -511,7 +520,8 @@ func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opp
 func (r *opportunityWriteRepository) MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkRenewalRequested")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId})
@@ -534,7 +544,8 @@ func (r *opportunityWriteRepository) MarkRenewalRequested(ctx context.Context, t
 func (r *opportunityWriteRepository) Archive(ctx context.Context, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Archive")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity {id:$opportunityId}) 

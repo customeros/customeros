@@ -27,6 +27,7 @@ const (
 
 const (
 	SpanTagComponentPostgresRepository = "postgresRepository"
+	SpanTagComponentNeo4jRepository    = "neo4jRepository"
 )
 
 func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) {
@@ -158,4 +159,12 @@ func ExtractTextMapCarrier(spanCtx opentracing.SpanContext) opentracing.TextMapC
 
 func TagComponentPostgresRepository(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentPostgresRepository)
+}
+
+func TagComponentNeo4jRepository(span opentracing.Span) {
+	span.SetTag(SpanTagComponent, SpanTagComponentNeo4jRepository)
+}
+
+func TagTenant(span opentracing.Span, tenant string) {
+	span.SetTag(SpanTagTenant, tenant)
 }

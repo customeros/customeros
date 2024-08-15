@@ -122,7 +122,7 @@ func findWorkEmail(services *service.Services) gin.HandlerFunc {
 		}
 		tracing.LogObjectAsJson(span, "request", request)
 
-		recordId, response, err := services.BettercontactService.FindWorkEmail(ctx, request.LinkedinUrl, request.FirstName, request.LastName, request.CompanyName, request.CompanyDomain)
+		recordId, requestId, response, err := services.BettercontactService.FindWorkEmail(ctx, request.LinkedinUrl, request.FirstName, request.LastName, request.CompanyName, request.CompanyDomain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, model.FindWorkEmailResponse{

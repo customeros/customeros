@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -47,7 +47,8 @@ func NewSocialWriteRepository(driver *neo4j.DriverWithContext, database string) 
 func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, data SocialFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.MergeSocialForEntity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -97,7 +98,8 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 func (r *socialWriteRepository) PermanentlyDelete(ctx context.Context, tenant, socialId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.PermanentlyDelete")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (soc:Social_%s {id:$socialId}) DETACH DELETE soc`, tenant)
 	params := map[string]any{
@@ -116,7 +118,8 @@ func (r *socialWriteRepository) PermanentlyDelete(ctx context.Context, tenant, s
 func (r *socialWriteRepository) RemoveSocialForEntityById(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.RemoveSocialForEntityById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.String("socialId", socialId))
 
 	// delete social only if has no other relations
@@ -143,7 +146,8 @@ func (r *socialWriteRepository) RemoveSocialForEntityById(ctx context.Context, t
 func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel, socialUrl string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.RemoveSocialForEntityByUrl")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.String("socialUrl", socialUrl))
 
 	// delete social only if has no other relations
@@ -170,7 +174,8 @@ func (r *socialWriteRepository) RemoveSocialForEntityByUrl(ctx context.Context, 
 func (r *socialWriteRepository) Update(ctx context.Context, tenant string, socialEntity neo4jentity.SocialEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "SocialWriteRepository.Update")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)

@@ -5,8 +5,8 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -40,7 +40,8 @@ func (r *masterPlanReadRepository) prepareReadSession(ctx context.Context) neo4j
 func (r *masterPlanReadRepository) GetMasterPlanById(ctx context.Context, tenant, masterPlanId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlanById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan {id:$id}) RETURN mp`
@@ -70,7 +71,8 @@ func (r *masterPlanReadRepository) GetMasterPlanById(ctx context.Context, tenant
 func (r *masterPlanReadRepository) GetMasterPlanMilestoneById(ctx context.Context, tenant, masterPlanMilestoneId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlanMilestoneById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, masterPlanMilestoneId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(:MasterPlan)-[:HAS_MILESTONE]->(m:MasterPlanMilestone {id:$id}) RETURN m`
@@ -101,7 +103,8 @@ func (r *masterPlanReadRepository) GetMasterPlanMilestoneById(ctx context.Contex
 func (r *masterPlanReadRepository) GetMasterPlansOrderByCreatedAt(ctx context.Context, tenant string, returnRetired *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlansOrderByCreatedAt")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan)`
 	if returnRetired != nil {
@@ -136,7 +139,8 @@ func (r *masterPlanReadRepository) GetMasterPlansOrderByCreatedAt(ctx context.Co
 func (r *masterPlanReadRepository) GetMasterPlanMilestonesForMasterPlans(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlanMilestonesForMasterPlans")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan)-[:HAS_MILESTONE]->(m:MasterPlanMilestone)
 		 WHERE mp.id IN $ids 
@@ -169,7 +173,8 @@ func (r *masterPlanReadRepository) GetMasterPlanMilestonesForMasterPlans(ctx con
 func (r *masterPlanReadRepository) GetMaxOrderForMasterPlanMilestones(ctx context.Context, tenant, masterPlanId string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMaxOrderForMasterPlanMilestones")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(:MasterPlan {id:$id})-[:HAS_MILESTONE]->(m:MasterPlanMilestone)
@@ -203,7 +208,8 @@ func (r *masterPlanReadRepository) GetMaxOrderForMasterPlanMilestones(ctx contex
 func (r *masterPlanReadRepository) GetMasterPlanMilestoneByPlanAndId(ctx context.Context, tenant, masterPlanId, masterPlanMilestoneId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlanMilestoneByPlanAndId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, masterPlanMilestoneId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(:MasterPlan {id:$masterPlanId})-[:HAS_MILESTONE]->(m:MasterPlanMilestone {id:$id}) RETURN m`
@@ -234,7 +240,8 @@ func (r *masterPlanReadRepository) GetMasterPlanMilestoneByPlanAndId(ctx context
 func (r *masterPlanReadRepository) GetMasterPlanMilestonesForMasterPlan(ctx context.Context, tenant, masterPlanId string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanReadRepository.GetMasterPlanMilestonesForMasterPlan")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(:MasterPlan {id:$id})-[:HAS_MILESTONE]->(m:MasterPlanMilestone)
 			WHERE m.retired IS NULL OR m.retired = false

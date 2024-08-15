@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -31,7 +31,8 @@ func NewTagWriteRepository(driver *neo4j.DriverWithContext, database string) Tag
 func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string, taggedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.LinkTagByIdToEntity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("tagId", tagId), log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.Object("taggedAt", taggedAt))
 
 	cypher := fmt.Sprintf(`
@@ -59,7 +60,8 @@ func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tenant, ta
 func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UnlinkTagByIdFromEntity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("tagId", tagId), log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
 
 	cypher := fmt.Sprintf(`

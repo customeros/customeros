@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -38,7 +38,8 @@ func (r *logEntryReadRepository) prepareReadSession(ctx context.Context) neo4j.S
 func (r *logEntryReadRepository) GetById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LogEntryReadRepository.GetById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
 	cypher := fmt.Sprintf(`MATCH (l:LogEntry {id:$id}) WHERE l:LogEntry_%s return l`, tenant)

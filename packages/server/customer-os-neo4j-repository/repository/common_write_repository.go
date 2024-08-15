@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -32,7 +32,8 @@ func NewCommonWriteRepository(driver *neo4j.DriverWithContext, database string) 
 func (r *commonWriteRepository) LinkEntityWithEntity(ctx context.Context, tenant, entityId string, entityType model.EntityType, relationship string, withEntityId string, withEntityType model.EntityType) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.LinkEntityWithEntity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += fmt.Sprintf(`MATCH (child:%s_%s {id:$withEntityId}) `, withEntityType.Neo4jLabel(), tenant)
@@ -67,7 +68,8 @@ func (r *commonWriteRepository) LinkEntityWithEntity(ctx context.Context, tenant
 func (r *commonWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, entityId)
 	span.LogFields(log.String("property", string(property)), log.String("nodeLabel", nodeLabel), log.Object("value", value))
 

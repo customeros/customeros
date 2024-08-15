@@ -6,9 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -68,7 +68,8 @@ func (r *organizationReadRepository) prepareReadSession(ctx context.Context) neo
 func (r *organizationReadRepository) CountByTenant(ctx context.Context, tenant string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.CountByTenant")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) where org.hide = false
 			RETURN count(org)`
@@ -99,7 +100,8 @@ func (r *organizationReadRepository) CountByTenant(ctx context.Context, tenant s
 func (r *organizationReadRepository) GetOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id}) RETURN org`
@@ -131,7 +133,8 @@ func (r *organizationReadRepository) GetOrganization(ctx context.Context, tenant
 func (r *organizationReadRepository) GetOrganizationIdsConnectedToInteractionEvent(ctx context.Context, tenant, interactionEventId string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationIdsConnectedToInteractionEvent")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("interactionEventId", interactionEventId))
 
 	cypher := fmt.Sprintf(`MATCH (ie:InteractionEvent_%s {id:$interactionEventId}),
@@ -174,7 +177,8 @@ func (r *organizationReadRepository) GetOrganizationIdsConnectedToInteractionEve
 func (r *organizationReadRepository) GetOrganizationByOpportunityId(ctx context.Context, tenant, opportunityId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByOpportunityId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("opportunityId", opportunityId))
 
 	cypher := `MATCH (op:Opportunity {id:$id})
@@ -217,7 +221,8 @@ func (r *organizationReadRepository) GetOrganizationByOpportunityId(ctx context.
 func (r *organizationReadRepository) GetOrganizationByContactId(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByContactId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contactId", contactId))
 
 	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}), 
@@ -258,7 +263,8 @@ func (r *organizationReadRepository) GetOrganizationByContactId(ctx context.Cont
 func (r *organizationReadRepository) GetOrganizationByContractId(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByContractId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]->(c:Contract {id:$id})
@@ -297,7 +303,8 @@ func (r *organizationReadRepository) GetOrganizationByContractId(ctx context.Con
 func (r *organizationReadRepository) GetOrganizationByInvoiceId(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByInvoiceId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("invoiceId", invoiceId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(inv:Invoice {id:$invoiceId})<-[:HAS_INVOICE]-(c:Contract)<-[:HAS_CONTRACT]-(org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
@@ -336,7 +343,8 @@ func (r *organizationReadRepository) GetOrganizationByInvoiceId(ctx context.Cont
 func (r *organizationReadRepository) GetOrganizationByCustomerOsId(ctx context.Context, tenant, customerOsId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByInvoiceId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("customerOsId", customerOsId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {customerOsId:$customerOsId})
@@ -373,7 +381,8 @@ func (r *organizationReadRepository) GetOrganizationByCustomerOsId(ctx context.C
 func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Context, tenant, referenceId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByReferenceId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("referenceId", referenceId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {referenceId:$referenceId}) RETURN org`
@@ -409,7 +418,8 @@ func (r *organizationReadRepository) GetOrganizationByReferenceId(ctx context.Co
 func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context, tenant, domain string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("domain", domain))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_DOMAIN]->(d:Domain{domain:$domain}) RETURN o limit 1`
@@ -447,7 +457,8 @@ func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context
 func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("socialUrl", socialUrl))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(:Social {url:$url}) RETURN o limit 1`
@@ -485,7 +496,8 @@ func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Cont
 func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant string, skip, limit int) ([]map[string]interface{}, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetForApiCache")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("skip", skip), log.Object("limit", limit))
 
 	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
@@ -565,7 +577,8 @@ func (r *organizationReadRepository) GetForApiCache(ctx context.Context, tenant 
 func (r *organizationReadRepository) GetPatchesForApiCache(ctx context.Context, tenant string, lastPatchTimestamp time.Time) ([]map[string]interface{}, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetPatchesForApiCache")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := ` MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)
 				where o.updatedAt > $lastPatchTimestamp
@@ -654,7 +667,8 @@ func (r *organizationReadRepository) GetPatchesForApiCache(ctx context.Context, 
 func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForInvoices")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("invoiceIds", invoiceIds))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice)<-[:HAS_INVOICE]-(:Contract)<-[:HAS_CONTRACT]-(o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
@@ -688,7 +702,8 @@ func (r *organizationReadRepository) GetAllForInvoices(ctx context.Context, tena
 func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context, tenant string, slackChannelIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForSlackChannels")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("slackChannelIds", slackChannelIds))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})-[:ORGANIZATION_BELONGS_TO_TENANT]->(o:Organization)
@@ -722,7 +737,8 @@ func (r *organizationReadRepository) GetAllForSlackChannels(ctx context.Context,
 func (r *organizationReadRepository) GetAllForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetAllForOpportunities")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("opportunityIds", opportunityIds))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_OPPORTUNITY]->(op:Opportunity)
@@ -756,7 +772,7 @@ func (r *organizationReadRepository) GetAllForOpportunities(ctx context.Context,
 func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateNextRenewalDate")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_CONTRACT]-(c:Contract)-[:ACTIVE_RENEWAL]->(op:RenewalOpportunity) 
@@ -802,7 +818,7 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateNextRenewalDate(ct
 func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsWithWebsiteAndWithoutDomains")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization) 
@@ -847,7 +863,7 @@ func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomain
 func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForEnrich")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain)
@@ -897,7 +913,7 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForAdjustIndustry")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
@@ -948,7 +964,7 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -67,7 +67,8 @@ func NewServiceLineItemWriteRepository(driver *neo4j.DriverWithContext, database
 func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.CreateForContract")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
@@ -127,7 +128,8 @@ func (r *serviceLineItemWriteRepository) CreateForContract(ctx context.Context, 
 func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tenant, serviceLineItemId string, data ServiceLineItemUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Update")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -171,7 +173,8 @@ func (r *serviceLineItemWriteRepository) Update(ctx context.Context, tenant, ser
 func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, serviceLineItemId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Delete")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
 	cypher := `MATCH (sli:ServiceLineItem {id:$serviceLineItemId})<-[:HAS_SERVICE]-(c:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
@@ -197,7 +200,8 @@ func (r *serviceLineItemWriteRepository) Delete(ctx context.Context, tenant, ser
 func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serviceLineItemId string, endedAt time.Time, isCanceled bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.Close")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 	span.LogFields(log.Object("endedAt", endedAt), log.Bool("isCanceled", isCanceled))
 
@@ -226,7 +230,8 @@ func (r *serviceLineItemWriteRepository) Close(ctx context.Context, tenant, serv
 func (r *serviceLineItemWriteRepository) AdjustEndDates(ctx context.Context, tenant, parentId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemWriteRepository.AdjustEndDates")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag("parentId", parentId)
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {parentId: $parentId})

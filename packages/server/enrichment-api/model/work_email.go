@@ -11,8 +11,9 @@ type FindWorkEmailRequest struct {
 }
 
 type FindWorkEmailResponse struct {
-	Status   string                                    `json:"status"`
-	Message  string                                    `json:"message,omitempty"`
-	RecordId string                                    `json:"recordId,omitempty"`
-	Data     *postgresentity.BetterContactResponseBody `json:"data,omitempty"`
+	Status                 string                                    `json:"status"`
+	Message                string                                    `json:"message,omitempty"`
+	RecordId               string                                    `json:"recordId,omitempty"`
+	BetterContactRequestId string                                    `json:"betterContactRequestId,omitempty"`
+	Data                   *postgresentity.BetterContactResponseBody `json:"data,omitempty"`
 }

@@ -1,12 +1,11 @@
 package entity
 
 import (
-	"github.com/google/uuid"
 	"time"
 )
 
 type EnrichDetailsBetterContact struct {
-	ID                 uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
+	ID                 string    `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	RequestID          string    `gorm:"column:request_id;type:varchar(255);NOT NULL" json:"requestId"`
 	CreatedAt          time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt          time.Time `gorm:"column:updated_at;type:timestamp;" json:"updatedAt"`

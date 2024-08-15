@@ -6,8 +6,8 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -44,7 +44,8 @@ func (r *organizationPlanReadRepository) prepareReadSession(ctx context.Context)
 func (r *organizationPlanReadRepository) GetOrganizationPlanById(ctx context.Context, tenant, organizationPlanId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationPlanById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan {id:$id}) RETURN op`
@@ -75,7 +76,8 @@ func (r *organizationPlanReadRepository) GetOrganizationPlanById(ctx context.Con
 func (r *organizationPlanReadRepository) GetOrganizationPlanMilestoneById(ctx context.Context, tenant, organizationPlanMilestoneId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationPlanMilestoneById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanMilestoneId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan)-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone {id:$id}) RETURN m`
@@ -106,7 +108,8 @@ func (r *organizationPlanReadRepository) GetOrganizationPlanMilestoneById(ctx co
 func (r *organizationPlanReadRepository) GetOrganizationPlansOrderByCreatedAt(ctx context.Context, tenant string, returnRetired *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationPlansOrderByCreatedAt")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan)`
 	if returnRetired != nil {
@@ -141,7 +144,8 @@ func (r *organizationPlanReadRepository) GetOrganizationPlansOrderByCreatedAt(ct
 func (r *organizationPlanReadRepository) GetOrganizationPlanMilestonesForOrganizationPlans(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationPlanMilestonesForOrganizationPlans")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan)-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone)
 		 WHERE op.id IN $ids 
@@ -174,7 +178,8 @@ func (r *organizationPlanReadRepository) GetOrganizationPlanMilestonesForOrganiz
 func (r *organizationPlanReadRepository) GetMilestonesForOrganizationPlan(ctx context.Context, tenant, organizationPlanId string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetMilestonesForOrgPlan")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan {id:$id})-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone)
 		 WHERE m.retired IS NULL OR m.retired = false
@@ -207,7 +212,8 @@ func (r *organizationPlanReadRepository) GetMilestonesForOrganizationPlan(ctx co
 func (r *organizationPlanReadRepository) GetMaxOrderForOrganizationPlanMilestones(ctx context.Context, tenant, organizationPlanId string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetMaxOrderForOrganizationPlanMilestones")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan {id:$id})-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone)
@@ -241,7 +247,8 @@ func (r *organizationPlanReadRepository) GetMaxOrderForOrganizationPlanMilestone
 func (r *organizationPlanReadRepository) GetOrganizationPlanMilestoneByPlanAndId(ctx context.Context, tenant, organizationPlanId, organizationPlanMilestoneId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationPlanMilestoneByPlanAndId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanMilestoneId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan {id:$organizationPlanId})-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone {id:$id}) RETURN m`
@@ -272,7 +279,8 @@ func (r *organizationPlanReadRepository) GetOrganizationPlanMilestoneByPlanAndId
 func (r *organizationPlanReadRepository) GetOrganizationPlansForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationPlansForOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(op:OrganizationPlan)-[:ORGANIZATION_PLAN_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId}) RETURN op`
 	params := map[string]any{
@@ -300,7 +308,8 @@ func (r *organizationPlanReadRepository) GetOrganizationPlansForOrganization(ctx
 func (r *organizationPlanReadRepository) GetMilestoneDueDate(ctx context.Context, tenant, organizationPlanMilestoneId string) (time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetMilestoneDueDate")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanMilestoneId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan)-[:HAS_MILESTONE]->(m:OrganizationPlanMilestone {id:$id}) RETURN m.dueDate`
@@ -330,7 +339,8 @@ func (r *organizationPlanReadRepository) GetMilestoneDueDate(ctx context.Context
 func (r *organizationPlanReadRepository) GetOrganizationFromOrganizationPlan(ctx context.Context, tenant, organizationPlanId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationPlanReadRepository.GetOrganizationFromOrganizationPlan")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_PLAN_BELONGS_TO_TENANT]-(:OrganizationPlan {id:$id})-[:ORGANIZATION_PLAN_BELONGS_TO_ORGANIZATION]->(o:Organization) RETURN o`

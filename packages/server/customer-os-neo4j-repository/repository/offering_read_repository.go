@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -34,7 +34,8 @@ func (r *offeringReadRepository) prepareReadSession(ctx context.Context) neo4j.S
 func (r *offeringReadRepository) GetOfferings(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingReadRepository.GetOfferings")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:OFFERING_BELONGS_TO_TENANT]-(of:Offering)
 			RETURN of ORDER BY of.createdAt ASC`
@@ -66,7 +67,8 @@ func (r *offeringReadRepository) GetOfferings(ctx context.Context, tenant string
 func (r *offeringReadRepository) GetOfferingById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OfferingReadRepository.GetOfferingById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:OFFERING_BELONGS_TO_TENANT]-(of:Offering {id:$id})
 			RETURN of`

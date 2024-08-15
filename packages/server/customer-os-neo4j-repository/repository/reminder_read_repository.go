@@ -5,8 +5,8 @@ import (
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -37,7 +37,8 @@ func NewReminderReadRepository(driver *neo4j.DriverWithContext, database string)
 func (r *reminderReadRepository) GetReminderById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetReminderById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id}) RETURN r`
@@ -69,7 +70,8 @@ func (r *reminderReadRepository) GetReminderById(ctx context.Context, tenant, id
 func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetRemindersOrderByDueDateAsc")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId})`
 	if dismissed != nil {
@@ -107,7 +109,8 @@ func (r *reminderReadRepository) GetRemindersOrderByDueDateAsc(ctx context.Conte
 func (r *reminderReadRepository) GetRemindersOrderByDueDateDesc(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetRemindersOrderByDueDateDesc")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId})`
 	if dismissed != nil {
@@ -145,7 +148,8 @@ func (r *reminderReadRepository) GetRemindersOrderByDueDateDesc(ctx context.Cont
 func (r *reminderReadRepository) GetRemindersForOrganization(ctx context.Context, tenant, organizationId string, dismissed *bool) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderReadRepository.GetRemindersForOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder)-[:REMINDER_BELONGS_TO_ORGANIZATION]->(o:Organization {id:$organizationId})`
 	if dismissed != nil {

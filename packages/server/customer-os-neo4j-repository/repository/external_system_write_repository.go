@@ -3,9 +3,9 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -37,7 +37,8 @@ func (r *externalSystemWriteRepository) prepareWriteSession(ctx context.Context)
 func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, tenant, externalSystemId, externalSystemName string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.CreateIfNotExists")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("externalSystemName", externalSystemName))
 
 	cypher := fmt.Sprintf(`MATCH(t:Tenant {name:$tenant})
@@ -62,7 +63,8 @@ func (r *externalSystemWriteRepository) CreateIfNotExists(ctx context.Context, t
 func (r *externalSystemWriteRepository) LinkWithEntity(ctx context.Context, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.LinkWithEntity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
 	tracing.LogObjectAsJson(span, "externalSystem", externalSystem)
 
@@ -78,7 +80,8 @@ func (r *externalSystemWriteRepository) LinkWithEntity(ctx context.Context, tena
 func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, linkedEntityId, linkedEntityNodeLabel string, externalSystem model.ExternalSystem) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.LinkWithEntityInTx")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
 	tracing.LogObjectAsJson(span, "externalSystem", externalSystem)
 
@@ -112,7 +115,8 @@ func (r *externalSystemWriteRepository) LinkWithEntityInTx(ctx context.Context, 
 func (r *externalSystemWriteRepository) SetProperty(ctx context.Context, tenant, externalSystemId, propertyName string, propertyValue any) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemWriteRepository.SetProperty")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("propertyName", propertyName), log.Object("propertyValue", propertyValue))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(e:ExternalSystem {id:$externalSystemId})

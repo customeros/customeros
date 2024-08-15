@@ -7,8 +7,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -55,7 +55,8 @@ func (r *timelineEventReadRepository) prepareReadSession(ctx context.Context) ne
 func (r *timelineEventReadRepository) GetTimelineEvent(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventReadRepository.GetTimelineEventsWithIds")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("id", id))
 
 	cypher := fmt.Sprintf(`MATCH (a:TimelineEvent{id: $id}) WHERE a:TimelineEvent_%s RETURN a`, tenant)
@@ -85,7 +86,8 @@ func (r *timelineEventReadRepository) GetTimelineEvent(ctx context.Context, tena
 func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.Context, tenant, organizationId string) (*time.Time, string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventReadRepository.CalculateAndGetLastTouchPoint")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 
 	params := map[string]any{
@@ -173,7 +175,8 @@ func (r *timelineEventReadRepository) CalculateAndGetLastTouchPoint(ctx context.
 func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Context, tenant, contactId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsForContact")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contactId", contactId), log.String("startingDate", startingDate.String()), log.Int("size", size))
 
 	params := map[string]any{
@@ -241,7 +244,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsForContact(ctx context.Co
 func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx context.Context, tenant string, contactId string, labels []string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForContact")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contactId", contactId))
 
 	params := map[string]any{
@@ -299,7 +303,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForContact(ctx 
 func (r *timelineEventReadRepository) GetTimelineEventsForOrganization(ctx context.Context, tenant, organizationId string, startingDate time.Time, size int, labels []string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsForOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId), log.String("startingDate", startingDate.String()), log.Int("size", size))
 
 	params := map[string]any{
@@ -409,7 +414,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsForOrganization(ctx conte
 func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization(ctx context.Context, tenant string, organizationId string, labels []string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsTotalCountForOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 
 	params := map[string]any{
@@ -505,7 +511,8 @@ func (r *timelineEventReadRepository) GetTimelineEventsTotalCountForOrganization
 func (r *timelineEventReadRepository) GetTimelineEventsWithIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TimelineEventRepository.GetTimelineEventsWithIds")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (a:TimelineEvent) WHERE a.id in $ids AND a:TimelineEvent_%s RETURN a`, tenant)
 	params := map[string]any{

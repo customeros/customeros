@@ -5,9 +5,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -57,7 +57,8 @@ func (r *contractReadRepository) prepareReadSession(ctx context.Context) neo4j.S
 func (r *contractReadRepository) GetContractById(ctx context.Context, tenant, contractId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 	span.LogFields(log.String("contractId", contractId))
 
@@ -89,7 +90,8 @@ func (r *contractReadRepository) GetContractById(ctx context.Context, tenant, co
 func (r *contractReadRepository) GetContractByServiceLineItemId(ctx context.Context, tenant string, serviceLineItemId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractByServiceLineItemId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("serviceLineItemId", serviceLineItemId))
 
 	cypher := `MATCH (sli:ServiceLineItem {id:$id})<-[:HAS_SERVICE]-(c:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN c LIMIT 1`
@@ -123,7 +125,8 @@ func (r *contractReadRepository) GetContractByServiceLineItemId(ctx context.Cont
 func (r *contractReadRepository) GetContractByOpportunityId(ctx context.Context, tenant string, opportunityId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractByOpportunityId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("opportunityId", opportunityId))
 
 	cypher := fmt.Sprintf(`MATCH (:Opportunity {id:$id})<-[:HAS_OPPORTUNITY]-(c:Contract:Contract_%s)-[:CONTRACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) RETURN c LIMIT 1`, tenant)
@@ -157,7 +160,8 @@ func (r *contractReadRepository) GetContractByOpportunityId(ctx context.Context,
 func (r *contractReadRepository) GetContractsForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsForOrganizations")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(contract:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(t)
 			WHERE o.id IN $organizationIds
@@ -187,7 +191,8 @@ func (r *contractReadRepository) GetContractsForOrganizations(ctx context.Contex
 func (r *contractReadRepository) GetContractForInvoice(ctx context.Context, tenant string, invoiceId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractForInvoice")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_INVOICE]->(i:Invoice_%s)
 			WHERE i.id = $invoiceId
@@ -222,7 +227,8 @@ func (r *contractReadRepository) GetContractForInvoice(ctx context.Context, tena
 func (r *contractReadRepository) GetContractsForInvoices(ctx context.Context, tenant string, invoiceIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsForInvoices")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_INVOICE]->(i:Invoice_%s)
 			WHERE i.id IN $invoiceIds
@@ -252,7 +258,8 @@ func (r *contractReadRepository) GetContractsForInvoices(ctx context.Context, te
 func (r *contractReadRepository) TenantsHasAtLeastOneContract(ctx context.Context, tenant string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.TenantsHasAtLeastOneContract")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (c:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(:Tenant{name:$tenant}) RETURN count(c) > 0`
 	params := map[string]any{
@@ -282,7 +289,8 @@ func (r *contractReadRepository) TenantsHasAtLeastOneContract(ctx context.Contex
 func (r *contractReadRepository) CountContracts(ctx context.Context, tenant string) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.CountContracts")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (c:Contract)-[:CONTRACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})MATCH (c)-[:ACTIVE_RENEWAL]->(op:Opportunity)
 			RETURN count(c)`
@@ -313,7 +321,7 @@ func (r *contractReadRepository) CountContracts(ctx context.Context, tenant stri
 func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateCycleInvoices")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("delayMinutes", delayMinutes), log.Int("limit", limit))
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(:ServiceLineItem)
@@ -364,7 +372,7 @@ func (r *contractReadRepository) GetContractsToGenerateCycleInvoices(ctx context
 func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx context.Context, referenceTime time.Time, delayMinutes, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateOffCycleInvoices")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("delayMinutes", delayMinutes), log.Int("limit", limit))
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
@@ -426,7 +434,7 @@ func (r *contractReadRepository) GetContractsToGenerateOffCycleInvoices(ctx cont
 func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx context.Context, referenceTime time.Time, delayMinutes int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractReadRepository.GetContractsToGenerateNextScheduledInvoices")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("delayMinutes", delayMinutes))
 
 	cypher := `MATCH (ts:TenantSettings)<-[:HAS_SETTINGS]-(t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS_CONTRACT]->(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
@@ -481,7 +489,7 @@ func (r *contractReadRepository) GetContractsToGenerateNextScheduledInvoices(ctx
 func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForStatusRenewal")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)<-[:HAS_CONTRACT]-(:Organization {hide:false})
@@ -539,7 +547,7 @@ func (r *contractReadRepository) GetContractsForStatusRenewal(ctx context.Contex
 func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Context, referenceTime time.Time, limit int) ([]TenantAndContractId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetContractsForStatusRenewal")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract),
@@ -589,7 +597,8 @@ func (r *contractReadRepository) GetContractsForRenewalRollout(ctx context.Conte
 func (r *contractReadRepository) IsContractInvoiced(ctx context.Context, tenant, contractId string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.IsContractInvoiced")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_INVOICE]->(i:Invoice {dryRun:false})
@@ -619,7 +628,8 @@ func (r *contractReadRepository) IsContractInvoiced(ctx context.Context, tenant,
 func (r *contractReadRepository) GetPaginatedContracts(ctx context.Context, tenant string, skip, limit int) (*utils.DbNodesWithTotalCount, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.IsContractInvoiced")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
@@ -665,7 +675,7 @@ func (r *contractReadRepository) GetPaginatedContracts(ctx context.Context, tena
 func (r *contractReadRepository) GetLiveContractsWithoutRenewalOpportunities(ctx context.Context, limit int) ([]TenantAndContractId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractRepository.GetLiveContractsWithoutRenewalOpportunities")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)

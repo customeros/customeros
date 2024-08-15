@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -52,7 +52,9 @@ func NewBillingProfileWriteRepository(driver *neo4j.DriverWithContext, database 
 func (r *billingProfileWriteRepository) Create(ctx context.Context, tenant, billingProfileId string, data BillingProfileCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.Create")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -91,7 +93,8 @@ func (r *billingProfileWriteRepository) Create(ctx context.Context, tenant, bill
 func (r *billingProfileWriteRepository) Update(ctx context.Context, tenant, billingProfileId string, data BillingProfileUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.Create")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -124,7 +127,8 @@ func (r *billingProfileWriteRepository) Update(ctx context.Context, tenant, bill
 func (r *billingProfileWriteRepository) LinkEmailToBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.LinkEmailToBillingProfile")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId}),
@@ -157,7 +161,8 @@ func (r *billingProfileWriteRepository) LinkEmailToBillingProfile(ctx context.Co
 func (r *billingProfileWriteRepository) UnlinkEmailFromBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, emailId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.UnlinkEmailFromBillingProfile")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId})-[rel:HAS]->(e:Email {id:$emailId})
@@ -182,7 +187,8 @@ func (r *billingProfileWriteRepository) UnlinkEmailFromBillingProfile(ctx contex
 func (r *billingProfileWriteRepository) LinkLocationToBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.LinkLocationToBillingProfile")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId}),
@@ -208,7 +214,8 @@ func (r *billingProfileWriteRepository) LinkLocationToBillingProfile(ctx context
 func (r *billingProfileWriteRepository) UnlinkLocationFromBillingProfile(ctx context.Context, tenant, organizationId, billingProfileId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BillingProfileWriteRepository.UnlinkLocationFromBillingProfile")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, billingProfileId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(:Organization {id:$orgId})-[:HAS_BILLING_PROFILE]->(bp:BillingProfile {id:$billingProfileId})-[rel:HAS]->(loc:Location {id:$locationId})

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -141,7 +141,8 @@ func NewContractWriteRepository(driver *neo4j.DriverWithContext, database string
 func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, tenant, contractId string, data ContractCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.CreateForOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -224,7 +225,8 @@ func (r *contractWriteRepository) CreateForOrganization(ctx context.Context, ten
 func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, contractId string, data ContractUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateContract")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -382,7 +384,8 @@ func (r *contractWriteRepository) UpdateContract(ctx context.Context, tenant, co
 func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, contractId, status string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.UpdateStatus")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
@@ -408,7 +411,8 @@ func (r *contractWriteRepository) UpdateStatus(ctx context.Context, tenant, cont
 func (r *contractWriteRepository) SuspendActiveRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SuspendActiveRenewalOpportunity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:ACTIVE_RENEWAL]->(op:RenewalOpportunity)
@@ -434,7 +438,8 @@ func (r *contractWriteRepository) SuspendActiveRenewalOpportunity(ctx context.Co
 func (r *contractWriteRepository) ActivateSuspendedRenewalOpportunity(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.ActivateSuspendedRenewalOpportunity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})-[r:SUSPENDED_RENEWAL]->(op:RenewalOpportunity)
@@ -460,7 +465,8 @@ func (r *contractWriteRepository) ActivateSuspendedRenewalOpportunity(ctx contex
 func (r *contractWriteRepository) ContractCausedOnboardingStatusChange(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.ContractCausedOnboardingStatusChange")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 	span.LogFields(log.String("contractId", contractId))
 
@@ -483,7 +489,8 @@ func (r *contractWriteRepository) ContractCausedOnboardingStatusChange(ctx conte
 func (r *contractWriteRepository) MarkStatusRenewalRequested(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkStatusRenewalRequested")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
@@ -506,7 +513,8 @@ func (r *contractWriteRepository) MarkStatusRenewalRequested(ctx context.Context
 func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Context, tenant, contractId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkRolloutRenewalRequested")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
@@ -529,7 +537,8 @@ func (r *contractWriteRepository) MarkRolloutRenewalRequested(ctx context.Contex
 func (r *contractWriteRepository) MarkCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkCycleInvoicingRequested")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
@@ -552,7 +561,8 @@ func (r *contractWriteRepository) MarkCycleInvoicingRequested(ctx context.Contex
 func (r *contractWriteRepository) MarkOffCycleInvoicingRequested(ctx context.Context, tenant, contractId string, invoicingStartedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkOffCycleInvoicingRequested")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
@@ -575,7 +585,8 @@ func (r *contractWriteRepository) MarkOffCycleInvoicingRequested(ctx context.Con
 func (r *contractWriteRepository) MarkNextPreviewInvoicingRequested(ctx context.Context, tenant, contractId string, nextPreviewInvoiceRequestedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.MarkNextPreviewInvoicingRequested")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})
@@ -598,7 +609,8 @@ func (r *contractWriteRepository) MarkNextPreviewInvoicingRequested(ctx context.
 func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contractId string, deletedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SoftDelete")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})
@@ -632,7 +644,8 @@ func (r *contractWriteRepository) SoftDelete(ctx context.Context, tenant, contra
 func (r *contractWriteRepository) SetLtv(ctx context.Context, tenant, contractId string, ltv float64) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContractWriteRepository.SetLtv")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(ct:Contract {id:$contractId})

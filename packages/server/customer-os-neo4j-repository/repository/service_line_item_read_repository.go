@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -41,7 +41,8 @@ func (r *serviceLineItemReadRepository) prepareReadSession(ctx context.Context) 
 func (r *serviceLineItemReadRepository) GetServiceLineItemsForContract(ctx context.Context, tenant, contractId string) ([]*neo4j.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetServiceLineItemsForContract")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract {id:$contractId})-[:HAS_SERVICE]->(sli:ServiceLineItem)
@@ -75,7 +76,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContract(ctx conte
 func (r *serviceLineItemReadRepository) GetServiceLineItemsForContracts(ctx context.Context, tenant string, contractIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetServiceLineItemsForContracts")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("contractIds", contractIds))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem)
@@ -106,7 +108,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForContracts(ctx cont
 func (r *serviceLineItemReadRepository) GetServiceLineItemsForInvoiceLines(ctx context.Context, tenant string, invoiceLineIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemRepository.GetServiceLineItemsForInvoiceLines")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("invoiceLineIds", invoiceLineIds))
 
 	cypher := fmt.Sprintf(`MATCH (il:InvoiceLine)-[:INVOICED]->(sli:ServiceLineItem)
@@ -137,7 +140,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsForInvoiceLines(ctx c
 func (r *serviceLineItemReadRepository) GetServiceLineItemsByParentId(ctx context.Context, tenant, sliParentId string) ([]*neo4j.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetServiceLineItemsByParentId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("sliParentId", sliParentId))
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)-[:HAS_SERVICE]->(sli:ServiceLineItem {parentId:$parentId})
@@ -171,7 +175,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemsByParentId(ctx contex
 func (r *serviceLineItemReadRepository) GetServiceLineItemById(ctx context.Context, tenant, serviceLineItemId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetServiceLineItemById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id}) WHERE sli:ServiceLineItem_%s RETURN sli`, tenant)
@@ -202,7 +207,8 @@ func (r *serviceLineItemReadRepository) GetServiceLineItemById(ctx context.Conte
 func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx context.Context, tenant, serviceLineItemParentId string, beforeDate *time.Time) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.GetLatestServiceLineItemByParentId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("serviceLineItemParentId", serviceLineItemParentId), log.Object("beforeDate", beforeDate))
 
 	params := map[string]any{
@@ -240,7 +246,8 @@ func (r *serviceLineItemReadRepository) GetLatestServiceLineItemByParentId(ctx c
 func (r *serviceLineItemReadRepository) WasServiceLineItemInvoiced(ctx context.Context, tenant, serviceLineItemId string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemReadRepository.WasServiceLineItemInvoiced")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, serviceLineItemId)
 
 	cypher := fmt.Sprintf(`MATCH (sli:ServiceLineItem {id:$id})<-[:INVOICED]-(il:InvoiceLine)--(i:Invoice {dryRun:false}) WHERE sli:ServiceLineItem_%s RETURN count(sli)`, tenant)

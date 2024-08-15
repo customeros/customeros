@@ -28,7 +28,8 @@ func NewCommentReadRepository(driver *neo4j.DriverWithContext, database string) 
 func (r *commentReadRepository) GetAllForIssues(ctx context.Context, tenant string, issueIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentRepository.GetAllForIssues")
 	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ISSUE_BELONGS_TO_TENANT]-(i:Issue)<-[:COMMENTED]-(c:Comment) 
 				WHERE i.id IN $issueIds

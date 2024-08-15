@@ -5,8 +5,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -41,7 +41,8 @@ func (r *commonReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.GenerateId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	id := ""
 	for true {
@@ -61,7 +62,8 @@ func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label str
 func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("id", id), log.String("label", label))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n.id LIMIT 1`, label, label, tenant)
@@ -92,7 +94,8 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsLinked")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("parentId", parentId), log.String("childId", childId), log.String("relationship", relationship))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$parentId})-[:%s]->(m:%s_%s {id:$childId}) `, parentType.Neo4jLabel(), tenant, relationship, childType.Neo4jLabel(), tenant)
@@ -125,7 +128,8 @@ func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentI
 func (r *commonReadRepository) ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedToId", linkedToId), log.String("linkedToLabel", linkedToLabel), log.String("linkRelationship", linkRelationship))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})-`, label)
@@ -161,7 +165,8 @@ func (r *commonReadRepository) ExistsByIdLinkedTo(ctx context.Context, tenant, i
 func (r *commonReadRepository) ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("id", id), log.String("label", label), log.String("linkedFromId", linkedFromId), log.String("linkedFromLabel", linkedFromLabel), log.String("linkRelationship", linkRelationship))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id})<-`, label)

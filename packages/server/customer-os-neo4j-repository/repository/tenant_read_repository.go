@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -100,7 +100,8 @@ func (r *tenantReadRepository) TenantExists(ctx context.Context, tenantName stri
 func (r *tenantReadRepository) GetTenantByName(ctx context.Context, tenant string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantByName")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (t:Tenant {name:$tenant}) RETURN t`
 	params := map[string]any{
@@ -133,7 +134,7 @@ func (r *tenantReadRepository) GetTenantByName(ctx context.Context, tenant strin
 func (r *tenantReadRepository) GetTenantForWorkspaceProvider(ctx context.Context, workspaceName, workspaceProvider string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForWorkspaceProvider")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 
 	cypher := `MATCH (t:Tenant)-[:HAS_WORKSPACE]->(w:Workspace)
 			WHERE w.name=$name AND w.provider=$provider
@@ -173,7 +174,7 @@ func (r *tenantReadRepository) GetTenantForWorkspaceProvider(ctx context.Context
 func (r *tenantReadRepository) GetTenantForUserEmail(ctx context.Context, email string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantForUserEmail")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.String("email", email))
 
 	cypher := `MATCH (t:Tenant)<-[:USER_BELONGS_TO_TENANT]-(:User)-[:HAS]->(e:Email)
@@ -211,7 +212,8 @@ func (r *tenantReadRepository) GetTenantForUserEmail(ctx context.Context, email 
 func (r *tenantReadRepository) GetTenantSettings(ctx context.Context, tenant string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantSettings")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_SETTINGS]->(ts:TenantSettings)
 			RETURN ts`
@@ -245,7 +247,8 @@ func (r *tenantReadRepository) GetTenantSettings(ctx context.Context, tenant str
 func (r *tenantReadRepository) GetTenantBillingProfiles(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantBillingProfiles")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile)
 			RETURN tbp ORDER BY tbp.createdAt ASC`
@@ -277,7 +280,8 @@ func (r *tenantReadRepository) GetTenantBillingProfiles(ctx context.Context, ten
 func (r *tenantReadRepository) GetTenantBillingProfileById(ctx context.Context, tenant, id string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantReadRepository.GetTenantBillingProfileById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$id})
 			RETURN tbp`

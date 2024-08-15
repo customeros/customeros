@@ -6,8 +6,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -40,7 +40,8 @@ func (r *emailReadRepository) prepareReadSession(ctx context.Context) neo4j.Sess
 func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tenant, email string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailIdIfExists")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("email", email))
 
 	cypher := fmt.Sprintf(`MATCH (e:Email_%s) WHERE e.email = $email OR e.rawEmail = $email RETURN e.id LIMIT 1`, tenant)
@@ -75,7 +76,8 @@ func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tenant, em
 func (r *emailReadRepository) GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailForUser")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("userId", userId))
 
 	cypher := fmt.Sprintf("MATCH (e:Email_%s)<-[:HAS]-(u:User {id:$userId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) WHERE u:User_%s return e", tenant, tenant)
@@ -113,7 +115,8 @@ func (r *emailReadRepository) GetEmailForUser(ctx context.Context, tenant string
 func (r *emailReadRepository) GetById(ctx context.Context, tenant, emailId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("emailId", emailId))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId}) return e`
@@ -140,7 +143,8 @@ func (r *emailReadRepository) GetById(ctx context.Context, tenant, emailId strin
 func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetFirstByEmail")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("email", email))
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) 
@@ -179,7 +183,8 @@ func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email
 func (r *emailReadRepository) GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetFirstByEmail")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := ""
 	switch entityType {

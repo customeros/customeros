@@ -6,9 +6,9 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -33,7 +33,8 @@ func NewActionReadRepository(driver *neo4j.DriverWithContext, database string) A
 func (r *actionReadRepository) GetFor(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "AttachmentRepository.GetAttachmentsForXX")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	span.LogFields(log.String("entityType", entityType.String()), log.String("entityIds", fmt.Sprintf("%v", entityIds)))
 
@@ -68,7 +69,8 @@ func (r *actionReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 func (r *actionReadRepository) GetSingleAction(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetSingleAction")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("entityId", entityId),
 		log.String("entityType", entityType.String()),
 		log.String("actionType", string(actionType)))
