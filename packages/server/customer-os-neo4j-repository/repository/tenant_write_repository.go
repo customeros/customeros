@@ -9,11 +9,11 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -115,7 +115,8 @@ func NewTenantWriteRepository(driver *neo4j.DriverWithContext, database string) 
 func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Context, tenant neo4jentity.TenantEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.CreateTenantIfNotExistAndReturn")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant.Name)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant.Name)
 	tracing.LogObjectAsJson(span, "inputTenantEntity", tenant)
 
 	cypher := `MERGE (t:Tenant {name:$name}) 
@@ -164,7 +165,8 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.CreateTenantBillingProfile")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
 							MERGE (t)-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$billingProfileId}) 
@@ -227,7 +229,8 @@ func (r *tenantWriteRepository) CreateTenantBillingProfile(ctx context.Context, 
 func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, tenant string, data TenantBillingProfileUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (:Tenant {name:$tenant})-[:HAS_BILLING_PROFILE]->(tbp:TenantBillingProfile {id:$billingProfileId}) 
@@ -312,7 +315,8 @@ func (r *tenantWriteRepository) UpdateTenantBillingProfile(ctx context.Context, 
 func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant string, data TenantSettingsFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.UpdateTenantBillingProfile")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})
@@ -364,7 +368,8 @@ func (r *tenantWriteRepository) UpdateTenantSettings(ctx context.Context, tenant
 func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.HardDelete")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "tenant", tenant)
 
 	nodeWithTenantSuffix := []string{
@@ -473,7 +478,8 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 func (r *tenantWriteRepository) LinkWithWorkspace(ctx context.Context, tenant string, workspace neo4jentity.WorkspaceEntity) (bool, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWriteRepository.LinkWithWorkspace")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)

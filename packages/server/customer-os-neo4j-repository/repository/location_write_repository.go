@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -75,7 +75,8 @@ func NewLocationWriteRepository(driver *neo4j.DriverWithContext, database string
 func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locationId string, data LocationCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.CreateLocation")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -154,7 +155,8 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locationId string, data LocationUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.UpdateLocation")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -222,7 +224,8 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 func (r *locationRepository) FailLocationValidation(ctx context.Context, tenant, locationId, validationError string, validatedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.FailLocationValidation")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:LOCATION_BELONGS_TO_TENANT]-(l:Location:Location_%s {id:$id})
@@ -248,7 +251,8 @@ func (r *locationRepository) FailLocationValidation(ctx context.Context, tenant,
 func (r *locationRepository) LocationValidated(ctx context.Context, tenant, locationId string, data AddressDetails, validatedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LocationValidated")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
@@ -313,7 +317,8 @@ func (r *locationRepository) LocationValidated(ctx context.Context, tenant, loca
 func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 	span.LogFields(log.String("organizationId", organizationId))
 
@@ -339,7 +344,8 @@ func (r *locationRepository) LinkWithOrganization(ctx context.Context, tenant, o
 func (r *locationRepository) LinkWithContact(ctx context.Context, tenant, contactId, locationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationWriteRepository.LinkWithContact")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, locationId)
 	span.LogFields(log.String("contactId", contactId))
 

@@ -609,12 +609,8 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 				tracing.TraceErr(span, err)
 				span.LogFields(log.Object("record", record))
 			} else {
-				betterContactRequestId := ""
-				if enrichmentResponse.Data != nil {
-					betterContactRequestId = enrichmentResponse.Data.Id
-				}
 				// mark contact with enrich requested
-				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, record.Tenant, record.ContactId, "techFindWorkEmailWithBetterContactRequestId", betterContactRequestId)
+				err = s.commonServices.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, record.Tenant, record.ContactId, neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId, enrichmentResponse.BetterContactRequestId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}

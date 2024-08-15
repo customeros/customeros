@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -33,7 +33,7 @@ func NewDomainWriteRepository(driver *neo4j.DriverWithContext, database string) 
 func (d domainWriteRepository) MergeDomain(ctx context.Context, domain, source, appSource string, time time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.MergeDomain")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, domain)
+	tracing.TagComponentNeo4jRepository(span)
 	span.SetTag(tracing.SpanTagEntityId, domain)
 	tracing.LogObjectAsJson(span, "data", domain)
 
@@ -66,7 +66,7 @@ func (d domainWriteRepository) MergeDomain(ctx context.Context, domain, source, 
 func (d domainWriteRepository) EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.EnrichSource, requestedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.EnrichFailed")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, domain)
+	tracing.TagComponentNeo4jRepository(span)
 	span.SetTag(tracing.SpanTagEntityId, domain)
 	span.LogFields(log.String("enrichError", enrichError), log.String("requestedAt", requestedAt.String()))
 
@@ -98,7 +98,7 @@ func (d domainWriteRepository) EnrichFailed(ctx context.Context, domain, enrichE
 func (d domainWriteRepository) EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.EnrichSource, enrichedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.EnrichSuccess")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, domain)
+	tracing.TagComponentNeo4jRepository(span)
 	span.SetTag(tracing.SpanTagEntityId, domain)
 	span.LogFields(log.String("enrichData", enrichData), log.String("enrichedAt", enrichedAt.String()))
 

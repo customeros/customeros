@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -48,7 +48,8 @@ func NewCommentWriteRepository(driver *neo4j.DriverWithContext, database string)
 func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId string, data CommentCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentWriteRepository.Create")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, commentId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -104,7 +105,8 @@ func (r *commentWriteRepository) Create(ctx context.Context, tenant, commentId s
 func (r *commentWriteRepository) Update(ctx context.Context, tenant, commentId string, data CommentUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommentWriteRepository.Update")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, commentId)
 	tracing.LogObjectAsJson(span, "data", data)
 

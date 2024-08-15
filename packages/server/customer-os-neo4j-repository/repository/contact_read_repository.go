@@ -3,9 +3,9 @@ package repository
 import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -68,6 +68,7 @@ func NewContactReadRepository(driver *neo4j.DriverWithContext, database string) 
 func (r *contactReadRepository) GetContactsEnrichedNotLinkedToOrganization(ctx context.Context) ([]ContactsEnrichedNotLinkedToOrganization, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization")
 	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -102,7 +103,8 @@ func (r *contactReadRepository) GetContactsEnrichedNotLinkedToOrganization(ctx c
 func (r *contactReadRepository) GetContactsWithSocialUrl(ctx context.Context, tenant, socialUrl string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithSocialUrl")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -133,7 +135,8 @@ func (r *contactReadRepository) GetContactsWithSocialUrl(ctx context.Context, te
 func (r *contactReadRepository) GetContactsWithEmail(ctx context.Context, tenant, email string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithEmail")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	session := utils.NewNeo4jReadSession(ctx, *r.driver)
 	defer session.Close(ctx)
@@ -161,7 +164,8 @@ func (r *contactReadRepository) GetContactsWithEmail(ctx context.Context, tenant
 func (r *contactReadRepository) GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetLinkedOrgDomains")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$id})--(:JobRole)--(o:Organization)--(d:Domain)
@@ -201,7 +205,8 @@ func (r *contactReadRepository) prepareReadSession(ctx context.Context) neo4j.Se
 func (r *contactReadRepository) GetContact(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContact")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$id}) RETURN c`
@@ -231,7 +236,8 @@ func (r *contactReadRepository) GetContact(ctx context.Context, tenant, contactI
 func (r *contactReadRepository) GetContactInOrganizationByEmail(ctx context.Context, tenant, organizationId, email string) (*neo4j.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 	span.LogFields(log.String("email", email))
 
@@ -264,7 +270,8 @@ func (r *contactReadRepository) GetContactInOrganizationByEmail(ctx context.Cont
 func (r *contactReadRepository) GetContactById(ctx context.Context, tenant, contactId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.LogFields(log.String("contactId", contactId))
 
@@ -296,7 +303,8 @@ func (r *contactReadRepository) GetContactById(ctx context.Context, tenant, cont
 func (r *contactReadRepository) GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactCountByOrganizations")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization) 
 				WHERE o.id IN $ids
@@ -334,7 +342,7 @@ func (r *contactReadRepository) GetContactCountByOrganizations(ctx context.Conte
 func (r *contactReadRepository) GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]ContactsEnrichWorkEmail, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToFindWorkEmailWithBetterContact")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("minutesFromLastContactUpdate", minutesFromLastContactUpdate))
 	span.LogFields(log.Int("limit", limit))
 
@@ -393,19 +401,22 @@ func (r *contactReadRepository) GetContactsToFindWorkEmailWithBetterContact(ctx 
 func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ctx context.Context, limit int) ([]ContactIdWithRequestId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
+	minutesDelayFromUpdate := 2
 	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 				WHERE
 					c.techFindWorkEmailWithBetterContactRequestId IS NOT NULL AND
+					c.techFindWorkEmailWithBetterContactRequestId <> '' AND
 					c.techFindWorkEmailWithBetterContactRequestedAt IS NOT NULL AND 
 					c.techFindWorkEmailWithBetterContactCompletedAt is null AND
-					c.techFindWorkEmailWithBetterContactRequestedAt < datetime() - duration({minutes: 2})
+					c.techFindWorkEmailWithBetterContactRequestedAt < datetime() - duration({minutes: $minutesDelay})
 				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId ORDER BY c.techFindWorkEmailWithBetterContactRequestedAt asc
 				LIMIT $limit`
 	params := map[string]any{
-		"limit": limit,
+		"limit":        limit,
+		"minutesDelay": minutesDelayFromUpdate,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -440,7 +451,7 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrichByEmail")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("minutesFromLastContactUpdate", minutesFromLastContactUpdate))
 	span.LogFields(log.Int("minutesFromLastEnrichAttempt", minutesFromLastEnrichAttempt))
 	span.LogFields(log.Int("limit", limit))
@@ -499,7 +510,7 @@ func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, 
 func (r *contactReadRepository) GetContactsWithGroupEmail(ctx context.Context, limit int) ([]TenantAndContactId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsWithGroupEmail")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, "")
+	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)

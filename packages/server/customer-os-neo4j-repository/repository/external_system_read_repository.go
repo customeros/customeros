@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -36,7 +36,8 @@ func (r *externalSystemReadRepository) prepareReadSession(ctx context.Context) n
 func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetFirstExternalIdForLinkedEntity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("entityId", entityId), log.String("entityLabel", entityLabel))
 
 	cypher := fmt.Sprintf(`
@@ -77,7 +78,8 @@ func (r *externalSystemReadRepository) GetFirstExternalIdForLinkedEntity(ctx con
 func (r *externalSystemReadRepository) GetAllExternalIdsForLinkedEntity(ctx context.Context, tenant, externalSystemId, entityId, entityLabel string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("externalSystemId", externalSystemId), log.String("entityId", entityId), log.String("entityLabel", entityLabel))
 
 	cypher := fmt.Sprintf(`
@@ -113,7 +115,8 @@ func (r *externalSystemReadRepository) GetAllExternalIdsForLinkedEntity(ctx cont
 func (r *externalSystemReadRepository) GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ExternalSystemReadRepository.GetAllForTenant")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]-(ext:ExternalSystem) RETURN ext`
 	params := map[string]any{

@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -43,7 +43,8 @@ func NewCustomFieldWriteRepository(driver *neo4j.DriverWithContext, database str
 func (r *customFieldWriteRepository) AddCustomFieldToOrganization(ctx context.Context, tenant, organizationId string, data CustomFieldCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldWriteRepository.AddCustomFieldToOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 	tracing.LogObjectAsJson(span, "data", data)
 

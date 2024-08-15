@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 )
 
@@ -41,7 +41,8 @@ func NewReminderWriteRepository(driver *neo4j.DriverWithContext, database string
 func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id, userId, organizationId, content, source, appSource string, createdAt, dueDate time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.CreateReminder")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
@@ -87,7 +88,8 @@ func (r *reminderWriteRepository) CreateReminder(ctx context.Context, tenant, id
 func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id string, data ReminderUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.UpdateReminder")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
 	if data.Content == nil && data.DueDate == nil && data.Dismissed == nil {
@@ -123,7 +125,8 @@ func (r *reminderWriteRepository) UpdateReminder(ctx context.Context, tenant, id
 func (r *reminderWriteRepository) DeleteReminder(ctx context.Context, tenant, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ReminderWriteRepository.DeleteReminder")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, id)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:REMINDER_BELONGS_TO_TENANT]-(r:Reminder {id:$id})

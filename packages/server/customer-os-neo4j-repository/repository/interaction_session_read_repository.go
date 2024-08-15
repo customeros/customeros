@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -32,7 +32,8 @@ func NewInteractionSessionReadRepository(driver *neo4j.DriverWithContext, databa
 func (r *interactionSessionReadRepository) GetForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*neo4j.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetForInteractionEvent")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("interactionEventId", interactionEventId))
 
 	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent_%s{id: $id})-[:PART_OF]->(s:InteractionSession_%s) 
@@ -64,7 +65,8 @@ func (r *interactionSessionReadRepository) GetForInteractionEvent(ctx context.Co
 func (r *interactionSessionReadRepository) GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetAllForInteractionEvents")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.Object("ids", ids))
 
 	cypher := fmt.Sprintf(`MATCH (e:InteractionEvent)-[:PART_OF]->(s:InteractionSession_%s) 
@@ -94,7 +96,8 @@ func (r *interactionSessionReadRepository) GetAllForInteractionEvents(ctx contex
 func (r *interactionSessionReadRepository) GetByIdentifierAndChannel(ctx context.Context, tenant, identifier, channel string) (*neo4j.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetByIdentifierAndChannel")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "identifier", identifier)
 	tracing.LogObjectAsJson(span, "channel", channel)
 

@@ -19,7 +19,7 @@ import (
 )
 
 type BettercontactService interface {
-	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string) (string, *postgresentity.BetterContactResponseBody, error)
+	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string) (string, string, *postgresentity.BetterContactResponseBody, error)
 }
 
 type bettercontactService struct {
@@ -55,7 +55,7 @@ type BetterContactResponseBody struct {
 	Message string `json:"message"`
 }
 
-func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string) (string, *postgresentity.BetterContactResponseBody, error) {
+func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string) (string, string, *postgresentity.BetterContactResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BettercontactService.FindWorkEmail")
 	defer span.Finish()
 	span.LogFields(log.String("linkedInUrl", linkedInUrl), log.String("firstName", firstName), log.String("lastName", lastName), log.String("companyDomain", companyDomain), log.String("companyName", companyName))
@@ -84,7 +84,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 		betterContactByLinkedInUrl, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByLinkedInUrl(ctx, linkedInUrl)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
-			return "", nil, err
+			return "", "", nil, err
 		}
 
 		if betterContactByLinkedInUrl != nil {
@@ -94,7 +94,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 		detailsBetterContactList, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetBy(ctx, firstName, lastName, companyName, companyDomain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
-			return "", nil, err
+			return "", "", nil, err
 		}
 
 		if detailsBetterContactList != nil && len(detailsBetterContactList) > 0 {
@@ -108,11 +108,11 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 			err := json.Unmarshal([]byte(existingBetterContactData.Response), &responseBody)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return "", nil, fmt.Errorf("failed to unmarshal response body: %v", err)
+				return "", "", nil, fmt.Errorf("failed to unmarshal response body: %v", err)
 			}
-			return existingBetterContactData.ID.String(), &responseBody, nil
+			return existingBetterContactData.ID, existingBetterContactData.RequestID, &responseBody, nil
 		}
-		return existingBetterContactData.ID.String(), nil, nil
+		return existingBetterContactData.ID, existingBetterContactData.RequestID, nil, nil
 	}
 
 	requestBodyDtls := BetterContactRequestBody{}
@@ -133,7 +133,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 	requestBody, err := json.Marshal(requestBodyDtls)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal bettercontact request body"))
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	// Create HTTP client
@@ -143,7 +143,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s?api_key=%s", s.config.BetterContactConfig.Url, s.config.BetterContactConfig.ApiKey), bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create bettercontact POST request"))
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	// Set headers
@@ -153,7 +153,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 	resp, err := client.Do(req)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to perform bettercontact POST request"))
-		return "", nil, err
+		return "", "", nil, err
 	}
 	defer resp.Body.Close()
 
@@ -162,7 +162,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 	err = json.NewDecoder(resp.Body).Decode(&responseBody)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode bettercontact response body"))
-		return "", nil, err
+		return "", "", nil, err
 	}
 
 	dbRecord, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.RegisterRequest(ctx, postgresentity.EnrichDetailsBetterContact{
@@ -176,8 +176,8 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return "", nil, err
+		return "", "", nil, err
 	}
 
-	return dbRecord.ID.String(), nil, nil
+	return dbRecord.ID, responseBody.ID, nil, nil
 }

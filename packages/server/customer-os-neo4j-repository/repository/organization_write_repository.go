@@ -3,11 +3,11 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -145,7 +145,8 @@ func (r *organizationWriteRepository) prepareWriteSession(ctx context.Context) n
 func (r *organizationWriteRepository) ReserveOrganizationId(ctx context.Context, tenant, inputId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ReserveOrganizationId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", inputId))
 
 	orgId := utils.NewUUIDIfEmpty(inputId)
@@ -170,7 +171,8 @@ func (r *organizationWriteRepository) ReserveOrganizationId(ctx context.Context,
 func (r *organizationWriteRepository) CreateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.CreateOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
@@ -185,7 +187,8 @@ func (r *organizationWriteRepository) CreateOrganization(ctx context.Context, te
 func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.CreateOrganizationInTx")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -313,7 +316,8 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -453,7 +457,8 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.MergeOrganizationDomain")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
@@ -486,7 +491,8 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tenant
 func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkFromDomain")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
@@ -510,7 +516,8 @@ func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tena
 func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ReplaceOwner")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId), log.String("userId", userId))
 
 	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
@@ -537,7 +544,8 @@ func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tenant, 
 func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetVisibility")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.Bool("hide", hide))
 
@@ -564,7 +572,8 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateLastTouchpoint")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
@@ -589,7 +598,8 @@ func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, 
 func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.SetCustomerOsIdIfMissing")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("customerOsId", customerOsId))
 
@@ -613,7 +623,8 @@ func (r *organizationWriteRepository) SetCustomerOsIdIfMissing(ctx context.Conte
 func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId, subOrganizationType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.LinkWithParentOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subOrganizationType", subOrganizationType))
 
@@ -641,7 +652,8 @@ func (r *organizationWriteRepository) LinkWithParentOrganization(ctx context.Con
 func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Context, tenant, organizationId, parentOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UnlinkParentOrganization")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("parentOrganizationId", parentOrganizationId))
 
@@ -665,7 +677,8 @@ func (r *organizationWriteRepository) UnlinkParentOrganization(ctx context.Conte
 func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateArr")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	cypher := `MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
@@ -692,7 +705,8 @@ func (r *organizationWriteRepository) UpdateArr(ctx context.Context, tenant, org
 func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, tenant, organizationId string, likelihood *string, likelihoodOrder *int64, nextRenewalDate *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateRenewalSummary")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.Object("likelihood", likelihood), log.Object("likelihoodOrder", likelihoodOrder), log.Object("nextRenewalDate", nextRenewalDate))
 
@@ -722,7 +736,8 @@ func (r *organizationWriteRepository) UpdateRenewalSummary(ctx context.Context, 
 func (r *organizationWriteRepository) WebScrapeRequested(ctx context.Context, tenant, organizationId, url string, attempt int64, requestedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.WebScrapeRequested")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("url", url))
 
@@ -750,7 +765,8 @@ func (r *organizationWriteRepository) WebScrapeRequested(ctx context.Context, te
 func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context, tenant, organizationId, status, comments string, statusOrder *int64, updatedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateOnboardingStatus")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
@@ -782,7 +798,8 @@ func (r *organizationWriteRepository) UpdateOnboardingStatus(ctx context.Context
 func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateTimeProperty")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("property", property), log.Object("value", value))
 
@@ -807,7 +824,8 @@ func (r *organizationWriteRepository) UpdateTimeProperty(ctx context.Context, te
 func (r *organizationWriteRepository) UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateFloatProperty")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("property", property), log.Float64("value", value))
 
@@ -832,7 +850,8 @@ func (r *organizationWriteRepository) UpdateFloatProperty(ctx context.Context, t
 func (r *organizationWriteRepository) UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.UpdateFloatProperty")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.LogFields(log.String("property", property), log.String("value", value))
 

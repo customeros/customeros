@@ -4,9 +4,9 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"strings"
@@ -72,7 +72,8 @@ func (r *organizationWithFiltersReadRepository) prepareReadSession(ctx context.C
 func (r *organizationWithFiltersReadRepository) GetFilteredOrganizationIds(ctx context.Context, tenant string, filter *model.Filter) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetFilteredOrganizationIds")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	tracing.LogObjectAsJson(span, "filter", filter)
 
 	params := map[string]any{

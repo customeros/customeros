@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -55,7 +55,8 @@ func NewMasterPlanWriteRepository(driver *neo4j.DriverWithContext, database stri
 func (r *masterPlanWriteRepository) Create(ctx context.Context, tenant, masterPlanId, name, source, appSource string, createdAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanWriteRepository.Create")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})
@@ -91,7 +92,8 @@ func (r *masterPlanWriteRepository) Create(ctx context.Context, tenant, masterPl
 func (r *masterPlanWriteRepository) CreateMilestone(ctx context.Context, tenant, masterPlanId, milestoneId, name, source, appSource string, order, durationHours int64, items []string, optional bool, createdAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanWriteRepository.CreateMilestone")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, milestoneId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan {id:$masterPlanId}) 
@@ -136,7 +138,8 @@ func (r *masterPlanWriteRepository) CreateMilestone(ctx context.Context, tenant,
 func (r *masterPlanWriteRepository) Update(ctx context.Context, tenant, masterPlanId string, data MasterPlanUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanWriteRepository.Update")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, masterPlanId)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:MASTER_PLAN_BELONGS_TO_TENANT]-(mp:MasterPlan {id:$masterPlanId}) 
@@ -167,7 +170,8 @@ func (r *masterPlanWriteRepository) Update(ctx context.Context, tenant, masterPl
 func (r *masterPlanWriteRepository) UpdateMilestone(ctx context.Context, tenant, masterPlanId, milestoneId string, data MasterPlanMilestoneUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MasterPlanWriteRepository.UpdateMilestone")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, milestoneId)
 	tracing.LogObjectAsJson(span, "data", data)
 

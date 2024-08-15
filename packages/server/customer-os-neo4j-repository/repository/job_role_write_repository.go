@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -44,7 +44,8 @@ func NewJobRoleWriteRepository(driver *neo4j.DriverWithContext, database string)
 func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleWriteRepository.CreateJobRole")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, jobRoleId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -85,7 +86,8 @@ func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobR
 func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleWriteRepository.LinkWithUser")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("userId", userId), log.String("jobRoleId", jobRoleId))
 
 	cypher := fmt.Sprintf(`MATCH (u:User_%s {id: $userId})
@@ -110,7 +112,8 @@ func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userI
 func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByInternalId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("contactId", contactId), log.String("organizationId", organizationId))
 	tracing.LogObjectAsJson(span, "data", data)
 

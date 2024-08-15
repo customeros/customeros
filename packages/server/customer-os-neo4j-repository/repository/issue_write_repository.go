@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -64,7 +64,8 @@ func NewIssueWriteRepository(driver *neo4j.DriverWithContext, database string) I
 func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId string, data IssueCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.Create")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -139,7 +140,8 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId string, data IssueUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.Update")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -177,7 +179,8 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserAssignee")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
 	span.LogFields(log.String("userId", userId))
 
@@ -203,7 +206,8 @@ func (r *issueWriteRepository) AddUserAssignee(ctx context.Context, tenant, issu
 func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.AddUserFollower")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
 	span.LogFields(log.String("userId", userId))
 
@@ -229,7 +233,8 @@ func (r *issueWriteRepository) AddUserFollower(ctx context.Context, tenant, issu
 func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserAssignee")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
 	span.LogFields(log.String("userId", userId))
 
@@ -256,7 +261,8 @@ func (r *issueWriteRepository) RemoveUserAssignee(ctx context.Context, tenant, i
 func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, issueId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveUserFollower")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, issueId)
 	span.LogFields(log.String("userId", userId))
 
@@ -283,7 +289,8 @@ func (r *issueWriteRepository) RemoveUserFollower(ctx context.Context, tenant, i
 func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.ReportedByOrganizationWithGroupId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 	span.LogFields(log.String("groupId", groupId))
 
@@ -308,7 +315,8 @@ func (r *issueWriteRepository) ReportedByOrganizationWithGroupId(ctx context.Con
 func (r *issueWriteRepository) RemoveReportedByOrganizationWithGroupId(ctx context.Context, tenant, organizationId, groupId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IssueWriteRepository.RemoveReportedByOrganizationWithGroupId")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("organizationId", organizationId))
 	span.LogFields(log.String("groupId", groupId))
 

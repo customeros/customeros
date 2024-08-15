@@ -5,8 +5,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -37,7 +37,8 @@ func (r *phoneNumberReadRepository) prepareReadSession(ctx context.Context) neo4
 func (r *phoneNumberReadRepository) GetPhoneNumberIdIfExists(ctx context.Context, tenant, phoneNumber string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetPhoneNumberIdIfExists")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("phoneNumber", phoneNumber))
 
 	cypher := fmt.Sprintf(`MATCH (p:PhoneNumber_%s) WHERE p.e164 = $phoneNumber OR p.rawPhoneNumber = $phoneNumber RETURN p.id LIMIT 1`, tenant)
@@ -72,7 +73,8 @@ func (r *phoneNumberReadRepository) GetPhoneNumberIdIfExists(ctx context.Context
 func (r *phoneNumberReadRepository) GetCountryCodeA2ForPhoneNumber(ctx context.Context, tenant, phoneNumberId string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
 
 	cypher := `MATCH (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
@@ -107,7 +109,8 @@ func (r *phoneNumberReadRepository) GetCountryCodeA2ForPhoneNumber(ctx context.C
 func (r *phoneNumberReadRepository) GetById(ctx context.Context, tenant, phoneNumberId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberReadRepository.GetById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber {id:$phoneNumberId}) return p`

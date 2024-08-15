@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -42,7 +42,8 @@ func NewInteractionSessionWriteRepository(driver *neo4j.DriverWithContext, datab
 func (r *interactionSessionWriteRepository) Create(ctx context.Context, tenant, interactionSessionId string, data InteractionSessionCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionWriteRepository.Create")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionSessionId)
 	tracing.LogObjectAsJson(span, "data", data)
 

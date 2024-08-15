@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -67,7 +67,8 @@ func NewInteractionEventWriteRepository(driver *neo4j.DriverWithContext, databas
 func (r *interactionEventWriteRepository) Create(ctx context.Context, tenant, interactionEventId string, data InteractionEventCreateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.Create")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -140,7 +141,8 @@ func (r *interactionEventWriteRepository) Create(ctx context.Context, tenant, in
 func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, interactionEventId string, data InteractionEventUpdateFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.Update")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
 	tracing.LogObjectAsJson(span, "data", data)
 
@@ -182,7 +184,8 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 func (r *interactionEventWriteRepository) SetAnalysisForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, contentType, analysisType, source, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.SetAnalysisForInteractionEvent")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
 	span.LogFields(log.String("content", content), log.String("contentType", contentType), log.String("source", source), log.String("appSource", appSource))
 
@@ -224,7 +227,8 @@ func (r *interactionEventWriteRepository) SetAnalysisForInteractionEvent(ctx con
 func (r *interactionEventWriteRepository) AddActionItemForInteractionEvent(ctx context.Context, tenant, interactionEventId, content, source, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.AddActionItemForInteractionEvent")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
 
 	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent{id:$interactionEventId})
@@ -258,7 +262,8 @@ func (r *interactionEventWriteRepository) AddActionItemForInteractionEvent(ctx c
 func (r *interactionEventWriteRepository) RemoveAllActionItemsForInteractionEvent(ctx context.Context, tenant, interactionEventId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.RemoveActionItemsForInteractionEvent")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
 
 	cypher := fmt.Sprintf(`MATCH (i:InteractionEvent_%s{id:$interactionEventId})-[:INCLUDES]->(a:ActionItem)
@@ -279,7 +284,8 @@ func (r *interactionEventWriteRepository) RemoveAllActionItemsForInteractionEven
 func (r *interactionEventWriteRepository) LinkInteractionEventWithSenderById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.LinkInteractionEventWithSenderById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
 	span.LogFields(log.String("entityId", entityId), log.String("label", label), log.String("relationType", relationType))
 
@@ -308,7 +314,8 @@ func (r *interactionEventWriteRepository) LinkInteractionEventWithSenderById(ctx
 func (r *interactionEventWriteRepository) LinkInteractionEventWithReceiverById(ctx context.Context, tenant, interactionEventId, entityId, label, relationType string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventWriteRepository.LinkInteractionEventWithReceiverById")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, interactionEventId)
 	span.LogFields(log.String("entityId", entityId), log.String("label", label), log.String("relationType", relationType))
 
@@ -337,7 +344,8 @@ func (r *interactionEventWriteRepository) LinkInteractionEventWithReceiverById(c
 func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx context.Context, tenant, interactionEventId, interactionSessionId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventToSession")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("interactionEventId", interactionEventId))
 
 	cypher := fmt.Sprintf(`
@@ -364,7 +372,8 @@ func (r *interactionEventWriteRepository) LinkInteractionEventToSession(ctx cont
 func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx context.Context, tenant, interactionEventId, emailId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventToSession")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("interactionEventId", interactionEventId))
 
 	cypher := fmt.Sprintf(`
@@ -392,7 +401,8 @@ func (r *interactionEventWriteRepository) InteractionEventSentByEmail(ctx contex
 func (r *interactionEventWriteRepository) InteractionEventSentToEmails(ctx context.Context, tenant, interactionEventId, sentType string, emailsId []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventRepository.LinkInteractionEventToSession")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("interactionEventId", interactionEventId))
 
 	cypher := fmt.Sprintf(`

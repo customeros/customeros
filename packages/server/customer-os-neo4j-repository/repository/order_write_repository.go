@@ -4,9 +4,9 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/tracing"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -31,7 +31,8 @@ func NewOrderWriteRepository(driver *neo4j.DriverWithContext, database string) O
 func (r *orderWriteRepository) UpsertOrder(ctx context.Context, tenant, organizationId, orderId string, createdAt time.Time, confirmedAt, paidAt, fulfilledAt, canceledAt *time.Time, sourceFields model.Source) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrderWriteRepository.UpsertOrder")
 	defer span.Finish()
-	tracing.SetNeo4jRepositorySpanTags(span, tenant)
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, orderId)
 	tracing.LogObjectAsJson(span, "createdAt", createdAt)
 	tracing.LogObjectAsJson(span, "organizationId", organizationId)
