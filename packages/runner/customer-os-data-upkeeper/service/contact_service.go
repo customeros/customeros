@@ -38,7 +38,7 @@ type ContactService interface {
 	AskForWorkEmailOnBetterContact()
 	EnrichWithWorkEmailFromBetterContact()
 	CheckBetterContactRequestsWithoutResponse()
-	EnrichContactsByEmail()
+	EnrichContacts()
 	SyncWeConnectContacts()
 	LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 }
@@ -817,17 +817,15 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 	}
 }
 
-func (s *contactService) EnrichContactsByEmail() {
+func (s *contactService) EnrichContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	now := utils.Now()
-
-	s.enrichContactsByEmail(ctx, now)
+	s.enrichContactsByEmail(ctx)
 }
 
-func (s *contactService) enrichContactsByEmail(ctx context.Context, now time.Time) {
-	span, ctx := tracing.StartTracerSpan(ctx, "enrichContactsByEmail")
+func (s *contactService) enrichContactsByEmail(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichContactsByEmail")
 	defer span.Finish()
 
 	limit := 100

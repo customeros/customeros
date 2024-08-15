@@ -9,20 +9,19 @@ import (
 )
 
 const (
-	organizationGroup                         = "organization"
-	contractGroup                             = "contract"
-	askForWorkEmailOnBetterContact            = "askForWorkEmailOnBetterContact"
-	enrichWithWorkEmailFromBetterContact      = "enrichWithWorkEmailFromBetterContact"
-	checkBetterContactRequestsWithoutResponse = "checkBetterContactRequestsWithoutResponse"
-	weConnectContactsGroup                    = "weConnectContactsGroup"
-	orphanContactsGroup                       = "orphanContactsGroup"
-	invoiceGroup                              = "invoice"
-	refreshLastTouchpointGroup                = "refreshLastTouchpoint"
-	currencyGroup                             = "currency"
-	linkUnthreadIssuesGroup                   = "linkUnthreadIssues"
-	contactGroup                              = "contact"
-	apiCacheGroup                             = "api_cache"
-	workflowGroup                             = "workflow"
+	organizationGroup          = "organization"
+	contractGroup              = "contract"
+	orphanContactsGroup        = "orphanContactsGroup"
+	invoiceGroup               = "invoice"
+	refreshLastTouchpointGroup = "refreshLastTouchpoint"
+	currencyGroup              = "currency"
+	linkUnthreadIssuesGroup    = "linkUnthreadIssues"
+	contactGroup               = "contact"
+	contactEnrichGroup         = "contactEnrich"
+	contactBettercontactGroup  = "contactEnrichWithBettercontact"
+	contactWeconnectGroup      = "contactWeconnect"
+	apiCacheGroup              = "api_cache"
+	workflowGroup              = "workflow"
 )
 
 var jobLocks = struct {
@@ -30,20 +29,18 @@ var jobLocks = struct {
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
-		organizationGroup:                         {},
-		contactGroup:                              {},
-		askForWorkEmailOnBetterContact:            {},
-		enrichWithWorkEmailFromBetterContact:      {},
-		checkBetterContactRequestsWithoutResponse: {},
-		weConnectContactsGroup:                    {},
-		orphanContactsGroup:                       {},
-		contractGroup:                             {},
-		invoiceGroup:                              {},
-		refreshLastTouchpointGroup:                {},
-		currencyGroup:                             {},
-		linkUnthreadIssuesGroup:                   {},
-		apiCacheGroup:                             {},
-		workflowGroup:                             {},
+		organizationGroup:          {},
+		contactGroup:               {},
+		contactBettercontactGroup:  {},
+		contactWeconnectGroup:      {},
+		orphanContactsGroup:        {},
+		contractGroup:              {},
+		invoiceGroup:               {},
+		refreshLastTouchpointGroup: {},
+		currencyGroup:              {},
+		linkUnthreadIssuesGroup:    {},
+		apiCacheGroup:              {},
+		workflowGroup:              {},
 	},
 }
 
@@ -143,28 +140,35 @@ func StartCron(cont *container.Container) *cron.Cron {
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForWorkEmailOnBetterContact, func() {
-		lockAndRunJob(cont, askForWorkEmailOnBetterContact, askForWorkEmailOnBetterContactJob)
+		lockAndRunJob(cont, contactBettercontactGroup, askForWorkEmailOnBetterContactJob)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "askForWorkEmailOnBetterContactJob", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, func() {
-		lockAndRunJob(cont, enrichWithWorkEmailFromBetterContact, enrichWithWorkEmailFromBetterContactJob)
+		lockAndRunJob(cont, contactBettercontactGroup, enrichWithWorkEmailFromBetterContactJob)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichWithWorkEmailFromBetterContactJob", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, func() {
-		lockAndRunJob(cont, checkBetterContactRequestsWithoutResponse, checkBetterContactRequestsWithoutResponseJob)
+		lockAndRunJob(cont, contactBettercontactGroup, checkBetterContactRequestsWithoutResponseJob)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkBetterContactRequestsWithoutResponseJob", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleWeConnectSyncContacts, func() {
-		lockAndRunJob(cont, weConnectContactsGroup, weConnectContacts)
+		lockAndRunJob(cont, contactWeconnectGroup, weConnectContacts)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "weConnectContacts", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContacts, func() {
+		lockAndRunJob(cont, contactEnrichGroup, enrichContacts)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "weConnectContacts", err.Error())
@@ -236,6 +240,10 @@ func checkBetterContactRequestsWithoutResponseJob(cont *container.Container) {
 
 func weConnectContacts(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).SyncWeConnectContacts()
+}
+
+func enrichContacts(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).EnrichContacts()
 }
 
 func linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(cont *container.Container) {
