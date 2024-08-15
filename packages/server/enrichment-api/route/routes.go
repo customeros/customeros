@@ -133,9 +133,10 @@ func findWorkEmail(services *service.Services) gin.HandlerFunc {
 		}
 
 		c.JSON(http.StatusOK, model.FindWorkEmailResponse{
-			Status:   "success",
-			RecordId: recordId,
-			Data:     response,
+			Status:                 "success",
+			RecordId:               recordId,
+			BetterContactRequestId: requestId,
+			Data:                   response,
 		})
 	}
 }
