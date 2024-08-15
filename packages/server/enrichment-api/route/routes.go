@@ -30,6 +30,7 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 		var request model.EnrichPersonRequest
 
 		if err := c.BindJSON(&request); err != nil {
+			tracing.TraceErr(span, err)
 			services.Logger.Errorf("Fail reading request: %v", err.Error())
 			c.JSON(http.StatusBadRequest, model.EnrichPersonResponse{
 				Status:      "error",
@@ -61,7 +62,7 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 		if request.LinkedinUrl != "" {
 			recordId, response, err := services.PersonScrapeInService.ScrapInPersonProfile(ctx, request.LinkedinUrl)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(err, "ScrapInPersonProfile"))
 				c.JSON(http.StatusInternalServerError, model.EnrichPersonResponse{
 					Status:      "error",
 					Message:     "Internal server error",
@@ -75,14 +76,13 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 			scrapinRecordId = recordId
 		}
 
-		foundByLinkedInUrl := enrichPersonData.PersonProfile != nil &&
-			enrichPersonData.PersonProfile.Person != nil
+		foundByLinkedInUrl := enrichPersonData != nil && enrichPersonData.PersonProfile != nil && enrichPersonData.PersonProfile.Person != nil
 
 		// Step 2 - Scrapin by email
 		if !foundByLinkedInUrl && request.Email != "" {
 			recordId, response, err := services.PersonScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName, request.Domain)
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchPerson"))
 				c.JSON(http.StatusInternalServerError, model.EnrichPersonResponse{
 					Status:      "error",
 					Message:     "Internal server error",
