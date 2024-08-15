@@ -26,14 +26,6 @@ const (
 	ContactPropertyHide                                      ContactProperty = "hide"
 	ContactPropertyUsername                                  ContactProperty = "username"
 	ContactPropertyEnrichedScrapinRecordId                   ContactProperty = "enrichedScrapinRecordId"
-	// Deprecated
-	ContactPropertyEnrichedAtScrapInPersonSearch ContactProperty = "enrichedAtScrapInPersonSearch"
-	// Deprecated
-	ContactPropertyEnrichedAtScrapInProfile ContactProperty = "enrichedAtScrapInProfile"
-	// Deprecated
-	ContactPropertyEnrichedScrapInPersonSearchParam ContactProperty = "enrichedScrapInPersonSearchParam"
-	// Deprecated
-	ContactPropertyEnrichedScrapInProfileParam ContactProperty = "enrichedScrapInProfileParam"
 )
 
 type ContactEntity struct {
