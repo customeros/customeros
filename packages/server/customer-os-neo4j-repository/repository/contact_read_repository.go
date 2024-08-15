@@ -456,17 +456,20 @@ func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, 
 	span.LogFields(log.Int("minutesFromLastEnrichAttempt", minutesFromLastEnrichAttempt))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization),
+	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
 				(t)--(ts:TenantSettings)
 				WHERE
 					ts.enrichContacts = true AND
 					(c)-[:HAS]->(:Email) AND
 					c.enrichedAt IS NULL AND
-					(c.enrichedFailedAtScrapInPersonSearch IS NULL OR c.enrichedFailedAtScrapInPersonSearch < datetime() - duration({minutes: $minutesFromLastFailure})) AND
-					o.relationship IN $allowedOrgRelationships AND
-					NOT o.stage IN $restrictedOrgStages AND
+					(c.enrichFailedAt IS NULL OR c.enrichFailedAt < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND
 					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt}))
+				WITH t,c
+				OPTIONAL MATCH (c)--(j:JobRole)--(o:Organization)
+				WHERE
+					o.relationship IN $allowedOrgRelationships AND
+					NOT o.stage IN $restrictedOrgStages
 				WITH t.name as tenant, c.id as contactId
 				ORDER BY CASE WHEN c.techEnrichRequestedAt IS NULL THEN 0 ELSE 1 END, c.techEnrichRequestedAt ASC
 				LIMIT $limit
