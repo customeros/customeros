@@ -168,6 +168,12 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
             store.ui.setIsSearching('organizations');
             wrapperRef.current?.setAttribute('data-focused', '');
           }}
+          onKeyDown={(e) => {
+            if (e.key === 'a' && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              e.currentTarget.select();
+            }
+          }}
           onKeyUp={(e) => {
             if (
               e.code === 'Escape' ||
