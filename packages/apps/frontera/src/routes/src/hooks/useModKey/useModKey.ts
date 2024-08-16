@@ -10,6 +10,7 @@ export const useModKey = (
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === key && e.metaKey) {
+        e.preventDefault();
         callback(e);
       }
     };
