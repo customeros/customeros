@@ -92,14 +92,14 @@ export const PageLayout = ({
         ref={dragHandleRef}
         onMouseDown={handleMouseDown}
         style={{
-          left: `${sidebarWidth}px`,
+          left: `${isResizable ? sidebarWidth : 200}px`,
           width: isDragging ? '14rem' : '1px',
         }}
         className={cn(
-          'absolute top-0 left-0 h-full z-10 hover:bg-transparent hover:border-l transition-colors hover:w-[1px]',
+          'absolute top-0 left-0 h-full z-10 hover:bg-transparent  transition-colors hover:w-[1px]',
           {
             'border-l': isDragging,
-            'cursor-col-resize': isResizable,
+            'hover:border-l cursor-col-resize': isResizable,
           },
         )}
       />
