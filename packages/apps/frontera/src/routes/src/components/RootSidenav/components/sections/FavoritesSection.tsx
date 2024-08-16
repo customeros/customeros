@@ -39,7 +39,7 @@ export const FavoritesSection = observer(
 
     return (
       <CollapsibleSection
-        title='Favorites'
+        title='My Views'
         isOpen={preferences.isFavoritesOpen}
         onToggle={() => togglePreference('isFavoritesOpen')}
       >

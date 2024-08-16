@@ -7,7 +7,7 @@ export default function RenewalsLayout({
   children: React.ReactNode;
 }) {
   return (
-    <PageLayout>
+    <PageLayout isResizable>
       <RootSidenav />
       <div className='h-full overflow-hidden'>{children}</div>
     </PageLayout>

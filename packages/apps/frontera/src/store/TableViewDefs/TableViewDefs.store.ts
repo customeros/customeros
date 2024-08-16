@@ -7,7 +7,7 @@ import { GroupOperation } from '@store/types';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { TableIdType, type TableViewDef } from '@graphql/types';
+import { TableIdType, TableViewType, type TableViewDef } from '@graphql/types';
 
 import mock from './mock.json';
 import { getDefaultValue, TableViewDefStore } from './TableViewDef.store';
@@ -178,7 +178,11 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     newTableViewDef.value = {
       ...getDefaultValue(),
       ...favoritePreset,
-      name: `Copy of ${favoritePreset?.name?.toLowerCase()}`,
+      name: `Copy of ${
+        favoritePreset?.tableType === TableViewType.Invoices
+          ? ` ${favoritePreset?.name} Invoices`
+          : favoritePreset?.name
+      }`,
       isPreset: false,
     };
 

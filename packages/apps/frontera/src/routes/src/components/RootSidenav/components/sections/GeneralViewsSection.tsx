@@ -11,8 +11,8 @@ import { Invoice } from '@ui/media/icons/Invoice.tsx';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Signature } from '@ui/media/icons/Signature.tsx';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
+import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
-import { SidenavItem } from '../SidenavItem';
 import { CollapsibleSection } from '../CollapsibleSection';
 
 interface GeneralViewsSectionProps {
@@ -58,13 +58,13 @@ export const GeneralViewsSection = observer(
 
     return (
       <CollapsibleSection
-        title='Views'
+        title='Records'
         isOpen={preferences.isViewsOpen}
         onToggle={() => togglePreference('isViewsOpen')}
       >
         {preferences.isViewsOpen && (
           <>
-            <SidenavItem
+            <RootSidenavItem
               label='Organizations'
               dataTest={`side-nav-item-all-orgs`}
               isActive={checkIsActive('finder', {
@@ -84,7 +84,7 @@ export const GeneralViewsSection = observer(
                 />
               )}
             />
-            <SidenavItem
+            <RootSidenavItem
               label='Contacts'
               dataTest={`side-nav-item-all-contacts`}
               onClick={() =>
@@ -104,7 +104,7 @@ export const GeneralViewsSection = observer(
             />
 
             {showInvoices && upcomingInvoices && (
-              <SidenavItem
+              <RootSidenavItem
                 label='Invoices'
                 key={upcomingInvoices.value.id}
                 dataTest={`side-nav-item-${upcomingInvoices.value.name}`}
@@ -126,7 +126,7 @@ export const GeneralViewsSection = observer(
                 }}
               />
             )}
-            <SidenavItem
+            <RootSidenavItem
               label='Contracts'
               dataTest={`side-nav-item-all-contracts`}
               onClick={() =>

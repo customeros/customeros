@@ -5,9 +5,9 @@ import { observer } from 'mobx-react-lite';
 
 import { TableViewType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { Star01 } from '@ui/media/icons/Star01.tsx';
 import { Archive } from '@ui/media/icons/Archive.tsx';
 import { Download02 } from '@ui/media/icons/Download02.tsx';
+import { LayersTwo01 } from '@ui/media/icons/LayersTwo01.tsx';
 import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
 import {
   Menu,
@@ -40,8 +40,8 @@ export const TableViewMenu: React.FC<TableViewMenuProps> = observer(() => {
           className='py-2.5'
           onClick={() => store.tableViewDefs.createFavorite(preset)}
         >
-          <Star01 className='text-gray-500' />
-          Save to favorites
+          <LayersTwo01 className='text-gray-500' />
+          Duplicate to My Views
         </MenuItem>
         {tableType !== TableViewType.Invoices && (
           <MenuItem className='py-1.5' onClick={downloadCSV}>

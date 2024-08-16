@@ -10,8 +10,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { iconMap } from '@shared/components/RootSidenav/utils';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
+import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
-import { SidenavItem } from '../SidenavItem';
 import { CollapsibleSection } from '../CollapsibleSection';
 
 interface LifecycleStagesSectionProps {
@@ -78,7 +78,7 @@ export const LifecycleStagesSection = observer(
                   : view.value.id;
 
               return (
-                <SidenavItem
+                <RootSidenavItem
                   key={view.value.id}
                   label={view.value.name}
                   dataTest={`side-nav-item-${view.value.name}`}
