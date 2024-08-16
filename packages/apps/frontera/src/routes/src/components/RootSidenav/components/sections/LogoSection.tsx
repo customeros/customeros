@@ -30,7 +30,7 @@ export const LogoSection = () => {
 
   return (
     <Menu>
-      <MenuButton className='py-2 px-6'>
+      <MenuButton className='py-2 mt-1 px-3 pl-5 !outline-none'>
         <div className='flex items-center gap-2'>
           {!isLoading ? (
             <>
@@ -46,9 +46,7 @@ export const LogoSection = () => {
               <span className='font-semibold  text-start w-[fit-content] overflow-hidden text-ellipsis whitespace-nowrap'>
                 {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
               </span>
-              <div className='w-3'>
-                <ChevronDown className='size-3 min-w-3' />
-              </div>
+              <ChevronDown className='size-3 min-w-3' />
             </>
           ) : (
             <Skeleton className='w-full h-8 mr-2' />

@@ -10,6 +10,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { iconMap } from '@shared/components/RootSidenav/utils';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
+import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem.tsx';
 import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
 import { CollapsibleSection } from '../CollapsibleSection';
@@ -77,20 +78,42 @@ export const LifecycleStagesSection = observer(
                   ? [view.value.id, contractsPreset]
                   : view.value.id;
 
+              if (view.value.tableId === TableIdType.Opportunities) {
+                return (
+                  <SidenavItem
+                    key={view.value.id}
+                    label={view.value.name}
+                    isActive={checkIsActive('prospects')}
+                    onClick={() => handleItemClick(`prospects`)}
+                    dataTest={`side-nav-item-${view.value.name}`}
+                    icon={(isActive) => {
+                      const Icon = iconMap?.[view.value.icon];
+
+                      if (!Icon) return <div />;
+
+                      return Icon ? (
+                        <Icon
+                          className={cn(
+                            'size-4 min-w-4 text-gray-500',
+                            isActive && 'text-gray-700',
+                          )}
+                        />
+                      ) : (
+                        <div className='size-4' />
+                      );
+                    }}
+                  />
+                );
+              }
+
               return (
                 <RootSidenavItem
                   key={view.value.id}
                   label={view.value.name}
                   dataTest={`side-nav-item-${view.value.name}`}
-                  isActive={
-                    view.value.tableId === TableIdType.Opportunities
-                      ? checkIsActive('prospects')
-                      : checkIsActive('finder', { preset })
-                  }
+                  isActive={checkIsActive('finder', { preset })}
                   onClick={() =>
-                    view.value.tableId === TableIdType.Opportunities
-                      ? handleItemClick(`prospects`)
-                      : handleItemClick(`finder?preset=${view.value.id}`)
+                    handleItemClick(`finder?preset=${view.value.id}`)
                   }
                   rightElement={
                     noOfOrganizationsMovedByICP > 0 &&
@@ -108,12 +131,12 @@ export const LifecycleStagesSection = observer(
                     return Icon ? (
                       <Icon
                         className={cn(
-                          'w-5 h-5 text-gray-500',
+                          'size-4 min-w-4 text-gray-500',
                           isActive && 'text-gray-700',
                         )}
                       />
                     ) : (
-                      <div className='size-5' />
+                      <div className='size-4' />
                     );
                   }}
                 />

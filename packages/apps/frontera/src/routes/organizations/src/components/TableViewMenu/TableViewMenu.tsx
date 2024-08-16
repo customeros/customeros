@@ -33,10 +33,7 @@ export const TableViewMenu = observer(() => {
         <DotsVertical />
       </MenuButton>
       <MenuList align='end' side='bottom'>
-        <MenuItem
-          className='py-2.5'
-          onClick={() => store.tableViewDefs.createFavorite(preset)}
-        >
+        <MenuItem onClick={() => store.tableViewDefs.createFavorite(preset)}>
           <LayersTwo01 className='text-gray-500' />
           Duplicate to My Views
         </MenuItem>
@@ -58,7 +55,7 @@ export const TableViewMenu = observer(() => {
               store.ui.commandMenu.setOpen(true);
             }}
           >
-            <Archive />
+            <Archive className='text-gray-500' />
             Archive view
           </MenuItem>
         )}

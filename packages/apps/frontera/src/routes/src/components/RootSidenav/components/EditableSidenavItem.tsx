@@ -88,7 +88,6 @@ export const EditableSideNavItem = observer(
 
             <MenuList align='end' side='bottom'>
               <MenuItem
-                className='py-2.5'
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
@@ -104,11 +103,10 @@ export const EditableSideNavItem = observer(
                 Rename view
               </MenuItem>
               <MenuItem
-                className='py-2.5'
                 onClick={() => store.tableViewDefs.createFavorite(preset)}
               >
                 <LayersTwo01 className='text-gray-500' />
-                Duplicate View
+                Duplicate view
               </MenuItem>
               <MenuItem
                 onClick={(e) => {
@@ -123,7 +121,7 @@ export const EditableSideNavItem = observer(
                   store.ui.commandMenu.setOpen(true);
                 }}
               >
-                <Archive />
+                <Archive className='text-gray-500' />
                 Archive view
               </MenuItem>
             </MenuList>
