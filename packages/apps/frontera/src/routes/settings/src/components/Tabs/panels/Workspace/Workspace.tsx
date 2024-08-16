@@ -8,6 +8,7 @@ import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { toastError } from '@ui/presentation/Toast';
 import { ImagePlus } from '@ui/media/icons/ImagePlus';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { outlineButton } from '@ui/form/Button/Button.variants';
 import { FileDropUploader, FileUploadTrigger } from '@ui/form/FileUploader';
 
@@ -109,26 +110,33 @@ export const Workspace = () => {
             ) : (
               <div className='flex  flex-1 items-center justify-between min-h-5 pt-2'>
                 {!store.settings.tenant.value?.workspaceLogo && !file && (
-                  <FileUploadTrigger
-                    apiBaseUrl='/fs'
-                    onChange={setFile}
-                    name='logoUploader'
-                    onError={handleError}
-                    onLoadStart={handelLoad}
-                    onLoadEnd={handleLoadEnd}
-                    onSuccess={handleTenantLogoUpdate}
-                    endpointOptions={{
-                      fileKeyName: 'file',
-                      uploadUrl: '/file',
-                    }}
-                    className={cn(
-                      outlineButton({ colorScheme: 'gray' }),
-                      'hover:bg-gray-100 p-1 rounded-md cursor-pointer text-gray-500',
-                      isLoading && 'opacity-50 pointer-events-none',
-                    )}
+                  <Tooltip
+                    hasArrow
+                    align='start'
+                    side='bottom'
+                    label='Upload a square logo no bigger than 1MB'
                   >
-                    <ImagePlus />
-                  </FileUploadTrigger>
+                    <FileUploadTrigger
+                      apiBaseUrl='/fs'
+                      onChange={setFile}
+                      name='logoUploader'
+                      onError={handleError}
+                      onLoadStart={handelLoad}
+                      onLoadEnd={handleLoadEnd}
+                      onSuccess={handleTenantLogoUpdate}
+                      endpointOptions={{
+                        fileKeyName: 'file',
+                        uploadUrl: '/file',
+                      }}
+                      className={cn(
+                        outlineButton({ colorScheme: 'gray' }),
+                        'hover:bg-gray-100 p-1 rounded-md cursor-pointer text-gray-500',
+                        isLoading && 'opacity-50 pointer-events-none',
+                      )}
+                    >
+                      <ImagePlus />
+                    </FileUploadTrigger>
+                  </Tooltip>
                 )}
 
                 {store.settings.tenant.value?.workspaceLogo && !file && (
