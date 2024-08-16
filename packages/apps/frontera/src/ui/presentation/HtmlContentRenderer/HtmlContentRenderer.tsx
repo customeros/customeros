@@ -20,14 +20,14 @@ interface HtmlContentRendererProps extends HTMLAttributes<HTMLDivElement> {
   pointerEvents?: React.CSSProperties['pointerEvents'];
 }
 
-export const HtmlContentRenderer: React.FC<HtmlContentRendererProps> = ({
+export const HtmlContentRenderer = ({
   htmlContent,
   noOfLines,
   className,
   pointerEvents,
   showAsInlineText,
   ...rest
-}) => {
+}: HtmlContentRendererProps) => {
   const linkifiedContent = sanitizeHtml(
     linkifyHtml(htmlContent.replace(/&zwnj;/g, ''), {
       defaultProtocol: 'https',

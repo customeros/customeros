@@ -11,7 +11,7 @@ interface CountBalloonProps {
   unseenCount?: number;
 }
 
-export const CountButton: React.FC<CountBalloonProps> = ({ unseenCount }) => {
+export const CountButton = ({ unseenCount }: CountBalloonProps) => {
   const [isBursted, setIsBursted] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const defaultOptions = {

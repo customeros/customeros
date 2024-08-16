@@ -71,7 +71,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsAvatar]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsAvatar,
-    size: 26,
+    size: 29,
     enableColumnFilter: false,
     enableResizing: false,
     cell: (props) => {

@@ -1,4 +1,4 @@
-import React, { PropsWithChildren } from 'react';
+import { PropsWithChildren } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { User01 } from '@ui/media/icons/User01';
@@ -19,7 +19,7 @@ interface IntercomMessageCardProps extends PropsWithChildren {
   profilePhotoUrl?: null | string;
 }
 
-export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
+export const IntercomMessageCard = ({
   name,
   sourceUrl,
   profilePhotoUrl,
@@ -29,7 +29,7 @@ export const IntercomMessageCard: React.FC<IntercomMessageCardProps> = ({
   className,
   date,
   showDateOnHover,
-}) => {
+}: IntercomMessageCardProps) => {
   return (
     <>
       <Card

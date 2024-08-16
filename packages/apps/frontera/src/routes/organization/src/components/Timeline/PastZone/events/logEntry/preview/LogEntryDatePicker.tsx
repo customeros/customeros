@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useField } from 'react-inverted-form';
 
 import { DateTimeUtils } from '@utils/date';
@@ -11,10 +11,15 @@ import {
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
 
-export const LogEntryDatePicker: React.FC<{
+interface LogEntryDatePickerProps {
   formId: string;
   event: LogEntryWithAliases;
-}> = ({ event, formId }) => {
+}
+
+export const LogEntryDatePicker = ({
+  event,
+  formId,
+}: LogEntryDatePickerProps) => {
   const { getInputProps } = useField('date', formId);
   const { id, onChange, value: dateValue, onBlur } = getInputProps();
   const { getInputProps: getTimeInputProps } = useField('time', formId);

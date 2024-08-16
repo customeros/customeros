@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { AlertSquare } from '@ui/media/icons/AlertSquare';
@@ -23,7 +23,7 @@ const colorMap: Record<Priority, ReactNode> = {
   ),
 };
 
-export const PriorityBadge: React.FC<PriorityBadgeProps> = ({ priority }) => {
+export const PriorityBadge = ({ priority }: PriorityBadgeProps) => {
   return (
     <Tooltip className='capitalize' label={`${priority} priority`}>
       <div aria-label={priority} className='flex items-end'>

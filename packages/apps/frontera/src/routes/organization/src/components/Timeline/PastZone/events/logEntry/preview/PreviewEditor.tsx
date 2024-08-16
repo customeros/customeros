@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useRemirror } from '@remirror/react';
@@ -14,12 +14,19 @@ import { FloatingReferenceSuggestions } from '@ui/form/RichTextEditor/FloatingRe
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { logEntryEditorExtensions } from '@organization/components/Timeline/FutureZone/TimelineActions/context/extensions';
 
-export const PreviewEditor: React.FC<{
+interface PreviewEditorProps {
   formId: string;
   onClose: () => void;
   initialContent: string;
   tags?: Array<{ label: string; value: string }>;
-}> = ({ formId, initialContent, tags, onClose }) => {
+}
+
+export const PreviewEditor = ({
+  formId,
+  initialContent,
+  tags,
+  onClose,
+}: PreviewEditorProps) => {
   const id = useParams()?.id as string;
   const client = getGraphQLClient();
   const { data } = useGetMentionOptionsQuery(client, {

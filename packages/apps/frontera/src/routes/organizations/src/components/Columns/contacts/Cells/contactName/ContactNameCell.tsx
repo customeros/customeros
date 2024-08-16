@@ -1,5 +1,5 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import React, { useRef, useState, useEffect, KeyboardEvent } from 'react';
+import { useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
@@ -14,8 +14,8 @@ interface ContactNameCellProps {
   contactId: string;
 }
 
-export const ContactNameCell: React.FC<ContactNameCellProps> = observer(
-  ({ contactId }) => {
+export const ContactNameCell = observer(
+  ({ contactId }: ContactNameCellProps) => {
     const contactNameInputRef = useRef<HTMLInputElement | null>(null);
     const store = useStore();
     const [isHovered, setIsHovered] = useState(false);

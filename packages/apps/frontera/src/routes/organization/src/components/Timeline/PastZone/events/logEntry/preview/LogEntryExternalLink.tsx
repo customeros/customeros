@@ -1,10 +1,13 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 
 import { ExternalSystem } from '@graphql/types';
 import { Hubspot } from '@ui/media/logos/Hubspot';
 import { getExternalUrl } from '@utils/getExternalLink';
 import { Salesforce } from '@ui/media/logos/Salesforce';
+
+interface LogEntryExternalLinkProps {
+  externalLink: ExternalSystem;
+}
 
 const getIcon = (type: string) => {
   switch (type) {
@@ -18,9 +21,9 @@ const getIcon = (type: string) => {
   }
 };
 
-export const LogEntryExternalLink: React.FC<{
-  externalLink: ExternalSystem;
-}> = ({ externalLink }) => {
+export const LogEntryExternalLink = ({
+  externalLink,
+}: LogEntryExternalLinkProps) => {
   const icon = (() => getIcon(externalLink.type))();
   const link = getExternalUrl(`${externalLink?.externalUrl}`);
 

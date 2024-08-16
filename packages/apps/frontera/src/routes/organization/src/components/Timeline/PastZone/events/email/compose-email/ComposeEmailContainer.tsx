@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
@@ -13,10 +11,10 @@ interface ComposeEmailContainerProps extends ComposeEmailProps {
   onClose: () => void;
 }
 
-export const ComposeEmailContainer: React.FC<ComposeEmailContainerProps> = ({
+export const ComposeEmailContainer = ({
   onClose,
   ...composeEmailProps
-}) => {
+}: ComposeEmailContainerProps) => {
   const client = getGraphQLClient();
   const { data: globalCache } = useGlobalCacheQuery(client);
   const allowSendingEmail =

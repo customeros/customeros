@@ -1,4 +1,3 @@
-import React from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -17,9 +16,7 @@ import {
 } from '@ui/overlay/Menu/Menu.tsx';
 import { useDownloadCsv } from '@organizations/components/TableViewMenu/useDownloadTableViewAsCSV.ts';
 
-interface TableViewMenuProps {}
-
-export const TableViewMenu: React.FC<TableViewMenuProps> = observer(() => {
+export const TableViewMenu = observer(() => {
   const { downloadCSV } = useDownloadCsv();
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset') ?? '1';

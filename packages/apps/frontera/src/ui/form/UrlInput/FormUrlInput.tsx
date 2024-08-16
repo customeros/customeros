@@ -13,11 +13,7 @@ interface FormUrlInputProps extends FormInputProps {
   rightElement?: React.ReactNode;
 }
 
-export const FormUrlInput: React.FC<FormUrlInputProps> = ({
-  name,
-  formId,
-  ...props
-}) => {
+export const FormUrlInput = ({ name, formId, ...props }: FormUrlInputProps) => {
   const { getInputProps } = useField(name, formId);
 
   return <UrlInput {...getInputProps()} {...props} />;

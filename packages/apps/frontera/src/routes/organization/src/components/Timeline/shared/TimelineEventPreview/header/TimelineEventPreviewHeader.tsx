@@ -16,9 +16,14 @@ interface TimelineEventPreviewHeaderProps {
   children?: React.ReactNode;
 }
 
-export const TimelineEventPreviewHeader: React.FC<
-  TimelineEventPreviewHeaderProps
-> = ({ date, name, onClose, copyLabel, children, parse }) => {
+export const TimelineEventPreviewHeader = ({
+  date,
+  name,
+  onClose,
+  copyLabel,
+  children,
+  parse,
+}: TimelineEventPreviewHeaderProps) => {
   const [_, copy] = useCopyToClipboard();
 
   const parsedName =
