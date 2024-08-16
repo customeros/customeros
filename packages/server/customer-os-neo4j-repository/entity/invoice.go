@@ -11,6 +11,7 @@ const (
 	InvoicePropertyCreatedAt                   InvoiceProperty = "createdAt"
 	InvoicePropertyFinalizedWebhookProcessedAt InvoiceProperty = "techInvoiceFinalizedWebhookProcessedAt"
 	InvoicePropertyPaidWebhookProcessedAt      InvoiceProperty = "techInvoicePaidWebhookProcessedAt"
+	InvoicePropertyInvoiceFinalizedEventSentAt InvoiceProperty = "techInvoiceFinalizedSentAt"
 )
 
 type InvoiceEntity struct {

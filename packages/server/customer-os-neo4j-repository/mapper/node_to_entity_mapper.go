@@ -100,7 +100,7 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			PaymentLink: utils.GetStringPropOrEmpty(props, "paymentLink"),
 		},
 		InvoiceInternalFields: entity.InvoiceInternalFields{
-			InvoiceFinalizedSentAt:             utils.GetTimePropOrNil(props, "techInvoiceFinalizedSentAt"),
+			InvoiceFinalizedSentAt:             utils.GetTimePropOrNil(props, string(entity.InvoicePropertyInvoiceFinalizedEventSentAt)),
 			InvoiceFinalizedWebhookProcessedAt: utils.GetTimePropOrNil(props, string(entity.InvoicePropertyFinalizedWebhookProcessedAt)),
 			InvoicePaidWebhookProcessedAt:      utils.GetTimePropOrNil(props, string(entity.InvoicePropertyPaidWebhookProcessedAt)),
 			PaymentLinkRequestedAt:             utils.GetTimePropOrNil(props, "techPaymentLinkRequestedAt"),

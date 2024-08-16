@@ -21,7 +21,7 @@ type InvoiceReadRepository interface {
 	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.Cypher) (*utils.DbNodesWithTotalCount, error)
 	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
-	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetPreviousCycleInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetLastIssuedOnCycleInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
 	GetLastIssuedInvoiceForContract(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
@@ -31,6 +31,7 @@ type InvoiceReadRepository interface {
 	GetInvoicesForOverdue(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForOnHold(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForScheduled(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
+	GetReadyInvoicesForFinalizedEvent(ctx context.Context, delayInMinutes int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
 }
 
 type invoiceReadRepository struct {
@@ -294,7 +295,7 @@ func (r *invoiceReadRepository) CountNonDryRunInvoicesForContract(ctx context.Co
 	return int(count.(int64)), nil
 }
 
-func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error) {
+func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForPaymentLinkRequest")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -308,12 +309,13 @@ func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Con
 				c.payOnline = true AND
 				i.createdAt+duration({days: $lookbackWindow}) > $now AND
 				(i.updatedAt + duration({minutes: $delay}) < $referenceTime OR i.techInvoiceFinalizedSentAt + duration({minutes: $delay}) < $referenceTime)
-			RETURN distinct(i), t.name limit 100`
+			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
 		"delay":          minutesFromLastUpdate,
 		"lookbackWindow": lookbackWindow,
 		"referenceTime":  referenceTime,
 		"now":            utils.Now(),
+		"limit":          limit,
 		"acceptedStatuses": []string{
 			neo4jenum.InvoiceStatusDue.String(),
 			neo4jenum.InvoiceStatusOverdue.String(),
@@ -650,6 +652,53 @@ func (r *invoiceReadRepository) GetInvoicesForScheduled(ctx context.Context) ([]
 		"now":                 utils.Now(),
 		"onHoldStatus":        neo4jenum.InvoiceStatusOnHold.String(),
 		"outOfContractStatus": neo4jenum.ContractStatusOutOfContract.String(),
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
+	return result.([]*utils.DbNodeAndTenant), err
+}
+
+func (r *invoiceReadRepository) GetReadyInvoicesForFinalizedEvent(ctx context.Context, minutesFromLastUpdate int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetReadyInvoicesForFinalizedEvent")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("minutesFromLastUpdate", minutesFromLastUpdate), log.Object("referenceTime", referenceTime))
+
+	cypher := `MATCH (c:Contract)-[:HAS_INVOICE]->(i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)
+			WHERE 
+				i.dryRun = false AND
+				i.status IN $acceptedStatuses AND
+				i.techInvoiceFinalizedSentAt IS NULL AND
+				i.updatedAt + duration({minutes: $minutesFromLastUpdate}) < $referenceTime
+			RETURN distinct(i), t.name limit $limit`
+	params := map[string]any{
+		"minutesFromLastUpdate": minutesFromLastUpdate,
+		"referenceTime":         referenceTime,
+		"limit":                 limit,
+		"acceptedStatuses": []string{
+			neo4jenum.InvoiceStatusDue.String(),
+			neo4jenum.InvoiceStatusOverdue.String(),
+			neo4jenum.InvoiceStatusOnHold.String(),
+			neo4jenum.InvoiceStatusPaid.String(),
+			neo4jenum.InvoiceStatusVoid.String(),
+		},
 	}
 	span.LogFields(log.String("query", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
