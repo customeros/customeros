@@ -313,17 +313,17 @@ type BetterContactResponseBody struct {
 }
 
 func (s *contactService) syncWeConnectContacts(c context.Context) {
-	span, ctx := tracing.StartTracerSpan(c, "ContactService.syncWeConnectContacts")
-	defer span.Finish()
-	tracing.TagComponentCronJob(span)
+	parentSpan, ctx := tracing.StartTracerSpan(c, "ContactService.syncWeConnectContacts")
+	defer parentSpan.Finish()
+	tracing.TagComponentCronJob(parentSpan)
 
 	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(parentSpan, err)
 		return
 	}
 
-	span.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
+	parentSpan.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(len(weConnectIntegrations))
