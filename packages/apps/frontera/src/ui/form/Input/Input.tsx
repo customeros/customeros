@@ -62,16 +62,21 @@ export interface InputProps
     Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   className?: string;
   placeholder?: string;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ size, variant, className, ...rest }, ref) => {
+  ({ size, variant, className, onKeyDown, ...rest }, ref) => {
     return (
       <input
         {...rest}
         ref={ref}
         data-1p-ignore
         className={twMerge(inputVariants({ className, size, variant }))}
+        onKeyDown={(e) => {
+          if (onKeyDown) onKeyDown(e);
+          e.stopPropagation();
+        }}
       />
     );
   },

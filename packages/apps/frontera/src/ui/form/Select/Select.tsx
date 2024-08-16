@@ -25,6 +25,7 @@ export interface SelectProps extends Props<any, any, any> {
   dataTest?: string;
   isReadOnly?: boolean;
   leftElement?: React.ReactNode;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 export const Select = forwardRef<SelectInstance, SelectProps>(
@@ -36,6 +37,7 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
       dataTest,
       components: _components,
       classNames,
+      onKeyDown,
       ...rest
     },
     ref,
@@ -122,6 +124,10 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         ref={ref}
         components={components}
         tabSelectsValue={false}
+        onKeyDown={(e) => {
+          if (onKeyDown) onKeyDown(e);
+          e.stopPropagation();
+        }}
         {...rest}
         classNames={defaultClassNames}
       />

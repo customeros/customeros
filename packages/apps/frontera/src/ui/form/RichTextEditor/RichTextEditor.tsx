@@ -38,7 +38,13 @@ const hooks = [
 
     useEditorEvent('click', clickHandler);
   },
+  () => {
+    useEditorEvent('keydown', (event: KeyboardEvent) => {
+      event.stopPropagation();
+    });
+  },
 ];
+
 export const RichTextEditor: FC<
   {
     name: string;
@@ -86,8 +92,7 @@ export const RichTextEditor: FC<
     useEffect(() => {
       didMountRef.current = true;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const handleKeyDown = (event: any) => {
+      const handleKeyDown = (event: KeyboardEvent) => {
         if (event.key === 'Tab') {
           event.preventDefault();
           setShouldFocus(true);

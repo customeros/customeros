@@ -59,6 +59,9 @@ export const Notes = observer(({ id }: NotesProps) => {
           editor={editor}
           className='min-h-[100px] cursor-text w-full'
           data-test='organization-account-notes-editor'
+          onKeyDown={(e) => {
+            e.stopPropagation();
+          }}
         />
       </CardFooter>
     </Card>

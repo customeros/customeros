@@ -42,6 +42,7 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   optionAction?: (data: string) => JSX.Element;
   Option?: ComponentType<OptionProps<SelectOption>>;
   MultiValue?: ComponentType<MultiValueProps<SelectOption>>;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
@@ -53,6 +54,7 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
       size = 'md',
       components: _components,
       classNames,
+      onKeyDown,
       ...props
     },
     ref,
@@ -199,6 +201,10 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         closeMenuOnSelect={false}
         classNames={defaultClassNames}
         loadOptions={props?.loadOptions}
+        onKeyDown={(e) => {
+          if (onKeyDown) onKeyDown(e);
+          e.stopPropagation();
+        }}
       />
     );
   },
