@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { Triage } from '@ui/media/icons/Triage';
+import { Users01 } from '@ui/media/icons/Users01.tsx';
 import { HeartHand } from '@ui/media/icons/HeartHand';
 import { Building07 } from '@ui/media/icons/Building07';
 import { CheckHeart } from '@ui/media/icons/CheckHeart';
@@ -29,4 +30,5 @@ export const iconMap: Record<
   BrokenHeart: (props) => <BrokenHeart {...props} />,
   CoinsStacked01: (props) => <CoinsStacked01 {...props} />,
   Signature: (props) => <Signature {...props} />,
+  users_01: (props) => <Users01 {...props} />,
 };
