@@ -18,12 +18,12 @@ interface DatePickerProps {
   onChange: (date: Date | null) => void;
 }
 
-export const DatePickerUnderline2: React.FC<DatePickerProps> = ({
+export const DatePickerUnderline2 = ({
   onChange,
   value,
   classNames,
   minDate,
-}) => {
+}: DatePickerProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isOpen, setIsOpen] = useState(false);
 

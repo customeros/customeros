@@ -1,5 +1,3 @@
-import { PropsWithChildren } from 'react';
-
 import { escapeForSlackWithMarkdown } from 'slack-to-html';
 
 import { cn } from '@ui/utils/cn';
@@ -9,7 +7,7 @@ import { Avatar } from '@ui/media/Avatar/Avatar';
 import { ViewInExternalAppButton } from '@ui/form/Button';
 import { Card, CardContent } from '@ui/presentation/Card/Card';
 
-interface SlackMessageCardProps extends PropsWithChildren {
+interface SlackMessageCardProps {
   name: string;
   date: string;
   content: string;
@@ -17,10 +15,11 @@ interface SlackMessageCardProps extends PropsWithChildren {
   onClick?: () => void;
   sourceUrl?: string | null;
   showDateOnHover?: boolean;
+  children?: React.ReactNode;
   profilePhotoUrl?: null | string;
 }
 
-export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
+export const SlackMessageCard = ({
   name,
   sourceUrl,
   profilePhotoUrl,
@@ -30,7 +29,7 @@ export const SlackMessageCard: React.FC<SlackMessageCardProps> = ({
   children,
   date,
   showDateOnHover,
-}) => {
+}: SlackMessageCardProps) => {
   const displayContent: string = (() => {
     const sanitizeContent = content.replace(/\n/g, '<br/>');
     const slack = escapeForSlackWithMarkdown(sanitizeContent);

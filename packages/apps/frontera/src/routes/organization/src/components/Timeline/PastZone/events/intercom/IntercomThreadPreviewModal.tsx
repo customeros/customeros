@@ -1,5 +1,3 @@
-import React from 'react';
-
 import copy from 'copy-to-clipboard';
 import { convert } from 'html-to-text';
 
@@ -38,7 +36,7 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   return sender;
 };
 
-export const IntercomThreadPreviewModal: React.FC = () => {
+export const IntercomThreadPreviewModal = () => {
   const client = getGraphQLClient();
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();

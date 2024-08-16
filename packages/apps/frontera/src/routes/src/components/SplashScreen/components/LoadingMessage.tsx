@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 
 import { loadingStatements } from './messages.ts';
 
-export const LoadingMessage: React.FC = () => {
+export const LoadingMessage = () => {
   const getRandomMessage = () => {
     const randomIndex = Math.floor(Math.random() * loadingStatements.length);
 

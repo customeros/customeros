@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { cn } from '@ui/utils/cn.ts';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { Preferences } from '@shared/components/RootSidenav/hooks';

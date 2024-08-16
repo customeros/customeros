@@ -1,10 +1,4 @@
-import React, {
-  useRef,
-  useState,
-  useEffect,
-  ChangeEvent,
-  useCallback,
-} from 'react';
+import { useRef, useState, useEffect, ChangeEvent, useCallback } from 'react';
 
 import { ShortcutHandlerProps } from '@remirror/extension-link';
 import {
@@ -33,7 +27,7 @@ interface LinkComponentProps {
 }
 
 //TODO:before merge check if the design is correct
-export const LinkComponent: React.FC<LinkComponentProps> = ({ isEditing }) => {
+export const LinkComponent = ({ isEditing }: LinkComponentProps) => {
   const [linkShortcut] = useState<ShortcutHandlerProps | undefined>();
 
   const ref = useRef<HTMLDivElement>(null);

@@ -173,7 +173,7 @@ interface AvatarProps
   badge?: React.ReactElement;
 }
 
-export const Avatar: React.FC<AvatarProps> = ({
+export const Avatar = ({
   icon,
   name,
   src,
@@ -254,7 +254,7 @@ interface AvatarBadgeProps extends VariantProps<typeof avatarBadgeSize> {
   className?: string;
 }
 
-export const AvatarBadge: React.FC<AvatarBadgeProps> = ({
+export const AvatarBadge = ({
   className,
   badgePosition,
   badgeSize,

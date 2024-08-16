@@ -1,8 +1,6 @@
 import React, { MouseEventHandler } from 'react';
 
 import { Button } from '@ui/form/Button/Button';
-import { InfoCircle } from '@ui/media/icons/InfoCircle';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import {
   AlertDialog,
   AlertDialogHeader,
@@ -33,16 +31,9 @@ export const InfoDialog = ({
   return (
     <AlertDialog isOpen={isOpen} onClose={onClose}>
       <AlertDialogOverlay>
-        <AlertDialogContent className='top-[25%] rounded-xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'>
-          <AlertDialogHeader className='text-lg font-bold pt-6'>
-            <FeaturedIcon
-              size='lg'
-              colorScheme='primary'
-              className='translate-y-[-10px] translate-x-[10px]'
-            >
-              <InfoCircle />
-            </FeaturedIcon>
-            {label && <p className='mt-4 font-semibold text-lg'>{label}</p>}
+        <AlertDialogContent className='top-[25%] rounded-xl '>
+          <AlertDialogHeader className='text-lg font-bold'>
+            {label && <p className='font-semibold text-lg'>{label}</p>}
             {children ??
               (description && (
                 <p className='mt-4 text-base text-gray-600 font-normal'>

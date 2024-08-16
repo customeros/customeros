@@ -1,6 +1,6 @@
+import { useMemo, useState } from 'react';
 import { useForm } from 'react-inverted-form';
 import { VirtuosoHandle } from 'react-virtuoso';
-import React, { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useRemirror } from '@remirror/react';
@@ -64,10 +64,10 @@ interface EmailPreviewModalProps {
   virtuosoRef?: React.RefObject<VirtuosoHandle>;
 }
 
-export const EmailPreviewModal: React.FC<EmailPreviewModalProps> = ({
+export const EmailPreviewModal = ({
   invalidateQuery,
   virtuosoRef,
-}) => {
+}: EmailPreviewModalProps) => {
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();
   const { open: isOpen, onOpen, onClose } = useDisclosure();

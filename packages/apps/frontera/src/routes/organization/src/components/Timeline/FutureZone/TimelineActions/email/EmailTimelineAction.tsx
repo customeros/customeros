@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 
 import { KeymapperClose } from '@ui/form/RichTextEditor/components/keyboardShortcuts/KeymapperClose';
 import { useTimelineRefContext } from '@organization/components/Timeline/context/TimelineRefContext';
@@ -6,7 +6,7 @@ import { ComposeEmailContainer } from '@organization/components/Timeline/PastZon
 import { useTimelineActionContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionContext';
 import { useTimelineActionEmailContext } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionEmailContext';
 
-export const EmailTimelineAction: React.FC = () => {
+export const EmailTimelineAction = () => {
   const {
     remirrorProps,
     isSending,

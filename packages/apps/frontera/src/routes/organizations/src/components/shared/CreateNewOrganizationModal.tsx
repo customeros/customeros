@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { useKeyBindings } from 'rooks';
@@ -43,8 +43,8 @@ function isValidURL(url: string) {
   return false;
 }
 
-export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProps> =
-  observer(({ isOpen, setIsOpen }) => {
+export const CreateNewOrganizationModal = observer(
+  ({ isOpen, setIsOpen }: CreateNewOrganizationModalProps) => {
     const { organizations, tableViewDefs, ui } = useStore();
     const [searchParams] = useSearchParams();
 
@@ -179,7 +179,8 @@ export const CreateNewOrganizationModal: React.FC<CreateNewOrganizationModalProp
         </ModalPortal>
       </Modal>
     );
-  });
+  },
+);
 
 const defaultValuesNewOrganization = (organizationName: string) => {
   switch (organizationName) {

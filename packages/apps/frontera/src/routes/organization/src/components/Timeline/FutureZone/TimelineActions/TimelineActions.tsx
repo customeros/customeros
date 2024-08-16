@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useParams } from 'react-router-dom';
 
 import { TimelineActionLogEntryContextContextProvider } from '@organization/components/Timeline/FutureZone/TimelineActions/context/TimelineActionLogEntryContext';
@@ -11,9 +11,7 @@ interface TimelineActionsProps {
   invalidateQuery: () => void;
 }
 
-export const TimelineActions: React.FC<TimelineActionsProps> = ({
-  invalidateQuery,
-}) => {
+export const TimelineActions = ({ invalidateQuery }: TimelineActionsProps) => {
   const id = useParams()?.id as string;
   const [activeEditor, setActiveEditor] = useState<
     null | 'log-entry' | 'email'

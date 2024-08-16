@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { ActionType } from '@graphql/types';
 import { InvoicePreviewModal } from '@organization/components/Timeline/PastZone/events/invoice/InvoicePreviewModal';
 
@@ -11,9 +9,7 @@ interface ActionPreviewModalProps {
   type: ActionType;
 }
 
-export const ActionPreviewModal: React.FC<ActionPreviewModalProps> = ({
-  type,
-}) => {
+export const ActionPreviewModal = ({ type }: ActionPreviewModalProps) => {
   switch (type) {
     case ActionType.ContractStatusUpdated:
     case ActionType.ContractRenewed:

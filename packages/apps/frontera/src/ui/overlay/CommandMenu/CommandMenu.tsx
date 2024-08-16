@@ -78,13 +78,13 @@ interface CommandSubItemProps extends Partial<CommandItemProps> {
   onSelectAction: () => void;
 }
 
-export const CommandSubItem: React.FC<CommandSubItemProps> = ({
+export const CommandSubItem = ({
   icon,
   onSelectAction,
   leftLabel,
   rightLabel,
   ...rest
-}) => {
+}: CommandSubItemProps) => {
   const search = useCommandState((state) => state.search);
 
   return (

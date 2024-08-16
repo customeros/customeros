@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { cn } from '@ui/utils/cn.ts';
 import { ArrowDropdown } from '@ui/media/icons/ArrowDropdown';

@@ -1,10 +1,11 @@
-import React from 'react';
-
 import styles from './inline-loader.module.scss';
 
-export const InlineLoader: React.FC<{ label?: string; color?: string }> = ({
+export const InlineLoader = ({
   label = 'Saving...',
   color = '#9880ff',
+}: {
+  label?: string;
+  color?: string;
 }) => {
   return (
     <div

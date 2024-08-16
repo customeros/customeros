@@ -1,4 +1,4 @@
-import React, { ReactElement } from 'react';
+import { ReactElement } from 'react';
 
 import { cn } from '@ui/utils/cn.ts';
 import { IconButton } from '@ui/form/IconButton';
@@ -11,12 +11,12 @@ interface ToolbarButtonProps {
   onClick: () => void;
 }
 
-export const ToolbarButton: React.FC<ToolbarButtonProps> = ({
+export const ToolbarButton = ({
   onClick,
   isActive,
   icon,
   label,
-}) => {
+}: ToolbarButtonProps) => {
   return (
     <Tooltip
       hasArrow

@@ -1,5 +1,3 @@
-import React from 'react';
-
 import copy from 'copy-to-clipboard';
 
 import { DateTimeUtils } from '@utils/date';
@@ -25,7 +23,7 @@ const getParticipant = (sentBy?: InteractionEventParticipant[]) => {
   return getDisplayNameAndAvatar(sentBy?.[0]);
 };
 
-export const SlackThreadPreviewModal: React.FC = () => {
+export const SlackThreadPreviewModal = () => {
   const client = getGraphQLClient();
   const { modalContent } = useTimelineEventPreviewStateContext();
   const { closeModal } = useTimelineEventPreviewMethodsContext();

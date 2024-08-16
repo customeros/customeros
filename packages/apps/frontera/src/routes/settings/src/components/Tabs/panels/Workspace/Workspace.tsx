@@ -134,7 +134,7 @@ export const Workspace = () => {
                         isLoading && 'opacity-50 pointer-events-none',
                       )}
                     >
-                      <ImagePlus />
+                      <ImagePlus className='size-6' />
                     </FileUploadTrigger>
                   </Tooltip>
                 )}

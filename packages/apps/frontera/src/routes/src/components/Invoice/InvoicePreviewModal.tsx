@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 
 import { FeaturedIcon } from '@ui/media/Icon';
@@ -27,10 +25,10 @@ const extractAddressData = (
   };
 };
 
-export const InvoicePreviewModalContent: React.FC<InvoicePreviewModalProps> = ({
+export const InvoicePreviewModalContent = ({
   invoiceStore,
   isFetching,
-}) => {
+}: InvoicePreviewModalProps) => {
   if (isFetching) {
     return <InvoiceSkeleton />;
   }

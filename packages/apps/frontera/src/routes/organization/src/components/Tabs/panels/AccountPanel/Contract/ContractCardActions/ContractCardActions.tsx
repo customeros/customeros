@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { ContractStatus } from '@graphql/types';
 import { XSquare } from '@ui/media/icons/XSquare';
@@ -21,13 +21,13 @@ interface ContractStatusSelectProps {
   onOpenEditModal: () => void;
 }
 
-export const ContractCardActions: React.FC<ContractStatusSelectProps> = ({
+export const ContractCardActions = ({
   status,
   contractId,
   organizationName,
   serviceStarted,
   onOpenEditModal,
-}) => {
+}: ContractStatusSelectProps) => {
   const { onStatusModalOpen } = useContractModalStatusContext();
   const getStatusDisplay = useMemo(() => {
     let icon, text;

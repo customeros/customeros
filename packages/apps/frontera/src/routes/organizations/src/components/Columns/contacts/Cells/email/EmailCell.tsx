@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, KeyboardEvent } from 'react';
+import { useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
@@ -26,8 +26,8 @@ interface EmailCellProps {
   validationDetails: EmailValidationDetails | undefined;
 }
 
-export const EmailCell: React.FC<EmailCellProps> = observer(
-  ({ email, validationDetails, contactId }) => {
+export const EmailCell = observer(
+  ({ email, validationDetails, contactId }: EmailCellProps) => {
     const emailInputRef = useRef<HTMLInputElement | null>(null);
     const store = useStore();
     const [isHovered, setIsHovered] = useState(false);

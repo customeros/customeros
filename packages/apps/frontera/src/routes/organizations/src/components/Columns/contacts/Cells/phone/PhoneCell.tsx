@@ -1,12 +1,10 @@
-import React from 'react';
-
 import { parsePhoneNumber, isPossiblePhoneNumber } from 'libphonenumber-js';
 
 interface PhoneCellProps {
   phone: string;
 }
 
-export const PhoneCell: React.FC<PhoneCellProps> = ({ phone }) => {
+export const PhoneCell = ({ phone }: PhoneCellProps) => {
   if (!phone) return;
 
   if (!isPossiblePhoneNumber(phone)) return <p>{phone}</p>;

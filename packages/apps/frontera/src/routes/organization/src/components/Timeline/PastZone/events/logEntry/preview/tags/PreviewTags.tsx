@@ -1,5 +1,5 @@
+import { useRef, useEffect } from 'react';
 import { useForm } from 'react-inverted-form';
-import React, { useRef, useEffect } from 'react';
 
 import { useQueryClient } from '@tanstack/react-query';
 
@@ -12,12 +12,19 @@ import {
   LogEntryTagsFormDtoI,
 } from '@organization/components/Timeline/PastZone/events/logEntry/preview/tags/LogEntryTagsDto';
 
-export const PreviewTags: React.FC<{
+interface PreviewTagsProps {
   id: string;
   isAuthor: boolean;
   tags?: Array<Tag>;
   tagOptions?: Array<{ label: string; value: string }>;
-}> = ({ isAuthor, tags = [], id, tagOptions }) => {
+}
+
+export const PreviewTags = ({
+  isAuthor,
+  tags = [],
+  id,
+  tagOptions,
+}: PreviewTagsProps) => {
   const logEntryStartedAtValues = new LogEntryTagsDto({ tags });
   const formId = 'preview-modal-log-entry-tag-update';
   const queryClient = useQueryClient();

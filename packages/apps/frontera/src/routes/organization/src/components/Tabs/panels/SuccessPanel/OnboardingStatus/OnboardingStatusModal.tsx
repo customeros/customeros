@@ -16,7 +16,6 @@ import { useStore } from '@shared/hooks/useStore';
 import { OnboardingStatus } from '@graphql/types';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { AutoresizeTextarea } from '@ui/form/Textarea';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
 import { useInfiniteGetTimelineQuery } from '@organization/graphql/getTimeline.generated';
 import {
@@ -115,30 +114,9 @@ export const OnboardingStatusModal = observer(
       <Modal open={isOpen} onOpenChange={onClose}>
         <ModalPortal>
           <ModalOverlay>
-            <ModalContent
-              className='rounded-2xl'
-              style={{
-                backgroundPositionX: '1px',
-                backgroundPositionY: '-7px',
-                backgroundImage: `url('/backgrounds/organization/circular-bg-pattern.png')`,
-                backgroundRepeat: 'no-repeat',
-              }}
-            >
+            <ModalContent className='rounded-2xl'>
               <ModalCloseButton />
               <ModalHeader>
-                <FeaturedIcon
-                  size='lg'
-                  className='ml-[12px] mt-[5px]'
-                  colorScheme={getIconcolorScheme(
-                    onboardingDetails?.status ?? OnboardingStatus.NotApplicable,
-                  )}
-                >
-                  {onboardingDetails?.status === OnboardingStatus.Successful ? (
-                    <Trophy01 />
-                  ) : (
-                    <Flag04 />
-                  )}
-                </FeaturedIcon>
                 <h2 className='text-lg mt-6'>Update onboarding status</h2>
               </ModalHeader>
               <ModalBody className='gap-4 flex flex-col'>

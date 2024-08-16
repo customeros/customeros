@@ -1,4 +1,3 @@
-import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
 import {
@@ -17,9 +16,7 @@ import { NotificationsHeader } from '@shared/components/Notifications/Notificati
 
 import './override.css';
 
-interface NotificationCenterProps {}
-
-export const NotificationCenter: React.FC<NotificationCenterProps> = () => {
+export const NotificationCenter = () => {
   const navigate = useNavigate();
 
   function handlerOnNotificationClick(message: IMessage) {
