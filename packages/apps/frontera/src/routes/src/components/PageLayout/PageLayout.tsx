@@ -2,7 +2,7 @@ import React, { useRef, useState, useEffect, useCallback } from 'react';
 
 import { useLocalStorage } from 'usehooks-ts';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
 
 interface PageLayoutProps {
   unstyled?: boolean;

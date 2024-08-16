@@ -57,6 +57,8 @@ export const FavoritesSection = observer(
               icon={(isActive) => {
                 const Icon = iconMap?.[view.value.icon];
 
+                if (!Icon) return <div />;
+
                 return (
                   <Icon
                     className={cn(
