@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 )
 
@@ -92,14 +93,13 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 }
 
 func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsLinked")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.IsLinkedWith")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("parentId", parentId), log.String("childId", childId), log.String("relationship", relationship))
+	span.LogFields(log.String("relationship", relationship))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$parentId})-[:%s]->(m:%s_%s {id:$childId}) `, parentType.Neo4jLabel(), tenant, relationship, childType.Neo4jLabel(), tenant)
-	cypher += fmt.Sprintf(`RETURN n.id LIMIT 1`)
+	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id:$parentId})-[:%s]->(m:%s_%s {id:$childId}) RETURN n.id LIMIT 1`, parentType.Neo4jLabel(), tenant, relationship, childType.Neo4jLabel(), tenant)
 	params := map[string]any{
 		"parentId": parentId,
 		"childId":  childId,
@@ -118,10 +118,11 @@ func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentI
 		}
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "error executing neo4j query"))
+		span.LogFields(log.Bool("result.found", false))
 		return false, err
 	}
-	span.LogFields(log.Bool("result.exists", result.(bool)))
+	span.LogFields(log.Bool("result.found", result.(bool)))
 	return result.(bool), err
 }
 
