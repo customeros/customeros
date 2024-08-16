@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { isEqual } from 'lodash';
 import { observer } from 'mobx-react-lite';
 import { FilterItem } from '@store/types.ts';
-import { useDeepCompareEffect } from 'rooks';
 
 import { Switch } from '@ui/form/Switch';
 import { useStore } from '@shared/hooks/useStore';
@@ -36,9 +36,11 @@ export const SearchBarFilterData = observer(() => {
         filter.active,
     );
 
-  useDeepCompareEffect(() => {
-    setFilters(appliedFilters);
-  }, [appliedFilters]);
+  useEffect(() => {
+    if (!isEqual(filters, appliedFilters)) {
+      setFilters(appliedFilters);
+    }
+  }, [appliedFilters, filters]);
 
   const totalResults = store.ui.searchCount;
 
