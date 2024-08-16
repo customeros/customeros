@@ -29,48 +29,46 @@ export const LogoSection = () => {
   };
 
   return (
-    <div className='px-2 pt-2 pl-5 h-fit mb-2 cursor-pointer flex justify-flex-start relative'>
-      <Menu>
-        <MenuButton>
-          <div className='flex items-center gap-2'>
-            {!isLoading ? (
-              <>
-                <Image
-                  width={20}
-                  height={20}
-                  alt='CustomerOS'
-                  className='logo-image'
-                  src={
-                    store.settings.tenant.value?.workspaceLogo || logoCustomerOs
-                  }
-                />
-                <span className='font-semibold  text-start w-[stretch] overflow-hidden text-ellipsis whitespace-nowrap'>
-                  {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
-                </span>
-                <div className='w-3'>
-                  <ChevronDown className='size-3 min-w-3' />
-                </div>
-              </>
-            ) : (
-              <Skeleton className='w-full h-8 mr-2' />
-            )}
+    <Menu>
+      <MenuButton className='py-2 px-6'>
+        <div className='flex items-center gap-2'>
+          {!isLoading ? (
+            <>
+              <Image
+                width={20}
+                height={20}
+                alt='CustomerOS'
+                className='logo-image'
+                src={
+                  store.settings.tenant.value?.workspaceLogo || logoCustomerOs
+                }
+              />
+              <span className='font-semibold  text-start w-[fit-content] overflow-hidden text-ellipsis whitespace-nowrap'>
+                {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
+              </span>
+              <div className='w-3'>
+                <ChevronDown className='size-3 min-w-3' />
+              </div>
+            </>
+          ) : (
+            <Skeleton className='w-full h-8 mr-2' />
+          )}
+        </div>
+      </MenuButton>
+      <MenuList side='bottom' align='center' className='w-[180px] ml-2'>
+        <MenuItem className='group' onClick={() => navigate('/settings')}>
+          <div className='flex gap-2 items-center'>
+            <Settings02 className='group-hover:text-gray-700 text-gray-500' />
+            <span>Settings</span>
           </div>
-        </MenuButton>
-        <MenuList side='bottom' align='center' className='w-[180px] ml-2'>
-          <MenuItem className='group' onClick={() => navigate('/settings')}>
-            <div className='flex gap-2 items-center'>
-              <Settings02 className='group-hover:text-gray-700 text-gray-500' />
-              <span>Settings</span>
-            </div>
-          </MenuItem>
-          <MenuItem className='group' onClick={handleSignOutClick}>
-            <div className='flex gap-2 items-center'>
-              <LogOut01 className='group-hover:text-gray-700 text-gray-500' />
-              <span>Sign Out</span>
-            </div>
-          </MenuItem>
-        </MenuList>
-      </Menu>
-    </div>
+        </MenuItem>
+        <MenuItem className='group' onClick={handleSignOutClick}>
+          <div className='flex gap-2 items-center'>
+            <LogOut01 className='group-hover:text-gray-700 text-gray-500' />
+            <span>Sign Out</span>
+          </div>
+        </MenuItem>
+      </MenuList>
+    </Menu>
   );
 };
