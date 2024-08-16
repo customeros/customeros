@@ -43,7 +43,6 @@ export const Layout = () => {
       P.string.startsWith('/invoices'),
       P.string.startsWith('/prospects'),
       P.string.startsWith('/customer-map'),
-      P.string.startsWith('/settings'),
       () => true,
     )
     .otherwise(() => false);
