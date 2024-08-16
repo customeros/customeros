@@ -18,6 +18,7 @@ export function getColumnConfig<Datum>(
       ...columns[columnTypeName],
       enableHiding: !curr.visible,
       size: curr.visible ? columns[columnTypeName].size : 0,
+      minSize: curr.visible ? columns[columnTypeName].minSize : 0,
     };
 
     if (!column) return acc;
