@@ -390,7 +390,7 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 		Name:        "Contacts",
 		ColumnsJson: string(jsonData),
 		Order:       0,
-		Icon:        "HeartHand",
+		Icon:        "users_01",
 		Filters:     ``,
 		Sorting:     ``,
 		IsPreset:    true,
