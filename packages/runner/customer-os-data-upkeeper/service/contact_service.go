@@ -329,7 +329,6 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 	waitGroup.Add(len(weConnectIntegrations))
 
 	for _, integration := range weConnectIntegrations {
-
 		go func(parentCtx context.Context, integration entity.PersonalIntegration) {
 			defer waitGroup.Done()
 
@@ -337,7 +336,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 			defer span.Finish()
 
 			tenant := integration.TenantName
-			span.SetTag(tracing.SpanTagTenant, tenant)
+			tracing.TagTenant(span, tenant)
 			span.LogFields(log.String("integrationEmail", integration.Email))
 
 			useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, integration.Email)
