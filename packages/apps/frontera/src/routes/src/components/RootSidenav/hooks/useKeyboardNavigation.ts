@@ -7,7 +7,6 @@ interface KeyboardNavigationOptions {
 }
 
 interface Presets {
-  leadsPreset?: string;
   targetsPreset?: string;
   churnedPreset?: string;
   customersPreset?: string;

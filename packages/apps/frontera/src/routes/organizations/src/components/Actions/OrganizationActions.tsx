@@ -8,17 +8,16 @@ import { X } from '@ui/media/icons/X';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { OrganizationStage } from '@graphql/types';
 import { useModKey } from '@shared/hooks/useModKey';
 import { CommandKbd } from '@ui/overlay/CommandMenu';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableInstance } from '@ui/presentation/Table';
 import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
-import { TableIdType, OrganizationStage } from '@graphql/types';
 import { ActionItem } from '@organizations/components/Actions/ActionItem';
 
 interface TableActionsProps {
   onHide: () => void;
-  tableId?: TableIdType;
   focusedId?: string | null;
   onOpenCommandK: () => void;
   isCommandMenuOpen: boolean;
@@ -32,7 +31,6 @@ interface TableActionsProps {
 export const OrganizationTableActions = ({
   table,
   onHide,
-  tableId,
   onUpdateStage,
   enableKeyboardShortcuts,
   onCreateContact,
@@ -103,14 +101,6 @@ export const OrganizationTableActions = ({
     clearSelection();
   };
 
-  const moveToLeads = (e: Event) => {
-    if (!selectCount) return;
-    e.preventDefault();
-    e.stopPropagation();
-    onUpdateStage(selectedIds, OrganizationStage.Lead);
-    clearSelection();
-  };
-
   useKeyBindings(
     {
       u: moveToAllOrgs,
@@ -118,7 +108,6 @@ export const OrganizationTableActions = ({
       o: moveToOpportunities,
       c: (e) => {
         e.stopPropagation();
-        e.preventDefault();
 
         if (selectCount > 1) return;
 
@@ -127,7 +116,6 @@ export const OrganizationTableActions = ({
         }
         onCreateContact();
       },
-      l: (e) => tableId === TableIdType.Nurture && moveToLeads(e),
       Escape: clearSelection,
     },
     { when: enableKeyboardShortcuts },

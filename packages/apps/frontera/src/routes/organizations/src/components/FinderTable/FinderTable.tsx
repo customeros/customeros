@@ -537,7 +537,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             <OrganizationTableActions
               focusedId={focusedId}
               onCreateContact={createSocial}
-              tableId={tableViewDef?.value.tableId}
               onOpenCommandK={handleOpenCommandKMenu}
               isCommandMenuOpen={isCommandMenuPrompted}
               onUpdateStage={store.organizations.updateStage}
