@@ -43,7 +43,7 @@ export const MissingPermissionsPrompt: FC<{
           colorScheme='gray'
           data-test='timeline-email-permission-prompt'
           onClick={() => {
-            navigate('/settings');
+            navigate('/settings?tab=oauth');
           }}
         >
           <Google className='mr-2' />
