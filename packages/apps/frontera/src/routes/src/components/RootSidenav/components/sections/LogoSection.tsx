@@ -29,9 +29,9 @@ export const LogoSection = () => {
   };
 
   return (
-    <div className='px-2 pt-2 h-fit mb-2 ml-[10px] cursor-pointer flex justify-flex-start relative'>
+    <div className='px-2 pt-2 pl-5 h-fit mb-2 cursor-pointer flex justify-flex-start relative'>
       <Menu>
-        <MenuButton>
+        <MenuButton className='w-[stretch]'>
           <div className='flex items-center gap-2'>
             {!isLoading ? (
               <>
@@ -44,10 +44,12 @@ export const LogoSection = () => {
                     store.settings.tenant.value?.workspaceLogo || logoCustomerOs
                   }
                 />
-                <span className='font-semibold  text-start w-[120px] overflow-hidden text-ellipsis whitespace-nowrap'>
+                <span className='font-semibold  text-start w-[stretch] overflow-hidden text-ellipsis whitespace-nowrap'>
                   {store.settings.tenant.value?.workspaceName || 'CustomerOS'}
                 </span>
-                <ChevronDown className='size-3' />
+                <div className='w-3'>
+                  <ChevronDown className='size-3 min-w-3' />
+                </div>
               </>
             ) : (
               <Skeleton className='w-full h-8 mr-2' />

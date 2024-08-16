@@ -36,12 +36,28 @@ export const Layout = () => {
     .with(P.string.startsWith('/settings'), () => <SettingsSidenav />)
     .otherwise(() => null);
 
+  const isResizable = match(location.pathname)
+    .with(
+      P.string.startsWith('/finder'),
+      P.string.startsWith('/renewals'),
+      P.string.startsWith('/invoices'),
+      P.string.startsWith('/prospects'),
+      P.string.startsWith('/customer-map'),
+      P.string.startsWith('/settings'),
+      () => true,
+    )
+    .otherwise(() => false);
+
   const unstyled = knownPaths.every((v) => !location.pathname.startsWith(v));
 
   return (
     <SplashScreen>
       <CommandMenu />
-      <PageLayout unstyled={unstyled} className='w-screen h-screen'>
+      <PageLayout
+        unstyled={unstyled}
+        isResizable={isResizable}
+        className='w-screen h-screen'
+      >
         {sidenav}
         <div className='h-full w-full flex-col overflow-hidden flex '>
           <Outlet />

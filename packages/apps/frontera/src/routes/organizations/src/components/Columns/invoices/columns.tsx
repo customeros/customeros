@@ -224,7 +224,7 @@ const columns: Record<string, Column> = {
     enableSorting: false,
     header: (props) => (
       <THead
-        title='Upcoming Invoices'
+        title='Invoice'
         id={ColumnViewType.InvoicesInvoicePreview}
         {...getTHeadProps(props)}
       />
