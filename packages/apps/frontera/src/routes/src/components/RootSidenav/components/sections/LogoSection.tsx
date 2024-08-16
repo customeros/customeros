@@ -31,7 +31,7 @@ export const LogoSection = () => {
   return (
     <div className='px-2 pt-2 pl-5 h-fit mb-2 cursor-pointer flex justify-flex-start relative'>
       <Menu>
-        <MenuButton className='w-[stretch]'>
+        <MenuButton>
           <div className='flex items-center gap-2'>
             {!isLoading ? (
               <>

@@ -18,7 +18,7 @@ export const PageLayout = ({
   isResizable,
 }: PageLayoutProps) => {
   const [storedSidebarWidth, setStoredSidebarWidth] = useLocalStorage(
-    'sidebarWidth',
+    'cos_sidebar_width',
     200,
   );
   const [sidebarWidth, setSidebarWidth] = useState(storedSidebarWidth);
