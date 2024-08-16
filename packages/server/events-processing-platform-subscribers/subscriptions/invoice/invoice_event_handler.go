@@ -16,7 +16,6 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
@@ -42,21 +41,6 @@ import (
 
 type eventMetadata struct {
 	UserId string `json:"user-id"`
-}
-
-type RequestBodyInvoiceFinalized struct {
-	Tenant                       string `json:"tenant"`
-	Currency                     string `json:"currency"`
-	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
-	StripeCustomerId             string `json:"stripeCustomerId"`
-	InvoiceId                    string `json:"invoiceId"`
-	InvoiceDescription           string `json:"invoiceDescription"`
-	CustomerOsId                 string `json:"customerOsId"`
-	Pay                          struct {
-		PayAutomatically      bool `json:"payAutomatically"`
-		CanPayWithCard        bool `json:"canPayWithCard"`
-		CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
-	} `json:"pay"`
 }
 
 type InvoiceActionMetadata struct {
@@ -367,24 +351,11 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	if invoiceEntity.DryRun {
 		return nil
 	}
-	// do not invoke invoice finalized webhook if it was already invoked
-	if invoiceEntity.InvoiceInternalFields.InvoiceFinalizedSentAt == nil {
-		err = h.integrationAppInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("error invoking invoice ready webhook for invoice %s: %s", invoiceId, err.Error())
-		}
-		err = h.slackInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("error invoking slack invoice finalized webhook for invoice %s: %s", invoiceId, err.Error())
-		}
 
-		err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.MarkInvoiceFinalizedEventSent(ctx, eventData.Tenant, invoiceEntity.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error setting invoice payment requested for invoice %s: %s", invoiceEntity.Id, err.Error())
-		}
+	err = h.slackInvoiceFinalizedWebhook(ctx, eventData.Tenant, *invoiceEntity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error invoking slack invoice finalized webhook for invoice %s: %s", invoiceId, err.Error())
 	}
 
 	// do not dispatch invoice finalized event if it was already dispatched
@@ -401,110 +372,6 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
 		}
-	}
-
-	return nil
-}
-
-func (h *InvoiceEventHandler) integrationAppInvoiceFinalizedWebhook(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.integrationAppInvoiceFinalizedWebhook")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	tracing.LogObjectAsJson(span, "invoice", invoice)
-
-	if h.cfg.EventNotifications.EndPoints.InvoiceFinalized == "" {
-		return nil
-	}
-
-	// get organization linked to invoice
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-	organizationEntity := neo4jentity.OrganizationEntity{}
-	if organizationDbNode != nil {
-		organizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	}
-
-	// get contract linked to invoice
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoice.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
-		return err
-	}
-	contractEntity := neo4jentity.ContractEntity{}
-	if contractDbNode != nil {
-		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-	}
-
-	// get stripe customer id for organization
-	stripeCustomerIds, err := h.repositories.Neo4jRepositories.ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity(ctx, tenant, neo4jenum.Stripe.String(), organizationEntity.ID, model.NodeLabelOrganization)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting stripe customer id for organization %s: %s", organizationEntity.ID, err.Error())
-		return err
-	}
-	identifiedStripeCustomerId := ""
-	if len(stripeCustomerIds) == 1 {
-		identifiedStripeCustomerId = stripeCustomerIds[0]
-	}
-
-	// convert amount to the smallest currency unit
-	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
-	if err != nil {
-		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
-	}
-
-	requestBody := RequestBodyInvoiceFinalized{
-		Tenant:                       tenant,
-		Currency:                     invoice.Currency.String(),
-		AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
-		StripeCustomerId:             identifiedStripeCustomerId,
-		InvoiceId:                    invoice.Id,
-		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
-		CustomerOsId:                 organizationEntity.CustomerOsId,
-		Pay: struct {
-			PayAutomatically      bool `json:"payAutomatically"`
-			CanPayWithCard        bool `json:"canPayWithCard"`
-			CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
-		}{
-			PayAutomatically:      contractEntity.PayAutomatically,
-			CanPayWithCard:        contractEntity.CanPayWithCard,
-			CanPayWithDirectDebit: contractEntity.CanPayWithDirectDebit,
-		},
-	}
-
-	// Convert the request body to JSON
-	requestBodyJSON, err := json.Marshal(requestBody)
-	if err != nil {
-		return fmt.Errorf("error encoding JSON: %v", err)
-	}
-
-	// Create an HTTP client
-	client := &http.Client{}
-
-	// Create a POST request with headers and body
-	req, err := http.NewRequest("POST", h.cfg.EventNotifications.EndPoints.InvoiceFinalized, bytes.NewBuffer(requestBodyJSON))
-	if err != nil {
-		return fmt.Errorf("error creating request: %v", err)
-	}
-
-	// Set the content type header
-	req.Header.Set("Content-Type", "application/json")
-
-	// Send the POST request
-	resp, err := client.Do(req)
-	if err != nil {
-		return fmt.Errorf("error sending request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	// Check the response status code
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("request failed with status code: %s", resp.Status)
 	}
 
 	return nil
