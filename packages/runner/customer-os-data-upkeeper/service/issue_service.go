@@ -33,6 +33,8 @@ func (s *issueService) LinkUnthreadIssues() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "IssueService.LinkUnthreadIssues")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
 	err := s.repositories.Neo4jRepositories.IssueWriteRepository.LinkUnthreadIssuesToOrganizationByGroupId(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)

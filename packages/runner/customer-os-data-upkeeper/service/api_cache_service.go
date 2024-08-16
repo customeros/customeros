@@ -44,6 +44,7 @@ func (s *apiCacheService) RefreshApiCache() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "ApiCacheService.RefreshApiCache")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	tenantNodeList, err := s.repositories.Neo4jRepositories.TenantReadRepository.GetAll(ctx)
 	if err != nil {

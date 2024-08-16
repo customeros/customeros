@@ -19,7 +19,7 @@ import (
 
 type ContractService interface {
 	UpkeepContracts()
-	ResyncContract(ctx context.Context, tenant, contractId string)
+	resyncContract(ctx context.Context, tenant, contractId string)
 }
 
 type contractService struct {
@@ -59,6 +59,7 @@ func (s *contractService) UpkeepContracts() {
 func (s *contractService) updateContractStatuses(ctx context.Context, referenceTime time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.updateContractStatuses")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -97,7 +98,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 				s.log.Errorf("Error refreshing contract status: %s", err.Error())
 				grpcErr, ok := status.FromError(err)
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.ResyncContract(ctx, record.Tenant, record.ContractId)
+					s.resyncContract(ctx, record.Tenant, record.ContractId)
 				}
 			} else {
 				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkStatusRenewalRequested(ctx, record.Tenant, record.ContractId)
@@ -121,6 +122,7 @@ func (s *contractService) updateContractStatuses(ctx context.Context, referenceT
 func (s *contractService) rolloutContractRenewals(ctx context.Context, referenceTime time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.rolloutContractRenewals")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -159,7 +161,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 				s.log.Errorf("Error rollout renewal opportunity: %s", err.Error())
 				grpcErr, ok := status.FromError(err)
 				if ok && grpcErr.Code() == codes.NotFound && grpcErr.Message() == "aggregate not found" {
-					s.ResyncContract(ctx, record.Tenant, record.ContractId)
+					s.resyncContract(ctx, record.Tenant, record.ContractId)
 				}
 			} else {
 				err = s.repositories.Neo4jRepositories.ContractWriteRepository.MarkRolloutRenewalRequested(ctx, record.Tenant, record.ContractId)
@@ -183,6 +185,7 @@ func (s *contractService) rolloutContractRenewals(ctx context.Context, reference
 func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.closeActiveRenewalOpportunitiesForEndedContracts")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -241,6 +244,7 @@ func (s *contractService) closeActiveRenewalOpportunitiesForEndedContracts(ctx c
 func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.createRenewalOpportunitiesIfMissing")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -287,8 +291,8 @@ func (s *contractService) createRenewalOpportunitiesIfMissing(ctx context.Contex
 	}
 }
 
-func (s *contractService) ResyncContract(ctx context.Context, tenant, contractId string) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.resyncContract")
+func (s *contractService) resyncContract(ctx context.Context, tenant, contractId string) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContractService.ResyncContract")
 	defer span.Finish()
 
 	contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)

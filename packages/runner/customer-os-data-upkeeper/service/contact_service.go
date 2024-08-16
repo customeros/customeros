@@ -73,6 +73,7 @@ func (s *contactService) UpkeepContacts() {
 func (s *contactService) removeEmptySocials(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.removeEmptySocials")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -127,6 +128,7 @@ func (s *contactService) removeEmptySocials(ctx context.Context) {
 func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.removeDuplicatedSocials")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -181,6 +183,7 @@ func (s *contactService) removeDuplicatedSocials(ctx context.Context) {
 func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.hideContactsWithGroupEmail")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 500
 
@@ -310,16 +313,17 @@ type BetterContactResponseBody struct {
 }
 
 func (s *contactService) syncWeConnectContacts(c context.Context) {
-	parentSpan, ctx := tracing.StartTracerSpan(c, "ContactService.syncWeConnectContacts")
-	defer parentSpan.Finish()
+	span, ctx := tracing.StartTracerSpan(c, "ContactService.syncWeConnectContacts")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
 	if err != nil {
-		tracing.TraceErr(parentSpan, err)
+		tracing.TraceErr(span, err)
 		return
 	}
 
-	parentSpan.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
+	span.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
 
 	var waitGroup sync.WaitGroup
 	waitGroup.Add(len(weConnectIntegrations))
@@ -495,6 +499,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	orphanContacts, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsEnrichedNotLinkedToOrganization(ctx)
 	if err != nil {
@@ -577,6 +582,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.findEmailsWithBetterContact")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	// Better contact is limited to 60 requests per minute
 	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
@@ -681,6 +687,7 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichWithWorkEmailFromBetterContact")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, 250)
 	if err != nil {
@@ -760,6 +767,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.checkBetterContactRequestsWithoutResponse")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	betterContactRequestsWithoutResponse, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetWithoutResponses(ctx)
 	if err != nil {
@@ -827,6 +835,7 @@ func (s *contactService) EnrichContacts() {
 func (s *contactService) enrichContactsByEmail(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichContactsByEmail")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
