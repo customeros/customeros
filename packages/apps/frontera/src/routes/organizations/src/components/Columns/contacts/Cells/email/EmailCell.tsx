@@ -96,9 +96,7 @@ export const EmailCell: React.FC<EmailCellProps> = observer(
       >
         {!isEdit && !email && <p className='text-gray-400'>Unknown</p>}
         {!isEdit && email && (
-          <p className='max-w-[140px] overflow-ellipsis overflow-hidden'>
-            {email}
-          </p>
+          <p className='overflow-ellipsis overflow-hidden'>{email}</p>
         )}
         {isEdit && (
           <Input
