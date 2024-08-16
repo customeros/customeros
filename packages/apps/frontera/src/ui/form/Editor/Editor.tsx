@@ -179,18 +179,6 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
           )}
           <EditorPlugin
             ErrorBoundary={LexicalErrorBoundary}
-            contentEditable={
-              <div ref={onRef} className={cn('relative', className)}>
-                <ContentEditable
-                  onBlur={onBlur}
-                  spellCheck='false'
-                  data-test={dataTest}
-                  className={twMerge(
-                    contentEditableVariants({ size, className }),
-                  )}
-                />
-              </div>
-            }
             placeholder={
               <span
                 onClick={() => editor.current?.focus()}
@@ -204,6 +192,19 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
               >
                 {placeholder}
               </span>
+            }
+            contentEditable={
+              <div ref={onRef} className={cn('relative', className)}>
+                <ContentEditable
+                  onBlur={onBlur}
+                  spellCheck='false'
+                  data-test={dataTest}
+                  onKeyDown={(e) => e.stopPropagation()}
+                  className={twMerge(
+                    contentEditableVariants({ size, className }),
+                  )}
+                />
+              </div>
             }
           />
           {children}

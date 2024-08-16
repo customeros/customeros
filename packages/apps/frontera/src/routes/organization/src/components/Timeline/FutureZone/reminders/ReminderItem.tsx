@@ -118,6 +118,7 @@ export const ReminderItem = observer(
           maxRows={isFocused ? undefined : 3}
           data-test='timeline-reminder-editor'
           value={reminder?.value.content ?? ''}
+          onKeyDown={(e) => e.stopPropagation()}
           placeholder='What should we remind you about?'
           className='px-2 pb-0 text-sm font-light font-sticky hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent'
         />
