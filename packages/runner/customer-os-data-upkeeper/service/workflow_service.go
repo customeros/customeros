@@ -33,6 +33,10 @@ func (s *workflowService) ExecuteWorkflows() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
+	span, ctx := tracing.StartTracerSpan(ctx, "WorkflowService.ExecuteWorkflows")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
 	liveWorkflows, err := s.repositories.PostgresRepositories.WorkflowRepository.GetAllTenantsLiveWorkflows(ctx)
 	if err != nil {
 		tracing.TraceErr(nil, err)

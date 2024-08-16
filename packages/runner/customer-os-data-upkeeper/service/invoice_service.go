@@ -65,6 +65,7 @@ func (s *invoiceService) GenerateCycleInvoices() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateCycleInvoices")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	if s.cfg.ProcessConfig.CycleInvoicingEnabled == false {
 		s.log.Infof("Cycle invoicing is disabled, stopping")
@@ -245,6 +246,7 @@ func (s *invoiceService) SendPayNotifications() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.SendPayNotifications")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	if s.eventsProcessingClient == nil {
 		err := errors.New("eventsProcessingClient is nil")
@@ -313,6 +315,7 @@ func (s *invoiceService) GenerateOffCycleInvoices() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateOffCycleInvoices")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	if s.cfg.ProcessConfig.OffCycleInvoicingEnabled == false {
 		s.log.Infof("Off-cycle invoicing is disabled, stopping")
@@ -412,6 +415,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateInvoicePaymentLinks")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	if s.eventsProcessingClient == nil {
 		err := errors.New("eventsProcessingClient is nil")
@@ -522,6 +526,7 @@ func (s *invoiceService) CleanupInvoices() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.CleanupInvoices")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	for {
 		select {
@@ -564,6 +569,7 @@ func (s *invoiceService) GenerateNextPreviewInvoices() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.GenerateNextPreviewInvoices")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	if s.eventsProcessingClient == nil {
 		err := errors.New("eventsProcessingClient is nil")
@@ -627,6 +633,7 @@ func (s *invoiceService) AdjustInvoiceStatus() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.AdjustInvoiceStatus")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	if s.eventsProcessingClient == nil {
 		err := errors.New("eventsProcessingClient is nil")

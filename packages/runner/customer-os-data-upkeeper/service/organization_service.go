@@ -42,13 +42,14 @@ func (s *organizationService) RefreshLastTouchpoint() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
+	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.RefreshLastTouchpoint")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
 	if s.eventsProcessingClient == nil {
 		s.log.Warn("eventsProcessingClient is nil.")
 		return
 	}
-
-	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.RefreshLastTouchpoint")
-	defer span.Finish()
 
 	limit := 2000
 
@@ -127,6 +128,7 @@ func (s *organizationService) UpkeepOrganizations() {
 func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context, referenceTime time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.updateDerivedNextRenewalDates")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 1000
 
@@ -182,6 +184,7 @@ func (s *organizationService) updateDerivedNextRenewalDates(ctx context.Context,
 func (s *organizationService) linkWithDomain(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.linkWithDomain")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -253,6 +256,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 func (s *organizationService) enrichOrganization(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.enrichOrganization")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 250
 
@@ -311,6 +315,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 func (s *organizationService) removeEmptySocials(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.removeEmptySocials")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -365,6 +370,7 @@ func (s *organizationService) removeEmptySocials(ctx context.Context) {
 func (s *organizationService) removeDuplicatedSocials(ctx context.Context, now time.Time) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.removeDuplicatedSocials")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 100
 
@@ -419,6 +425,7 @@ func (s *organizationService) removeDuplicatedSocials(ctx context.Context, now t
 func (s *organizationService) adjustIndustries(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "OrganizationService.adjustIndustries")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
 	limit := 500
 

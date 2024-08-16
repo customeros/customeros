@@ -37,6 +37,8 @@ func (c currencyService) GetCurrencyRatesECB() {
 
 	span, ctx := tracing.StartTracerSpan(ctx, "CurrencyService.GetCurrencyRatesECB")
 	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
 	// Make HTTP GET request to ECB API endpoint
 	resp, err := http.Get("https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml")
 	if err != nil {
