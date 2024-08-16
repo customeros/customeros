@@ -17,6 +17,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"net/http"
+	"strings"
 )
 
 const (
@@ -134,7 +135,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		// convert to boolean
 		searchPhoneNumber := searchPhoneNumberParam == "true"
 
-		if linkedinUrl == "" || email == "" || firstName == "" || lastName == "" {
+		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(email) == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing required parameters linkedinUrl or email"})
 			return
 		}
