@@ -103,14 +103,6 @@ export const OrganizationTableActions = ({
     clearSelection();
   };
 
-  const moveToLeads = (e: Event) => {
-    if (!selectCount) return;
-    e.preventDefault();
-    e.stopPropagation();
-    onUpdateStage(selectedIds, OrganizationStage.Lead);
-    clearSelection();
-  };
-
   useKeyBindings(
     {
       u: moveToAllOrgs,
@@ -118,7 +110,6 @@ export const OrganizationTableActions = ({
       o: moveToOpportunities,
       c: (e) => {
         e.stopPropagation();
-        e.preventDefault();
 
         if (selectCount > 1) return;
 
@@ -127,7 +118,6 @@ export const OrganizationTableActions = ({
         }
         onCreateContact();
       },
-      l: (e) => tableId === TableIdType.Nurture && moveToLeads(e),
       Escape: clearSelection,
     },
     { when: enableKeyboardShortcuts },

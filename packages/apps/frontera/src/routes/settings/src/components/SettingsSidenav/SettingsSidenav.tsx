@@ -34,7 +34,6 @@ export const SettingsSidenav = () => {
   };
 
   const presets = {
-    leadsPreset: store.tableViewDefs.leadsPreset,
     targetsPreset: store.tableViewDefs.targetsPreset,
     churnedPreset: store.tableViewDefs.churnedPreset,
     customersPreset: store.tableViewDefs.defaultPreset,

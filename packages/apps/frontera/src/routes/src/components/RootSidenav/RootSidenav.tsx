@@ -26,7 +26,6 @@ export const RootSidenav = observer(() => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
   const presets = {
-    leadsPreset: store.tableViewDefs.leadsPreset,
     targetsPreset: store.tableViewDefs.targetsPreset,
     churnedPreset: store.tableViewDefs.churnedPreset,
     customersPreset: store.tableViewDefs.defaultPreset,

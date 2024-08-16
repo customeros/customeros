@@ -126,7 +126,6 @@ const KeyboardShortcut = ({ shortcut }: { shortcut: string }) => {
 };
 
 const navigationKeywords = {
-  go_to_leads: ['go to', 'navigate', 'leads', 'prospect'],
   go_to_targets: ['go to', 'navigate', 'targets', 'prospect'],
   go_to_customers: ['go to', 'navigate', 'customers', 'relationship'],
   go_to_former_customers: [
