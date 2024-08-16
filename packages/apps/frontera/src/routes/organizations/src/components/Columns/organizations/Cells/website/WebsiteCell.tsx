@@ -106,6 +106,10 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
 
   const formattedLink = getFormattedLink(website);
 
+  const editFormattedLink = website?.startsWith('http')
+    ? website
+    : `https://${website}`;
+
   return (
     <div
       className='flex items-center'
@@ -118,7 +122,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
           ref={inputRef}
           variant='unstyled'
           placeholder='Unknown'
-          value={formattedLink}
+          value={editFormattedLink}
           onBlur={() => setIsEdit(false)}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
@@ -134,7 +138,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
 
             organization.update((org) => {
               if (value.includes('https://www')) {
-                const newUrl = getFormattedLink(value);
+                const newUrl = getExternalUrl(value);
 
                 org.website = newUrl;
               }
