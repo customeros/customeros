@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -20,12 +20,12 @@ interface ContractStatusSelectProps {
   onHandleStatusChange: () => void;
 }
 
-export const ContractMenu: React.FC<ContractStatusSelectProps> = ({
+export const ContractMenu = ({
   status,
   onOpenEditModal,
   onHandleStatusChange,
   statusContent,
-}) => {
+}: ContractStatusSelectProps) => {
   const { onStatusModalOpen } = useContractModalStatusContext();
 
   return (

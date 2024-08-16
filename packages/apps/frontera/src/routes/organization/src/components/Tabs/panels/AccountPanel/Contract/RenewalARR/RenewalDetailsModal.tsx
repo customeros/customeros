@@ -11,9 +11,7 @@ import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
-import { ClockFastForward } from '@ui/media/icons/ClockFastForward';
 import { FormAutoresizeTextarea } from '@ui/form/Textarea/FormAutoresizeTextarea';
 import {
   Currency,
@@ -165,21 +163,14 @@ const RenewalDetailsForm = ({
   return (
     <>
       <ModalContent
+        className='z-50 rounded-2xl '
         style={{
           backgroundPositionX: '1px',
           backgroundPositionY: '-7px',
         }}
-        className='z-50 rounded-2xl bg-[url(/backgrounds/organization/circular-bg-pattern.png)] bg-no-repeat'
       >
         <ModalCloseButton />
         <ModalHeader>
-          <FeaturedIcon
-            size='lg'
-            colorScheme='primary'
-            className='ml-[12px] mt-1 mb-[31px]'
-          >
-            <ClockFastForward />
-          </FeaturedIcon>
           <span className='text-lg mt-3 font-semibold'>Renewal details</span>
         </ModalHeader>
         <form onSubmit={(v) => handleSubmit(v)}>

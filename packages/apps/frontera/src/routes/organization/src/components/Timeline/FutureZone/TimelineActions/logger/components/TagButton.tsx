@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Button } from '@ui/form/Button/Button';
 
 interface TagButtonProps {
@@ -7,7 +5,7 @@ interface TagButtonProps {
   onTagSet: () => void;
 }
 
-export const TagButton: React.FC<TagButtonProps> = ({ onTagSet, tag }) => (
+export const TagButton = ({ onTagSet, tag }: TagButtonProps) => (
   <Button
     size='xs'
     color='gray.400'

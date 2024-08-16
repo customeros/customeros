@@ -1,4 +1,3 @@
-import React from 'react';
 import { useParams } from 'react-router-dom';
 
 import { useOrganization } from '@organization/hooks/useOrganization';
@@ -11,9 +10,7 @@ interface EmptyTimelineProps {
   invalidateQuery: () => void;
 }
 
-export const EmptyTimeline: React.FC<EmptyTimelineProps> = ({
-  invalidateQuery,
-}) => {
+export const EmptyTimeline = ({ invalidateQuery }: EmptyTimelineProps) => {
   const id = useParams()?.id as string;
 
   const { data } = useOrganization({ id });

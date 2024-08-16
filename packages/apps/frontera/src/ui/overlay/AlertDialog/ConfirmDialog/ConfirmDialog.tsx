@@ -1,8 +1,6 @@
 import React, { useRef, MouseEventHandler } from 'react';
 
-import { Play } from '@ui/media/icons/Play';
 import { Spinner } from '@ui/feedback/Spinner/Spinner';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { Button, ButtonProps } from '@ui/form/Button/Button';
 
 import {
@@ -24,7 +22,6 @@ interface ConfirmDeleteDialogProps {
   isLoading?: boolean;
   onClose: () => void;
   description?: string;
-  icon?: React.ReactNode;
   body?: React.ReactNode;
   hideCloseButton?: boolean;
   confirmButtonLabel: string;
@@ -45,7 +42,6 @@ export const ConfirmDialog = ({
   confirmButtonLabel,
   cancelButtonLabel = 'Cancel',
   loadingButtonLabel = 'Loading action...',
-  icon,
   colorScheme = 'primary',
   hideCloseButton,
 }: ConfirmDeleteDialogProps) => {
@@ -55,16 +51,9 @@ export const ConfirmDialog = ({
     <AlertDialog isOpen={isOpen} onClose={onClose} className='z-[99999]'>
       <AlertDialogPortal>
         <AlertDialogOverlay>
-          <AlertDialogContent className='rounded-xl bg-no-repeat bg-[url(/backgrounds/organization/circular-bg-pattern.png)]'>
+          <AlertDialogContent className='rounded-xl '>
             {!hideCloseButton && <AlertDialogCloseIconButton />}
-            <FeaturedIcon
-              size='lg'
-              className='mt-[13px] ml-[11px]'
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              colorScheme={colorScheme as any}
-            >
-              {icon ? icon : <Play />}
-            </FeaturedIcon>
+
             <AlertDialogHeader className='text-lg font-bold mt-4'>
               <p className='pb-0 font-semibold'>{title}</p>
               {description && (

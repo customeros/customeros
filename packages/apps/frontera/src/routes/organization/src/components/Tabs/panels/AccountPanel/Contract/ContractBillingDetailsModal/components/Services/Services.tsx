@@ -1,5 +1,3 @@
-import { FC } from 'react';
-
 import { observer } from 'mobx-react-lite';
 
 import { ContractStatus } from '@graphql/types';
@@ -13,8 +11,8 @@ interface SubscriptionServiceModalProps {
   contractStatus?: ContractStatus | null;
 }
 
-export const Services: FC<SubscriptionServiceModalProps> = observer(
-  ({ id, currency, contractStatus }) => {
+export const Services = observer(
+  ({ id, currency, contractStatus }: SubscriptionServiceModalProps) => {
     return (
       <>
         <div className='flex relative items-center h-8 '>

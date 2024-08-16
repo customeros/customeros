@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn.ts';
@@ -22,8 +20,13 @@ interface ServiceItemMenuProps {
   handleCloseService: (isClosed: boolean) => void;
 }
 
-export const ServiceItemMenu: React.FC<ServiceItemMenuProps> = observer(
-  ({ id, contractId, allowAddModification, handleCloseService }) => {
+export const ServiceItemMenu = observer(
+  ({
+    id,
+    contractId,
+    allowAddModification,
+    handleCloseService,
+  }: ServiceItemMenuProps) => {
     const store = useStore();
     const contractLineItemsStore = store.contractLineItems;
 

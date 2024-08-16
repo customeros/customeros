@@ -1,23 +1,21 @@
-import React from 'react';
-
 import { Plus } from '@ui/media/icons/Plus';
 import { ServiceLineItem } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ServicesList } from '@organization/components/Tabs/panels/AccountPanel/Contract/Services/ServicesList';
 
-interface Props {
+interface ServicesProps {
   id: string;
   onModalOpen: () => void;
   currency?: string | null;
   data?: Array<ServiceLineItem> | null;
 }
 
-export const Services: React.FC<Props> = ({
+export const Services = ({
   id,
   data,
   currency,
   onModalOpen,
-}) => {
+}: ServicesProps) => {
   return (
     <>
       <p className='w-full flex items-center justify-between'>

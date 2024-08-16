@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { File02 } from '@ui/media/icons/File02';
@@ -63,10 +63,10 @@ const colorSchemeMap: Record<
   [ActionType.InvoiceIssued]: 'primary',
 };
 
-const InvoiceStatusChangeAction: React.FC<InvoiceStatusChangeActionProps> = ({
+const InvoiceStatusChangeAction = ({
   data,
   mode,
-}) => {
+}: InvoiceStatusChangeActionProps) => {
   const isTemporary = data.appSource === 'customeros-optimistic-update';
   const { handleOpenInvoice } = useTimelineEventPreviewMethodsContext();
 

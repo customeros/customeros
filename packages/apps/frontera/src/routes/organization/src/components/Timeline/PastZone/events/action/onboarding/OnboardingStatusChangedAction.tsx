@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { Flag04 } from '@ui/media/icons/Flag04';
 import { Action, OnboardingStatus } from '@graphql/types';
@@ -22,9 +22,9 @@ interface OnboardingStatusChangedActionProps {
   data: Action;
 }
 
-export const OnboardingStatusChangedAction: React.FC<
-  OnboardingStatusChangedActionProps
-> = ({ data }) => {
+export const OnboardingStatusChangedAction = ({
+  data,
+}: OnboardingStatusChangedActionProps) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
   const status = useMemo(() => {
     return getMetadata(data?.metadata)?.status;

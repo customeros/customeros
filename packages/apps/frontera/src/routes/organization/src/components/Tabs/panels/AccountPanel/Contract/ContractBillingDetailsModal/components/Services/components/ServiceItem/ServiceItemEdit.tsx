@@ -31,7 +31,7 @@ const inputClasses =
 const deleteButtonClasses =
   'border-none bg-transparent shadow-none text-gray-400 pr-3 pl-4 py-2 -mx-4 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
 
-export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
+export const ServiceItemEdit = observer(
   ({
     service,
     allServices,
@@ -39,7 +39,7 @@ export const ServiceItemEdit: React.FC<ServiceItemProps> = observer(
     isModification,
     type,
     contractStatus,
-  }) => {
+  }: ServiceItemProps) => {
     const highlightVersion = '';
 
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';

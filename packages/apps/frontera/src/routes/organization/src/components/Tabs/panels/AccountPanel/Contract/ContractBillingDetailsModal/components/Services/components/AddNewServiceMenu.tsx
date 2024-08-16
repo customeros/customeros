@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { observer } from 'mobx-react-lite';
 
 import { BilledType } from '@graphql/types';
@@ -20,8 +18,8 @@ interface AddNewServiceMenuProps {
   contractId: string;
 }
 //TODO K
-export const AddNewServiceMenu: React.FC<AddNewServiceMenuProps> = observer(
-  ({ isInline, contractId }) => {
+export const AddNewServiceMenu = observer(
+  ({ isInline, contractId }: AddNewServiceMenuProps) => {
     const store = useStore();
     const contractLineItemsStore = store.contractLineItems;
 

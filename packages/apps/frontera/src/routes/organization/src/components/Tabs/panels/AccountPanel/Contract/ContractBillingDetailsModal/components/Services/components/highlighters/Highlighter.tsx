@@ -1,5 +1,3 @@
-import React, { PropsWithChildren } from 'react';
-
 import { twMerge } from 'tailwind-merge';
 
 import { cn } from '@ui/utils/cn.ts';
@@ -7,14 +5,18 @@ import { colors } from '@ui/theme/colors.ts';
 import { HighlightColor } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/Services/components/highlighters/utils.ts';
 
 interface HighlighterProps extends React.SVGAttributes<SVGElement> {
+  color?: string;
   className?: string;
+  children?: React.ReactNode;
+  highlightVersion?: number | string;
+  backgroundColor?: 'transparent' | 'grayWarm';
 }
 
-const HighlighterVariant1: React.FC<HighlighterProps & { color?: string }> = ({
+const HighlighterVariant1 = ({
   color,
   className,
   ...props
-}) => {
+}: HighlighterProps) => {
   return (
     <svg
       height='21'
@@ -33,10 +35,7 @@ const HighlighterVariant1: React.FC<HighlighterProps & { color?: string }> = ({
   );
 };
 
-const HighlighterVariant2: React.FC<HighlighterProps> = ({
-  color,
-  ...props
-}) => {
+const HighlighterVariant2 = ({ color, ...props }: HighlighterProps) => {
   return (
     <svg
       height='21'
@@ -54,10 +53,7 @@ const HighlighterVariant2: React.FC<HighlighterProps> = ({
   );
 };
 
-const HighlighterVariant3: React.FC<HighlighterProps> = ({
-  color,
-  ...props
-}) => {
+const HighlighterVariant3 = ({ color, ...props }: HighlighterProps) => {
   return (
     <svg
       height='21'
@@ -77,12 +73,9 @@ const HighlighterVariant3: React.FC<HighlighterProps> = ({
 
 export const Highlighter = ({
   children,
-  highlightVersion,
   backgroundColor = 'transparent',
-}: PropsWithChildren<{
-  backgroundColor?: string;
-  highlightVersion?: number | string;
-}>) => {
+  highlightVersion,
+}: HighlighterProps) => {
   const color =
     backgroundColor === HighlightColor.GrayWarm
       ? colors[backgroundColor as keyof typeof colors]?.['200']

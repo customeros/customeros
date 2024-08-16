@@ -15,10 +15,10 @@ interface ServiceUpdatedActionProps {
   mode?: 'created' | 'updated' | 'removed';
 }
 
-export const ServiceUpdatedAction: React.FC<ServiceUpdatedActionProps> = ({
+export const ServiceUpdatedAction = ({
   data,
   mode = 'updated',
-}) => {
+}: ServiceUpdatedActionProps) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
   const metadata = getMetadata(data?.metadata);
 

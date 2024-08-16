@@ -1,10 +1,8 @@
-import React from 'react';
-
 import { Skeleton } from '@ui/feedback/Skeleton';
 import { Divider } from '@ui/presentation/Divider/Divider';
 import { OrganizationPanel } from '@organization/components/Tabs/shared/OrganizationPanel/OrganizationPanel';
 
-export const AccountPanelSkeleton: React.FC = () => {
+export const AccountPanelSkeleton = () => {
   return (
     <OrganizationPanel title='Account'>
       <div className='flex justify-between w-full items-center mb-4'>

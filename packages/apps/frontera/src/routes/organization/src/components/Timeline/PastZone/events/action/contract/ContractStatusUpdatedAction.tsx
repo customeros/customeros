@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Action } from '@graphql/types';
@@ -11,9 +11,9 @@ interface ContractStatusUpdatedActionProps {
   data: Action;
 }
 
-export const ContractStatusUpdatedAction: React.FC<
-  ContractStatusUpdatedActionProps
-> = ({ data }) => {
+export const ContractStatusUpdatedAction = ({
+  data,
+}: ContractStatusUpdatedActionProps) => {
   const { openModal } = useTimelineEventPreviewMethodsContext();
   const status = useMemo(() => {
     return getMetadata(data?.metadata)?.status?.toLowerCase();

@@ -1,21 +1,18 @@
-import React, { useState, ChangeEvent } from 'react';
+import { useState, ChangeEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { cn } from '@ui/utils/cn.ts';
+import { DateTimeUtils } from '@utils/date.ts';
 import { ContractStatus } from '@graphql/types';
 import { Input } from '@ui/form/Input/Input.tsx';
+import { useStore } from '@shared/hooks/useStore';
 import { FlipBackward } from '@ui/media/icons/FlipBackward.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { ChevronExpand } from '@ui/media/icons/ChevronExpand.tsx';
 import { ChevronCollapse } from '@ui/media/icons/ChevronCollapse.tsx';
 import { Card, CardHeader, CardContent } from '@ui/presentation/Card/Card.tsx';
-// import { Highlighter } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/Services/components/highlighters';
-
-import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
-
-import { DateTimeUtils } from '@utils/date.ts';
-import { useStore } from '@shared/hooks/useStore';
 
 import { ServiceItem } from './ServiceItem';
 import { ServiceItemMenu } from './ServiceItemMenu.tsx';
@@ -28,8 +25,8 @@ interface ServiceCardProps {
   contractStatus?: ContractStatus | null;
 }
 
-export const ServiceCard: React.FC<ServiceCardProps> = observer(
-  ({ ids, type, contractId, currency, contractStatus }) => {
+export const ServiceCard = observer(
+  ({ ids, type, contractId, currency, contractStatus }: ServiceCardProps) => {
     const [showEnded, setShowEnded] = useState(false);
     const [allowIndividualRestore, setAllowIndividualRestore] = useState(true);
     const store = useStore();
@@ -96,16 +93,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
     return (
       <Card className='px-3 py-2 mb-2 rounded-lg'>
         <CardHeader className={cn('flex justify-between pb-0.5')}>
-          {/*<Highlighter*/}
-          {/*  highlightVersion={descriptionLI?.uiMetadata?.shapeVariant}*/}
-          {/*  backgroundColor={*/}
-          {/*    liveServices.length === 1 &&*/}
-          {/*    descriptionLI?.isNewlyAdded &&*/}
-          {/*    !isClosed*/}
-          {/*      ? descriptionLI.uiMetadata?.color*/}
-          {/*      : undefined*/}
-          {/*  }*/}
-          {/*>*/}
           <Input
             size='xs'
             value={description ?? ''}
@@ -120,7 +107,6 @@ export const ServiceCard: React.FC<ServiceCardProps> = observer(
               },
             )}
           />
-          {/*</Highlighter>*/}
 
           <div className='flex items-baseline'>
             {endedServices && endedServices.length > 0 && (

@@ -7,9 +7,7 @@ import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { ContractStatus } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
-import { XSquare } from '@ui/media/icons/XSquare';
 import { Radio, RadioGroup } from '@ui/form/Radio/Radio';
-import { FeaturedIcon } from '@ui/media/Icon/FeaturedIcon';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 import {
   Modal,
@@ -119,13 +117,6 @@ export const ContractEndModal = observer(
         <ModalOverlay className='z-50' />
         <ModalContent className='rounded-2xl z-[999]'>
           <ModalHeader className='pb-3'>
-            <FeaturedIcon
-              size='lg'
-              colorScheme='error'
-              className='mt-3 mb-6 ml-[10px] '
-            >
-              <XSquare className='text-error-600' />
-            </FeaturedIcon>
             <h2 className='text-lg mt-2 font-semibold'>
               End {organizationName}’s contract?
             </h2>

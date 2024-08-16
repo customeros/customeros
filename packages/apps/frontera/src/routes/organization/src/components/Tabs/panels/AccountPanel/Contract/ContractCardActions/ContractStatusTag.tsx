@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { DateTimeUtils } from '@utils/date';
 import { ContractStatus } from '@graphql/types';
@@ -23,12 +23,12 @@ const statusColorScheme: Record<string, string> = {
   [ContractStatus.OutOfContract]: 'warning',
 };
 
-export const ContractStatusTag: React.FC<ContractStatusSelectProps> = ({
+export const ContractStatusTag = ({
   status,
   contractStarted,
   statusContent,
   onHandleStatusChange,
-}) => {
+}: ContractStatusSelectProps) => {
   const contractStatusOptions: SelectOption<ContractStatus>[] = [
     { label: 'Draft', value: ContractStatus.Draft },
     { label: 'Ended', value: ContractStatus.Ended },
