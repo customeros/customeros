@@ -30,15 +30,15 @@ export const LogoSection = () => {
 
   return (
     <Menu>
-      <MenuButton className='py-2 mt-1 px-3 pl-5 !outline-none'>
-        <div className='flex items-center gap-2'>
+      <MenuButton className='py-2 mt-1 px-3 pl-[18px] !outline-none'>
+        <div className='flex items-center gap-1.5'>
           {!isLoading ? (
             <>
               <Image
                 width={20}
                 height={20}
                 alt='CustomerOS'
-                className='logo-image'
+                className='logo-image rounded'
                 src={
                   store.settings.tenant.value?.workspaceLogo || logoCustomerOs
                 }
