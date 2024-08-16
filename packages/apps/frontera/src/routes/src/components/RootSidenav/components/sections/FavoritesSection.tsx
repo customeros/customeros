@@ -62,7 +62,7 @@ export const FavoritesSection = observer(
                 return (
                   <Icon
                     className={cn(
-                      'text-md text-gray-500',
+                      'size-4 min-w-4 text-gray-500',
                       isActive && 'text-gray-700',
                     )}
                   />

@@ -31,6 +31,7 @@ export class ContactsStore implements GroupStore<Contact> {
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Contact>();
   totalElements = 0;
+  isFullyLoaded = false;
   private service: ContactService;
 
   constructor(public root: RootStore, public transport: Transport) {
@@ -45,16 +46,19 @@ export class ContactsStore implements GroupStore<Contact> {
 
     when(
       () =>
-        this.isBootstrapped && this.totalElements > 0 && !this.root.demoMode,
+        this.isBootstrapped &&
+        this.totalElements > 0 &&
+        this.totalElements !== this.value.size &&
+        !this.root.demoMode,
       async () => {
         await this.bootstrapRest();
       },
     );
 
     when(
-      () => this.totalElements > 0 && this.totalElements === this.value.size,
+      () => this.isBootstrapped && this.totalElements === this.value.size,
       () => {
-        this.isBootstrapped = true;
+        this.isFullyLoaded = true;
         this.isLoading = false;
       },
     );
@@ -120,6 +124,8 @@ export class ContactsStore implements GroupStore<Contact> {
       runInAction(() => {
         this.error = (e as Error)?.message;
       });
+    } finally {
+      this.isBootstrapped = true;
     }
   }
 

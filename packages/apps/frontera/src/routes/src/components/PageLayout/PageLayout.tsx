@@ -30,7 +30,7 @@ export const PageLayout = ({
       if (!isResizable) return;
       e.preventDefault();
       setIsDragging(true);
-      document.body.style.cursor = 'ew-resize';
+      document.body.style.cursor = 'col-resize';
       document.body.style.userSelect = 'none';
     },
     [isResizable],
@@ -96,9 +96,10 @@ export const PageLayout = ({
           width: isDragging ? '14rem' : '1px',
         }}
         className={cn(
-          'absolute top-0 left-0 h-full cursor-ew-resize z-10 hover:bg-transparent hover:border-l transition-colors hover:w-[1px]',
+          'absolute top-0 left-0 h-full z-10 hover:bg-transparent hover:border-l transition-colors hover:w-[1px]',
           {
             'border-l': isDragging,
+            'cursor-col-resize': isResizable,
           },
         )}
       />

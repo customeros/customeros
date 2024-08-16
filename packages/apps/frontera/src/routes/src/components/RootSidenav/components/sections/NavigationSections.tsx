@@ -32,7 +32,10 @@ export const NavigationSections = ({
         onClick={() => handleItemClick('customer-map')}
         icon={(isActive) => (
           <Bubbles
-            className={cn('w-5 h-5 text-gray-500', isActive && 'text-gray-700')}
+            className={cn(
+              'size-4 min-w-4 text-gray-500',
+              isActive && 'text-gray-700',
+            )}
           />
         )}
       />

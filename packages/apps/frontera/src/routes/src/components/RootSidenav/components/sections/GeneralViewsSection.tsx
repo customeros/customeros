@@ -78,7 +78,7 @@ export const GeneralViewsSection = observer(
               icon={(isActive) => (
                 <Building07
                   className={cn(
-                    'w-5 h-5 text-gray-500',
+                    'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',
                   )}
                 />
@@ -96,7 +96,7 @@ export const GeneralViewsSection = observer(
               icon={(isActive) => (
                 <Users01
                   className={cn(
-                    'w-5 h-5 text-gray-500',
+                    'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',
                   )}
                 />
@@ -118,7 +118,7 @@ export const GeneralViewsSection = observer(
                   return (
                     <Invoice
                       className={cn(
-                        'w-5 h-5 text-gray-500',
+                        'size-4 min-w-4 text-gray-500',
                         isActive && 'text-gray-700',
                       )}
                     />
@@ -138,7 +138,7 @@ export const GeneralViewsSection = observer(
               icon={(isActive) => (
                 <Signature
                   className={cn(
-                    'w-5 h-5 text-gray-500',
+                    'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',
                   )}
                 />

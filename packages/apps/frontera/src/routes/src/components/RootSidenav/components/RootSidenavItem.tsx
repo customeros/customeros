@@ -79,7 +79,6 @@ export const RootSidenavItem = observer(
 
             <MenuList align='end' side='bottom'>
               <MenuItem
-                className='py-2.5'
                 onClick={() => store.tableViewDefs.createFavorite(preset)}
               >
                 <LayersTwo01 className='text-gray-500' />
