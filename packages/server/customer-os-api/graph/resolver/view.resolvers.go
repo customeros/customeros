@@ -220,8 +220,13 @@ func (r *mutationResolver) TableViewDefArchive(ctx context.Context, id string) (
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.TableViewDefArchive", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("id", id))
 
-	err := r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.ArchiveTableViewDefinition(ctx, id)
+	idUint, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		idUint = 0
+	}
+	err = r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.ArchiveTableViewDefinition(ctx, idUint)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, err.Error())

@@ -22,7 +22,7 @@ type TableViewDefinitionRepository interface {
 	CreateTableViewDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 	UpdateTableViewDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
 	UpdateTableViewSharedDefinition(ctx context.Context, viewDefinition entity.TableViewDefinition) helper.QueryResult
-	ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId string) error
+	ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId uint64) error
 }
 
 func NewTableViewDefinitionRepository(gormDb *gorm.DB) TableViewDefinitionRepository {
@@ -176,7 +176,7 @@ func (t tableViewDefinitionRepository) UpdateTableViewSharedDefinition(ctx conte
 	return helper.QueryResult{Result: existing}
 }
 
-func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId string) error {
+func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Context, viewDefinitionId uint64) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.ArchiveTableViewDefinition")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
@@ -188,11 +188,14 @@ func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Co
 		Delete(&entity.TableViewDefinition{})
 
 	if result.Error != nil {
+		tracing.TraceErr(span, result.Error)
 		return result.Error
 	}
 
 	if result.RowsAffected < 1 {
-		return errors.New("TableViewDef not found")
+		err := errors.New("TableViewDef not found")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
