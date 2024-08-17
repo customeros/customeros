@@ -7,6 +7,7 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	reminder "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/pkg/errors"
 	"os"
 	"os/signal"
@@ -116,6 +117,7 @@ func (eb *EventBufferWatcher) HandleEvent(ctx context.Context, eventBuffer postg
 func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.handleEvent")
 	defer span.Finish()
+
 	switch evt.EventType {
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		var data orgevents.OrganizationOwnerUpdateEvent
@@ -139,6 +141,8 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 			return err
 		}
 		return err
+	case reminder.ReminderNotificationV1:
+		return nil
 	default:
 		return errors.New("Event type not supported")
 	}
