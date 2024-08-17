@@ -92,10 +92,11 @@ func (c ContactEntity) Labels(tenant string) []string {
 }
 
 func (c ContactEntity) DeriveFirstAndLastNames() (string, string) {
-	firstName := c.FirstName
-	lastName := c.LastName
-	if (firstName == "" || lastName == "") && c.Name != "" {
-		parts := strings.Split(c.Name, " ")
+	firstName := strings.TrimSpace(c.FirstName)
+	lastName := strings.TrimSpace(c.LastName)
+	name := strings.TrimSpace(c.Name)
+	if (firstName == "" || lastName == "") && name != "" {
+		parts := strings.Split(name, " ")
 		if firstName == "" {
 			firstName = parts[0]
 		}
@@ -103,5 +104,22 @@ func (c ContactEntity) DeriveFirstAndLastNames() (string, string) {
 			lastName = strings.Join(parts[1:], " ")
 		}
 	}
+
+	if firstName != "" && lastName == "" {
+		parts := strings.Split(firstName, " ")
+		if len(parts) > 1 {
+			firstName = parts[0]
+			lastName = strings.Join(parts[1:], " ")
+		}
+	}
+
+	if firstName == "" && lastName != "" {
+		parts := strings.Split(lastName, " ")
+		if len(parts) > 1 {
+			firstName = parts[0]
+			lastName = strings.Join(parts[1:], " ")
+		}
+	}
+
 	return firstName, lastName
 }
