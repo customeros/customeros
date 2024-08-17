@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
+	"net/url"
 )
 
 type ScrapinPersonService interface {
@@ -156,9 +157,11 @@ func (s *scrapinPersonService) callScrapinPersonProfile(ctx context.Context, lin
 		return &postgresentity.ScrapInPersonResponse{}, err
 	}
 
-	url := baseUrl + "/enrichment/profile" + "?apikey=" + scrapInApiKey + "&linkedInUrl=" + linkedInUrl
+	params := url.Values{}
+	params.Add("apikey", scrapInApiKey)
+	params.Add("linkedInUrl", linkedInUrl)
 
-	body, err := makeScrapInHTTPRequest(url)
+	body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/profile" + "?" + params.Encode())
 
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
@@ -298,18 +301,20 @@ func (s *scrapinPersonService) callScrapinPersonSearch(ctx context.Context, emai
 		return &postgresentity.ScrapInPersonResponse{}, err
 	}
 
-	url := baseUrl + "/enrichment" + "?apikey=" + scrapInApiKey + "&email=" + email
+	params := url.Values{}
+	params.Add("apikey", scrapInApiKey)
+	params.Add("email", email)
 	if firstName != "" {
-		url += "&firstName=" + firstName
+		params.Add("firstName", firstName)
 	}
 	if lastName != "" {
-		url += "&lastName=" + lastName
+		params.Add("lastName", lastName)
 	}
 	if domain != "" {
-		url += "&companyDomain=" + domain
+		params.Add("companyDomain", domain)
 	}
 
-	body, err := makeScrapInHTTPRequest(url)
+	body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment" + "?" + params.Encode())
 
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))

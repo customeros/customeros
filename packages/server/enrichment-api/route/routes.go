@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/service"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"net/http"
 )
@@ -24,7 +25,7 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 
 func enrichPerson(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
+		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "enrichPerson")
 		defer span.Finish()
 
 		var request model.EnrichPersonRequest
@@ -107,7 +108,7 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 
 func findWorkEmail(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "FindWorkEmail", c.Request.Header)
+		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "findWorkEmail")
 		defer span.Finish()
 
 		var request model.FindWorkEmailRequest
