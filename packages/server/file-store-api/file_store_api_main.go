@@ -23,6 +23,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -150,17 +151,16 @@ func main() {
 		jwtTennantUserService.GetJWTTenantUserEnhancer(),
 		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
 		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
-		func(ctx *gin.Context) {
-			tenantName, _ := ctx.Keys["TenantName"].(string)
-			userEmail, _ := ctx.Keys["UserEmail"].(string)
-
-			_, err := services.FileService.DownloadSingleFile(ctx, userEmail, tenantName, ctx.Param("id"), ctx, ctx.Query("inline") == "true")
+		func(c *gin.Context) {
+			tenantName, _ := c.Keys["TenantName"].(string)
+			userEmail, _ := c.Keys["UserEmail"].(string)
+			_, err := services.FileService.DownloadSingleFile(c.Request.Context(), userEmail, tenantName, c.Param("id"), c, c.Query("inline") == "true")
 			if err != nil && err.Error() != "record not found" {
-				ctx.AbortWithStatus(500) //todo
+				c.AbortWithStatus(http.StatusInternalServerError)
 				return
 			}
 			if err != nil && err.Error() == "record not found" {
-				ctx.AbortWithStatus(404)
+				c.AbortWithStatus(http.StatusNotFound)
 				return
 			}
 		})

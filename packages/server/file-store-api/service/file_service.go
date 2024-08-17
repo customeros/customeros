@@ -215,7 +215,8 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	defer cancel()
 
 	var graphqlResponse model.AttachmentCreateResponse
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
+	tracing.InjectSpanContextIntoGraphQLRequest(graphqlRequest, span)
+	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -223,10 +224,10 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	return mapper.MapAttachmentResponseToFileEntity(&graphqlResponse.Attachment), nil
 }
 
-func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error) {
+func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantName, id string, ginContext *gin.Context, inline bool) (*model.File, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.DownloadSingleFile")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenantName)
+	tracing.TagTenant(span, tenantName)
 	span.LogFields(log.String("userEmail", userEmail), log.String("fileId", id), log.Bool("inline", inline))
 
 	attachment, err := s.getCosAttachmentById(ctx, userEmail, tenantName, id)
@@ -240,10 +241,10 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	if err != nil {
 		tracing.TraceErr(span, err)
 		log.Error(err)
-		context.AbortWithError(http.StatusInternalServerError, err)
+		ginContext.AbortWithError(http.StatusInternalServerError, err)
 	}
 
-	context.Header("Accept-Ranges", "bytes")
+	ginContext.Header("Accept-Ranges", "bytes")
 
 	svc := s3.New(session)
 
@@ -262,7 +263,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		context.AbortWithError(http.StatusInternalServerError, err)
+		ginContext.AbortWithError(http.StatusInternalServerError, err)
 		return nil, err
 	}
 
@@ -270,7 +271,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	eTag := aws.StringValue(respHead.ETag)
 
 	// Parse the range header
-	rangeHeader := context.GetHeader("Range")
+	rangeHeader := ginContext.GetHeader("Range")
 	var start, end int64
 	if rangeHeader != "" {
 		s.log.Infof("Range header: %s", rangeHeader)
@@ -291,23 +292,23 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	}
 
 	// Set the content length header to the file size
-	context.Header("Content-Length", strconv.FormatInt(end-start+1, 10))
+	ginContext.Header("Content-Length", strconv.FormatInt(end-start+1, 10))
 
 	// Set the content range header to indicate the range of bytes being served
-	context.Header("Content-Range", "bytes "+strconv.FormatInt(start, 10)+"-"+strconv.FormatInt(end, 10)+"/"+strconv.FormatInt(*respHead.ContentLength, 10))
+	ginContext.Header("Content-Range", "bytes "+strconv.FormatInt(start, 10)+"-"+strconv.FormatInt(end, 10)+"/"+strconv.FormatInt(*respHead.ContentLength, 10))
 
 	// If the ETag matches, send a 304 Not Modified response and exit early
-	if match := context.GetHeader("If-Range"); match != "" && match != eTag {
-		context.Status(http.StatusRequestedRangeNotSatisfiable)
+	if match := ginContext.GetHeader("If-Range"); match != "" && match != eTag {
+		ginContext.Status(http.StatusRequestedRangeNotSatisfiable)
 		return byId, nil
 	}
 
 	if !inline {
-		context.Header("Content-Disposition", "attachment; filename="+byId.FileName)
+		ginContext.Header("Content-Disposition", "attachment; filename="+byId.FileName)
 	} else {
-		context.Header("Content-Disposition", "inline; filename="+byId.FileName)
+		ginContext.Header("Content-Disposition", "inline; filename="+byId.FileName)
 	}
-	context.Header("Content-Type", fmt.Sprintf("%s", byId.MimeType))
+	ginContext.Header("Content-Type", fmt.Sprintf("%s", byId.MimeType))
 	resp, err := svc.GetObject(&s3.GetObjectInput{
 		Bucket: aws.String(s.cfg.AWS.Bucket),
 		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
@@ -317,13 +318,13 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 		tracing.TraceErr(span, err)
 		// Handle error
 		s.log.Errorf("Error getting object: %v", err)
-		context.AbortWithError(http.StatusInternalServerError, err)
+		ginContext.AbortWithError(http.StatusInternalServerError, err)
 		return nil, err
 	}
 	defer resp.Body.Close()
 
 	// Serve the file contents
-	io.Copy(context.Writer, resp.Body)
+	io.Copy(ginContext.Writer, resp.Body)
 	return byId, nil
 }
 
@@ -418,6 +419,7 @@ func (s *fileService) getCosAttachmentById(ctx context.Context, userEmail, tenan
 	defer cancel()
 
 	var graphqlResponse model.AttachmentResponse
+	tracing.InjectSpanContextIntoGraphQLRequest(graphqlRequest, span)
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

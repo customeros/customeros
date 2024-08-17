@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/machinebox/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/opentracing/opentracing-go"
@@ -96,6 +97,22 @@ func InjectSpanContextIntoHTTPRequest(req *http.Request, span opentracing.Span) 
 		}
 	}
 	return req
+}
+
+func InjectSpanContextIntoGraphQLRequest(req *graphql.Request, span opentracing.Span) {
+	if span != nil {
+		carrier := make(opentracing.TextMapCarrier)
+		err := span.Tracer().Inject(span.Context(), opentracing.TextMap, carrier)
+		if err != nil {
+			// Log error or handle it as per your application's error handling strategy
+			fmt.Println("Error injecting span context into GraphQL request:", err)
+			return
+		}
+
+		for k, v := range carrier {
+			req.Header.Set(k, v)
+		}
+	}
 }
 
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {
