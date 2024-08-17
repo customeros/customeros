@@ -60,6 +60,8 @@ github.com/customeros/mailsherpa v0.0.11 h1:LPs9iKhd2JzZr6m4DPuHvvgBMsOlxrzQR7Wy
 github.com/customeros/mailsherpa v0.0.11/go.mod h1:dqlIA4RlH0zOVX70kbamCWWDuKYNR29N1u9FQabHdwY=
 github.com/customeros/mailsherpa v0.0.13 h1:hmBIrnTKhOlDurVmLq4uZU7O2cRT14/AH/23nStrRaA=
 github.com/customeros/mailsherpa v0.0.13/go.mod h1:4rJeliJL5qViLN4WlLbheaoQmVS9OSfJF6cLdSXpJm4=
+github.com/customeros/mailsherpa v0.0.14 h1:f/13HbtrYtHGDOZu/biV0zbszJLHtOEKWtizWV8TcTI=
+github.com/customeros/mailsherpa v0.0.14/go.mod h1:4rJeliJL5qViLN4WlLbheaoQmVS9OSfJF6cLdSXpJm4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
