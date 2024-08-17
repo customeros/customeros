@@ -151,10 +151,8 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 	if cacheDomain == nil || cacheDomain.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailDomainValidationCacheTtlDays).Before(utils.Now()) {
 		// get domain data with mailsherpa
 		domainValidation, err := mailsherpa.ValidateDomain(mailsherpa.EmailValidationRequest{
-			Email:                email,
-			FromDomain:           s.config.EmailConfig.EmailValidationFromDomain,
-			ValidateFreeAccounts: true,
-			ValidateRoleAccounts: true,
+			Email:      email,
+			FromDomain: s.config.EmailConfig.EmailValidationFromDomain,
 		}, true)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain data"))
@@ -193,10 +191,8 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 		(cacheEmail.RetryValidation && cacheEmail.UpdatedAt.Add(time.Hour).Before(utils.Now())) {
 		// get email data with mailsherpa
 		emailValidation, err := mailsherpa.ValidateEmail(mailsherpa.EmailValidationRequest{
-			Email:                email,
-			FromDomain:           s.config.EmailConfig.EmailValidationFromDomain,
-			ValidateFreeAccounts: true,
-			ValidateRoleAccounts: true,
+			Email:      email,
+			FromDomain: s.config.EmailConfig.EmailValidationFromDomain,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data"))
