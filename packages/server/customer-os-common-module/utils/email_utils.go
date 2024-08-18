@@ -2,8 +2,8 @@ package utils
 
 import (
 	"fmt"
-	"github.com/google/uuid"
 	"strings"
+	"unicode"
 )
 
 func EnsureEmailRfcId(id string) string {
@@ -24,11 +24,25 @@ func EnsureEmailRfcIds(to []string) []string {
 	return result
 }
 
-func GenerateUUID() (string, error) {
-	uuidObj, err := uuid.NewRandom()
-	if err != nil {
-		return "", err
+func GetReadableNameFromEmail(email string) string {
+	parts := strings.Split(email, "@")
+	if len(parts) == 0 {
+		return ""
 	}
 
-	return uuidObj.String(), nil
+	username := parts[0]
+
+	// Split the username by ., -, and _
+	words := strings.FieldsFunc(username, func(r rune) bool {
+		return r == '.' || r == '-' || r == '_'
+	})
+
+	// Capitalize first letter of each word and join with spaces
+	for i, word := range words {
+		if len(word) > 0 {
+			words[i] = string(unicode.ToUpper(rune(word[0]))) + word[1:]
+		}
+	}
+
+	return strings.Join(words, " ")
 }

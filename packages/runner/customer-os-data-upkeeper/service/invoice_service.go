@@ -33,18 +33,19 @@ type GeneratePaymentLinkEventBody struct {
 	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
 	InvoiceId                    string `json:"invoiceId"`
 	InvoiceDescription           string `json:"invoiceDescription"`
+	CustomerEmail                string `json:"customerEmail"`
 }
 
-type RequestBodyInvoiceFinalized struct {
+type InvoiceFinalizedEventBody struct {
 	Tenant                       string `json:"tenant"`
 	Currency                     string `json:"currency"`
 	AmountInSmallestCurrencyUnit int64  `json:"amountInSmallestCurrencyUnit"`
-	StripeCustomerId             string `json:"stripeCustomerId"`
 	InvoiceId                    string `json:"invoiceId"`
 	InvoiceDescription           string `json:"invoiceDescription"`
 	CustomerOsId                 string `json:"customerOsId"`
 	Status                       string `json:"status"`
 	CustomerEmail                string `json:"customerEmail"`
+	CustomerName                 string `json:"customerName"`
 	Pay                          struct {
 		PayAutomatically      bool `json:"payAutomatically"`
 		CanPayWithCard        bool `json:"canPayWithCard"`
@@ -481,6 +482,17 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
 			tenant := record.Tenant
 
+			// get contract linked to invoice
+			contractDbNode, err := s.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, tenant, invoice.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
+			}
+			contractEntity := neo4jentity.ContractEntity{}
+			if contractDbNode != nil {
+				contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
+			}
+
 			// convert amount to the smallest currency unit
 			amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
 			if err != nil {
@@ -500,6 +512,7 @@ func (s *invoiceService) GenerateInvoicePaymentLinks() {
 				AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
 				InvoiceId:                    invoice.Id,
 				InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
+				CustomerEmail:                contractEntity.InvoiceEmail,
 			}
 
 			// Convert the request body to JSON
@@ -792,7 +805,7 @@ func (s *invoiceService) SendInvoiceFinalizedEvent() {
 		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetReadyInvoicesForFinalizedEvent(ctx, s.cfg.ProcessConfig.DelayAutoPayInvoiceInMinutes, referenceTime, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			s.log.Errorf("Error getting invoices for payment links generation: %v", err)
+			s.log.Errorf("Error getting invoices for finalized event: %v", err)
 			return
 		}
 
@@ -859,41 +872,30 @@ func (s *invoiceService) integrationAppInvoiceFinalizedWebhook(ctx context.Conte
 		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 	}
 
-	// get stripe customer id for organization
-	stripeCustomerIds, err := s.repositories.Neo4jRepositories.ExternalSystemReadRepository.GetAllExternalIdsForLinkedEntity(ctx, tenant, neo4jenum.Stripe.String(), organizationEntity.ID, model.NodeLabelOrganization)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error getting stripe customer id for organization %s: %s", organizationEntity.ID, err.Error())
-		return err
-	}
-	identifiedStripeCustomerId := ""
-	if len(stripeCustomerIds) == 1 {
-		identifiedStripeCustomerId = stripeCustomerIds[0]
-	}
-
 	// convert amount to the smallest currency unit
 	amountInSmallestCurrencyUnit, err := data.InSmallestCurrencyUnit(invoice.Currency.String(), invoice.TotalAmount)
 	if err != nil {
 		return fmt.Errorf("error converting amount to smallest currency unit: %v", err.Error())
 	}
 
-	requestBody := RequestBodyInvoiceFinalized{
+	requestBody := InvoiceFinalizedEventBody{
 		Tenant:                       tenant,
 		Currency:                     invoice.Currency.String(),
 		AmountInSmallestCurrencyUnit: amountInSmallestCurrencyUnit,
-		StripeCustomerId:             identifiedStripeCustomerId,
 		InvoiceId:                    invoice.Id,
 		InvoiceDescription:           fmt.Sprintf("Invoice %s", invoice.Number),
 		CustomerOsId:                 organizationEntity.CustomerOsId,
 		Status:                       invoice.Status.String(),
+		CustomerEmail:                contractEntity.InvoiceEmail,
+		CustomerName:                 utils.GetReadableNameFromEmail(contractEntity.InvoiceEmail),
 		Pay: struct {
 			PayAutomatically      bool `json:"payAutomatically"`
 			CanPayWithCard        bool `json:"canPayWithCard"`
 			CanPayWithDirectDebit bool `json:"canPayWithDirectDebit"`
 		}{
 			PayAutomatically:      contractEntity.PayAutomatically && (invoice.Status == neo4jenum.InvoiceStatusDue || invoice.Status == neo4jenum.InvoiceStatusOverdue),
-			CanPayWithCard:        contractEntity.CanPayWithCard,
-			CanPayWithDirectDebit: contractEntity.CanPayWithDirectDebit,
+			CanPayWithCard:        true,
+			CanPayWithDirectDebit: true,
 		},
 	}
 

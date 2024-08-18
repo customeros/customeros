@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -273,10 +274,7 @@ func (s *syncEmailService) GetEmailIdForEmail(ctx context.Context, tenant string
 	domain := utils.ExtractDomain(email)
 	for _, personalEmailProvider := range personalEmailProviderList {
 		if strings.Contains(domain, personalEmailProvider.ProviderDomain) {
-			id, err := utils.GenerateUUID()
-			if err != nil {
-				return "", fmt.Errorf("unable to generate email id: %v", err)
-			}
+			id := uuid.New().String()
 			err = s.repositories.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, id, repository2.EmailCreateFields{
 				RawEmail:     email,
 				SourceFields: neo4jmodel.Source{Source: source},
