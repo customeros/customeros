@@ -9,7 +9,6 @@ import (
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -21,7 +20,7 @@ import (
 var knowIpDataBadResponseMessages = []string{"is a reserved IP address"}
 
 type IpIntelligenceService interface {
-	LookupIp(ctx context.Context, ip string) (*model.IpLookupData, error)
+	LookupIp(ctx context.Context, ip string) (*postgresentity.IPDataResponseBody, error)
 }
 
 type ipIntelligenceService struct {
@@ -38,7 +37,7 @@ func NewIpIntelligenceService(config *config.Config, services *Services, log log
 	}
 }
 
-func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*model.IpLookupData, error) {
+func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*postgresentity.IPDataResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "IpIntelligenceService.LookupIp")
 	defer span.Finish()
 	span.LogFields(log.String("ip", ip))
@@ -75,10 +74,9 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*model
 		}
 	}
 
-	result := mapIpDataFromPostgresEntity(data)
-	result.Ip = ip
+	data.Ip = ip
 
-	return result, nil
+	return data, nil
 }
 
 func (s *ipIntelligenceService) askIpData(ctx context.Context, ip string) (*postgresentity.IPDataResponseBody, error) {
@@ -138,25 +136,4 @@ func (s *ipIntelligenceService) askIpData(ctx context.Context, ip string) (*post
 	ipDataResponseBody.StatusCode = resp.StatusCode
 
 	return &ipDataResponseBody, nil
-}
-
-func mapIpDataFromPostgresEntity(entity *postgresentity.IPDataResponseBody) *model.IpLookupData {
-	return &model.IpLookupData{
-		Ip:            entity.Ip,
-		City:          entity.City,
-		Region:        entity.Region,
-		RegionCode:    entity.RegionCode,
-		RegionType:    entity.RegionType,
-		CountryName:   entity.CountryName,
-		CountryCode:   entity.CountryCode,
-		ContinentName: entity.ContinentName,
-		ContinentCode: entity.ContinentCode,
-		Latitude:      entity.Latitude,
-		Longitude:     entity.Longitude,
-		Asn:           entity.Asn,
-		Carrier:       entity.Carrier,
-		TimeZone:      entity.TimeZone,
-		Threat:        entity.Threat,
-		Count:         entity.Count,
-	}
 }
