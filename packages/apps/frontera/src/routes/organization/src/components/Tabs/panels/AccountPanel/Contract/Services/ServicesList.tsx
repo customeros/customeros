@@ -102,17 +102,23 @@ export const ServicesList = observer(
             >
               Subscriptions
             </h1>
-            {groupedServicesByParentId?.subscription?.map((service) => (
-              <React.Fragment
-                key={`service-item-${service?.currentLineItem?.metadata?.id}`}
-              >
-                <ServiceItem
-                  currency={currency}
-                  onOpen={onModalOpen}
-                  id={service?.currentLineItem?.metadata?.id}
-                />
-              </React.Fragment>
-            ))}
+            {groupedServicesByParentId?.subscription
+              ?.sort(
+                (a, b) =>
+                  new Date(b.currentLineItem?.serviceStarted || 0).getTime() -
+                  new Date(a.currentLineItem?.serviceStarted || 0).getTime(),
+              )
+              .map((service) => (
+                <React.Fragment
+                  key={`service-item-${service?.currentLineItem?.metadata?.id}`}
+                >
+                  <ServiceItem
+                    currency={currency}
+                    onOpen={onModalOpen}
+                    id={service?.currentLineItem?.metadata?.id}
+                  />
+                </React.Fragment>
+              ))}
           </article>
         )}
 
@@ -124,17 +130,23 @@ export const ServicesList = observer(
             >
               One-time
             </h1>
-            {groupedServicesByParentId?.once?.map((service) => (
-              <React.Fragment
-                key={`service-item-${service?.currentLineItem?.metadata?.id}`}
-              >
-                <ServiceItem
-                  currency={currency}
-                  onOpen={onModalOpen}
-                  id={service?.currentLineItem?.metadata?.id}
-                />
-              </React.Fragment>
-            ))}
+            {groupedServicesByParentId?.once
+              ?.sort(
+                (a, b) =>
+                  new Date(b.currentLineItem?.serviceStarted || 0).getTime() -
+                  new Date(a.currentLineItem?.serviceStarted || 0).getTime(),
+              )
+              .map((service) => (
+                <React.Fragment
+                  key={`service-item-${service?.currentLineItem?.metadata?.id}`}
+                >
+                  <ServiceItem
+                    currency={currency}
+                    onOpen={onModalOpen}
+                    id={service?.currentLineItem?.metadata?.id}
+                  />
+                </React.Fragment>
+              ))}
           </article>
         )}
       </div>

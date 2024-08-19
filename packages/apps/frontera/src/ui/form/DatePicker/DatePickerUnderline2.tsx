@@ -52,7 +52,7 @@ export const DatePickerUnderline2 = ({
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
           <span
             className={cn(
-              'underline cursor-pointer whitespace-pre pb-[1px] text-inherit border-t-[1px] border-transparent hover:text-gray-700',
+              'underline cursor-pointer whitespace-pre pb-[1px] text-inherit border-t-[1px] border-transparent hover:text-gray-700 ',
               classNames,
             )}
           >

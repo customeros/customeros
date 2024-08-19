@@ -5,6 +5,7 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { ContractStatus } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
 import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
@@ -260,10 +261,14 @@ export const ServiceItemEdit = observer(
             // service.isFieldRevised('serviceStarted') ? bgColor : undefined
           }
         >
-          <DatePickerUnderline2
-            onChange={onChangeServiceStarted}
-            value={service?.tempValue?.serviceStarted}
-          />
+          <Tooltip label='Service start date'>
+            <div>
+              <DatePickerUnderline2
+                onChange={onChangeServiceStarted}
+                value={service?.tempValue?.serviceStarted}
+              />
+            </div>
+          </Tooltip>
         </Highlighter>
 
         <IconButton

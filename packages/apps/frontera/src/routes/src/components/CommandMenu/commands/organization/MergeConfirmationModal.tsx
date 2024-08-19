@@ -57,6 +57,11 @@ export const MergeConfirmationModal = observer(() => {
             className='w-full'
             colorScheme='error'
             onClick={handleConfirm}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleConfirm();
+              }
+            }}
           >
             Merge
           </Button>
