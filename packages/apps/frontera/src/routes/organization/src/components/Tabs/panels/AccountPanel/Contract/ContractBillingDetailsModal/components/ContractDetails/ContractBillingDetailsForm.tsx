@@ -11,8 +11,6 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
 import { ModalBody } from '@ui/overlay/Modal/Modal.tsx';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
-import { Checkbox } from '@ui/form/Checkbox/Checkbox.tsx';
 import { Divider } from '@ui/presentation/Divider/Divider.tsx';
 import { currencyOptions } from '@shared/util/currencyOptions.ts';
 import { DatePickerUnderline } from '@ui/form/DatePicker/DatePickerUnderline.tsx';
@@ -20,7 +18,6 @@ import {
   Currency,
   BankAccount,
   ContractStatus,
-  ExternalSystemType,
   TenantBillingProfile,
 } from '@graphql/types';
 import {
@@ -53,22 +50,16 @@ export const ContractBillingDetailsForm = observer(
     openAddressModal,
   }: SubscriptionServiceModalProps) => {
     const store = useStore();
-    const externalSystemInstances = store.externalSystemInstances;
     const contractStore = store.contracts.value.get(
       contractId,
     ) as ContractStore;
 
     const currency = contractStore?.tempValue?.currency;
-    const availablePaymentMethodTypes = externalSystemInstances?.value?.find(
-      (e) => e.type === ExternalSystemType.Stripe,
-    )?.stripeDetails?.paymentMethodTypes;
+
     const { items: iConnections } = useConnections();
     const isStripeActive = !!iConnections
       .map((item) => item.integration?.key)
       .find((e) => e === 'stripe');
-
-    const payAutomatically =
-      contractStore?.tempValue?.billingDetails?.payAutomatically;
 
     const bankTransferPopoverContent = useMemo(() => {
       if (!tenantBillingProfile?.canPayWithBankTransfer) {
@@ -95,23 +86,6 @@ export const ContractBillingDetailsForm = observer(
 
       return '';
     }, [tenantBillingProfile, bankAccounts, currency]);
-
-    const paymentMethod = useMemo(() => {
-      let method;
-
-      switch (currency) {
-        case Currency.Gbp:
-          method = 'Bacs';
-          break;
-        case Currency.Usd:
-          method = 'ACH';
-          break;
-        default:
-          method = 'SEPA';
-      }
-
-      return method;
-    }, [currency]);
 
     const renewalCalculatedDate = useMemo(() => {
       if (!contractStore?.tempValue?.serviceStarted) return null;
@@ -359,7 +333,7 @@ export const ContractBillingDetailsForm = observer(
                     }
                   >
                     <div className='text-base font-normal whitespace-nowrap'>
-                      Auto-payment via Stripe
+                      Auto-charge via Stripe
                     </div>
                   </PaymentDetailsPopover>
 
@@ -382,83 +356,6 @@ export const ContractBillingDetailsForm = observer(
                     }}
                   />
                 </div>
-
-                {isStripeActive && payAutomatically && (
-                  <div className='flex flex-col gap-1 ml-2 mt-1'>
-                    <Tooltip
-                      align='end'
-                      side='bottom'
-                      label={
-                        availablePaymentMethodTypes?.includes('card')
-                          ? ''
-                          : 'Credit or Debit card not enabled in Stripe'
-                      }
-                    >
-                      <div>
-                        <Checkbox
-                          size='sm'
-                          key='canPayWithCard'
-                          disabled={
-                            !availablePaymentMethodTypes?.includes('card')
-                          }
-                          isChecked={
-                            !!contractStore?.tempValue.billingDetails
-                              ?.canPayWithCard
-                          }
-                          onChange={(value) =>
-                            contractStore?.updateTemp((contract) => ({
-                              ...contract,
-                              billingDetails: {
-                                ...contract.billingDetails,
-                                canPayWithCard: !!value,
-                              },
-                            }))
-                          }
-                        >
-                          <div className='text-base whitespace-nowrap'>
-                            Credit or Debit cards
-                          </div>
-                        </Checkbox>
-                      </div>
-                    </Tooltip>
-                    <Tooltip
-                      align='end'
-                      side='bottom'
-                      label={
-                        availablePaymentMethodTypes?.includes('bacs_debit')
-                          ? ''
-                          : 'Direct debit not enabled in Stripe'
-                      }
-                    >
-                      <div>
-                        <Checkbox
-                          size='sm'
-                          key='canPayWithDirectDebit'
-                          disabled={
-                            !availablePaymentMethodTypes?.includes('ach_debit')
-                          }
-                          isChecked={
-                            !!contractStore?.tempValue.billingDetails
-                              ?.canPayWithDirectDebit
-                          }
-                          onChange={(value) =>
-                            contractStore?.updateTemp((contract) => ({
-                              ...contract,
-                              billingDetails: {
-                                ...contract.billingDetails,
-                                canPayWithDirectDebit: !!value,
-                              },
-                            }))
-                          }
-                        >
-                          <div className='text-base whitespace-nowrap'>
-                            Direct Debit via {paymentMethod}
-                          </div>
-                        </Checkbox>
-                      </div>
-                    </Tooltip>
-                  </div>
-                )}
               </div>
 
               <div className='flex w-full justify-between items-center'>
@@ -526,7 +423,7 @@ export const ContractBillingDetailsForm = observer(
                   }
                 >
                   <div className='text-base font-normal whitespace-nowrap'>
-                    Check
+                    Checks
                   </div>
                 </PaymentDetailsPopover>
                 <Switch
