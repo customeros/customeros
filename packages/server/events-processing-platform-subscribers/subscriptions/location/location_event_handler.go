@@ -158,7 +158,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		return h.sendLocationFailedValidationEvent(ctx, tenant, locationId, rawAddress, country, err.Error())
 	}
 	requestBody := []byte(string(evJSON))
-	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validateAddress", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi.Url+"/validateAddress", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to create location validation request: %v", err.Error())
@@ -167,7 +167,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 	// Inject span context into the HTTP request
 	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApi.ApiKey)
 	req.Header.Set(security.TenantHeader, tenant)
 
 	// Make the HTTP request

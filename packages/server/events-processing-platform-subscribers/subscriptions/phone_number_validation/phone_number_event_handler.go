@@ -136,7 +136,7 @@ func (h *phoneNumberEventHandler) validatePhoneNumber(ctx context.Context, tenan
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
 	}
 	requestBody := []byte(string(evJSON))
-	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi+"/validatePhoneNumber", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", h.cfg.Services.ValidationApi.Url+"/validatePhoneNumber", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())
@@ -145,7 +145,7 @@ func (h *phoneNumberEventHandler) validatePhoneNumber(ctx context.Context, tenan
 	req = commonTracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApiKey)
+	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.ValidationApi.ApiKey)
 	req.Header.Set(security.TenantHeader, tenant)
 
 	// Make the HTTP request
