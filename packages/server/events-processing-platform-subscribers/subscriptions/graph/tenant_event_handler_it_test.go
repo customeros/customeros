@@ -32,8 +32,8 @@ func TestTenantEventHandler_OnUpdateBillingProfileV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &TenantEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	timeNow := utils.Now()
@@ -114,8 +114,8 @@ func TestTenantEventHandler_OnUpdateTenantSettingsV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &TenantEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	timeNow := utils.Now()

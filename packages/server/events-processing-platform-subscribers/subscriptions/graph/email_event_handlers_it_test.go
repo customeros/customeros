@@ -22,7 +22,7 @@ func TestGraphEmailEventHandler_OnEmailCreate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	emailEventHandler := &EmailEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	myMailId, _ := uuid.NewUUID()
 	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, myMailId.String())
@@ -77,8 +77,8 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	require.Equal(t, emailId, utils.GetStringPropOrEmpty(propsAfterEmailCreate, "id"))
 
 	emailEventHandler := &EmailEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	agg := emailAggregate.NewEmailAggregateWithTenantAndID(tenantName, emailId)
@@ -151,7 +151,7 @@ func TestGraphEmailEventHandler_OnEmailValidationFailed(t *testing.T) {
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = emailEventHandler.OnEmailValidationFailed(context.Background(), event)
 	require.Nil(t, err)
@@ -222,7 +222,7 @@ func TestGraphEmailEventHandler_OnEmailValidated(t *testing.T) {
 	require.Nil(t, err)
 
 	emailEventHandler := &EmailEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = emailEventHandler.OnEmailValidated(context.Background(), event)
 	require.Nil(t, err)

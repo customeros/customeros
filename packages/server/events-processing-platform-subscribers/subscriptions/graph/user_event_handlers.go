@@ -11,7 +11,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
@@ -21,14 +21,14 @@ import (
 )
 
 type UserEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
+	log      logger.Logger
+	services *service.Services
 }
 
-func NewUserEventHandler(log logger.Logger, repositories *repository.Repositories) *UserEventHandler {
+func NewUserEventHandler(log logger.Logger, services *service.Services) *UserEventHandler {
 	return &UserEventHandler{
-		log:          log,
-		repositories: repositories,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -45,13 +45,13 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
 
-	session := utils.NewNeo4jWriteSession(ctx, *h.repositories.Drivers.Neo4jDriver)
+	session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var err error
 
-		err = h.repositories.Neo4jRepositories.UserWriteRepository.CreateUserInTx(ctx, tx, eventData.Tenant, neo4jentity.UserEntity{
+		err = h.services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUserInTx(ctx, tx, eventData.Tenant, neo4jentity.UserEntity{
 			Id:              userId,
 			Name:            eventData.Name,
 			FirstName:       eventData.FirstName,
@@ -79,7 +79,7 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 				ExternalSource:   eventData.ExternalSystem.ExternalSource,
 				SyncDate:         eventData.ExternalSystem.SyncDate,
 			}
-			err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
+			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -117,7 +117,7 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
 		Timezone:        eventData.Timezone,
 	}
-	err := h.repositories.Neo4jRepositories.UserWriteRepository.UpdateUser(ctx, eventData.Tenant, userId, data)
+	err := h.services.CommonServices.Neo4jRepositories.UserWriteRepository.UpdateUser(ctx, eventData.Tenant, userId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving user %s: %s", userId, err.Error())
@@ -125,7 +125,7 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	if eventData.ExternalSystem.Available() {
-		session := utils.NewNeo4jWriteSession(ctx, *h.repositories.Drivers.Neo4jDriver)
+		session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
 		defer session.Close(ctx)
 
 		_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
@@ -139,7 +139,7 @@ func (h *UserEventHandler) OnUserUpdate(ctx context.Context, evt eventstore.Even
 					ExternalSource:   eventData.ExternalSystem.ExternalSource,
 					SyncDate:         eventData.ExternalSystem.SyncDate,
 				}
-				innerErr := h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
+				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, userId, model.NodeLabelUser, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link user %s with external system %s: %s", userId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -168,7 +168,7 @@ func (h *UserEventHandler) OnJobRoleLinkedToUser(ctx context.Context, evt events
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.JobRoleWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.JobRoleId)
+	err := h.services.CommonServices.Neo4jRepositories.JobRoleWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.JobRoleId)
 
 	return err
 }
@@ -185,7 +185,7 @@ func (h *UserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, evt ev
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
+	err := h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -202,7 +202,7 @@ func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventsto
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Label, eventData.Primary)
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Label, eventData.Primary)
 
 	return err
 }
@@ -221,7 +221,7 @@ func (h *UserEventHandler) OnAddRole(c context.Context, evt eventstore.Event) er
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: eventData.Tenant})
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.UserWriteRepository.AddRole(ctx, userId, eventData.Role)
+	err := h.services.CommonServices.Neo4jRepositories.UserWriteRepository.AddRole(ctx, userId, eventData.Role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding role %s to user %s: %s", eventData.Role, userId, err.Error())
@@ -242,7 +242,7 @@ func (h *UserEventHandler) OnRemoveRole(ctx context.Context, evt eventstore.Even
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.UserWriteRepository.RemoveRole(ctx, eventData.Tenant, userId, eventData.Role)
+	err := h.services.CommonServices.Neo4jRepositories.UserWriteRepository.RemoveRole(ctx, eventData.Tenant, userId, eventData.Role)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing role %s from user %s: %s", eventData.Role, userId, err.Error())

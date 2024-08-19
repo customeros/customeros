@@ -54,8 +54,8 @@ func TestGraphInteractionEventEventHandler_OnCreate(t *testing.T) {
 
 	// prepare event handler
 	interactionEventHandler := &InteractionEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	now := utils.Now()
 	interactionEventId := uuid.New().String()
@@ -168,7 +168,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare event handler
 	interactionEventHandler := &InteractionEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
@@ -228,7 +228,7 @@ func TestGraphInteractionEventEventHandler_OnUpdate_CurrentSourceOpenline_Update
 
 	// prepare event handler
 	interactionEventHandler := &InteractionEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
@@ -296,7 +296,7 @@ func TestGraphInteractionEventEventHandler_OnSummaryReplace_Create(t *testing.T)
 
 	// prepare event handler
 	interactionEventHandler := &InteractionEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
 	summary := "AnalysisSummary"
@@ -351,7 +351,7 @@ func TestGraphInteractionEventEventHandler_OnActionItemsReplace(t *testing.T) {
 
 	// prepare event handler
 	interactionEventHandler := &InteractionEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	interactionEventAggregate := aggregate.NewInteractionEventAggregateWithTenantAndID(tenantName, interactionEventId)
 

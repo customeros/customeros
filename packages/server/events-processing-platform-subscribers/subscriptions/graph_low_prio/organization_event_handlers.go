@@ -7,6 +7,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"time"
 
@@ -14,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -24,16 +24,16 @@ import (
 )
 
 type OrganizationEventHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	grpcClients  *grpc_client.Clients
+	services    *service.Services
+	log         logger.Logger
+	grpcClients *grpc_client.Clients
 }
 
-func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *OrganizationEventHandler {
+func NewOrganizationEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *OrganizationEventHandler {
 	return &OrganizationEventHandler{
-		repositories: repositories,
-		log:          log,
-		grpcClients:  grpcClients,
+		services:    services,
+		log:         log,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -59,7 +59,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	var timelineEventNode *dbtype.Node
 	var err error
 
-	lastTouchpointAt, lastTouchpointId, err = h.repositories.Neo4jRepositories.TimelineEventReadRepository.CalculateAndGetLastTouchPoint(ctx, eventData.Tenant, organizationId)
+	lastTouchpointAt, lastTouchpointId, err = h.services.CommonServices.Neo4jRepositories.TimelineEventReadRepository.CalculateAndGetLastTouchPoint(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to calculate last touchpoint: %v", err.Error())
@@ -68,7 +68,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	}
 
 	if lastTouchpointAt == nil {
-		timelineEventNode, err = h.repositories.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated)
+		timelineEventNode, err = h.services.CommonServices.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get created action: %v", err.Error())
@@ -80,7 +80,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 			lastTouchpointAt = utils.GetTimePropOrNil(propsFromNode, "createdAt")
 		}
 	} else {
-		timelineEventNode, err = h.repositories.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEvent(ctx, eventData.Tenant, lastTouchpointId)
+		timelineEventNode, err = h.services.CommonServices.Neo4jRepositories.TimelineEventReadRepository.GetTimelineEvent(ctx, eventData.Tenant, lastTouchpointId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get last touchpoint: %v", err.Error())
@@ -112,7 +112,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	case model.NodeLabelInteractionEvent:
 		timelineEventInteractionEvent := timelineEvent.(*neo4jentity.InteractionEventEntity)
 		if timelineEventInteractionEvent.Channel == "EMAIL" {
-			interactionEventSentByUser, err := h.repositories.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, eventData.Tenant, timelineEventInteractionEvent.Id)
+			interactionEventSentByUser, err := h.services.CommonServices.Neo4jRepositories.InteractionEventReadRepository.InteractionEventSentByUser(ctx, eventData.Tenant, timelineEventInteractionEvent.Id)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to check if interaction event was sent by user: %v", err.Error())
@@ -153,7 +153,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 		h.log.Infof("Last touchpoint not available for organization: %s", organizationId)
 	}
 
-	if err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, lastTouchpointAt, lastTouchpointId, timelineEventType); err != nil {
+	if err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateLastTouchpoint(ctx, eventData.Tenant, organizationId, lastTouchpointAt, lastTouchpointId, timelineEventType); err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update last touchpoint for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
 	}

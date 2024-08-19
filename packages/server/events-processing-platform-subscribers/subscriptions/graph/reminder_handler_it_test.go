@@ -24,8 +24,8 @@ func TestReminderEventHandler_OnCreate(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{Name: "ORG"})
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{Name: "USER"})
 	reminderEvtHdlr := &ReminderEventHandler{
-		repositories: testDatabase.Repositories,
-		log:          testLogger,
+		services: testDatabase.Services,
+		log:      testLogger,
 	}
 	reminderId := uuid.New().String()
 	reminderAgg := reminder.NewReminderAggregateWithTenantAndID(tenantName, reminderId)
@@ -81,8 +81,8 @@ func TestReminderEventHandler_OnUpdate(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, entity.OrganizationEntity{Name: "ORG"})
 	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, entity.UserEntity{Name: "USER"})
 	reminderEvtHdlr := &ReminderEventHandler{
-		repositories: testDatabase.Repositories,
-		log:          testLogger,
+		services: testDatabase.Services,
+		log:      testLogger,
 	}
 	reminderId := uuid.New().String()
 	reminderAgg := reminder.NewReminderAggregateWithTenantAndID(tenantName, reminderId)

@@ -31,9 +31,9 @@ func TestInvoiceEventHandler_OnInvoiceCreateForContractV1(t *testing.T) {
 	})
 
 	eventHandler := &InvoiceEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -167,9 +167,9 @@ func TestInvoiceEventHandler_OnInvoiceFillV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	timeNow := utils.Now()
@@ -374,9 +374,9 @@ func TestInvoiceEventHandler_OnInvoiceFillV1_GenerateNextInvoice_NotCalled(t *te
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	timeNow := utils.Now()
@@ -438,8 +438,8 @@ func TestInvoiceEventHandler_OnInvoicePdfGenerated(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	timeNow := utils.Now()
@@ -495,9 +495,9 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	timeNow := utils.Now()
@@ -567,9 +567,9 @@ func TestInvoiceEventHandler_OnInvoiceVoidV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	timeNow := utils.Now()
@@ -627,8 +627,8 @@ func TestInvoiceEventHandler_OnInvoiceDeleteV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &InvoiceEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	aggregate := invoice.NewInvoiceAggregateWithTenantAndID(tenantName, id)

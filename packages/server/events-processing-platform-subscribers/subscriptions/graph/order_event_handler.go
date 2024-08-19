@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/order"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -15,16 +15,16 @@ import (
 )
 
 type OrderEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewOrderEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *OrderEventHandler {
+func NewOrderEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *OrderEventHandler {
 	return &OrderEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -42,7 +42,7 @@ func (h *OrderEventHandler) OnUpsertOrderV1(ctx context.Context, evt eventstore.
 	orderId := order.GetOrderObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, orderId)
 
-	err := h.repositories.Neo4jRepositories.OrderWriteRepository.UpsertOrder(ctx, eventData.Tenant, eventData.OrganizationId, orderId, eventData.CreatedAt, eventData.ConfirmedAt, eventData.PaidAt, eventData.FulfilledAt, eventData.CanceledAt, neo4jmodel.Source{
+	err := h.services.CommonServices.Neo4jRepositories.OrderWriteRepository.UpsertOrder(ctx, eventData.Tenant, eventData.OrganizationId, orderId, eventData.CreatedAt, eventData.ConfirmedAt, eventData.PaidAt, eventData.FulfilledAt, eventData.CanceledAt, neo4jmodel.Source{
 		Source:    eventData.SourceFields.Source,
 		AppSource: eventData.SourceFields.AppSource,
 	})
@@ -61,7 +61,7 @@ func (h *OrderEventHandler) OnUpsertOrderV1(ctx context.Context, evt eventstore.
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, orderId, model.NodeLabelOrder, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, orderId, model.NodeLabelOrder, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link order %s with external system %s: %s", orderId, eventData.ExternalSystem.ExternalSystemId, err.Error())

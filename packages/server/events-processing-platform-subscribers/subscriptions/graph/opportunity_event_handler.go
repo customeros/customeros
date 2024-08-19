@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -36,16 +36,16 @@ import (
 )
 
 type OpportunityEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewOpportunityEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *OpportunityEventHandler {
+func NewOpportunityEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *OpportunityEventHandler {
 	return &OpportunityEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -89,7 +89,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	if eventData.Currency != "" {
 		data.Currency = neo4jenum.DecodeCurrency(eventData.Currency)
 	} else {
-		tenantSettingsDbNode, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+		tenantSettingsDbNode, err := h.services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while getting tenant settings for tenant %s: %s", eventData.Tenant, err.Error())
@@ -99,7 +99,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 			data.Currency = tenantSettings.BaseCurrency
 		}
 	}
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateForOrganization(ctx, eventData.Tenant, opportunityId, data)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CreateForOrganization(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
@@ -107,7 +107,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.OwnerUserId != "" {
-		err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
@@ -124,7 +124,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, model.NodeLabelOpportunity, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, model.NodeLabelOpportunity, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -147,7 +147,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	}
 
 	// check if active renewal opportunity already exists for this contract
-	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, eventData.ContractId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting renewal opportunity for contract %s: %s", eventData.ContractId, err.Error())
@@ -178,7 +178,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		RenewedAt:           eventData.RenewedAt,
 		RenewalAdjustedRate: eventData.RenewalAdjustedRate,
 	}
-	newOpportunityCreated, err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
+	newOpportunityCreated, err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CreateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while saving renewal opportunity %s: %s", opportunityId, err.Error())
@@ -186,7 +186,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	}
 
 	if newOpportunityCreated {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, eventData.ContractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -224,20 +224,20 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateNextRenewalDate(ctx, eventData.Tenant, opportunityId, eventData.RenewedAt)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.UpdateNextRenewalDate(ctx, eventData.Tenant, opportunityId, eventData.RenewedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while updating next cycle date for opportunity %s: %s", opportunityId, err.Error())
 	}
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
 	}
 	if contractDbNode != nil {
 		contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -265,7 +265,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 }
 
 func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
@@ -292,7 +292,7 @@ func (h *OpportunityEventHandler) sendEventToUpdateOrganizationRenewalSummary(ct
 
 func (h *OpportunityEventHandler) sendEventToUpdateOrganizationArr(ctx context.Context, tenant, opportunityId string, span opentracing.Span) {
 	// if amount changed, recalculate organization combined ARR forecast
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting organization for opportunity %s: %s", opportunityId, err.Error())
@@ -330,7 +330,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
@@ -361,7 +361,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		UpdateLikelihoodRate:    eventData.UpdateLikelihoodRate(),
 		UpdateNextSteps:         eventData.UpdateNextSteps(),
 	}
-	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.Update(ctx, eventData.Tenant, opportunityId, data)
+	err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.Update(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
@@ -370,13 +370,13 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 
 	if eventData.UpdateOwnerUserId() {
 		if eventData.OwnerUserId != "" {
-			err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
 			}
 		} else {
-			err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, eventData.Tenant, opportunityId)
+			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, eventData.Tenant, opportunityId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while removing owner of opportunity %s: %s", opportunityId, err.Error())
@@ -393,7 +393,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, model.NodeLabelOpportunity, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, opportunityId, model.NodeLabelOpportunity, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking opportunity %s with external system %s: %s", opportunityId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -401,7 +401,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		}
 	}
 
-	opportunityDbNode, err = h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err = h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
@@ -410,7 +410,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	opportunityAfterUpdate := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
 	if opportunityBeforeUpdate.InternalStage != opportunityAfterUpdate.InternalStage || opportunityBeforeUpdate.ExternalStage != opportunityAfterUpdate.ExternalStage {
-		err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelOpportunity, opportunityId, string(neo4jentity.OpportunityPropertyStageUpdatedAt), utils.NowPtr())
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelOpportunity, opportunityId, string(neo4jentity.OpportunityPropertyStageUpdatedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while updating opportunity %s: %s", opportunityId, err.Error())
@@ -437,7 +437,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	}
 
 	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting opportunity %s: %s", opportunityId, err.Error())
@@ -449,7 +449,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	adjustedRateChanged := eventData.UpdateRenewalAdjustedRate() && opportunity.RenewalDetails.RenewalAdjustedRate != eventData.RenewalAdjustedRate
 	setUpdatedByUserId := (amountChanged || likelihoodChanged || adjustedRateChanged) && eventData.UpdatedByUserId != ""
 	if eventData.OwnerUserId != "" {
-		err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
@@ -474,7 +474,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		UpdateRenewedAt:           eventData.UpdateRenewedAt(),
 		UpdateRenewalAdjustedRate: eventData.UpdateRenewalAdjustedRate(),
 	}
-	err = h.repositories.Neo4jRepositories.OpportunityWriteRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, data)
+	err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.UpdateRenewal(ctx, eventData.Tenant, opportunityId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving opportunity %s: %s", opportunityId, err.Error())
@@ -486,7 +486,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	}
 	// update renewal ARR if likelihood changed but amount didn't
 	if (likelihoodChanged || adjustedRateChanged) && !amountChanged {
-		contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
@@ -496,7 +496,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 			return nil
 		}
 		contract := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -509,7 +509,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 
 	// prepare action for likelihood change
 	if likelihoodChanged {
-		contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
@@ -544,14 +544,14 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
 
-	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil
@@ -584,7 +584,7 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 
 	// set organization as customer
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
-		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -618,7 +618,7 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 	// create new renewal opportunity
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		// get contract id for opportunity
-		contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting contract for opportunity %s: %s", opportunityId, err.Error())
@@ -660,14 +660,14 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
 		return err
 	}
 
-	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil
@@ -706,7 +706,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 
 	// set organization stage to target if still engaged
 	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeNBO {
-		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
+		organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, eventData.Tenant, opportunityId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -744,7 +744,7 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	})
 	userName := ""
 	if eventData.UpdatedByUserId != "" {
-		userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, eventData.UpdatedByUserId)
+		userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, eventData.UpdatedByUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get user %s: %s", eventData.UpdatedByUserId, err.Error())
@@ -762,7 +762,7 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	extraActionProperties := map[string]interface{}{
 		"comments": eventData.Comments,
 	}
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
 }
 
@@ -780,7 +780,7 @@ func (h *OpportunityEventHandler) OnArchive(ctx context.Context, evt eventstore.
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	err := h.repositories.Neo4jRepositories.OpportunityWriteRepository.Archive(ctx, eventData.Tenant, opportunityId)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.Archive(ctx, eventData.Tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while archiving opportunity %s: %s", opportunityId, err.Error())

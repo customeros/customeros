@@ -10,7 +10,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -19,16 +19,16 @@ import (
 )
 
 type OrganizationEventHandler struct {
-	repositories         *repository.Repositories
+	services             *service.Services
 	log                  logger.Logger
 	notificationProvider notifications.NotificationProvider
 	cfg                  *config.Config
 }
 
-func NewOrganizationEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *OrganizationEventHandler {
+func NewOrganizationEventHandler(log logger.Logger, services *service.Services, cfg *config.Config) *OrganizationEventHandler {
 	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String("eu-west-1")})
 	return &OrganizationEventHandler{
-		repositories:         repositories,
+		services:             services,
 		log:                  log,
 		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, s3),
 		cfg:                  cfg,
@@ -86,11 +86,11 @@ func (h *OrganizationEventHandler) OnOrganizationUpdateOwner(ctx context.Context
 func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
 	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
-	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
 	}
 
 	var email *neo4jentity.EmailEntity
@@ -102,11 +102,11 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	email = neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
 	// actor user email
-	actorEmailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, actorUserId)
+	actorEmailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, actorUserId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
 	}
 
 	var actorEmail *neo4jentity.EmailEntity
@@ -118,11 +118,11 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	actorEmail = neo4jmapper.MapDbNodeToEmailEntity(actorEmailDbNode)
 
 	// target user
-	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+	userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var user neo4jentity.UserEntity
 	if userDbNode != nil {
@@ -130,11 +130,11 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// actor user
-	actorDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
+	actorDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var actor neo4jentity.UserEntity
 	if userDbNode != nil {
@@ -142,11 +142,11 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 	}
 
 	// Organization
-	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
+	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
+		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
 	}
 	var org neo4jentity.OrganizationEntity
 	if orgDbNode != nil {
@@ -205,11 +205,11 @@ func (h *OrganizationEventHandler) notificationProviderSendEmail(ctx context.Con
 func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx context.Context, span opentracing.Span, workflowId, userId, actorUserId, orgId, tenant string) error {
 	///////////////////////////////////       Get User, Actor, Org Content       ///////////////////////////////////
 	// target user email
-	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
 	}
 
 	var email *neo4jentity.EmailEntity
@@ -221,11 +221,11 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	email = neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
 	// target user
-	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+	userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var user neo4jentity.UserEntity
 	if userDbNode != nil {
@@ -233,11 +233,11 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 
 	// actor user
-	actorDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
+	actorDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, actorUserId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var actor neo4jentity.UserEntity
 	if userDbNode != nil {
@@ -245,11 +245,11 @@ func (h *OrganizationEventHandler) notificationProviderSendInAppNotification(ctx
 	}
 
 	// Organization
-	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
+	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, orgId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
+		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
 	}
 	var org neo4jentity.OrganizationEntity
 	if orgDbNode != nil {

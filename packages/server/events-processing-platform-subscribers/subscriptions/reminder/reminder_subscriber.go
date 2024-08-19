@@ -21,7 +21,6 @@ type ReminderSubscriber struct {
 	log                  logger.Logger
 	db                   *esdb.Client
 	cfg                  *config.Config
-	services             *service.Services
 	reminderEventHandler *ReminderEventHandler
 }
 
@@ -30,8 +29,7 @@ func NewReminderSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Confi
 		log:                  log,
 		db:                   db,
 		cfg:                  cfg,
-		services:             services,
-		reminderEventHandler: NewReminderEventHandler(log, services.Repositories, *cfg, services.EventBufferStoreService),
+		reminderEventHandler: NewReminderEventHandler(log, services, *cfg, services.EventBufferStoreService),
 	}
 }
 

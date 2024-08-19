@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -13,16 +13,16 @@ import (
 )
 
 type GenericEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewGenericEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *GenericEventHandler {
+func NewGenericEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *GenericEventHandler {
 	return &GenericEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -39,7 +39,7 @@ func (h *GenericEventHandler) OnLinkEntityWithEntityV1(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, eventData.EntityId)
 
-	err := h.repositories.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, eventData.Tenant, eventData.EntityId, eventData.EntityType, eventData.RelationshipName, eventData.WithEntityId, eventData.WithEntityType)
+	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, eventData.Tenant, eventData.EntityId, eventData.EntityType, eventData.RelationshipName, eventData.WithEntityId, eventData.WithEntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

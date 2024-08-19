@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -18,7 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -39,24 +38,22 @@ import (
 )
 
 type ContactEventHandler struct {
-	repositories         *repository.Repositories
+	services             *service.Services
 	log                  logger.Logger
 	cfg                  *config.Config
 	caches               caches.Cache
 	grpcClients          *grpc_client.Clients
 	locationEventHandler *location.LocationEventHandler
-	services             *commonService.Services
 }
 
-func NewContactEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients, services *commonService.Services) *ContactEventHandler {
+func NewContactEventHandler(services *service.Services, log logger.Logger, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients) *ContactEventHandler {
 	contactEventHandler := ContactEventHandler{
-		repositories:         repositories,
+		services:             services,
 		log:                  log,
 		cfg:                  cfg,
 		caches:               caches,
 		grpcClients:          grpcClients,
-		locationEventHandler: location.NewLocationEventHandler(repositories, log, cfg, grpcClients),
-		services:             services,
+		locationEventHandler: location.NewLocationEventHandler(services, log, cfg, grpcClients),
 	}
 
 	return &contactEventHandler
@@ -86,7 +83,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 	span.LogFields(log.String("contactId", contactId), log.String("linkedInUrl", linkedInUrl))
 
 	// skip enrichment if disabled in tenant settings
-	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	tenantSettings, err := h.services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "TenantReadRepository.GetTenantSettings"))
 		h.log.Errorf("Error getting tenant settings: %s", err.Error())
@@ -100,7 +97,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 	}
 
 	// skip enrichment if contact is already enriched
-	contactDbNode, err := h.repositories.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, contactId)
+	contactDbNode, err := h.services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, contactId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "ContactReadRepository.GetContact"))
 		h.log.Errorf("Error getting contact with id %s: %s", contactId, err.Error())
@@ -125,7 +122,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 			return err
 		}
 
-		domains, _ := h.repositories.Neo4jRepositories.ContactReadRepository.GetLinkedOrgDomains(ctx, tenant, contactEntity.Id)
+		domains, _ := h.services.CommonServices.Neo4jRepositories.ContactReadRepository.GetLinkedOrgDomains(ctx, tenant, contactEntity.Id)
 		emailDomain := utils.ExtractDomainFromEmail(emailAddress)
 		if utils.Contains(domains, emailDomain) {
 			domain = emailDomain
@@ -155,7 +152,7 @@ func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant, conta
 	defer span.Finish()
 	span.LogFields(log.String("contactId", contactId))
 
-	records, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, model.CONTACT, []string{contactId})
+	records, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, model.CONTACT, []string{contactId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds"))
 		return "", err
@@ -188,13 +185,13 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		span.LogFields(log.String("result", "person not found"))
 
 		// mark contact as failed to enrich
-		err := h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
+		err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
 			h.log.Errorf("Error updating enriched at scrap in person search property: %s", err.Error())
 		}
 
-		err = h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapinRecordId, strconv.FormatUint(enrichPersonResponse.RecordId, 10))
+		err = h.services.CommonServices.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapinRecordId, strconv.FormatUint(enrichPersonResponse.RecordId, 10))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
 			h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
@@ -304,14 +301,14 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	err := h.repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapinRecordId, strconv.FormatUint(enrichPersonResponse.RecordId, 10))
+	err := h.services.CommonServices.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, tenant, contact.Id, neo4jentity.ContactPropertyEnrichedScrapinRecordId, strconv.FormatUint(enrichPersonResponse.RecordId, 10))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
 		h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 	}
 
 	// mark contact as enriched
-	err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedAt), utils.NowPtr())
+	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichedAt), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateTimeProperty"))
 		h.log.Errorf("Error updating enriched at property: %s", err.Error())
@@ -333,7 +330,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		// get social id by url if exist for current contact
 		socialId := ""
-		socialDbNodes, err := h.repositories.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, model.CONTACT, []string{contact.Id})
+		socialDbNodes, err := h.services.CommonServices.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, model.CONTACT, []string{contact.Id})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
 		}
@@ -367,7 +364,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	// add organization
-	organizationNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContactId(ctx, tenant, contact.Id)
+	organizationNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContactId(ctx, tenant, contact.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByContactId"))
 		h.log.Errorf("Error getting organization by contact id: %s", err.Error())
@@ -375,12 +372,12 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 	}
 
 	if organizationNode == nil && scrapinContactResponse.Company != nil {
-		domain := h.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+		domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 		span.LogFields(log.String("extractedDomainFromWebsite", domain))
 		if domain != "" {
 			var organizationId string
 
-			organizationByDomainNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+			organizationByDomainNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
 				h.log.Errorf("Error getting organization by domain: %s", err.Error())

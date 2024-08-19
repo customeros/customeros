@@ -17,7 +17,6 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -74,34 +73,34 @@ type GraphSubscriber struct {
 	orderEventHandler              *OrderEventHandler
 }
 
-func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
+func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
 		log:                            log,
 		db:                             db,
 		cfg:                            cfg,
-		genericEventHandler:            NewGenericEventHandler(log, repositories, grpcClients),
-		contactEventHandler:            NewContactEventHandler(log, repositories, grpcClients),
-		organizationEventHandler:       NewOrganizationEventHandler(log, services, repositories, grpcClients, cache),
-		phoneNumberEventHandler:        NewPhoneNumberEventHandler(log, repositories, grpcClients),
-		emailEventHandler:              NewEmailEventHandler(log, services, repositories, grpcClients),
-		userEventHandler:               NewUserEventHandler(log, repositories),
-		locationEventHandler:           NewLocationEventHandler(repositories),
-		jobRoleEventHandler:            NewJobRoleEventHandler(repositories),
-		interactionEventHandler:        NewInteractionEventHandler(log, repositories, grpcClients),
-		interactionSessionEventHandler: NewInteractionSessionEventHandler(log, repositories, grpcClients),
-		logEntryEventHandler:           NewLogEntryEventHandler(log, repositories, grpcClients),
-		issueEventHandler:              NewIssueEventHandler(log, repositories, grpcClients),
-		commentEventHandler:            NewCommentEventHandler(log, repositories),
-		opportunityEventHandler:        NewOpportunityEventHandler(log, repositories, grpcClients),
-		contractEventHandler:           NewContractEventHandler(log, repositories, grpcClients),
-		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, repositories, grpcClients),
-		masterPlanEventHandler:         NewMasterPlanEventHandler(log, repositories),
-		invoiceEventHandler:            NewInvoiceEventHandler(log, repositories, grpcClients),
-		tenantEventHandler:             NewTenantEventHandler(log, repositories),
-		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, repositories),
-		bankAccountEventHandler:        NewBankAccountEventHandler(log, repositories),
-		reminderEventHandler:           NewReminderEventHandler(log, repositories),
-		orderEventHandler:              NewOrderEventHandler(log, repositories, grpcClients),
+		genericEventHandler:            NewGenericEventHandler(log, services, grpcClients),
+		contactEventHandler:            NewContactEventHandler(log, services, grpcClients),
+		organizationEventHandler:       NewOrganizationEventHandler(log, services, grpcClients, cache),
+		phoneNumberEventHandler:        NewPhoneNumberEventHandler(log, services, grpcClients),
+		emailEventHandler:              NewEmailEventHandler(log, services, grpcClients),
+		userEventHandler:               NewUserEventHandler(log, services),
+		locationEventHandler:           NewLocationEventHandler(services),
+		jobRoleEventHandler:            NewJobRoleEventHandler(services),
+		interactionEventHandler:        NewInteractionEventHandler(log, services, grpcClients),
+		interactionSessionEventHandler: NewInteractionSessionEventHandler(log, services, grpcClients),
+		logEntryEventHandler:           NewLogEntryEventHandler(log, services, grpcClients),
+		issueEventHandler:              NewIssueEventHandler(log, services, grpcClients),
+		commentEventHandler:            NewCommentEventHandler(log, services),
+		opportunityEventHandler:        NewOpportunityEventHandler(log, services, grpcClients),
+		contractEventHandler:           NewContractEventHandler(log, services, grpcClients),
+		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, services, grpcClients),
+		masterPlanEventHandler:         NewMasterPlanEventHandler(log, services),
+		invoiceEventHandler:            NewInvoiceEventHandler(log, services, grpcClients),
+		tenantEventHandler:             NewTenantEventHandler(log, services),
+		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, services),
+		bankAccountEventHandler:        NewBankAccountEventHandler(log, services),
+		reminderEventHandler:           NewReminderEventHandler(log, services),
+		orderEventHandler:              NewOrderEventHandler(log, services, grpcClients),
 	}
 }
 

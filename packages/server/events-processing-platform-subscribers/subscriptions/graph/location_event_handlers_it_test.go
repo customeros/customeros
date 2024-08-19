@@ -82,7 +82,7 @@ func TestGraphLocationEventHandler_OnLocationCreate(t *testing.T) {
 
 	require.Nil(t, err)
 	locationEventHandler := &LocationEventHandler{
-		Repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = locationEventHandler.OnLocationCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -230,7 +230,7 @@ func TestGraphLocationEventHandler_OnLocationValidated(t *testing.T) {
 	require.Nil(t, err)
 
 	locationEventHandler := &LocationEventHandler{
-		Repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = locationEventHandler.OnLocationValidated(context.Background(), event)
 	require.Nil(t, err)
@@ -353,7 +353,7 @@ func TestGraphLocationEventHandler_OnLocationValidationFailed(t *testing.T) {
 	require.Nil(t, err)
 
 	locationEventHandler := &LocationEventHandler{
-		Repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = locationEventHandler.OnLocationValidationFailed(context.Background(), event)
 	require.Nil(t, err)
@@ -495,7 +495,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	locationEventHandler := &LocationEventHandler{
-		Repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = locationEventHandler.OnLocationUpdate(context.Background(), locationUpdateEvent)
 	require.Nil(t, err)

@@ -3,11 +3,10 @@ package notifications
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -27,13 +26,13 @@ type NotificationsSubscriber struct {
 	reminderEventHandler *ReminderEventHandler
 }
 
-func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *NotificationsSubscriber {
+func NewNotificationsSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, cfg *config.Config) *NotificationsSubscriber {
 	return &NotificationsSubscriber{
 		log:                  log,
 		db:                   db,
 		cfg:                  cfg,
-		orgEventHandler:      NewOrganizationEventHandler(log, repositories, cfg),
-		reminderEventHandler: NewReminderEventHandler(log, repositories, cfg),
+		orgEventHandler:      NewOrganizationEventHandler(log, services, cfg),
+		reminderEventHandler: NewReminderEventHandler(log, services, cfg),
 	}
 }
 

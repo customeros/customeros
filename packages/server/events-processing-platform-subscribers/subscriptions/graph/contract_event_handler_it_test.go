@@ -37,9 +37,9 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ContractCreateEvent
@@ -210,9 +210,9 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -299,9 +299,9 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -360,9 +360,9 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -425,9 +425,9 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -535,9 +535,9 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	updateEvent, err := event.NewContractUpdateEvent(contractAggregate,
@@ -642,9 +642,9 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	now := utils.Now()
 	yesterday := now.AddDate(0, 0, -1)
@@ -719,9 +719,9 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	yesterday := now.AddDate(0, 0, -1)
 	daysAgo2 := now.AddDate(0, 0, -2)
@@ -782,9 +782,9 @@ func TestContractEventHandler_OnRefreshStatus_Ended(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	refreshStatusEvent, err := event.NewContractRefreshStatusEvent(contractAggregate)
@@ -838,9 +838,9 @@ func TestContractEventHandler_OnRefreshStatus_Live(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId)
 	refreshStatusEvent, err := event.NewContractRefreshStatusEvent(contractAggregate)
@@ -910,9 +910,9 @@ func TestContractEventHandler_OnUpdate_SubsetOfFieldsSet(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	now := utils.Now()
 
@@ -1003,9 +1003,9 @@ func TestContractEventHandler_OnDeleteV1(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenantName, contractId1)
 	now := utils.Now()
@@ -1065,8 +1065,8 @@ func TestContractEventHandler_DeriveContractStatus_Ended(t *testing.T) {
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 	// EXECUTE
 	status, err := contractEventHandler.deriveContractStatus(ctx, tenantName, contractEntity)
@@ -1090,8 +1090,8 @@ func TestContractEventHandler_DeriveContractStatus_Draft_NoServiceStartedAt(t *t
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// EXECUTE
@@ -1117,8 +1117,8 @@ func TestContractEventHandler_DeriveContractStatus_Draft_FutureServiceStartedAt(
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// EXECUTE
@@ -1157,8 +1157,8 @@ func TestContractEventHandler_DeriveContractStatus_Live_AutoRenew_ActiveRenewalO
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// EXECUTE
@@ -1186,8 +1186,8 @@ func TestContractEventHandler_DeriveContractStatus_Live_NoAutoRenew_NoActiveRene
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// EXECUTE
@@ -1225,8 +1225,8 @@ func TestContractEventHandler_DeriveContractStatus_OutOfContract_NoAutoRenew_Act
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// EXECUTE

@@ -2,13 +2,13 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
@@ -18,14 +18,14 @@ import (
 )
 
 type TenantEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
+	log      logger.Logger
+	services *service.Services
 }
 
-func NewTenantEventHandler(log logger.Logger, repositories *repository.Repositories) *TenantEventHandler {
+func NewTenantEventHandler(log logger.Logger, services *service.Services) *TenantEventHandler {
 	return &TenantEventHandler{
-		log:          log,
-		repositories: repositories,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -66,7 +66,7 @@ func (h *TenantEventHandler) OnAddBillingProfileV1(ctx context.Context, evt even
 		CanPayWithBankTransfer: eventData.CanPayWithBankTransfer,
 		Check:                  eventData.Check,
 	}
-	err := h.repositories.Neo4jRepositories.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenantName, data)
+	err := h.services.CommonServices.Neo4jRepositories.TenantWriteRepository.CreateTenantBillingProfile(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -121,7 +121,7 @@ func (h *TenantEventHandler) OnUpdateBillingProfileV1(ctx context.Context, evt e
 		UpdateCanPayWithBankTransfer: eventData.UpdateCanPayWithBankTransfer(),
 		UpdateCheck:                  eventData.UpdateCheck(),
 	}
-	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenantName, data)
+	err := h.services.CommonServices.Neo4jRepositories.TenantWriteRepository.UpdateTenantBillingProfile(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -157,7 +157,7 @@ func (h *TenantEventHandler) OnUpdateTenantSettingsV1(ctx context.Context, evt e
 		UpdateWorkspaceLogo:        eventData.UpdateWorkspaceLogo(),
 		UpdateWorkspaceName:        eventData.UpdateWorkspaceName(),
 	}
-	err := h.repositories.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenantName, data)
+	err := h.services.CommonServices.Neo4jRepositories.TenantWriteRepository.UpdateTenantSettings(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

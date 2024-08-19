@@ -47,7 +47,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_CreateRenewalOpportunit
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
@@ -96,7 +96,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract(t *test
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
@@ -146,7 +146,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MonthlyContract_NotAuto
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
@@ -196,7 +196,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_QuarterlyContract(t *te
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
@@ -246,7 +246,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_AnnualContract(t *testi
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
@@ -297,7 +297,7 @@ func TestContractEventHandler_UpdateRenewalNextCycleDate_MultiAnnualContract(t *
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, tenantName, contractId)
@@ -370,7 +370,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_OnlyOnceBilled(t *testing
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -439,7 +439,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MultipleServices(t *testi
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -497,7 +497,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_MediumLikelihood(t *testi
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -559,7 +559,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsBeforeNextRen
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -622,7 +622,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsIn6Months_Pro
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -685,7 +685,7 @@ func TestContractEventHandler_UpdateRenewalArrForecast_ContractEndsInMoreThan12M
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityArr(ctx, tenantName, contractId)
@@ -739,7 +739,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
@@ -773,7 +773,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_EndedCont
 	})
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
@@ -823,7 +823,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	mocked_grpc.SetOpportunityCallbacks(&opportunityCallbacks)
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)
@@ -855,7 +855,7 @@ func TestContractEventHandler_UpdateActiveRenewalOpportunityLikelihood_Reinitiat
 	})
 
 	// prepare event handler
-	handler := NewContractHandler(testLogger, testDatabase.Repositories, testMockedGrpcClient)
+	handler := NewContractHandler(testLogger, testDatabase.Services, testMockedGrpcClient)
 
 	// EXECUTE
 	err := handler.UpdateActiveRenewalOpportunityLikelihood(ctx, tenantName, contractId)

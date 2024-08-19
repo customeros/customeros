@@ -8,11 +8,11 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -25,16 +25,16 @@ import (
 )
 
 type contractHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	grpcClients  *grpc_client.Clients
+	services    *service.Services
+	log         logger.Logger
+	grpcClients *grpc_client.Clients
 }
 
-func NewContractHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *contractHandler {
+func NewContractHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *contractHandler {
 	return &contractHandler{
-		repositories: repositories,
-		log:          log,
-		grpcClients:  grpcClients,
+		services:    services,
+		log:         log,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -103,7 +103,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
+	opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -113,7 +113,7 @@ func (h *contractHandler) UpdateActiveRenewalOpportunityLikelihood(ctx context.C
 		h.log.Infof("No open renewal opportunity found for contract %s", contractId)
 		return nil
 	}
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
@@ -177,7 +177,7 @@ func (h *contractHandler) UpdateOrganizationRelationship(ctx context.Context, te
 	}
 
 	// get contract
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
@@ -186,7 +186,7 @@ func (h *contractHandler) UpdateOrganizationRelationship(ctx context.Context, te
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	// get organization for contract
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
@@ -195,7 +195,7 @@ func (h *contractHandler) UpdateOrganizationRelationship(ctx context.Context, te
 	orgEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
 	// get all contracts for organization
-	orgContracts, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{orgEntity.ID})
+	orgContracts, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{orgEntity.ID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting contracts for organization %s: %s", orgEntity.ID, err.Error())
@@ -286,7 +286,7 @@ func (h *contractHandler) updateRenewalOpportunityRenewedAt(ctx context.Context,
 		return nil
 	}
 	startRenewalDateCalculation := contractEntity.ServiceStartedAt
-	previousClosedWonRenewalDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
+	previousClosedWonRenewalDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetPreviousClosedWonRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil
@@ -387,7 +387,7 @@ func (h *contractHandler) calculateMaxArr(ctx context.Context, tenant string, co
 	var arr float64
 
 	// Fetch service line items for the contract from the database
-	sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, tenant, contract.Id)
+	sliDbNodes, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, tenant, contract.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return 0, err
@@ -471,7 +471,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("contractId", contractId))
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
@@ -484,7 +484,7 @@ func (h *contractHandler) assertContractAndRenewalOpportunity(ctx context.Contex
 		return nil, nil, true
 	}
 
-	currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
+	currentRenewalOpportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())

@@ -33,7 +33,7 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	myUserId, _ := uuid.NewUUID()
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
@@ -95,7 +95,7 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	})
 
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	myUserId, _ := uuid.NewUUID()
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, myUserId.String())
@@ -156,10 +156,10 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	jobRoleEventHandler := &JobRoleEventHandler{
-		Repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	myUserId, _ := uuid.NewUUID()
 	myJobRoleId, _ := uuid.NewUUID()
@@ -247,10 +247,10 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	jobRoleEventHandler := &JobRoleEventHandler{
-		Repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	myUserId, _ := uuid.NewUUID()
 	myJobRoleId, _ := uuid.NewUUID()
@@ -355,7 +355,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	require.Equal(t, userId, utils.GetStringPropOrEmpty(propsAfterUserCreate, "id"))
 
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	userUpdateTime := utils.Now()
@@ -447,7 +447,7 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 	require.NotNil(t, dbNodeAfterPhoneNumberCreate)
 
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	phoneNumberLabel := "phoneNumberLabel"
@@ -522,7 +522,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 	require.Equal(t, &creationTime, utils.GetTimePropOrNil(propsAfterEmailCreate, "updatedAt"))
 
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	emailLabel := "emailLabel"
@@ -587,7 +587,7 @@ func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {
 	require.NotNil(t, utils.GetStringPropOrEmpty(propsAfterJobRoleCreate, "id"))
 
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	userLinkJobRoleTime := utils.Now()
@@ -638,7 +638,7 @@ func TestGraphUserEventHandler_OnAddRole(t *testing.T) {
 	require.Equal(t, 2, len(utils.GetListStringPropOrEmpty(propsAfterUserCreate, "roles")))
 
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	roleAddedTime := utils.Now()
@@ -689,7 +689,7 @@ func TestGraphUserEventHandler_OnRemoveRole(t *testing.T) {
 	require.Equal(t, 2, len(utils.GetListStringPropOrEmpty(propsAfterUserCreate, "roles")))
 
 	userEventHandler := &UserEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	roleAddedTime := utils.Now()

@@ -29,9 +29,9 @@ func TestGraphInteractionSessionEventHandler_OnCreate(t *testing.T) {
 
 	// prepare event handler
 	interactionSessionEventHandler := &InteractionSessionEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	now := utils.Now()
 	interactionSessionId := uuid.New().String()

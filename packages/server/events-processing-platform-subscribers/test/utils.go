@@ -9,7 +9,7 @@ import (
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/postgres"
 	"github.com/stretchr/testify/require"
@@ -24,8 +24,8 @@ type TestDatabase struct {
 	Driver         *neo4j.DriverWithContext
 	GormDB         *gorm.DB
 
-	Repositories   *repository.Repositories
 	CommonServices *commonService.Services
+	Services       *service.Services
 	GrpcClients    *grpc_client.Clients
 }
 
@@ -44,13 +44,15 @@ func SetupTestDatabase() (TestDatabase, func()) {
 
 	postgresContainer, postgresGormDB, _ := postgrest.InitTestDB()
 	testDBs.GormDB = postgresGormDB
-	testDBs.Repositories = repository.InitRepos(testDBs.Driver, "neo4j", postgresGormDB)
 
 	testDialFactory := mocked_grpc.NewMockedTestDialFactory()
 	grpcConn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 	testDBs.GrpcClients = grpc_client.InitClients(grpcConn)
 
 	testDBs.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, testDBs.Driver, "neo4j", testDBs.GrpcClients)
+	testDBs.Services = &service.Services{
+		CommonServices: testDBs.CommonServices,
+	}
 
 	shutdown := func() {
 		neo4jtest.CloseDriver(*testDBs.Driver)

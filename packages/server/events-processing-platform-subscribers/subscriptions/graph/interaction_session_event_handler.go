@@ -8,7 +8,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
@@ -18,16 +18,16 @@ import (
 )
 
 type InteractionSessionEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewInteractionSessionEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *InteractionSessionEventHandler {
+func NewInteractionSessionEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *InteractionSessionEventHandler {
 	return &InteractionSessionEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -59,7 +59,7 @@ func (h *InteractionSessionEventHandler) OnCreate(ctx context.Context, evt event
 		Status:      eventData.Status,
 		Name:        eventData.Name,
 	}
-	err := h.repositories.Neo4jRepositories.InteractionSessionWriteRepository.Create(ctx, eventData.Tenant, interactionSessionId, data)
+	err := h.services.CommonServices.Neo4jRepositories.InteractionSessionWriteRepository.Create(ctx, eventData.Tenant, interactionSessionId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving interaction session %s: %s", interactionSessionId, err.Error())
@@ -75,7 +75,7 @@ func (h *InteractionSessionEventHandler) OnCreate(ctx context.Context, evt event
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, interactionSessionId, model.NodeLabelInteractionSession, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, interactionSessionId, model.NodeLabelInteractionSession, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link interaction session %s with external system %s: %s", interactionSessionId, eventData.ExternalSystem.ExternalSystemId, err.Error())

@@ -18,8 +18,8 @@ func TestCountryEventHandler_OnCreate(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	eventHandler := &CountryEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	id := uuid.New().String()

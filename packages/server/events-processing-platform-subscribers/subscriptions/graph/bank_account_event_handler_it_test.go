@@ -32,8 +32,8 @@ func TestBankAccountEventHandler_OnAddBankAccountV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &BankAccountEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	now := utils.Now()
@@ -123,8 +123,8 @@ func TestBankAccountEventHandler_OnUpdateBankAccountV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &BankAccountEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	now := utils.Now()
@@ -208,8 +208,8 @@ func TestBankAccountEventHandler_OnDeleteBankAccountV1(t *testing.T) {
 
 	// Prepare the event handler
 	eventHandler := &BankAccountEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	now := utils.Now()

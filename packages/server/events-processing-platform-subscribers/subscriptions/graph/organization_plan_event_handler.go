@@ -5,6 +5,7 @@ import (
 	"fmt"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"time"
 
 	"github.com/google/uuid"
@@ -15,7 +16,6 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	orgModel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
@@ -26,14 +26,14 @@ import (
 )
 
 type OrganizationPlanEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
+	log      logger.Logger
+	services *service.Services
 }
 
-func NewOrganizationPlanEventHandler(log logger.Logger, repositories *repository.Repositories) *OrganizationPlanEventHandler {
+func NewOrganizationPlanEventHandler(log logger.Logger, services *service.Services) *OrganizationPlanEventHandler {
 	return &OrganizationPlanEventHandler{
-		log:          log,
-		repositories: repositories,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -56,7 +56,7 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
 
 	// Create empty org plan
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Create(ctx, eventData.Tenant, masterPlanId, eventData.OrganizationPlanId, eventData.Name, source, appSource, eventData.CreatedAt, entity.OrganizationPlanStatusDetails{Status: model.NotStarted.String(), UpdatedAt: eventData.CreatedAt, Comments: ""})
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.Create(ctx, eventData.Tenant, masterPlanId, eventData.OrganizationPlanId, eventData.Name, source, appSource, eventData.CreatedAt, entity.OrganizationPlanStatusDetails{Status: model.NotStarted.String(), UpdatedAt: eventData.CreatedAt, Comments: ""})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
@@ -65,7 +65,7 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 
 	// Link org plan to master plan
 	if masterPlanId != "" {
-		err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithMasterPlan(ctx, eventData.Tenant, eventData.OrganizationPlanId, masterPlanId, eventData.CreatedAt)
+		err = h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithMasterPlan(ctx, eventData.Tenant, eventData.OrganizationPlanId, masterPlanId, eventData.CreatedAt)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error linking master plan %s: %s", eventData.OrganizationPlanId, err.Error())
@@ -74,7 +74,7 @@ func (h *OrganizationPlanEventHandler) OnCreate(ctx context.Context, evt eventst
 	}
 
 	// Link org plan to org
-	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, eventData.OrganizationPlanId, organizationId, eventData.CreatedAt)
+	err = h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, eventData.OrganizationPlanId, organizationId, eventData.CreatedAt)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -117,7 +117,7 @@ func (h *OrganizationPlanEventHandler) OnUpdate(ctx context.Context, evt eventst
 		UpdateRetired:       eventData.UpdateRetired(),
 		UpdateStatusDetails: eventData.UpdateStatusDetails(),
 	}
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, eventData.Tenant, eventData.OrganizationPlanId, data)
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, eventData.Tenant, eventData.OrganizationPlanId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating organization plan %s: %s", eventData.OrganizationPlanId, err.Error())
@@ -152,7 +152,7 @@ func (h *OrganizationPlanEventHandler) OnCreateMilestone(ctx context.Context, ev
 
 	source := helper.GetSource(eventData.SourceFields.Source)
 	appSource := helper.GetAppSource(eventData.SourceFields.AppSource)
-	err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.CreateMilestone(
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.CreateMilestone(
 		ctx,
 		eventData.Tenant,
 		eventData.OrganizationPlanId,
@@ -200,7 +200,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 
 	span.SetTag(tracing.SpanTagEntityId, eventData.MilestoneId)
 
-	dueDate, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetMilestoneDueDate(ctx, eventData.Tenant, eventData.MilestoneId)
+	dueDate, err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanReadRepository.GetMilestoneDueDate(ctx, eventData.Tenant, eventData.MilestoneId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while retrieving milestone due date %s: %s", eventData.MilestoneId, err.Error())
@@ -321,7 +321,7 @@ func (h *OrganizationPlanEventHandler) OnUpdateMilestone(ctx context.Context, ev
 		data.UpdateStatusDetails = true
 	}
 
-	err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId, data)
+	err = h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, eventData.OrganizationPlanId, eventData.MilestoneId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating master plan milestone %s: %s", eventData.MilestoneId, err.Error())
@@ -354,7 +354,7 @@ func (h *OrganizationPlanEventHandler) OnReorderMilestones(ctx context.Context, 
 			Order:       int64(i),
 			UpdateOrder: true,
 		}
-		err := h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, organizationPlanId, milestoneId, data)
+		err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.UpdateMilestone(ctx, eventData.Tenant, organizationPlanId, milestoneId, data)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while updating organization plan milestone order %s: %s", milestoneId, err.Error())
@@ -369,14 +369,14 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagEntityId, opid)
 
-	opmNode, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetMilestonesForOrganizationPlan(ctx, tenant, opid)
+	opmNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanReadRepository.GetMilestonesForOrganizationPlan(ctx, tenant, opid)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while retrieving organization plan %s: %s", opid, err.Error())
 		return err
 	}
 
-	opNode, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlanById(ctx, tenant, opid)
+	opNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlanById(ctx, tenant, opid)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while retrieving organization plan %s: %s", opid, err.Error())
@@ -441,7 +441,7 @@ func (h *OrganizationPlanEventHandler) propagateStatusUpdatesFromMilestone(ctx c
 	if op.StatusDetails.Status != opdata.StatusDetails.Status {
 		opdata.StatusDetails.UpdatedAt = time.Now().UTC()
 		opdata.UpdateStatusDetails = true
-		err = h.repositories.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, tenant, opid, opdata)
+		err = h.services.CommonServices.Neo4jRepositories.OrganizationPlanWriteRepository.Update(ctx, tenant, opid, opdata)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while updating organization plan %s: %s", opid, err.Error())
@@ -466,7 +466,7 @@ func (h *OrganizationPlanEventHandler) propagateStatusToOrg(ctx context.Context,
 	span.SetTag(tracing.SpanTagEntityId, opid)
 
 	// propagate to organization
-	orgNode, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationFromOrganizationPlan(ctx, tenant, opid)
+	orgNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationFromOrganizationPlan(ctx, tenant, opid)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while retrieving organization for organization plan %s: %s", opid, err.Error())
@@ -475,7 +475,7 @@ func (h *OrganizationPlanEventHandler) propagateStatusToOrg(ctx context.Context,
 	org := neo4jmapper.MapDbNodeToOrganizationEntity(orgNode)
 
 	// get all organization plans
-	opNodes, err := h.repositories.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlansForOrganization(ctx, tenant, org.ID)
+	opNodes, err := h.services.CommonServices.Neo4jRepositories.OrganizationPlanReadRepository.GetOrganizationPlansForOrganization(ctx, tenant, org.ID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while retrieving organization plans for organization %s: %s", org.ID, err.Error())
@@ -513,7 +513,7 @@ func (h *OrganizationPlanEventHandler) propagateStatusToOrg(ctx context.Context,
 
 	// if status changed, write to Org DB Node and save change action
 	if org.OnboardingDetails.Status != statusStr {
-		err = h.repositories.Neo4jRepositories.OrganizationWriteRepository.UpdateOnboardingStatus(ctx, tenant, org.ID, statusStr, org.OnboardingDetails.Comments, getOrderForOnboardingStatus(statusStr), updatedAtNow)
+		err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateOnboardingStatus(ctx, tenant, org.ID, statusStr, org.OnboardingDetails.Comments, getOrderForOnboardingStatus(statusStr), updatedAtNow)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to update onboarding status for organization %s: %s", org.ID, err.Error())
@@ -544,7 +544,7 @@ func (h *OrganizationPlanEventHandler) saveOnboardingStatusChangeAction(ctx cont
 		"status":   status,
 		"comments": comments,
 	}
-	_, err := h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, model2.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, updatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+	_, err := h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, tenant, organizationId, model2.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, updatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
 }
 

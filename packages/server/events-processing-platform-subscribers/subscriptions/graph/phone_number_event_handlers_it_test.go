@@ -25,7 +25,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberCreate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	phoneNumberId, _ := uuid.NewUUID()
 	phoneNumberAggregate := aggregate.NewPhoneNumberAggregateWithTenantAndID(tenantName, phoneNumberId.String())
@@ -84,7 +84,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidated(t *testing.T) {
 	require.Nil(t, err)
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberValidated(context.Background(), event)
 	require.Nil(t, err)
@@ -134,7 +134,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberValidationFailed(t *testing.T
 	require.Nil(t, err)
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	err = phoneNumberEventHandler.OnPhoneNumberValidationFailed(context.Background(), event)
 	require.Nil(t, err)
@@ -184,8 +184,8 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	updatedAtUpdate := utils.Now()
 
 	phoneNumberEventHandler := &PhoneNumberEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// prepare grpc mock

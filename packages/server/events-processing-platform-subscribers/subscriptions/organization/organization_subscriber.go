@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	orgevts "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"strings"
 
@@ -13,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -29,7 +29,7 @@ type OrganizationSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients) *OrganizationSubscriber {
+func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, services *service.Services, caches caches.Cache, grpcClients *grpc_client.Clients) *OrganizationSubscriber {
 	aiCfg := aiConfig.Config{
 		OpenAi: aiConfig.AiModelConfigOpenAi{
 			ApiKey:       cfg.Services.Ai.ApiKey,
@@ -46,7 +46,7 @@ func NewOrganizationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.C
 		log:                      log,
 		db:                       db,
 		cfg:                      cfg,
-		organizationEventHandler: NewOrganizationEventHandler(repositories, log, cfg, caches, aiModel, grpcClients, nil),
+		organizationEventHandler: NewOrganizationEventHandler(services, log, cfg, caches, aiModel, grpcClients),
 	}
 }
 

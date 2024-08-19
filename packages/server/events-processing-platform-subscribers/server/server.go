@@ -18,7 +18,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/email_validation"
@@ -45,7 +44,6 @@ const (
 type Server struct {
 	Config         *config.Config
 	Log            logger.Logger
-	Repositories   *repository.Repositories
 	Services       *service.Services
 	AggregateStore eventstore.AggregateStore
 
@@ -98,19 +96,12 @@ func (server *Server) Start(parentCtx context.Context) error {
 	postgresDb, _ := InitPostgresDB(server.Config, server.Log)
 	defer postgresDb.SqlDB.Close()
 
-	repository.Migration(postgresDb.GormDB)
-
 	// Setting up Neo4j
 	neo4jDriver, err := commonconf.NewNeo4jDriver(server.Config.Neo4j)
 	if err != nil {
 		logrus.Fatalf("Could not establish connection with neo4j at: %v, error: %v", server.Config.Neo4j.Target, err.Error())
 	}
 	defer neo4jDriver.Close(ctx)
-	server.Repositories = repository.InitRepos(&neo4jDriver, server.Config.Neo4j.Database, postgresDb.GormDB)
-
-	// Setting up caches
-	industryMap, _ := server.Repositories.PostgresRepositories.IndustryMappingRepository.GetAllIndustryMappingsAsMap(ctx)
-	server.caches = caches.InitCaches(industryMap)
 
 	server.AggregateStore = store.NewAggregateStore(server.Log, esdb)
 
@@ -123,13 +114,17 @@ func (server *Server) Start(parentCtx context.Context) error {
 	defer df.Close(gRPCconn)
 	grpcClients := grpc_client.InitClients(gRPCconn)
 
-	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Repositories, server.Log, grpcClients)
+	server.Services = service.InitServices(server.Config, server.AggregateStore, server.Log, grpcClients, postgresDb.GormDB, &neo4jDriver)
 
-	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Repositories.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
+	// Setting up cache
+	industryMap, _ := server.Services.CommonServices.PostgresRepositories.IndustryMappingRepository.GetAllIndustryMappingsAsMap(ctx)
+	server.caches = caches.InitCaches(industryMap)
+
+	eventBufferWatcher := eventbuffer.NewEventBufferWatcher(server.Services.CommonServices.PostgresRepositories.EventBufferRepository, server.Log, server.AggregateStore)
 	eventBufferWatcher.Start(ctx)
 	defer eventBufferWatcher.Stop()
 
-	InitSubscribers(server, ctx, grpcClients, esdb, cancel, server.Services)
+	server.InitSubscribers(ctx, grpcClients, esdb, cancel)
 
 	<-ctx.Done()
 	server.waitShootDown(waitShotDownDuration)
@@ -154,9 +149,9 @@ func InitPostgresDB(cfg *config.Config, log logger.Logger) (db *commonconf.Stora
 	return
 }
 
-func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc, services *service.Services) {
+func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_client.Clients, esdb *esdb.Client, cancel context.CancelFunc) {
 	if server.Config.Subscriptions.GraphSubscription.Enabled {
-		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, services, server.Repositories, grpcClients, server.Config, server.caches)
+		graphSubscriber := graph_subscription.NewGraphSubscriber(server.Log, esdb, server.Services, grpcClients, server.Config, server.caches)
 		go func() {
 			err := graphSubscriber.Connect(ctx, graphSubscriber.ProcessEvents)
 			if err != nil {
@@ -167,7 +162,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.GraphLowPrioritySubscription.Enabled {
-		subscriber := graph_low_prio_subscription.NewGraphLowPrioSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
+		subscriber := graph_low_prio_subscription.NewGraphLowPrioSubscriber(server.Log, esdb, server.Services, grpcClients, server.Config)
 		go func() {
 			err := subscriber.Connect(ctx, subscriber.ProcessEvents)
 			if err != nil {
@@ -178,7 +173,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.Log, esdb, server.Config, grpcClients, server.Repositories)
+		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.Log, esdb, server.Config, grpcClients, server.Services)
 		go func() {
 			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -189,7 +184,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.PhoneNumberValidationSubscription.Enabled {
-		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients)
+		phoneNumberValidationSubscriber := phone_number_validation_subscription.NewPhoneNumberValidationSubscriber(server.Log, esdb, server.Config, server.Services, grpcClients)
 		go func() {
 			err := phoneNumberValidationSubscriber.Connect(ctx, phoneNumberValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -200,7 +195,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.LocationValidationSubscription.Enabled {
-		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients)
+		locationValidationSubscriber := location_validation_subscription.NewLocationValidationSubscriber(server.Log, esdb, server.Config, server.Services, grpcClients)
 		go func() {
 			err := locationValidationSubscriber.Connect(ctx, locationValidationSubscriber.ProcessEvents)
 			if err != nil {
@@ -211,7 +206,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.OrganizationSubscription.Enabled {
-		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients)
+		organizationSubscriber := organization_subscription.NewOrganizationSubscriber(server.Log, esdb, server.Config, server.Services, server.caches, grpcClients)
 		go func() {
 			err := organizationSubscriber.Connect(ctx, organizationSubscriber.ProcessEvents)
 			if err != nil {
@@ -222,7 +217,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.OrganizationWebscrapeSubscription.Enabled {
-		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationEnrichSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients, services)
+		organizationWebscrapeSubscriber := organization_subscription.NewOrganizationEnrichSubscriber(server.Log, esdb, server.Config, server.caches, grpcClients, server.Services)
 		go func() {
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
@@ -233,7 +228,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.InteractionEventSubscription.Enabled {
-		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.Log, esdb, server.Config, server.Repositories, grpcClients)
+		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.Log, esdb, server.Config, server.Services, grpcClients)
 		go func() {
 			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
 			if err != nil {
@@ -244,7 +239,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.NotificationsSubscription.Enabled {
-		notificationsSubscriber := notifications_subscription.NewNotificationsSubscriber(server.Log, esdb, server.Repositories, grpcClients, server.Config)
+		notificationsSubscriber := notifications_subscription.NewNotificationsSubscriber(server.Log, esdb, server.Services, server.Config)
 		go func() {
 			err := notificationsSubscriber.Connect(ctx, notificationsSubscriber.ProcessEvents)
 			if err != nil {
@@ -255,7 +250,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.InvoiceSubscription.Enabled {
-		invoiceSubscriber := invoice_subscription.NewInvoiceSubscriber(server.Log, esdb, server.Config, services.CommonServices, server.Repositories, grpcClients, services.FileStoreApiService, services.PostmarkProvider)
+		invoiceSubscriber := invoice_subscription.NewInvoiceSubscriber(server.Log, esdb, server.Config, server.Services, grpcClients)
 		go func() {
 			err := invoiceSubscriber.Connect(ctx, invoiceSubscriber.ProcessEvents)
 			if err != nil {
@@ -266,7 +261,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.EnrichSubscription.Enabled {
-		enrichSubscriber := enrichsubscription.NewEnrichSubscriber(server.Log, esdb, server.Config, server.Repositories, server.caches, grpcClients, services.CommonServices)
+		enrichSubscriber := enrichsubscription.NewEnrichSubscriber(server.Log, esdb, server.Config, server.Services, server.caches, grpcClients)
 		go func() {
 			err := enrichSubscriber.Connect(ctx, enrichSubscriber.ProcessEvents)
 			if err != nil {
@@ -277,7 +272,7 @@ func InitSubscribers(server *Server, ctx context.Context, grpcClients *grpc_clie
 	}
 
 	if server.Config.Subscriptions.ReminderSubscription.Enabled {
-		reminderSubscriber := remindersubscription.NewReminderSubscriber(server.Log, esdb, server.Config, services)
+		reminderSubscriber := remindersubscription.NewReminderSubscriber(server.Log, esdb, server.Config, server.Services)
 		go func() {
 			err := reminderSubscriber.Connect(ctx, reminderSubscriber.ProcessEvents)
 			if err != nil {

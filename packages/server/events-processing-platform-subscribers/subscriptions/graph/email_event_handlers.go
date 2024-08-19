@@ -10,7 +10,6 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -25,18 +24,16 @@ import (
 )
 
 type EmailEventHandler struct {
-	log          logger.Logger
-	services     *service.Services
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewEmailEventHandler(log logger.Logger, services *service.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *EmailEventHandler {
+func NewEmailEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *EmailEventHandler {
 	return &EmailEventHandler{
-		log:          log,
-		services:     services,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -63,11 +60,11 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 		},
 		CreatedAt: eventData.CreatedAt,
 	}
-	err := h.repositories.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, eventData.Tenant, emailId, data)
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, eventData.Tenant, emailId, data)
 
 	if eventData.LinkWithType != nil && eventData.LinkWithId != nil {
 		if *eventData.LinkWithType == "CONTACT" {
-			err = h.repositories.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, *eventData.LinkWithId, emailId, "Work", true)
+			err = h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, *eventData.LinkWithId, emailId, "Work", true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -95,14 +92,14 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.LogFields(log.String("rawEmail", eventData.RawEmail))
 
-	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetById(ctx, eventData.Tenant, emailId)
+	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetById(ctx, eventData.Tenant, emailId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 	emailBeforeUpdate := neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 
-	err = h.repositories.Neo4jRepositories.EmailWriteRepository.UpdateEmail(ctx, eventData.Tenant, emailId, eventData.RawEmail, eventData.Source)
+	err = h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.UpdateEmail(ctx, eventData.Tenant, emailId, eventData.RawEmail, eventData.Source)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -110,7 +107,7 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 
 	// email address updated
 	if emailBeforeUpdate.RawEmail != eventData.RawEmail && emailBeforeUpdate.Email != eventData.RawEmail {
-		err = h.repositories.Neo4jRepositories.EmailWriteRepository.CleanEmailValidation(ctx, eventData.Tenant, emailId)
+		err = h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.CleanEmailValidation(ctx, eventData.Tenant, emailId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
@@ -148,7 +145,7 @@ func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eve
 	}
 
 	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError)
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError)
 
 	return err
 }
@@ -182,7 +179,7 @@ func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore
 		IsDisposable:    eventData.IsDisposable,
 		IsRoleAccount:   eventData.IsRoleAccount,
 	}
-	err := h.repositories.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
 
 	return err
 }

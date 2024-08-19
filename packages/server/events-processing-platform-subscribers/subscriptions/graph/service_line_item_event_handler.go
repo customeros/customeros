@@ -16,7 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
@@ -30,16 +30,16 @@ import (
 )
 
 type ServiceLineItemEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewServiceLineItemEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *ServiceLineItemEventHandler {
+func NewServiceLineItemEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *ServiceLineItemEventHandler {
 	return &ServiceLineItemEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -86,7 +86,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	reasonForChange := eventData.Comments
 	if isNewVersionForExistingSLI {
 		//get the previous service line item to get the previous price and quantity
-		previousSliDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.PreviousVersionId)
+		previousSliDbNode, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, eventData.PreviousVersionId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while getting latest service line item with parent id %s: %s", eventData.ParentId, err.Error())
@@ -123,21 +123,21 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		Comments:   eventData.Comments,
 		VatRate:    eventData.VatRate,
 	}
-	err := h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, data)
+	err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.CreateForContract(ctx, eventData.Tenant, serviceLineItemId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
-	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, eventData.ParentId)
+	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, eventData.ParentId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
-	serviceLineItemDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	serviceLineItemDbNode, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting service line item by id %s: %s", serviceLineItemId, err.Error())
@@ -145,7 +145,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	}
 	serviceLineItemEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 
-	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+	contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 	err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -155,7 +155,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	// Update contract LTV
 	contractHandler.UpdateContractLtv(ctx, eventData.Tenant, eventData.ContractId)
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -169,7 +169,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if usrMetadata.UserId != "" {
-			user, err = h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
+			user, err = h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
@@ -246,7 +246,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 	if !isNewVersionForExistingSLI {
 		if serviceLineItemEntity.Billed.String() == model.AnnuallyBilled.String() || serviceLineItemEntity.Billed.String() == model.QuarterlyBilled.String() || serviceLineItemEntity.Billed.String() == model.MonthlyBilled.String() {
 			message = userName + " added a recurring service to " + contractEntity.Name + ": " + name + " at " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " x " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeRecurringCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating recurring billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
@@ -254,7 +254,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		}
 		if serviceLineItemEntity.Billed.String() == model.OnceBilled.String() {
 			message = userName + " added a one time service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeOnceCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating once billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
@@ -262,7 +262,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		}
 		if serviceLineItemEntity.Billed.String() == model.UsageBilled.String() {
 			message = userName + " added a per use service to " + contractEntity.Name + ": " + name + " at " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, eventData.ContractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemBilledTypeUsageCreated, message, metadataBilledType, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating per use billed type service line item created action for contract %s: %s", eventData.ContractId, err.Error())
@@ -278,7 +278,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 			if eventData.Price < previousPrice {
 				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + "/" + cycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle + " starting with " + eventData.StartedAt.Format("2006-01-02")
 			}
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -292,7 +292,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 			if eventData.Price < serviceLineItemEntity.Price {
 				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.2f", previousPrice) + " to " + fmt.Sprintf("%.2f", eventData.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
 			}
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -305,7 +305,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 			if eventData.Price < serviceLineItemEntity.Price {
 				message = userName + " decreased the price for " + name + " from " + fmt.Sprintf("%.4f", previousPrice) + " to " + fmt.Sprintf("%.4f", eventData.Price) + " starting with " + eventData.StartedAt.Format("2006-01-02")
 			}
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -318,7 +318,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 			if eventData.Quantity < previousQuantity {
 				message = userName + " decreased the quantity of " + name + " from " + strconv.FormatInt(previousQuantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10) + " starting with " + eventData.StartedAt.Format("2006-01-02")
 			}
-			_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+			_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractEntity.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractEntity.Id, err.Error())
@@ -344,7 +344,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	serviceLineItemDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	serviceLineItemDbNode, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -364,21 +364,21 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		VatRate:   eventData.VatRate,
 		StartedAt: eventData.StartedAt,
 	}
-	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Update(ctx, eventData.Tenant, serviceLineItemId, data)
+	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.Update(ctx, eventData.Tenant, serviceLineItemId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
-	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
+	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
@@ -387,7 +387,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 	if contractDbNode != nil {
 		contractId = contractEntity.Id
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -413,7 +413,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if usrMetadata.UserId != "" {
-			user, err = h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
+			user, err = h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
@@ -472,7 +472,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		if eventData.Price < serviceLineItemEntity.Price {
 			message = userEntity.GetFullName() + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + "/" + oldCycle + " to " + fmt.Sprintf("%.2f", eventData.Price) + "/" + cycle
 		}
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+		_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
@@ -486,7 +486,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		if eventData.Price < serviceLineItemEntity.Price {
 			message = userEntity.GetFullName() + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.2f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.2f", eventData.Price)
 		}
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+		_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
@@ -499,7 +499,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		if eventData.Price < serviceLineItemEntity.Price {
 			message = userEntity.GetFullName() + " retroactively decreased the price for " + name + " from " + fmt.Sprintf("%.4f", serviceLineItemEntity.Price) + " to " + fmt.Sprintf("%.4f", eventData.Price)
 		}
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+		_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemPriceUpdated, message, metadataPrice, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating price update action for contract service line item %s: %s", contractId, err.Error())
@@ -513,7 +513,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		if eventData.Quantity < serviceLineItemEntity.Quantity {
 			message = userEntity.GetFullName() + " retroactively decreased the quantity of " + name + " from " + strconv.FormatInt(serviceLineItemEntity.Quantity, 10) + " to " + strconv.FormatInt(eventData.Quantity, 10)
 		}
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+		_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model2.CONTRACT, neo4jenum.ActionServiceLineItemQuantityUpdated, message, metadataQuantity, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed creating quantity update action for contract service line item %s: %s", contractId, err.Error())
@@ -537,7 +537,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	serviceLineItemDbNode, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
+	serviceLineItemDbNode, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -556,7 +556,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if usrMetadata.UserId != "" {
-			user, err = h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
+			user, err = h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, eventData.Tenant, usrMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to get user for service line item %s with userid %s", serviceLineItemId, usrMetadata.UserId)
@@ -565,7 +565,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		userEntity = *neo4jmapper.MapDbNodeToUserEntity(user)
 	}
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
@@ -578,13 +578,13 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		contractName = "Unnamed contract"
 	}
 
-	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Delete(ctx, eventData.Tenant, serviceLineItemId)
+	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.Delete(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
-	err = h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
+	err = h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.AdjustEndDates(ctx, eventData.Tenant, serviceLineItemEntity.ParentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adjusting end dates for service line item %s: %s", serviceLineItemId, err.Error())
@@ -592,7 +592,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 	}
 
 	if contractDbNode != nil {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -609,7 +609,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 	})
 	message := userEntity.GetFullName() + " removed " + serviceLineItemName + " from " + contractName
 
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contract.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemRemoved, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contract.Id, model2.CONTRACT, neo4jenum.ActionServiceLineItemRemoved, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed remove service line item action for contract %s: %s", contract.Id, err.Error())
@@ -630,14 +630,14 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	}
 
 	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.ServiceLineItemWriteRepository.Close(ctx, eventData.Tenant, serviceLineItemId, eventData.EndedAt, eventData.IsCanceled)
+	err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemWriteRepository.Close(ctx, eventData.Tenant, serviceLineItemId, eventData.EndedAt, eventData.IsCanceled)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while closing service line item %s: %s", serviceLineItemId, err.Error())
 		return err
 	}
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractByServiceLineItemId(ctx, eventData.Tenant, serviceLineItemId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while getting contract for service line item %s: %s", serviceLineItemId, err.Error())
@@ -645,7 +645,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 	}
 	if contractDbNode != nil {
 		contract := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityArr(ctx, eventData.Tenant, contract.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
