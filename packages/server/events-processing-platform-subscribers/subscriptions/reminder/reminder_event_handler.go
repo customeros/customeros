@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	reminderevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
@@ -22,15 +22,15 @@ import (
 
 type ReminderEventHandler struct {
 	log                     logger.Logger
-	repositories            *repository.Repositories
+	services                *service.Services
 	cfg                     config.Config
 	eventBufferStoreService *eventbuffer.EventBufferStoreService
 }
 
-func NewReminderEventHandler(log logger.Logger, repositories *repository.Repositories, cfg config.Config, eventBufferStoreService *eventbuffer.EventBufferStoreService) *ReminderEventHandler {
+func NewReminderEventHandler(log logger.Logger, services *service.Services, cfg config.Config, eventBufferStoreService *eventbuffer.EventBufferStoreService) *ReminderEventHandler {
 	return &ReminderEventHandler{
 		log:                     log,
-		repositories:            repositories,
+		services:                services,
 		cfg:                     cfg,
 		eventBufferStoreService: eventBufferStoreService,
 	}
