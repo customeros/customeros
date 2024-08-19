@@ -103,11 +103,19 @@ export const ServicesList = observer(
               Subscriptions
             </h1>
             {groupedServicesByParentId?.subscription
-              ?.sort(
-                (a, b) =>
-                  new Date(b.currentLineItem?.serviceStarted || 0).getTime() -
-                  new Date(a.currentLineItem?.serviceStarted || 0).getTime(),
-              )
+              ?.sort((a, b) => {
+                const aDate = new Date(a.currentLineItem?.serviceStarted || 0);
+                const bDate = new Date(b.currentLineItem?.serviceStarted || 0);
+
+                if (aDate.getTime() !== bDate.getTime()) {
+                  return bDate.getTime() - aDate.getTime();
+                }
+
+                return (
+                  (b.currentLineItem?.price || 0) -
+                  (a.currentLineItem?.price || 0)
+                );
+              })
               .map((service) => (
                 <React.Fragment
                   key={`service-item-${service?.currentLineItem?.metadata?.id}`}
@@ -131,11 +139,19 @@ export const ServicesList = observer(
               One-time
             </h1>
             {groupedServicesByParentId?.once
-              ?.sort(
-                (a, b) =>
-                  new Date(b.currentLineItem?.serviceStarted || 0).getTime() -
-                  new Date(a.currentLineItem?.serviceStarted || 0).getTime(),
-              )
+              ?.sort((a, b) => {
+                const aDate = new Date(a.currentLineItem?.serviceStarted || 0);
+                const bDate = new Date(b.currentLineItem?.serviceStarted || 0);
+
+                if (aDate.getTime() !== bDate.getTime()) {
+                  return bDate.getTime() - aDate.getTime();
+                }
+
+                return (
+                  (b.currentLineItem?.price || 0) -
+                  (a.currentLineItem?.price || 0)
+                );
+              })
               .map((service) => (
                 <React.Fragment
                   key={`service-item-${service?.currentLineItem?.metadata?.id}`}
