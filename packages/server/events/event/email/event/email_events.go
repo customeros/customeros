@@ -1,7 +1,6 @@
 package event
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -88,24 +87,6 @@ type EmailFailedValidationEvent struct {
 	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
 }
 
-func NewEmailFailedValidationEvent(aggregate eventstore.Aggregate, tenant, validationError string) (eventstore.Event, error) {
-	eventData := EmailFailedValidationEvent{
-		Tenant:          tenant,
-		ValidationError: validationError,
-		ValidatedAt:     utils.Now(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailFailedValidationEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, EmailValidationFailedV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailFailedValidationEvent")
-	}
-	return event, nil
-}
-
 type EmailValidatedEvent struct {
 	Tenant          string    `json:"tenant" validate:"required"`
 	RawEmail        string    `json:"rawEmail" validate:"required"`
@@ -124,39 +105,6 @@ type EmailValidatedEvent struct {
 	IsValidSyntax   bool      `json:"isValidSyntax"`
 	Username        string    `json:"username"`
 	EmailAddress    string    `json:"email"`
-}
-
-func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, isReachable, validationError, domain, username, emailAddress string,
-	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax, isDeliverable, IsDisposable, IsRoleAccount bool) (eventstore.Event, error) {
-	eventData := EmailValidatedEvent{
-		Tenant:          tenant,
-		RawEmail:        rawEmail,
-		IsReachable:     isReachable,
-		ValidationError: validationError,
-		AcceptsMail:     acceptsMail,
-		CanConnectSmtp:  canConnectSmtp,
-		HasFullInbox:    hasFullInbox,
-		IsCatchAll:      isCatchAll,
-		IsDisabled:      isDisabled,
-		IsDeliverable:   isDeliverable,
-		IsDisposable:    IsDisposable,
-		IsRoleAccount:   IsRoleAccount,
-		Domain:          domain,
-		IsValidSyntax:   isValidSyntax,
-		Username:        username,
-		EmailAddress:    emailAddress,
-		ValidatedAt:     utils.Now(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailValidatedEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, EmailValidatedV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailValidatedEvent")
-	}
-	return event, nil
 }
 
 type EmailRequestValidationEvent struct {

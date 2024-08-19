@@ -13,12 +13,18 @@ import (
 	"golang.org/x/net/context"
 )
 
+type TenantAndEmailId struct {
+	Tenant  string
+	EmailId string
+}
+
 type EmailReadRepository interface {
 	GetEmailIdIfExists(ctx context.Context, tenant, email string) (string, error)
 	GetEmailForUser(ctx context.Context, tenant string, userId string) (*dbtype.Node, error)
 	GetById(ctx context.Context, tenant, emailId string) (*dbtype.Node, error)
 	GetFirstByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 	GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInMinutes, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error)
 }
 
 type emailReadRepository struct {
@@ -220,4 +226,54 @@ func (r *emailReadRepository) GetAllEmailNodesForLinkedEntityIds(ctx context.Con
 		return nil, err
 	}
 	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInMinutes, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailsForValidation")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("delayFromLastUpdateInMinutes", delayFromLastUpdateInMinutes),
+		log.Int("delayFromLastValidationAttemptInMinutes", delayFromLastValidationAttemptInMinutes),
+		log.Int("limit", limit))
+
+	cypher := `MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
+				WHERE
+					e.techValidatedAt IS NULL AND
+					(e.updatedAt < datetime() - duration({minutes: $delayFromLastUpdateInMinutes})) AND
+					(c.techValidationRequestedAt IS NULL OR c.techValidationRequestedAt < datetime() - duration({minutes: $delayFromLastValidationAttemptInMinutes}))
+				WITH t.name as tenant, e.id as emailId
+				ORDER BY CASE WHEN e.techValidationRequestedAt IS NULL THEN 0 ELSE 1 END, c.techValidationRequestedAt ASC
+				LIMIT $limit
+				RETURN DISTINCT tenant, emailId`
+	params := map[string]any{
+		"delayFromLastUpdateInMinutes":            delayFromLastUpdateInMinutes,
+		"delayFromLastValidationAttemptInMinutes": delayFromLastValidationAttemptInMinutes,
+		"limit": limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	output := make([]TenantAndEmailId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndEmailId{
+				Tenant:  v.Values[0].(string),
+				EmailId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
 }

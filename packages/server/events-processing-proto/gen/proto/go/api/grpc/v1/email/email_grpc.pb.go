@@ -25,10 +25,6 @@ type EmailGrpcServiceClient interface {
 	UpsertEmail(ctx context.Context, in *UpsertEmailGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
 	RequestEmailValidation(ctx context.Context, in *RequestEmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
 	UpdateEmailValidation(ctx context.Context, in *EmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
-	// Deprecated
-	FailEmailValidation(ctx context.Context, in *FailEmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
-	// Deprecated
-	PassEmailValidation(ctx context.Context, in *PassEmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
 }
 
 type emailGrpcServiceClient struct {
@@ -66,24 +62,6 @@ func (c *emailGrpcServiceClient) UpdateEmailValidation(ctx context.Context, in *
 	return out, nil
 }
 
-func (c *emailGrpcServiceClient) FailEmailValidation(ctx context.Context, in *FailEmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error) {
-	out := new(EmailIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/emailGrpcService/FailEmailValidation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *emailGrpcServiceClient) PassEmailValidation(ctx context.Context, in *PassEmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error) {
-	out := new(EmailIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/emailGrpcService/PassEmailValidation", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 // EmailGrpcServiceServer is the server API for EmailGrpcService service.
 // All implementations should embed UnimplementedEmailGrpcServiceServer
 // for forward compatibility
@@ -91,10 +69,6 @@ type EmailGrpcServiceServer interface {
 	UpsertEmail(context.Context, *UpsertEmailGrpcRequest) (*EmailIdGrpcResponse, error)
 	RequestEmailValidation(context.Context, *RequestEmailValidationGrpcRequest) (*EmailIdGrpcResponse, error)
 	UpdateEmailValidation(context.Context, *EmailValidationGrpcRequest) (*EmailIdGrpcResponse, error)
-	// Deprecated
-	FailEmailValidation(context.Context, *FailEmailValidationGrpcRequest) (*EmailIdGrpcResponse, error)
-	// Deprecated
-	PassEmailValidation(context.Context, *PassEmailValidationGrpcRequest) (*EmailIdGrpcResponse, error)
 }
 
 // UnimplementedEmailGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -109,12 +83,6 @@ func (UnimplementedEmailGrpcServiceServer) RequestEmailValidation(context.Contex
 }
 func (UnimplementedEmailGrpcServiceServer) UpdateEmailValidation(context.Context, *EmailValidationGrpcRequest) (*EmailIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpdateEmailValidation not implemented")
-}
-func (UnimplementedEmailGrpcServiceServer) FailEmailValidation(context.Context, *FailEmailValidationGrpcRequest) (*EmailIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method FailEmailValidation not implemented")
-}
-func (UnimplementedEmailGrpcServiceServer) PassEmailValidation(context.Context, *PassEmailValidationGrpcRequest) (*EmailIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method PassEmailValidation not implemented")
 }
 
 // UnsafeEmailGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -182,42 +150,6 @@ func _EmailGrpcService_UpdateEmailValidation_Handler(srv interface{}, ctx contex
 	return interceptor(ctx, in, info, handler)
 }
 
-func _EmailGrpcService_FailEmailValidation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(FailEmailValidationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EmailGrpcServiceServer).FailEmailValidation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/emailGrpcService/FailEmailValidation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EmailGrpcServiceServer).FailEmailValidation(ctx, req.(*FailEmailValidationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _EmailGrpcService_PassEmailValidation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(PassEmailValidationGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EmailGrpcServiceServer).PassEmailValidation(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/emailGrpcService/PassEmailValidation",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EmailGrpcServiceServer).PassEmailValidation(ctx, req.(*PassEmailValidationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 // EmailGrpcService_ServiceDesc is the grpc.ServiceDesc for EmailGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -236,14 +168,6 @@ var EmailGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpdateEmailValidation",
 			Handler:    _EmailGrpcService_UpdateEmailValidation_Handler,
-		},
-		{
-			MethodName: "FailEmailValidation",
-			Handler:    _EmailGrpcService_FailEmailValidation_Handler,
-		},
-		{
-			MethodName: "PassEmailValidation",
-			Handler:    _EmailGrpcService_PassEmailValidation_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

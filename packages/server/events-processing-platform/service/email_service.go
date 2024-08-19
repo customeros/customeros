@@ -87,44 +87,6 @@ func (s *emailService) UpsertEmail(ctx context.Context, request *emailpb.UpsertE
 	return &emailpb.EmailIdGrpcResponse{Id: emailId}, nil
 }
 
-func (s *emailService) FailEmailValidation(ctx context.Context, request *emailpb.FailEmailValidationGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.FailEmailValidation")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return email.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(FailEmailValidation.HandleGRPCRequest) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
-}
-
-func (s *emailService) PassEmailValidation(ctx context.Context, request *emailpb.PassEmailValidationGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.PassEmailValidation")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return email.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(PassEmailValidation.HandleGRPCRequest) tenant:{%v}, err: %v", request.Tenant, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
-}
-
 func (s *emailService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

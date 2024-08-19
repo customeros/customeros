@@ -18,39 +18,6 @@ message UpsertEmailGrpcRequest {
   optional string LinkWithId = 12;
 }
 
-//Deprecated
-message FailEmailValidationGrpcRequest {
-  string tenant = 1;
-  string emailId = 2;
-  string errorMessage = 3;
-  string appSource = 4;
-  string loggedInUserId = 5;
-  string rawEmail = 6;
-}
-
-//Deprecated
-message PassEmailValidationGrpcRequest {
-  string tenant = 1;
-  string emailId = 2;
-  string appSource = 3;
-  string loggedInUserId = 4;
-  string rawEmail = 5;
-  string isReachable = 6;
-  string errorMessage = 7;
-  string domain = 8;
-  string username = 9;
-  string email = 10;
-  bool acceptsMail = 11;
-  bool canConnectSmtp = 12;
-  bool hasFullInbox = 13;
-  bool isCatchAll = 14;
-  bool isDisabled = 15;
-  bool isValidSyntax = 16;
-  bool isDisposable = 17;
-  bool isRoleAccount = 18;
-  bool IsDeliverable = 19;
-}
-
 message EmailValidationGrpcRequest {
   string tenant = 1;
   string emailId = 2;
@@ -93,8 +60,4 @@ service emailGrpcService {
   rpc UpsertEmail(UpsertEmailGrpcRequest) returns (EmailIdGrpcResponse);
   rpc RequestEmailValidation(RequestEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
   rpc UpdateEmailValidation(EmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
-  // Deprecated
-  rpc FailEmailValidation(FailEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
-  // Deprecated
-  rpc PassEmailValidation(PassEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
 }
