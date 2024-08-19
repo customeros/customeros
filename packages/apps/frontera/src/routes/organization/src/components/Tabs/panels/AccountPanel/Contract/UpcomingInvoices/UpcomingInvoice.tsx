@@ -1,3 +1,4 @@
+import { toZonedTime } from 'date-fns-tz';
 import { observer } from 'mobx-react-lite';
 
 import { Contract } from '@graphql/types';
@@ -54,17 +55,17 @@ export const UpcomingInvoice = observer(
         <div className='whitespace-nowrap text-gray-500 underline'>
           {formatCurrency(invoice.amountDue, 2, invoice?.currency)} on{' '}
           {DateTimeUtils.format(
-            invoice?.due,
+            toZonedTime(invoice?.invoicePeriodStart, 'UTC').toUTCString(),
             DateTimeUtils.defaultFormatShortString,
           )}{' '}
           (
           {DateTimeUtils.format(
-            invoice?.invoicePeriodStart,
+            toZonedTime(invoice?.invoicePeriodStart, 'UTC').toUTCString(),
             DateTimeUtils.dateDayAndMonth,
           )}{' '}
           -{' '}
           {DateTimeUtils.format(
-            invoice?.invoicePeriodEnd,
+            toZonedTime(invoice?.invoicePeriodStart, 'UTC').toUTCString(),
             DateTimeUtils.defaultFormatShortString,
           )}
           )
