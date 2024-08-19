@@ -102,7 +102,16 @@ export const ServiceList = observer(
             const aDate = new Date(a[0]?.serviceStarted || 0);
             const bDate = new Date(b[0]?.serviceStarted || 0);
 
-            return bDate.getTime() - aDate.getTime();
+            const dateComparison = bDate.getTime() - aDate.getTime();
+
+            if (dateComparison === 0) {
+              const aTimestamp = new Date(a[0]?.serviceStarted || 0).getTime();
+              const bTimestamp = new Date(b[0]?.serviceStarted || 0).getTime();
+
+              return bTimestamp - aTimestamp;
+            }
+
+            return dateComparison;
           })
           .map((data, i) => (
             <React.Fragment
@@ -117,6 +126,7 @@ export const ServiceList = observer(
               />
             </React.Fragment>
           ))}
+
         {groupedServicesByParentId.once.length !== 0 && (
           <p className='text-sm font-medium mb-2'>One-time</p>
         )}
@@ -125,11 +135,20 @@ export const ServiceList = observer(
             const aDate = new Date(a[0]?.serviceStarted || 0);
             const bDate = new Date(b[0]?.serviceStarted || 0);
 
-            return bDate.getTime() - aDate.getTime();
+            const dateComparison = bDate.getTime() - aDate.getTime();
+
+            if (dateComparison === 0) {
+              const aTimestamp = new Date(a[0]?.serviceStarted || 0).getTime();
+              const bTimestamp = new Date(b[0]?.serviceStarted || 0).getTime();
+
+              return bTimestamp - aTimestamp;
+            }
+
+            return dateComparison;
           })
           .map((data, i) => (
             <React.Fragment
-              key={`one-time-card-item${data[0]?.parentId}-${data[0].description}-${i}`}
+              key={`one-time-card-item-${data[0]?.parentId}-${data[0].description}-${i}`}
             >
               <ServiceCard
                 contractId={id}

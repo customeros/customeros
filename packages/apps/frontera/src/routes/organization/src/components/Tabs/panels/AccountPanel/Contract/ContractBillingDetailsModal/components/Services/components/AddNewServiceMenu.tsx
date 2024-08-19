@@ -51,6 +51,7 @@ export const AddNewServiceMenu = observer(
                   billingCycle: BilledType.Monthly,
                   contractId,
                   description: 'Unnamed',
+                  serviceStarted: new Date(Date.now() + 86400000).toISOString(),
                 })
               }
             >
@@ -65,6 +66,7 @@ export const AddNewServiceMenu = observer(
                   billingCycle: BilledType.Once,
                   contractId,
                   description: 'Unnamed',
+                  serviceStarted: new Date(Date.now() + 86400000).toISOString(),
                 })
               }
             >
