@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/aggregate"
@@ -21,16 +21,16 @@ import (
 )
 
 type LogEntryEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewLogEntryEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *LogEntryEventHandler {
+func NewLogEntryEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *LogEntryEventHandler {
 	return &LogEntryEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -60,7 +60,7 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		},
 		CreatedAt: eventData.CreatedAt,
 	}
-	err := h.repositories.Neo4jRepositories.LogEntryWriteRepository.Create(ctx, eventData.Tenant, logEntryId, data)
+	err := h.services.CommonServices.Neo4jRepositories.LogEntryWriteRepository.Create(ctx, eventData.Tenant, logEntryId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving log entry %s: %s", logEntryId, err.Error())
@@ -76,7 +76,7 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, model.NodeLabelLogEntry, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, logEntryId, model.NodeLabelLogEntry, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link log entry %s with external system %s: %s", logEntryId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -120,7 +120,7 @@ func (h *LogEntryEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		LoggedOrganizationId: eventData.LoggedOrganizationId,
 		Source:               helper.GetSource(eventData.SourceOfTruth),
 	}
-	err := h.repositories.Neo4jRepositories.LogEntryWriteRepository.Update(ctx, eventData.Tenant, logEntryId, data)
+	err := h.services.CommonServices.Neo4jRepositories.LogEntryWriteRepository.Update(ctx, eventData.Tenant, logEntryId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving log entry %s: %s", logEntryId, err.Error())
@@ -141,7 +141,7 @@ func (h *LogEntryEventHandler) OnAddTag(ctx context.Context, evt eventstore.Even
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, model.NodeLabelLogEntry, eventData.TaggedAt)
+	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, model.NodeLabelLogEntry, eventData.TaggedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())
@@ -162,7 +162,7 @@ func (h *LogEntryEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.E
 	}
 
 	logEntryId := aggregate.GetLogEntryObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, model.NodeLabelLogEntry)
+	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, logEntryId, model.NodeLabelLogEntry)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing tag %s to log entry %s: %s", eventData.TagId, logEntryId, err.Error())

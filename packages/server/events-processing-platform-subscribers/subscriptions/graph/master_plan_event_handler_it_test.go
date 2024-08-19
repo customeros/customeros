@@ -26,8 +26,8 @@ func TestMasterPlanEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	masterPlanEventHandler := &MasterPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanCreateEvent
@@ -82,8 +82,8 @@ func TestMasterPlanEventHandler_OnCreateMilestone(t *testing.T) {
 
 	// Prepare the event handler
 	masterPlanEventHandler := &MasterPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent
@@ -146,8 +146,8 @@ func TestMasterPlanEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	masterPlanEventHandler := &MasterPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanUpdateEvent
@@ -198,8 +198,8 @@ func TestMasterPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 
 	// Prepare the event handler
 	masterPlanEventHandler := &MasterPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent
@@ -261,8 +261,8 @@ func TestMasterPlanEventHandler_OnReorderMilestones(t *testing.T) {
 
 	// Prepare the event handler
 	masterPlanEventHandler := &MasterPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent

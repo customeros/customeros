@@ -10,7 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/aggregate"
@@ -23,16 +23,16 @@ import (
 )
 
 type IssueEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewIssueEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *IssueEventHandler {
+func NewIssueEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *IssueEventHandler {
 	return &IssueEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -66,7 +66,7 @@ func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) 
 		SubmittedByOrganizationId: eventData.SubmittedByOrganizationId,
 		SubmittedByUserId:         eventData.SubmittedByUserId,
 	}
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.Create(ctx, eventData.Tenant, issueId, data)
+	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.Create(ctx, eventData.Tenant, issueId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
@@ -82,7 +82,7 @@ func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) 
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, model.NodeLabelIssue, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, model.NodeLabelIssue, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -131,7 +131,7 @@ func (h *IssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) 
 		Priority:    eventData.Priority,
 		Source:      helper.GetSource(eventData.Source),
 	}
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.Update(ctx, eventData.Tenant, issueId, data)
+	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.Update(ctx, eventData.Tenant, issueId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving issue %s: %s", issueId, err.Error())
@@ -146,7 +146,7 @@ func (h *IssueEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event) 
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, model.NodeLabelIssue, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, issueId, model.NodeLabelIssue, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link issue %s with external system %s: %s", issueId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -171,7 +171,7 @@ func (h *IssueEventHandler) OnAddUserAssignee(ctx context.Context, evt eventstor
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.AddUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId)
+	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.AddUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding assignee to issue %s: %s", issueId, err.Error())
@@ -194,7 +194,7 @@ func (h *IssueEventHandler) OnAddUserFollower(ctx context.Context, evt eventstor
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.AddUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId)
+	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.AddUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while adding follower to issue %s: %s", issueId, err.Error())
@@ -217,7 +217,7 @@ func (h *IssueEventHandler) OnRemoveUserAssignee(ctx context.Context, evt events
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId)
+	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.RemoveUserAssignee(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing assignee from issue %s: %s", issueId, err.Error())
@@ -241,7 +241,7 @@ func (h *IssueEventHandler) OnRemoveUserFollower(ctx context.Context, evt events
 	span.LogFields(log.String("eventData", fmt.Sprintf("%+v", evt)))
 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.IssueWriteRepository.RemoveUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId)
+	err := h.services.CommonServices.Neo4jRepositories.IssueWriteRepository.RemoveUserFollower(ctx, eventData.Tenant, issueId, eventData.UserId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while removing follower from issue %s: %s", issueId, err.Error())

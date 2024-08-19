@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
@@ -15,11 +15,11 @@ import (
 )
 
 type JobRoleEventHandler struct {
-	Repositories *repository.Repositories
+	services *service.Services
 }
 
-func NewJobRoleEventHandler(repositories *repository.Repositories) *JobRoleEventHandler {
-	return &JobRoleEventHandler{Repositories: repositories}
+func NewJobRoleEventHandler(services *service.Services) *JobRoleEventHandler {
+	return &JobRoleEventHandler{services: services}
 }
 
 func (h *JobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstore.Event) error {
@@ -46,6 +46,6 @@ func (h *JobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstor
 		},
 		CreatedAt: eventData.CreatedAt,
 	}
-	err := h.Repositories.Neo4jRepositories.JobRoleWriteRepository.CreateJobRole(ctx, eventData.Tenant, eventId, data)
+	err := h.services.CommonServices.Neo4jRepositories.JobRoleWriteRepository.CreateJobRole(ctx, eventData.Tenant, eventId, data)
 	return err
 }

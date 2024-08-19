@@ -31,7 +31,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -124,24 +123,22 @@ type BrandfetchIndustry struct {
 }
 
 type organizationEventHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	cfg          *config.Config
-	caches       caches.Cache
-	aiModel      ai.AiModel
-	grpcClients  *grpc_client.Clients
-	services     *service.Services
+	log         logger.Logger
+	cfg         *config.Config
+	caches      caches.Cache
+	aiModel     ai.AiModel
+	grpcClients *grpc_client.Clients
+	services    *service.Services
 }
 
-func NewOrganizationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, caches caches.Cache, aiModel ai.AiModel, grpcClients *grpc_client.Clients, services *service.Services) *organizationEventHandler {
+func NewOrganizationEventHandler(services *service.Services, log logger.Logger, cfg *config.Config, caches caches.Cache, aiModel ai.AiModel, grpcClients *grpc_client.Clients) *organizationEventHandler {
 	return &organizationEventHandler{
-		repositories: repositories,
-		log:          log,
-		cfg:          cfg,
-		caches:       caches,
-		aiModel:      aiModel,
-		grpcClients:  grpcClients,
-		services:     services,
+		log:         log,
+		cfg:         cfg,
+		caches:      caches,
+		aiModel:     aiModel,
+		grpcClients: grpcClients,
+		services:    services,
 	}
 }
 
@@ -195,7 +192,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)
@@ -209,13 +206,13 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	}
 
 	// create domain node if not exist
-	err = h.repositories.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, utils.Now())
+	err = h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error creating domain node: %v", err)
 		return nil
 	}
-	domainNode, err := h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
+	domainNode, err := h.services.CommonServices.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting domain node: %v", err)
@@ -247,7 +244,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 
 	// re-fetch latest domain node
 	if justEnriched {
-		domainNode, err = h.repositories.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
+		domainNode, err = h.services.CommonServices.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting domain node: %v", err)
@@ -289,7 +286,7 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, dom
 	// get current month in format yyyy-mm
 	currentMonth := utils.Now().Format("2006-01")
 
-	queryResult := h.repositories.PostgresRepositories.ExternalAppKeysRepository.GetAppKeys(ctx, constants.AppBrandfetch, currentMonth, h.cfg.Services.BrandfetchLimit)
+	queryResult := h.services.CommonServices.PostgresRepositories.ExternalAppKeysRepository.GetAppKeys(ctx, constants.AppBrandfetch, currentMonth, h.cfg.Services.BrandfetchLimit)
 	if queryResult.Error != nil {
 		tracing.TraceErr(span, queryResult.Error)
 		h.log.Errorf("Error getting brandfetch app keys: %v", queryResult.Error)
@@ -317,7 +314,7 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, dom
 	}
 
 	// Increment usage count of the app key
-	queryResult = h.repositories.PostgresRepositories.ExternalAppKeysRepository.IncrementUsageCount(ctx, appKey.ID)
+	queryResult = h.services.CommonServices.PostgresRepositories.ExternalAppKeysRepository.IncrementUsageCount(ctx, appKey.ID)
 	if queryResult.Error != nil {
 		tracing.TraceErr(span, queryResult.Error)
 		h.log.Errorf("Error incrementing app key usage count: %v", queryResult.Error)
@@ -338,7 +335,7 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, dom
 	}
 
 	if enrichFailed {
-		innerErr := h.repositories.Neo4jRepositories.DomainWriteRepository.EnrichFailed(ctx, domain, errMsg, neo4jenum.Brandfetch, utils.Now())
+		innerErr := h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.EnrichFailed(ctx, domain, errMsg, neo4jenum.Brandfetch, utils.Now())
 		if innerErr != nil {
 			tracing.TraceErr(span, innerErr)
 			h.log.Errorf("Error saving enriching domain results: %v", innerErr.Error())
@@ -347,7 +344,7 @@ func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, dom
 	}
 
 	bodyAsString := string(body)
-	err = h.repositories.Neo4jRepositories.DomainWriteRepository.EnrichSuccess(ctx, domain, bodyAsString, neo4jenum.Brandfetch, utils.Now())
+	err = h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.EnrichSuccess(ctx, domain, bodyAsString, neo4jenum.Brandfetch, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error saving enriching domain results: %v", err.Error())
@@ -581,7 +578,7 @@ func (h *organizationEventHandler) AdjustNewOrganizationFields(ctx context.Conte
 
 	// wait for organization to be created in neo4j before updating it
 	for attempt := 1; attempt <= constants.MaxRetriesCheckDataInNeo4j; attempt++ {
-		exists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, model.NodeLabelOrganization)
+		exists, err := h.services.CommonServices.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, organizationId, model.NodeLabelOrganization)
 		if err == nil && exists {
 			break
 		}
@@ -740,7 +737,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt1,
 		Prompt:         firstPrompt,
 	}
-	promptStoreLogId1, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog1)
+	promptStoreLogId1, err := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.Store(promptLog1)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log: %v", err)
@@ -752,14 +749,14 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
-		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
+		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId1, err.Error())
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return ""
 	} else {
-		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
+		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId1, firstResult)
 		if storeErr != nil {
 			tracing.TraceErr(span, storeErr)
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
@@ -782,7 +779,7 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 		PromptTemplate: &h.cfg.Services.Anthropic.IndustryLookupPrompt2,
 		Prompt:         secondPrompt,
 	}
-	promptStoreLogId2, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog2)
+	promptStoreLogId2, err := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.Store(promptLog2)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log with error: %v", err)
@@ -791,14 +788,14 @@ func (h *organizationEventHandler) mapIndustryToGICSWithAI(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error invoking AI: %v", err)
-		err = h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId2, err.Error())
+		err = h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId2, err.Error())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating prompt log with error: %v", err)
 		}
 		return ""
 	} else {
-		err = h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, secondResult)
+		err = h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId2, secondResult)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error updating prompt log with ai response: %v", err)
@@ -821,7 +818,7 @@ func (h *organizationEventHandler) OnAdjustIndustry(ctx context.Context, evt eve
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
+	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, eventData.Tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization with id %s: %v", organizationId, err)

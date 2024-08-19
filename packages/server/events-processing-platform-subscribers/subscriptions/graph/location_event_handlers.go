@@ -5,7 +5,7 @@ import (
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
@@ -16,12 +16,12 @@ import (
 )
 
 type LocationEventHandler struct {
-	Repositories *repository.Repositories
+	services *service.Services
 }
 
-func NewLocationEventHandler(repositories *repository.Repositories) *LocationEventHandler {
+func NewLocationEventHandler(services *service.Services) *LocationEventHandler {
 	return &LocationEventHandler{
-		Repositories: repositories,
+		services: services,
 	}
 }
 
@@ -48,7 +48,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 		Name:           eventData.Name,
 		AddressDetails: locationAddressToAddressDetails(eventData.LocationAddress),
 	}
-	err := h.Repositories.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, eventData.Tenant, LocationId, data)
+	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.CreateLocation(ctx, eventData.Tenant, LocationId, data)
 
 	return err
 }
@@ -71,12 +71,12 @@ func (h *LocationEventHandler) OnLocationUpdate(ctx context.Context, evt eventst
 		RawAddress:     eventData.RawAddress,
 		AddressDetails: locationAddressToAddressDetails(eventData.LocationAddress),
 	}
-	err := h.Repositories.Neo4jRepositories.LocationWriteRepository.UpdateLocation(ctx, eventData.Tenant, locationId, data)
+	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.UpdateLocation(ctx, eventData.Tenant, locationId, data)
 
 	return err
 }
 
-func (e *LocationEventHandler) OnLocationValidated(ctx context.Context, evt eventstore.Event) error {
+func (h *LocationEventHandler) OnLocationValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "LocationEventHandler.OnLocationValidated")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
@@ -89,7 +89,7 @@ func (e *LocationEventHandler) OnLocationValidated(ctx context.Context, evt even
 
 	locationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
 	data := locationAddressToAddressDetails(eventData.LocationAddress)
-	err := e.Repositories.Neo4jRepositories.LocationWriteRepository.LocationValidated(ctx, eventData.Tenant, locationId, data, eventData.ValidatedAt)
+	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LocationValidated(ctx, eventData.Tenant, locationId, data, eventData.ValidatedAt)
 
 	return err
 }
@@ -106,7 +106,7 @@ func (h *LocationEventHandler) OnLocationValidationFailed(ctx context.Context, e
 	}
 
 	locationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.Repositories.Neo4jRepositories.LocationWriteRepository.FailLocationValidation(ctx, eventData.Tenant, locationId, eventData.ValidationError, eventData.ValidatedAt)
+	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.FailLocationValidation(ctx, eventData.Tenant, locationId, eventData.ValidationError, eventData.ValidatedAt)
 
 	return err
 }

@@ -8,7 +8,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -17,14 +17,14 @@ import (
 )
 
 type CommentEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
+	log      logger.Logger
+	services *service.Services
 }
 
-func NewCommentEventHandler(log logger.Logger, repositories *repository.Repositories) *CommentEventHandler {
+func NewCommentEventHandler(log logger.Logger, services *service.Services) *CommentEventHandler {
 	return &CommentEventHandler{
-		log:          log,
-		repositories: repositories,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -40,7 +40,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 	}
 
 	if eventData.CommentedIssueId != "" {
-		issueExists, err := h.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CommentedIssueId, model.NodeLabelIssue)
+		issueExists, err := h.services.CommonServices.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CommentedIssueId, model.NodeLabelIssue)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while checking if issue %s exists: %s", eventData.CommentedIssueId, err.Error())
@@ -67,7 +67,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 			AppSource:     helper.GetAppSource(eventData.AppSource),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.CommentWriteRepository.Create(ctx, eventData.Tenant, commentId, data)
+	err := h.services.CommonServices.Neo4jRepositories.CommentWriteRepository.Create(ctx, eventData.Tenant, commentId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving comment %s: %s", commentId, err.Error())
@@ -83,7 +83,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, model.NodeLabelComment, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, model.NodeLabelComment, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link comment %s with external system %s: %s", commentId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -111,7 +111,7 @@ func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event
 		ContentType: eventData.ContentType,
 		Source:      helper.GetSource(eventData.Source),
 	}
-	err := h.repositories.Neo4jRepositories.CommentWriteRepository.Update(ctx, eventData.Tenant, commentId, data)
+	err := h.services.CommonServices.Neo4jRepositories.CommentWriteRepository.Update(ctx, eventData.Tenant, commentId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving comment %s: %s", commentId, err.Error())
@@ -127,7 +127,7 @@ func (h *CommentEventHandler) OnUpdate(ctx context.Context, evt eventstore.Event
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, model.NodeLabelComment, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, commentId, model.NodeLabelComment, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link comment %s with external system %s: %s", commentId, eventData.ExternalSystem.ExternalSystemId, err.Error())

@@ -13,9 +13,9 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
@@ -30,18 +30,18 @@ import (
 )
 
 type phoneNumberEventHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	cfg          *config.Config
-	grpcClients  *grpc_client.Clients
+	services    *service.Services
+	log         logger.Logger
+	cfg         *config.Config
+	grpcClients *grpc_client.Clients
 }
 
-func NewPhoneNumberEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *phoneNumberEventHandler {
+func NewPhoneNumberEventHandler(services *service.Services, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *phoneNumberEventHandler {
 	return &phoneNumberEventHandler{
-		repositories: repositories,
-		log:          log,
-		cfg:          cfg,
-		grpcClients:  grpcClients,
+		services:    services,
+		log:         log,
+		cfg:         cfg,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -72,7 +72,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
-	phoneNumberNodeAvailable := subscriptions.WaitCheckNodeExistsInNeo4j(ctx, h.repositories.Neo4jRepositories, eventData.Tenant, phoneNumberId, model.NodeLabelPhoneNumber)
+	phoneNumberNodeAvailable := subscriptions.WaitCheckNodeExistsInNeo4j(ctx, h.services.CommonServices.Neo4jRepositories, eventData.Tenant, phoneNumberId, model.NodeLabelPhoneNumber)
 	if !phoneNumberNodeAvailable {
 		err := errors.Errorf("%s node %s not available in neo4j", model.NodeLabelPhoneNumber, phoneNumberId)
 		tracing.TraceErr(span, err)
@@ -98,7 +98,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberValidate(ctx context.Context, evt
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, phoneNumberId)
 
-	phoneNumberDbNode, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetById(ctx, eventData.Tenant, phoneNumberId)
+	phoneNumberDbNode, err := h.services.CommonServices.Neo4jRepositories.PhoneNumberReadRepository.GetById(ctx, eventData.Tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -114,7 +114,7 @@ func (h *phoneNumberEventHandler) validatePhoneNumber(ctx context.Context, tenan
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("rawPhoneNumber", rawPhoneNumber))
 
-	countryCodeA2, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
+	countryCodeA2, err := h.services.CommonServices.Neo4jRepositories.PhoneNumberReadRepository.GetCountryCodeA2ForPhoneNumber(ctx, tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return h.sendPhoneNumberFailedValidationEvent(ctx, tenant, phoneNumberId, rawPhoneNumber, countryCodeA2, err.Error())

@@ -62,8 +62,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -138,8 +138,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
 		Hide: false,
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -170,8 +170,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 		Hide: true,
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -209,8 +209,8 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_New(t *testin
 		Url: socialUrl,
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -263,7 +263,7 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	neo4jt.LinkSocial(ctx, testDatabase.Driver, existingSocialId, orgId)
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -322,7 +322,7 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 	require.Equal(t, locationName, utils.GetStringPropOrEmpty(propsAfterLocationCreate, "name"))
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -370,7 +370,7 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	event, err := events.NewOrganizationRefreshArrEvent(orgAggregate)
@@ -440,8 +440,8 @@ func TestGraphOrganizationEventHandler_OnRefreshRenewalSummary(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	event, err := events.NewOrganizationRefreshRenewalSummaryEvent(orgAggregate)
@@ -480,7 +480,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 		Name: "test org",
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -536,7 +536,7 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -597,7 +597,7 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -647,7 +647,7 @@ func TestGraphOrganizationEventHandler_OnUpdateBillingProfile(t *testing.T) {
 		TaxId:     "Tax id",
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -688,7 +688,7 @@ func TestGraphOrganizationEventHandler_OnEmailLinkedToBillingProfile(t *testing.
 	newEmailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{})
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -725,7 +725,7 @@ func TestGraphOrganizationEventHandler_OnEmailUnlinkedFromBillingProfile(t *test
 	neo4jtest.LinkNodes(ctx, testDatabase.Driver, billingProfileId, existingEmailId, "HAS", map[string]interface{}{"primary": true})
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -762,7 +762,7 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToBillingProfile(t *testi
 	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{})
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -798,7 +798,7 @@ func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *t
 	neo4jtest.LinkNodes(ctx, testDatabase.Driver, billingProfileId, existingLocationId, "HAS")
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -834,7 +834,7 @@ func TestGraphOrganizationEventHandler_OnDomainUnlinkedFromOrganization(t *testi
 	neo4jtest.LinkDomainToOrganization(ctx, testDatabase.Driver, orgId, "openline.ai")
 
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 

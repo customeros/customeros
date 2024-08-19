@@ -2,13 +2,13 @@ package graph
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -16,14 +16,14 @@ import (
 )
 
 type ReminderEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
+	log      logger.Logger
+	services *service.Services
 }
 
-func NewReminderEventHandler(log logger.Logger, repositories *repository.Repositories) *ReminderEventHandler {
+func NewReminderEventHandler(log logger.Logger, services *service.Services) *ReminderEventHandler {
 	return &ReminderEventHandler{
-		log:          log,
-		repositories: repositories,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -44,7 +44,7 @@ func (h *ReminderEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 	source := helper.GetSource(eventData.Source)
 	appSource := helper.GetAppSource(eventData.AppSource)
 
-	err := h.repositories.Neo4jRepositories.ReminderWriteRepository.CreateReminder(ctx, eventData.Tenant, reminderId, eventData.UserId, eventData.OrganizationId, eventData.Content, source, appSource, eventData.CreatedAt, eventData.DueDate)
+	err := h.services.CommonServices.Neo4jRepositories.ReminderWriteRepository.CreateReminder(ctx, eventData.Tenant, reminderId, eventData.UserId, eventData.OrganizationId, eventData.Content, source, appSource, eventData.CreatedAt, eventData.DueDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving reminder %s: %s", reminderId, err.Error())
@@ -79,7 +79,7 @@ func (h *ReminderEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateDismissed: eventData.UpdateDismissed(),
 	}
 
-	err := h.repositories.Neo4jRepositories.ReminderWriteRepository.UpdateReminder(ctx, eventData.Tenant, reminderId, updateData)
+	err := h.services.CommonServices.Neo4jRepositories.ReminderWriteRepository.UpdateReminder(ctx, eventData.Tenant, reminderId, updateData)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating reminder plan %s: %s", reminderId, err.Error())

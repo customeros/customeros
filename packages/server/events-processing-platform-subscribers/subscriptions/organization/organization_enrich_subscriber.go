@@ -10,7 +10,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -29,7 +28,7 @@ type OrganizationEnrichSubscriber struct {
 	organizationEventHandler *organizationEventHandler
 }
 
-func NewOrganizationEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, repositories *repository.Repositories, caches caches.Cache, grpcClients *grpc_client.Clients, services *service.Services) *OrganizationEnrichSubscriber {
+func NewOrganizationEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, caches caches.Cache, grpcClients *grpc_client.Clients, services *service.Services) *OrganizationEnrichSubscriber {
 	aiCfg := aiConfig.Config{
 		OpenAi: aiConfig.AiModelConfigOpenAi{
 			ApiKey:       cfg.Services.Ai.ApiKey,
@@ -46,7 +45,7 @@ func NewOrganizationEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *co
 		log:                      log,
 		db:                       db,
 		cfg:                      cfg,
-		organizationEventHandler: NewOrganizationEventHandler(repositories, log, cfg, caches, aiModel, grpcClients, services),
+		organizationEventHandler: NewOrganizationEventHandler(services, log, cfg, caches, aiModel, grpcClients),
 	}
 }
 

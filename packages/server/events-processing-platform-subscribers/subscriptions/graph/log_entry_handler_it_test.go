@@ -51,8 +51,8 @@ func TestGraphLogEntryEventHandler_OnCreate(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &LogEntryEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	now := utils.Now()
 	logEntryId := uuid.New().String()
@@ -121,7 +121,7 @@ func TestGraphLogEntryEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &LogEntryEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
@@ -164,7 +164,7 @@ func TestGraphLogEntryEventHandler_OnAddTag(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &LogEntryEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
@@ -208,7 +208,7 @@ func TestGraphLogEntryEventHandler_OnRemoveTag(t *testing.T) {
 
 	// prepare event handler
 	logEntryEventHandler := &LogEntryEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	logEntryAggregate := aggregate.NewLogEntryAggregateWithTenantAndID(tenantName, logEntryId)
 	removeTagEvent, err := event.NewLogEntryRemoveTagEvent(logEntryAggregate, tagId)

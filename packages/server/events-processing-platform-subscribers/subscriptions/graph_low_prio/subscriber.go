@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/opentracing/opentracing-go"
 	"strings"
@@ -12,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -29,12 +29,12 @@ type GraphLowPrioSubscriber struct {
 	organizationEventHandler *OrganizationEventHandler
 }
 
-func NewGraphLowPrioSubscriber(log logger.Logger, db *esdb.Client, repositories *repository.Repositories, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphLowPrioSubscriber {
+func NewGraphLowPrioSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config) *GraphLowPrioSubscriber {
 	return &GraphLowPrioSubscriber{
 		log:                      log,
 		db:                       db,
 		cfg:                      cfg,
-		organizationEventHandler: NewOrganizationEventHandler(log, repositories, grpcClients),
+		organizationEventHandler: NewOrganizationEventHandler(log, services, grpcClients),
 	}
 }
 

@@ -12,7 +12,7 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 
@@ -29,18 +29,18 @@ import (
 )
 
 type emailEventHandler struct {
-	log          logger.Logger
-	cfg          *config.Config
-	grpcClients  *grpc_client.Clients
-	repositories *repository.Repositories
+	log         logger.Logger
+	cfg         *config.Config
+	grpcClients *grpc_client.Clients
+	services    *service.Services
 }
 
-func NewEmailEventHandler(log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients, repositories *repository.Repositories) *emailEventHandler {
+func NewEmailEventHandler(log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients, services *service.Services) *emailEventHandler {
 	return &emailEventHandler{
-		log:          log,
-		cfg:          cfg,
-		grpcClients:  grpcClients,
-		repositories: repositories,
+		log:         log,
+		cfg:         cfg,
+		grpcClients: grpcClients,
+		services:    services,
 	}
 }
 
@@ -98,7 +98,7 @@ func (h *emailEventHandler) OnEmailValidate(ctx context.Context, evt eventstore.
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, emailId)
 
-	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetById(ctx, eventData.Tenant, emailId)
+	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetById(ctx, eventData.Tenant, emailId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

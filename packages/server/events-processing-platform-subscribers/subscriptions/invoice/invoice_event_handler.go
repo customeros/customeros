@@ -6,7 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"io/ioutil"
 	"net/http"
 	"net/mail"
@@ -16,7 +16,6 @@ import (
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -26,8 +25,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	postmark "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/notifications"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/webhook"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -52,24 +49,18 @@ type InvoiceActionMetadata struct {
 }
 
 type InvoiceEventHandler struct {
-	log              logger.Logger
-	repositories     *repository.Repositories
-	commonServices   *commonService.Services
-	cfg              config.Config
-	grpcClients      *grpc_client.Clients
-	fsc              fsc.FileStoreApiService
-	postmarkProvider *postmark.PostmarkProvider
+	log         logger.Logger
+	cfg         config.Config
+	grpcClients *grpc_client.Clients
+	services    *service.Services
 }
 
-func NewInvoiceEventHandler(log logger.Logger, commonServices *commonService.Services, repositories *repository.Repositories, cfg config.Config, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *postmark.PostmarkProvider) *InvoiceEventHandler {
+func NewInvoiceEventHandler(log logger.Logger, services *service.Services, cfg config.Config, grpcClients *grpc_client.Clients) *InvoiceEventHandler {
 	return &InvoiceEventHandler{
-		log:              log,
-		repositories:     repositories,
-		commonServices:   commonServices,
-		cfg:              cfg,
-		grpcClients:      grpcClients,
-		fsc:              fsc,
-		postmarkProvider: postmarkProvider,
+		log:         log,
+		services:    services,
+		cfg:         cfg,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -87,14 +78,14 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
+	invoiceEntity, err := h.services.CommonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return err
 	}
 
 	if invoiceEntity.OffCycle {
 
-		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, eventData.ContractId)
+		sliDbNodes, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, eventData.ContractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
@@ -109,7 +100,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			}
 		}
 
-		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillOffCyclePrepaidInvoice(ctx, invoiceEntity, sliEntities)
+		invoiceEntity, invoiceLines, err := h.services.CommonServices.InvoiceService.FillOffCyclePrepaidInvoice(ctx, invoiceEntity, sliEntities)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error filling invoice %s: %s", invoiceId, err.Error())
@@ -142,7 +133,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 		}
 	} else {
 
-		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, eventData.ContractId)
+		sliDbNodes, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, eventData.ContractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting service line items for contract %s: %s", eventData.ContractId, err.Error())
@@ -157,7 +148,7 @@ func (h *InvoiceEventHandler) onInvoiceFillRequestedV1(ctx context.Context, evt 
 			}
 		}
 
-		invoiceEntity, invoiceLines, err := h.commonServices.InvoiceService.FillCycleInvoice(ctx, invoiceEntity, sliEntities)
+		invoiceEntity, invoiceLines, err := h.services.CommonServices.InvoiceService.FillCycleInvoice(ctx, invoiceEntity, sliEntities)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error filling invoice %s: %s", invoiceId, err.Error())
@@ -173,7 +164,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	var tenantSettingsEntity *neo4jentity.TenantSettingsEntity
 
 	//load contract from neo4j
-	contract, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	contract, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetContractById")
@@ -185,7 +176,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	}
 
 	//load tenant settings from neo4j
-	tenantSettings, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
+	tenantSettings, err := h.services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -205,13 +196,13 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 	}
 
 	contractCountry := contractEntity.Country
-	countryDbNode, _ := h.repositories.Neo4jRepositories.CountryReadRepository.GetCountryByCodeIfExists(ctx, contractCountry)
+	countryDbNode, _ := h.services.CommonServices.Neo4jRepositories.CountryReadRepository.GetCountryByCodeIfExists(ctx, contractCountry)
 	if countryDbNode != nil {
 		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
 		contractCountry = countryEntity.Name
 	}
 	tenantBillingProfileCountry := tenantBillingProfileEntity.Country
-	countryDbNode, _ = h.repositories.Neo4jRepositories.CountryReadRepository.GetCountryByCodeIfExists(ctx, tenantBillingProfileCountry)
+	countryDbNode, _ = h.services.CommonServices.Neo4jRepositories.CountryReadRepository.GetCountryByCodeIfExists(ctx, tenantBillingProfileCountry)
 	if countryDbNode != nil {
 		countryEntity := neo4jmapper.MapDbNodeToCountryEntity(countryDbNode)
 		tenantBillingProfileCountry = countryEntity.Name
@@ -219,7 +210,7 @@ func (h *InvoiceEventHandler) prepareAndCallFillInvoice(ctx context.Context, ten
 
 	invoiceNumber := ""
 	if !invoiceEntity.OffCycle {
-		filledInvoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, tenant, contractId)
+		filledInvoiceDbNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetFirstPreviewFilledInvoice(ctx, tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
@@ -337,7 +328,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
+	invoiceEntity, err := h.services.CommonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -367,7 +358,7 @@ func (h *InvoiceEventHandler) onInvoicePdfGeneratedV1(ctx context.Context, evt e
 			h.log.Errorf("Error dispatching invoice finalized event for invoice %s: %s", invoiceId, err.Error())
 			// TODO: must implement retry mechanism for dispatching invoice finalized event
 		}
-		err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyFinalizedWebhookProcessedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error setting invoice finalized webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
@@ -388,7 +379,7 @@ func (h *InvoiceEventHandler) slackInvoiceFinalizedWebhook(ctx context.Context, 
 	}
 
 	// get organization linked to invoice
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
@@ -431,7 +422,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	tracing.LogObjectAsJson(span, "invoice", invoice)
 
 	// get organization linked to invoice to build payload for webhook
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
@@ -443,7 +434,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	}
 
 	// get contract linked to invoice to build payload for webhook
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
@@ -459,7 +450,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 	}
 
 	// get invoice line items linked to invoice to build payload for webhook
-	invoiceLineDbNodes, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, tenant, invoice.Id)
+	invoiceLineDbNodes, err := h.services.CommonServices.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
@@ -479,7 +470,7 @@ func (h *InvoiceEventHandler) dispatchInvoiceFinalizedEvent(ctx context.Context,
 		tenant,
 		webhook.WebhookEventInvoiceFinalized,
 		webhookPayload,
-		h.repositories,
+		h.services.CommonServices.PostgresRepositories,
 		h.cfg,
 	)
 	if err != nil {
@@ -498,7 +489,7 @@ func (h *InvoiceEventHandler) dispatchInvoicePaidEvent(ctx context.Context, tena
 	tracing.LogObjectAsJson(span, "invoice", invoice)
 
 	// get organization linked to invoice to build payload for webhook
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByInvoiceId(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting organization for invoice %s: %s", invoice.Id, err.Error())
@@ -510,7 +501,7 @@ func (h *InvoiceEventHandler) dispatchInvoicePaidEvent(ctx context.Context, tena
 	}
 
 	// get contract linked to invoice to build payload for webhook
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractsForOrganizations(ctx, tenant, []string{organizationEntity.ID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting contract for invoice %s: %s", invoice.Id, err.Error())
@@ -526,7 +517,7 @@ func (h *InvoiceEventHandler) dispatchInvoicePaidEvent(ctx context.Context, tena
 	}
 
 	// get invoice line items linked to invoice to build payload for webhook
-	invoiceLineDbNodes, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, tenant, invoice.Id)
+	invoiceLineDbNodes, err := h.services.CommonServices.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, tenant, invoice.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error getting invoice line items for invoice %s: %s", invoice.Id, err.Error())
@@ -546,7 +537,7 @@ func (h *InvoiceEventHandler) dispatchInvoicePaidEvent(ctx context.Context, tena
 		tenant,
 		webhook.WebhookEventInvoiceStatusPaid,
 		webhookPayload,
-		h.repositories,
+		h.services.CommonServices.PostgresRepositories,
 		h.cfg,
 	)
 	if err != nil {
@@ -577,13 +568,13 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	var invoiceLineEntities = []*neo4jentity.InvoiceLineEntity{}
 
 	//load invoice
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
+	invoiceEntity, err := h.services.CommonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return err
 	}
 
 	// load contract
-	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	contractNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
@@ -596,7 +587,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//load invoice lines
-	invoiceLinesNodes, err := h.repositories.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, eventData.Tenant, invoiceId)
+	invoiceLinesNodes, err := h.services.CommonServices.Neo4jRepositories.InvoiceLineReadRepository.GetAllForInvoice(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetAllForInvoice")
@@ -653,7 +644,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 			return err
 		}
 		if tenantBillingProfileEntity.CanPayWithBankTransfer {
-			bankAccountDbNodes, err := h.repositories.Neo4jRepositories.BankAccountReadRepository.GetBankAccounts(ctx, eventData.Tenant)
+			bankAccountDbNodes, err := h.services.CommonServices.Neo4jRepositories.BankAccountReadRepository.GetBankAccounts(ctx, eventData.Tenant)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.GetBankAccounts")
@@ -687,7 +678,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 			"Amount":    invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Amount, 2),
 			"Vat":       invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceLine.Vat, 2),
 		}
-		sliDbNode, _ := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, invoiceLine.ServiceLineItemId)
+		sliDbNode, _ := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemById(ctx, eventData.Tenant, invoiceLine.ServiceLineItemId)
 		sliEntity := neo4jmapper.MapDbNodeToServiceLineItemEntity(sliDbNode)
 
 		if invoiceLine.BilledType == neo4jenum.BilledTypeOnce {
@@ -729,7 +720,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	defer tmpInvoiceFile.Close()
 
 	if invoiceEntity.Provider.LogoRepositoryFileId != "" {
-		fileMetadata, err := h.fsc.GetFileMetadata(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, span)
+		fileMetadata, err := h.services.FileStoreApiService.GetFileMetadata(eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, span)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error getting file metadata for file %s: %s", invoiceEntity.Provider.LogoRepositoryFileId, err.Error())
@@ -746,7 +737,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//convert the temp to pdf
-	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.fsc, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, dataForPdf, span)
+	pdfBytes, err := ConvertInvoiceHtmlToPdf(h.services.FileStoreApiService, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, dataForPdf, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")
@@ -766,7 +757,7 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 		basePath = basePath + "/DRY_RUN"
 	}
 
-	fileDTO, err := h.fsc.UploadSingleFileBytes(eventData.Tenant, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", *pdfBytes, span)
+	fileDTO, err := h.services.FileStoreApiService.UploadSingleFileBytes(eventData.Tenant, basePath, invoiceEntity.Id, "Invoice - "+invoiceEntity.Number+".pdf", *pdfBytes, span)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceFillV1.UploadSingleFileBytes")
@@ -818,12 +809,12 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
+	invoiceEntity, err := h.services.CommonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
-	invoiceLines, err := h.commonServices.InvoiceService.GetInvoiceLinesForInvoices(ctx, []string{invoiceId})
+	invoiceLines, err := h.services.CommonServices.InvoiceService.GetInvoiceLinesForInvoices(ctx, []string{invoiceId})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -848,7 +839,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 
 	// load contract
 	contractEntity := neo4jentity.ContractEntity{}
-	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	contractNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
@@ -875,9 +866,9 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 
-	postmarkEmail := postmark.PostmarkEmail{
+	postmarkEmail := service.PostmarkEmail{
 		WorkflowId:    notifications.WorkflowInvoiceVoided,
-		MessageStream: postmark.PostmarkMessageStreamInvoice,
+		MessageStream: service.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            invoiceEntity.Customer.Email,
 		CC:            cc,
@@ -890,7 +881,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{issueDate}}":      invoiceEntity.CreatedAt.Format("02 Jan 2006"),
 		},
-		Attachments: []postmark.PostmarkEmailAttachment{},
+		Attachments: []service.PostmarkEmailAttachment{},
 	}
 
 	err = h.appendProviderLogoToEmail(ctx, eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
@@ -907,7 +898,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
-	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
+	err = h.services.PostmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error sending invoice voided notification for invoice %s: %s", invoiceId, err.Error())
@@ -915,7 +906,7 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 	}
 
 	// Request was successful
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetVoidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.SetVoidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error setting invoice void notification sent at for invoice %s: %s", invoiceId, err.Error())
@@ -950,7 +941,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	var contractEntity neo4jentity.ContractEntity
 
 	//load invoice
-	invoiceEntity, err := h.commonServices.InvoiceService.GetById(ctx, invoiceId)
+	invoiceEntity, err := h.services.CommonServices.InvoiceService.GetById(ctx, invoiceId)
 	if err != nil {
 		return nil
 	}
@@ -967,7 +958,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error dispatching invoice paid event for invoice %s: %s", invoiceId, err.Error())
 		} else {
-			err = h.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyPaidWebhookProcessedAt), utils.NowPtr())
+			err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyPaidWebhookProcessedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error setting invoice paid webhook processed for invoice %s: %s", invoiceEntity.Id, err.Error())
@@ -981,7 +972,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	}
 
 	// load contract
-	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	contractNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePaidV1.GetContractForInvoice")
@@ -1013,8 +1004,8 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 
-	postmarkEmail := postmark.PostmarkEmail{
-		MessageStream: postmark.PostmarkMessageStreamInvoice,
+	postmarkEmail := service.PostmarkEmail{
+		MessageStream: service.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
 		CC:            cc,
@@ -1026,7 +1017,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 			"{{amtDue}}":         fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{paymentDate}}":    utils.Now().Format("02 Jan 2006"),
 		},
-		Attachments: []postmark.PostmarkEmailAttachment{},
+		Attachments: []service.PostmarkEmailAttachment{},
 	}
 	if eventTriggeredByUser {
 		postmarkEmail.WorkflowId = notifications.WorkflowInvoicePaymentReceived
@@ -1057,7 +1048,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		return nil
 	}
 
-	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
+	err = h.services.PostmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error sending invoice paid notification for invoice %s: %s", invoiceId, err.Error())
@@ -1065,7 +1056,7 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 	}
 
 	// Request was successful
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.SetPaidInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error setting invoice paid notification sent at for invoice %s: %s", invoiceId, err.Error())
@@ -1094,7 +1085,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	var contractEntity neo4jentity.ContractEntity
 
 	//load invoice
-	invoiceNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	invoiceNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetInvoice")
@@ -1115,7 +1106,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return nil
 	}
 
-	contractNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	contractNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetContractForInvoice")
@@ -1154,9 +1145,9 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 
-	postmarkEmail := postmark.PostmarkEmail{
+	postmarkEmail := service.PostmarkEmail{
 		WorkflowId:    workflowId,
-		MessageStream: postmark.PostmarkMessageStreamInvoice,
+		MessageStream: service.PostmarkMessageStreamInvoice,
 		From:          invoiceEntity.Provider.Email,
 		To:            contractEntity.InvoiceEmail,
 		CC:            cc,
@@ -1169,7 +1160,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 			"{{amtDue}}":           fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
 			"{{paymentLink}}":      invoiceEntity.PaymentDetails.PaymentLink,
 		},
-		Attachments: []postmark.PostmarkEmailAttachment{},
+		Attachments: []service.PostmarkEmailAttachment{},
 	}
 
 	err = h.appendInvoiceFileToEmailAsAttachment(ctx, eventData.Tenant, invoiceEntity, &postmarkEmail)
@@ -1195,7 +1186,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return nil
 	}
 
-	err = h.postmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
+	err = h.services.PostmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
 
 	if err != nil {
 		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.SendNotification")
@@ -1207,7 +1198,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntity)
 
 	// Request was successful
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error setting invoice pay notification sent at for invoice %s: %s", invoiceId, err.Error())
@@ -1238,23 +1229,23 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 	actionType := neo4jenum.ActionInvoiceSent
 	message := "Sent invoice N° " + invoiceEntity.Number + " with an amount of " + invoiceEntity.Currency.Symbol() + utils.FormatAmount(invoiceEntity.TotalAmount, 2)
 
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating invoice action for invoice %s: %s", invoiceEntity.Id, err.Error())
 	}
 }
 
-func (h *InvoiceEventHandler) appendInvoiceFileToEmailAsAttachment(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *postmark.PostmarkEmail) error {
+func (h *InvoiceEventHandler) appendInvoiceFileToEmailAsAttachment(ctx context.Context, tenant string, invoice neo4jentity.InvoiceEntity, postmarkEmail *service.PostmarkEmail) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.appendInvoiceFileToEmailAsAttachment")
 	defer span.Finish()
 
-	invoiceFileBytes, err := h.fsc.GetFileBytes(tenant, invoice.RepositoryFileId, span)
+	invoiceFileBytes, err := h.services.FileStoreApiService.GetFileBytes(tenant, invoice.RepositoryFileId, span)
 	if err != nil {
 		return err
 	}
 
-	postmarkEmail.Attachments = append(postmarkEmail.Attachments, postmark.PostmarkEmailAttachment{
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, service.PostmarkEmailAttachment{
 		Filename:       "Invoice " + invoice.Number + ".pdf",
 		ContentEncoded: base64.StdEncoding.EncodeToString(*invoiceFileBytes),
 		ContentType:    "application/pdf",
@@ -1263,7 +1254,7 @@ func (h *InvoiceEventHandler) appendInvoiceFileToEmailAsAttachment(ctx context.C
 	return nil
 }
 
-func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, tenant, logoFileId string, postmarkEmail *postmark.PostmarkEmail) error {
+func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, tenant, logoFileId string, postmarkEmail *service.PostmarkEmail) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.appendProviderLogoToEmail")
 	defer span.Finish()
 
@@ -1271,12 +1262,12 @@ func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, ten
 		return nil
 	}
 
-	metadata, fileBytes, err := h.fsc.GetFile(tenant, logoFileId, span)
+	metadata, fileBytes, err := h.services.FileStoreApiService.GetFile(tenant, logoFileId, span)
 	if err != nil {
 		return err
 	}
 
-	postmarkEmail.Attachments = append(postmarkEmail.Attachments, postmark.PostmarkEmailAttachment{
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, service.PostmarkEmailAttachment{
 		Filename:       "provider-logo-file-encoded",
 		ContentEncoded: base64.StdEncoding.EncodeToString(*fileBytes),
 		ContentType:    metadata.MimeType,
@@ -1286,7 +1277,7 @@ func (h *InvoiceEventHandler) appendProviderLogoToEmail(ctx context.Context, ten
 	return nil
 }
 
-func (h *InvoiceEventHandler) appendCustomerOSLogoToEmail(ctx context.Context, postmarkEmail *postmark.PostmarkEmail) error {
+func (h *InvoiceEventHandler) appendCustomerOSLogoToEmail(ctx context.Context, postmarkEmail *service.PostmarkEmail) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.appendCustomerOSLogoToEmail")
 	defer span.Finish()
 
@@ -1303,7 +1294,7 @@ func (h *InvoiceEventHandler) appendCustomerOSLogoToEmail(ctx context.Context, p
 		return err
 	}
 
-	postmarkEmail.Attachments = append(postmarkEmail.Attachments, postmark.PostmarkEmailAttachment{
+	postmarkEmail.Attachments = append(postmarkEmail.Attachments, service.PostmarkEmailAttachment{
 		Filename:       "customer-os-encoded",
 		ContentEncoded: base64.StdEncoding.EncodeToString(b),
 		ContentType:    "image/png",
@@ -1319,7 +1310,7 @@ func isValidEmailSyntax(email string) bool {
 }
 
 func (h *InvoiceEventHandler) loadTenantBillingProfile(ctx context.Context, tenant string, failIfNotFound bool) (neo4jentity.TenantBillingProfileEntity, error) {
-	tenantBillingProfiles, err := h.repositories.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
+	tenantBillingProfiles, err := h.services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantBillingProfiles(ctx, tenant)
 	if err != nil {
 		return neo4jentity.TenantBillingProfileEntity{}, err
 	}

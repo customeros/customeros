@@ -4,14 +4,11 @@ import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/notifications"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -27,18 +24,16 @@ type InvoiceSubscriber struct {
 	db                  *esdb.Client
 	cfg                 *config.Config
 	grpcClients         *grpc_client.Clients
-	repositories        *repository.Repositories
 	invoiceEventHandler *InvoiceEventHandler
 }
 
-func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, commonServices *commonService.Services, repositories *repository.Repositories, grpcClients *grpc_client.Clients, fsc fsc.FileStoreApiService, postmarkProvider *notifications.PostmarkProvider) *InvoiceSubscriber {
+func NewInvoiceSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, services *service.Services, grpcClients *grpc_client.Clients) *InvoiceSubscriber {
 	return &InvoiceSubscriber{
 		log:                 log,
 		db:                  db,
 		cfg:                 cfg,
 		grpcClients:         grpcClients,
-		repositories:        repositories,
-		invoiceEventHandler: NewInvoiceEventHandler(log, commonServices, repositories, *cfg, grpcClients, fsc, postmarkProvider),
+		invoiceEventHandler: NewInvoiceEventHandler(log, services, *cfg, grpcClients),
 	}
 }
 

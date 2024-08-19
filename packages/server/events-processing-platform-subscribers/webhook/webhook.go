@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/opentracing/opentracing-go"
@@ -17,12 +18,11 @@ import (
 	temporal_client "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/temporal/workflows"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"go.temporal.io/sdk/client"
 	"go.temporal.io/sdk/temporal"
 )
 
-func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, payload *InvoicePayload, db *repository.Repositories, cfg config.Config) error {
+func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, payload *InvoicePayload, postgresRepositories *postgresRepository.Repositories, cfg config.Config) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "DispatchWebhook")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -35,7 +35,7 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 	}
 
 	// fetch webhook data from db
-	webhookResult := db.PostgresRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
+	webhookResult := postgresRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
 	if webhookResult.Error != nil {
 		err := fmt.Errorf("error fetching webhook data: %v", webhookResult.Error)
 		tracing.TraceErr(span, err)

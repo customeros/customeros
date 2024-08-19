@@ -52,8 +52,8 @@ func TestGraphIssueEventHandler_OnCreate(t *testing.T) {
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	now := utils.Now()
 	issueId := uuid.New().String()
@@ -136,7 +136,7 @@ func TestGraphIssueEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -190,7 +190,7 @@ func TestGraphIssueEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOp
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -239,7 +239,7 @@ func TestGraphIssueEventHandler_OnAddUserAssignee(t *testing.T) {
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-1) * time.Minute)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -277,7 +277,7 @@ func TestGraphIssueEventHandler_OnRemoveUserAssignee(t *testing.T) {
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-1) * time.Hour)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -314,7 +314,7 @@ func TestGraphIssueEventHandler_OnAddUserFollower(t *testing.T) {
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-10) * time.Minute)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)
@@ -352,7 +352,7 @@ func TestGraphIssueEventHandler_OnRemoveUserFollower(t *testing.T) {
 
 	// prepare event handler
 	issueEventHandler := &IssueEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	updatedAt := utils.Now().Add(time.Duration(-1) * time.Hour)
 	issueAggregate := aggregate.NewIssueAggregateWithTenantAndID(tenantName, issueId)

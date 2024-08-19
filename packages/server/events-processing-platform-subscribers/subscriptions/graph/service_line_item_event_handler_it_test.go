@@ -42,9 +42,9 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -131,9 +131,9 @@ func TestServiceLineItemEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -237,9 +237,9 @@ func TestServiceLineItemEventHandler_OnDeleteUnnamed(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemDeleteEvent
@@ -332,9 +332,9 @@ func TestServiceLineItemEventHandler_OnDelete(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemDeleteEvent
@@ -420,9 +420,9 @@ func TestServiceLineItemEventHandler_OnClose(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -481,9 +481,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -527,7 +527,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreaseRetroactively_Timeline
 	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
-	require.Equal(t, float64(200.0), serviceLineItem.Price)
+	require.Equal(t, 200.0, serviceLineItem.Price)
 
 	// verify action
 	actionDbNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "Action_"+tenantName)
@@ -568,9 +568,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -614,7 +614,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceIncreasePerUseRetroactively_Ti
 	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, neo4jenum.BilledTypeUsage, serviceLineItem.Billed)
-	require.Equal(t, float64(200.0), serviceLineItem.Price)
+	require.Equal(t, 200.0, serviceLineItem.Price)
 	require.Equal(t, "test reason for change", serviceLineItem.Comments)
 
 	// verify action
@@ -658,9 +658,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -705,7 +705,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseRetroactively_Timeline
 	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, neo4jenum.BilledTypeAnnually, serviceLineItem.Billed)
-	require.Equal(t, float64(50.0), serviceLineItem.Price)
+	require.Equal(t, 50.0, serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
@@ -749,9 +749,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -795,7 +795,7 @@ func TestServiceLineItemEventHandler_OnUpdatePriceDecreaseOnceRetroactively_Time
 	serviceLineItem := neo4jmapper.MapDbNodeToServiceLineItemEntity(serviceLineItemDbNode)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, neo4jenum.BilledTypeOnce, serviceLineItem.Billed)
-	require.Equal(t, float64(50.0), serviceLineItem.Price)
+	require.Equal(t, 50.0, serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 
 	// verify action
@@ -836,9 +836,9 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityIncreaseRetroactively_Timel
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -919,9 +919,9 @@ func TestServiceLineItemEventHandler_OnUpdateQuantityDecreaseRetroactively_Timel
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemUpdateEvent
@@ -999,9 +999,9 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1056,7 +1056,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringMonthly(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
-	require.Equal(t, float64(170.25), serviceLineItem.Price)
+	require.Equal(t, 170.25, serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
@@ -1098,9 +1098,9 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1155,7 +1155,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringAnnually(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.Equal(t, neo4jenum.BilledTypeAnnually, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
-	require.Equal(t, float64(170.25), serviceLineItem.Price)
+	require.Equal(t, 170.25, serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
@@ -1197,9 +1197,9 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1254,7 +1254,7 @@ func TestServiceLineItemEventHandler_OnCreateRecurringQuarterly(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.Equal(t, neo4jenum.BilledTypeQuarterly, serviceLineItem.Billed)
 	require.Equal(t, int64(10), serviceLineItem.Quantity)
-	require.Equal(t, float64(170.25), serviceLineItem.Price)
+	require.Equal(t, 170.25, serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
@@ -1296,9 +1296,9 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1351,7 +1351,7 @@ func TestServiceLineItemEventHandler_OnCreateOnce(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.Equal(t, neo4jenum.BilledTypeOnce, serviceLineItem.Billed)
-	require.Equal(t, float64(170.25), serviceLineItem.Price)
+	require.Equal(t, 170.25, serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
@@ -1393,9 +1393,9 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1448,7 +1448,7 @@ func TestServiceLineItemEventHandler_OnCreatePerUse(t *testing.T) {
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, serviceLineItemId, serviceLineItem.ParentID)
 	require.Equal(t, neo4jenum.BilledTypeUsage, serviceLineItem.Billed)
-	require.Equal(t, float64(170.25), serviceLineItem.Price)
+	require.Equal(t, 170.25, serviceLineItem.Price)
 	require.Equal(t, "Service 1", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
@@ -1494,9 +1494,9 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactiveQuantity
 	})
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	// Create a ServiceLineItemCreateEvent
 	timeNow := utils.Now()
@@ -1598,9 +1598,9 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1653,7 +1653,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentID)
 	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
-	require.Equal(t, float64(850.75), serviceLineItem.Price)
+	require.Equal(t, 850.75, serviceLineItem.Price)
 	require.Equal(t, "Test service line item", serviceLineItem.Name)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
@@ -1700,9 +1700,9 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent
@@ -1755,7 +1755,7 @@ func TestServiceLineItemEventHandler_OnCreateNewVersionForNonRetroactivePriceInc
 	require.Equal(t, serviceLineItemId, serviceLineItem.ID)
 	require.Equal(t, serviceLineItemParentId, serviceLineItem.ParentID)
 	require.Equal(t, neo4jenum.BilledTypeMonthly, serviceLineItem.Billed)
-	require.Equal(t, float64(850.75), serviceLineItem.Price)
+	require.Equal(t, 850.75, serviceLineItem.Price)
 	require.Equal(t, "This is a reason for change", serviceLineItem.Comments)
 	require.Equal(t, timeNow, serviceLineItem.CreatedAt)
 	test.AssertRecentTime(t, serviceLineItem.UpdatedAt)
@@ -1807,9 +1807,9 @@ func TestServiceLineItemEventHandler_OnUpdatePriceNonRetroactiveForExistingSLI(t
 
 	// Prepare the event handler
 	serviceLineItemEventHandler := &ServiceLineItemEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create a ServiceLineItemCreateEvent

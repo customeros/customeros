@@ -65,8 +65,8 @@ func TestOrganizationPlanEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanCreateEvent
@@ -165,8 +165,8 @@ func TestOrganizationPlanEventHandler_OnCreateMilestone(t *testing.T) {
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an OrgPlanMilestoneCreateEvent
@@ -263,8 +263,8 @@ func TestOrganizationPlanEventHandler_OnUpdate(t *testing.T) {
 	})
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an OrgPlanUpdateEvent
@@ -367,8 +367,8 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestone(t *testing.T) {
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent
@@ -518,8 +518,8 @@ func TestOrganizationPlanEventHandler_OnReorderMilestones(t *testing.T) {
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent
@@ -621,8 +621,8 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneLate(t *testing.T) {
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent
@@ -756,8 +756,8 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneAllDoneLate(t *testing.T)
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent
@@ -887,8 +887,8 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateLate(t *testing.T)
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent
@@ -1022,8 +1022,8 @@ func TestOrganizationPlanEventHandler_OnUpdateMilestoneDueDateOnTrack(t *testing
 
 	// Prepare the event handler
 	orgPlanEventHandler := &OrganizationPlanEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an MasterPlanMilestoneCreateEvent

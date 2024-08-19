@@ -133,8 +133,8 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		repositories: testDatabase.Repositories,
-		log:          testLogger,
+		services: testDatabase.Services,
+		log:      testLogger,
 		notificationProvider: &MockNotificationProvider{
 			s3: &MockS3Client{},
 		},

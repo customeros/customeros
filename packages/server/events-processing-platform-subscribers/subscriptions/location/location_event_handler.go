@@ -15,9 +15,9 @@ import (
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/aggregate"
@@ -65,19 +65,19 @@ type ValidatedAddress struct {
 }
 
 type LocationEventHandler struct {
-	repositories *repository.Repositories
-	log          logger.Logger
-	cfg          *config.Config
-	grpcClients  *grpc_client.Clients
-	aiModel      ai.AiModel
+	services    *service.Services
+	log         logger.Logger
+	cfg         *config.Config
+	grpcClients *grpc_client.Clients
+	aiModel     ai.AiModel
 }
 
-func NewLocationEventHandler(repositories *repository.Repositories, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *LocationEventHandler {
+func NewLocationEventHandler(services *service.Services, log logger.Logger, cfg *config.Config, grpcClients *grpc_client.Clients) *LocationEventHandler {
 	return &LocationEventHandler{
-		repositories: repositories,
-		log:          log,
-		cfg:          cfg,
-		grpcClients:  grpcClients,
+		services:    services,
+		log:         log,
+		cfg:         cfg,
+		grpcClients: grpcClients,
 		aiModel: ai.NewAiModel(ai.AnthropicModelType, aiConfig.Config{
 			Anthropic: aiConfig.AiModelConfigAnthropic{
 				ApiPath: cfg.Services.Ai.ApiPath,
@@ -241,7 +241,7 @@ func (h *LocationEventHandler) prepareCountry(ctx context.Context, tenant, event
 	if eventCountry != "" {
 		return eventCountry
 	}
-	country, err := h.repositories.Neo4jRepositories.CountryReadRepository.GetDefaultCountryCodeA3(ctx, tenant)
+	country, err := h.services.CommonServices.Neo4jRepositories.CountryReadRepository.GetDefaultCountryCodeA3(ctx, tenant)
 	if err != nil {
 		return ""
 	}
@@ -305,7 +305,7 @@ func (h *LocationEventHandler) ExtractAndEnrichLocation(ctx context.Context, ten
 	}
 
 	// Step 1: Check if mapping exists
-	locationMapping, err := h.repositories.PostgresRepositories.AiLocationMappingRepository.GetLatestLocationMappingByInput(ctx, address)
+	locationMapping, err := h.services.CommonServices.PostgresRepositories.AiLocationMappingRepository.GetLatestLocationMappingByInput(ctx, address)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get location mapping"))
 	}
@@ -331,7 +331,7 @@ func (h *LocationEventHandler) ExtractAndEnrichLocation(ctx context.Context, ten
 		PromptTemplate: &h.cfg.Services.Anthropic.LocationEnrichmentPrompt,
 		Prompt:         prompt,
 	}
-	promptStoreLogId, err := h.repositories.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
+	promptStoreLogId, err := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.Store(promptLog)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error storing prompt log: %v", err)
@@ -341,14 +341,14 @@ func (h *LocationEventHandler) ExtractAndEnrichLocation(ctx context.Context, ten
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get AI response"))
 		h.log.Errorf("Error invoking AI: %s", err.Error())
-		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
+		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateError(promptStoreLogId, err.Error())
 		if storeErr != nil {
 			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with error"))
 			h.log.Errorf("Error updating prompt log with error: %v", storeErr)
 		}
 		return nil, err
 	} else {
-		storeErr := h.repositories.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
+		storeErr := h.services.CommonServices.PostgresRepositories.AiPromptLogRepository.UpdateResponse(promptStoreLogId, aiResult)
 		if storeErr != nil {
 			tracing.TraceErr(span, errors.Wrap(storeErr, "failed to update prompt log with ai response"))
 			h.log.Errorf("Error updating prompt log with ai response: %v", storeErr)
@@ -368,7 +368,7 @@ func (h *LocationEventHandler) ExtractAndEnrichLocation(ctx context.Context, ten
 		ResponseJson:  aiResult,
 		AiPromptLogId: promptStoreLogId,
 	}
-	err = h.repositories.PostgresRepositories.AiLocationMappingRepository.AddLocationMapping(ctx, *locationMapping)
+	err = h.services.CommonServices.PostgresRepositories.AiLocationMappingRepository.AddLocationMapping(ctx, *locationMapping)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to store location mapping"))
 		h.log.Errorf("Error storing location mapping: %v", err)

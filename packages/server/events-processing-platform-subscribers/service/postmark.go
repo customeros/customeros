@@ -1,4 +1,4 @@
-package notifications
+package service
 
 import (
 	"context"
@@ -15,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/notifications"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/opentracing/opentracing-go"
 )
@@ -44,14 +43,14 @@ type PostmarkEmailAttachment struct {
 }
 
 type PostmarkProvider struct {
-	log        logger.Logger
-	repository *repository.Repositories
+	log      logger.Logger
+	services *Services
 }
 
-func NewPostmarkProvider(log logger.Logger, repo *repository.Repositories) *PostmarkProvider {
+func NewPostmarkProvider(log logger.Logger, services *Services) *PostmarkProvider {
 	return &PostmarkProvider{
-		log:        log,
-		repository: repo,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -59,7 +58,7 @@ func (np *PostmarkProvider) getPostmarkClient(ctx context.Context, tenant string
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.getPostmarkClient")
 	defer span.Finish()
 
-	p := np.repository.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(tenant)
+	p := np.services.CommonServices.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(tenant)
 	if p.Error != nil {
 		tracing.TraceErr(span, p.Error)
 		return nil, p.Error

@@ -3,6 +3,7 @@ package notifications
 import (
 	"context"
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"time"
 
@@ -13,7 +14,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -21,16 +21,16 @@ import (
 )
 
 type ReminderEventHandler struct {
-	repositories         *repository.Repositories
+	services             *service.Services
 	log                  logger.Logger
 	notificationProvider notifications.NotificationProvider
 	cfg                  *config.Config
 }
 
-func NewReminderEventHandler(log logger.Logger, repositories *repository.Repositories, cfg *config.Config) *ReminderEventHandler {
+func NewReminderEventHandler(log logger.Logger, services *service.Services, cfg *config.Config) *ReminderEventHandler {
 	s3 := aws_client.NewS3Client(&aws.Config{Region: aws.String("eu-west-1")})
 	return &ReminderEventHandler{
-		repositories:         repositories,
+		services:             services,
 		log:                  log,
 		notificationProvider: notifications.NewNovuNotificationProvider(log, cfg.Services.Novu.ApiKey, s3),
 		cfg:                  cfg,
@@ -95,11 +95,11 @@ func (h *ReminderEventHandler) notificationProviderSendEmail(
 	createdAt time.Time,
 ) error {
 	// target user email
-	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
 	}
 
 	var email neo4jentity.EmailEntity
@@ -110,22 +110,22 @@ func (h *ReminderEventHandler) notificationProviderSendEmail(
 	}
 	email = *neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 	// target user
-	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+	userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var user neo4jentity.UserEntity
 	if userDbNode != nil {
 		user = *neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 	// Organization
-	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
+	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
+		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
 	}
 	var org neo4jentity.OrganizationEntity
 	if orgDbNode != nil {
@@ -183,11 +183,11 @@ func (h *ReminderEventHandler) notificationProviderSendInAppNotification(
 	tenant string,
 ) error {
 	// target user email
-	emailDbNode, err := h.repositories.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
+	emailDbNode, err := h.services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailForUser(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.EmailRepository.GetEmailForUser")
+		return errors.Wrap(err, "h.services.CommonServices.EmailRepository.GetEmailForUser")
 	}
 
 	var email neo4jentity.EmailEntity
@@ -198,22 +198,22 @@ func (h *ReminderEventHandler) notificationProviderSendInAppNotification(
 	}
 	email = *neo4jmapper.MapDbNodeToEmailEntity(emailDbNode)
 	// target user
-	userDbNode, err := h.repositories.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
+	userDbNode, err := h.services.CommonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, tenant, userId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.UserRepository.GetUser")
+		return errors.Wrap(err, "h.services.CommonServices.UserRepository.GetUser")
 	}
 	var user neo4jentity.UserEntity
 	if userDbNode != nil {
 		user = *neo4jmapper.MapDbNodeToUserEntity(userDbNode)
 	}
 	// Organization
-	orgDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
+	orgDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "h.repositories.OrganizationRepository.GetOrganization")
+		return errors.Wrap(err, "h.services.CommonServices.OrganizationRepository.GetOrganization")
 	}
 	var org neo4jentity.OrganizationEntity
 	if orgDbNode != nil {

@@ -31,7 +31,7 @@ func TestGraphCommentEventHandler_OnCreate(t *testing.T) {
 
 	// prepare event handler
 	commentEventHandler := &CommentEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	commentId := uuid.New().String()
@@ -94,7 +94,7 @@ func TestGraphCommentEventHandler_OnUpdate(t *testing.T) {
 
 	// prepare event handler
 	commentEventHandler := &CommentEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	commentAggregate := comment.NewCommentAggregateWithTenantAndID(tenantName, commentId)
@@ -135,7 +135,7 @@ func TestGraphCommentEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNon
 
 	// prepare event handler
 	commentEventHandler := &CommentEventHandler{
-		repositories: testDatabase.Repositories,
+		services: testDatabase.Services,
 	}
 	now := utils.Now()
 	commentAggregate := comment.NewCommentAggregateWithTenantAndID(tenantName, commentId)

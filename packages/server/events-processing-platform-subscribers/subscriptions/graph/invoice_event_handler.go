@@ -13,7 +13,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
@@ -33,16 +33,16 @@ type InvoiceActionMetadata struct {
 }
 
 type InvoiceEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewInvoiceEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *InvoiceEventHandler {
+func NewInvoiceEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *InvoiceEventHandler {
 	return &InvoiceEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -61,7 +61,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, eventData.ContractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting contract %s: %s", eventData.ContractId, err.Error())
@@ -97,7 +97,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		},
 		Note: eventData.Note,
 	}
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.CreateInvoiceForContract(ctx, eventData.Tenant, invoiceId, data)
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.CreateInvoiceForContract(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving invoice %s: %s", invoiceId, err.Error())
@@ -106,7 +106,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 
 	// Remove previous initialized invoices, if any
 	if eventData.DryRun && eventData.Preview {
-		err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInitializedInvoices(ctx, eventData.Tenant, eventData.ContractId, invoiceId)
+		err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInitializedInvoices(ctx, eventData.Tenant, eventData.ContractId, invoiceId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
@@ -175,7 +175,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 		TotalAmount:                  eventData.TotalAmount,
 		Status:                       neo4jenum.DecodeInvoiceStatus(eventData.Status),
 	}
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.FillInvoice(ctx, eventData.Tenant, invoiceId, data)
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.FillInvoice(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while filling invocie with details %s: %s", invoiceId, err.Error())
@@ -199,7 +199,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 			ServiceLineItemId:       item.ServiceLineItemId,
 			ServiceLineItemParentId: item.ServiceLineItemParentId,
 		}
-		err = h.repositories.Neo4jRepositories.InvoiceLineWriteRepository.CreateInvoiceLine(ctx, eventData.Tenant, invoiceId, item.Id, invoiceLineData)
+		err = h.services.CommonServices.Neo4jRepositories.InvoiceLineWriteRepository.CreateInvoiceLine(ctx, eventData.Tenant, invoiceId, item.Id, invoiceLineData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while inserting invoice line %s for invoice %s: %s", item.Id, invoiceId, err.Error())
@@ -224,7 +224,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 	}
 
 	if !invoiceEntityAfterFill.OffCycle && !invoiceEntityAfterFill.DryRun {
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, "")
+		err := h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
@@ -238,7 +238,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 			return err
 		}
 	} else if invoiceEntityAfterFill.Preview && invoiceEntityAfterFill.DryRun {
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, invoiceId)
+		err := h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, eventData.ContractId, invoiceId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", eventData.ContractId, err.Error())
@@ -298,7 +298,7 @@ func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventst
 		UpdateStatus:      eventData.UpdateStatus(),
 		UpdatePaymentLink: eventData.UpdatePaymentLink(),
 	}
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating invoice %s: %s", invoiceId, err.Error())
@@ -332,7 +332,7 @@ func (h *InvoiceEventHandler) OnInvoicePdfGenerated(ctx context.Context, evt eve
 	span.SetTag(tracing.SpanTagEntityId, id)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.InvoicePdfGenerated(ctx, eventData.Tenant, id, eventData.RepositoryFileId)
+	err := h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.InvoicePdfGenerated(ctx, eventData.Tenant, id, eventData.RepositoryFileId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating invoice pdf generated %s: %s", id, err.Error())
@@ -397,7 +397,7 @@ func (h *InvoiceEventHandler) OnInvoiceVoidV1(ctx context.Context, evt eventstor
 		return err
 	}
 
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, neo4jrepository.InvoiceUpdateFields{
 		UpdateStatus: true,
 		Status:       neo4jenum.InvoiceStatusVoid,
 	})
@@ -432,7 +432,7 @@ func (h *InvoiceEventHandler) OnInvoiceDeleteV1(ctx context.Context, evt eventst
 	span.SetTag(tracing.SpanTagEntityId, invoiceId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeleteInitializedInvoice(ctx, eventData.Tenant, invoiceId)
+	err := h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.DeleteInitializedInvoice(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting invoice {%s}: {%s}", invoiceId, err.Error())
@@ -488,9 +488,9 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 		return
 	}
 	if invoiceEntity.Status == neo4jenum.InvoiceStatusDue {
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+		_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	} else {
-		_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+		_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, invoiceEntity.Id, model.INVOICE, actionType, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	}
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -499,7 +499,7 @@ func (h *InvoiceEventHandler) createInvoiceAction(ctx context.Context, tenant st
 }
 
 func (h *InvoiceEventHandler) getInvoice(ctx context.Context, tenant, invoiceId string) (*neo4jentity.InvoiceEntity, error) {
-	invoiceDbNode, err := h.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, invoiceId)
+	invoiceDbNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, tenant, invoiceId)
 	if err != nil {
 		return nil, err
 	}

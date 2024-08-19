@@ -54,6 +54,7 @@ type Repositories struct {
 	StatsApiCallsRepository                     StatsApiCallsRepository
 	CosApiEnrichPersonTempResultRepository      CosApiEnrichPersonTempResultRepository
 	OranizationWebsiteHostingPlatformRepository OrganizationWebsiteHostingPlatformRepository
+	CustomerOsIdsRepository                     CustomerOsIdsRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -106,6 +107,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		StatsApiCallsRepository:                     NewStatsApiCallsRepository(db),
 		CosApiEnrichPersonTempResultRepository:      NewCosApiEnrichPersonTempResultRepository(db),
 		OranizationWebsiteHostingPlatformRepository: NewOrganizationWebsiteHostingPlatformRepository(db),
+		CustomerOsIdsRepository:                     NewCustomerOsIdsRepository(db),
 	}
 
 	return repositories
@@ -166,7 +168,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.CacheEmailValidationDomain{},
 		&entity.StatsApiCalls{},
 		&entity.CosApiEnrichPersonTempResult{},
-		&entity.OrganizationWebsiteHostingPlatform{})
+		&entity.OrganizationWebsiteHostingPlatform{},
+		&entity.CustomerOsIds{})
 	if err != nil {
 		panic(err)
 	}

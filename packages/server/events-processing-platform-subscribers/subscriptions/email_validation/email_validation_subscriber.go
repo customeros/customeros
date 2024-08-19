@@ -5,7 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -27,12 +27,12 @@ type EmailValidationSubscriber struct {
 	emailEventHandler *emailEventHandler
 }
 
-func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, grpcClients *grpc_client.Clients, repositories *repository.Repositories) *EmailValidationSubscriber {
+func NewEmailValidationSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, grpcClients *grpc_client.Clients, services *service.Services) *EmailValidationSubscriber {
 	return &EmailValidationSubscriber{
 		log:               log,
 		db:                db,
 		cfg:               cfg,
-		emailEventHandler: NewEmailEventHandler(log, cfg, grpcClients, repositories),
+		emailEventHandler: NewEmailEventHandler(log, cfg, grpcClients, services),
 	}
 }
 

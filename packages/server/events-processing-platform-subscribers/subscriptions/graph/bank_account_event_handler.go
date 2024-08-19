@@ -6,7 +6,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	tenant "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
@@ -17,14 +17,14 @@ import (
 )
 
 type BankAccountEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
+	log      logger.Logger
+	services *service.Services
 }
 
-func NewBankAccountEventHandler(log logger.Logger, repositories *repository.Repositories) *BankAccountEventHandler {
+func NewBankAccountEventHandler(log logger.Logger, services *service.Services) *BankAccountEventHandler {
 	return &BankAccountEventHandler{
-		log:          log,
-		repositories: repositories,
+		log:      log,
+		services: services,
 	}
 }
 
@@ -61,7 +61,7 @@ func (h *BankAccountEventHandler) OnAddBankAccountV1(ctx context.Context, evt ev
 		RoutingNumber:       eventData.RoutingNumber,
 		OtherDetails:        eventData.OtherDetails,
 	}
-	err := h.repositories.Neo4jRepositories.BankAccountWriteRepository.CreateBankAccount(ctx, tenantName, data)
+	err := h.services.CommonServices.Neo4jRepositories.BankAccountWriteRepository.CreateBankAccount(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -108,7 +108,7 @@ func (h *BankAccountEventHandler) OnUpdateBankAccountV1(ctx context.Context, evt
 		UpdateRoutingNumber:       eventData.UpdateRoutingNumber(),
 		UpdateOtherDetails:        eventData.UpdateOtherDetails(),
 	}
-	err := h.repositories.Neo4jRepositories.BankAccountWriteRepository.UpdateBankAccount(ctx, tenantName, data)
+	err := h.services.CommonServices.Neo4jRepositories.BankAccountWriteRepository.UpdateBankAccount(ctx, tenantName, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -130,7 +130,7 @@ func (h *BankAccountEventHandler) OnDeleteBankAccountV1(ctx context.Context, evt
 	tenantName := tenant.GetTenantName(evt.GetAggregateID())
 	span.SetTag(tracing.SpanTagEntityId, tenantName)
 
-	err := h.repositories.Neo4jRepositories.BankAccountWriteRepository.DeleteBankAccount(ctx, tenantName, eventData.Id)
+	err := h.services.CommonServices.Neo4jRepositories.BankAccountWriteRepository.DeleteBankAccount(ctx, tenantName, eventData.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

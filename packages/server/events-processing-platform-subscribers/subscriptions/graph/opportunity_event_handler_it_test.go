@@ -41,9 +41,9 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent
@@ -130,9 +130,9 @@ func TestOpportunityEventHandler_OnCreateRenewal(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent
@@ -202,8 +202,8 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	// Create an OpportunityUpdateNextCycleDateEvent
@@ -245,9 +245,9 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -297,9 +297,9 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -346,8 +346,8 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	closeOpportunityEvent, err := opportunityevent.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
@@ -383,8 +383,8 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
+		log:      testLogger,
+		services: testDatabase.Services,
 	}
 
 	closeOpportunityEvent, err := opportunityevent.NewOpportunityCloseLooseEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
@@ -454,9 +454,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountAndRenewalChangedByUser(t
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -524,9 +524,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_OnlyCommentsChangedByUser_DoNot
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -632,9 +632,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AmountChangedByUser_GenerateEve
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()
@@ -725,9 +725,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_ChangeOwner(t *testing.T) {
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create an OpportunityCreateEvent
@@ -881,9 +881,9 @@ func TestOpportunityEventHandler_OnUpdateRenewal_AdjustedRateChanged(t *testing.
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:          testLogger,
-		repositories: testDatabase.Repositories,
-		grpcClients:  testMockedGrpcClient,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	now := utils.Now()

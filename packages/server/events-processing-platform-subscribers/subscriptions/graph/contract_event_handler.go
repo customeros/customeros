@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -38,16 +38,16 @@ type ActionStatusMetadata struct {
 }
 
 type ContractEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewContractEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *ContractEventHandler {
+func NewContractEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *ContractEventHandler {
 	return &ContractEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -93,7 +93,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.Source),
 		},
 	}
-	err := h.repositories.Neo4jRepositories.ContractWriteRepository.CreateForOrganization(ctx, eventData.Tenant, contractId, data)
+	err := h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.CreateForOrganization(ctx, eventData.Tenant, contractId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while saving contract %s: %s", contractId, err.Error())
@@ -109,7 +109,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, model.NodeLabelContract, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, model.NodeLabelContract, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while linking contract %s with external system %s: %s", contractId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -159,7 +159,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -231,7 +231,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		UpdateDueDays:                eventData.UpdateDueDays(),
 		UpdateApproved:               eventData.UpdateApproved(),
 	}
-	err = h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateContract(ctx, eventData.Tenant, contractId, data)
+	err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.UpdateContract(ctx, eventData.Tenant, contractId, data)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s: %s", contractId, err.Error())
@@ -245,7 +245,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	if statusChanged {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateOrganizationRelationship(ctx, eventData.Tenant, contractId, statusChanged)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -253,7 +253,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		}
 	}
 
-	contractDbNode, err = h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	contractDbNode, err = h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -269,7 +269,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 			ExternalSource:   eventData.ExternalSystem.ExternalSource,
 			SyncDate:         eventData.ExternalSystem.SyncDate,
 		}
-		err = h.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, model.NodeLabelContract, externalSystemData)
+		err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntity(ctx, eventData.Tenant, contractId, model.NodeLabelContract, externalSystemData)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while link contract %s with external system %s: %s", contractId, eventData.ExternalSystem.ExternalSystemId, err.Error())
@@ -278,12 +278,12 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	}
 
 	if beforeUpdateContractEntity.LengthInMonths > 0 && afterUpdateContractEntity.LengthInMonths == 0 {
-		err = h.repositories.Neo4jRepositories.ContractWriteRepository.SuspendActiveRenewalOpportunity(ctx, eventData.Tenant, contractId)
+		err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.SuspendActiveRenewalOpportunity(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while suspending renewal opportunity for contract %s: %s", contractId, err.Error())
 		}
-		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
+		organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
@@ -320,13 +320,13 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		}
 	} else {
 		if beforeUpdateContractEntity.LengthInMonths == 0 && afterUpdateContractEntity.LengthInMonths > 0 {
-			err = h.repositories.Neo4jRepositories.ContractWriteRepository.ActivateSuspendedRenewalOpportunity(ctx, eventData.Tenant, contractId)
+			err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.ActivateSuspendedRenewalOpportunity(ctx, eventData.Tenant, contractId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while activating renewal opportunity for contract %s: %s", contractId, err.Error())
 			}
 		}
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -338,7 +338,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 		h.createActionForStatusChange(ctx, eventData.Tenant, contractId, string(afterUpdateContractEntity.ContractStatus), afterUpdateContractEntity.Name)
 	}
 
-	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+	contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 	err = contractHandler.UpdateActiveRenewalOpportunityLikelihood(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -364,7 +364,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	contractId := aggregate.GetContractObjectID(evt.GetAggregateID(), eventData.Tenant)
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -375,7 +375,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		return nil
 	}
 
-	currentRenewalOpportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
+	currentRenewalOpportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting renewal opportunity for contract %s: %s", contractId, err.Error())
@@ -399,7 +399,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	}
 
 	// Update contract LTV
-	contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+	contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 	contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contractId)
 
 	// Add action in timeline
@@ -409,7 +409,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	})
 	message := contractEntity.Name + " renewed"
 
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contractId, model.CONTRACT, neo4jenum.ActionContractRenewed, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, eventData.Tenant, contractId, model.CONTRACT, neo4jenum.ActionContractRenewed, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
@@ -449,7 +449,7 @@ func (h *ContractEventHandler) createActionForStatusChange(ctx context.Context, 
 		actionStatusMetadata.Comment = contractName + " is now out of contract"
 	}
 	metadata, err := utils.ToJson(actionStatusMetadata)
-	_, err = h.repositories.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, model.CONTRACT, neo4jenum.ActionContractStatusUpdated, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.Create(ctx, tenant, contractId, model.CONTRACT, neo4jenum.ActionContractStatusUpdated, message, metadata, utils.Now(), constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating status update action for contract %s: %s", contractId, err.Error())
@@ -461,7 +461,7 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 	// TODO temporary not eligible for all contracts
 	return
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -472,7 +472,7 @@ func (h *ContractEventHandler) startOnboardingIfEligible(ctx context.Context, te
 	contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 
 	if contractEntity.IsEligibleToStartOnboarding() {
-		organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)
+		organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, tenant, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while getting organization for contract %s: %s", contractEntity.Id, err.Error())
@@ -514,7 +514,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
 	// fetch organization of the contract
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())
@@ -526,7 +526,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 	}
 	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-	err = h.repositories.Neo4jRepositories.ContractWriteRepository.SoftDelete(ctx, eventData.Tenant, contractId, eventData.UpdatedAt)
+	err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.SoftDelete(ctx, eventData.Tenant, contractId, eventData.UpdatedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting contract %s: %s", contractId, err.Error())
@@ -551,7 +551,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		})
 	})
 
-	err = h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
@@ -567,7 +567,7 @@ func (h *ContractEventHandler) updateStatus(ctx context.Context, tenant, contrac
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting contract %s: %s", contractId, err.Error())
@@ -583,7 +583,7 @@ func (h *ContractEventHandler) updateStatus(ctx context.Context, tenant, contrac
 	}
 	statusChanged := contractEntity.ContractStatus.String() != status
 
-	err = h.repositories.Neo4jRepositories.ContractWriteRepository.UpdateStatus(ctx, tenant, contractId, status)
+	err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.UpdateStatus(ctx, tenant, contractId, status)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s status: %s", contractId, err.Error())
@@ -613,7 +613,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 	}
 
 	if statusChanged {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateOrganizationRelationship(ctx, eventData.Tenant, contractId, statusChanged)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -623,21 +623,21 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 	}
 
 	if status == neo4jenum.ContractStatusEnded.String() {
-		contractHandler := contracthandler.NewContractHandler(h.log, h.repositories, h.grpcClients)
+		contractHandler := contracthandler.NewContractHandler(h.log, h.services, h.grpcClients)
 		err = contractHandler.UpdateActiveRenewalOpportunityRenewDateAndArr(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("error while updating contract's {%s} renewal date: %s", contractId, err.Error())
 		}
 
-		err := h.repositories.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
+		err := h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.DeletePreviewCycleInvoices(ctx, eventData.Tenant, contractId, "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while deleting preview invoice for contract %s: %s", contractId, err.Error())
 		}
 	}
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -680,7 +680,7 @@ func (h *ContractEventHandler) deriveContractStatus(ctx context.Context, tenant 
 	// Check if contract is out of contract
 	if !contractEntity.AutoRenew {
 		// fetch active renewal opportunity for the contract
-		opportunityDbNode, err := h.repositories.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
+		opportunityDbNode, err := h.services.CommonServices.Neo4jRepositories.OpportunityReadRepository.GetActiveRenewalOpportunityForContract(ctx, tenant, contractEntity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return "", err
@@ -713,7 +713,7 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contractId)
 
-	contractDbNode, err := h.repositories.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
+	contractDbNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractById(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -730,7 +730,7 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 	}
 
 	if recalculateContractLtv {
-		sliDbNodes, err := h.repositories.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, contractId)
+		sliDbNodes, err := h.services.CommonServices.Neo4jRepositories.ServiceLineItemReadRepository.GetServiceLineItemsForContract(ctx, eventData.Tenant, contractId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -771,7 +771,7 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 	}
 
 	truncatedLtv := utils.TruncateFloat64(ltv, 2)
-	err = h.repositories.Neo4jRepositories.ContractWriteRepository.SetLtv(ctx, eventData.Tenant, contractId, truncatedLtv)
+	err = h.services.CommonServices.Neo4jRepositories.ContractWriteRepository.SetLtv(ctx, eventData.Tenant, contractId, truncatedLtv)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while updating contract %s ltv: %s", contractId, err.Error())
@@ -779,7 +779,7 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 	}
 
 	// get organization for contract
-	organizationDbNode, err := h.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
+	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContractId(ctx, eventData.Tenant, contractId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while getting organization for contract %s: %s", contractId, err.Error())

@@ -9,7 +9,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/aggregate"
@@ -22,16 +22,16 @@ import (
 )
 
 type PhoneNumberEventHandler struct {
-	log          logger.Logger
-	repositories *repository.Repositories
-	grpcClients  *grpc_client.Clients
+	log         logger.Logger
+	services    *service.Services
+	grpcClients *grpc_client.Clients
 }
 
-func NewPhoneNumberEventHandler(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) *PhoneNumberEventHandler {
+func NewPhoneNumberEventHandler(log logger.Logger, services *service.Services, grpcClients *grpc_client.Clients) *PhoneNumberEventHandler {
 	return &PhoneNumberEventHandler{
-		log:          log,
-		repositories: repositories,
-		grpcClients:  grpcClients,
+		log:         log,
+		services:    services,
+		grpcClients: grpcClients,
 	}
 }
 
@@ -58,7 +58,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 		},
 		CreatedAt: eventData.CreatedAt,
 	}
-	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.CreatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, data)
+	err := h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.CreatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, data)
 
 	return err
 }
@@ -78,14 +78,14 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt e
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.LogFields(log.String("rawPhoneNumber", eventData.RawPhoneNumber))
 
-	phoneNumberDbNode, err := h.repositories.Neo4jRepositories.PhoneNumberReadRepository.GetById(ctx, eventData.Tenant, phoneNumberId)
+	phoneNumberDbNode, err := h.services.CommonServices.Neo4jRepositories.PhoneNumberReadRepository.GetById(ctx, eventData.Tenant, phoneNumberId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 	phoneNumberBeforeUpdate := neo4jmapper.MapDbNodeToPhoneNumberEntity(phoneNumberDbNode)
 
-	err = h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.UpdatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, eventData.RawPhoneNumber, eventData.Source)
+	err = h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.UpdatePhoneNumber(ctx, eventData.Tenant, phoneNumberId, eventData.RawPhoneNumber, eventData.Source)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -93,7 +93,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt e
 
 	// email address updated
 	if phoneNumberBeforeUpdate.RawPhoneNumber != eventData.RawPhoneNumber && phoneNumberBeforeUpdate.E164 != eventData.RawPhoneNumber {
-		err = h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.CleanPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId)
+		err = h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.CleanPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
@@ -119,7 +119,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberUpdate(ctx context.Context, evt e
 	return nil
 }
 
-func (e *PhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, evt eventstore.Event) error {
+func (h *PhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberEventHandler.OnPhoneNumberValidated")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
@@ -138,7 +138,7 @@ func (e *PhoneNumberEventHandler) OnPhoneNumberValidated(ctx context.Context, ev
 		Source:        constants.SourceOpenline,
 		AppSource:     "validation-api",
 	}
-	err := e.repositories.Neo4jRepositories.PhoneNumberWriteRepository.PhoneNumberValidated(ctx, eventData.Tenant, phoneNumberId, data)
+	err := h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.PhoneNumberValidated(ctx, eventData.Tenant, phoneNumberId, data)
 
 	return err
 }
@@ -155,7 +155,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberValidationFailed(ctx context.Cont
 	}
 
 	phoneNumberId := aggregate.GetPhoneNumberObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.repositories.Neo4jRepositories.PhoneNumberWriteRepository.FailPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId, eventData.ValidationError)
+	err := h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.FailPhoneNumberValidation(ctx, eventData.Tenant, phoneNumberId, eventData.ValidationError)
 
 	return err
 }
