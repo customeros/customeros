@@ -69,18 +69,26 @@ type Email {
 }
 
 type EmailValidationDetails {
-    validated: Boolean
-    isReachable: String
-    isValidSyntax: Boolean
+    isValidSyntax:  Boolean
+    isRisky:        Boolean
+    isFirewalled:   Boolean
+    provider:       String
+    firewall:       String
+    isCatchAll:     Boolean
     canConnectSmtp: Boolean
-    acceptsMail: Boolean
-    hasFullInbox: Boolean
-    isCatchAll: Boolean
-    isDeliverable: Boolean
-    isDisabled: Boolean
-    isDisposable: Boolean
-    isRoleAccount: Boolean
-    error: String
+    isDeliverable:  Boolean
+    isMailboxFull:  Boolean
+    isRoleAccount:  Boolean
+    isFreeAccount:  Boolean
+    smtpSuccess:    Boolean
+
+    validated: Boolean @deprecated
+    isReachable: String @deprecated
+    acceptsMail: Boolean @deprecated
+    hasFullInbox: Boolean @deprecated
+    isDisabled: Boolean @deprecated
+    isDisposable: Boolean @deprecated
+    error: String @deprecated
 }
 
 """
