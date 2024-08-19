@@ -37,10 +37,6 @@ func (a *EmailAggregate) HandleGRPCRequest(ctx context.Context, request any, par
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *emailpb.PassEmailValidationGrpcRequest:
-		return nil, nil
-	case *emailpb.FailEmailValidationGrpcRequest:
-		return nil, nil
 	case *emailpb.EmailValidationGrpcRequest:
 		return nil, a.emailValidatedV2(ctx, r)
 	default:

@@ -35,6 +35,7 @@ type Config struct {
 	}
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
+	Limits             Limits
 }
 
 type ProcessConfig struct {
@@ -47,6 +48,10 @@ type ProcessConfig struct {
 	RequestPaymentLinkLookBackWindowInDays   int  `env:"REQUEST_PAYMENT_LINK_LOOK_BACK_WINDOW_IN_DAYS" envDefault:"5"`
 	DelayGenerateCycleInvoiceInMinutes       int  `env:"DELAY_GENERATE_CYCLE_INVOICE_IN_MINUTES" envDefault:"240"`
 	DelayGenerateOffCycleInvoiceInMinutes    int  `env:"DELAY_GENERATE_OFF_CYCLE_INVOICE_IN_MINUTES" envDefault:"60"`
+}
+
+type Limits struct {
+	EmailsValidationLimit int `env:"EMAILS_VALIDATION_LIMIT" envDefault:"50" required:"true"`
 }
 
 type EventNotifications struct {

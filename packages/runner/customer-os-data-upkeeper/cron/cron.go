@@ -22,6 +22,7 @@ const (
 	contactWeconnectGroup      = "contactWeconnect"
 	apiCacheGroup              = "api_cache"
 	workflowGroup              = "workflow"
+	emailGroup                 = "email"
 )
 
 var jobLocks = struct {
@@ -42,6 +43,7 @@ var jobLocks = struct {
 		linkUnthreadIssuesGroup:    {},
 		apiCacheGroup:              {},
 		workflowGroup:              {},
+		emailGroup:                 {},
 	},
 }
 
@@ -203,6 +205,10 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "executeWorkflows", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmails, func() {
+		lockAndRunJob(cont, emailGroup, validateEmails)
+	})
+
 	c.Start()
 
 	return c
@@ -308,4 +314,8 @@ func refreshApiCache(cont *container.Container) {
 
 func executeWorkflows(cont *container.Container) {
 	service.NewWorkflowService(cont.Cfg, cont.Log, cont.Repositories, cont.CommonServices).ExecuteWorkflows()
+}
+
+func validateEmails(cont *container.Container) {
+	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ValidateEmails()
 }
