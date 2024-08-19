@@ -54,6 +54,13 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 			Error:          entity.Error,
 			IsDisposable:   entity.IsDisposable,
 			IsRoleAccount:  entity.IsRoleAccount,
+			IsRisky:        entity.IsRisky,
+			IsFirewalled:   entity.IsFirewalled,
+			Provider:       entity.Provider,
+			Firewall:       entity.Firewall,
+			IsMailboxFull:  entity.IsMailboxFull,
+			IsFreeAccount:  entity.IsFreeAccount,
+			SMTPSuccess:    entity.SmtpSuccess,
 		},
 	}
 }
