@@ -36,6 +36,18 @@ type EmailValidatedFields struct {
 	IsReachable     string    `json:"isReachable"`
 	IsDisposable    bool      `json:"isDisposable"`
 	IsRoleAccount   bool      `json:"isRoleAccount"`
+	IsRisky         bool      `json:"isRisky"`
+	IsFirewalled    bool      `json:"isFirewalled"`
+	Provider        string    `json:"provider"`
+	Firewall        string    `json:"firewall"`
+	CanConnectSMTP  bool      `json:"canConnectSMTP"`
+	IsMailboxFull   bool      `json:"isMailboxFull"`
+	IsFreeAccount   bool      `json:"isFreeAccount"`
+	SmtpSuccess     bool      `json:"smtpSuccess"`
+	ResponseCode    string    `json:"responseCode"`
+	ErrorCode       string    `json:"errorCode"`
+	Description     string    `json:"description"`
+	SmtpResponse    string    `json:"smtpResponse"`
 }
 
 type EmailWriteRepository interface {
@@ -178,7 +190,20 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.updatedAt = datetime(),
 					e.isReachable = $isReachable,
 					e.isDisposable = $isDisposable,
-					e.isRoleAccount = $isRoleAccount
+					e.isRoleAccount = $isRoleAccount,
+					e.techValidatedAt = $validatedAt,
+					e.isRisky = $isRisky,
+					e.isFirewalled = $isFirewalled,
+					e.provider = $provider,
+					e.firewall = $firewall,
+					e.canConnectSMTP = $canConnectSMTP,
+					e.isMailboxFull = $isMailboxFull,
+					e.isFreeAccount = $isFreeAccount,
+					e.smtpSuccess = $smtpSuccess,
+					e.verifyResponseCode = $verifyResponseCode,
+					e.verifyErrorCode = $verifyErrorCode,
+					e.verifyDescription = $verifyDescription,
+					e.verifySmtpResponse = $verifySmtpResponse
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
@@ -190,27 +215,40 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 				WITH d, e
 				MERGE (e)-[:HAS_DOMAIN]->(d)`, tenant)
 	params := map[string]any{
-		"id":              emailId,
-		"tenant":          tenant,
-		"validationError": data.ValidationError,
-		"email":           data.EmailAddress,
-		"domain":          strings.ToLower(data.Domain),
-		"acceptsMail":     data.AcceptsMail,
-		"canConnectSmtp":  data.CanConnectSmtp,
-		"hasFullInbox":    data.HasFullInbox,
-		"isCatchAll":      data.IsCatchAll,
-		"isDeliverable":   data.IsDeliverable,
-		"isDisabled":      data.IsDisabled,
-		"isValidSyntax":   data.IsValidSyntax,
-		"username":        data.Username,
-		"validatedAt":     data.ValidatedAt,
-		"isReachable":     data.IsReachable,
-		"isDisposable":    data.IsDisposable,
-		"isRoleAccount":   data.IsRoleAccount,
-		"now":             utils.Now(),
-		"source":          constants.SourceOpenline,
-		"appSource":       constants.AppSourceEventProcessingPlatform,
+		"id":                 emailId,
+		"tenant":             tenant,
+		"validationError":    data.ValidationError,
+		"email":              data.EmailAddress,
+		"domain":             strings.ToLower(data.Domain),
+		"acceptsMail":        data.AcceptsMail,
+		"canConnectSmtp":     data.CanConnectSmtp,
+		"hasFullInbox":       data.HasFullInbox,
+		"isCatchAll":         data.IsCatchAll,
+		"isDeliverable":      data.IsDeliverable,
+		"isDisabled":         data.IsDisabled,
+		"isValidSyntax":      data.IsValidSyntax,
+		"username":           data.Username,
+		"validatedAt":        data.ValidatedAt,
+		"isReachable":        data.IsReachable,
+		"isDisposable":       data.IsDisposable,
+		"isRoleAccount":      data.IsRoleAccount,
+		"isRisky":            data.IsRisky,
+		"isFirewalled":       data.IsFirewalled,
+		"provider":           data.Provider,
+		"firewall":           data.Firewall,
+		"canConnectSMTP":     data.CanConnectSMTP,
+		"isMailboxFull":      data.IsMailboxFull,
+		"isFreeAccount":      data.IsFreeAccount,
+		"smtpSuccess":        data.SmtpSuccess,
+		"verifyResponseCode": data.ResponseCode,
+		"verifyErrorCode":    data.ErrorCode,
+		"verifyDescription":  data.Description,
+		"verifySmtpResponse": data.SmtpResponse,
+		"now":                utils.Now(),
+		"source":             constants.SourceOpenline,
+		"appSource":          constants.AppSourceEventProcessingPlatform,
 	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
@@ -339,6 +377,19 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 					e.isReachable = null,
 					e.isDisposable = null,
 					e.isRoleAccount = null,
+					e.techValidatedAt = null,
+					e.isRisky = null,
+					e.isFirewalled = null,
+					e.provider = null,
+					e.firewall = null,
+					e.canConnectSMTP = null,
+					e.isMailboxFull = null,
+					e.isFreeAccount = null,
+					e.smtpSuccess = null,
+					e.verifyResponseCode = null,
+					e.verifyErrorCode = null,
+					e.verifyDescription = null,
+					e.verifySmtpResponse = null,
 					e.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":     emailId,

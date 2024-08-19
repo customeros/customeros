@@ -704,6 +704,22 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 		Error:          utils.GetStringPropOrNil(props, string(entity.EmailPropertyError)),
 		IsDisposable:   utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsDisposable)),
 		IsRoleAccount:  utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsRoleAccount)),
+		EmailInternalFields: entity.EmailInternalFields{
+			ValidatedAt:           utils.GetTimePropOrNil(props, string(entity.EmailPropertyValidatedAt)),
+			ValidationRequestedAt: utils.GetTimePropOrNil(props, string(entity.EmailPropertyValidationRequestedAt)),
+		},
+		Username:      utils.GetStringPropOrNil(props, string(entity.EmailPropertyUsername)),
+		IsRisky:       utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsRisky)),
+		IsFirewalled:  utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsFirewalled)),
+		Provider:      utils.GetStringPropOrNil(props, string(entity.EmailPropertyProvider)),
+		Firewall:      utils.GetStringPropOrNil(props, string(entity.EmailPropertyFirewall)),
+		IsMailboxFull: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsMailboxFull)),
+		IsFreeAccount: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsFreeAccount)),
+		SmtpSuccess:   utils.GetBoolPropOrNil(props, string(entity.EmailPropertySmtpSuccess)),
+		ResponseCode:  utils.GetStringPropOrNil(props, string(entity.EmailPropertyResponseCode)),
+		ErrorCode:     utils.GetStringPropOrNil(props, string(entity.EmailPropertyErrorCode)),
+		Description:   utils.GetStringPropOrNil(props, string(entity.EmailPropertyDescription)),
+		SmtpResponse:  utils.GetStringPropOrNil(props, string(entity.EmailPropertySmtpResponse)),
 	}
 }
 

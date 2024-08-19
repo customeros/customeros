@@ -8,20 +8,34 @@ import (
 type EmailProperty string
 
 const (
-	EmailPropertyEmail          EmailProperty = "email"
-	EmailPropertyRawEmail       EmailProperty = "rawEmail"
-	EmailPropertyIsDisposable   EmailProperty = "isDisposable"
-	EmailPropertyIsRoleAccount  EmailProperty = "isRoleAccount"
-	EmailPropertyIsValidSyntax  EmailProperty = "isValidSyntax"
-	EmailPropertyCanConnectSMTP EmailProperty = "canConnectSMTP"
-	EmailPropertyAcceptsMail    EmailProperty = "acceptsMail"
-	EmailPropertyHasFullInbox   EmailProperty = "hasFullInbox"
-	EmailPropertyIsCatchAll     EmailProperty = "isCatchAll"
-	EmailPropertyIsDeliverable  EmailProperty = "isDeliverable"
-	EmailPropertyIsDisabled     EmailProperty = "isDisabled"
-	EmailPropertyError          EmailProperty = "error"
-	EmailPropertyValidated      EmailProperty = "validated"
-	EmailPropertyIsReachable    EmailProperty = "isReachable"
+	EmailPropertyEmail                 EmailProperty = "email"
+	EmailPropertyRawEmail              EmailProperty = "rawEmail"
+	EmailPropertyIsDisposable          EmailProperty = "isDisposable"
+	EmailPropertyIsRoleAccount         EmailProperty = "isRoleAccount"
+	EmailPropertyIsValidSyntax         EmailProperty = "isValidSyntax"
+	EmailPropertyCanConnectSMTP        EmailProperty = "canConnectSMTP"
+	EmailPropertyAcceptsMail           EmailProperty = "acceptsMail"
+	EmailPropertyHasFullInbox          EmailProperty = "hasFullInbox"
+	EmailPropertyIsCatchAll            EmailProperty = "isCatchAll"
+	EmailPropertyIsDeliverable         EmailProperty = "isDeliverable"
+	EmailPropertyIsDisabled            EmailProperty = "isDisabled"
+	EmailPropertyError                 EmailProperty = "error"
+	EmailPropertyValidated             EmailProperty = "validated"
+	EmailPropertyValidatedAt           EmailProperty = "techValidatedAt"
+	EmailPropertyValidationRequestedAt EmailProperty = "techValidationRequestedAt"
+	EmailPropertyIsReachable           EmailProperty = "isReachable"
+	EmailPropertyUsername              EmailProperty = "username"
+	EmailPropertyIsRisky               EmailProperty = "isRisky"
+	EmailPropertyIsFirewalled          EmailProperty = "isFirewalled"
+	EmailPropertyProvider              EmailProperty = "provider"
+	EmailPropertyFirewall              EmailProperty = "firewall"
+	EmailPropertyIsMailboxFull         EmailProperty = "isMailboxFull"
+	EmailPropertyIsFreeAccount         EmailProperty = "isFreeAccount"
+	EmailPropertySmtpSuccess           EmailProperty = "smtpSuccess"
+	EmailPropertyResponseCode          EmailProperty = "verifyResponseCode"
+	EmailPropertyErrorCode             EmailProperty = "verifyErrorCode"
+	EmailPropertyDescription           EmailProperty = "verifyDescription"
+	EmailPropertySmtpResponse          EmailProperty = "verifySmtpResponse"
 )
 
 type EmailEntity struct {
@@ -37,21 +51,42 @@ type EmailEntity struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 
-	Validated      *bool
-	IsReachable    *string
 	IsValidSyntax  *bool
-	CanConnectSMTP *bool
-	AcceptsMail    *bool
-	HasFullInbox   *bool
+	Username       *string
+	IsRisky        *bool
+	IsFirewalled   *bool
+	Provider       *string
+	Firewall       *string
 	IsCatchAll     *bool
+	CanConnectSMTP *bool
 	IsDeliverable  *bool
-	IsDisabled     *bool
-	Error          *string
-	IsDisposable   *bool
-	IsRoleAccount  *bool // group inbox indicator
+	IsMailboxFull  *bool
+	IsRoleAccount  *bool
+	IsFreeAccount  *bool
+	SmtpSuccess    *bool
+	ResponseCode   *string
+	ErrorCode      *string
+	Description    *string
+	SmtpResponse   *string
+
+	EmailInternalFields EmailInternalFields
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
+
+	//All below deprecated
+	Validated    *bool
+	IsReachable  *string
+	AcceptsMail  *bool
+	HasFullInbox *bool
+	IsDisabled   *bool
+	Error        *string
+	IsDisposable *bool
+}
+
+type EmailInternalFields struct {
+	ValidatedAt           *time.Time
+	ValidationRequestedAt *time.Time
 }
 
 type EmailEntities []EmailEntity

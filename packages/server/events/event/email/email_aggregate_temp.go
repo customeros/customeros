@@ -44,10 +44,10 @@ func (a *EmailTempAggregate) requestEmailValidation(ctx context.Context, request
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	updateEvent, err := event.NewEmailValidateEvent(a)
+	updateEvent, err := event.NewEmailRequestValidationEvent(a)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "failed to create EmailValidateEvent")
+		return errors.Wrap(err, "failed to create EmailRequestValidationEvent")
 	}
 	eventstore.EnrichEventWithMetadataExtended(&updateEvent, span, eventstore.EventMetadata{
 		Tenant: a.Tenant,

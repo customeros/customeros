@@ -101,6 +101,7 @@ func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context
 	result.Syntax.IsValid = syntaxValidation.IsValid
 	result.Syntax.Domain = syntaxValidation.Domain
 	result.Syntax.User = syntaxValidation.User
+	result.Syntax.CleanEmail = syntaxValidation.CleanEmail
 
 	// if syntax is not valid, return
 	if !syntaxValidation.IsValid {

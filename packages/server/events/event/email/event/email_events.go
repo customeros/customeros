@@ -10,11 +10,14 @@ import (
 )
 
 const (
-	EmailCreateV1           = "V1_EMAIL_CREATE"
-	EmailUpdateV1           = "V1_EMAIL_UPDATE"
+	EmailCreateV1    = "V1_EMAIL_CREATE"
+	EmailUpdateV1    = "V1_EMAIL_UPDATE"
+	EmailValidateV1  = "V1_EMAIL_VALIDATE"
+	EmailValidatedV2 = "V2_EMAIL_VALIDATED"
+	//Deprecated
+	EmailValidatedV1 = "V1_EMAIL_VALIDATED"
+	//Deprecated
 	EmailValidationFailedV1 = "V1_EMAIL_VALIDATION_FAILED"
-	EmailValidatedV1        = "V1_EMAIL_VALIDATED"
-	EmailValidateV1         = "V1_EMAIL_VALIDATE"
 )
 
 type EmailCreateEvent struct {
@@ -156,22 +159,22 @@ func NewEmailValidatedEvent(aggregate eventstore.Aggregate, tenant, rawEmail, is
 	return event, nil
 }
 
-type EmailValidateEvent struct {
+type EmailRequestValidationEvent struct {
 	Tenant string `json:"tenant" validate:"required"`
 }
 
-func NewEmailValidateEvent(aggr eventstore.Aggregate) (eventstore.Event, error) {
-	eventData := EmailValidateEvent{
+func NewEmailRequestValidationEvent(aggr eventstore.Aggregate) (eventstore.Event, error) {
+	eventData := EmailRequestValidationEvent{
 		Tenant: aggr.GetTenant(),
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailValidateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "failed to validate EmailRequestValidationEvent")
 	}
 
 	event := eventstore.NewBaseEvent(aggr, EmailValidateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailValidateEvent")
+		return eventstore.Event{}, errors.Wrap(err, "error setting json data for EmailRequestValidationEvent")
 	}
 	return event, nil
 }

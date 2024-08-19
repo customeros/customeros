@@ -89,7 +89,7 @@ func (h *emailEventHandler) OnEmailValidate(ctx context.Context, evt eventstore.
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData event.EmailValidateEvent
+	var eventData event.EmailRequestValidationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
