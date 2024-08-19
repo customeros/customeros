@@ -218,10 +218,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.emailEventHandler.OnEmailCreate(ctx, evt)
 	case emailevents.EmailUpdateV1:
 		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
-	case emailevents.EmailValidationFailedV1:
-		return s.emailEventHandler.OnEmailValidationFailed(ctx, evt)
-	case emailevents.EmailValidatedV1:
-		return s.emailEventHandler.OnEmailValidated(ctx, evt)
+	case emailevents.EmailValidationFailedV1,
+		emailevents.EmailValidatedV1:
+		return nil
+	case emailevents.EmailValidatedV2:
+		return s.emailEventHandler.OnEmailValidatedV2(ctx, evt)
 	case emailevents.EmailValidateV1:
 		return nil
 

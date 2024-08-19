@@ -9,6 +9,7 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/enrichment-api/**
+      - packages/server/validation-api/**
       - packages/server/events-processing-proto/**
       - packages/server/events/**
       - packages/server/events-processing-platform/**
@@ -21,6 +22,7 @@ on:
       - packages/server/customer-os-postgres-repository/**
       - packages/server/customer-os-neo4j-repository/**
       - packages/server/enrichment-api/**
+      - packages/server/validation-api/**
       - packages/server/events-processing-proto/**
       - packages/server/events/**
       - packages/server/events-processing-platform/**
