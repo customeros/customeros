@@ -101,13 +101,9 @@ export const AddNewOrganization = observer(() => {
             value={website}
             variant='unstyled'
             placeholder='Website link'
+            allowKeyDownEventPropagation
             onChange={(e) => {
               setWebsite(e.target.value);
-            }}
-            onKeyDown={(e) => {
-              if (e.key === '/') {
-                e.stopPropagation();
-              }
             }}
             onKeyUp={(e) => {
               if (e.key === 'Backspace' && website.length === 0) {
@@ -121,7 +117,6 @@ export const AddNewOrganization = observer(() => {
             </p>
           )}
         </div>
-
         <div className='flex flex-col'>
           <label htmlFor='name' className='absolute top-[-999999px]'>
             Organization name
@@ -130,6 +125,7 @@ export const AddNewOrganization = observer(() => {
             id='name'
             value={name}
             variant='unstyled'
+            allowKeyDownEventPropagation
             placeholder='Organization name'
             defaultValue={searchParams.get('name') ?? ''}
             data-test='address-book-create-new-org-org-name'
