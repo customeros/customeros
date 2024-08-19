@@ -1,7 +1,6 @@
 package email
 
 import (
-	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
@@ -39,92 +38,51 @@ func (a *EmailAggregate) HandleGRPCRequest(ctx context.Context, request any, par
 
 	switch r := request.(type) {
 	case *emailpb.PassEmailValidationGrpcRequest:
-		return nil, a.emailValidated(ctx, r)
+		return nil, nil
 	case *emailpb.FailEmailValidationGrpcRequest:
-		return nil, a.emailValidationFailed(ctx, r)
+		return nil, nil
+	case *emailpb.EmailValidationGrpcRequest:
+		return nil, a.emailValidatedV2(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
 }
 
-func (a *EmailAggregate) emailValidated(ctx context.Context, request *emailpb.PassEmailValidationGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTempAggregate.requestEmailValidation")
+func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.EmailValidationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.emailValidatedV2")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, a.Tenant)
 	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	if request.RawEmail != a.Email.RawEmail {
-		span.LogFields(log.String("result", fmt.Sprintf("email does not match. validated %s, current %s", request.RawEmail, a.Email.RawEmail)))
-		return nil
-	}
-
-	event, err := event2.NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
-		request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp, request.HasFullInbox, request.IsCatchAll,
-		request.IsDisabled, request.IsValidSyntax, request.IsDeliverable, request.IsDisposable, request.IsRoleAccount)
+	event, err := event2.NewEmailValidatedEventV2(a,
+		request.Tenant,
+		request.RawEmail,
+		request.Email,
+		request.Domain,
+		request.Username,
+		request.IsValidSyntax,
+		request.IsRisky,
+		request.IsFirewalled,
+		request.Provider,
+		request.Firewall,
+		request.IsCatchAll,
+		request.CanConnectSMTP,
+		request.IsDeliverable,
+		request.IsMailboxFull,
+		request.IsRoleAccount,
+		request.IsFreeAccount,
+		request.SmtpSuccess,
+		request.ResponseCode,
+		request.ErrorCode,
+		request.Description,
+		request.SmtpResponse,
+	)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailValidatedEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.GetAppSource(),
-	})
-
-	return a.Apply(event)
-}
-
-func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.PassEmailValidationGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTempAggregate.requestEmailValidation")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	if request.RawEmail != a.Email.RawEmail {
-		span.LogFields(log.String("result", fmt.Sprintf("email does not match. validated %s, current %s", request.RawEmail, a.Email.RawEmail)))
-		return nil
-	}
-
-	event, err := event2.NewEmailValidatedEvent(a, request.Tenant, request.RawEmail, request.IsReachable, request.ErrorMessage,
-		request.Domain, request.Username, request.Email, request.AcceptsMail, request.CanConnectSmtp, request.HasFullInbox, request.IsCatchAll,
-		request.IsDisabled, request.IsValidSyntax, request.IsDeliverable, request.IsDisposable, request.IsRoleAccount)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailValidatedEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.GetAppSource(),
-	})
-
-	return a.Apply(event)
-}
-
-func (a *EmailAggregate) emailValidationFailed(ctx context.Context, request *emailpb.FailEmailValidationGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "EmailTempAggregate.requestEmailValidation")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	if request.RawEmail != "" && request.RawEmail != a.Email.RawEmail {
-		span.LogFields(log.String("result", fmt.Sprintf("email does not match. validated %s, current %s", request.RawEmail, a.Email.RawEmail)))
-		return nil
-	}
-
-	event, err := event2.NewEmailFailedValidationEvent(a, request.Tenant, request.ErrorMessage)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewEmailFailedValidationEvent")
+		return errors.Wrap(err, "NewEmailValidatedEventV2")
 	}
 
 	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{

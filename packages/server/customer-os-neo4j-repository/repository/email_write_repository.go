@@ -53,7 +53,6 @@ type EmailValidatedFields struct {
 type EmailWriteRepository interface {
 	CreateEmail(ctx context.Context, tenant, emailId string, data EmailCreateFields) error
 	UpdateEmail(ctx context.Context, tenant, emailId, rawEmail, source string) error
-	FailEmailValidation(ctx context.Context, tenant, emailId, validationError string) error
 	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
 	CleanEmailValidation(ctx context.Context, tenant, emailId string) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool) error
@@ -129,33 +128,6 @@ func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId,
 		"sourceOfTruth": source,
 		"rawEmail":      rawEmail,
 		"overwrite":     source == constants.SourceOpenline,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (r *emailWriteRepository) FailEmailValidation(ctx context.Context, tenant, emailId, validationError string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.FailEmailValidation")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
-				WHERE e:Email_%s
-		 		SET e.validationError = $validationError,
-		     		e.validated = false,
-					e.updatedAt = datetime()`, tenant)
-	params := map[string]any{
-		"id":              emailId,
-		"tenant":          tenant,
-		"validationError": validationError,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

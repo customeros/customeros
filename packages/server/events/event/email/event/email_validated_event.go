@@ -33,26 +33,33 @@ type EmailValidatedEventV2 struct {
 	SmtpResponse   string    `json:"smtpResponse"`
 }
 
-func NewEmailValidatedEventV2(aggregate eventstore.Aggregate, tenant, rawEmail, isReachable, validationError, domain, username, emailAddress string,
-	acceptsMail, canConnectSmtp, hasFullInbox, isCatchAll, isDisabled, isValidSyntax, isDeliverable, IsDisposable, IsRoleAccount bool) (eventstore.Event, error) {
-	eventData := EmailValidatedEvent{
-		Tenant:          tenant,
-		RawEmail:        rawEmail,
-		IsReachable:     isReachable,
-		ValidationError: validationError,
-		AcceptsMail:     acceptsMail,
-		CanConnectSmtp:  canConnectSmtp,
-		HasFullInbox:    hasFullInbox,
-		IsCatchAll:      isCatchAll,
-		IsDisabled:      isDisabled,
-		IsDeliverable:   isDeliverable,
-		IsDisposable:    IsDisposable,
-		IsRoleAccount:   IsRoleAccount,
-		Domain:          domain,
-		IsValidSyntax:   isValidSyntax,
-		Username:        username,
-		EmailAddress:    emailAddress,
-		ValidatedAt:     utils.Now(),
+func NewEmailValidatedEventV2(aggregate eventstore.Aggregate, tenant, rawEmail, email, domain, username string,
+	isValidSyntax, risky, firewalled bool, provider, firewall string,
+	isCatchAll, canConnectSMTP, isDeliverable, isMailboxFull, isRoleAccount, isFreeAccount, smtpSuccess bool,
+	responseCode, errorCode, description, smtpResponse string) (eventstore.Event, error) {
+	eventData := EmailValidatedEventV2{
+		Tenant:         tenant,
+		RawEmail:       rawEmail,
+		Email:          email,
+		ValidatedAt:    utils.Now(),
+		Domain:         domain,
+		Username:       username,
+		IsValidSyntax:  isValidSyntax,
+		IsRisky:        risky,
+		IsFirewalled:   firewalled,
+		Provider:       provider,
+		Firewall:       firewall,
+		IsCatchAll:     isCatchAll,
+		CanConnectSMTP: canConnectSMTP,
+		IsDeliverable:  isDeliverable,
+		IsMailboxFull:  isMailboxFull,
+		IsRoleAccount:  isRoleAccount,
+		IsFreeAccount:  isFreeAccount,
+		SmtpSuccess:    smtpSuccess,
+		ResponseCode:   responseCode,
+		ErrorCode:      errorCode,
+		Description:    description,
+		SmtpResponse:   smtpResponse,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

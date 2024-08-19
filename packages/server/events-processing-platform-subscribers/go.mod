@@ -18,6 +18,8 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
 
+replace github.com/openline-ai/openline-customer-os/packages/server/validation-api => ../validation-api
+
 require (
 	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0
 	github.com/aws/aws-sdk-go v1.55.3
@@ -34,6 +36,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/events v0.0.0-20240413132139-bfffc416fdeb
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform v0.0.0-20240305183844-4e6aa5b2c822
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240723183528-e1ad8abb70ba
+	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-00010101000000-000000000000
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.9.3
@@ -92,6 +95,7 @@ require (
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
+	github.com/smartystreets/smartystreets-go-sdk v1.19.5 // indirect
 	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/tetratelabs/wazero v1.6.0 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -103,7 +107,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.temporal.io/api v1.32.0 // indirect
 	golang.org/x/arch v0.9.0 // indirect
-	golang.org/x/exp v0.0.0-20240525044651-4c93da0ed11d // indirect
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/oauth2 v0.22.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	google.golang.org/api v0.192.0 // indirect

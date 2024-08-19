@@ -112,10 +112,8 @@ func (s *EmailValidationSubscriber) When(ctx context.Context, evt eventstore.Eve
 
 	switch evt.GetEventType() {
 	case event.EmailCreateV1:
-		_ = s.emailEventHandler.OnEmailCreate(ctx, evt)
 		return nil
 	case event.EmailValidateV1:
-		_ = s.emailEventHandler.OnEmailValidate(ctx, evt)
 		return nil
 	default:
 		return nil

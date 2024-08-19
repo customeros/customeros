@@ -7,13 +7,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contact"
-	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
-
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contact"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
+	emailevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -26,6 +27,7 @@ type EnrichSubscriber struct {
 	db                  *esdb.Client
 	cfg                 *config.Config
 	contactEventHandler *contact.ContactEventHandler
+	emailEventHandler   *email.EmailEventHandler
 }
 
 func NewEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config, services *service.Services, caches caches.Cache, grpcClients *grpc_client.Clients) *EnrichSubscriber {
@@ -34,6 +36,7 @@ func NewEnrichSubscriber(log logger.Logger, db *esdb.Client, cfg *config.Config,
 		db:                  db,
 		cfg:                 cfg,
 		contactEventHandler: contact.NewContactEventHandler(services, log, cfg, caches, grpcClients),
+		emailEventHandler:   email.NewEmailEventHandler(services, log, cfg, caches, grpcClients),
 	}
 }
 
@@ -116,6 +119,8 @@ func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error
 		_ = s.contactEventHandler.OnEnrichContactRequested(ctx, evt)
 	case contactevent.ContactAddSocialV1:
 		_ = s.contactEventHandler.OnSocialAddedToContact(ctx, evt)
+	case emailevent.EmailValidateV1:
+		_ = s.emailEventHandler.OnEmailValidate(ctx, evt)
 	}
 	return nil
 }

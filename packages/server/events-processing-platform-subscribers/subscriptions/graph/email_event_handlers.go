@@ -133,52 +133,42 @@ func (h *EmailEventHandler) OnEmailUpdate(ctx context.Context, evt eventstore.Ev
 	return nil
 }
 
-func (h *EmailEventHandler) OnEmailValidationFailed(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailValidationFailed")
+func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailValidatedV2")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData event.EmailFailedValidationEvent
+	var eventData event.EmailValidatedEventV2
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
-
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.FailEmailValidation(ctx, eventData.Tenant, emailId, eventData.ValidationError)
 
-	return err
-}
-
-func (h *EmailEventHandler) OnEmailValidated(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailValidated")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.EmailValidatedEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.EmailValidatedFields{
-		ValidationError: eventData.ValidationError,
-		EmailAddress:    eventData.EmailAddress,
-		Domain:          eventData.Domain,
-		AcceptsMail:     eventData.AcceptsMail,
-		CanConnectSmtp:  eventData.CanConnectSmtp,
-		HasFullInbox:    eventData.HasFullInbox,
-		IsCatchAll:      eventData.IsCatchAll,
-		IsDeliverable:   eventData.IsDeliverable,
-		IsDisabled:      eventData.IsDisabled,
-		IsValidSyntax:   eventData.IsValidSyntax,
-		Username:        eventData.Username,
-		ValidatedAt:     eventData.ValidatedAt,
-		IsReachable:     eventData.IsReachable,
-		IsDisposable:    eventData.IsDisposable,
-		IsRoleAccount:   eventData.IsRoleAccount,
+		EmailAddress:   eventData.Email,
+		Domain:         eventData.Domain,
+		Username:       eventData.Username,
+		IsValidSyntax:  eventData.IsValidSyntax,
+		IsRisky:        eventData.IsRisky,
+		IsFirewalled:   eventData.IsFirewalled,
+		Provider:       eventData.Provider,
+		Firewall:       eventData.Firewall,
+		IsCatchAll:     eventData.IsCatchAll,
+		CanConnectSMTP: eventData.CanConnectSMTP,
+		IsDeliverable:  eventData.IsDeliverable,
+		IsMailboxFull:  eventData.IsMailboxFull,
+		IsRoleAccount:  eventData.IsRoleAccount,
+		IsFreeAccount:  eventData.IsFreeAccount,
+		SmtpSuccess:    eventData.SmtpSuccess,
+		ResponseCode:   eventData.ResponseCode,
+		ErrorCode:      eventData.ErrorCode,
+		Description:    eventData.Description,
+		SmtpResponse:   eventData.SmtpResponse,
+		ValidatedAt:    eventData.ValidatedAt,
 	}
+
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
 
 	return err
