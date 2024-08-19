@@ -20,7 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	email_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/email_validation"
 	enrichsubscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/enrich"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph_low_prio"
@@ -167,17 +166,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 			err := subscriber.Connect(ctx, subscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(graphLowPrioSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.EmailValidationSubscription.Enabled {
-		emailValidationSubscriber := email_validation_subscription.NewEmailValidationSubscriber(server.Log, esdb, server.Config, grpcClients, server.Services)
-		go func() {
-			err := emailValidationSubscriber.Connect(ctx, emailValidationSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(emailValidationSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()
