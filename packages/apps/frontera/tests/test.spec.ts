@@ -1,5 +1,3 @@
-import { expect } from '@playwright/test';
-
 import { test } from './hooks';
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
@@ -78,8 +76,4 @@ test('create and delete contracts', async ({ page }) => {
   // Delete a contract
   await organizationAccountPage.deleteContract(1);
   await organizationAccountPage.checkContractsCount(1);
-});
-
-test('made to faile', async () => {
-  expect(1, `Expected 1 to be equal to 2`).toBe(2);
 });

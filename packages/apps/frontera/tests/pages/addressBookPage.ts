@@ -281,16 +281,20 @@ export class AddressBookPage {
     );
   }
 
-  async selectAllOrgs() {
+  async selectAllOrgs(): Promise<boolean> {
     const allOrgsSelectAllOrgs = this.page.locator(this.allOrgsSelectAllOrgs);
 
-    await allOrgsSelectAllOrgs.waitFor({ state: 'visible' });
+    await allOrgsSelectAllOrgs.waitFor({ state: 'visible', timeout: 2000 });
 
     const isVisible = await allOrgsSelectAllOrgs.isVisible();
 
     if (isVisible) {
       await allOrgsSelectAllOrgs.click();
+
+      return true;
     }
+
+    return false;
   }
 
   async archiveOrgs() {
