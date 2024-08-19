@@ -17,7 +17,7 @@ export function getColumnConfig<Datum>(
     const column = {
       ...columns[columnTypeName],
       enableHiding: !curr.visible,
-      size: curr.visible ? columns[columnTypeName].size : 0,
+      size: curr.visible ? curr.width : 0,
       minSize: curr.visible ? columns[columnTypeName].minSize : 0,
     };
 

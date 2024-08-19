@@ -560,7 +560,8 @@ const columns: Record<string, Column> = {
     'value.connectedUsers',
     {
       id: ColumnViewType.ContactsConnections,
-      size: 150,
+      minSize: 150,
+      maxSize: 600,
       enableColumnFilter: true,
       enableSorting: true,
 

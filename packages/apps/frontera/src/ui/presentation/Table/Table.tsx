@@ -3,6 +3,7 @@ import type {
   OnChangeFn,
   SortingState,
   RowSelectionState,
+  ColumnSizingState,
   ColumnFiltersState,
   Table as TableInstance,
 } from '@tanstack/react-table';
@@ -68,6 +69,7 @@ interface TableProps<T extends object> {
   onFullRowSelection?: (id?: string) => void;
   onSortingChange?: OnChangeFn<SortingState>;
   getRowId?: (row: T, index: number) => string;
+  onResizeColumn?: OnChangeFn<ColumnSizingState>;
   onSelectionChange?: OnChangeFn<RowSelectionState>;
   tableRef: MutableRefObject<TableInstance<T> | null>;
   onFocusedRowChange?: (index: number | null) => void;
@@ -102,6 +104,7 @@ export const Table = <T extends object>({
   onSelectedIndexChange,
   enableKeyboardShortcuts,
   enableColumnResizing = false,
+  onResizeColumn,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -132,6 +135,7 @@ export const Table = <T extends object>({
     onSortingChange: onSortingChange ?? setSorting,
     onRowSelectionChange: onSelectionChange ?? setSelection,
     columnResizeDirection: 'ltr',
+    onColumnSizingChange: onResizeColumn,
   });
 
   const { rows } = table.getRowModel();
