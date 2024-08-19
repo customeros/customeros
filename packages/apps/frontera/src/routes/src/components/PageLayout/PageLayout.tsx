@@ -93,7 +93,7 @@ export const PageLayout = ({
         onMouseDown={handleMouseDown}
         style={{
           left: `${isResizable ? sidebarWidth : 200}px`,
-          width: isDragging ? '14rem' : '1px',
+          width: isDragging ? '14rem' : '3px',
         }}
         className={cn(
           'absolute top-0 left-0 h-full z-10 hover:bg-transparent  transition-colors hover:w-[1px]',
