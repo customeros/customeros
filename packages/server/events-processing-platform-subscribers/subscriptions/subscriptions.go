@@ -27,6 +27,9 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
+
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "emailValidation-v2")
+
 	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	graphSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,
@@ -46,19 +49,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		s.cfg.Subscriptions.GraphLowPrioritySubscription.GroupName,
 		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: s.cfg.Subscriptions.GraphLowPrioritySubscription.Prefixes},
 		&graphLowPrioritySubSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
-	emailValidationSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	emailValidationSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.EmailValidationSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.EmailValidationSubscription.Prefix}},
-		&emailValidationSubscriptionSettings,
 		false,
 		false,
 		esdb.End{},

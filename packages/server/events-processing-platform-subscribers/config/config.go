@@ -28,7 +28,6 @@ type Config struct {
 type Subscriptions struct {
 	GraphSubscription                 GraphSubscription
 	GraphLowPrioritySubscription      GraphLowPrioritySubscription
-	EmailValidationSubscription       EmailValidationSubscription
 	PhoneNumberValidationSubscription PhoneNumberValidationSubscription
 	LocationValidationSubscription    LocationValidationSubscription
 	OrganizationSubscription          OrganizationSubscription
@@ -54,14 +53,6 @@ type GraphLowPrioritySubscription struct {
 	PoolSize         int      `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient uint32   `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	Prefixes         []string `env:"EVENT_STORE_SUBSCRIPTIONS_GRAPH_LOW_PRIO_V2_PREFIXES" envDefault:"organization-" validate:"required"`
-}
-
-type EmailValidationSubscription struct {
-	Enabled          bool   `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_ENABLED" envDefault:"true"`
-	GroupName        string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_GROUP_NAME" envDefault:"emailValidation-v2" validate:"required"`
-	Prefix           string `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_PREFIX" envDefault:"email-" validate:"required"`
-	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_EMAIL_VALIDATION_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 }
 
 type PhoneNumberValidationSubscription struct {
