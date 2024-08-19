@@ -18,6 +18,7 @@ message UpsertEmailGrpcRequest {
   optional string LinkWithId = 12;
 }
 
+//Deprecated
 message FailEmailValidationGrpcRequest {
   string tenant = 1;
   string emailId = 2;
@@ -27,6 +28,7 @@ message FailEmailValidationGrpcRequest {
   string rawEmail = 6;
 }
 
+//Deprecated
 message PassEmailValidationGrpcRequest {
   string tenant = 1;
   string emailId = 2;
@@ -49,6 +51,33 @@ message PassEmailValidationGrpcRequest {
   bool IsDeliverable = 19;
 }
 
+message EmailValidationGrpcRequest {
+  string tenant = 1;
+  string emailId = 2;
+  string appSource = 3;
+  string loggedInUserId = 4;
+  string rawEmail = 5;
+  string email = 6;
+  string domain = 7;
+  string username = 8;
+  bool isValidSyntax = 9;
+  bool isRisky = 10;
+  bool isFirewalled = 11;
+  string Provider = 12;
+  string Firewall = 13;
+  bool isCatchAll = 14;
+  bool canConnectSMTP = 15;
+  bool isDeliverable = 16;
+  bool isMailboxFull = 17;
+  bool isRoleAccount = 18;
+  bool isFreeAccount = 19;
+  bool smtpSuccess = 20;
+  string responseCode = 21;
+  string errorCode = 22;
+  string description = 23;
+  string smtpResponse = 24;
+}
+
 message RequestEmailValidationGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -62,7 +91,10 @@ message EmailIdGrpcResponse {
 
 service emailGrpcService {
   rpc UpsertEmail(UpsertEmailGrpcRequest) returns (EmailIdGrpcResponse);
-  rpc FailEmailValidation(FailEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
-  rpc PassEmailValidation(PassEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
   rpc RequestEmailValidation(RequestEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
+  rpc UpdateEmailValidation(EmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
+  // Deprecated
+  rpc FailEmailValidation(FailEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
+  // Deprecated
+  rpc PassEmailValidation(PassEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
 }

@@ -152,3 +152,22 @@ func (s *emailService) RequestEmailValidation(ctx context.Context, request *emai
 
 	return &emailpb.EmailIdGrpcResponse{Id: request.Id}, nil
 }
+
+func (s *emailService) UpdateEmailValidation(ctx context.Context, request *emailpb.EmailValidationGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.UpdateEmailValidation")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.SetTag(tracing.SpanTagEntityId, request.EmailId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return email.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpdateEmailValidation.HandleGRPCRequest) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
+}

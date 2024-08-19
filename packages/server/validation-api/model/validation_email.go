@@ -13,9 +13,10 @@ type ValidateEmailResponse struct {
 type ValidateEmailMailsherpaData struct {
 	Email  string `json:"email"`
 	Syntax struct {
-		IsValid bool   `json:"isValid"`
-		User    string `json:"user"`
-		Domain  string `json:"domain"`
+		IsValid    bool   `json:"isValid"`
+		User       string `json:"user"`
+		Domain     string `json:"domain"`
+		CleanEmail string `json:"cleanEmail"`
 	} `json:"syntax"`
 	DomainData struct {
 		IsFirewalled   bool   `json:"isFirewalled"`
