@@ -5,8 +5,9 @@ import omit from 'lodash/omit';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { gql } from 'graphql-request';
-import { makeAutoObservable } from 'mobx';
+import debounce from 'lodash/debounce';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 import { Filter, Operation, FilterItem } from '@store/types';
 
@@ -27,10 +28,12 @@ export class TableViewDefStore implements Store<TableViewDef> {
   subscribe = makeAutoSyncable.subscribe;
   load = makeAutoSyncable.load<TableViewDef>();
   update = makeAutoSyncable.update<TableViewDef>();
+  private readonly debouncedSave: () => void;
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoSyncable(this, { channelName: 'TableViewDef', mutator: this.save });
     makeAutoObservable(this);
+    this.debouncedSave = debounce(this.save, 500);
   }
 
   set id(id: string) {
@@ -97,6 +100,20 @@ export class TableViewDefStore implements Store<TableViewDef> {
       },
       { mutate: false },
     );
+  }
+
+  setColumnSize(columnType: string, size: number) {
+    runInAction(() => {
+      const columnIdx = this.value.columns.findIndex(
+        (c) => c.columnType === columnType,
+      );
+
+      if (columnIdx !== -1) {
+        this.value.columns[columnIdx].width = size;
+      }
+    });
+
+    this.debouncedSave();
   }
 
   async invalidate() {}

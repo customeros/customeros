@@ -240,6 +240,8 @@ const columns: Record<string, Column> = {
   INVOICES_PLACEHOLDER: columnHelper.accessor((row) => row, {
     id: 'PLACEHOLDER',
     size: 32,
+    minSize: 32,
+    maxSize: 32,
     fixWidth: true,
     header: () => <></>,
     cell: () => <></>,

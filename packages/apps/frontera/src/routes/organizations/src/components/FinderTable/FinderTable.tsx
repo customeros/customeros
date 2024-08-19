@@ -6,8 +6,8 @@ import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 import difference from 'lodash/difference';
 import intersection from 'lodash/intersection';
-import { ColumnDef } from '@tanstack/react-table';
 import { OnChangeFn } from '@tanstack/table-core';
+import { ColumnDef } from '@tanstack/react-table';
 import { InvoiceStore } from '@store/Invoices/Invoice.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
@@ -18,6 +18,7 @@ import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Invoice, WorkflowType, TableViewType } from '@graphql/types';
+import { useColumnSizing } from '@organizations/hooks/useColumnSizing.ts';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import {
   Table,
@@ -106,6 +107,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
   };
+
+  const handleColumnSizing = useColumnSizing(tableColumns, tableViewDef);
 
   const organizationsData = store.organizations?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Organizations) return arr;
@@ -508,6 +511,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         getRowId={(row) => row.id}
         enableColumnResizing={true}
         onSortingChange={setSorting}
+        onResizeColumn={handleColumnSizing}
         onFocusedRowChange={handleSetFocused}
         onSelectedIndexChange={setSelectedIndex}
         isLoading={store.organizations.isLoading}
