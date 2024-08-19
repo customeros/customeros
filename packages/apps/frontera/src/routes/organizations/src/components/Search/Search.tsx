@@ -109,11 +109,11 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   );
 
   const placeholder = match(tableType)
-    .with(TableViewType.Contacts, () => 'e.g. Isabella Evans')
-    .with(TableViewType.Contracts, () => 'e.g. CustomerOS contract...')
-    .with(TableViewType.Organizations, () => 'e.g. CustomerOS...')
-    .with(TableViewType.Invoices, () => 'e.g. My contract')
-    .otherwise(() => 'e.g. Organization name...');
+    .with(TableViewType.Contacts, () => 'by name, organization or email...')
+    .with(TableViewType.Contracts, () => 'by contract name...')
+    .with(TableViewType.Organizations, () => 'by organization name...')
+    .with(TableViewType.Invoices, () => 'by contract name...')
+    .otherwise(() => 'by organization name...');
 
   const handleToogleFlow = () => {
     if (open) {

@@ -74,15 +74,15 @@ export const Search = observer(() => {
             store.ui.setIsSearching(null);
             wrapperRef.current?.removeAttribute('data-focused');
           }}
+          placeholder={
+            store.ui.isSearching
+              ? 'by opportunity, organization or owner...'
+              : '/ to search'
+          }
           onFocus={() => {
             store.ui.setIsSearching('opportunities');
             wrapperRef.current?.setAttribute('data-focused', '');
           }}
-          placeholder={
-            store.ui.isSearching
-              ? 'e.g. Opportunity, organization or owner...'
-              : '/ to search'
-          }
           onKeyUp={(e) => {
             if (
               e.code === 'Escape' ||
