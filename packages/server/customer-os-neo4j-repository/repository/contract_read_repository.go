@@ -633,12 +633,12 @@ func (r *contractReadRepository) GetPaginatedContracts(ctx context.Context, tena
 
 	dbNodesWithTotalCount := new(utils.DbNodesWithTotalCount)
 
-	countCypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract) RETURN count(c) as count`
+	countCypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)<-[:HAS_CONTRACT]-(:Organization {hide:false}) RETURN count(c) as count`
 	countParams := map[string]any{
 		"tenant": tenant,
 	}
 
-	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract) RETURN c SKIP $skip LIMIT $limit`
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTRACT_BELONGS_TO_TENANT]-(c:Contract)<-[:HAS_CONTRACT]-(:Organization {hide:false}) RETURN c SKIP $skip LIMIT $limit`
 	params := map[string]any{
 		"tenant": tenant,
 		"skip":   skip,
