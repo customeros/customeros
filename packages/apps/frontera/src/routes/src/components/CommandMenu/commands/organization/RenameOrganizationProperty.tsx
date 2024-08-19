@@ -33,12 +33,12 @@ export const RenameOrganizationProperty = observer(() => {
     .with({ property: 'website' }, () => entity?.value?.website ?? '')
     .otherwise(() => '');
 
-  const [name, setName] = useState(() => defaultValue ?? '');
-
   const placeholder = match({ property })
     .with({ property: 'name' }, () => 'Rename organization...')
     .with({ property: 'website' }, () => 'Edit website...')
     .otherwise(() => '');
+
+  const [name, setName] = useState(() => defaultValue ?? '');
 
   return (
     <Command label={`Rename ${context.property}`}>

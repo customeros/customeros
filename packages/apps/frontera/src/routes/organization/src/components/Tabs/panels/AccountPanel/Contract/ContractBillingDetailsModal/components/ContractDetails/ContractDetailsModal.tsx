@@ -309,7 +309,7 @@ export const ContractDetailsModal = observer(
               tenantBillingProfiles?.[0]?.value as TenantBillingProfile
             }
           />
-          <ModalFooter className='p-0 flex sticky z-[999] -bottom-6 -mb-5 pb-5 pt-3 bg-gray-25'>
+          <ModalFooter className='p-0 flex sticky z-[999] -bottom-6 -mb-6 pb-5 pt-3 bg-gray-25'>
             <Button
               size='md'
               variant='outline'
