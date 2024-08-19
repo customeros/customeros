@@ -8,11 +8,9 @@ import { toastError } from '@ui/presentation/Toast';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
-import { ResizableInput } from '@ui/form/Input/ResizableInput.tsx';
 import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput.tsx';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
 
-import { Highlighter } from '../highlighters';
 import { BilledTypeEditField } from './BilledTypeEditField.tsx';
 
 interface ServiceItemProps {
@@ -41,8 +39,6 @@ export const ServiceItemEdit = observer(
     type,
     contractStatus,
   }: ServiceItemProps) => {
-    const highlightVersion = '';
-
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
 
     const isDraft =
@@ -146,130 +142,121 @@ export const ServiceItemEdit = observer(
     return (
       <div className='flex items-baseline justify-between group relative text-gray-500 '>
         <div className='flex items-baseline'>
-          <Highlighter
-            backgroundColor={undefined}
-            highlightVersion={highlightVersion}
-          >
-            <MaskedResizableInput
-              min={0}
-              size='xs'
-              type='number'
-              placeholder='0'
-              className={inputClasses}
-              onFocus={(e) => e.target.select()}
-              value={service?.tempValue?.quantity ?? ''}
-              onChange={(e) => {
-                updateQuantity(e.target.value ?? '');
-              }}
-              onBlur={(e) =>
-                !e.target.value?.length
-                  ? updateQuantity('0')
-                  : updateQuantity(e.target.value)
-              }
-              blocks={{
-                num: {
-                  mask: Number,
-                  min: 0,
-                  lazy: false,
-                  placeholderChar: '#',
-                  thousandsSeparator: ',',
-                  normalizeZeros: true,
-                  padFractionalZeros: false,
-                  radix: '.',
-                  autofix: true,
-                },
-              }}
-            />
-          </Highlighter>
-          <span className='relative z-[2] mx-1 text-gray-700'>×</span>
-          <Highlighter
-            highlightVersion={highlightVersion}
-            backgroundColor={
-              undefined
-              // service.isFieldRevised('price') ? bgColor : undefined
+          <MaskedResizableInput
+            min={0}
+            size='xs'
+            type='number'
+            placeholder='0'
+            className={inputClasses}
+            onFocus={(e) => e.target.select()}
+            value={service?.tempValue?.quantity ?? ''}
+            onChange={(e) => {
+              updateQuantity(e.target.value ?? '');
+            }}
+            onBlur={(e) =>
+              !e.target.value?.length
+                ? updateQuantity('0')
+                : updateQuantity(e.target.value)
             }
-          >
-            {sliCurrencySymbol}
-            <ResizableInput
-              min={0}
-              size='xs'
-              type='number'
-              placeholder='0'
-              className={inputClasses}
-              value={service?.tempValue?.price}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => updatePrice(e.target.value ?? '')}
-              onBlur={(e) =>
-                !e.target.value?.length
-                  ? updatePrice('0')
-                  : updatePrice(e.target.value)
-              }
-            />
-          </Highlighter>
-          <Highlighter
-            highlightVersion={highlightVersion}
-            backgroundColor={
-              undefined
-              // service.isFieldRevised('price') ? bgColor : undefined
+            blocks={{
+              num: {
+                mask: Number,
+                min: 0,
+                lazy: false,
+                placeholderChar: '#',
+                thousandsSeparator: ',',
+                normalizeZeros: true,
+                padFractionalZeros: false,
+                radix: '.',
+                autofix: true,
+              },
+            }}
+          />
+          <span className=' mx-1 text-gray-700'>×</span>
+
+          {sliCurrencySymbol}
+
+          <MaskedResizableInput
+            min={0}
+            size='xs'
+            type='number'
+            placeholder='0'
+            className={inputClasses}
+            onFocus={(e) => e.target.select()}
+            value={service?.tempValue?.price?.toString() ?? ''}
+            onChange={(e) => {
+              updatePrice(e.target.value ?? '');
+            }}
+            onBlur={(e) =>
+              !e.target.value?.length
+                ? updatePrice('0')
+                : updatePrice(e.target.value)
             }
-          >
-            {type === 'one-time' ? (
-              <span className='text-gray-700'></span>
-            ) : (
-              <BilledTypeEditField
-                isModification={isModification}
-                id={service.tempValue.metadata.id}
-              />
-            )}
-          </Highlighter>
-          <span className='relative z-[2] mx-1 text-gray-700'>•</span>
-          <Highlighter
-            highlightVersion={highlightVersion}
-            backgroundColor={
-              undefined
-              // service.isFieldRevised('taxRate') ? bgColor : undefined
-            }
-          >
-            <ResizableInput
-              min={0}
-              size='xs'
-              placeholder='0'
-              className={inputClasses}
-              onFocus={(e) => e.target.select()}
-              onChange={(e) => updateTaxRate(e.target.value)}
-              value={
-                !isNaN(service?.tempValue?.tax?.taxRate as number)
-                  ? service?.tempValue?.tax.taxRate
-                  : ''
-              }
-              onBlur={(e) =>
-                !e.target.value?.trim()?.length
-                  ? updateTaxRate('0')
-                  : updateTaxRate(e.target.value)
-              }
+            blocks={{
+              num: {
+                mask: Number,
+                min: type === 'one-time' ? -999999999999 : 0,
+                lazy: false,
+                placeholderChar: '#',
+                thousandsSeparator: ',',
+                normalizeZeros: true,
+                padFractionalZeros: false,
+                radix: '.',
+                autofix: true,
+              },
+            }}
+          />
+
+          {type === 'one-time' ? (
+            <span className='text-gray-700'></span>
+          ) : (
+            <BilledTypeEditField
+              isModification={isModification}
+              id={service.tempValue.metadata.id}
             />
-          </Highlighter>
-          <span className='whitespace-nowrap relative z-[2] mx-1 text-gray-700'>
-            % VAT
-          </span>
+          )}
+          <span className=' mx-1 text-gray-700'>•</span>
+
+          <MaskedResizableInput
+            min={0}
+            size='xs'
+            type='number'
+            placeholder='0'
+            className={inputClasses}
+            onFocus={(e) => e.target.select()}
+            onChange={(e) => updateTaxRate(e.target.value)}
+            value={service?.tempValue?.tax?.taxRate?.toString() || ''}
+            onBlur={(e) =>
+              !e.target.value?.trim()?.length
+                ? updateTaxRate('0')
+                : updateTaxRate(e.target.value)
+            }
+            blocks={{
+              num: {
+                mask: Number,
+                min: 0,
+                lazy: false,
+                placeholderChar: '#',
+                thousandsSeparator: ',',
+                normalizeZeros: true,
+                padFractionalZeros: false,
+                radix: '.',
+                autofix: true,
+              },
+            }}
+          />
+
+          <span className='whitespace-nowrap  mx-1 text-gray-700'>% VAT</span>
         </div>
 
-        <Highlighter
-          highlightVersion={highlightVersion}
-          backgroundColor={
-            undefined
-            // service.isFieldRevised('serviceStarted') ? bgColor : undefined
-          }
-        >
-          <Tooltip label='Service start date'>
-            <div>
-              <DatePickerUnderline2
-                onChange={onChangeServiceStarted}
-                value={service?.tempValue?.serviceStarted}
-              />
-            </div>
-          </Tooltip>
-        </Highlighter>
+        <Tooltip label='Service start date'>
+          <div>
+            <DatePickerUnderline2
+              onChange={onChangeServiceStarted}
+              value={service?.tempValue?.serviceStarted}
+            />
+          </div>
+        </Tooltip>
 
         <IconButton
           size='xs'

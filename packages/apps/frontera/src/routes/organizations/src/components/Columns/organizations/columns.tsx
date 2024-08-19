@@ -72,6 +72,8 @@ export const columns: Record<string, Column> = {
   [ColumnViewType.OrganizationsAvatar]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.OrganizationsAvatar,
     size: 29,
+    minSize: 29,
+    maxSize: 29,
     enableColumnFilter: false,
     enableResizing: false,
     cell: (props) => {
