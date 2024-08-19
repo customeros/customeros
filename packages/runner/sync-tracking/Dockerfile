@@ -10,6 +10,7 @@ COPY server/customer-os-neo4j-repository/. /app/packages/server/customer-os-neo4
 COPY server/customer-os-postgres-repository/. /app/packages/server/customer-os-postgres-repository/
 COPY server/events-processing-proto/. /app/packages/server/events-processing-proto/
 COPY server/events/. /app/packages/server/events/
+COPY server/validation-api/. /app/packages/server/validation-api/
 COPY runner/sync-tracking/. /app/packages/runner/sync-tracking
 
 WORKDIR /app/packages/runner/sync-tracking

@@ -19,13 +19,13 @@ type Config struct {
 
 	Cron cronconf.Config
 
-	IPDataApi struct {
-		Url    string `env:"IPDATA_API_URL"`
-		ApiKey string `env:"IPDATA_API_KEY"`
-	}
 	SnitcherApi struct {
 		Url    string `env:"SNITCHER_API_URL"`
 		ApiKey string `env:"SNITCHER_API_KEY"`
+	}
+	ValidationApi struct {
+		Url    string `env:"VALIDATION_API" validate:"required"`
+		ApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
 	}
 
 	SlackBotApiKey string `env:"SLACK_BOT_API_KEY"`

@@ -7,16 +7,19 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
+	"net"
 	"net/http"
 	"strings"
 )
@@ -317,79 +320,44 @@ func (s *trackingService) askAndStoreIPData(c context.Context, request *entity.E
 	span, ctx := opentracing.StartSpanFromContext(c, "TrackingService.askAndStoreIPData")
 	defer span.Finish()
 
-	// Create HTTP client
-	client := &http.Client{}
-
-	// Create POST request
-	req, err := http.NewRequest("GET", fmt.Sprintf("%s/%s?api-key=%s", s.cfg.IPDataApi.Url, request.IP, s.cfg.IPDataApi.ApiKey), nil)
+	ipLookupResponse, err := s.callVerifyAPIForIpData(ctx, request.IP)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to create POST request: %v", err)
-	}
-
-	// Set headers
-	req.Header.Set("Content-Type", "application/json")
-
-	//Perform the request
-	resp, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to perform POST request: %v", err)
-	}
-	defer resp.Body.Close()
-
-	responseBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to read response body: %v", err)
-	}
-
-	if resp.StatusCode != http.StatusOK {
-		span.LogFields(log.Int("response.status", resp.StatusCode))
-		span.LogFields(log.String("response.body", string(responseBody)))
-		tracing.TraceErr(span, errors.New(fmt.Sprintf("bad response status: %v", resp.StatusCode)))
-		return fmt.Errorf("bad response status: %v", resp.StatusCode)
-	}
-
-	// Parse the JSON request body
-	var ipDataResponseBody entity.IPDataResponseBody
-	if err = json.Unmarshal(responseBody, &ipDataResponseBody); err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to unmarshal response body: %v", err)
+		return fmt.Errorf("failed to call verify API: %v", err)
 	}
 
 	shouldIdentify := true
 
-	if ipDataResponseBody.Ip == "" {
+	if ipLookupResponse.IpData == nil {
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Ip == "" {
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Carrier != nil {
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsTor ||
+		ipLookupResponse.IpData.Threat.IsIcloudRelay ||
+		ipLookupResponse.IpData.Threat.IsProxy ||
+		ipLookupResponse.IpData.Threat.IsDatacenter ||
+		ipLookupResponse.IpData.Threat.IsAnonymous ||
+		ipLookupResponse.IpData.Threat.IsKnownAttacker ||
+		ipLookupResponse.IpData.Threat.IsKnownAbuser ||
+		ipLookupResponse.IpData.Threat.IsThreat ||
+		ipLookupResponse.IpData.Threat.IsBogon {
 		shouldIdentify = false
 	}
 
-	if ipDataResponseBody.Carrier != nil {
-		shouldIdentify = false
-	}
+	if ipLookupResponse.IpData != nil {
+		marshal, err := json.Marshal(ipLookupResponse.IpData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return fmt.Errorf("failed to marshal response body: %v", err)
+		}
 
-	if ipDataResponseBody.Threat.IsTor ||
-		ipDataResponseBody.Threat.IsIcloudRelay ||
-		ipDataResponseBody.Threat.IsProxy ||
-		ipDataResponseBody.Threat.IsDatacenter ||
-		ipDataResponseBody.Threat.IsAnonymous ||
-		ipDataResponseBody.Threat.IsKnownAttacker ||
-		ipDataResponseBody.Threat.IsKnownAbuser ||
-		ipDataResponseBody.Threat.IsThreat ||
-		ipDataResponseBody.Threat.IsBogon {
-		shouldIdentify = false
-	}
-
-	marshal, err := json.Marshal(ipDataResponseBody)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to marshal response body: %v", err)
-	}
-
-	err = s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterResponse(ctx, request.IP, shouldIdentify, string(marshal))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return fmt.Errorf("failed to store response: %v", err)
+		err = s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterResponse(ctx, request.IP, shouldIdentify, string(marshal))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return fmt.Errorf("failed to store response: %v", err)
+		}
 	}
 
 	return nil
@@ -792,4 +760,53 @@ func (s *trackingService) sendSlackMessage(ctx context.Context, tenant, channel,
 	span.LogFields(log.String("response.body", string(responseBody)))
 
 	return nil
+}
+
+func (s *trackingService) callVerifyAPIForIpData(ctx context.Context, ipAddress string) (*validationmodel.IpLookupResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingService.callVerifyAPIForIpData")
+	defer span.Finish()
+
+	if net.ParseIP(ipAddress) == nil {
+		err := errors.New("invalid IP address")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	requestJSON, err := json.Marshal(validationmodel.IpLookupRequest{
+		Ip: ipAddress,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+		return nil, err
+	}
+	requestBody := []byte(string(requestJSON))
+	req, err := http.NewRequest("POST", s.cfg.ValidationApi.Url+"/ipLookup", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		return nil, err
+	}
+	// Inject span context into the HTTP request
+	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
+
+	// Set the request headers
+	req.Header.Set(security.ApiKeyHeader, s.cfg.ValidationApi.ApiKey)
+	req.Header.Set(security.TenantHeader, "")
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		return nil, err
+	}
+	defer response.Body.Close()
+
+	var result validationmodel.IpLookupResponse
+	err = json.NewDecoder(response.Body).Decode(&result)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
+		return nil, err
+	}
+
+	return &result, nil
 }
