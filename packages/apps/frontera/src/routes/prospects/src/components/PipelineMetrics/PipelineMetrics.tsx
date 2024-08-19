@@ -15,25 +15,32 @@ export const PipelineMetrics = ({
   totalWeightedArr = 0,
 }: PipelineMetricsProps) => {
   return (
-    <div className='px-3 py-2 mx-4 mt-4 bg-gray-100 flex justify-center gap-4 rounded-[4px]'>
-      <span className=''>
-        <span className='font-semibold'>{count}</span>{' '}
-        <span className='text-gray-500'>opportunities</span>
-      </span>
-      <p className='font-semibold'>•</p>
-      <span className=''>
-        <span className='font-semibold'>
-          {formatCurrency(totalArr, 2, currency)}{' '}
+    <div
+      className='
+       sticky top-[42px] z-[9999] bg-white'
+    >
+      <div className='px-3 py-2 mx-4 mt-4 mb-4 bg-gray-100 flex justify-center gap-4 rounded-[4px]'>
+        <span className=''>
+          <span className='font-semibold'>{count}</span>{' '}
+          <span className='text-gray-500'>opportunities</span>
         </span>
-        <span className='text-gray-500 text-medium'>ARR estimate</span>
-      </span>
-      <p className='font-semibold'>•</p>
-      <span className=''>
-        <span className='font-semibold'>
-          {formatCurrency(totalWeightedArr, 2, currency)}{' '}
+        <p className='font-semibold'>•</p>
+        <span className=''>
+          <span className='font-semibold'>
+            {formatCurrency(totalArr, 2, currency)}{' '}
+          </span>
+          <span className='text-gray-500 text-medium'>ARR estimate</span>
         </span>
-        <span className='text-gray-500 text-medium'>Weighted ARR estimate</span>
-      </span>
+        <p className='font-semibold'>•</p>
+        <span className=''>
+          <span className='font-semibold'>
+            {formatCurrency(totalWeightedArr, 2, currency)}{' '}
+          </span>
+          <span className='text-gray-500 text-medium'>
+            Weighted ARR estimate
+          </span>
+        </span>
+      </div>
     </div>
   );
 };
