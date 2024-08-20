@@ -1177,6 +1177,7 @@ type GlobalCache struct {
 	IsOwner             bool                     `json:"isOwner"`
 	InactiveEmailTokens []*GlobalCacheEmailToken `json:"inactiveEmailTokens"`
 	ActiveEmailTokens   []*GlobalCacheEmailToken `json:"activeEmailTokens"`
+	Mailboxes           []string                 `json:"mailboxes"`
 	GCliCache           []*GCliItem              `json:"gCliCache"`
 	MinARRForecastValue float64                  `json:"minARRForecastValue"`
 	MaxARRForecastValue float64                  `json:"maxARRForecastValue"`

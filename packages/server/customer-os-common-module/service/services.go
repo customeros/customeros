@@ -33,8 +33,9 @@ type Services struct {
 	SocialService          SocialService
 	DomainService          DomainService
 
-	GoogleService GoogleService
-	AzureService  AzureService
+	GoogleService  GoogleService
+	AzureService   AzureService
+	OpenSrsService OpenSrsService
 
 	ApiCacheService ApiCacheService
 }
@@ -66,6 +67,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.UserService = NewUserService(services)
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
+	services.OpenSrsService = NewOpenSRSService(services.PostgresRepositories, services)
 	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
 
 	return services

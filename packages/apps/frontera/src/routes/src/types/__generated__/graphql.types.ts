@@ -1620,6 +1620,7 @@ export type GlobalCache = {
   gCliCache: Array<GCliItem>;
   inactiveEmailTokens: Array<GlobalCacheEmailToken>;
   isOwner: Scalars['Boolean']['output'];
+  mailboxes: Array<Scalars['String']['output']>;
   maxARRForecastValue: Scalars['Float']['output'];
   minARRForecastValue: Scalars['Float']['output'];
   user: User;

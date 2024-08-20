@@ -79,9 +79,20 @@ func (r *queryResolver) GlobalCache(ctx context.Context) (*model.GlobalCache, er
 				response.InactiveEmailTokens = append(response.InactiveEmailTokens, &model.GlobalCacheEmailToken{Email: oauthToken.EmailAddress, Provider: oauthToken.Provider})
 			}
 		}
+	}
 
-		//response.ActiveEmailTokens = utils.UniqueSlicePtrElements(response.ActiveEmailTokens)
-		//response.InactiveEmailTokens = utils.UniqueSlicePtrElements(response.InactiveEmailTokens)
+	mailboxes, err := r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Get(ctx, tenantName)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed GlobalCache - get tenant mailboxes")
+		return nil, nil
+	}
+
+	response.Mailboxes = make([]string, 0)
+	if mailboxes != nil && len(mailboxes) > 0 {
+		for _, mailbox := range mailboxes {
+			response.Mailboxes = append(response.Mailboxes, mailbox.MailboxUsername)
+		}
 	}
 
 	response.GCliCache = r.Services.Cache.GetStates() //pre-populate with states

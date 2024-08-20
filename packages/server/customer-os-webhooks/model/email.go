@@ -45,8 +45,6 @@ type PostmarkEmailWebhookData struct {
 	} `json:"BccFull"`
 	OriginalRecipient string `json:"OriginalRecipient"`
 	Subject           string `json:"Subject"`
-	MessageID         string `json:"MessageID"`
-	ReplyTo           string `json:"ReplyTo"`
 	MailboxHash       string `json:"MailboxHash"`
 	Date              string `json:"Date"`
 	TextBody          string `json:"TextBody"`

@@ -277,7 +277,7 @@ services:
       - NEO4J_TARGET=neo4j://neo4j:7687
 
   enrichment-api:
-    image: ghcr.io/openline-ai/openline-customer-os/enrichment-api:latest
+    image: ghcr.io/customeros/customeros/enrichment-api:latest
     networks:
       - openline
     ports:

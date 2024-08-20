@@ -31,6 +31,7 @@ export type GlobalCacheQuery = {
   global_Cache: {
     __typename?: 'GlobalCache';
     cdnLogoUrl: string;
+    mailboxes: Array<string>;
     isOwner: boolean;
     minARRForecastValue: number;
     maxARRForecastValue: number;
@@ -94,6 +95,7 @@ export const GlobalCacheDocument = `
       email
       provider
     }
+    mailboxes
     isOwner
     gCliCache {
       id
