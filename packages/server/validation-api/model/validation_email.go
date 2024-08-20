@@ -5,9 +5,10 @@ type ValidateEmailRequest struct {
 }
 
 type ValidateEmailResponse struct {
-	Status  string                       `json:"status"`
-	Message string                       `json:"message,omitempty"`
-	Data    *ValidateEmailMailsherpaData `json:"data,omitempty"`
+	Status          string                       `json:"status"`
+	Message         string                       `json:"message,omitempty"`
+	InternalMessage string                       `json:"internalMessage,omitempty"`
+	Data            *ValidateEmailMailsherpaData `json:"data,omitempty"`
 }
 
 type ValidateEmailMailsherpaData struct {

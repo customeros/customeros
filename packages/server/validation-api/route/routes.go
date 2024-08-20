@@ -90,8 +90,9 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				tracing.TraceErr(span, err)
 				l.Errorf("Error on : %v", err.Error())
 				c.JSON(http.StatusInternalServerError, model.ValidateEmailResponse{
-					Status:  "error",
-					Message: "Internal server error",
+					Status:          "error",
+					Message:         "Internal server error",
+					InternalMessage: err.Error(),
 				})
 				return
 			}
