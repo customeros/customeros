@@ -8,6 +8,7 @@ import {
   Social,
   ColumnViewType,
   ComparisonOperator,
+  OrganizationRelationship,
 } from '@graphql/types';
 
 const getFilterFn = (filter: FilterItem | undefined | null) => {
@@ -28,7 +29,9 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
       if (!filterValues) return false;
 
-      return filterValues.includes(row.value?.isCustomer);
+      return filterValues.includes(
+        row.value?.relationship === OrganizationRelationship.Customer,
+      );
     })
     .with({ property: 'OWNER_ID' }, (filter) => (row: OrganizationStore) => {
       const filterValues = filter?.value;

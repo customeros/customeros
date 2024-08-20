@@ -548,7 +548,6 @@ const ORGANIZATIONS_QUERY = gql`
         market
         website
         domains
-        isCustomer
         logo
         icon
         relationship
