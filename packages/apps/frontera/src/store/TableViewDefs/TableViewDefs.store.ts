@@ -88,7 +88,28 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   }
 
   getById(id: string) {
-    return this.value.get(id);
+    const tableViewDefStore = this.value.get(id);
+
+    if (!tableViewDefStore && this.isBootstrapped) {
+      const defaultPresetId = this.defaultPreset;
+
+      if (defaultPresetId) {
+        const defaultTableViewDefStore = this.value.get(defaultPresetId);
+
+        if (defaultTableViewDefStore) {
+          runInAction(() => {
+            const url = new URL(window.location.href);
+
+            url.searchParams.set('preset', defaultPresetId);
+            window.history.replaceState(null, '', url.toString());
+          });
+
+          return defaultTableViewDefStore;
+        }
+      }
+    }
+
+    return tableViewDefStore;
   }
 
   toArray(): TableViewDefStore[] {
