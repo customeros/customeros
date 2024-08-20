@@ -241,9 +241,9 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 					e.techValidatedAt IS NULL AND
 					e.rawEmail CONTAINS "@" AND
 					(e.updatedAt < datetime() - duration({minutes: $delayFromLastUpdateInMinutes})) AND
-					(c.techValidationRequestedAt IS NULL OR c.techValidationRequestedAt < datetime() - duration({minutes: $delayFromLastValidationAttemptInMinutes}))
+					(e.techValidationRequestedAt IS NULL OR e.techValidationRequestedAt < datetime() - duration({minutes: $delayFromLastValidationAttemptInMinutes}))
 				WITH t.name as tenant, e.id as emailId
-				ORDER BY CASE WHEN e.techValidationRequestedAt IS NULL THEN 0 ELSE 1 END, c.techValidationRequestedAt ASC
+				ORDER BY CASE WHEN e.techValidationRequestedAt IS NULL THEN 0 ELSE 1 END, e.techValidationRequestedAt ASC
 				LIMIT $limit
 				RETURN DISTINCT tenant, emailId`
 	params := map[string]any{
