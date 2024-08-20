@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { useDidMount } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useDidMount, useKeyBindings } from 'rooks';
 
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
@@ -29,7 +29,7 @@ function isValidURL(url: string) {
 
 export const AddNewOrganization = observer(() => {
   const store = useStore();
-  const [allowSubmit, setAllowSubmit] = useState(false);
+  const [_allowSubmit, setAllowSubmit] = useState(false);
   const { organizations, tableViewDefs, ui } = useStore();
   const [searchParams] = useSearchParams();
 
@@ -53,10 +53,7 @@ export const AddNewOrganization = observer(() => {
     }, 100);
   });
 
-  const handleConfirm = (e: KeyboardEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const handleConfirm = () => {
     setValidation(false);
 
     if (website && !isValidURL(website)) {
@@ -75,15 +72,6 @@ export const AddNewOrganization = observer(() => {
     store.ui.commandMenu.toggle('AddNewOrganization');
   };
 
-  useKeyBindings(
-    {
-      Enter: handleConfirm,
-    },
-    {
-      when: allowSubmit,
-    },
-  );
-
   return (
     <Command label={`Rename `}>
       <div className='p-6 pb-4 flex flex-col gap-2 border-b border-b-gray-100'>
@@ -101,7 +89,6 @@ export const AddNewOrganization = observer(() => {
             value={website}
             variant='unstyled'
             placeholder='Website link'
-            allowKeyDownEventPropagation
             onChange={(e) => {
               setWebsite(e.target.value);
             }}
@@ -125,12 +112,16 @@ export const AddNewOrganization = observer(() => {
             id='name'
             value={name}
             variant='unstyled'
-            allowKeyDownEventPropagation
             placeholder='Organization name'
             defaultValue={searchParams.get('name') ?? ''}
             data-test='address-book-create-new-org-org-name'
             onChange={(e) => {
               setName(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleConfirm();
+              }
             }}
           />
         </div>

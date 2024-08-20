@@ -11,7 +11,6 @@ import {
 } from '@shared/components/RootSidenav/hooks';
 import {
   LogoSection,
-  UserActionSection,
   NavigationSections,
 } from '@shared/components/RootSidenav/components/sections';
 
@@ -51,7 +50,7 @@ export const RootSidenav = observer(() => {
         handleItemClick={handleItemClick}
         togglePreference={togglePreference}
       />
-      <UserActionSection />
+      {/* <UserActionSection /> */}
     </div>
   );
 });

@@ -1,4 +1,3 @@
-import { FC } from 'react';
 import { components } from 'react-select';
 import { MultiValueProps } from 'react-select';
 import { useParams, useSearchParams } from 'react-router-dom';
@@ -31,15 +30,14 @@ interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
   existingContacts: Array<{ id: string; label: string; value?: string | null }>;
 }
 
-export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
+export const MultiValueWithActionMenu = ({
   existingContacts,
   navigateAfterAddingToPeople,
   onChange,
   value,
   ...rest
-}) => {
+}: MultiValueWithActionMenuProps) => {
   // const [editInput, setEditInput] = useState(false);
-
   const client = getGraphQLClient();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -110,13 +108,8 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
           addContactToOrganization.mutate({
             input: { contactId, organizationId },
           });
-        },
-        onSettled: (data) => {
-          if (navigateAfterAddingToPeople) {
-            handleNavigateToContact(data?.contact_Create as string, 'name');
-          }
           toastSuccess(
-            'Contact added to people list',
+            'Contact added to People list',
             data?.contact_Create as string,
           );
         },
@@ -170,15 +163,6 @@ export const MultiValueWithActionMenu: FC<MultiValueWithActionMenuProps> = ({
       </MenuButton>
       <div onPointerDown={(e) => e.stopPropagation()}>
         <MenuList side='bottom' align='start' className='max-w-[300px] p-2'>
-          {/*<MenuItem*/}
-          {/*  className='flex justify-between items-center rounded-md border border-transparent hover:bg-gray-50 hover:border-gray-100 focus:border-gray-200'*/}
-          {/*  onPointerDown={() => {*/}
-          {/*    handleEditInput();*/}
-          {/*  }}*/}
-          {/*>*/}
-          {/*  Edit address*/}
-          {/*  <Edit03 className='size-3 text-gray-500 ml-2' />*/}
-          {/*</MenuItem>*/}
           {rest?.data?.value ? (
             <MenuItem
               onPointerDown={() => {
