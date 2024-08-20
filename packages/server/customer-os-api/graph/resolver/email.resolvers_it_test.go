@@ -458,11 +458,11 @@ func TestQueryResolver_GetEmail_ById(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
 	emailId := neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
-		Email:       "test@openline.ai",
-		RawEmail:    "testRaw@openline.ai",
-		IsReachable: utils.StringPtr("reachable"),
-		CreatedAt:   utils.Now(),
-		UpdatedAt:   utils.Now(),
+		Email:     "test@openline.ai",
+		RawEmail:  "testRaw@openline.ai",
+		CreatedAt: utils.Now(),
+		UpdatedAt: utils.Now(),
+		IsRisky:   utils.BoolPtr(true),
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
@@ -485,7 +485,7 @@ func TestQueryResolver_GetEmail_ById(t *testing.T) {
 	test.AssertRecentTime(t, email.CreatedAt)
 	require.Equal(t, "test@openline.ai", *email.Email)
 	require.Equal(t, "testRaw@openline.ai", *email.RawEmail)
-	require.Equal(t, "reachable", *email.EmailValidationDetails.IsReachable)
+	require.Equal(t, true, *email.EmailValidationDetails.IsRisky)
 
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName})
 }

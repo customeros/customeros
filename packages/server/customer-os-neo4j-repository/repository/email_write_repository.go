@@ -21,33 +21,27 @@ type EmailCreateFields struct {
 }
 
 type EmailValidatedFields struct {
-	ValidationError string    `json:"validationError"`
-	EmailAddress    string    `json:"emailAddress"`
-	Domain          string    `json:"domain"`
-	AcceptsMail     bool      `json:"acceptsMail"`
-	CanConnectSmtp  bool      `json:"canConnectSmtp"`
-	HasFullInbox    bool      `json:"hasFullInbox"`
-	IsCatchAll      bool      `json:"isCatchAll"`
-	IsDeliverable   bool      `json:"isDeliverable"`
-	IsDisabled      bool      `json:"isDisabled"`
-	IsValidSyntax   bool      `json:"isValidSyntax"`
-	Username        string    `json:"username"`
-	ValidatedAt     time.Time `json:"validatedAt"`
-	IsReachable     string    `json:"isReachable"`
-	IsDisposable    bool      `json:"isDisposable"`
-	IsRoleAccount   bool      `json:"isRoleAccount"`
-	IsRisky         bool      `json:"isRisky"`
-	IsFirewalled    bool      `json:"isFirewalled"`
-	Provider        string    `json:"provider"`
-	Firewall        string    `json:"firewall"`
-	CanConnectSMTP  bool      `json:"canConnectSMTP"`
-	IsMailboxFull   bool      `json:"isMailboxFull"`
-	IsFreeAccount   bool      `json:"isFreeAccount"`
-	SmtpSuccess     bool      `json:"smtpSuccess"`
-	ResponseCode    string    `json:"responseCode"`
-	ErrorCode       string    `json:"errorCode"`
-	Description     string    `json:"description"`
-	SmtpResponse    string    `json:"smtpResponse"`
+	EmailAddress   string    `json:"emailAddress"`
+	Domain         string    `json:"domain"`
+	CanConnectSmtp bool      `json:"canConnectSmtp"`
+	IsCatchAll     bool      `json:"isCatchAll"`
+	IsDeliverable  bool      `json:"isDeliverable"`
+	IsValidSyntax  bool      `json:"isValidSyntax"`
+	Username       string    `json:"username"`
+	ValidatedAt    time.Time `json:"validatedAt"`
+	IsRoleAccount  bool      `json:"isRoleAccount"`
+	IsRisky        bool      `json:"isRisky"`
+	IsFirewalled   bool      `json:"isFirewalled"`
+	Provider       string    `json:"provider"`
+	Firewall       string    `json:"firewall"`
+	CanConnectSMTP bool      `json:"canConnectSMTP"`
+	IsMailboxFull  bool      `json:"isMailboxFull"`
+	IsFreeAccount  bool      `json:"isFreeAccount"`
+	SmtpSuccess    bool      `json:"smtpSuccess"`
+	ResponseCode   string    `json:"responseCode"`
+	ErrorCode      string    `json:"errorCode"`
+	Description    string    `json:"description"`
+	SmtpResponse   string    `json:"smtpResponse"`
 }
 
 type EmailWriteRepository interface {
@@ -83,7 +77,6 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
               MERGE (e:Email:Email_%s {id:$id})
 				 SET e.rawEmail = $rawEmail, 
-					e.validated = null,
 					e.source = $source,
 					e.sourceOfTruth = $sourceOfTruth,
 					e.appSource = $appSource,
@@ -148,20 +141,13 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
-		 		SET e.validationError = $validationError,
-					e.email = $email,
-		     		e.validated = true,
-					e.acceptsMail = $acceptsMail,
+		 		SET e.email = $email,
 					e.canConnectSmtp = $canConnectSmtp,
-					e.hasFullInbox = $hasFullInbox,
 					e.isCatchAll = $isCatchAll,
 					e.isDeliverable = $isDeliverable,
-					e.isDisabled = $isDisabled,
 					e.isValidSyntax = $isValidSyntax,
 					e.username = $username,
 					e.updatedAt = datetime(),
-					e.isReachable = $isReachable,
-					e.isDisposable = $isDisposable,
 					e.isRoleAccount = $isRoleAccount,
 					e.techValidatedAt = $validatedAt,
 					e.isRisky = $isRisky,
@@ -189,20 +175,14 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 	params := map[string]any{
 		"id":                 emailId,
 		"tenant":             tenant,
-		"validationError":    data.ValidationError,
 		"email":              data.EmailAddress,
 		"domain":             strings.ToLower(data.Domain),
-		"acceptsMail":        data.AcceptsMail,
 		"canConnectSmtp":     data.CanConnectSmtp,
-		"hasFullInbox":       data.HasFullInbox,
 		"isCatchAll":         data.IsCatchAll,
 		"isDeliverable":      data.IsDeliverable,
-		"isDisabled":         data.IsDisabled,
 		"isValidSyntax":      data.IsValidSyntax,
 		"username":           data.Username,
 		"validatedAt":        data.ValidatedAt,
-		"isReachable":        data.IsReachable,
-		"isDisposable":       data.IsDisposable,
 		"isRoleAccount":      data.IsRoleAccount,
 		"isRisky":            data.IsRisky,
 		"isFirewalled":       data.IsFirewalled,
@@ -335,19 +315,12 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
 				WHERE e:Email_%s
-		 		SET e.validationError = null,
-		     		e.validated = null,
-					e.email = "",
-					e.acceptsMail = null,
+		 		SET e.email = "",
 					e.canConnectSmtp = null,
-					e.hasFullInbox = null,
 					e.isCatchAll = null,
 					e.isDeliverable = null,
-					e.isDisabled = null,
 					e.isValidSyntax = null,
 					e.username = null,
-					e.isReachable = null,
-					e.isDisposable = null,
 					e.isRoleAccount = null,
 					e.techValidatedAt = null,
 					e.isRisky = null,

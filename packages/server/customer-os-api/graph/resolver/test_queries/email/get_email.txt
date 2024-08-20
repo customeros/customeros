@@ -6,7 +6,7 @@ query GetEmail($emailId: ID!) {
       createdAt
       updatedAt
       emailValidationDetails {
-        isReachable
+        isRisky
       }
   }
 }

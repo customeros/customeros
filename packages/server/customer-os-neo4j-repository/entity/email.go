@@ -10,20 +10,13 @@ type EmailProperty string
 const (
 	EmailPropertyEmail                 EmailProperty = "email"
 	EmailPropertyRawEmail              EmailProperty = "rawEmail"
-	EmailPropertyIsDisposable          EmailProperty = "isDisposable"
 	EmailPropertyIsRoleAccount         EmailProperty = "isRoleAccount"
 	EmailPropertyIsValidSyntax         EmailProperty = "isValidSyntax"
 	EmailPropertyCanConnectSMTP        EmailProperty = "canConnectSMTP"
-	EmailPropertyAcceptsMail           EmailProperty = "acceptsMail"
-	EmailPropertyHasFullInbox          EmailProperty = "hasFullInbox"
 	EmailPropertyIsCatchAll            EmailProperty = "isCatchAll"
 	EmailPropertyIsDeliverable         EmailProperty = "isDeliverable"
-	EmailPropertyIsDisabled            EmailProperty = "isDisabled"
-	EmailPropertyError                 EmailProperty = "error"
-	EmailPropertyValidated             EmailProperty = "validated"
 	EmailPropertyValidatedAt           EmailProperty = "techValidatedAt"
 	EmailPropertyValidationRequestedAt EmailProperty = "techValidationRequestedAt"
-	EmailPropertyIsReachable           EmailProperty = "isReachable"
 	EmailPropertyUsername              EmailProperty = "username"
 	EmailPropertyIsRisky               EmailProperty = "isRisky"
 	EmailPropertyIsFirewalled          EmailProperty = "isFirewalled"
@@ -73,15 +66,6 @@ type EmailEntity struct {
 
 	InteractionEventParticipantDetails   InteractionEventParticipantDetails
 	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
-
-	//All below deprecated
-	Validated    *bool
-	IsReachable  *string
-	AcceptsMail  *bool
-	HasFullInbox *bool
-	IsDisabled   *bool
-	Error        *string
-	IsDisposable *bool
 }
 
 type EmailInternalFields struct {
