@@ -39,17 +39,20 @@ export const GlobalSharedCommands = observer(() => {
   };
 
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    document.addEventListener('keydown', (e: KeyboardEvent) => {
       if (e.metaKey && e.key === 'k' && e.shiftKey) {
         store.ui.commandMenu.setType('GlobalHub');
         store.ui.commandMenu.setOpen(true);
       }
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
+    });
 
     return () => {
-      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('keydown', (e: KeyboardEvent) => {
+        if (e.metaKey && e.key === 'k' && e.shiftKey) {
+          store.ui.commandMenu.setType('GlobalHub');
+          store.ui.commandMenu.setOpen(true);
+        }
+      });
     };
   }, []);
 

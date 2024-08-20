@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { useDidMount } from 'rooks';
 import { observer } from 'mobx-react-lite';
+import { useDidMount, useKeyBindings } from 'rooks';
 
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
@@ -29,7 +29,7 @@ function isValidURL(url: string) {
 
 export const AddNewOrganization = observer(() => {
   const store = useStore();
-  const [_allowSubmit, setAllowSubmit] = useState(false);
+  const [allowSubmit, setAllowSubmit] = useState(false);
   const { organizations, tableViewDefs, ui } = useStore();
   const [searchParams] = useSearchParams();
 
@@ -71,6 +71,13 @@ export const AddNewOrganization = observer(() => {
 
     store.ui.commandMenu.toggle('AddNewOrganization');
   };
+
+  useKeyBindings(
+    {
+      Enter: handleConfirm,
+    },
+    { when: allowSubmit },
+  );
 
   return (
     <Command label={`Rename `}>
