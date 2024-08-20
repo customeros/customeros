@@ -155,7 +155,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 			FromDomain: s.config.EmailConfig.EmailValidationFromDomain,
 		}, true)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain data"))
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain data with mailsherpa"))
 			return nil, err
 		}
 		cacheDomain, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Save(ctx, postgresentity.CacheEmailValidationDomain{
@@ -195,7 +195,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			FromDomain: s.config.EmailConfig.EmailValidationFromDomain,
 		})
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data"))
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data with mailsherpa"))
 			return nil, err
 		}
 		cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, postgresentity.CacheEmailValidation{
