@@ -120,7 +120,7 @@ func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context
 	result.DomainData.Provider = domainValidation.Provider
 	result.DomainData.Firewall = domainValidation.Firewall
 
-	emailValidation, err := s.getEmailValidation(ctx, email)
+	emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 		return nil, err
@@ -176,20 +176,20 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 	return cacheDomain, nil
 }
 
-func (s *emailValidationService) getEmailValidation(ctx context.Context, email string) (*postgresentity.CacheEmailValidation, error) {
+func (s *emailValidationService) getEmailValidation(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation) (*postgresentity.CacheEmailValidation, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getEmailValidation")
 	defer span.Finish()
 
-	cacheEmail, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Get(ctx, email)
+	cachedEmail, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Get(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 		return nil, err
 	}
 
 	// if no cached data found, or last time fetched > 90 days ago, or is retry validation and last time fetched > 1 hour ago
-	if cacheEmail == nil ||
-		cacheEmail.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) ||
-		(cacheEmail.RetryValidation && cacheEmail.UpdatedAt.Add(time.Hour).Before(utils.Now())) {
+	if cachedEmail == nil ||
+		cachedEmail.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) ||
+		(cachedEmail.RetryValidation && cachedEmail.UpdatedAt.Add(time.Hour).Before(utils.Now())) {
 		// get email data with mailsherpa
 		emailValidation, err := mailsherpa.ValidateEmail(mailsherpa.EmailValidationRequest{
 			Email:      email,
@@ -199,7 +199,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data"))
 			return nil, err
 		}
-		cacheEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, postgresentity.CacheEmailValidation{
+		cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, postgresentity.CacheEmailValidation{
 			Email:           email,
 			IsDeliverable:   emailValidation.IsDeliverable,
 			IsMailboxFull:   emailValidation.IsMailboxFull,
@@ -211,6 +211,8 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			Description:     emailValidation.Description,
 			RetryValidation: emailValidation.RetryValidation,
 			SmtpResponse:    emailValidation.SmtpResponse,
+			Username:        syntaxValidation.User,
+			NormalizedEmail: syntaxValidation.CleanEmail,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save email data"))
@@ -218,5 +220,5 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 		}
 	}
 
-	return cacheEmail, nil
+	return cachedEmail, nil
 }
