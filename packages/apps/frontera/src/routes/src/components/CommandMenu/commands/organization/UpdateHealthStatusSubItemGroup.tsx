@@ -1,7 +1,8 @@
 import { Activity } from '@ui/media/icons/Activity';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
-import { organizationKeywords } from '@shared/components/CommandMenu/commands';
+
+import { organizationKeywords } from './keywords';
 
 export const UpdateHealthStatusSubItemGroup = ({
   selectedIds,

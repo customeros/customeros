@@ -53,10 +53,7 @@ export const AddNewOrganization = observer(() => {
     }, 100);
   });
 
-  const handleConfirm = (e: KeyboardEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
+  const handleConfirm = () => {
     setValidation(false);
 
     if (website && !isValidURL(website)) {
@@ -79,9 +76,7 @@ export const AddNewOrganization = observer(() => {
     {
       Enter: handleConfirm,
     },
-    {
-      when: allowSubmit,
-    },
+    { when: allowSubmit },
   );
 
   return (
@@ -101,7 +96,6 @@ export const AddNewOrganization = observer(() => {
             value={website}
             variant='unstyled'
             placeholder='Website link'
-            allowKeyDownEventPropagation
             onChange={(e) => {
               setWebsite(e.target.value);
             }}
@@ -125,12 +119,16 @@ export const AddNewOrganization = observer(() => {
             id='name'
             value={name}
             variant='unstyled'
-            allowKeyDownEventPropagation
             placeholder='Organization name'
             defaultValue={searchParams.get('name') ?? ''}
             data-test='address-book-create-new-org-org-name'
             onChange={(e) => {
               setName(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                handleConfirm();
+              }
             }}
           />
         </div>

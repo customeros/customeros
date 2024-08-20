@@ -13,7 +13,19 @@ export const CommandsContainer = ({
   children: ReactNode;
 }) => {
   return (
-    <Command>
+    <Command
+      filter={(value, search, keywords) => {
+        const extendValue = value.replace(/\s/g, '') + keywords;
+        const searchWithoutSpaces = search.replace(/\s/g, '');
+
+        if (
+          extendValue.toLowerCase().includes(searchWithoutSpaces.toLowerCase())
+        )
+          return 1;
+
+        return 0;
+      }}
+    >
       <CommandInput label={label} placeholder='Type a command or search' />
       <Command.List>
         <Command.Group>{children}</Command.Group>

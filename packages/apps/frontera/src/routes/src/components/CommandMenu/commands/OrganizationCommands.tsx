@@ -74,7 +74,7 @@ export const OrganizationCommands = observer(() => {
         {!!organization?.value?.tags?.length && (
           <CommandItem
             leftAccessory={<Tag01 />}
-            keywords={organizationKeywords.change_or_add_tags}
+            keywords={['change', 'add', 'tags', 'update', 'edit']}
             onSelect={() => {
               organization?.removeAllTagsFromOrganization();
               store.ui.commandMenu.setOpen(false);
@@ -86,7 +86,6 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Edit03 />}
-          keywords={organizationKeywords.rename_org}
           rightAccessory={
             <>
               <Kbd>
@@ -95,6 +94,15 @@ export const OrganizationCommands = observer(() => {
               <Kbd>R</Kbd>
             </>
           }
+          keywords={[
+            'rename',
+            'org',
+            'organization',
+            'company',
+            'update',
+            'edit',
+            'change',
+          ]}
           onSelect={() => {
             store.ui.commandMenu.setType('RenameOrganizationProperty');
             store.ui.commandMenu.setContext({
@@ -108,7 +116,15 @@ export const OrganizationCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Globe01 />}
-          keywords={organizationKeywords.edit_website}
+          keywords={[
+            'edit',
+            'website',
+            'change',
+            'domain',
+            'link',
+            'url',
+            'web address',
+          ]}
           onSelect={() => {
             store.ui.commandMenu.setType('RenameOrganizationProperty');
             store.ui.commandMenu.setContext({
@@ -121,10 +137,20 @@ export const OrganizationCommands = observer(() => {
         </CommandItem>
         <CommandItem
           leftAccessory={<AlignHorizontalCentre02 />}
-          keywords={organizationKeywords.change_relationship}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeRelationship');
           }}
+          keywords={[
+            'change',
+            'relationship',
+            'status',
+            'update',
+            'edit',
+            'customer',
+            'prospect',
+            'former customer',
+            'unqualified',
+          ]}
         >
           Change relationship...
         </CommandItem>

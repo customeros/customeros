@@ -413,9 +413,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const handleSetFocused = (index: number | null) => {
     if (isCommandMenuPrompted) return;
-    if (selectedIds.length > 0) return;
 
     setFocusIndex(index);
+
+    if (selectedIds.length > 0) return;
 
     if (tableType === TableViewType.Organizations) {
       if (typeof index !== 'number') {

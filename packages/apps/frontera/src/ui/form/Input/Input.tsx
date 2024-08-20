@@ -85,8 +85,12 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         data-1p-ignore
         className={twMerge(inputVariants({ className, size, variant }))}
         onKeyDown={(e) => {
-          if (onKeyDown) return onKeyDown(e);
-          if (allowKeyDownEventPropagation) return;
+          if (onKeyDown) {
+            onKeyDown(e);
+
+            return;
+          }
+
           e.stopPropagation();
         }}
       />

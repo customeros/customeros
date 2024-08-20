@@ -36,7 +36,8 @@ export const AddContactViaLinkedInUrl = observer(() => {
 
       setUrl('');
 
-      store.ui.commandMenu.toggle('AddContactViaLinkedInUrl');
+      store.ui.commandMenu.setOpen(false);
+      store.ui.commandMenu.setType('OrganizationCommands');
 
       return;
     }
@@ -50,6 +51,11 @@ export const AddContactViaLinkedInUrl = observer(() => {
         label={label}
         placeholder='Add contact via LinkedIn'
         onValueChange={(value) => setUrl(value)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            handleConfirm();
+          }
+        }}
         onKeyUp={(e) => {
           if (e.key === 'Backspace' && url.length === 0) {
             setValidationError(false);
