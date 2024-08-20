@@ -71,13 +71,13 @@ func (h *EmailEventHandler) OnEmailValidate(ctx context.Context, evt eventstore.
 }
 
 func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, emailToValidate string) error {
-	span, ctx := opentracing.StartSpanFromContext(context.Background(), "EmailEventHandler.validateEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.validateEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	emailValidationResponse, err := h.callApiValidateEmail(ctx, tenant, emailToValidate)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to call validation api"))
+		tracing.TraceErr(span, errors.Wrap(err, "error while calling email validation api"))
 		return nil
 	}
 
@@ -122,7 +122,7 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 }
 
 func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, emailAddress string) (*validationmodel.ValidateEmailResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(context.Background(), "EmailEventHandler.callApiValidateEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.callApiValidateEmail")
 	defer span.Finish()
 	span.LogFields(log.String("emailAddress", emailAddress))
 	span.SetTag(tracing.SpanTagTenant, tenant)
