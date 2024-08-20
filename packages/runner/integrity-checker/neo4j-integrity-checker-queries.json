@@ -200,12 +200,16 @@
       "name": "Email",
       "queries": [
         {
-          "name": "check_email_nodes_labels",
+          "name": "Check email node labels",
           "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(n:Email) WHERE size(labels(n)) <> 2 OR NOT 'Email_'+t.name in labels(n) return count(n)"
         },
         {
-          "name": "cross_tenants_email_link",
+          "name": "Cross tenant email link",
           "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:Email)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+        },
+        {
+          "name": "Emails not validated",
+          "query": "MATCH (e:Email) WHERE e.rawEmail CONTAINS '@' AND e.techValidatedAt IS NULL AND e.updatedAt < datetime() - duration({minutes:30}) RETURN count(e)"
         }
       ]
     },
