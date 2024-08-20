@@ -83,7 +83,7 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-		return h.grpcClients.EmailClient.UpdateEmailValidation(ctx, &emailpb.EmailValidationGrpcRequest{
+		request := emailpb.EmailValidationGrpcRequest{
 			Tenant:        tenant,
 			EmailId:       emailId,
 			AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
@@ -111,7 +111,8 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 			ErrorCode:      emailValidationResponse.Data.EmailData.ErrorCode,
 			Description:    emailValidationResponse.Data.EmailData.Description,
 			SmtpResponse:   emailValidationResponse.Data.EmailData.SmtpResponse,
-		})
+		}
+		return h.grpcClients.EmailClient.UpdateEmailValidation(ctx, &request)
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call grpc"))
@@ -156,11 +157,16 @@ func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, em
 	}
 	defer response.Body.Close()
 
-	var result validationmodel.ValidateEmailResponse
-	err = json.NewDecoder(response.Body).Decode(&result)
+	var validationResponse validationmodel.ValidateEmailResponse
+	err = json.NewDecoder(response.Body).Decode(&validationResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
 		return nil, err
 	}
-	return &result, nil
+	if validationResponse.Data == nil {
+		err = errors.New("email validation response data is empty: " + validationResponse.Message)
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return &validationResponse, nil
 }
