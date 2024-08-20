@@ -36,11 +36,16 @@ export class InvoiceStore extends Syncable<Invoice> {
       contract: computed,
       provider: computed,
       bankAccounts: computed,
+      number: computed,
     });
   }
 
   get id() {
     return this.value.metadata?.id;
+  }
+
+  get number() {
+    return this.value.invoiceNumber;
   }
 
   set id(id: string) {
@@ -70,10 +75,10 @@ export class InvoiceStore extends Syncable<Invoice> {
 
       const { invoice } = await this.transport.graphql.request<
         INVOICE_QUERY_RESULT,
-        { id: string }
-      >(INVOICES_QUERY, { id: this.id });
+        { number: string }
+      >(INVOICES_QUERY, { number: this.number });
 
-      this.load(invoice);
+      await this.load(invoice);
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -101,7 +106,6 @@ export class InvoiceStore extends Syncable<Invoice> {
 
       runInAction(() => {
         this.invalidate();
-        this.root.invoices.value.get(this.id)?.invalidate();
       });
     } catch (err) {
       runInAction(() => {
@@ -137,8 +141,8 @@ type INVOICE_QUERY_RESULT = {
   invoice: Invoice;
 };
 const INVOICES_QUERY = gql`
-  query Invoice($id: ID!) {
-    invoice(id: $id) {
+  query Invoice($number: String!) {
+    invoice_ByNumber(number: $number) {
       issued
       metadata {
         id
