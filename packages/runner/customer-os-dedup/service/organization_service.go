@@ -192,7 +192,7 @@ func (s *organizationService) dedupBatchOfTenantOrganizations(ctx context.Contex
 }
 
 func (s *organizationService) dedupTwoOrgsByDetails(ctx context.Context, tenant string, org1Id, org2Id string) error {
-	span, ctx := opentracing.StartSpanFromContext(context.Background(), "OrganizationService.dedupTwoOrgsByDetails")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.dedupTwoOrgsByDetails")
 	defer span.Finish()
 	span.LogFields(log.String("org1", org1Id), log.String("org2", org2Id))
 

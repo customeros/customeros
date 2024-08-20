@@ -179,6 +179,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 func (s *emailValidationService) getEmailValidation(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation) (*postgresentity.CacheEmailValidation, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getEmailValidation")
 	defer span.Finish()
+	span.LogFields(log.String("email", email))
 
 	cachedEmail, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Get(ctx, email)
 	if err != nil {

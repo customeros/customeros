@@ -109,7 +109,7 @@ func (h *phoneNumberEventHandler) OnPhoneNumberValidate(ctx context.Context, evt
 }
 
 func (h *phoneNumberEventHandler) validatePhoneNumber(ctx context.Context, tenant, phoneNumberId, rawPhoneNumber string) error {
-	span, ctx := opentracing.StartSpanFromContext(context.Background(), "EmailEventHandler.validateEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "PhoneNumberEventHandler.validatePhoneNumber")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogFields(log.String("phoneNumberId", phoneNumberId), log.String("rawPhoneNumber", rawPhoneNumber))
