@@ -164,7 +164,7 @@ func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, em
 		return nil, err
 	}
 	if validationResponse.Data == nil {
-		err = errors.New("email validation response data is empty: " + validationResponse.Message)
+		err = errors.New("email validation response data is empty: " + validationResponse.InternalMessage)
 		tracing.TraceErr(span, err)
 		return nil, err
 	}

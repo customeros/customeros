@@ -267,7 +267,6 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
 			return
 		}
-
 		if result.Status != "success" {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": result.Message})
 			return
@@ -337,11 +336,16 @@ func callApiValidateEmail(ctx context.Context, services *service.Services, span 
 	}
 	defer response.Body.Close()
 
-	var result validationmodel.ValidateEmailResponse
-	err = json.NewDecoder(response.Body).Decode(&result)
+	var validationResponse validationmodel.ValidateEmailResponse
+	err = json.NewDecoder(response.Body).Decode(&validationResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
 		return nil, err
 	}
-	return &result, nil
+	if validationResponse.Data == nil {
+		err = errors.New("email validation response data is empty: " + validationResponse.InternalMessage)
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return &validationResponse, nil
 }
