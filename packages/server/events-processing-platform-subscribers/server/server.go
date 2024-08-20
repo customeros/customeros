@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	validator "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/eventbuffer"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/subscriber"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstoredb"
 	"github.com/opentracing/opentracing-go"
 	"os"
@@ -20,7 +21,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	enrichsubscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/enrich"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph_low_prio"
 	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/interaction_event"
@@ -249,7 +249,7 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 	}
 
 	if server.Config.Subscriptions.EnrichSubscription.Enabled {
-		enrichSubscriber := enrichsubscription.NewEnrichSubscriber(server.Log, esdb, server.Config, server.Services, server.caches, grpcClients)
+		enrichSubscriber := subscriber.NewEnrichSubscriber(server.Log, esdb, server.Config, server.Services, server.caches, grpcClients)
 		go func() {
 			err := enrichSubscriber.Connect(ctx, enrichSubscriber.ProcessEvents)
 			if err != nil {
