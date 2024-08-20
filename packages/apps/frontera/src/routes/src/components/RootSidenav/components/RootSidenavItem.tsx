@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom';
 import React, { useState, ReactElement, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -17,6 +16,7 @@ import {
 } from '@ui/overlay/Menu/Menu.tsx';
 
 interface SidenavItemProps {
+  id?: string;
   href?: string;
   label: string;
   dataTest?: string;
@@ -27,11 +27,9 @@ interface SidenavItemProps {
 }
 
 export const RootSidenavItem = observer(
-  ({ label, icon, onClick, isActive, dataTest }: SidenavItemProps) => {
+  ({ label, icon, onClick, isActive, dataTest, id }: SidenavItemProps) => {
     const [isEditing, setIsEditing] = useState(false);
     const store = useStore();
-    const [searchParams] = useSearchParams();
-    const preset = searchParams.get('preset') ?? '1';
 
     const handleClick: MouseEventHandler = (e) => {
       e.preventDefault();
@@ -43,6 +41,20 @@ export const RootSidenavItem = observer(
         ? ['font-semibold', 'bg-grayModern-100']
         : ['font-normal', 'bg-transparent'],
     );
+
+    const handleAddToMyViews: MouseEventHandler<HTMLDivElement> = (e) => {
+      e.stopPropagation();
+
+      if (!id) {
+        store.ui.toastError(
+          `We were unable to add this view to favorites`,
+          'dup-view-error',
+        );
+
+        return;
+      }
+      store.tableViewDefs.createFavorite(id);
+    };
 
     return (
       <Button
@@ -78,9 +90,7 @@ export const RootSidenavItem = observer(
             </Tooltip>
 
             <MenuList align='end' side='bottom'>
-              <MenuItem
-                onClick={() => store.tableViewDefs.createFavorite(preset)}
-              >
+              <MenuItem onClick={handleAddToMyViews}>
                 <LayersTwo01 className='text-gray-500' />
                 Duplicate to My Views
               </MenuItem>
