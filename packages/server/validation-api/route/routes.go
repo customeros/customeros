@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/service"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
@@ -58,7 +59,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 		tracing.TracingEnhancer(ctx, "POST /validateEmailV2"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
 		func(c *gin.Context) {
-			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ValidateEmailV2", c.Request.Header)
+			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ValidateEmailV2")
 			defer span.Finish()
 
 			var request model.ValidateEmailRequest
@@ -72,7 +73,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				return
 			}
 
-			// check ip is present
+			// check email is present
 			if request.Email == "" {
 				tracing.TraceErr(span, errors.New("Missing email parameter"))
 				l.Errorf("Missing email parameter")
