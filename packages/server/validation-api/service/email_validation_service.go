@@ -146,7 +146,6 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 	cacheDomain, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Get(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
-		return nil, err
 	}
 
 	if cacheDomain == nil || cacheDomain.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailDomainValidationCacheTtlDays).Before(utils.Now()) {
@@ -184,7 +183,6 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 	cachedEmail, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Get(ctx, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
-		return nil, err
 	}
 
 	// if no cached data found, or last time fetched > 90 days ago, or is retry validation and last time fetched > 1 hour ago
