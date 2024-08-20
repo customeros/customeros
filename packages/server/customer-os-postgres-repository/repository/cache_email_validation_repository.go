@@ -79,6 +79,8 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 			"description":      cacheEmailValidation.Description,
 			"retry_validation": cacheEmailValidation.RetryValidation,
 			"smtp_response":    cacheEmailValidation.SmtpResponse,
+			"normalized_email": cacheEmailValidation.NormalizedEmail,
+			"username":         cacheEmailValidation.Username,
 		}
 		if err := r.db.WithContext(ctx).Model(&existingData).Updates(updates).Error; err != nil {
 			return nil, err
