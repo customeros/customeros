@@ -333,7 +333,7 @@ export const ContractBillingDetailsForm = observer(
                     }
                   >
                     <div className='text-base font-normal whitespace-nowrap'>
-                      Auto-charge via Stripe
+                      Auto-charge card via Stripe
                     </div>
                   </PaymentDetailsPopover>
 
@@ -364,7 +364,7 @@ export const ContractBillingDetailsForm = observer(
                   content={isStripeActive ? '' : 'No payment provider enabled'}
                 >
                   <div className='text-base font-normal whitespace-nowrap'>
-                    Pay online via Stripe
+                    Payment link via Stripe
                   </div>
                 </PaymentDetailsPopover>
                 <Switch
