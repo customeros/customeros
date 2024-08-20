@@ -161,7 +161,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
       arr = arr.filter((entity) => {
         const name = entity.value?.name || '';
-        const org = entity.value?.organizations.content?.[0].name || '';
+        const org = entity.value?.organizations.content?.[0]?.name || '';
         const email = entity.value?.emails?.[0]?.email || '';
 
         return (
