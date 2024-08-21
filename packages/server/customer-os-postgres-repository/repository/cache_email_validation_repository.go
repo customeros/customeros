@@ -51,14 +51,12 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 	tracing.LogObjectAsJson(span, "cacheEmailValidation", cacheEmailValidation)
 
 	var existingData entity.CacheEmailValidation
-	result := r.db.WithContext(ctx).Where("email = ?", cacheEmailValidation.Email).First(&existingData)
+	result := r.db.WithContext(ctx).Where("email = ?", cacheEmailValidation.Email).Order("created_at desc").First(&existingData)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// Record doesn't exist, create a new one
-			cacheEmailValidation.CreatedAt = utils.Now()
-			cacheEmailValidation.UpdatedAt = utils.Now()
-			if err := r.db.WithContext(ctx).Create(&cacheEmailValidation).Error; err != nil {
+			if err := r.db.WithContext(ctx).Save(&cacheEmailValidation).Error; err != nil {
 				return nil, err
 			}
 		} else {
@@ -81,6 +79,7 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 			"smtp_response":    cacheEmailValidation.SmtpResponse,
 			"normalized_email": cacheEmailValidation.NormalizedEmail,
 			"username":         cacheEmailValidation.Username,
+			"domain":           cacheEmailValidation.Domain,
 		}
 		if err := r.db.WithContext(ctx).Model(&existingData).Updates(updates).Error; err != nil {
 			return nil, err

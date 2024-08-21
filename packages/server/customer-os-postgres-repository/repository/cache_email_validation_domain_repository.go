@@ -51,14 +51,12 @@ func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEma
 	tracing.LogObjectAsJson(span, "cacheEmailValidationDomain", cacheEmailValidationDomain)
 
 	var existingData entity.CacheEmailValidationDomain
-	result := r.db.WithContext(ctx).Where("domain = ?", cacheEmailValidationDomain.Domain).First(&existingData)
+	result := r.db.WithContext(ctx).Where("domain = ?", cacheEmailValidationDomain.Domain).Order("created_at desc").First(&existingData)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// Record doesn't exist, create a new one
-			cacheEmailValidationDomain.CreatedAt = utils.Now()
-			cacheEmailValidationDomain.UpdatedAt = utils.Now()
-			if err := r.db.WithContext(ctx).Create(&cacheEmailValidationDomain).Error; err != nil {
+			if err := r.db.WithContext(ctx).Save(&cacheEmailValidationDomain).Error; err != nil {
 				return nil, err
 			}
 		} else {
