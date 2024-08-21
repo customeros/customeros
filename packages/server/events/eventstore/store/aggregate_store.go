@@ -27,14 +27,14 @@ func NewAggregateStore(log logger.Logger, esdbClient *esdb.Client) *aggregateSto
 }
 
 func (as *aggregateStore) Load(ctx context.Context, aggregate es.Aggregate) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.Load")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", aggregate.GetID()))
-
 	stream, err := as.esdbClient.ReadStream(ctx, aggregate.GetID(), esdb.ReadStreamOptions{}, count)
 	if err != nil {
+		span, _ := opentracing.StartSpanFromContext(ctx, "AggregateStore.Load")
+		defer span.Finish()
+		span.LogFields(log.String("AggregateID", aggregate.GetID()))
+
 		tracing.TraceErr(span, err)
-		as.log.Errorf("(Load) esdbClient.ReadStream: {%+v}", err)
+		as.log.Errorf("(Load) esdbClient.ReadStream: {%s}", err.Error())
 		return errors.Wrap(err, "esdbClient.ReadStream")
 	}
 	defer stream.Close()
@@ -47,17 +47,25 @@ func (as *aggregateStore) Load(ctx context.Context, aggregate es.Aggregate) erro
 		}
 
 		if err != nil {
+			span, _ := opentracing.StartSpanFromContext(ctx, "AggregateStore.Load")
+			defer span.Finish()
+			span.LogFields(log.String("AggregateID", aggregate.GetID()))
+
 			tracing.TraceErr(span, err)
-			as.log.Errorf("(Load) esdbClient.ReadStream: {%+v}", err)
+			as.log.Errorf("(Load) esdbClient.ReadStream: {%s}", err.Error())
 			return errors.Wrap(err, "stream.Recv")
 		}
 
 		esEvent := es.NewEventFromRecorded(event.Event)
 		if err := aggregate.RaiseEvent(esEvent); err != nil {
+			span, _ := opentracing.StartSpanFromContext(ctx, "AggregateStore.Load")
+			defer span.Finish()
+			span.LogFields(log.String("AggregateID", aggregate.GetID()))
+			span.LogFields(log.Int64("error.esEvent.version", esEvent.Version))
+			span.LogFields(log.Int64("error.aggregate.version", aggregate.GetVersion()))
+
 			tracing.TraceErr(span, err)
-			span.LogFields(log.Object("error.esEvent.version", esEvent.Version))
-			span.LogFields(log.Object("error.aggregate.version", aggregate.GetVersion()))
-			as.log.Errorf("(Load) aggregate.RaiseEvent: {%+v}", err)
+			as.log.Errorf("(Load) aggregate.RaiseEvent: {%s}", err.Error())
 			return errors.Wrap(err, "RaiseEvent")
 		}
 		as.log.Debugf("(Load) esEvent: {%s}", esEvent.String())
@@ -206,10 +214,6 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 }
 
 func (as *aggregateStore) Exists(ctx context.Context, aggregateID string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "AggregateStore.Exists")
-	defer span.Finish()
-	span.SetTag("aggregateID", aggregateID)
-
 	readStreamOptions := esdb.ReadStreamOptions{Direction: esdb.Backwards, From: esdb.Revision(1)}
 
 	stream, err := as.esdbClient.ReadStream(ctx, aggregateID, readStreamOptions, 1)
@@ -224,18 +228,20 @@ func (as *aggregateStore) Exists(ctx context.Context, aggregateID string) error 
 			break
 		}
 		if err != nil {
+			span, _ := opentracing.StartSpanFromContext(ctx, "AggregateStore.Exists")
+			defer span.Finish()
+			span.SetTag("aggregateID", aggregateID)
+
 			span.LogFields(log.String("exists", "false"))
 			if es.IsEventStoreErrorCodeResourceNotFound(err) {
-				as.log.Warnf("(AggregateStore.Exists) esdbClient.ReadStream: {%+v}", err)
+				as.log.Warnf("(AggregateStore.Exists) esdbClient.ReadStream: {%s}", err.Error())
 				return es.ErrAggregateNotFound
 			}
 			tracing.TraceErr(span, err)
-			as.log.Errorf("(AggregateStore.Exists) esdbClient.ReadStream: {%+v}", err)
+			as.log.Errorf("(AggregateStore.Exists) esdbClient.ReadStream: {%s}", err.Error())
 			return errors.Wrap(err, "stream.Recv")
 		}
 	}
-
-	span.LogFields(log.String("exists", "true"))
 	return nil
 }
 
