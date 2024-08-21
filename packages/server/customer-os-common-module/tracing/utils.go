@@ -136,7 +136,7 @@ func SetDefaultServiceSpanTags(ctx context.Context, span opentracing.Span) {
 }
 func SetDefaultNeo4jRepositorySpanTags(ctx context.Context, span opentracing.Span) {
 	setDefaultSpanTags(ctx, span)
-	span.SetTag(SpanTagComponent, constants.ComponentNeo4jRepository)
+	TagComponentNeo4jRepository(span)
 }
 
 func TraceErr(span opentracing.Span, err error, fields ...log.Field) {
