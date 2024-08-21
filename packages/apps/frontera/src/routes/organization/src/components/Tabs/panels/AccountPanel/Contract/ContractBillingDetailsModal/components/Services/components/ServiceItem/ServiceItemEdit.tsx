@@ -146,10 +146,12 @@ export const ServiceItemEdit = observer(
             min={0}
             size='xs'
             type='number'
+            mask={Number}
+            autofix={true}
             placeholder='0'
             className={inputClasses}
             onFocus={(e) => e.target.select()}
-            value={service?.tempValue?.quantity ?? ''}
+            value={service?.tempValue?.quantity?.toString() || ''}
             onChange={(e) => {
               updateQuantity(e.target.value ?? '');
             }}
@@ -158,31 +160,20 @@ export const ServiceItemEdit = observer(
                 ? updateQuantity('0')
                 : updateQuantity(e.target.value)
             }
-            blocks={{
-              num: {
-                mask: Number,
-                min: 0,
-                lazy: false,
-                placeholderChar: '#',
-                thousandsSeparator: ',',
-                normalizeZeros: true,
-                padFractionalZeros: false,
-                radix: '.',
-                autofix: true,
-              },
-            }}
           />
           <span className=' mx-1 text-gray-700'>×</span>
 
           {sliCurrencySymbol}
 
           <MaskedResizableInput
-            min={0}
             size='xs'
             type='number'
+            mask={Number}
+            autofix={true}
             placeholder='0'
             className={inputClasses}
             onFocus={(e) => e.target.select()}
+            min={type === 'one-time' ? -999999999999 : 0}
             value={service?.tempValue?.price?.toString() ?? ''}
             onChange={(e) => {
               updatePrice(e.target.value ?? '');
@@ -192,19 +183,6 @@ export const ServiceItemEdit = observer(
                 ? updatePrice('0')
                 : updatePrice(e.target.value)
             }
-            blocks={{
-              num: {
-                mask: Number,
-                min: type === 'one-time' ? -999999999999 : 0,
-                lazy: false,
-                placeholderChar: '#',
-                thousandsSeparator: ',',
-                normalizeZeros: true,
-                padFractionalZeros: false,
-                radix: '.',
-                autofix: true,
-              },
-            }}
           />
 
           {type === 'one-time' ? (
@@ -221,6 +199,8 @@ export const ServiceItemEdit = observer(
             min={0}
             size='xs'
             type='number'
+            mask={Number}
+            autofix={true}
             placeholder='0'
             className={inputClasses}
             onFocus={(e) => e.target.select()}
@@ -231,19 +211,6 @@ export const ServiceItemEdit = observer(
                 ? updateTaxRate('0')
                 : updateTaxRate(e.target.value)
             }
-            blocks={{
-              num: {
-                mask: Number,
-                min: 0,
-                lazy: false,
-                placeholderChar: '#',
-                thousandsSeparator: ',',
-                normalizeZeros: true,
-                padFractionalZeros: false,
-                radix: '.',
-                autofix: true,
-              },
-            }}
           />
 
           <span className='whitespace-nowrap  mx-1 text-gray-700'>% VAT</span>

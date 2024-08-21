@@ -67,7 +67,7 @@ export const csvDataMapper = {
   [ColumnViewType.OrganizationsTags]: (d: OrganizationStore) =>
     d?.value?.tags?.map((e) => e.name).join('; '),
   [ColumnViewType.OrganizationsIsPublic]: (d: OrganizationStore) =>
-    d?.value?.isPublic ? 'Public' : 'Private',
+    d?.value?.public ? 'Public' : 'Private',
   [ColumnViewType.OrganizationsStage]: (d: OrganizationStore) => d.value?.stage,
   [ColumnViewType.OrganizationsCity]: (d: OrganizationStore) =>
     d?.value?.locations?.[0]?.countryCodeA2,

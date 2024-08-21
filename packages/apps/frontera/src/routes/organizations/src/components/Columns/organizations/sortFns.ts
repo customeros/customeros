@@ -5,6 +5,7 @@ import {
   Social,
   ColumnViewType,
   OnboardingStatus,
+  OrganizationRelationship,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
@@ -17,7 +18,8 @@ export const getOrganizationSortFn = (columnId: string) =>
     )
     .with(
       'ORGANIZATIONS_RELATIONSHIP',
-      () => (row: OrganizationStore) => row.value?.isCustomer,
+      () => (row: OrganizationStore) =>
+        row.value?.relationship === OrganizationRelationship.Customer,
     )
     .with(
       'ORGANIZATIONS_ONBOARDING_STATUS',

@@ -47,7 +47,7 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
   async bootstrap() {
     if (this.root.demoMode) {
       this.load(mock.data.invoices.content as Invoice[], {
-        getId: (data) => data.metadata.id,
+        getId: (data) => data.invoiceNumber,
       });
       this.isBootstrapped = true;
       this.totalElements = mock.data.invoices.totalElements;
@@ -69,7 +69,7 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
       });
 
       this.load(invoices.content, {
-        getId: (data) => data.metadata.id,
+        getId: (data) => data.invoiceNumber, // this change is intentional, preview id changes between updates and number stays stable
       });
       runInAction(() => {
         this.isBootstrapped = true;
@@ -102,7 +102,7 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
         runInAction(() => {
           page++;
           this.load(invoices.content, {
-            getId: (data) => data.metadata.id,
+            getId: (data) => data.invoiceNumber,
           });
         });
       } catch (e) {
