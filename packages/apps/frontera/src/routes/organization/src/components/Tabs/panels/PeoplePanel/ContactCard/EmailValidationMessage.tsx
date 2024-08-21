@@ -1,72 +1,110 @@
-import { useState, useEffect } from 'react';
-
+import { XCircle } from '@ui/media/icons/XCircle.tsx';
 import { EmailValidationDetails } from '@graphql/types';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { useTenantNameQuery } from '@shared/graphql/tenantName.generated';
-import { SimpleValidationIndicator } from '@ui/presentation/validation/simple-validation-indicator';
-
-import { validateEmail, VALIDATION_MESSAGES } from './utils';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { HelpCircle } from '@ui/media/icons/HelpCircle.tsx';
+import { AlertCircle } from '@ui/media/icons/AlertCircle.tsx';
+import { ClockFastForward } from '@ui/media/icons/ClockFastForward.tsx';
+import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken.tsx';
 
 interface Props {
   email: string;
   validationDetails: EmailValidationDetails | undefined;
 }
 
-export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
-  const client = getGraphQLClient();
-  const [isLoading, setIsLoading] = useState(!validationDetails);
-  const [validationData, setValidationData] = useState<
-    EmailValidationDetails | null | undefined
-  >(validationDetails);
+const emailStatuses = {
+  DELIVERABLE_NO_RISK: {
+    message: 'Deliverable • No risk',
+    icon: <CheckCircleBroken className='text-greenLight-500 size-3' />,
+  },
+  DELIVERABLE_FIREWALL: {
+    message: 'Deliverable • Firewall protected',
+    icon: <CheckCircleBroken className='text-greenLight-500 size-3' />,
+  },
+  DELIVERABLE_FREE_ACCOUNT: {
+    message: 'Deliverable • Free account',
+    icon: <CheckCircleBroken className='text-warning-400 size-3' />,
+  },
+  CATCH_ALL: {
+    message: "Don't know • Catch-all",
+    icon: <AlertCircle className='text-gray-500 size-3' />,
+  },
+  NOT_VERIFIED: {
+    message: "Don't know • Not verified yet",
+    icon: <HelpCircle className='text-gray-500 size-3' />,
+  },
+  VERIFICATION_IN_PROGRESS: {
+    message: "Don't know • Verification in progress",
+    icon: <ClockFastForward className='text-primary-600 size-3' />,
+  },
+  MAILBOX_FULL: {
+    message: 'Not deliverable • Mailbox full',
+    icon: <XCircle className='text-error-500 size-3' />,
+  },
+  INVALID_MAILBOX: {
+    message: 'Not deliverable • Invalid mailbox',
+    icon: <XCircle className='text-error-500 size-3' />,
+  },
+  INCORRECT_FORMAT: {
+    message: 'Not deliverable • Incorrect format',
+    icon: <XCircle className='text-error-500 size-3' />,
+  },
+};
 
-  const { data: tenantNameQuery } = useTenantNameQuery(client);
+function isValidEmail(email: string) {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-  useEffect(() => {
-    if (!validationDetails && tenantNameQuery?.tenant) {
-      validateEmail({ email, tenant: tenantNameQuery?.tenant }).then(
-        (result) => {
-          setIsLoading(false);
+  return emailRegex.test(email);
+}
 
-          if (result) {
-            setValidationData(result);
-          }
-        },
-      );
-    }
-  }, [email, tenantNameQuery?.tenant]);
-
-  if (!validationData && !isLoading) {
+function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
+  if (!email) {
     return null;
   }
 
-  const getMessages = () => {
-    if (!validationData) return [];
-    const { validated, isReachable, isValidSyntax } = validationData;
+  if (email && !emailData) {
+    return emailStatuses.NOT_VERIFIED;
+  }
 
-    if (validated && isValidSyntax === false) {
-      return [VALIDATION_MESSAGES.isValidSyntax.message];
-    }
+  if (!emailData?.verified) {
+    const isValidSyntax = isValidEmail(email);
 
-    if (
-      validated &&
-      isReachable &&
-      (VALIDATION_MESSAGES.isReachable.condition as Array<string>).includes(
-        isReachable,
-      )
-    ) {
-      return [VALIDATION_MESSAGES.isReachable.message];
-    }
+    if (!isValidSyntax) return emailStatuses.INCORRECT_FORMAT;
 
-    return [];
-  };
+    return emailStatuses.NOT_VERIFIED;
+  }
 
-  if (!validationData?.validated) return null;
+  if (emailData?.verifyingCheckAll)
+    return emailStatuses.VERIFICATION_IN_PROGRESS;
+
+  if (!emailData?.isValidSyntax) {
+    return emailStatuses.INCORRECT_FORMAT;
+  }
+
+  if (emailData?.isDeliverable && emailData?.verified) {
+    if (!emailData?.isRisky) return emailStatuses.DELIVERABLE_NO_RISK;
+    if (emailData?.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
+    if (emailData?.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
+    if (emailData?.isCatchAll) return emailStatuses.CATCH_ALL;
+  }
+
+  if (emailData?.isDeliverable === false && emailData?.verified) {
+    if (emailData?.isMailboxFull) return emailStatuses.MAILBOX_FULL;
+    if (!emailData?.canConnectSmtp) return emailStatuses.INVALID_MAILBOX;
+  }
+
+  return null;
+}
+
+export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
+  const data = checkEmailStatus(validationDetails, email);
+
+  if (!data) return null;
 
   return (
-    <SimpleValidationIndicator
-      isLoading={isLoading}
-      showValidationMessage={true}
-      errorMessages={getMessages()}
-    />
+    <>
+      <Tooltip side='left' label={data?.message}>
+        <div>{data?.icon}</div>
+      </Tooltip>
+    </>
   );
 };

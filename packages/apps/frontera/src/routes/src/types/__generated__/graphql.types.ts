@@ -365,7 +365,6 @@ export enum ColumnViewType {
   ContractsPeriod = 'CONTRACTS_PERIOD',
   ContractsRenewal = 'CONTRACTS_RENEWAL',
   ContractsRenewalDate = 'CONTRACTS_RENEWAL_DATE',
-  ContractsSignDate = 'CONTRACTS_SIGN_DATE',
   ContractsStatus = 'CONTRACTS_STATUS',
   InvoicesAmount = 'INVOICES_AMOUNT',
   InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
@@ -376,7 +375,6 @@ export enum ColumnViewType {
   InvoicesInvoiceStatus = 'INVOICES_INVOICE_STATUS',
   InvoicesIssueDate = 'INVOICES_ISSUE_DATE',
   InvoicesIssueDatePast = 'INVOICES_ISSUE_DATE_PAST',
-  InvoicesPaymentStatus = 'INVOICES_PAYMENT_STATUS',
   OpportunitiesCommonColumn = 'OPPORTUNITIES_COMMON_COLUMN',
   OrganizationsAvatar = 'ORGANIZATIONS_AVATAR',
   OrganizationsChurnDate = 'ORGANIZATIONS_CHURN_DATE',
@@ -1402,18 +1400,34 @@ export type EmailUpdateAddressInput = {
 
 export type EmailValidationDetails = {
   __typename?: 'EmailValidationDetails';
+  /** @deprecated No longer supported */
   acceptsMail?: Maybe<Scalars['Boolean']['output']>;
   canConnectSmtp?: Maybe<Scalars['Boolean']['output']>;
+  /** @deprecated No longer supported */
   error?: Maybe<Scalars['String']['output']>;
+  firewall?: Maybe<Scalars['String']['output']>;
+  /** @deprecated No longer supported */
   hasFullInbox?: Maybe<Scalars['Boolean']['output']>;
   isCatchAll?: Maybe<Scalars['Boolean']['output']>;
   isDeliverable?: Maybe<Scalars['Boolean']['output']>;
+  /** @deprecated No longer supported */
   isDisabled?: Maybe<Scalars['Boolean']['output']>;
+  /** @deprecated No longer supported */
   isDisposable?: Maybe<Scalars['Boolean']['output']>;
+  isFirewalled?: Maybe<Scalars['Boolean']['output']>;
+  isFreeAccount?: Maybe<Scalars['Boolean']['output']>;
+  isMailboxFull?: Maybe<Scalars['Boolean']['output']>;
+  /** @deprecated No longer supported */
   isReachable?: Maybe<Scalars['String']['output']>;
+  isRisky?: Maybe<Scalars['Boolean']['output']>;
   isRoleAccount?: Maybe<Scalars['Boolean']['output']>;
   isValidSyntax?: Maybe<Scalars['Boolean']['output']>;
+  provider?: Maybe<Scalars['String']['output']>;
+  smtpSuccess?: Maybe<Scalars['Boolean']['output']>;
+  /** @deprecated No longer supported */
   validated?: Maybe<Scalars['Boolean']['output']>;
+  verified: Scalars['Boolean']['output'];
+  verifyingCheckAll: Scalars['Boolean']['output'];
 };
 
 export type EntityTemplate = Node & {
@@ -2484,7 +2498,6 @@ export type Mutation = {
   phoneNumberUpdateInOrganization: PhoneNumber;
   phoneNumberUpdateInUser: PhoneNumber;
   phoneNumber_Update: PhoneNumber;
-  player_Merge: Result;
   reminder_Create?: Maybe<Scalars['ID']['output']>;
   reminder_Update?: Maybe<Scalars['ID']['output']>;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
@@ -3242,11 +3255,6 @@ export type MutationPhoneNumberUpdateInUserArgs = {
 
 export type MutationPhoneNumber_UpdateArgs = {
   input: PhoneNumberUpdateInput;
-};
-
-export type MutationPlayer_MergeArgs = {
-  input: PlayerInput;
-  userId: Scalars['ID']['input'];
 };
 
 export type MutationReminder_CreateArgs = {
@@ -4219,39 +4227,6 @@ export type PhoneNumberUpdateInput = {
   phoneNumber: Scalars['String']['input'];
 };
 
-export type Player = {
-  __typename?: 'Player';
-  appSource: Scalars['String']['output'];
-  authId: Scalars['String']['output'];
-  createdAt: Scalars['Time']['output'];
-  id: Scalars['ID']['output'];
-  identityId?: Maybe<Scalars['String']['output']>;
-  provider: Scalars['String']['output'];
-  source: DataSource;
-  sourceOfTruth: DataSource;
-  updatedAt: Scalars['Time']['output'];
-  users: Array<PlayerUser>;
-};
-
-export type PlayerInput = {
-  appSource?: InputMaybe<Scalars['String']['input']>;
-  authId: Scalars['String']['input'];
-  identityId?: InputMaybe<Scalars['String']['input']>;
-  provider: Scalars['String']['input'];
-};
-
-export type PlayerUpdate = {
-  appSource?: InputMaybe<Scalars['String']['input']>;
-  identityId?: InputMaybe<Scalars['String']['input']>;
-};
-
-export type PlayerUser = {
-  __typename?: 'PlayerUser';
-  default: Scalars['Boolean']['output'];
-  tenant: Scalars['String']['output'];
-  user: User;
-};
-
 export type PriceCalculation = {
   __typename?: 'PriceCalculation';
   calculationType?: Maybe<CalculationType>;
@@ -4330,7 +4305,6 @@ export type Query = {
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
-  player_ByAuthIdProvider: Player;
   reminder: Reminder;
   remindersForOrganization: Array<Reminder>;
   serviceLineItem: ServiceLineItem;
@@ -4543,11 +4517,6 @@ export type QueryOrganizationsArgs = {
 
 export type QueryPhoneNumberArgs = {
   id: Scalars['ID']['input'];
-};
-
-export type QueryPlayer_ByAuthIdProviderArgs = {
-  authId: Scalars['String']['input'];
-  provider: Scalars['String']['input'];
 };
 
 export type QueryReminderArgs = {
@@ -5186,7 +5155,6 @@ export type User = {
   lastName: Scalars['String']['output'];
   name?: Maybe<Scalars['String']['output']>;
   phoneNumbers: Array<PhoneNumber>;
-  player: Player;
   profilePhotoUrl?: Maybe<Scalars['String']['output']>;
   roles: Array<Role>;
   source: DataSource;
@@ -5226,11 +5194,6 @@ export type UserInput = {
    */
   lastName: Scalars['String']['input'];
   name?: InputMaybe<Scalars['String']['input']>;
-  /**
-   * Player to associate with the user with. If the person does not exist, it will be created.
-   * **Required**
-   */
-  player: PlayerInput;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
 };

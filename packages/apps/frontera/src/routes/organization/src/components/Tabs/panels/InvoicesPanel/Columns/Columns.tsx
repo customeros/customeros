@@ -52,7 +52,7 @@ export const columns = [
   }),
 
   columnHelper.accessor((row) => row, {
-    id: ColumnViewType.InvoicesPaymentStatus,
+    id: ColumnViewType.InvoicesInvoiceStatus,
     size: 120,
     enableColumnFilter: false,
     enableSorting: true,

@@ -43,16 +43,7 @@ export const getPredefinedFilterFn = (
         return row.value?.preview === filterValues;
       },
     )
-    .with(
-      { property: ColumnViewType.InvoicesPaymentStatus },
-      (filter) => (row: InvoiceStore) => {
-        const filterValues = filter?.value;
 
-        if (!filter.active) return true;
-
-        return filterValues.includes(row.value?.status);
-      },
-    )
     .with(
       { property: ColumnViewType.InvoicesIssueDate },
       (filter) => (row: InvoiceStore) => {

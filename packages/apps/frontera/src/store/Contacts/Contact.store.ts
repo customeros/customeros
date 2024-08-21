@@ -536,15 +536,20 @@ const CONTACT_QUERY = gql`
         id
         email
         emailValidationDetails {
-          isReachable
           isValidSyntax
-          canConnectSmtp
-          acceptsMail
-          hasFullInbox
+          verifyingCheckAll
+          verified
+          isRisky
+          isFirewalled
+          provider
+          firewall
           isCatchAll
+          canConnectSmtp
           isDeliverable
-          validated
-          isDisabled
+          isMailboxFull
+          isRoleAccount
+          isFreeAccount
+          smtpSuccess
         }
       }
       socials {

@@ -9,7 +9,6 @@ type InvoicesColumnType =
   | ColumnViewType.InvoicesInvoicePreview
   | ColumnViewType.InvoicesIssueDate
   | ColumnViewType.InvoicesInvoiceStatus
-  | ColumnViewType.InvoicesPaymentStatus
   | ColumnViewType.InvoicesInvoiceNumber;
 
 export const invoicesOptionsMap: Record<InvoicesColumnType | string, string> = {
@@ -60,7 +59,6 @@ export const invoicesHelperTextMap: Record<
   [ColumnViewType.InvoicesIssueDate]: 'E.g. 15 Aug 2019',
   [ColumnViewType.InvoicesIssueDatePast]: 'E.g. 15 Jun 2019',
   [ColumnViewType.InvoicesInvoiceStatus]: 'E.g. Scheduled',
-  [ColumnViewType.InvoicesPaymentStatus]: 'E.g. Paid',
 };
 
 type RenewalsColumnType =

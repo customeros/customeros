@@ -11,7 +11,7 @@ import { getColumnConfig } from '@organizations/components/Columns/shared/util/g
 import {
   IssueDateFilter,
   BillingCycleFilter,
-  PaymentStatusFilter,
+  InvoiceStatusFilter,
 } from './Filters';
 import {
   AmountCell,
@@ -155,7 +155,7 @@ const columns: Record<string, Column> = {
       <THead
         title='Invoice Status'
         id={ColumnViewType.InvoicesInvoiceStatus}
-        renderFilter={() => <PaymentStatusFilter />}
+        renderFilter={() => <InvoiceStatusFilter />}
         {...getTHeadProps(props)}
       />
     ),
