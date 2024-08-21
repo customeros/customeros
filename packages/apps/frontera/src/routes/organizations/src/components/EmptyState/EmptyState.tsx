@@ -19,7 +19,7 @@ export const EmptyState = observer(() => {
     ?.toArray()
     .find((e) => e.value.id === preset)?.value?.tableId;
 
-  const allOrgsView = store.tableViewDefs.addressBookPreset;
+  const allOrgsView = store.tableViewDefs.organizationsPreset;
 
   const options = (() => {
     switch (currentPreset) {

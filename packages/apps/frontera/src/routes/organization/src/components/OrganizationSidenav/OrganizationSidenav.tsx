@@ -13,7 +13,6 @@ import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
-import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 import { useKeyboardNavigation } from '@shared/components/RootSidenav/hooks/useKeyboardNavigation';
 
 export const OrganizationSidenav = observer(() => {
@@ -50,11 +49,10 @@ export const OrganizationSidenav = observer(() => {
 
   const presets = {
     targetsPreset: store.tableViewDefs.targetsPreset,
-    churnedPreset: store.tableViewDefs.churnedPreset,
     customersPreset: store.tableViewDefs.defaultPreset,
-    addressBookPreset: store.tableViewDefs.addressBookPreset,
+    organizationsPreset: store.tableViewDefs.organizationsPreset,
     upcomingInvoicesPreset: store.tableViewDefs.upcomingInvoicesPreset,
-    myPortfolioPreset: store.tableViewDefs.myPortfolioPreset,
+    contractsPreset: store.tableViewDefs.contractsPreset,
   };
 
   useKeyboardNavigation(presets, {
@@ -131,7 +129,7 @@ export const OrganizationSidenav = observer(() => {
         />
       </div>
       <div className='flex flex-col flex-grow justify-end'>
-        <NotificationCenter />
+        {/* <NotificationCenter /> */}
       </div>
     </div>
   );

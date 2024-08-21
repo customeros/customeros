@@ -26,11 +26,11 @@ export const RootSidenav = observer(() => {
 
   const presets = {
     targetsPreset: store.tableViewDefs.targetsPreset,
-    churnedPreset: store.tableViewDefs.churnedPreset,
     customersPreset: store.tableViewDefs.defaultPreset,
-    addressBookPreset: store.tableViewDefs.addressBookPreset,
+    organizationsPreset: store.tableViewDefs.organizationsPreset,
     upcomingInvoicesPreset: store.tableViewDefs.upcomingInvoicesPreset,
-    myPortfolioPreset: store.tableViewDefs.myPortfolioPreset,
+    contactsPreset: store.tableViewDefs.contactsPreset,
+    contractsPreset: store.tableViewDefs.contractsPreset,
   };
 
   useKeyboardNavigation(presets, {

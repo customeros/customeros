@@ -29,9 +29,11 @@ export const GlobalSharedCommands = observer(() => {
   const navigate = useNavigate();
 
   const targetsPreset = store.tableViewDefs.targetsPreset;
-  const churnedPreset = store.tableViewDefs.churnedPreset;
   const customersPreset = store.tableViewDefs.defaultPreset;
-  const addressBookPreset = store.tableViewDefs.addressBookPreset;
+  const organizationsPreset = store.tableViewDefs.organizationsPreset;
+  const contactsPreset = store.tableViewDefs.contactsPreset;
+  const upcomingInvoicesPreset = store.tableViewDefs.upcomingInvoicesPreset;
+  const contractsPreset = store.tableViewDefs.contractsPreset;
 
   const handleGoTo = (path: string, preset?: string) => {
     navigate(path + (preset ? `?preset=${preset}` : ''));
@@ -82,21 +84,39 @@ export const GlobalSharedCommands = observer(() => {
       >
         Go to Customers
       </CommandItem>
+
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
-        rightAccessory={<KeyboardShortcut shortcut='F' />}
-        keywords={navigationKeywords.go_to_former_customers}
-        onSelect={() => handleGoTo('/finder', churnedPreset)}
+        keywords={navigationKeywords.go_to_address_book}
+        rightAccessory={<KeyboardShortcut shortcut='Z' />}
+        onSelect={() => handleGoTo('/finder', organizationsPreset)}
       >
-        Go to Former customers
+        Go to Organizations
       </CommandItem>
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
         keywords={navigationKeywords.go_to_address_book}
-        rightAccessory={<KeyboardShortcut shortcut='A' />}
-        onSelect={() => handleGoTo('/finder', addressBookPreset)}
+        rightAccessory={<KeyboardShortcut shortcut='N' />}
+        onSelect={() => handleGoTo('/finder', contactsPreset)}
       >
-        Go to Address book
+        Go to Contacts
+      </CommandItem>
+
+      <CommandItem
+        leftAccessory={<ArrowNarrowRight />}
+        rightAccessory={<KeyboardShortcut shortcut='I' />}
+        keywords={navigationKeywords.go_to_scheduled_invoices}
+        onSelect={() => handleGoTo('/finder', upcomingInvoicesPreset)}
+      >
+        Go to Invoices
+      </CommandItem>
+      <CommandItem
+        leftAccessory={<ArrowNarrowRight />}
+        keywords={navigationKeywords.go_to_contracts}
+        rightAccessory={<KeyboardShortcut shortcut='R' />}
+        onSelect={() => handleGoTo('/finder', contractsPreset)}
+      >
+        Go to Contracts
       </CommandItem>
       <CommandItem
         leftAccessory={<ArrowNarrowRight />}
@@ -129,47 +149,29 @@ const KeyboardShortcut = ({ shortcut }: { shortcut: string }) => {
 };
 
 const navigationKeywords = {
-  go_to_targets: ['go to', 'navigate', 'targets', 'prospect'],
-  go_to_customers: ['go to', 'navigate', 'customers', 'relationship'],
-  go_to_former_customers: [
-    'go to',
-    'navigate',
-    'churned',
-    'former customers',
-    'relationship',
-  ],
-  go_to_address_book: [
-    'go to',
-    'navigate',
-    'address book',
-    'all contact',
-    'all orgs',
-    'leads',
-    'targets',
-    'customers',
-    'former customers',
-    'unqualified',
-    'prospects',
-  ],
+  go_to_contracts: ['go to', 'contracts', 'navigate'],
+  go_to_contacts: ['go to', 'contacts', 'navigate', 'people'],
+  go_to_targets: ['go to', 'targets', 'navigate'],
+  go_to_customers: ['go to', 'customers', 'navigate'],
+  go_to_address_book: ['go to', 'organizations', 'navigate'],
   go_to_opportunities: [
     'go to',
-    'navigate',
     'opportunities',
+    'navigate',
     'deals',
     'pipeline',
   ],
-  go_to_my_portfolio: ['go to', 'navigate', 'my portfolio'],
   go_to_scheduled_invoices: [
     'go to',
+    'invoices',
     'navigate',
-    'scheduled invoices',
-    'past invoices',
-    'billing',
+    'past',
+    'scheduled',
   ],
   go_to_settings: [
     'go to',
-    'navigate',
     'settings',
+    'navigate',
     'accounts',
     'integrations',
     'apps',
@@ -177,13 +179,5 @@ const navigationKeywords = {
     'billing',
     'data',
   ],
-  go_to_customer_map: [
-    'go to',
-    'navigate',
-    'customer',
-    'map',
-    'dashboard',
-    'charts',
-    'graphs',
-  ],
+  go_to_customer_map: ['go to', 'customer', 'map', 'navigate', 'dashboard'],
 };

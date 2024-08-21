@@ -17,7 +17,7 @@ export const PipelineMetrics = ({
   return (
     <div
       className='
-       sticky top-[42px] z-[9999] bg-white'
+       sticky top-[42px] z-20 bg-white'
     >
       <div className='px-3 py-2 mx-4 mt-4 mb-4 bg-gray-100 flex justify-center gap-4 rounded-[4px]'>
         <span className=''>
