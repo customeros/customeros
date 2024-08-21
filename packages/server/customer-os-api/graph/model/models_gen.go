@@ -1029,27 +1029,27 @@ type EmailUpdateAddressInput struct {
 }
 
 type EmailValidationDetails struct {
-	Verified                bool    `json:"verified"`
-	RunningAdditionalChecks bool    `json:"runningAdditionalChecks"`
-	IsValidSyntax           *bool   `json:"isValidSyntax,omitempty"`
-	IsRisky                 *bool   `json:"isRisky,omitempty"`
-	IsFirewalled            *bool   `json:"isFirewalled,omitempty"`
-	Provider                *string `json:"provider,omitempty"`
-	Firewall                *string `json:"firewall,omitempty"`
-	IsCatchAll              *bool   `json:"isCatchAll,omitempty"`
-	CanConnectSMTP          *bool   `json:"canConnectSmtp,omitempty"`
-	IsDeliverable           *bool   `json:"isDeliverable,omitempty"`
-	IsMailboxFull           *bool   `json:"isMailboxFull,omitempty"`
-	IsRoleAccount           *bool   `json:"isRoleAccount,omitempty"`
-	IsFreeAccount           *bool   `json:"isFreeAccount,omitempty"`
-	SMTPSuccess             *bool   `json:"smtpSuccess,omitempty"`
-	Validated               *bool   `json:"validated,omitempty"`
-	IsReachable             *string `json:"isReachable,omitempty"`
-	AcceptsMail             *bool   `json:"acceptsMail,omitempty"`
-	HasFullInbox            *bool   `json:"hasFullInbox,omitempty"`
-	IsDisabled              *bool   `json:"isDisabled,omitempty"`
-	IsDisposable            *bool   `json:"isDisposable,omitempty"`
-	Error                   *string `json:"error,omitempty"`
+	Verified          bool    `json:"verified"`
+	VerifyingCheckAll bool    `json:"verifyingCheckAll"`
+	IsValidSyntax     *bool   `json:"isValidSyntax,omitempty"`
+	IsRisky           *bool   `json:"isRisky,omitempty"`
+	IsFirewalled      *bool   `json:"isFirewalled,omitempty"`
+	Provider          *string `json:"provider,omitempty"`
+	Firewall          *string `json:"firewall,omitempty"`
+	IsCatchAll        *bool   `json:"isCatchAll,omitempty"`
+	CanConnectSMTP    *bool   `json:"canConnectSmtp,omitempty"`
+	IsDeliverable     *bool   `json:"isDeliverable,omitempty"`
+	IsMailboxFull     *bool   `json:"isMailboxFull,omitempty"`
+	IsRoleAccount     *bool   `json:"isRoleAccount,omitempty"`
+	IsFreeAccount     *bool   `json:"isFreeAccount,omitempty"`
+	SMTPSuccess       *bool   `json:"smtpSuccess,omitempty"`
+	Validated         *bool   `json:"validated,omitempty"`
+	IsReachable       *string `json:"isReachable,omitempty"`
+	AcceptsMail       *bool   `json:"acceptsMail,omitempty"`
+	HasFullInbox      *bool   `json:"hasFullInbox,omitempty"`
+	IsDisabled        *bool   `json:"isDisabled,omitempty"`
+	IsDisposable      *bool   `json:"isDisposable,omitempty"`
+	Error             *string `json:"error,omitempty"`
 }
 
 type EntityTemplate struct {
