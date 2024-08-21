@@ -151,7 +151,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     )?.value.id;
   }
 
-  get addressBookPreset() {
+  get organizationsPreset() {
     return this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Organizations && t.value.isPreset,
     )?.value.id;

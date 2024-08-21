@@ -8,10 +8,10 @@ interface KeyboardNavigationOptions {
 
 interface Presets {
   targetsPreset?: string;
-  churnedPreset?: string;
+  contactsPreset?: string;
   customersPreset?: string;
-  addressBookPreset?: string;
-  myPortfolioPreset?: string;
+  contractsPreset?: string;
+  organizationsPreset?: string;
   upcomingInvoicesPreset?: string;
 }
 
@@ -47,21 +47,23 @@ export const useKeyboardNavigation = (
     },
     options,
   );
+
   useSequentialShortcut(
     'G',
-    'F',
+    'Z',
     () => {
-      if (!presets.churnedPreset) return;
-      navigate(`/finder?preset=${presets.churnedPreset}`);
+      if (!presets.organizationsPreset) return;
+      navigate(`/finder?preset=${presets.organizationsPreset}`);
     },
     options,
   );
+
   useSequentialShortcut(
     'G',
-    'A',
+    'N',
     () => {
-      if (!presets.addressBookPreset) return;
-      navigate(`/finder?preset=${presets.addressBookPreset}`);
+      if (!presets.contactsPreset) return;
+      navigate(`/finder?preset=${presets.contactsPreset}`);
     },
     options,
   );
@@ -82,20 +84,22 @@ export const useKeyboardNavigation = (
     },
     options,
   );
-  useSequentialShortcut(
-    'G',
-    'P',
-    () => {
-      if (!presets.myPortfolioPreset) return;
-      navigate(`/finder?preset=${presets.myPortfolioPreset}`);
-    },
-    options,
-  );
+
   useSequentialShortcut(
     'G',
     'D',
     () => {
       navigate('/customer-map');
+    },
+    options,
+  );
+
+  useSequentialShortcut(
+    'G',
+    'R',
+    () => {
+      if (!presets.contractsPreset) return;
+      navigate(`/finder?preset=${presets.contractsPreset}`);
     },
     options,
   );
