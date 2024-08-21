@@ -75,16 +75,4 @@ const defaultValue: User = {
   sourceOfTruth: DataSource.Openline,
   profilePhotoUrl: '',
   timezone: '',
-  player: {
-    id: '',
-    appSource: '',
-    createdAt: '',
-    updatedAt: '',
-    authId: '',
-    provider: '',
-    source: DataSource.Openline,
-    sourceOfTruth: DataSource.Openline,
-    users: [],
-    identityId: '',
-  },
 };

@@ -2,6 +2,7 @@ import { match } from 'ts-pattern';
 import { FilterItem } from '@store/types.ts';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
 
+import { EmailVerificationStatus } from '@organizations/components/Columns/contacts/Filters/Email/utils.ts';
 import {
   Tag,
   User,
@@ -97,34 +98,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return emails?.some((e) => e?.includes(filterValues));
       },
     )
-    .with({ property: 'EMAIL_VERIFIED' }, (filter) => (row: ContactStore) => {
-      const filterValue = filter?.value;
 
-      if (!filter.active) return true;
-
-      const emailsValidation = row.value?.emails?.map(
-        (e) => e.emailValidationDetails,
-      );
-
-      if (!emailsValidation?.length && filter.includeEmpty) return true;
-
-      return emailsValidation.some((e) => {
-        if (filterValue === 'verified') {
-          return (
-            e.validated &&
-            e.isReachable !== 'risky' &&
-            e.isReachable !== 'invalid' &&
-            e.isValidSyntax
-          );
-        }
-
-        if (filterValue === 'not-verified') {
-          return !e.validated && !e.isValidSyntax && e.isReachable !== 'safe';
-        }
-
-        return true;
-      });
-    })
     .with(
       { property: ColumnViewType.ContactsPhoneNumbers },
       (filter) => (row: ContactStore) => {
@@ -303,6 +277,107 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return filterValue.includes(region);
       };
     })
+
+    .with(
+      { property: 'email_verification' },
+      (filter) => (row: ContactStore) => {
+        if (!filter.active) return true;
+
+        const filterValues = filter.value;
+        const email = row.value?.emails?.[0];
+        const emailValidationData = email?.emailValidationDetails;
+
+        if (!emailValidationData) return false;
+        const isDeliverable = emailValidationData.isDeliverable;
+
+        const matchesDeliverable = (values: EmailVerificationStatus[]) => {
+          if (!isDeliverable) return false;
+
+          if (values.includes(EmailVerificationStatus.NoRisk)) {
+            return emailValidationData.verified && !emailValidationData.isRisky;
+          }
+
+          if (values.includes(EmailVerificationStatus.FirewallProtected)) {
+            return (
+              emailValidationData.verified && emailValidationData?.isFirewalled
+            );
+          }
+
+          if (values.includes(EmailVerificationStatus.FreeAccount)) {
+            return (
+              emailValidationData.verified && emailValidationData?.isFreeAccount
+            );
+          }
+
+          if (values.includes(EmailVerificationStatus.GroupMailbox)) {
+            return (
+              emailValidationData.verified &&
+              emailValidationData?.verifyingCheckAll
+            );
+          }
+
+          return false;
+        };
+
+        const matchesNotDeliverable = (values: EmailVerificationStatus[]) => {
+          if (isDeliverable !== false) return false;
+
+          if (values.includes(EmailVerificationStatus.InvalidMailbox)) {
+            return (
+              emailValidationData.verified &&
+              emailValidationData?.canConnectSmtp === false
+            );
+          }
+
+          if (values.includes(EmailVerificationStatus.MailboxFull)) {
+            return (
+              emailValidationData.verified && emailValidationData?.isMailboxFull
+            );
+          }
+
+          if (values.includes(EmailVerificationStatus.IncorrectFormat)) {
+            return !emailValidationData?.isValidSyntax;
+          }
+
+          return false;
+        };
+
+        const matchesDeliverableUnknown = (
+          values: EmailVerificationStatus[],
+        ) => {
+          if (values.includes(EmailVerificationStatus.CatchAll)) {
+            return (
+              isDeliverable &&
+              emailValidationData.isCatchAll &&
+              emailValidationData.verified
+            );
+          }
+
+          if (values.includes(EmailVerificationStatus.NotVerified)) {
+            return emailValidationData?.verified === false;
+          }
+
+          if (values.includes(EmailVerificationStatus.VerificationInProgress)) {
+            return emailValidationData?.verifyingCheckAll;
+          }
+
+          return false;
+        };
+
+        return filterValues.some(
+          (categoryFilter: {
+            category: string;
+            values: EmailVerificationStatus[];
+          }) =>
+            (categoryFilter.category === 'is_deliverable' &&
+              matchesDeliverable(categoryFilter.values)) ||
+            (categoryFilter.category === 'is_not_deliverable' &&
+              matchesNotDeliverable(categoryFilter.values)) ||
+            (categoryFilter.category === 'is_deliverable_unknown' &&
+              matchesDeliverableUnknown(categoryFilter.values)),
+        );
+      },
+    )
 
     .otherwise(() => noop);
 };

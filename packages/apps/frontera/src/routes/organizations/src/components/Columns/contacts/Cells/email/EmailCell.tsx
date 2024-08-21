@@ -9,16 +9,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Edit03 } from '@ui/media/icons/Edit03.tsx';
 import { EmailValidationDetails } from '@graphql/types';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
-import { SimpleValidationIndicator } from '@ui/presentation/validation/simple-validation-indicator';
-import { VALIDATION_MESSAGES } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/utils.ts';
-
-function isValidEmail(email: string) {
-  // Regular expression for validating an email
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-  // Test the email against the regex
-  return emailRegex.test(email);
-}
+import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 
 interface EmailCellProps {
   email: string;
@@ -53,30 +44,6 @@ export const EmailCell = observer(
     useEffect(() => {
       store.ui.setIsEditingTableCell(isEdit);
     }, [isEdit]);
-
-    const getMessages = () => {
-      if (!validationDetails) return [];
-      const { validated, isReachable, isValidSyntax } = validationDetails;
-
-      if (validated && !isValidEmail(email) && isReachable === 'safe')
-        return [VALIDATION_MESSAGES.isValidSyntax.message];
-
-      if (!validated && !isValidSyntax && isReachable !== 'safe') {
-        return [VALIDATION_MESSAGES.isValidSyntax.message];
-      }
-
-      if (
-        validated &&
-        isReachable &&
-        (VALIDATION_MESSAGES.isReachable.condition as Array<string>).includes(
-          isReachable,
-        )
-      ) {
-        return [VALIDATION_MESSAGES.isReachable.message];
-      }
-
-      return [];
-    };
 
     const handleEscape = (e: KeyboardEvent<HTMLDivElement>) => {
       if (e.key === 'Escape' || e.key === 'Enter') {
@@ -136,10 +103,9 @@ export const EmailCell = observer(
           />
         )}
         {email && (
-          <SimpleValidationIndicator
-            isLoading={false}
-            showValidationMessage={true}
-            errorMessages={getMessages()}
+          <EmailValidationMessage
+            email={email}
+            validationDetails={validationDetails}
           />
         )}
       </div>

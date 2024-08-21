@@ -40,8 +40,8 @@ export interface InputObject {
 
 export const VALIDATION_MESSAGES: MappedObject = {
   isReachable: {
-    condition: ['invalid'],
-    message: 'This mailbox is not reachable.',
+    condition: ['isDeliverable'],
+    message: 'Deliverable • No risk',
   },
   isValidSyntax: {
     condition: false,
