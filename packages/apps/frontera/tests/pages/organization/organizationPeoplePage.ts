@@ -52,7 +52,6 @@ export class OrganizationPeoplePage {
     );
 
     await response.json();
-    // await this.page.waitForResponse('**/customer-os-api');
   }
 
   async addNameToContact() {

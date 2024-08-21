@@ -1,12 +1,10 @@
 import { Page, expect } from '@playwright/test';
 
-import config from '../../tests/config.js';
-
 export class LoginPage {
   constructor(private page: Page) {}
 
   async login() {
-    // const loginUrl = process.env.PROD_FE_TEST_USER_URL;
+    const loginUrl = process.env.PROD_FE_TEST_USER_URL;
 
     // Listen to all responses from the page
     this.page.on('response', async (response) => {
@@ -24,6 +22,6 @@ export class LoginPage {
       }
     });
 
-    await this.page.goto(config.LOCAL_LOGIN_URL);
+    await this.page.goto(loginUrl);
   }
 }
