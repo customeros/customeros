@@ -4,151 +4,28 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
+	"github.com/gin-gonic/gin"
+	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
 	"regexp"
 	"strings"
-	"time"
-
-	"github.com/gin-gonic/gin"
-	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 )
 
 func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services *service.Services, cfg *config.Config, log logger.Logger, cache *commoncaches.Cache) {
-	route.POST("/sync/interaction-events",
-		tracing.TracingEnhancer(ctx, "/sync/interaction-events"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
-		syncInteractionEventsHandler(services, log))
-	route.POST("/sync/interaction-event",
-		tracing.TracingEnhancer(ctx, "/sync/interaction-event"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_WEBHOOKS, security.WithCache(cache)),
-		syncInteractionEventHandler(services, log))
 	route.POST("/sync/postmark-interaction-event",
 		tracing.TracingEnhancer(ctx, "/sync/postmark-interaction-event"),
 		syncPostmarkInteractionEventHandler(services, cfg, log))
-}
-
-func syncInteractionEventsHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncInteractionEvents", c.Request.Header)
-		defer span.Finish()
-
-		// Read the tenant header
-		tenant := c.GetHeader("tenant")
-		if tenant == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
-			return
-		}
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
-
-		// Limit the size of the request body
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
-		requestBody, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvents) error reading request body: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
-
-		// Parse the JSON request body
-		var interactionEvents []model.InteractionEventData
-		if err = json.Unmarshal(requestBody, &interactionEvents); err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvents) Failed unmarshalling body request: %s", err.Error())
-			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
-			return
-		}
-
-		if len(interactionEvents) == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing interactionEvents in request"})
-			return
-		}
-
-		// Context timeout, allocate per interactionEvent
-		timeout := time.Duration(len(interactionEvents)) * common.Min1Duration
-		if timeout > constants.RequestMaxTimeout {
-			timeout = constants.RequestMaxTimeout
-		}
-		ctx, cancel := context.WithTimeout(ctx, timeout)
-		defer cancel()
-
-		syncResult, err := services.InteractionEventService.SyncInteractionEvents(ctx, interactionEvents)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvents) error in sync interactionEvents: %s", err.Error())
-			if errors.IsBadRequest(err) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entries"})
-			}
-		} else {
-			c.JSON(http.StatusOK, syncResult)
-		}
-	}
-}
-
-func syncInteractionEventHandler(services *service.Services, log logger.Logger) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "SyncInteractionEvent", c.Request.Header)
-		defer span.Finish()
-
-		// Read the tenant header
-		tenant := c.GetHeader("tenant")
-		if tenant == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
-			return
-		}
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
-
-		// Limit the size of the request body
-		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
-		requestBody, err := io.ReadAll(c.Request.Body)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvent) error reading request body: %s", err.Error())
-			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
-			return
-		}
-
-		// Parse the JSON request body
-		var interactionEvent model.InteractionEventData
-		if err = json.Unmarshal(requestBody, &interactionEvent); err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvents) Failed unmarshalling body request: %s", err.Error())
-			c.JSON(http.StatusUnprocessableEntity, gin.H{"error": "Cannot unmarshal request body"})
-			return
-		}
-
-		// Context timeout, allocate per interactionEvent
-		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
-		defer cancel()
-
-		syncResult, err := services.InteractionEventService.SyncInteractionEvents(ctx, []model.InteractionEventData{interactionEvent})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			log.Errorf("(SyncInteractionEvent) error in sync interactionEvent: %s", err.Error())
-			if errors.IsBadRequest(err) {
-				c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-			} else {
-				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing log entry"})
-			}
-		} else {
-			c.JSON(http.StatusOK, syncResult)
-		}
-	}
 }
 
 func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config.Config, log logger.Logger) gin.HandlerFunc {
@@ -273,6 +150,13 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			}
 		}
 
+		messageId, err := getMessageId(postmarkEmailWebhookData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+
 		if username == "" {
 			span.LogFields(tracingLog.Bool("mailbox.found", false))
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
@@ -282,7 +166,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		span.LogFields(tracingLog.Bool("mailbox.found", true))
 		span.LogFields(tracingLog.String("mailbox.username", username))
 
-		emailExists, err := services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(externalSystem, tenantByName, username, postmarkEmailWebhookData.MessageID)
+		emailExists, err := services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(externalSystem, tenantByName, username, messageId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error checking email exists: %s", err.Error())
@@ -301,28 +185,29 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 				return
 			}
 
-			err = services.CommonServices.PostgresRepositories.RawEmailRepository.Store(externalSystem, tenantByName, username, emailRawData.ProviderMessageId, postmarkEmailWebhookData.MessageID, string(jsonContent), emailRawData.Sent, entity.REAL_TIME)
+			err = services.CommonServices.PostgresRepositories.RawEmailRepository.Store(externalSystem, tenantByName, username, emailRawData.ProviderMessageId, messageId, string(jsonContent), emailRawData.Sent, entity.REAL_TIME)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 				return
 			}
 
-			slackMessageText := "*From:* " + postmarkEmailWebhookData.FromFull.Email + " - " + postmarkEmailWebhookData.FromFull.Name + "\n"
-			for _, t := range postmarkEmailWebhookData.ToFull {
-				slackMessageText += "*To:* " + t.Email + " - " + t.Name + "\n"
-			}
-			for _, t := range postmarkEmailWebhookData.CcFull {
-				slackMessageText += "*CC:* " + t.Email + " - " + t.Name + "\n"
-			}
-			for _, t := range postmarkEmailWebhookData.BccFull {
-				slackMessageText += "*BCC:* " + t.Email + " - " + t.Name + "\n"
-			}
-			slackMessageText += "*Subject:* " + postmarkEmailWebhookData.Subject + "\n"
-			slackMessageText += "*Body:* " + postmarkEmailWebhookData.HtmlBody
+			if cfg.Slack.NotifyPostmarkEmail != "" {
+				slackMessageText := "*From:* " + postmarkEmailWebhookData.FromFull.Email + " - " + postmarkEmailWebhookData.FromFull.Name + "\n"
+				for _, t := range postmarkEmailWebhookData.ToFull {
+					slackMessageText += "*To:* " + t.Email + " - " + t.Name + "\n"
+				}
+				for _, t := range postmarkEmailWebhookData.CcFull {
+					slackMessageText += "*CC:* " + t.Email + " - " + t.Name + "\n"
+				}
+				for _, t := range postmarkEmailWebhookData.BccFull {
+					slackMessageText += "*BCC:* " + t.Email + " - " + t.Name + "\n"
+				}
+				slackMessageText += "*Subject:* " + postmarkEmailWebhookData.Subject + "\n"
+				slackMessageText += "*Body:* " + postmarkEmailWebhookData.HtmlBody
 
-			utils.SendSlackMessage(ctx, cfg.Slack.NotifyPostmarkEmail, slackMessageText)
-
+				utils.SendSlackMessage(ctx, cfg.Slack.NotifyPostmarkEmail, slackMessageText)
+			}
 		}
 		c.JSON(http.StatusOK, gin.H{})
 	}
@@ -334,6 +219,41 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 	encoder.SetEscapeHTML(false)
 	err := encoder.Encode(t)
 	return buffer.Bytes(), err
+}
+
+func getMessageId(pmData model.PostmarkEmailWebhookData) (string, error) {
+	messageId := ""
+	for _, header := range pmData.Headers {
+		if header.Name == "Message-ID" || header.Name == "Message-Id" {
+			messageId = header.Value
+		}
+	}
+
+	if messageId == "" {
+		return "", errors.New("Message-ID not found in headers")
+	}
+	return messageId, nil
+}
+
+func getReferences(pmData model.PostmarkEmailWebhookData) (string, error) {
+	references := ""
+	for _, header := range pmData.Headers {
+		if header.Name == "References" {
+			references = header.Value
+		}
+	}
+
+	return references, nil
+}
+
+func getInReplyTo(pmData model.PostmarkEmailWebhookData) (string, error) {
+	inReplyTo := ""
+	for _, header := range pmData.Headers {
+		if header.Name == "In-Reply-To" {
+			inReplyTo = header.Value
+		}
+	}
+	return inReplyTo, nil
 }
 
 func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookData) (entity.EmailRawData, error) {
@@ -371,24 +291,23 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 		}
 	}
 
-	messageId := ""
-	threadId := ""
-	//search in headers for Message-ID
-	for k, v := range headers {
-		if k == "Message-Id" {
-			messageId = v
-		}
-		if k == "X-Session-ID" {
-			threadId = v
-		}
+	messageId, err := getMessageId(pmData)
+	if err != nil {
+		return entity.EmailRawData{}, err
 	}
 
-	if messageId == "" {
-		messageId = pmData.MessageID
+	references, err := getReferences(pmData)
+	if err != nil {
+		return entity.EmailRawData{}, err
+	}
+
+	inReplyTo, err := getInReplyTo(pmData)
+	if err != nil {
+		return entity.EmailRawData{}, err
 	}
 
 	return entity.EmailRawData{
-		ProviderMessageId: pmData.MessageID,
+		ProviderMessageId: messageId,
 		MessageId:         messageId,
 		Sent:              *sentTime,
 		Subject:           pmData.Subject,
@@ -398,9 +317,9 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 		Bcc:               strings.Join(bcc, ", "),
 		Html:              pmData.HtmlBody,
 		Text:              pmData.TextBody,
-		ThreadId:          threadId,
-		InReplyTo:         pmData.ReplyTo,
-		Reference:         pmData.OriginalRecipient,
+		ThreadId:          "",
+		InReplyTo:         inReplyTo,
+		Reference:         references,
 		Headers:           headers,
 	}, nil
 }

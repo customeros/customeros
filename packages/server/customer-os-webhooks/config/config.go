@@ -25,7 +25,7 @@ type Config struct {
 	BetterContactCallbackApiKey string `env:"BETTER_CONTACT_CALLBACK_API_KEY" validate:"required"`
 
 	Slack struct {
-		NotifyPostmarkEmail string `env:"SLACK_NOTIFY_POSTMARK_EMAIL" validate:"required"`
+		NotifyPostmarkEmail string `env:"SLACK_NOTIFY_POSTMARK_EMAIL"`
 	}
 }
 

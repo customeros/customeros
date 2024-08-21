@@ -124,11 +124,23 @@ export const ParticipantsSelectGroup = ({
           });
         });
 
+      globalCacheData?.global_Cache?.mailboxes
+        .filter((v) => attendees.indexOf(v) > -1)
+        .forEach((v) => {
+          options.push({
+            label: v,
+            value: v,
+            provider: 'mailbox',
+            active: true,
+          });
+        });
+
       setFromOptions(options);
     }
   }, [
     globalCacheData?.global_Cache?.activeEmailTokens,
     globalCacheData?.global_Cache?.inactiveEmailTokens,
+    globalCacheData?.global_Cache?.mailboxes,
     id,
     attendees,
   ]);

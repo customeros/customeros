@@ -123,21 +123,32 @@ func (s *mailService) SendMail(ctx context.Context, request dto.MailRequest, use
 	}
 
 	if oauthToken == nil {
-		tracing.TraceErr(span, errors.New("unable to retrieve oauth token for new gmail service"))
-		return nil, fmt.Errorf("unable to retrieve oauth token for new gmail service: %v", err)
-	}
 
-	if oauthToken.NeedsManualRefresh {
-		tracing.TraceErr(span, errors.New("oauth token needs manual refresh"))
-		return nil, fmt.Errorf("oauth token needs manual refresh: %v", err)
-	}
+		mailbox, err := s.services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant.Tenant, request.From)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
 
-	if oauthToken.Provider == "google" {
-		return s.services.CommonServices.GoogleService.SendEmail(ctx, tenant.Tenant, request)
-	} else if oauthToken.Provider == "azure-ad" {
-		return s.services.CommonServices.AzureService.SendEmail(ctx, tenant.Tenant, request)
+		if mailbox == nil {
+			return nil, fmt.Errorf("mailbox not found for %s", request.From)
+		}
+
+		return s.services.CommonServices.OpenSrsService.Reply(ctx, tenant.Tenant, request)
 	} else {
-		return nil, fmt.Errorf("provider %s not supported", oauthToken.Provider)
+
+		if oauthToken.NeedsManualRefresh {
+			tracing.TraceErr(span, errors.New("oauth token needs manual refresh"))
+			return nil, fmt.Errorf("oauth token needs manual refresh: %v", err)
+		}
+
+		if oauthToken.Provider == "google" {
+			return s.services.CommonServices.GoogleService.SendEmail(ctx, tenant.Tenant, request)
+		} else if oauthToken.Provider == "azure-ad" {
+			return s.services.CommonServices.AzureService.SendEmail(ctx, tenant.Tenant, request)
+		} else {
+			return nil, fmt.Errorf("provider %s not supported", oauthToken.Provider)
+		}
 	}
 }
 

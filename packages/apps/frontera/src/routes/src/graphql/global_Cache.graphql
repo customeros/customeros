@@ -19,6 +19,7 @@ query global_Cache {
       email
       provider
     }
+    mailboxes
     isOwner
     gCliCache {
       id

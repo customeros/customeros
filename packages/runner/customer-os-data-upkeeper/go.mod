@@ -44,6 +44,8 @@ require (
 	github.com/99designs/gqlgen v0.17.49 // indirect
 	github.com/DusanKasan/parsemail v1.2.0 // indirect
 	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0 // indirect
+	github.com/PuerkitoBio/goquery v1.9.2 // indirect
+	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/bytedance/sonic v1.12.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
