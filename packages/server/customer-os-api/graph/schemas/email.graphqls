@@ -70,7 +70,7 @@ type Email {
 
 type EmailValidationDetails {
     verified:       Boolean!
-    runningAdditionalChecks: Boolean!
+    verifyingCheckAll: Boolean!
     isValidSyntax:  Boolean
     isRisky:        Boolean
     isFirewalled:   Boolean
