@@ -212,6 +212,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			SmtpResponse:    emailValidation.SmtpResponse,
 			Username:        syntaxValidation.User,
 			NormalizedEmail: syntaxValidation.CleanEmail,
+			Domain:          syntaxValidation.Domain,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save email data"))
