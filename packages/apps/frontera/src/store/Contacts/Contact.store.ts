@@ -212,6 +212,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
         input: {
           organizationId: this.organizationId,
           description: this.value.jobRoles[0].description,
+          jobTitle: this.value.jobRoles[0].jobTitle,
         },
       });
 
