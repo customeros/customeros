@@ -53,7 +53,7 @@ type Config struct {
 
 	// Cache
 	// Defaults to each hour at 15 minutes
-	CronScheduleRefreshApiCache string `env:"CRON_SCHEDULE_REFRESH_API_CACHE" envDefault:"* 15 * * * *"`
+	CronScheduleRefreshApiCache string `env:"CRON_SCHEDULE_REFRESH_API_CACHE" envDefault:"0 15 * * * *"`
 
 	// Email
 	// Defaults to each 2 minutes

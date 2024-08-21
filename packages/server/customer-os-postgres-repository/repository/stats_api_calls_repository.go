@@ -8,7 +8,6 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
-	"time"
 )
 
 type StatsApiCallsRepository interface {
@@ -54,7 +53,7 @@ func (r statsApiCallsRepository) Increment(ctx context.Context, tenant, api stri
 
 	// Increment the call count and update the record
 	stats.Calls++
-	stats.UpdatedAt = time.Now()
+	stats.UpdatedAt = utils.Now()
 	err = r.db.WithContext(ctx).Save(&stats).Error
 	return &stats, err
 }
