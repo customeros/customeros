@@ -105,6 +105,30 @@ export async function clickLocatorThatIsVisible(page: Page, selector: string) {
   return locator;
 }
 
+export async function doubleClickLocatorThatIsVisible(
+  page: Page,
+  selector: string,
+) {
+  const locator = await ensureLocatorIsVisible(page, selector);
+
+  await page.dblclick(selector);
+
+  return locator;
+}
+
+export async function writeTextInLocator(
+  page: Page,
+  selector: string,
+  text: string,
+) {
+  const locator = await ensureLocatorIsVisible(page, selector);
+
+  await page.click(selector);
+  await locator.pressSequentially(text);
+
+  return page;
+}
+
 export async function clickLocatorThatIsVisibleWithIndex(
   page: Page,
   selector: string,

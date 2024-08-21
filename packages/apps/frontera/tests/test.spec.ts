@@ -62,7 +62,7 @@ test('create and delete contracts', async ({ page }) => {
   await organizationSideNavPage.goToPeople();
   await organizationPeoplePage.createContactFromEmpty();
 
-  // // Go to Account page and update org
+  // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
   await organizationAccountPage.updateOrgToCustomer();
   await organizationAccountPage.addNoteToOrg();
