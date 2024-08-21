@@ -104,6 +104,7 @@ export const ContactTableActions = ({
 
         <ActionItem
           onClick={() => onHideContacts()}
+          dataTest='contacts-actions-archive'
           icon={<Archive className='text-inherit size-3' />}
         >
           Archive

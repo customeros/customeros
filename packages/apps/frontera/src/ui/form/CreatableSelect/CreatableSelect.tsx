@@ -35,6 +35,7 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   size?: Size;
   name?: string;
   formId?: string;
+  dataTest?: string;
   withTooltip?: boolean;
   leftElement?: React.ReactNode;
   navigateAfterAddingToContract?: boolean;
@@ -50,6 +51,7 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
     {
       name,
       formId,
+      dataTest,
       leftElement,
       size = 'md',
       components: _components,
@@ -71,6 +73,7 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         return (
           <div
             ref={innerRef}
+            data-test={dataTest}
             className={`flex w-full items-start group ${sizeClass}`}
             {...innerProps}
           >

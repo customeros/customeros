@@ -252,6 +252,7 @@ export const ContactCard = observer(
                 ref={nameInputRef}
                 placeholder='Name'
                 onChange={handleChange}
+                data-test='org-people-contact-name'
                 className='font-semibold text-gray-700'
                 value={contactStore?.value?.name ?? ''}
               />
@@ -260,6 +261,7 @@ export const ContactCard = observer(
                 name='prefix'
                 placeholder='Title'
                 className='text-gray-500'
+                data-test='org-people-contact-title'
                 value={contactStore?.value?.jobRoles?.[0]?.jobTitle ?? ''}
                 onChange={(e) => {
                   contactStore?.update((value) => {
@@ -275,6 +277,7 @@ export const ContactCard = observer(
                 name='role'
                 options={roleOptions}
                 placeholder='Choose job roles'
+                dataTest='org-people-contact-job-roles'
                 value={
                   contactStore?.value?.jobRoles?.[0]?.description
                     ?.split(',')
@@ -302,6 +305,7 @@ export const ContactCard = observer(
                 colorScheme='gray'
                 aria-label='Close'
                 id='collapse-button'
+                data-test='org-people-contact-close'
                 icon={<Check className='text-gray-500' />}
                 className='absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
               />
@@ -315,6 +319,7 @@ export const ContactCard = observer(
                 id='confirm-button'
                 aria-label='Delete contact'
                 onClick={toggleConfirmDelete}
+                data-test='org-people-contact-delete'
                 icon={<Trash01 className='text-gray-400' />}
                 className='hover:bg-error-100 *:hover:text-error-500 absolute z-50 top-2 right-2 p-1 opacity-0 pointer-events-auto transition-opacity duration-300 group-hover:opacity-100 "'
               />
@@ -347,6 +352,7 @@ export const ContactCard = observer(
                   variant='unstyled'
                   ref={emailInputRef}
                   placeholder='Email'
+                  data-test='org-people-contact-email'
                   value={contactStore?.value?.emails?.[0]?.email ?? ''}
                   onBlur={() => {
                     if (!contactStore?.value?.emails?.[0]?.id) {
@@ -383,6 +389,7 @@ export const ContactCard = observer(
                 <Input
                   variant='unstyled'
                   placeholder='Phone number'
+                  data-test='org-people-contact-phone-number'
                   value={
                     contactStore?.value.phoneNumbers?.[0]?.rawPhoneNumber ?? ''
                   }
@@ -422,6 +429,7 @@ export const ContactCard = observer(
               <Tags
                 placeholder='Personas'
                 onCreateOption={handleCreateOption}
+                dataTest='org-people-contact-personas'
                 icon={
                   <Users01 className='text-gray-500 w-[18px] h-4 mr-[10px] mt-[6px] ' />
                 }
@@ -445,6 +453,7 @@ export const ContactCard = observer(
 
               <SocialIconInput
                 placeholder='Social link'
+                data-test='org-people-contact-social-link'
                 leftElement={<Share07 className='text-gray-500' />}
                 value={
                   contactStore?.value?.socials?.map((s) => ({
@@ -487,6 +496,7 @@ export const ContactCard = observer(
                 isClearable
                 placeholder='Timezone'
                 options={timezoneOptions}
+                dataTest='org-people-contact-timezone'
                 leftElement={<Clock className='text-gray-500 mr-3' />}
                 value={timezoneOptions.find(
                   (v) => v.value === contactStore?.value?.timezone,

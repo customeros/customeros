@@ -10,6 +10,7 @@ import {
 } from '@ui/form/CreatableSelect';
 
 interface TagsProps {
+  dataTest?: string;
   placeholder: string;
   autofocus?: boolean;
   hideBorder?: boolean;
@@ -24,6 +25,7 @@ interface TagsProps {
 export const Tags = observer(
   ({
     icon,
+    dataTest,
     placeholder,
     onCreateOption,
     value,
@@ -55,6 +57,7 @@ export const Tags = observer(
         value={value}
         leftElement={icon}
         onChange={onChange}
+        dataTest={dataTest}
         autoFocus={autofocus}
         backspaceRemovesValue
         defaultOptions={options}
