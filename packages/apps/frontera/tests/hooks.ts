@@ -28,7 +28,7 @@ base.beforeEach(async ({ page }) => {
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 
-  //Archive organizations
+  //Archive contacts
   await contactsPage.waitForPageLoad();
 
   let isSelectContactsClicked = false;
