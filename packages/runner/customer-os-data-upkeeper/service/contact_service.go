@@ -317,7 +317,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 	defer parentSpan.Finish()
 	tracing.TagComponentCronJob(parentSpan)
 
-	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindByIntegration("weconnect")
+	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindActivesByIntegration("weconnect")
 	if err != nil {
 		tracing.TraceErr(parentSpan, err)
 		return
@@ -398,6 +398,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				err = json.Unmarshal(responseBody, &contactList)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
+					s.log.Errorf("Error unmarshalling weconnect response: {%s}", string(responseBody))
 					return
 				}
 

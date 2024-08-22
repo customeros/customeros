@@ -74,6 +74,7 @@ func InitPersonalIntegrationRoutes(r *gin.Engine, services *service.Services) {
 				TenantName: tenantName,
 				Email:      userEmail,
 				Secret:     request["secret"].(string),
+				Active:     true,
 			}
 			saved, err := services.PersonalIntegrationsService.SavePersonalIntegration(integration)
 			if err != nil {
