@@ -81,6 +81,16 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 		return nil
 	}
 
+	if emailValidationResponse.Data.EmailData.SkippedValidation {
+		span.LogFields(log.Bool("result.skippedValidation", true))
+		h.log.Warnf("Email %s for tenant %s skipped validation", emailId, tenant)
+		return nil
+	} else if emailValidationResponse.Data.EmailData.RetryValidation {
+		span.LogFields(log.Bool("result.retryValidation", true))
+		h.log.Warnf("Email %s for tenant %s need retry validation", emailId, tenant)
+		return nil
+	}
+
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
 		request := emailpb.EmailValidationGrpcRequest{

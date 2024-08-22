@@ -27,15 +27,16 @@ type ValidateEmailMailsherpaData struct {
 		CanConnectSMTP bool   `json:"canConnectSMTP"`
 	} `json:"domainData"`
 	EmailData struct {
-		IsDeliverable   bool   `json:"isDeliverable"`
-		IsMailboxFull   bool   `json:"isMailboxFull"`
-		IsRoleAccount   bool   `json:"isRoleAccount"`
-		IsFreeAccount   bool   `json:"isFreeAccount"`
-		SmtpSuccess     bool   `json:"smtpSuccess"`
-		ResponseCode    string `json:"responseCode"`
-		ErrorCode       string `json:"errorCode"`
-		Description     string `json:"description"`
-		RetryValidation bool   `json:"retryValidation"`
-		SmtpResponse    string `json:"smtpResponse"`
+		SkippedValidation bool   `json:"skippedValidation"` // if true, email validation was skipped
+		IsDeliverable     bool   `json:"isDeliverable"`
+		IsMailboxFull     bool   `json:"isMailboxFull"`
+		IsRoleAccount     bool   `json:"isRoleAccount"`
+		IsFreeAccount     bool   `json:"isFreeAccount"`
+		SmtpSuccess       bool   `json:"smtpSuccess"`
+		ResponseCode      string `json:"responseCode"`
+		ErrorCode         string `json:"errorCode"`
+		Description       string `json:"description"`
+		RetryValidation   bool   `json:"retryValidation"` // if true, email validation should be retried
+		SmtpResponse      string `json:"smtpResponse"`
 	} `json:"emailData"`
 }
