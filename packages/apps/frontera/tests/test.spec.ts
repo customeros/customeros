@@ -1,9 +1,8 @@
-import { expect } from '@playwright/test';
-
 import { test } from './hooks';
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
 import { AddressBookPage } from './pages/addressBookPage';
+import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
 import { OrganizationAccountPage } from './pages/organization/organizationAccountPage';
 import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
 import { OrganizationTimelinePage } from './pages/organization/organizationTimelinePage';
@@ -42,6 +41,7 @@ test('convert org to customer', async ({ page }) => {
 test('create and delete contracts', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const addressBookPage = new AddressBookPage(page);
+  const organizationPeoplePage = new OrganizationPeoplePage(page);
   const organizationAccountPage = new OrganizationAccountPage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
   const organizationTimelinePage = new OrganizationTimelinePage(page);
@@ -54,8 +54,15 @@ test('create and delete contracts', async ({ page }) => {
   // Add organization and check new entry
   await addressBookPage.addOrganization();
 
+  //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
   await addressBookPage.goToOrganization();
+
+  // Go to People page
+  await organizationSideNavPage.goToPeople();
+  await organizationPeoplePage.createContactFromEmpty();
+
+  // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
   await organizationAccountPage.updateOrgToCustomer();
   await organizationAccountPage.addNoteToOrg();
@@ -78,8 +85,4 @@ test('create and delete contracts', async ({ page }) => {
   // Delete a contract
   await organizationAccountPage.deleteContract(1);
   await organizationAccountPage.checkContractsCount(1);
-});
-
-test('made to faile', async () => {
-  expect(1, `Expected 1 to be equal to 2`).toBe(2);
 });

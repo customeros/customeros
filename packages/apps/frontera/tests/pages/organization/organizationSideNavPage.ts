@@ -25,7 +25,10 @@ export class OrganizationSideNavPage {
   }
 
   async goToPeople() {
-    await this.page.click(this.peopleInTheOrganizationPage);
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.peopleInTheOrganizationPage,
+    );
   }
 
   async goToAccount() {
