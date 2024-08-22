@@ -114,7 +114,7 @@ export const HtmlContentRenderer = ({
 
   return (
     <div
-      className={cn(textRendererClass, className, 'flex flex-col')}
+      className={cn(textRendererClass, className)}
       style={{
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         pointerEvents: pointerEvents as any,

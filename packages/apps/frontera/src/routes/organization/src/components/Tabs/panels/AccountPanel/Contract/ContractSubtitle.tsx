@@ -72,6 +72,14 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
       data.metadata.created,
     ) === 0;
 
+  if (isJustCreated) {
+    return (
+      <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
+        Contract starting... Edit contract
+      </p>
+    );
+  }
+
   if (isJustCreated && !serviceStartDate) {
     return (
       <p className='font-normal shadow-none text-sm  text-gray-500 focus:text-gray-500 hover:text-gray-500 hover:no-underline focus:no-underline'>
