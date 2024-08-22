@@ -224,7 +224,7 @@ func JSONMarshal(t interface{}) ([]byte, error) {
 func getMessageId(pmData model.PostmarkEmailWebhookData) (string, error) {
 	messageId := ""
 	for _, header := range pmData.Headers {
-		if header.Name == "Message-ID" || header.Name == "Message-Id" {
+		if header.Name == "Message-ID" || header.Name == "Message-Id" || strings.ToLower(header.Name) == "message-id" {
 			messageId = header.Value
 		}
 	}
