@@ -2,20 +2,20 @@ import React, { MouseEvent } from 'react';
 
 import { CheckedState } from '@radix-ui/react-checkbox';
 
+import { cn } from '@ui/utils/cn.ts';
 import { IconButton } from '@ui/form/IconButton';
-import { InfoCircle } from '@ui/media/icons/InfoCircle.tsx';
+import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import { Checkbox, CheckMinus } from '@ui/form/Checkbox/Checkbox';
 import {
   CollapsibleRoot,
   CollapsibleContent,
-  CollapsibleTrigger,
-} from '@ui/transitions/Collapse/Collapse.tsx';
+} from '@ui/transitions/Collapse/Collapse';
 
 import {
   CategoryHeaderLabel,
   DeliverabilityStatus,
   EmailVerificationStatus,
-} from './utils.ts';
+} from './utils';
 
 interface CheckboxOption {
   label: string;
@@ -25,8 +25,8 @@ interface CheckboxOption {
 
 interface CheckboxGroupProps {
   options: CheckboxOption[];
-  isCategoryChecked: boolean;
   category: DeliverabilityStatus;
+  isCategoryChecked: boolean | CheckedState;
   onToggleCategory: (category: DeliverabilityStatus) => void;
   isOptionChecked: (value: EmailVerificationStatus) => boolean;
   onToggleOption: (
@@ -48,17 +48,15 @@ export const EmailFilterValidationOptionGroup: React.FC<CheckboxGroupProps> = ({
   isCategoryChecked,
   onOpenInfoModal,
 }) => (
-  <CollapsibleRoot open={isCategoryChecked} className='flex flex-col w-full'>
+  <CollapsibleRoot open={!!isCategoryChecked} className='flex flex-col w-full'>
     <div className='flex justify-between w-full items-center'>
-      <CollapsibleTrigger asChild={false}>
-        <Checkbox
-          icon={<CheckMinus />}
-          isChecked={isCategoryChecked}
-          onChange={() => onToggleCategory(category)}
-        >
-          <p className='text-sm'>{CategoryHeaderLabel[category]}</p>
-        </Checkbox>
-      </CollapsibleTrigger>
+      <Checkbox
+        icon={<CheckMinus />}
+        isChecked={isCategoryChecked}
+        onChange={() => onToggleCategory(category)}
+      >
+        <p className='text-sm'>{CategoryHeaderLabel[category]}</p>
+      </Checkbox>
     </div>
     <CollapsibleContent>
       <div className='flex flex-col w-full gap-2 ml-6 mt-2'>
@@ -69,8 +67,14 @@ export const EmailFilterValidationOptionGroup: React.FC<CheckboxGroupProps> = ({
               isChecked={isOptionChecked(option.value)}
               onChange={(checked) => onToggleOption(option.value, checked)}
             >
-              <div className='flex '>
-                <p className='text-sm'>{option.label}</p>
+              <div className='flex'>
+                <p
+                  className={cn('text-sm', {
+                    'text-gray-400': option?.disabled,
+                  })}
+                >
+                  {option.label}
+                </p>
 
                 <IconButton
                   size='xxs'
@@ -78,7 +82,7 @@ export const EmailFilterValidationOptionGroup: React.FC<CheckboxGroupProps> = ({
                   icon={<InfoCircle />}
                   aria-label='More info'
                   onClick={(e) => onOpenInfoModal(e, option.value)}
-                  className='opacity-0 group-hover:opacity-100 transition-opacity bg-transparent'
+                  className='opacity-0 group-hover:opacity-100 transition-opacity bg-transparent hover:bg-transparent'
                 />
               </div>
             </Checkbox>

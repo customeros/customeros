@@ -61,47 +61,50 @@ export const EmailCell = observer(
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        {!isEdit && !email && <p className='text-gray-400'>Unknown</p>}
-        {!isEdit && email && (
-          <p className='overflow-ellipsis overflow-hidden'>{email}</p>
-        )}
-        {isEdit && (
-          <Input
-            size='xs'
-            variant='unstyled'
-            ref={emailInputRef}
-            placeholder='Email'
-            onFocus={(e) => e.target.select()}
-            value={contactStore?.value?.emails?.[0]?.email ?? ''}
-            onBlur={() => {
-              if (!contactStore?.value?.emails?.[0]?.id) {
-                contactStore?.addEmail();
-              } else {
-                contactStore?.updateEmail();
-              }
-            }}
-            onChange={(e) => {
-              contactStore?.update(
-                (value) => {
-                  set(value, 'emails[0].email', e.target.value);
+        <div className='flex w-[stretch]'>
+          {!isEdit && !email && <p className='text-gray-400'>Unknown</p>}
+          {!isEdit && email && (
+            <p className='overflow-ellipsis overflow-hidden'>{email}</p>
+          )}
+          {isEdit && (
+            <Input
+              size='xs'
+              variant='unstyled'
+              ref={emailInputRef}
+              placeholder='Email'
+              onFocus={(e) => e.target.select()}
+              value={contactStore?.value?.emails?.[0]?.email ?? ''}
+              onBlur={() => {
+                if (!contactStore?.value?.emails?.[0]?.id) {
+                  contactStore?.addEmail();
+                } else {
+                  contactStore?.updateEmail();
+                }
+              }}
+              onChange={(e) => {
+                contactStore?.update(
+                  (value) => {
+                    set(value, 'emails[0].email', e.target.value);
 
-                  return value;
-                },
-                { mutate: false },
-              );
-            }}
-          />
-        )}
-        {isHovered && !isEdit && (
-          <IconButton
-            size='xxs'
-            variant='ghost'
-            aria-label='edit'
-            className='ml-3 rounded-[5px]'
-            onClick={() => setIsEdit(!isEdit)}
-            icon={<Edit03 className='text-gray-500' />}
-          />
-        )}
+                    return value;
+                  },
+                  { mutate: false },
+                );
+              }}
+            />
+          )}
+          {isHovered && !isEdit && (
+            <IconButton
+              size='xxs'
+              variant='ghost'
+              aria-label='edit'
+              className='ml-3 rounded-[5px]'
+              onClick={() => setIsEdit(!isEdit)}
+              icon={<Edit03 className='text-gray-500' />}
+            />
+          )}
+        </div>
+
         {email && (
           <EmailValidationMessage
             email={email}

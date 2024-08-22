@@ -79,7 +79,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
       iconColor({
         iconSize,
         iconColorScheme,
-        class: disabled ? 'fill-gray-300 pointer-events-none' : undefined,
+        className: disabled ? 'fill-gray-300' : undefined,
       }),
     );
 
@@ -95,7 +95,7 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
           defaultChecked={defaultChecked}
           className={twMerge(
             className,
-            'disabled:pointer-events-none disabled:opacity-80',
+            'disabled:pointer-events-none disabled:opacity-80 disabled:bg-gray-100',
             CheckboxVariants({ size, colorScheme }),
           )}
         >
@@ -117,7 +117,10 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
             {...labelProps}
             htmlFor={id}
             tabIndex={-1}
-            className={twMerge(labelProps?.className, disabled && 'opacity-70')}
+            className={twMerge(
+              labelProps?.className,
+              disabled && 'text-gray-300',
+            )}
           >
             {children}
           </label>

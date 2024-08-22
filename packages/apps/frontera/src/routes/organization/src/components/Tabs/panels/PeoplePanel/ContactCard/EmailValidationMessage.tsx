@@ -41,7 +41,7 @@ const emailStatuses = {
     icon: <XCircle className='text-error-500 size-3' />,
   },
   INVALID_MAILBOX: {
-    message: 'Not deliverable • Invalid mailbox',
+    message: 'Not deliverable • Mailbox doesn’t exist',
     icon: <XCircle className='text-error-500 size-3' />,
   },
   INCORRECT_FORMAT: {
@@ -102,7 +102,7 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
 
   return (
     <>
-      <Tooltip side='left' label={data?.message}>
+      <Tooltip side='right' label={data?.message}>
         <div>{data?.icon}</div>
       </Tooltip>
     </>
