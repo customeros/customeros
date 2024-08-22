@@ -23,17 +23,17 @@ export const PaymentDetailsPopover: FC<PaymentDetailsPopoverProps> = ({
 
   return (
     <Popover>
-      <PopoverTrigger>
+      <PopoverTrigger disabled={!content?.length}>
         <div className='w-full'>{children}</div>
       </PopoverTrigger>
       <PopoverContent
         className={cn(
-          content ? 'block' : 'none',
-          'w-fit bg-gray-700 text-white rounded-md text-sm border-none',
+          content?.length ? 'block' : 'none',
+          'w-fit bg-gray-700 text-white rounded-md text-sm border-none z-[50000]',
         )}
       >
         <div className='flex'>
-          <p className='text-base mr-2'>{content}</p>
+          <p className='text-base mr-2 text-white'>{content}</p>
 
           {withNavigation && (
             <span
