@@ -19,11 +19,6 @@ The request body should be a JSON object with the following structure:
     "email": "sample@example.com" 
 }
 ````
-### Response
-
-The response will be in JSON format with the following structure:
-https://reacher.stoplight.io/docs/backend/76c074a57efb1-check-email
-
 ### Example
 
 ````

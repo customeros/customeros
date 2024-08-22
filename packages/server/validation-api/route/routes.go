@@ -21,37 +21,12 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 	r.GET("/readiness", healthCheckHandler)
 	validateAddress(ctx, r, services)
 	validatePhoneNumber(ctx, r, services)
-	validateEmailWithReacher(ctx, r, services, logger)
 	validateEmailV2(ctx, r, services, logger)
 	ipLookup(ctx, r, services, logger)
 }
 
 func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
-}
-
-func validateEmailWithReacher(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
-	r.POST("/validateEmail",
-		tracing.TracingEnhancer(ctx, "POST /validateEmail"),
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
-		func(c *gin.Context) {
-			var request model.ValidateEmailRequest
-
-			if err := c.BindJSON(&request); err != nil {
-				l.Errorf("Fail reading request: %v", err.Error())
-				c.AbortWithStatus(500) //todo
-				return
-			}
-
-			response, err := services.EmailValidationService.ValidateEmailWithReacher(ctx, request.Email)
-			if err != nil {
-				l.Errorf("Error validating email: %v", err.Error())
-				c.JSON(500, gin.H{"error": err.Error()})
-				return
-			}
-
-			c.JSON(200, model.MapValidationEmailResponse(response, nil))
-		})
 }
 
 func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
