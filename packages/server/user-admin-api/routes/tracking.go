@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -25,18 +26,22 @@ func addTrackingRoutes(rg *gin.RouterGroup, services *service.Services) {
 		span.LogFields(tracingLog.String("userAgent", userAgent))
 
 		if origin == "" || referer == "" || userAgent == "" {
+			err := fmt.Errorf("missing required headers")
+			tracing.TraceErr(span, err)
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
 		tenant, err := services.CommonServices.PostgresRepositories.TrackingAllowedOriginRepository.GetTenantForOrigin(ctx, origin)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get tenant for origin"))
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
 		}
 
 		if tenant == nil || *tenant == "" {
+			err = fmt.Errorf("tenant not found for origin")
+			tracing.TraceErr(span, err)
 			span.LogFields(tracingLog.String("result.info", "tenant not found for origin"))
 			ginContext.JSON(http.StatusForbidden, gin.H{})
 			return
