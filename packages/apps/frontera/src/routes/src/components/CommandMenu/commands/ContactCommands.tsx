@@ -5,10 +5,12 @@ import { Phone } from '@ui/media/icons/Phone';
 import { Clock } from '@ui/media/icons/Clock';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
+import { Delete } from '@ui/media/icons/Delete';
 import { useStore } from '@shared/hooks/useStore';
-import { Kbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { Archive } from '@ui/media/icons/Archive';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
+import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
 export const ContactCommands = observer(() => {
@@ -22,18 +24,10 @@ export const ContactCommands = observer(() => {
       <>
         <CommandItem
           leftAccessory={<Tag01 />}
+          keywords={contactKeywords.edit_persona_tag}
           onSelect={() => {
             store.ui.commandMenu.setType('EditPersonaTag');
           }}
-          keywords={[
-            'edit',
-            'persona',
-            'tag',
-            'change',
-            'update',
-            'label',
-            'profile',
-          ]}
           rightAccessory={
             <>
               <Kbd>
@@ -60,7 +54,7 @@ export const ContactCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Mail01 />}
-          keywords={['edit', 'email', 'change', 'update', 'address', '@']}
+          keywords={contactKeywords.edit_email}
           onSelect={() => {
             store.ui.commandMenu.setType('EditEmail');
           }}
@@ -78,7 +72,7 @@ export const ContactCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Edit03 />}
-          keywords={['edit', 'name', 'change', 'update', 'rename', 'contact']}
+          keywords={contactKeywords.edit_name}
           onSelect={() => {
             store.ui.commandMenu.setType('EditName');
           }}
@@ -95,41 +89,25 @@ export const ContactCommands = observer(() => {
         </CommandItem>
         <CommandItem
           leftAccessory={<Phone />}
+          keywords={contactKeywords.edit_phone_number}
           onSelect={() => {
             store.ui.commandMenu.setType('EditPhoneNumber');
           }}
-          keywords={[
-            'edit',
-            'phone',
-            'number',
-            'change',
-            'update',
-            'mobile',
-            'telephone',
-          ]}
         >
           Edit phone number
         </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}
+          keywords={contactKeywords.edit_job_title}
           onSelect={() => {
             store.ui.commandMenu.setType('EditJobTitle');
           }}
-          keywords={[
-            'edit',
-            'job',
-            'title',
-            'change',
-            'update',
-            'position',
-            'designation',
-          ]}
         >
           Edit job title
         </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}
-          keywords={['edit', 'job', 'roles', 'update', 'position', 'function']}
+          keywords={contactKeywords.edit_job_roles}
           onSelect={() => {
             store.ui.commandMenu.setType('ChangeOrAddJobRoles');
           }}
@@ -138,14 +116,66 @@ export const ContactCommands = observer(() => {
         </CommandItem>
         <CommandItem
           leftAccessory={<Clock />}
-          keywords={['edit', 'timezone', 'change', 'update', 'location']}
+          keywords={contactKeywords.edit_time_zone}
           onSelect={() => {
             store.ui.commandMenu.setType('EditTimeZone');
           }}
         >
           Edit time zone...
         </CommandItem>
+        <CommandItem
+          leftAccessory={<Archive />}
+          keywords={contactKeywords.archive_contact}
+          onSelect={() => {
+            store.ui.commandMenu.setType('DeleteConfirmationModal');
+          }}
+          rightAccessory={
+            <>
+              <CommandKbd />
+              <Kbd>
+                <Delete className='text-inherit size-3' />
+              </Kbd>
+            </>
+          }
+        >
+          Archive contact
+        </CommandItem>
       </>
     </CommandsContainer>
   );
 });
+
+const contactKeywords = {
+  archive_contact: ['archive', 'contact', 'delete', 'remove', 'hide'],
+  edit_email: ['edit', 'email', 'change', 'update', 'address', '@'],
+  edit_name: ['edit', 'name', 'change', 'update', 'rename', 'contact'],
+  edit_phone_number: [
+    'edit',
+    'phone',
+    'number',
+    'change',
+    'update',
+    'mobile',
+    'telephone',
+  ],
+  edit_job_title: [
+    'edit',
+    'job',
+    'title',
+    'change',
+    'update',
+    'position',
+    'designation',
+  ],
+  edit_job_roles: ['edit', 'job', 'roles', 'update', 'position', 'function'],
+  edit_time_zone: ['edit', 'timezone', 'change', 'update', 'location'],
+  edit_persona_tag: [
+    'edit',
+    'persona',
+    'tag',
+    'change',
+    'update',
+    'label',
+    'profile',
+  ],
+};
