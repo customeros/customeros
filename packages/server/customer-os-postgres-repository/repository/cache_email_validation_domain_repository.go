@@ -50,34 +50,39 @@ func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEma
 	tracing.TagComponentPostgresRepository(span)
 	tracing.LogObjectAsJson(span, "cacheEmailValidationDomain", cacheEmailValidationDomain)
 
-	var existingData entity.CacheEmailValidationDomain
-	result := r.db.WithContext(ctx).Where("domain = ?", cacheEmailValidationDomain.Domain).Order("created_at desc").First(&existingData)
+	query := `
+        INSERT INTO cache_email_validation_domain (
+            domain, is_catch_all, is_firewalled, can_connect_smtp, provider, firewall, created_at, updated_at
+        ) VALUES (
+            ?, ?, ?, ?, ?, ?, ?, ?
+        )
+        ON CONFLICT (domain) DO UPDATE SET
+            is_catch_all = EXCLUDED.is_catch_all,
+            is_firewalled = EXCLUDED.is_firewalled,
+            can_connect_smtp = EXCLUDED.can_connect_smtp,
+            provider = EXCLUDED.provider,
+            firewall = EXCLUDED.firewall,
+            updated_at = EXCLUDED.updated_at
+        RETURNING *
+    `
 
-	if result.Error != nil {
-		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
-			// Record doesn't exist, create a new one
-			if err := r.db.WithContext(ctx).Save(&cacheEmailValidationDomain).Error; err != nil {
-				return nil, err
-			}
-		} else {
-			// Some other error occurred
-			return nil, result.Error
-		}
-	} else {
-		// Record exists, update it
-		updates := map[string]interface{}{
-			"updated_at":       utils.Now(),
-			"is_catch_all":     cacheEmailValidationDomain.IsCatchAll,
-			"is_firewalled":    cacheEmailValidationDomain.IsFirewalled,
-			"can_connect_smtp": cacheEmailValidationDomain.CanConnectSMTP,
-			"provider":         cacheEmailValidationDomain.Provider,
-			"firewall":         cacheEmailValidationDomain.Firewall,
-		}
-		if err := r.db.WithContext(ctx).Model(&existingData).Updates(updates).Error; err != nil {
-			return nil, err
-		}
-		cacheEmailValidationDomain = existingData
+	now := utils.Now()
+	var result entity.CacheEmailValidationDomain
+
+	err := r.db.WithContext(ctx).Raw(query,
+		cacheEmailValidationDomain.Domain,
+		cacheEmailValidationDomain.IsCatchAll,
+		cacheEmailValidationDomain.IsFirewalled,
+		cacheEmailValidationDomain.CanConnectSMTP,
+		cacheEmailValidationDomain.Provider,
+		cacheEmailValidationDomain.Firewall,
+		now,
+		now,
+	).Scan(&result).Error
+
+	if err != nil {
+		return nil, err
 	}
 
-	return &cacheEmailValidationDomain, nil
+	return &result, nil
 }
