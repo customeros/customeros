@@ -57,14 +57,13 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 
 	emailCreate := "email@create.com"
 	rawEmailCreate := "email@create.com"
-	isReachable := "emailIsNotReachable"
 	creationTime := utils.Now()
 	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
-		Email:       emailCreate,
-		RawEmail:    rawEmailCreate,
-		CreatedAt:   creationTime,
-		UpdatedAt:   creationTime,
-		IsReachable: &isReachable,
+		Email:     emailCreate,
+		RawEmail:  rawEmailCreate,
+		CreatedAt: creationTime,
+		UpdatedAt: creationTime,
+		IsRisky:   utils.BoolPtr(true),
 	})
 
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Email": 1, "Email_" + tenantName: 1})
@@ -96,7 +95,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	require.Equal(t, 6, len(emailProps))
 	emailId = utils.GetStringPropOrEmpty(emailProps, "id")
 	require.NotNil(t, emailId)
-	require.Equal(t, "", utils.GetStringPropOrEmpty(emailProps, "isReachable"))
+	require.Nil(t, utils.GetBoolPropOrNil(emailProps, "isRisky"))
 	require.Equal(t, "", utils.GetStringPropOrEmpty(emailProps, "email"))
 	require.Equal(t, rawEmailUpdate, utils.GetStringPropOrEmpty(emailProps, "rawEmail"))
 	require.Equal(t, creationTime, utils.GetTimePropOrNow(emailProps, "createdAt"))
