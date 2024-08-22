@@ -12,7 +12,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"time"
+	"strings"
 )
 
 type EmailValidationService interface {
@@ -65,21 +65,35 @@ func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context
 	result.DomainData.Provider = domainValidation.Provider
 	result.DomainData.Firewall = domainValidation.Firewall
 
-	emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
-		return nil, err
+	var providersToSkip []string
+	if s.config.EmailConfig.EmailValidationSkipProvidersCommaSeparated != "" {
+		providersToSkip = strings.Split(s.config.EmailConfig.EmailValidationSkipProvidersCommaSeparated, ",")
+		// remove spaces
+		for i, provider := range providersToSkip {
+			providersToSkip[i] = strings.TrimSpace(provider)
+		}
 	}
-	result.EmailData.IsDeliverable = emailValidation.IsDeliverable
-	result.EmailData.IsMailboxFull = emailValidation.IsMailboxFull
-	result.EmailData.IsRoleAccount = emailValidation.IsRoleAccount
-	result.EmailData.IsFreeAccount = emailValidation.IsFreeAccount
-	result.EmailData.SmtpSuccess = emailValidation.SmtpSuccess
-	result.EmailData.ResponseCode = emailValidation.ResponseCode
-	result.EmailData.ErrorCode = emailValidation.ErrorCode
-	result.EmailData.Description = emailValidation.Description
-	result.EmailData.RetryValidation = emailValidation.RetryValidation
-	result.EmailData.SmtpResponse = emailValidation.SmtpResponse
+
+	// Check for providers that are marked for skip
+	if len(providersToSkip) == 0 || !utils.Contains(providersToSkip, domainValidation.Provider) {
+		emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
+			return nil, err
+		}
+		result.EmailData.IsDeliverable = emailValidation.IsDeliverable
+		result.EmailData.IsMailboxFull = emailValidation.IsMailboxFull
+		result.EmailData.IsRoleAccount = emailValidation.IsRoleAccount
+		result.EmailData.IsFreeAccount = emailValidation.IsFreeAccount
+		result.EmailData.SmtpSuccess = emailValidation.SmtpSuccess
+		result.EmailData.ResponseCode = emailValidation.ResponseCode
+		result.EmailData.ErrorCode = emailValidation.ErrorCode
+		result.EmailData.Description = emailValidation.Description
+		result.EmailData.RetryValidation = emailValidation.RetryValidation
+		result.EmailData.SmtpResponse = emailValidation.SmtpResponse
+	} else {
+		result.EmailData.SkippedValidation = true
+	}
 
 	return result, nil
 }
@@ -130,10 +144,10 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 	}
 
-	// if no cached data found, or last time fetched > 90 days ago, or is retry validation and last time fetched > 1 hour ago
+	// if no cached data found, or last time fetched > 90 days ago, or is retry validation
 	if cachedEmail == nil ||
-		cachedEmail.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) ||
-		(cachedEmail.RetryValidation && cachedEmail.UpdatedAt.Add(time.Hour).Before(utils.Now())) {
+		cachedEmail.RetryValidation ||
+		cachedEmail.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) {
 		// get email data with mailsherpa
 		emailValidation, err := mailsherpa.ValidateEmail(mailsherpa.EmailValidationRequest{
 			Email:      email,
