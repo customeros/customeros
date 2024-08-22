@@ -9,10 +9,11 @@ import (
 type Config struct {
 	ApiPort string `env:"PORT"`
 
-	SmartyConfig   SmartyConfig
-	IpDataConfig   IpDataConfig
-	IpHunterConfig IpHunterConfig
-	EmailConfig    EmailConfig
+	SmartyConfig    SmartyConfig
+	IpDataConfig    IpDataConfig
+	IpHunterConfig  IpHunterConfig
+	EmailConfig     EmailConfig
+	ScrubbyIoConfig ScrubbyIoConfig
 
 	Postgres config.PostgresConfig
 	Neo4j    config.Neo4jConfig
@@ -39,4 +40,11 @@ type EmailConfig struct {
 	EmailDomainValidationCacheTtlDays          int    `env:"EMAIL_VALIDATION_DOMAIN_CACHE_TTL_DAYS" envDefault:"90" validate:"required"`
 	EmailValidationCacheTtlDays                int    `env:"EMAIL_VALIDATION_CACHE_TTL_DAYS" envDefault:"14" validate:"required"`
 	EmailValidationSkipProvidersCommaSeparated string `env:"EMAIL_VALIDATION_SKIP_PROVIDERS" envDefault:""`
+}
+
+type ScrubbyIoConfig struct {
+	ApiUrl               string `env:"SCRUBBY_IO_API_URL" envDefault:"https://api.scrubby.io" validate:"required"`
+	ApiKey               string `env:"SCRUBBY_IO_API_KEY" validate:"required"`
+	CacheTtlDays         int    `env:"SCRUBBY_IO_CACHE_TTL_DAYS" envDefault:"90" validate:"required"`
+	ScrubbyIoCallbackUrl string `env:"SCRUBBY_IO_CALLBACK_URL"`
 }

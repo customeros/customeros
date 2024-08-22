@@ -16,7 +16,8 @@ import (
 )
 
 type EmailValidationService interface {
-	ValidateEmailWithMailsherpa(ctx context.Context, email string) (*model.ValidateEmailMailsherpaData, error)
+	ValidateEmailWithMailsherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error)
+	ValidateEmailScrubby(ctx context.Context, email string) (string, error)
 }
 
 type emailValidationService struct {
@@ -33,12 +34,12 @@ func NewEmailValidationService(config *config.Config, services *Services, log lo
 	}
 }
 
-func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context, email string) (*model.ValidateEmailMailsherpaData, error) {
+func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailWithMailsherpa")
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
 
-	result := &model.ValidateEmailMailsherpaData{
+	result := &model.ValidateEmailMailSherpaData{
 		Email: email,
 	}
 
@@ -180,4 +181,9 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 	}
 
 	return cachedEmail, nil
+}
+
+func (s *emailValidationService) ValidateEmailScrubby(ctx context.Context, email string) (string, error) {
+	//TODO implement me
+	panic("implement me")
 }

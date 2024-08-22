@@ -8,10 +8,10 @@ type ValidateEmailResponse struct {
 	Status          string                       `json:"status"`
 	Message         string                       `json:"message,omitempty"`
 	InternalMessage string                       `json:"internalMessage,omitempty"`
-	Data            *ValidateEmailMailsherpaData `json:"data,omitempty"`
+	Data            *ValidateEmailMailSherpaData `json:"data,omitempty"`
 }
 
-type ValidateEmailMailsherpaData struct {
+type ValidateEmailMailSherpaData struct {
 	Email  string `json:"email"`
 	Syntax struct {
 		IsValid    bool   `json:"isValid"`
@@ -39,4 +39,14 @@ type ValidateEmailMailsherpaData struct {
 		RetryValidation   bool   `json:"retryValidation"` // if true, email validation should be retried
 		SmtpResponse      string `json:"smtpResponse"`
 	} `json:"emailData"`
+}
+
+type ValidateEmailWithScrubbyResponse struct {
+	Status          string `json:"status"`
+	Message         string `json:"message,omitempty"`
+	InternalMessage string `json:"internalMessage,omitempty"`
+	EmailIsValid    bool   `json:"emailIsValid"`
+	EmailIsInvalid  bool   `json:"emailIsInvalid"`
+	EmailIsUnknown  bool   `json:"emailIsUnknown"`
+	EmailIsPending  bool   `json:"emailIsPending"`
 }

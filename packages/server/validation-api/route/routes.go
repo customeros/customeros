@@ -22,6 +22,7 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 	validateAddress(ctx, r, services)
 	validatePhoneNumber(ctx, r, services)
 	validateEmailV2(ctx, r, services, logger)
+	validateEmailWithScrubby(ctx, r, services, logger)
 	ipLookup(ctx, r, services, logger)
 }
 
@@ -47,6 +48,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				})
 				return
 			}
+			span.LogFields(log.String("request.email", request.Email))
 
 			// check email is present
 			if request.Email == "" {
@@ -58,7 +60,6 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				})
 				return
 			}
-			span.LogFields(log.String("request.email", request.Email))
 
 			response, err := services.EmailValidationService.ValidateEmailWithMailsherpa(ctx, request.Email)
 			if err != nil {
@@ -75,6 +76,66 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 			c.JSON(http.StatusOK, model.ValidateEmailResponse{
 				Status: "success",
 				Data:   response,
+			})
+		})
+}
+
+func validateEmailWithScrubby(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
+	r.POST("/validateEmailWithScrubby",
+		tracing.TracingEnhancer(ctx, "POST /validateEmailWithScrubby"),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
+		func(c *gin.Context) {
+			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ValidateEmailWithScrubby")
+			defer span.Finish()
+
+			var request model.ValidateEmailRequest
+
+			if err := c.BindJSON(&request); err != nil {
+				l.Errorf("Fail reading request: %v", err.Error())
+				c.JSON(http.StatusBadRequest, model.ValidateEmailWithScrubbyResponse{
+					Status:  "error",
+					Message: "Invalid request body",
+				})
+				return
+			}
+			span.LogFields(log.String("request.email", request.Email))
+
+			// check email is present
+			if request.Email == "" {
+				tracing.TraceErr(span, errors.New("Missing email parameter"))
+				l.Errorf("Missing email parameter")
+				c.JSON(http.StatusBadRequest, model.ValidateEmailWithScrubbyResponse{
+					Status:  "error",
+					Message: "Missing email parameter",
+				})
+				return
+			}
+
+			validationStatus, err := services.EmailValidationService.ValidateEmailScrubby(ctx, request.Email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				l.Errorf("Error on : %v", err.Error())
+				c.JSON(http.StatusInternalServerError, model.ValidateEmailWithScrubbyResponse{
+					Status:          "error",
+					Message:         "Internal server error",
+					InternalMessage: err.Error(),
+				})
+				return
+			}
+			span.LogFields(log.String("result.validationStatus", validationStatus))
+
+			if validationStatus != "valid" && validationStatus != "invalid" && validationStatus != "pending" {
+				validationStatus = "unknown"
+				l.Errorf("Unknown validation status: %s", validationStatus)
+				tracing.TraceErr(span, errors.New("Unknown validation status"))
+			}
+
+			c.JSON(http.StatusOK, model.ValidateEmailWithScrubbyResponse{
+				Status:         "success",
+				EmailIsValid:   validationStatus == "valid",
+				EmailIsInvalid: validationStatus == "invalid",
+				EmailIsUnknown: validationStatus == "unknown",
+				EmailIsPending: validationStatus == "pending",
 			})
 		})
 }
