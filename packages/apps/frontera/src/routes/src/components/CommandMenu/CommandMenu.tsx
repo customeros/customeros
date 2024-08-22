@@ -52,6 +52,7 @@ import {
   OrganizationBulkCommands,
   RenameOrganizationProperty,
   ChooseOpportunityOrganization,
+  ContactEmailVerificationInfoModal,
 } from './commands';
 
 //can we keep this in a nice order ? Thanks
@@ -89,6 +90,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
+  ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
 };
 
 export const CommandMenu = observer(() => {

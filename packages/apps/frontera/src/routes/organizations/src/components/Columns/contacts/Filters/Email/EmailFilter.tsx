@@ -1,50 +1,23 @@
 import { useSearchParams } from 'react-router-dom';
-import React, { RefObject, startTransition } from 'react';
+import React, { RefObject, MouseEvent, startTransition } from 'react';
 
 import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
 import { CheckedState } from '@radix-ui/react-checkbox';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Checkbox, CheckMinus } from '@ui/form/Checkbox/Checkbox';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
-import {
-  CollapsibleRoot,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '@ui/transitions/Collapse/Collapse.tsx';
 
+import { DeliverabilityStatus, EmailVerificationStatus } from './utils.ts';
+import { EmailFilterValidationOptionGroup } from './EmailFilterValidationOptionGroup';
 import {
   FilterHeader,
   DebouncedSearchInput,
 } from '../../../shared/Filters/abstract';
-import {
-  CategoryHeaderLabel,
-  DeliverabilityStatus,
-  EmailVerificationStatus,
-} from './utils.ts';
 
 interface EmailFilterProps {
   property?: ColumnViewType;
   initialFocusRef: RefObject<HTMLInputElement>;
-}
-
-interface CheckboxOption {
-  label: string;
-  disabled?: boolean;
-  value: EmailVerificationStatus;
-}
-
-interface CheckboxGroupProps {
-  options: CheckboxOption[];
-  isCategoryChecked: boolean;
-  category: DeliverabilityStatus;
-  onToggleCategory: (category: DeliverabilityStatus) => void;
-  isOptionChecked: (value: EmailVerificationStatus) => boolean;
-  onToggleOption: (
-    value: EmailVerificationStatus,
-    checked?: CheckedState,
-  ) => void;
 }
 
 interface EmailVerificationFilterValue {
@@ -69,43 +42,6 @@ const DEFAULT_VERIFICATION_FILTER: FilterItem = {
   includeEmpty: false,
   operation: ComparisonOperator.In,
 };
-
-const CheckboxGroup: React.FC<CheckboxGroupProps> = ({
-  category,
-  options,
-  onToggleCategory,
-  onToggleOption,
-  isOptionChecked,
-  isCategoryChecked,
-}) => (
-  <CollapsibleRoot open={isCategoryChecked} className='flex flex-col w-full'>
-    <div className='flex justify-between w-full items-center'>
-      <CollapsibleTrigger asChild={false}>
-        <Checkbox
-          icon={<CheckMinus />}
-          isChecked={isCategoryChecked}
-          onChange={() => onToggleCategory(category)}
-        >
-          <p className='text-sm'>{CategoryHeaderLabel[category]}</p>
-        </Checkbox>
-      </CollapsibleTrigger>
-    </div>
-    <CollapsibleContent>
-      <div className='flex flex-col w-full gap-2 ml-6 mt-2'>
-        {options.map((option) => (
-          <Checkbox
-            key={option.value}
-            disabled={option?.disabled}
-            isChecked={isOptionChecked(option.value)}
-            onChange={(checked) => onToggleOption(option.value, checked)}
-          >
-            <p className='text-sm'>{option.label}</p>
-          </Checkbox>
-        ))}
-      </div>
-    </CollapsibleContent>
-  </CollapsibleRoot>
-);
 
 export const EmailFilter: React.FC<EmailFilterProps> = observer(
   ({ initialFocusRef, property }) => {
@@ -298,9 +234,25 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
       });
     };
 
+    const handleOpenInfoModal = (
+      e: MouseEvent<HTMLButtonElement>,
+      status: EmailVerificationStatus,
+    ) => {
+      e.stopPropagation();
+      e.preventDefault();
+      store.ui.commandMenu.setType('ContactEmailVerificationInfoModal');
+      store.ui.commandMenu.setContext({
+        ids: [],
+        entity: 'Contact',
+        property: status,
+      });
+      store.ui.commandMenu.setOpen(true);
+    };
+
     const renderCheckboxGroup = (category: DeliverabilityStatus) => (
-      <CheckboxGroup
+      <EmailFilterValidationOptionGroup
         category={category}
+        onOpenInfoModal={handleOpenInfoModal}
         onToggleCategory={handleToggleCategory}
         options={getOptionsForCategory(category)}
         isCategoryChecked={isCategoryChecked(category)}
@@ -318,6 +270,7 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
           onDisplayChange={() => {}}
           isChecked={filter.active || verificationFilter.active || false}
         />
+
         <DebouncedSearchInput
           value={filter.value}
           ref={initialFocusRef}

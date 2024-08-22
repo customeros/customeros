@@ -5,3 +5,4 @@ export * from './EditPhoneNumber';
 export * from './EditJobTitle';
 export * from './EditTimeZone';
 export * from './ChangeOrAddJobRoles';
+export * from './ContactEmailVerificationInfoModal';

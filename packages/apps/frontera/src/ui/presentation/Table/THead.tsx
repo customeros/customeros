@@ -121,7 +121,14 @@ const THead = observer(
             {title}
           </p>
           {canFilter && (
-            <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
+            <Popover
+              open={isOpen}
+              onOpenChange={(value) => {
+                if (!store.ui.commandMenu.isOpen) {
+                  setIsOpen(value);
+                }
+              }}
+            >
               <PopoverTrigger asChild>
                 <IconButton
                   size='xxs'

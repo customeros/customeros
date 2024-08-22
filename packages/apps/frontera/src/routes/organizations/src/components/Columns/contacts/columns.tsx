@@ -151,7 +151,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         title='Email'
-        filterWidth='14rem'
+        filterWidth='15rem'
         id={ColumnViewType.ContactsEmails}
         renderFilter={(initialFocusRef) => (
           <EmailFilter
