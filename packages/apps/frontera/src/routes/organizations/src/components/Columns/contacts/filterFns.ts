@@ -10,6 +10,7 @@ import {
   Social,
   ColumnViewType,
   ComparisonOperator,
+  EmailValidationDetails,
 } from '@graphql/types';
 
 const getFilterFn = (filter: FilterItem | undefined | null) => {
@@ -288,81 +289,6 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const emailValidationData = email?.emailValidationDetails;
 
         if (!emailValidationData) return false;
-        const isDeliverable = emailValidationData.isDeliverable;
-
-        const matchesDeliverable = (values: EmailVerificationStatus[]) => {
-          if (!isDeliverable) return false;
-
-          if (values.includes(EmailVerificationStatus.NoRisk)) {
-            return emailValidationData.verified && !emailValidationData.isRisky;
-          }
-
-          if (values.includes(EmailVerificationStatus.FirewallProtected)) {
-            return (
-              emailValidationData.verified && emailValidationData?.isFirewalled
-            );
-          }
-
-          if (values.includes(EmailVerificationStatus.FreeAccount)) {
-            return (
-              emailValidationData.verified && emailValidationData?.isFreeAccount
-            );
-          }
-
-          if (values.includes(EmailVerificationStatus.GroupMailbox)) {
-            return (
-              emailValidationData.verified &&
-              emailValidationData?.verifyingCheckAll
-            );
-          }
-
-          return false;
-        };
-
-        const matchesNotDeliverable = (values: EmailVerificationStatus[]) => {
-          if (isDeliverable !== false) return false;
-
-          if (values.includes(EmailVerificationStatus.InvalidMailbox)) {
-            return (
-              emailValidationData.verified &&
-              emailValidationData?.canConnectSmtp === false
-            );
-          }
-
-          if (values.includes(EmailVerificationStatus.MailboxFull)) {
-            return (
-              emailValidationData.verified && emailValidationData?.isMailboxFull
-            );
-          }
-
-          if (values.includes(EmailVerificationStatus.IncorrectFormat)) {
-            return !emailValidationData?.isValidSyntax;
-          }
-
-          return false;
-        };
-
-        const matchesDeliverableUnknown = (
-          values: EmailVerificationStatus[],
-        ) => {
-          if (values.includes(EmailVerificationStatus.CatchAll)) {
-            return (
-              isDeliverable &&
-              emailValidationData.isCatchAll &&
-              emailValidationData.verified
-            );
-          }
-
-          if (values.includes(EmailVerificationStatus.NotVerified)) {
-            return emailValidationData?.verified === false;
-          }
-
-          if (values.includes(EmailVerificationStatus.VerificationInProgress)) {
-            return emailValidationData?.verifyingCheckAll;
-          }
-
-          return false;
-        };
 
         return filterValues.some(
           (categoryFilter: {
@@ -370,11 +296,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
             values: EmailVerificationStatus[];
           }) =>
             (categoryFilter.category === 'is_deliverable' &&
-              matchesDeliverable(categoryFilter.values)) ||
+              isDeliverable(categoryFilter.values, emailValidationData)) ||
             (categoryFilter.category === 'is_not_deliverable' &&
-              matchesNotDeliverable(categoryFilter.values)) ||
+              isNotDeliverable(categoryFilter.values, emailValidationData)) ||
             (categoryFilter.category === 'is_deliverable_unknown' &&
-              matchesDeliverableUnknown(categoryFilter.values)),
+              isDeliverableUnknown(categoryFilter.values, emailValidationData)),
         );
       },
     )
@@ -388,3 +314,60 @@ export const getContactFilterFns = (filters: Filter | null) => {
 
   return data.map(({ filter }) => getFilterFn(filter));
 };
+
+function isNotDeliverable(
+  statuses: EmailVerificationStatus[],
+  data: EmailValidationDetails,
+): boolean {
+  if (!!data?.isDeliverable || !data.verified) return false;
+
+  if (!statuses.length && !data.isDeliverable && data.verified) return true;
+
+  const statusChecks: Record<string, () => boolean> = {
+    [EmailVerificationStatus.InvalidMailbox]: () => !data.canConnectSmtp,
+    [EmailVerificationStatus.MailboxFull]: () => !!data?.isMailboxFull,
+    [EmailVerificationStatus.IncorrectFormat]: () => !data.isValidSyntax,
+  };
+
+  return statuses.some((status) => statusChecks[status]());
+}
+
+function isDeliverableUnknown(
+  statuses: EmailVerificationStatus[],
+  data: EmailValidationDetails,
+): boolean {
+  if (
+    !statuses.length &&
+    (!data.verified || data.isCatchAll || data.verifyingCheckAll)
+  ) {
+    return true;
+  }
+
+  const statusChecks: Record<string, () => boolean> = {
+    [EmailVerificationStatus.CatchAll]: () =>
+      !!data?.isDeliverable && !!data?.isCatchAll && !!data?.verified,
+    [EmailVerificationStatus.NotVerified]: () => !data.verified,
+    [EmailVerificationStatus.VerificationInProgress]: () =>
+      data.verifyingCheckAll,
+  };
+
+  return statuses.some((status) => statusChecks[status]?.() ?? false);
+}
+
+function isDeliverable(
+  statuses: EmailVerificationStatus[],
+  data: EmailValidationDetails,
+): boolean {
+  if (!data?.isDeliverable || !data.verified) return false;
+
+  if (!statuses.length && data.isDeliverable && data.verified) return true;
+
+  const statusChecks: Record<string, () => boolean> = {
+    [EmailVerificationStatus.NoRisk]: () => !data.isRisky,
+    [EmailVerificationStatus.FirewallProtected]: () => !!data.isFirewalled,
+    [EmailVerificationStatus.FreeAccount]: () => !!data.isFreeAccount,
+    [EmailVerificationStatus.GroupMailbox]: () => data.verifyingCheckAll,
+  };
+
+  return statuses.some((status) => statusChecks[status]?.() ?? false);
+}
