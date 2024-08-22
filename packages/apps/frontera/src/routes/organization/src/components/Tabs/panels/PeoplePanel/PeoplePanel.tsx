@@ -31,14 +31,7 @@ export const PeoplePanel = observer(() => {
 
     if (!organizationId) return;
 
-    store.contacts.create(organizationId, {
-      onSuccess: (id) => {
-        if (!organization) return;
-        const contact = store.contacts.value.get(id);
-
-        contact?.linkOrganization(organization?.id);
-      },
-    });
+    store.contacts.create(organizationId);
   };
 
   return (

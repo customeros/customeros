@@ -536,9 +536,9 @@ const CONTACT_QUERY = gql`
         id
         email
         emailValidationDetails {
-          isValidSyntax
-          verifyingCheckAll
           verified
+          verifyingCheckAll
+          isValidSyntax
           isRisky
           isFirewalled
           provider

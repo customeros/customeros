@@ -1,9 +1,0 @@
-mutation addContractAttachment($contractId: ID!, $attachmentId: ID!) {
-  contract_AddAttachment(contractId: $contractId, attachmentId: $attachmentId) {
-    attachments {
-      id
-      basePath
-      fileName
-    }
-  }
-}
