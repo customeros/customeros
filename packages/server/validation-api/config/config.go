@@ -9,7 +9,6 @@ import (
 type Config struct {
 	ApiPort string `env:"PORT"`
 
-	ReacherConfig  ReacherConfig
 	SmartyConfig   SmartyConfig
 	IpDataConfig   IpDataConfig
 	IpHunterConfig IpHunterConfig
@@ -19,11 +18,6 @@ type Config struct {
 	Neo4j    config.Neo4jConfig
 	Jaeger   tracing.JaegerConfig
 	Logger   logger.Config
-}
-
-type ReacherConfig struct {
-	ApiPath string `env:"REACHER_API_PATH" validate:"required"`
-	Secret  string `env:"REACHER_SECRET" validate:"required"`
 }
 
 type SmartyConfig struct {
