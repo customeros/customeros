@@ -329,7 +329,7 @@ function isNotDeliverable(
     [EmailVerificationStatus.IncorrectFormat]: () => !data.isValidSyntax,
   };
 
-  return statuses.some((status) => statusChecks[status]());
+  return statuses.some((status) => statusChecks[status]?.() ?? false);
 }
 
 function isDeliverableUnknown(

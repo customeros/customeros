@@ -1,5 +1,5 @@
 import { useSearchParams } from 'react-router-dom';
-import React, { RefObject, MouseEvent, startTransition } from 'react';
+import React, { RefObject, useEffect, startTransition } from 'react';
 
 import { FilterItem } from '@store/types';
 import { observer } from 'mobx-react-lite';
@@ -7,13 +7,18 @@ import { CheckedState } from '@radix-ui/react-checkbox';
 
 import { useStore } from '@shared/hooks/useStore';
 import { ColumnViewType, ComparisonOperator } from '@graphql/types';
+import { EmailFilterValidationOptionGroup } from '@organizations/components/Columns/contacts/Filters/Email/EmailFilterValidationOptionGroup';
 
-import { DeliverabilityStatus, EmailVerificationStatus } from './utils.ts';
-import { EmailFilterValidationOptionGroup } from './EmailFilterValidationOptionGroup';
 import {
   FilterHeader,
   DebouncedSearchInput,
 } from '../../../shared/Filters/abstract';
+import {
+  getCategoryString,
+  DeliverabilityStatus,
+  getOptionsForCategory,
+  EmailVerificationStatus,
+} from './utils';
 
 interface EmailFilterProps {
   property?: ColumnViewType;
@@ -76,49 +81,60 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
       });
     };
 
+    useEffect(() => {
+      if (verificationFilter.active && !filter.active) {
+        tableViewDef?.setFilter({ ...filter, active: true });
+      }
+    }, [verificationFilter.active, filter.active]);
+
     const handleFilterCategory = (
       category: DeliverabilityStatus,
       value: EmailVerificationStatus,
       checked?: CheckedState,
     ) => {
+      const categoryString = getCategoryString(category);
       const currentValues =
         verificationFilter.value as EmailVerificationFilterValue[];
-      const categoryIndex = currentValues.findIndex(
-        (item) => item.category === getCategoryString(category),
+
+      const categoryMap = new Map(
+        currentValues.map((item) => [item.category, item.values]),
       );
 
-      let newValues: EmailVerificationFilterValue[];
+      let categoryValues = categoryMap.get(categoryString) || [];
 
-      if (categoryIndex === -1) {
-        newValues = [
-          ...currentValues,
-          {
-            category: getCategoryString(category),
-            values: checked ? [value] : [],
-          },
-        ];
+      if (checked) {
+        categoryValues = [...new Set([...categoryValues, value])];
       } else {
-        newValues = currentValues.map((item, index) => {
-          if (index === categoryIndex) {
-            const newCategoryValues = checked
-              ? [...item.values, value]
-              : item.values.filter((v) => v !== value);
-
-            return { ...item, values: newCategoryValues };
-          }
-
-          return item;
-        });
+        categoryValues = categoryValues.filter((v) => v !== value);
       }
+
+      categoryMap.set(categoryString, categoryValues);
+
+      const allOptions = new Set(
+        getOptionsForCategory(category).map((option) => option.value),
+      );
+      const allOptionsSelected =
+        allOptions.size === categoryValues.length &&
+        categoryValues.every((v) => allOptions.has(v));
+
+      if (allOptionsSelected) {
+        categoryValues.push(categoryString);
+      } else {
+        const index = categoryValues.indexOf(categoryString);
+
+        if (index !== -1) {
+          categoryValues.splice(index, 1);
+        }
+      }
+
+      const newValues = Array.from(categoryMap)
+        .map(([category, values]) => ({ category, values }))
+        .filter((item) => item.values.length > 0);
 
       tableViewDef?.setFilter({
         ...verificationFilter,
         value: newValues,
-        active: newValues.some(
-          (item) =>
-            item.category === getCategoryString(category) ||
-            item.values.length > 0,
-        ),
+        active: newValues.length > 0,
       });
     };
 
@@ -135,97 +151,58 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
       return categoryItem ? categoryItem.values.includes(value) : false;
     };
 
-    const isCategoryChecked = (category: DeliverabilityStatus): boolean => {
+    const isCategoryChecked = (
+      category: DeliverabilityStatus,
+    ): CheckedState => {
       const currentValues =
         verificationFilter.value as EmailVerificationFilterValue[];
-
-      return currentValues.some(
+      const categoryItem = currentValues.find(
         (item) => item.category === getCategoryString(category),
       );
-    };
 
-    const getCategoryString = (category: DeliverabilityStatus): string => {
-      switch (category) {
-        case DeliverabilityStatus.Deliverable:
-          return 'is_deliverable';
-        case DeliverabilityStatus.NotDeliverable:
-          return 'is_not_deliverable';
-        case DeliverabilityStatus.Unknown:
-          return 'is_deliverable_unknown';
-      }
-    };
+      if (!categoryItem) return false;
 
-    const getOptionsForCategory = (category: DeliverabilityStatus) => {
-      switch (category) {
-        case DeliverabilityStatus.Deliverable:
-          return [
-            { label: 'No risk', value: EmailVerificationStatus.NoRisk },
-            {
-              label: 'Firewall protected',
-              value: EmailVerificationStatus.FirewallProtected,
-            },
-            {
-              label: 'Free account',
-              value: EmailVerificationStatus.FreeAccount,
-            },
-            {
-              disabled: true,
-              label: 'Group mailbox',
-              value: EmailVerificationStatus.GroupMailbox,
-            },
-          ];
-        case DeliverabilityStatus.NotDeliverable:
-          return [
-            {
-              label: 'Invalid mailbox',
-              value: EmailVerificationStatus.InvalidMailbox,
-            },
-            {
-              label: 'Mailbox full',
-              value: EmailVerificationStatus.MailboxFull,
-            },
-            {
-              label: 'Incorrect email format',
-              value: EmailVerificationStatus.IncorrectFormat,
-            },
-          ];
-        case DeliverabilityStatus.Unknown:
-          return [
-            { label: 'Catch all', value: EmailVerificationStatus.CatchAll },
-            {
-              label: 'Not verified yet',
-              value: EmailVerificationStatus.NotVerified,
-            },
-            {
-              label: 'Verification in progress',
-              value: EmailVerificationStatus.VerificationInProgress,
-            },
-          ];
-        default:
-          return [];
-      }
+      const totalOptions = getOptionsForCategory(category).filter(
+        (option) => !option.disabled,
+      ).length;
+
+      const validOptions = categoryItem?.values.filter(
+        (e) => e !== categoryItem.category && e !== 'group_mailbox',
+      ).length;
+
+      if (validOptions === totalOptions) return true;
+
+      return 'indeterminate';
     };
 
     const handleToggleCategory = (category: DeliverabilityStatus) => {
       const currentValues =
         verificationFilter.value as EmailVerificationFilterValue[];
       const categoryString = getCategoryString(category);
-      const categoryIndex = currentValues.findIndex(
-        (item) => item.category === categoryString,
+
+      // Use Map for O(1) lookup and modification
+      const categoryMap = new Map(
+        currentValues.map((item) => [item.category, item.values]),
       );
 
-      let newValues: EmailVerificationFilterValue[];
+      const categoryValues = categoryMap.get(categoryString);
 
-      if (categoryIndex === -1) {
-        newValues = [
-          ...currentValues,
-          { category: categoryString, values: [] },
-        ];
-      } else {
-        newValues = currentValues.filter(
-          (item) => item.category !== categoryString,
+      if (!categoryValues || !categoryValues.includes(categoryString)) {
+        const allOptions = new Set(
+          getOptionsForCategory(category)
+            .filter((option) => !option.disabled)
+            .map((option) => option.value),
         );
+
+        allOptions.add(categoryString);
+        categoryMap.set(categoryString, Array.from(allOptions));
+      } else {
+        categoryMap.delete(categoryString);
       }
+
+      const newValues = Array.from(categoryMap)
+        .map(([category, values]) => ({ category, values }))
+        .filter((item) => item.values.length > 0);
 
       tableViewDef?.setFilter({
         ...verificationFilter,
@@ -235,7 +212,7 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
     };
 
     const handleOpenInfoModal = (
-      e: MouseEvent<HTMLButtonElement>,
+      e: React.MouseEvent,
       status: EmailVerificationStatus,
     ) => {
       e.stopPropagation();
@@ -272,9 +249,9 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
         />
 
         <DebouncedSearchInput
-          value={filter.value}
           ref={initialFocusRef}
           onChange={handleChange}
+          value={filter.value as string}
           placeholder='e.g. john.doe@acme.com'
         />
         <div className='flex flex-col gap-2 mt-2 items-start'>
