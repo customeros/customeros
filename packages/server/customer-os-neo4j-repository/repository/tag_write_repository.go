@@ -14,6 +14,7 @@ import (
 type TagWriteRepository interface {
 	LinkTagByIdToEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string, taggedAt time.Time) error
 	UnlinkTagByIdFromEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string) error
+	UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error
 }
 
 type tagWriteRepository struct {
@@ -71,6 +72,28 @@ func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tenant
 		"tenant":   tenant,
 		"id":       tagId,
 		"entityId": linkedEntityId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *tagWriteRepository) UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UnlinkAllAndDelete")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("tagId", tagId))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId}) DETACH DELETE tag`
+	params := map[string]any{
+		"tenant": tenant,
+		"tagId":  tagId,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

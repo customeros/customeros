@@ -65,7 +65,11 @@ func (s *tagService) Update(ctx context.Context, tag *neo4jentity.TagEntity) (*n
 }
 
 func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, error) {
-	err := s.repositories.TagRepository.UnlinkAndDelete(ctx, common.GetTenantFromContext(ctx), id)
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.UnlinkAndDelete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	err := s.repositories.Neo4jRepositories.TagWriteRepository.UnlinkAllAndDelete(ctx, common.GetTenantFromContext(ctx), id)
 	if err != nil {
 		return false, err
 	}
