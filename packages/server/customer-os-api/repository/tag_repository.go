@@ -14,7 +14,6 @@ import (
 type TagRepository interface {
 	Merge(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
 	Update(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
-	UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error
 }
 
 type tagRepository struct {
@@ -89,29 +88,5 @@ func (r *tagRepository) Update(ctx context.Context, tenant string, tag neo4jenti
 		return nil, err
 	} else {
 		return result.(*dbtype.Node), nil
-	}
-}
-
-func (r *tagRepository) UnlinkAndDelete(ctx context.Context, tenant string, tagId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.UnlinkAndDelete")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
-			DETACH DELETE tag`,
-			map[string]any{
-				"tenant": tenant,
-				"id":     tagId,
-			})
-		return nil, err
-	}); err != nil {
-		return err
-	} else {
-		return nil
 	}
 }
