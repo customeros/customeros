@@ -370,7 +370,7 @@ export const ContractBillingDetailsForm = observer(
                 <Switch
                   size='sm'
                   name='payOnline'
-                  isInvalid={!!bankTransferPopoverContent.length}
+                  isInvalid={!isStripeActive}
                   isChecked={
                     !!contractStore?.tempValue?.billingDetails?.payOnline
                   }
