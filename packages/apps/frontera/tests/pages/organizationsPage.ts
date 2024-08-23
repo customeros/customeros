@@ -6,13 +6,13 @@ import {
   clickLocatorsThatAreVisible,
 } from '../helper';
 
-export class AddressBookPage {
+export class OrganizationsPage {
   private page: Page;
 
   private sideNavItemAllOrgs = 'button[data-test="side-nav-item-all-orgs"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
-  private addressBookCreateNewOrgOrgName =
-    'input[data-test="address-book-create-new-org-org-name"]';
+  private organizationsCreateNewOrgOrgName =
+    'input[data-test="organizations-create-new-org-org-name"]';
   private organizationNameInAllOrgsTable =
     'p[data-test="organization-name-in-all-orgs-table"]';
   private organizationWebsiteInAllOrgsTable =
@@ -56,7 +56,7 @@ export class AddressBookPage {
     await clickLocatorsThatAreVisible(
       this.page,
       this.allOrgsAddOrg,
-      this.addressBookCreateNewOrgOrgName,
+      this.organizationsCreateNewOrgOrgName,
     );
     await this.page.keyboard.press('Enter');
 

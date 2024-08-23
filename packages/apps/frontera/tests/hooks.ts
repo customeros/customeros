@@ -2,29 +2,29 @@ import { test as base } from '@playwright/test';
 
 import { LoginPage } from './pages/loginPage';
 import { ContactsPage } from './pages/contactsPage';
-import { AddressBookPage } from './pages/addressBookPage';
+import { OrganizationsPage } from './pages/organizationsPage';
 
 base.beforeEach(async ({ page }) => {
   const loginPage = new LoginPage(page);
-  const addressBookPage = new AddressBookPage(page);
+  const organizationsPage = new OrganizationsPage(page);
   const contactsPage = new ContactsPage(page);
 
   await loginPage.login();
 
   //Archive organizations
-  await addressBookPage.waitForPageLoad();
+  await organizationsPage.waitForPageLoad();
 
   let isSelectAllOrgsClicked = false;
 
   try {
-    isSelectAllOrgsClicked = await addressBookPage.selectAllOrgs(); // Returns true if successful
+    isSelectAllOrgsClicked = await organizationsPage.selectAllOrgs(); // Returns true if successful
   } catch (error) {
     console.warn('Select All Orgs button not found or visible:', error);
   }
 
   if (isSelectAllOrgsClicked) {
-    await addressBookPage.archiveOrgs();
-    await addressBookPage.confirmArchiveOrgs();
+    await organizationsPage.archiveOrgs();
+    await organizationsPage.confirmArchiveOrgs();
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 

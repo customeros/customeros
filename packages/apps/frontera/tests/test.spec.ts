@@ -1,7 +1,7 @@
 import { test } from './hooks';
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
-import { AddressBookPage } from './pages/addressBookPage';
+import { OrganizationsPage } from './pages/organizationsPage';
 import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
 import { OrganizationAccountPage } from './pages/organization/organizationAccountPage';
 import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
@@ -11,50 +11,50 @@ test.setTimeout(180000);
 
 test('convert org to customer', async ({ page }) => {
   const loginPage = new LoginPage(page);
-  const addressBookPage = new AddressBookPage(page);
+  const organizationsPage = new OrganizationsPage(page);
   const customersPage = new CustomersPage(page);
 
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await addressBookPage.waitForPageLoad();
+  await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await addressBookPage.addOrganization();
-  await addressBookPage.checkNewEntry();
+  await organizationsPage.addOrganization();
+  await organizationsPage.checkNewEntry();
 
   // Go to Customers page and ensure no new org
-  await addressBookPage.goToCustomersPage();
+  await organizationsPage.goToCustomersPage();
   await customersPage.ensureNumberOfCustomersExist(0);
 
   // Go back to All Orgs page
-  await addressBookPage.goToAllOrgsPage();
+  await organizationsPage.goToAllOrgsPage();
 
   // Make the organization a customer
-  await addressBookPage.updateOrgToCustomer();
+  await organizationsPage.updateOrgToCustomer();
 
   // Go to Customers page and ensure we have a new customer
-  await addressBookPage.goToCustomersPage();
+  await organizationsPage.goToCustomersPage();
   await customersPage.ensureNumberOfCustomersExist(1);
 });
 
 test('create people in organization', async ({ page }) => {
   const loginPage = new LoginPage(page);
-  const addressBookPage = new AddressBookPage(page);
+  const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
 
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await addressBookPage.waitForPageLoad();
+  await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await addressBookPage.addOrganization();
+  await organizationsPage.addOrganization();
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await addressBookPage.goToOrganization();
+  await organizationsPage.goToOrganization();
 
   // Go to People page
   await organizationSideNavPage.goToPeople();
@@ -63,21 +63,21 @@ test('create people in organization', async ({ page }) => {
 
 test('create timeline entries in organization', async ({ page }) => {
   const loginPage = new LoginPage(page);
-  const addressBookPage = new AddressBookPage(page);
+  const organizationsPage = new OrganizationsPage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
   const organizationTimelinePage = new OrganizationTimelinePage(page);
 
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await addressBookPage.waitForPageLoad();
+  await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await addressBookPage.addOrganization();
+  await organizationsPage.addOrganization();
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await addressBookPage.goToOrganization();
+  await organizationsPage.goToOrganization();
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
@@ -89,21 +89,21 @@ test('create timeline entries in organization', async ({ page }) => {
 
 test('create contracts in organization', async ({ page }) => {
   const loginPage = new LoginPage(page);
-  const addressBookPage = new AddressBookPage(page);
+  const organizationsPage = new OrganizationsPage(page);
   const organizationAccountPage = new OrganizationAccountPage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
 
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await addressBookPage.waitForPageLoad();
+  await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await addressBookPage.addOrganization();
+  await organizationsPage.addOrganization();
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await addressBookPage.goToOrganization();
+  await organizationsPage.goToOrganization();
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();

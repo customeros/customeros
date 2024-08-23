@@ -121,7 +121,7 @@ export const AddNewOrganization = observer(() => {
             variant='unstyled'
             placeholder='Organization name'
             defaultValue={searchParams.get('name') ?? ''}
-            data-test='address-book-create-new-org-org-name'
+            data-test='organizations-create-new-org-org-name'
             onChange={(e) => {
               setName(e.target.value);
             }}
