@@ -60,7 +60,7 @@ type UPDATE_TAG_RESPONSE = {
 
 const UPDATE_TAG_MUTATION = gql`
   mutation UpdateTag($input: TagUpdateInput!) {
-    updateTag(input: $input) {
+    tag_Update(input: $input) {
       id
     }
   }
