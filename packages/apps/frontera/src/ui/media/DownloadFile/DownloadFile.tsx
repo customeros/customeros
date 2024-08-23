@@ -19,13 +19,9 @@ export const DownloadFile = observer(
     };
 
     return (
-      <div>
-        <Button variant={variant} onClick={handleDownload} {...rest}>
-          <a target='_blank' rel='noreferrer' href={files.values.get(fileId)}>
-            Download
-          </a>
-        </Button>
-      </div>
+      <Button variant={variant} onClick={handleDownload} {...rest} size='xs'>
+        Download
+      </Button>
     );
   },
 );

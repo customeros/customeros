@@ -40,13 +40,13 @@ export const InvoicePreviewModal = observer(() => {
           <div className='flex justify-end items-center'>
             <Tooltip side='bottom' asChild={false} label='Copy invoice link'>
               <IconButton
-                size='md'
+                size='xs'
                 variant='ghost'
                 className='mr-1'
                 colorScheme='gray'
                 aria-label='Copy invoice link'
+                icon={<Link03 color='text-inherit' />}
                 onClick={() => copy(window.location.href)}
-                icon={<Link03 height='18px' color='gray.500' />}
               />
             </Tooltip>
             <Tooltip
@@ -56,12 +56,12 @@ export const InvoicePreviewModal = observer(() => {
               aria-label='close'
             >
               <IconButton
-                size='md'
+                size='xs'
                 variant='ghost'
                 colorScheme='gray'
                 onClick={closeModal}
                 aria-label='Close preview'
-                icon={<XClose height='24px' color='gray.500' />}
+                icon={<XClose color='text-inherit' />}
               />
             </Tooltip>
           </div>
