@@ -95,18 +95,12 @@ export const Checkbox = forwardRef<HTMLButtonElement, CheckboxProps>(
           defaultChecked={defaultChecked}
           className={twMerge(
             className,
-            'disabled:pointer-events-none disabled:opacity-80 disabled:bg-gray-100',
             CheckboxVariants({ size, colorScheme }),
           )}
         >
           <RadixCheckbox.Indicator>
-            {icon ? (
-              React.cloneElement(icon as React.ReactElement, {
-                className: twMerge(
-                  (icon as React.ReactElement).props.className,
-                  iconClasses,
-                ),
-              })
+            {isChecked === 'indeterminate' ? (
+              <CheckMinus className={iconClasses} />
             ) : (
               <CheckIcon className={iconClasses} />
             )}
@@ -152,7 +146,7 @@ const CheckIcon = ({
   );
 };
 
-export const CheckMinus = ({
+const CheckMinus = ({
   className,
   ...props
 }: React.SVGAttributes<SVGElement>) => {
