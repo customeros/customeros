@@ -83,10 +83,10 @@ const InvoiceStatusChangeAction = ({
       tabIndex={0}
       role='button'
       onClick={() =>
-        !isTemporary && metadata?.id && handleOpenInvoice(metadata.id)
+        !isTemporary && metadata?.id && handleOpenInvoice(metadata.number)
       }
       className={cn('flex items-center pointer focus:outline-none min-h-10 ', {
-        'not-allowed': isTemporary || !metadata?.id,
+        'not-allowed': isTemporary || !metadata?.number,
         'opacity-50': isTemporary,
       })}
     >
