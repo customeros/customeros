@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 
-import { Link03 } from '@ui/media/icons/Link03';
 import { XClose } from '@ui/media/icons/XClose';
 import { useStore } from '@shared/hooks/useStore';
+import { Link01 } from '@ui/media/icons/Link01.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
@@ -45,7 +45,7 @@ export const InvoicePreviewModal = observer(() => {
                 className='mr-1'
                 colorScheme='gray'
                 aria-label='Copy invoice link'
-                icon={<Link03 color='text-inherit' />}
+                icon={<Link01 color='text-inherit' />}
                 onClick={() => copy(window.location.href)}
               />
             </Tooltip>
