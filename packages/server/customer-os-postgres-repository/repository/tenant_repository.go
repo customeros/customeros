@@ -24,6 +24,7 @@ func NewTenantRepository(gormDb *gorm.DB) TenantRepository {
 func (e tenantRepository) Create(ctx context.Context, tenantEntity entity.Tenant) (*entity.Tenant, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantRepository.Create")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	err := e.gormDb.Create(&tenantEntity).Error
 	if err != nil {

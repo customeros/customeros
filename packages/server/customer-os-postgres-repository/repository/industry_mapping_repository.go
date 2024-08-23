@@ -24,6 +24,7 @@ func NewIndustryMappingRepository(gormDb *gorm.DB) IndustryMappingRepository {
 func (r industryMappingRepository) GetAllIndustryMappingsAsMap(ctx context.Context) (map[string]string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "IndustryMappingRepository.GetAllIndustryMappingsAsMap")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var industryMappings []entity.IndustryMapping
 	err := r.gormDb.Find(&industryMappings).Error

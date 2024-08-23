@@ -2,16 +2,18 @@ package repository
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"golang.org/x/net/context"
 	"gorm.io/gorm"
-	"gorm.io/gorm/clause"
 	"log"
 )
 
 type TenantSettingsRepository interface {
-	FindForTenantName(tenantName string) (*entity.TenantSettings, error)
-	Save(tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error)
-	CheckKeysExist(tenantName string, keyName []string) (bool, error)
+	FindForTenantName(ctx context.Context, tenantName string) (*entity.TenantSettings, error)
+	Save(ctx context.Context, tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error)
+	CheckKeysExist(ctx context.Context, tenantName string, keyName []string) (bool, error)
 }
 
 type tenantSettingsRepo struct {
@@ -24,7 +26,11 @@ func NewTenantSettingsRepository(db *gorm.DB) TenantSettingsRepository {
 	}
 }
 
-func (r *tenantSettingsRepo) FindForTenantName(tenantName string) (*entity.TenantSettings, error) {
+func (r *tenantSettingsRepo) FindForTenantName(ctx context.Context, tenantName string) (*entity.TenantSettings, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.FindForTenantName")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	var tenantSettings entity.TenantSettings
 
 	err := r.db.
@@ -41,7 +47,11 @@ func (r *tenantSettingsRepo) FindForTenantName(tenantName string) (*entity.Tenan
 	return &tenantSettings, nil
 }
 
-func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string) (bool, error) {
+func (r *tenantSettingsRepo) CheckKeysExist(ctx context.Context, tenantName string, keyName []string) (bool, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.CheckKeysExist")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	var rows int64
 	exists := true
 	for _, key := range keyName {
@@ -60,36 +70,10 @@ func (r *tenantSettingsRepo) CheckKeysExist(tenantName string, keyName []string)
 	return exists, nil
 }
 
-func (r *tenantSettingsRepo) SaveKeys(keys []entity.GoogleServiceAccountKey) error {
-
-	for _, key := range keys {
-		result := r.db.Clauses(clause.OnConflict{
-			Columns:   []clause.Column{{Name: "tenant_name"}, {Name: "key"}},
-			DoUpdates: clause.Assignments(map[string]interface{}{"value": key.Value}),
-		}).Save(&key)
-		if result.Error != nil {
-			return fmt.Errorf("SaveKeys: %w", result.Error)
-		}
-	}
-	return nil
-}
-
-func (r *tenantSettingsRepo) DeleteKeys(keys []entity.GoogleServiceAccountKey) error {
-
-	var deletedItem entity.GoogleServiceAccountKey
-	for _, key := range keys {
-		log.Printf("DeleteKeys: %s, %s", key.TenantName, key.Key)
-		err := r.db.
-			Where(&key, "tenant_name", "key").Delete(&deletedItem).Error
-
-		if err != nil {
-			return fmt.Errorf("DeleteKeys: %w", err)
-		}
-	}
-	return nil
-}
-
-func (r *tenantSettingsRepo) Save(tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error) {
+func (r *tenantSettingsRepo) Save(ctx context.Context, tenantSettings *entity.TenantSettings) (*entity.TenantSettings, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsRepository.Save")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	err := r.db.Save(tenantSettings).Error
 

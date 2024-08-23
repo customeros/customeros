@@ -58,7 +58,7 @@ func (np *PostmarkProvider) getPostmarkClient(ctx context.Context, tenant string
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.getPostmarkClient")
 	defer span.Finish()
 
-	p := np.services.CommonServices.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(tenant)
+	p := np.services.CommonServices.PostgresRepositories.PostmarkApiKeyRepository.GetPostmarkApiKey(ctx, tenant)
 	if p.Error != nil {
 		tracing.TraceErr(span, p.Error)
 		return nil, p.Error

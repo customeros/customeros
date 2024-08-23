@@ -31,7 +31,7 @@ func NewTenantSettingsOpportunityStageRepository(db *gorm.DB) TenantSettingsOppo
 func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, tenant, id string) (*entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.GetById")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(tracingLog.String("id", id))
 
@@ -55,7 +55,7 @@ func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, te
 func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Context, tenant string) ([]*entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Get")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
 	var entities []*entity.TenantSettingsOpportunityStage
@@ -93,7 +93,7 @@ func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Con
 func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Init")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
 	r.Store(ctx, entity.TenantSettingsOpportunityStage{
@@ -141,7 +141,7 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, entity entity.TenantSettingsOpportunityStage) (*entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Store")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, entity.Tenant)
 
 	err := r.gormDb.Save(&entity).Error
@@ -159,7 +159,7 @@ func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, enti
 func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, tenant, id string, label *string, likelihoodRate *int64, visible *bool) (*entity.TenantSettingsOpportunityStage, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.Update")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(tracingLog.String("id", id))
 

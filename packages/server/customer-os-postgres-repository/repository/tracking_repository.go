@@ -39,6 +39,7 @@ func NewTrackingRepository(gormDb *gorm.DB) TrackingRepository {
 func (r trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetById")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	span.LogFields(tracingLog.String("id", id))
 

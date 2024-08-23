@@ -71,7 +71,7 @@ func main() {
 	}
 	appCache.SetPersonalEmailProviders(personalEmailProviders)
 
-	emailExclusionEntities, err := services.Repositories.PostgresRepositories.TenantSettingsEmailExclusionRepository.GetExclusionList()
+	emailExclusionEntities, err := services.Repositories.PostgresRepositories.TenantSettingsEmailExclusionRepository.GetExclusionList(ctx)
 	if err != nil {
 		appLogger.Fatalf("Error getting email exclusion list: %s", err.Error())
 	}

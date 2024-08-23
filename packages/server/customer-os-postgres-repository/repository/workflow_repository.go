@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -28,6 +29,7 @@ func NewWorkflowRepository(gormDb *gorm.DB) WorkflowRepository {
 func (t workflowRepository) GetWorkflowByTypeIfExists(ctx context.Context, tenant string, workflowType entity.WorkflowType) (*entity.Workflow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetWorkflowByTypeIfExists")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var workflow entity.Workflow
 	err := t.gormDb.
@@ -47,6 +49,7 @@ func (t workflowRepository) GetWorkflowByTypeIfExists(ctx context.Context, tenan
 func (t workflowRepository) CreateWorkflow(ctx context.Context, workflow *entity.Workflow) (entity.Workflow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.CreateWorkflow")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	err := t.gormDb.Create(workflow).Error
 	if err != nil {
@@ -59,6 +62,7 @@ func (t workflowRepository) CreateWorkflow(ctx context.Context, workflow *entity
 func (t workflowRepository) UpdateWorkflow(ctx context.Context, id uint64, name, condition, actionParam1 *string, live *bool) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.UpdateWorkflow")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	updateMap := make(map[string]interface{})
 	if name != nil {
@@ -81,6 +85,7 @@ func (t workflowRepository) UpdateWorkflow(ctx context.Context, id uint64, name,
 func (t workflowRepository) GetWorkflowByTenantAndId(ctx context.Context, tenant string, id uint64) (entity.Workflow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetWorkflowByTenantAndId")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var workflow entity.Workflow
 	err := t.gormDb.
@@ -97,6 +102,7 @@ func (t workflowRepository) GetWorkflowByTenantAndId(ctx context.Context, tenant
 func (t workflowRepository) GetAllTenantsLiveWorkflows(ctx context.Context) ([]entity.Workflow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetAllTenantsLiveWorkflows")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var workflows []entity.Workflow
 	err := t.gormDb.
@@ -113,6 +119,7 @@ func (t workflowRepository) GetAllTenantsLiveWorkflows(ctx context.Context) ([]e
 func (t workflowRepository) GetWorkflows(ctx context.Context, tenant string) ([]entity.Workflow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "WorkflowRepository.GetWorkflows")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var workflows []entity.Workflow
 	err := t.gormDb.

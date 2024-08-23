@@ -36,7 +36,7 @@ func (c *currencyService) GetRate(ctx context.Context, fromCurrency, toCurrency 
 
 	// step 1 convert from fromCurrency into USD
 	if fromCurrency != "" && fromCurrency != neo4jenum.CurrencyUSD.String() {
-		rate, err := c.repositories.CurrencyRateRepository.GetLatestCurrencyRate(fromCurrency)
+		rate, err := c.repositories.CurrencyRateRepository.GetLatestCurrencyRate(ctx, fromCurrency)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return 1, err
@@ -48,7 +48,7 @@ func (c *currencyService) GetRate(ctx context.Context, fromCurrency, toCurrency 
 
 	// step 2 covert from USD to toCurrency
 	if toCurrency != "" && toCurrency != neo4jenum.CurrencyUSD.String() {
-		rate, err := c.repositories.CurrencyRateRepository.GetLatestCurrencyRate(toCurrency)
+		rate, err := c.repositories.CurrencyRateRepository.GetLatestCurrencyRate(ctx, toCurrency)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return 1, err

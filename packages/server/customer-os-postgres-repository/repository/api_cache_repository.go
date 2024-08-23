@@ -24,24 +24,26 @@ func NewApiCacheRepository(gormDb *gorm.DB) ApiCacheRepository {
 	return &apiCacheRepositoryImpl{gormDb: gormDb}
 }
 
-func (repo *apiCacheRepositoryImpl) GetAll(ctx context.Context) ([]*entity.ApiCache, error) {
+func (r *apiCacheRepositoryImpl) GetAll(ctx context.Context) ([]*entity.ApiCache, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ApiCacheRepository.Get")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var entities []*entity.ApiCache
-	err := repo.gormDb.Find(&entities).Error
+	err := r.gormDb.Find(&entities).Error
 
 	return entities, err
 }
 
-func (repo *apiCacheRepositoryImpl) Get(ctx context.Context, tenant, typee string) (*entity.ApiCache, error) {
+func (r *apiCacheRepositoryImpl) Get(ctx context.Context, tenant, typee string) (*entity.ApiCache, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ApiCacheRepository.Get")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("typee", typee))
 
 	var entity entity.ApiCache
-	err := repo.gormDb.Where("tenant = ? AND type = ?", tenant, typee).First(&entity).Error
+	err := r.gormDb.Where("tenant = ? AND type = ?", tenant, typee).First(&entity).Error
 
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, nil
@@ -50,24 +52,25 @@ func (repo *apiCacheRepositoryImpl) Get(ctx context.Context, tenant, typee strin
 	return &entity, err
 }
 
-func (repo *apiCacheRepositoryImpl) Save(ctx context.Context, entity entity.ApiCache) error {
+func (r *apiCacheRepositoryImpl) Save(ctx context.Context, entity entity.ApiCache) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ApiCacheRepository.Save")
 	defer span.Finish()
-	span.SetTag("tenant", entity.Tenant)
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, entity.Tenant)
 
 	if entity.ID != "" {
-		return repo.gormDb.Create(&entity).Error
+		return r.gormDb.Create(&entity).Error
 	} else {
-		existing, err := repo.Get(ctx, entity.Tenant, entity.Type)
+		existing, err := r.Get(ctx, entity.Tenant, entity.Type)
 		if err != nil {
 			return err
 		}
 
 		if existing != nil {
 			entity.ID = existing.ID
-			return repo.gormDb.Save(&entity).Error
+			return r.gormDb.Save(&entity).Error
 		} else {
-			return repo.gormDb.Create(&entity).Error
+			return r.gormDb.Create(&entity).Error
 		}
 	}
 }

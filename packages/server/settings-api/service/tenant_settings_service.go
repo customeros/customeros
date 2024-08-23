@@ -134,7 +134,7 @@ func NewTenantSettingsService(services *Services, log logger.Logger, cfg *config
 }
 
 func (s *tenantSettingsService) GetForTenant(tenantName string) (*postgresentity.TenantSettings, map[string]bool, error) {
-	settings, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.FindForTenantName(tenantName)
+	settings, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.FindForTenantName(context.TODO(), tenantName)
 
 	if err != nil {
 		return nil, nil, err
@@ -170,7 +170,7 @@ func (s *tenantSettingsService) GetServiceActivations(tenantName string) (map[st
 		for _, mapping := range keyMappings {
 			keys = append(keys, mapping.DbKeyName)
 		}
-		active, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.CheckKeysExist(tenantName, keys)
+		active, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.CheckKeysExist(context.TODO(), tenantName, keys)
 		if err != nil {
 			return nil, fmt.Errorf("GetServiceActivations: %w", err)
 		}
@@ -193,7 +193,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 			TenantName: tenantName,
 		}
 
-		_, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(tenantSettings)
+		_, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(context.TODO(), tenantSettings)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1329,7 +1329,7 @@ func (s *tenantSettingsService) SaveIntegrationData(tenantName string, request m
 	}
 
 	if legacyUpdate {
-		tenantSettings, err = s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(tenantSettings)
+		tenantSettings, err = s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(context.TODO(), tenantSettings)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -1636,7 +1636,7 @@ func (s *tenantSettingsService) ClearIntegrationData(tenantName, identifier stri
 			}
 		}
 
-		save, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(tenantSettings)
+		save, err := s.services.CommonServices.PostgresRepositories.TenantSettingsRepository.Save(ctx, tenantSettings)
 		if err != nil {
 			return nil, nil, err
 		}

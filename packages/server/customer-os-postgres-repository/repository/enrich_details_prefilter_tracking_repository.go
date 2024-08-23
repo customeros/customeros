@@ -30,6 +30,7 @@ func NewEnrichDetailsPrefilterTrackingRepository(gormDb *gorm.DB) EnrichDetailsP
 func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx context.Context) ([]*entity.EnrichDetailsPreFilterTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetForSendingRequests")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	var entitites []*entity.EnrichDetailsPreFilterTracking
 	err := r.gormDb.
@@ -49,6 +50,7 @@ func (r enrichDetailsPrefilterTrackingRepository) GetForSendingRequests(ctx cont
 func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, ip string) (*entity.EnrichDetailsPreFilterTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.GetByIP")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("ip", ip))
 
 	var entity *entity.EnrichDetailsPreFilterTracking
@@ -73,7 +75,7 @@ func (r enrichDetailsPrefilterTrackingRepository) GetByIP(ctx context.Context, i
 func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Context, ip string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterRequest")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("ip", ip))
 
 	request := entity.EnrichDetailsPreFilterTracking{
@@ -93,7 +95,7 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Co
 func (r enrichDetailsPrefilterTrackingRepository) RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, response string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterResponse")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("ip", ip), tracingLog.Bool("shouldIdentify", shouldIdentify), tracingLog.String("response", response))
 
 	byId, err := r.GetByIP(ctx, ip)

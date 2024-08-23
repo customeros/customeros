@@ -91,7 +91,7 @@ func (c currencyService) GetCurrencyRatesECB() {
 	for _, currency := range envelope.Cube.Cube.Currencies {
 		if currency.Currency == "USD" {
 			usdToEurRate = utils.TruncateFloat64(float64(1)/currency.Rate, 5)
-			err := c.repositories.PostgresRepositories.CurrencyRateRepository.SaveCurrencyRate("EUR", usdToEurRate, date, "European Central Bank")
+			err := c.repositories.PostgresRepositories.CurrencyRateRepository.SaveCurrencyRate(ctx, "EUR", usdToEurRate, date, "European Central Bank")
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.log.Errorf("Error saving currency rate: %s", err.Error())
@@ -104,7 +104,7 @@ func (c currencyService) GetCurrencyRatesECB() {
 	for _, currency := range envelope.Cube.Cube.Currencies {
 		if currency.Currency != "USD" {
 			usdToCurrency := utils.TruncateFloat64(usdToEurRate*currency.Rate, 5)
-			err := c.repositories.PostgresRepositories.CurrencyRateRepository.SaveCurrencyRate(currency.Currency, usdToCurrency, date, "European Central Bank")
+			err := c.repositories.PostgresRepositories.CurrencyRateRepository.SaveCurrencyRate(ctx, currency.Currency, usdToCurrency, date, "European Central Bank")
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.log.Errorf("Error saving currency rate: %s", err.Error())
