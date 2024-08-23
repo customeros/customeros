@@ -61,7 +61,7 @@ export const EmailCell = observer(
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
-        <div className='flex w-[stretch]'>
+        <div className='flex ' style={{ width: `calc(100% - 1rem)` }}>
           {!isEdit && !email && <p className='text-gray-400'>Unknown</p>}
           {!isEdit && email && (
             <p className='overflow-ellipsis overflow-hidden'>{email}</p>

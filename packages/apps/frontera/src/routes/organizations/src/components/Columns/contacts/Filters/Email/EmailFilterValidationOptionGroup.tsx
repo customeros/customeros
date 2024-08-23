@@ -4,8 +4,8 @@ import { CheckedState } from '@radix-ui/react-checkbox';
 
 import { cn } from '@ui/utils/cn.ts';
 import { IconButton } from '@ui/form/IconButton';
+import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
-import { Checkbox, CheckMinus } from '@ui/form/Checkbox/Checkbox';
 import {
   CollapsibleRoot,
   CollapsibleContent,
@@ -51,7 +51,6 @@ export const EmailFilterValidationOptionGroup: React.FC<CheckboxGroupProps> = ({
   <CollapsibleRoot open={!!isCategoryChecked} className='flex flex-col w-full'>
     <div className='flex justify-between w-full items-center'>
       <Checkbox
-        icon={<CheckMinus />}
         isChecked={isCategoryChecked}
         onChange={() => onToggleCategory(category)}
       >
@@ -62,12 +61,12 @@ export const EmailFilterValidationOptionGroup: React.FC<CheckboxGroupProps> = ({
       <div className='flex flex-col w-full gap-2 ml-6 mt-2'>
         {options.map((option) => (
           <div className='group' key={option.value}>
-            <Checkbox
-              disabled={option?.disabled}
-              isChecked={isOptionChecked(option.value)}
-              onChange={(checked) => onToggleOption(option.value, checked)}
-            >
-              <div className='flex'>
+            <div className='flex'>
+              <Checkbox
+                disabled={option?.disabled}
+                isChecked={isOptionChecked(option.value)}
+                onChange={(checked) => onToggleOption(option.value, checked)}
+              >
                 <p
                   className={cn('text-sm', {
                     'text-gray-400': option?.disabled,
@@ -75,17 +74,16 @@ export const EmailFilterValidationOptionGroup: React.FC<CheckboxGroupProps> = ({
                 >
                   {option.label}
                 </p>
-
-                <IconButton
-                  size='xxs'
-                  variant='ghost'
-                  icon={<InfoCircle />}
-                  aria-label='More info'
-                  onClick={(e) => onOpenInfoModal(e, option.value)}
-                  className='opacity-0 group-hover:opacity-100 transition-opacity bg-transparent hover:bg-transparent'
-                />
-              </div>
-            </Checkbox>
+              </Checkbox>
+              <IconButton
+                size='xxs'
+                variant='ghost'
+                icon={<InfoCircle />}
+                aria-label='More info'
+                onClick={(e) => onOpenInfoModal(e, option.value)}
+                className='opacity-0 group-hover:opacity-100 transition-opacity bg-transparent hover:bg-transparent'
+              />
+            </div>
           </div>
         ))}
       </div>
