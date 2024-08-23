@@ -83,14 +83,6 @@ type EmailValidationDetails {
     isRoleAccount:  Boolean
     isFreeAccount:  Boolean
     smtpSuccess:    Boolean
-
-    validated: Boolean @deprecated
-    isReachable: String @deprecated
-    acceptsMail: Boolean @deprecated
-    hasFullInbox: Boolean @deprecated
-    isDisabled: Boolean @deprecated
-    isDisposable: Boolean @deprecated
-    error: String @deprecated
 }
 
 """
