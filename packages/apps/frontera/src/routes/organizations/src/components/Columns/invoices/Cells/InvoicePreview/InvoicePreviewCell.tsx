@@ -2,19 +2,13 @@ import { useSearchParams } from 'react-router-dom';
 
 import { Eye } from '@ui/media/icons/Eye';
 
-export const InvoicePreviewCell = ({
-  value,
-  invoiceId,
-}: {
-  value: string;
-  invoiceId: string;
-}) => {
+export const InvoicePreviewCell = ({ value }: { value: string }) => {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const handleClick = () => {
     const newSearchParams = new URLSearchParams(searchParams?.toString());
 
-    newSearchParams.set('preview', invoiceId);
+    newSearchParams.set('preview', value);
     setSearchParams(newSearchParams.toString());
   };
 

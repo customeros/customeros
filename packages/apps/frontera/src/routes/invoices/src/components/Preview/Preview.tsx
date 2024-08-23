@@ -20,7 +20,7 @@ import { PaymentStatusSelect } from '../shared';
 export const Preview = observer(() => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const invoiceId = searchParams?.get('preview');
+  const invoiceNumber = searchParams?.get('preview');
 
   const onOpenChange = () => {
     const newParams = new URLSearchParams(searchParams?.toString());
@@ -32,10 +32,12 @@ export const Preview = observer(() => {
 
   const store = useStore();
 
-  const invoice = invoiceId ? store.invoices.value.get(invoiceId) : null;
+  const invoice = invoiceNumber
+    ? store.invoices.value.get(invoiceNumber)
+    : null;
 
   return (
-    <Modal open={!!invoiceId} onOpenChange={onOpenChange}>
+    <Modal open={!!invoiceNumber} onOpenChange={onOpenChange}>
       <ModalPortal>
         <ModalOverlay className='z-50'>
           {/* width and height of A4 */}
@@ -45,7 +47,7 @@ export const Preview = observer(() => {
                 <PaymentStatusSelect
                   variant='invoice-preview'
                   value={invoice?.value?.status}
-                  invoiceId={invoice?.value?.metadata?.id}
+                  invoiceNumber={invoice?.number}
                 />
               ) : (
                 <Skeleton className='w-[72px] h-[34px]' />
@@ -53,8 +55,8 @@ export const Preview = observer(() => {
 
               <DownloadFile
                 variant='outline'
-                fileId={invoiceId ?? ''}
                 leftIcon={<Download02 />}
+                fileId={invoice?.id ?? ''}
                 fileName={`invoice-${invoice?.value?.invoiceNumber}`}
               />
             </ModalHeader>

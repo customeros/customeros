@@ -16,17 +16,14 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 export const columns = [
   columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoiceNumber,
-    size: 90,
+    size: 100,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (
       <THead title='N°' id='invoiceNumber' {...getTHeadProps(props)} />
     ),
     cell: (props) => (
-      <InvoicePreviewCell
-        value={props.getValue()?.value?.invoiceNumber}
-        invoiceId={props.getValue()?.value?.metadata?.id}
-      />
+      <InvoicePreviewCell value={props.getValue()?.value?.invoiceNumber} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
@@ -53,7 +50,7 @@ export const columns = [
 
   columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesInvoiceStatus,
-    size: 120,
+    size: 110,
     enableColumnFilter: false,
     enableSorting: true,
     header: (props) => (
@@ -65,15 +62,15 @@ export const columns = [
     ),
     cell: (props) => (
       <PaymentStatusSelect
+        invoiceNumber={props.getValue()?.number}
         value={props.getValue()?.value?.status || null}
-        invoiceId={props.getValue()?.value?.metadata?.id}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
   columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesAmount,
-    size: 100,
+    size: 90,
     enableColumnFilter: false,
     enableSorting: false,
     header: (props) => (

@@ -76,7 +76,9 @@ export const InvoicesPanel = observer(() => {
             enableRowSelection={false}
             totalItems={invoices.length}
             isLoading={store.invoices.isLoading}
-            onFullRowSelection={(id) => id && handleOpenInvoice(id)}
+            onFullRowSelection={(row) =>
+              row?.number && handleOpenInvoice(row.number)
+            }
           />
         </div>
       </motion.div>
