@@ -1,8 +1,12 @@
 package service
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
+	"fmt"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -12,8 +16,21 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"net/http"
 	"strings"
 )
+
+type ScrubbyIoRequest struct {
+	Email       string `json:"email"`
+	CallbackUrl string `json:"callback_url"`
+	Identifier  string `json:"identifier"`
+}
+
+type ScrubbyIoResponse struct {
+	Email      string `json:"email"`
+	Status     string `json:"status"`
+	Identifier string `json:"identifier"`
+}
 
 type EmailValidationService interface {
 	ValidateEmailWithMailsherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error)
@@ -184,6 +201,109 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 }
 
 func (s *emailValidationService) ValidateEmailScrubby(ctx context.Context, email string) (string, error) {
-	//TODO implement me
-	panic("implement me")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailScrubby")
+	defer span.Finish()
+	span.LogFields(log.String("email", email))
+
+	cachedScrubbyRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailScrubbyRepository.GetLatestByEmail(ctx, email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
+		return "", err
+	}
+
+	validationStatus := ""
+
+	if cachedScrubbyRecord == nil ||
+		cachedScrubbyRecord.Status == "" ||
+		cachedScrubbyRecord.CheckedAt.AddDate(0, 0, s.config.ScrubbyIoConfig.CacheTtlDays).Before(utils.Now()) {
+		identifier := uuid.New().String()
+		scrubbyResponse, err := s.callScrubbyIo(ctx, identifier, email)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email with scrubby"))
+		} else {
+			savedRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailScrubbyRepository.Save(ctx, postgresentity.CacheEmailScrubby{
+				ID:        identifier,
+				Email:     email,
+				Status:    strings.ToLower(scrubbyResponse.Status),
+				CheckedAt: utils.Now(),
+			})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to save scrubby data"))
+				return "", err
+			}
+			validationStatus = savedRecord.Status
+		}
+	}
+
+	if validationStatus == "" || validationStatus == "pending" {
+		allCachedRecords, err := s.Services.CommonServices.PostgresRepositories.CacheEmailScrubbyRepository.GetAllByEmail(ctx, email)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get all scrubby records"))
+			return validationStatus, err
+		}
+		for _, record := range allCachedRecords {
+			if record.Status == "valid" {
+				validationStatus = "valid"
+				break
+			} else if record.Status == "invalid" {
+				validationStatus = "invalid"
+				break
+			} else if record.Status != "" {
+				validationStatus = record.Status
+			}
+		}
+	}
+	return validationStatus, nil
+}
+
+func (s *emailValidationService) callScrubbyIo(ctx context.Context, identifier, email string) (ScrubbyIoResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.callScrubbyIo")
+	defer span.Finish()
+	span.LogFields(log.String("email", email), log.String("identifier", identifier))
+
+	requestJSON, err := json.Marshal(ScrubbyIoRequest{
+		Email:       email,
+		Identifier:  identifier,
+		CallbackUrl: s.config.ScrubbyIoConfig.CallbackUrl,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+		return ScrubbyIoResponse{}, err
+	}
+
+	requestBody := []byte(string(requestJSON))
+	req, err := http.NewRequest("POST", s.config.ScrubbyIoConfig.ApiUrl+"/add_email", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		return ScrubbyIoResponse{}, err
+	}
+
+	// Set the request headers
+	req.Header.Set("x-api-key", s.config.ScrubbyIoConfig.ApiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		return ScrubbyIoResponse{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		err = errors.New(fmt.Sprintf("scrubby.io returned %d status code", response.StatusCode))
+		tracing.TraceErr(span, err)
+		return ScrubbyIoResponse{}, err
+	}
+
+	var scrubbyIoResponse ScrubbyIoResponse
+	err = json.NewDecoder(response.Body).Decode(&scrubbyIoResponse)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode scrubby.io response"))
+		return ScrubbyIoResponse{}, err
+	}
+	tracing.LogObjectAsJson(span, "response.scrubby", scrubbyIoResponse)
+
+	return scrubbyIoResponse, nil
 }

@@ -43,8 +43,8 @@ type EmailConfig struct {
 }
 
 type ScrubbyIoConfig struct {
-	ApiUrl               string `env:"SCRUBBY_IO_API_URL" envDefault:"https://api.scrubby.io" validate:"required"`
-	ApiKey               string `env:"SCRUBBY_IO_API_KEY" validate:"required"`
-	CacheTtlDays         int    `env:"SCRUBBY_IO_CACHE_TTL_DAYS" envDefault:"90" validate:"required"`
-	ScrubbyIoCallbackUrl string `env:"SCRUBBY_IO_CALLBACK_URL"`
+	ApiUrl       string `env:"SCRUBBY_IO_API_URL" envDefault:"https://api.scrubby.io" validate:"required"`
+	ApiKey       string `env:"SCRUBBY_IO_API_KEY" validate:"required"`
+	CacheTtlDays int    `env:"SCRUBBY_IO_CACHE_TTL_DAYS" envDefault:"90" validate:"required"`
+	CallbackUrl  string `env:"SCRUBBY_IO_CALLBACK_URL"`
 }
