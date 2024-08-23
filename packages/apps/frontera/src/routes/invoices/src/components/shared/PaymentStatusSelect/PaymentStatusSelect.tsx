@@ -44,7 +44,7 @@ export const PaymentStatusSelect = observer(
           {cloneElement(Status, {
             className: cn(
               'cursor-pointer',
-              variant === 'invoice-preview' && 'px-2 py-1 text-md',
+              variant === 'invoice-preview' && 'px-2 py-0.5 text-md',
               value === InvoiceStatus.Scheduled &&
                 'opacity-50 cursor-not-allowed',
             ),
