@@ -3,7 +3,6 @@ package repository
 import (
 	"errors"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -27,8 +26,8 @@ func NewTenantWebhookApiKeyRepository(gormDb *gorm.DB) TenantWebhookApiKeyReposi
 func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.CreateApiKey")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	apiKey := entity.TenantWebhookApiKey{
 		Tenant:  tenant,
@@ -46,7 +45,7 @@ func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant
 func (r *tenantWebhookApiKeyRepository) GetTenantForApiKey(ctx context.Context, apiKey string) (*entity.TenantWebhookApiKey, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.GetTenantWithApiKey")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
+	tracing.TagComponentPostgresRepository(span)
 
 	// get record for api key or nil if not found
 	var apiKeyRecord entity.TenantWebhookApiKey

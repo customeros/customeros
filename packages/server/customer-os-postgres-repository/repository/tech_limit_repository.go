@@ -27,7 +27,7 @@ func NewTechLimitRepository(gormDb *gorm.DB) TechLimitRepository {
 func (t techLimitRepository) GetTechLimit(ctx context.Context, key string) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TechLimitRepository.GetTechLimit")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("key", key))
 
 	var techLimits []entity.TechLimit
@@ -51,7 +51,7 @@ func (t techLimitRepository) GetTechLimit(ctx context.Context, key string) helpe
 func (t techLimitRepository) IncrementTechLimit(ctx context.Context, key string) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TechLimitRepository.IncrementTechLimit")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("key", key))
 
 	// create entry if not exists

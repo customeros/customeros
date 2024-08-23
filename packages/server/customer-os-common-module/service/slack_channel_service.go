@@ -34,7 +34,7 @@ func (s *slackChannelService) GetSlackChannels(ctx context.Context, tenant strin
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, "service")
 
-	nodes, err := s.repositories.SlackChannelRepository.GetSlackChannels(tenant)
+	nodes, err := s.repositories.SlackChannelRepository.GetSlackChannels(ctx, tenant)
 	if err != nil {
 		return nil, err
 	}
@@ -48,7 +48,7 @@ func (s *slackChannelService) GetPaginatedSlackChannels(ctx context.Context, ten
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.SetTag(tracing.SpanTagComponent, "service")
 
-	channels, totalCount, err := s.repositories.SlackChannelRepository.GetPaginatedSlackChannels(tenant, page, limit)
+	channels, totalCount, err := s.repositories.SlackChannelRepository.GetPaginatedSlackChannels(ctx, tenant, page, limit)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -65,7 +65,7 @@ func (s *slackChannelService) StoreSlackChannel(ctx context.Context, tenant, sou
 	span.LogFields(log.String("channelName", channelName))
 	span.LogFields(log.String("organizationId", utils.IfNotNilString(organizationId)))
 
-	existing, err := s.repositories.SlackChannelRepository.GetSlackChannel(tenant, channelId)
+	existing, err := s.repositories.SlackChannelRepository.GetSlackChannel(ctx, tenant, channelId)
 	if err != nil {
 		return err
 	}
@@ -81,13 +81,13 @@ func (s *slackChannelService) StoreSlackChannel(ctx context.Context, tenant, sou
 			OrganizationId: organizationId,
 			Source:         source,
 		}
-		return s.repositories.SlackChannelRepository.CreateSlackChannel(&slackChannel)
+		return s.repositories.SlackChannelRepository.CreateSlackChannel(ctx, &slackChannel)
 	}
 	if existing != nil {
 		if organizationId != nil {
-			return s.repositories.SlackChannelRepository.UpdateSlackChannelOrganization(existing.ID, *organizationId)
+			return s.repositories.SlackChannelRepository.UpdateSlackChannelOrganization(ctx, existing.ID, *organizationId)
 		} else if channelName != "" {
-			return s.repositories.SlackChannelRepository.UpdateSlackChannelName(existing.ID, channelName)
+			return s.repositories.SlackChannelRepository.UpdateSlackChannelName(ctx, existing.ID, channelName)
 		}
 	}
 

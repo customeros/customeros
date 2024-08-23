@@ -25,7 +25,7 @@ func NewAppKeyRepo(db *gorm.DB) AppKeyRepository {
 func (r *appKeyRepository) FindByKey(ctx context.Context, app string, key string) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "AppKeyRepo.FindByKey")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("app", app))
 
 	var appKey entity.AppKey

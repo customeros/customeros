@@ -2,8 +2,11 @@ package repository
 
 import (
 	"errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"golang.org/x/net/context"
 	"gorm.io/gorm"
 	"time"
 )
@@ -13,15 +16,19 @@ type currencyRateRepo struct {
 }
 
 type CurrencyRateRepository interface {
-	GetLatestCurrencyRate(currency string) (*entity.CurrencyRate, error)
-	SaveCurrencyRate(currency string, rate float64, date time.Time, source string) error
+	GetLatestCurrencyRate(ctx context.Context, currency string) (*entity.CurrencyRate, error)
+	SaveCurrencyRate(ctx context.Context, currency string, rate float64, date time.Time, source string) error
 }
 
 func NewCurrencyRateRepository(db *gorm.DB) CurrencyRateRepository {
 	return &currencyRateRepo{db: db}
 }
 
-func (r *currencyRateRepo) GetLatestCurrencyRate(currency string) (*entity.CurrencyRate, error) {
+func (r *currencyRateRepo) GetLatestCurrencyRate(ctx context.Context, currency string) (*entity.CurrencyRate, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CurrencyRateRepository.GetLatestCurrencyRate")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	var rate entity.CurrencyRate
 	err := r.db.
 		Where("currency = ?", currency).
@@ -38,7 +45,11 @@ func (r *currencyRateRepo) GetLatestCurrencyRate(currency string) (*entity.Curre
 	return &rate, nil
 }
 
-func (r *currencyRateRepo) SaveCurrencyRate(currency string, rate float64, date time.Time, source string) error {
+func (r *currencyRateRepo) SaveCurrencyRate(ctx context.Context, currency string, rate float64, date time.Time, source string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CurrencyRateRepository.SaveCurrencyRate")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
 	// Check if the currency rate already exists for the given currency and date
 	var existingRate entity.CurrencyRate
 	err := r.db.

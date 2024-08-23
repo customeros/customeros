@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -24,6 +25,7 @@ func NewTrackingAllowedOriginRepository(gormDb *gorm.DB) TrackingAllowedOriginRe
 func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(ctx context.Context, origin string) (*string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.GetTenantForOrigin")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("origin", origin))
 
 	var result entity.TrackingAllowedOrigin

@@ -68,7 +68,7 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 
 	for _, emailRawData := range rawEmails {
 
-		emailExists, err := s.services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(externalSystem, importState.Tenant, importState.Username, emailRawData.MessageId)
+		emailExists, err := s.services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(ctx, externalSystem, importState.Tenant, importState.Username, emailRawData.MessageId)
 		if err != nil {
 			return nil, fmt.Errorf("unable to check if email exists: %v", err)
 		}
@@ -82,7 +82,7 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 				countEmailsExists = countEmailsExists + 1
 
 				if countEmailsExists >= s.cfg.SyncData.BatchSize {
-					importState, err = s.services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.UpdateEmailImportState(importState.Tenant, importState.Provider, importState.Username, importState.State, "")
+					importState, err = s.services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.UpdateEmailImportState(ctx, importState.Tenant, importState.Provider, importState.Username, importState.State, "")
 					if err != nil {
 						return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)
 					}
@@ -94,7 +94,7 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 		} else {
 			zeroTime := time.Time{}
 			if emailRawData.Sent != zeroTime && importState.StopDate != nil && emailRawData.Sent.Before(*importState.StopDate) {
-				importState, err = s.services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.UpdateEmailImportState(importState.Tenant, importState.Provider, importState.Username, importState.State, "")
+				importState, err = s.services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.UpdateEmailImportState(ctx, importState.Tenant, importState.Provider, importState.Username, importState.State, "")
 				if err != nil {
 					return nil, fmt.Errorf("unable to update the gmail page token for username: %v", err)
 				}
@@ -108,14 +108,13 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 			return nil, fmt.Errorf("failed to marshal email content: %v", err)
 		}
 
-		err = s.services.CommonServices.PostgresRepositories.RawEmailRepository.Store(externalSystem, importState.Tenant, importState.Username, emailRawData.ProviderMessageId, emailRawData.MessageId, string(jsonContent), emailRawData.Sent, importState.State)
+		err = s.services.CommonServices.PostgresRepositories.RawEmailRepository.Store(ctx, externalSystem, importState.Tenant, importState.Username, emailRawData.ProviderMessageId, emailRawData.MessageId, string(jsonContent), emailRawData.Sent, importState.State)
 		if err != nil {
 			return nil, fmt.Errorf("failed to store email content: %v", err)
 		}
-
 	}
 
-	importState, err = s.services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.UpdateEmailImportState(importState.Tenant, importState.Provider, importState.Username, importState.State, next)
+	importState, err = s.services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.UpdateEmailImportState(ctx, importState.Tenant, importState.Provider, importState.Username, importState.State, next)
 	if err != nil {
 		return nil, fmt.Errorf("unable to update the email page token for username: %v", err)
 	}

@@ -27,6 +27,7 @@ func NewGoogleServiceAccountKeyRepository(gormDb *gorm.DB) *GoogleServiceAccount
 func (repo *GoogleServiceAccountKeyRepositoryImpl) GetApiKeyByTenantService(ctx context.Context, tenantName, serviceId string) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GoogleServiceAccountKeyRepository.GetApiKeyByTenantService")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("tenantName", tenantName), log.String("serviceId", serviceId))
 
 	result := entity.GoogleServiceAccountKey{}
@@ -47,6 +48,7 @@ func (repo *GoogleServiceAccountKeyRepositoryImpl) GetApiKeyByTenantService(ctx 
 func (repo *GoogleServiceAccountKeyRepositoryImpl) SaveKey(ctx context.Context, tenant, key, value string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleServiceAccountKeyRepository.SaveKey")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("key", key), log.String("value", value))
 
@@ -77,6 +79,7 @@ func (repo *GoogleServiceAccountKeyRepositoryImpl) SaveKey(ctx context.Context, 
 func (repo *GoogleServiceAccountKeyRepositoryImpl) DeleteKey(ctx context.Context, tenant, key string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleServiceAccountKeyRepository.SaveKey")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("key", key))
 

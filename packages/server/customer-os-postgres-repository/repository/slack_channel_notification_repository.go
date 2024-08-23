@@ -24,6 +24,7 @@ func NewSlackChannelNotificationRepository(db *gorm.DB) SlackChannelNotification
 func (r *slackChannelNotificationRepository) GetSlackChannels(c context.Context, tenant, workflow string) ([]*entity.SlackChannelNotification, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "SlackChannelNotificationRepository.GetSlackChannels")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.LogFields(tracingLog.String("workflow", workflow))
 

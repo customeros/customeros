@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -30,9 +29,8 @@ func NewFlowSequenceContactRepository(gormDb *gorm.DB) FlowSequenceContactReposi
 func (r flowSequenceContactRepositoryImpl) Count(ctx context.Context, tenant, sequenceId string) (int64, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceContactRepository.Count")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	var result int64
 	err := r.gormDb.
@@ -54,9 +52,8 @@ func (r flowSequenceContactRepositoryImpl) Count(ctx context.Context, tenant, se
 func (r flowSequenceContactRepositoryImpl) Get(ctx context.Context, tenant, sequenceId string, page, limit int) ([]*entity.FlowSequenceContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceContactRepository.Get")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("sequenceId", sequenceId))
 
 	var result []*entity.FlowSequenceContact
@@ -80,9 +77,8 @@ func (r flowSequenceContactRepositoryImpl) Get(ctx context.Context, tenant, sequ
 func (r flowSequenceContactRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*entity.FlowSequenceContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceContactRepository.GetById")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	span.LogFields(tracingLog.String("id", id))
 
@@ -109,9 +105,8 @@ func (r flowSequenceContactRepositoryImpl) GetById(ctx context.Context, tenant, 
 func (repo *flowSequenceContactRepositoryImpl) Store(ctx context.Context, tenant string, entity *entity.FlowSequenceContact) (*entity.FlowSequenceContact, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceContactRepository.Store")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	span.LogFields(tracingLog.Object("entity", entity))
 
@@ -130,9 +125,8 @@ func (repo *flowSequenceContactRepositoryImpl) Store(ctx context.Context, tenant
 func (repo *flowSequenceContactRepositoryImpl) Delete(ctx context.Context, tenant, id string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceContactRepository.Delete")
 	defer span.Finish()
-
+	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("id", id))
 
 	err := repo.gormDb.Delete(&entity.FlowSequenceContact{}, "id = ?", id).Error

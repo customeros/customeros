@@ -166,7 +166,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		span.LogFields(tracingLog.Bool("mailbox.found", true))
 		span.LogFields(tracingLog.String("mailbox.username", username))
 
-		emailExists, err := services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(externalSystem, tenantByName, username, messageId)
+		emailExists, err := services.CommonServices.PostgresRepositories.RawEmailRepository.EmailExistsByMessageId(ctx, externalSystem, tenantByName, username, messageId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			log.Errorf("(SyncInteractionEvent) error checking email exists: %s", err.Error())

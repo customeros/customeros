@@ -213,7 +213,7 @@ func (h *OrganizationEventHandler) setCustomerOsId(ctx context.Context, tenant, 
 			EntityId:     organizationId,
 			Attempts:     attempt,
 		}
-		innerErr := h.services.CommonServices.PostgresRepositories.CustomerOsIdsRepository.Reserve(customerOsIdsEntity)
+		innerErr := h.services.CommonServices.PostgresRepositories.CustomerOsIdsRepository.Reserve(ctx, customerOsIdsEntity)
 		if innerErr == nil {
 			break
 		}

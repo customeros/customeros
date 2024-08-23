@@ -35,7 +35,7 @@ func DispatchWebhook(ctx context.Context, tenant string, event WebhookEvent, pay
 	}
 
 	// fetch webhook data from db
-	webhookResult := postgresRepositories.TenantWebhookRepository.GetWebhook(tenant, event.String())
+	webhookResult := postgresRepositories.TenantWebhookRepository.GetWebhook(ctx, tenant, event.String())
 	if webhookResult.Error != nil {
 		err := fmt.Errorf("error fetching webhook data: %v", webhookResult.Error)
 		tracing.TraceErr(span, err)

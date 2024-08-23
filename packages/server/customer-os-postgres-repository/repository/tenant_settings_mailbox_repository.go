@@ -26,6 +26,7 @@ func NewTenantSettingsMailboxRepository(db *gorm.DB) TenantSettingsMailboxReposi
 func (r *tenantSettingsMailboxRepository) Get(c context.Context, tenant string) ([]*entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.Get")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, tracing.SpanTagComponentPostgresRepository)
@@ -50,6 +51,7 @@ func (r *tenantSettingsMailboxRepository) Get(c context.Context, tenant string) 
 func (r *tenantSettingsMailboxRepository) GetByMailbox(c context.Context, tenant, mailbox string) (*entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.GetByMailbox")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, tracing.SpanTagComponentPostgresRepository)
@@ -79,6 +81,7 @@ func (r *tenantSettingsMailboxRepository) GetByMailbox(c context.Context, tenant
 func (r *tenantSettingsMailboxRepository) GetById(c context.Context, tenant, id string) (*entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.GetById")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, tracing.SpanTagComponentPostgresRepository)

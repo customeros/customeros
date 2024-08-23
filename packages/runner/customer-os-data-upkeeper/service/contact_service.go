@@ -317,7 +317,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 	defer parentSpan.Finish()
 	tracing.TagComponentCronJob(parentSpan)
 
-	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindActivesByIntegration("weconnect")
+	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindActivesByIntegration(c, "weconnect")
 	if err != nil {
 		tracing.TraceErr(parentSpan, err)
 		return

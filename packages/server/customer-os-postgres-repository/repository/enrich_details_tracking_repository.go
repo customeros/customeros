@@ -26,6 +26,7 @@ func NewEnrichDetailsTrackingRepository(gormDb *gorm.DB) EnrichDetailsTrackingRe
 func (r enrichDetailsTrackingRepository) RegisterRequest(ctx context.Context, request entity.EnrichDetailsTracking) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.RegisterRequest")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	err := r.gormDb.Create(&request).Error
 	if err != nil {
@@ -39,6 +40,7 @@ func (r enrichDetailsTrackingRepository) RegisterRequest(ctx context.Context, re
 func (r enrichDetailsTrackingRepository) GetByIP(ctx context.Context, ip string) (*entity.EnrichDetailsTracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsTrackingRepository.GetByIP")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(tracingLog.String("ip", ip))
 
 	var entity *entity.EnrichDetailsTracking

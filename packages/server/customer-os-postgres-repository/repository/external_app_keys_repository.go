@@ -27,7 +27,7 @@ func NewExternalAppKeysRepository(gormDb *gorm.DB) ExternalAppKeysRepository {
 func (e externalAppKeysRepository) GetAppKeys(ctx context.Context, app, group string, usageLimit int) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ExternalAppKeysRepository.GetAppKeys")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("app", app), log.String("group1", group))
 
 	var appKeys []entity.ExternalAppKeys
@@ -45,7 +45,7 @@ func (e externalAppKeysRepository) GetAppKeys(ctx context.Context, app, group st
 func (e externalAppKeysRepository) IncrementUsageCount(ctx context.Context, id uint64) helper.QueryResult {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ExternalAppKeysRepository.IncrementUsageCount")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
+	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.Uint64("id", id))
 
 	// create entry if not exists

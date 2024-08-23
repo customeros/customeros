@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
+	"golang.org/x/net/context"
 )
 
 type Integration string
@@ -16,7 +17,7 @@ const CalComHeader = "x-cal-signature-256"
 
 func SignatureCheck(hSignature string, body []byte, personalIntegrationRepository postgresRepository.PersonalIntegrationRepository, tenant, email, integration string) error {
 	if hSignature != "" {
-		result := personalIntegrationRepository.FindIntegration(tenant, email, integration)
+		result := personalIntegrationRepository.FindIntegration(context.TODO(), tenant, email, integration)
 
 		if result.Error != nil {
 			return fmt.Errorf("SignatureCheck error: %v", result.Error.Error())

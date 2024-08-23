@@ -187,7 +187,7 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, tenan
 		//activate real time sync only if there are more than Batch Size emails imported, to not overlap with the history sync
 		//if there are no emails imported, activate real time sync only if there are no other active syncs
 
-		emailImportStateLastWeek, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.LAST_WEEK)
+		emailImportStateLastWeek, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_WEEK)
 		if err != nil {
 			logrus.Errorf("failed to get email import state: %v", err)
 			return
@@ -203,65 +203,65 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, tenan
 			return
 		}
 
-		emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.REAL_TIME)
+		emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 		if err != nil {
 			logrus.Errorf("failed to get gmail import state: %v", err)
 			return
 		}
 
 		if emailImportState.Active == false {
-			importedEmails, err := services.CommonServices.PostgresRepositories.RawEmailRepository.CountForUsername("gmail", tenant, email)
+			importedEmails, err := services.CommonServices.PostgresRepositories.RawEmailRepository.CountForUsername(ctx, "gmail", tenant, email)
 			if err != nil {
 				logrus.Errorf("failed to count imported emails: %v", err)
 				return
 			}
 
 			if importedEmails > config.SyncData.BatchSize {
-				err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.ActivateEmailImportState(tenant, provider, email, postgresEntity.REAL_TIME)
+				err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.ActivateEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 				if err != nil {
 					logrus.Errorf("failed to update gmail import state: %v", err)
 					return
 				}
 
-				emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.REAL_TIME)
+				emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 				if err != nil {
 					logrus.Errorf("failed to get gmail import state: %v", err)
 					return
 				}
 			} else {
 
-				lastWeek, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.LAST_WEEK)
+				lastWeek, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_WEEK)
 				if err != nil {
 					logrus.Errorf("failed to get gmail import state: %v", err)
 					return
 				}
 
-				last3Months, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.LAST_3_MONTHS)
+				last3Months, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_3_MONTHS)
 				if err != nil {
 					logrus.Errorf("failed to get gmail import state: %v", err)
 					return
 				}
 
-				lastYear, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.LAST_YEAR)
+				lastYear, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.LAST_YEAR)
 				if err != nil {
 					logrus.Errorf("failed to get gmail import state: %v", err)
 					return
 				}
 
-				olderThanOneYear, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.OLDER_THAN_ONE_YEAR)
+				olderThanOneYear, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.OLDER_THAN_ONE_YEAR)
 				if err != nil {
 					logrus.Errorf("failed to get gmail import state: %v", err)
 					return
 				}
 
 				if lastWeek.Active == false && last3Months.Active == false && lastYear.Active == false && olderThanOneYear.Active == false {
-					err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.ActivateEmailImportState(tenant, provider, email, postgresEntity.REAL_TIME)
+					err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.ActivateEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 					if err != nil {
 						logrus.Errorf("failed to update gmail import state: %v", err)
 						return
 					}
 
-					emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, email, postgresEntity.REAL_TIME)
+					emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenant, provider, email, postgresEntity.REAL_TIME)
 					if err != nil {
 						logrus.Errorf("failed to get gmail import state: %v", err)
 						return
@@ -298,7 +298,7 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, tenan
 	}
 
 	if state == postgresEntity.HISTORY && emailImportState.Cursor == "" {
-		err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.DeactivateEmailImportState(tenant, provider, email, emailImportState.State)
+		err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.DeactivateEmailImportState(ctx, tenant, provider, email, emailImportState.State)
 		if err != nil {
 			logrus.Errorf("failed to update gmail import state: %v", err)
 			return
@@ -309,7 +309,7 @@ func syncEmailsForEmailAddress(ctx context.Context, config *config.Config, tenan
 }
 
 func getHistoryImportState(services *service.Services, tenant string, provider, username string, state postgresEntity.EmailImportState) (*postgresEntity.UserEmailImportState, error) {
-	emailImportState, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenant, provider, username, state)
+	emailImportState, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(context.TODO(), tenant, provider, username, state)
 	if err != nil {
 		return nil, err
 	}
@@ -348,61 +348,62 @@ func getNextEmailImportState(state postgresEntity.EmailImportState) (postgresEnt
 
 func InitializeEmailImportState(services *service.Services, tenantName, provider, userEmail string) error {
 	now := time.Now()
+	ctx := context.TODO()
 
-	emailImportState, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenantName, provider, userEmail, postgresEntity.REAL_TIME)
+	emailImportState, err := services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.REAL_TIME)
 	if err != nil {
 		return err
 	}
 	if emailImportState == nil {
-		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(tenantName, provider, userEmail, postgresEntity.REAL_TIME, nil, nil, false, "")
+		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.REAL_TIME, nil, nil, false, "")
 		if err != nil {
 			return err
 		}
 	}
 
-	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenantName, provider, userEmail, postgresEntity.LAST_WEEK)
+	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.LAST_WEEK)
 	if err != nil {
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(0, 0, -7)
-		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(tenantName, provider, userEmail, postgresEntity.LAST_WEEK, &now, &stop, true, "")
+		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.LAST_WEEK, &now, &stop, true, "")
 		if err != nil {
 			return err
 		}
 	}
 
-	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenantName, provider, userEmail, postgresEntity.LAST_3_MONTHS)
+	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.LAST_3_MONTHS)
 	if err != nil {
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(0, -3, 0)
-		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(tenantName, provider, userEmail, postgresEntity.LAST_3_MONTHS, &now, &stop, true, "")
+		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.LAST_3_MONTHS, &now, &stop, true, "")
 		if err != nil {
 			return err
 		}
 	}
 
-	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenantName, provider, userEmail, postgresEntity.LAST_YEAR)
+	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.LAST_YEAR)
 	if err != nil {
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(-1, 0, 0)
-		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(tenantName, provider, userEmail, postgresEntity.LAST_YEAR, &now, &stop, true, "")
+		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.LAST_YEAR, &now, &stop, true, "")
 		if err != nil {
 			return err
 		}
 	}
 
-	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(tenantName, provider, userEmail, postgresEntity.OLDER_THAN_ONE_YEAR)
+	emailImportState, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.GetEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.OLDER_THAN_ONE_YEAR)
 	if err != nil {
 		return err
 	}
 	if emailImportState == nil {
 		stop := now.AddDate(-50, 0, 0)
-		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(tenantName, provider, userEmail, postgresEntity.OLDER_THAN_ONE_YEAR, &now, &stop, true, "")
+		_, err = services.CommonServices.PostgresRepositories.UserEmailImportPageTokenRepository.CreateEmailImportState(ctx, tenantName, provider, userEmail, postgresEntity.OLDER_THAN_ONE_YEAR, &now, &stop, true, "")
 		if err != nil {
 			return err
 		}
