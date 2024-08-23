@@ -17,15 +17,10 @@ func MapTagInputToEntity(input model.TagInput) *neo4jentity.TagEntity {
 	return &tagEntity
 }
 
-func MapTagUpdateInputToEntity(input model.TagUpdateInput) *neo4jentity.TagEntity {
-	tagEntity := neo4jentity.TagEntity{
-		Id:   input.ID,
-		Name: input.Name,
+func MapEntityToTag(entity *neo4jentity.TagEntity) *model.Tag {
+	if entity == nil {
+		return nil
 	}
-	return &tagEntity
-}
-
-func MapEntityToTag(entity neo4jentity.TagEntity) *model.Tag {
 	return &model.Tag{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
@@ -47,7 +42,7 @@ func MapEntityToTag(entity neo4jentity.TagEntity) *model.Tag {
 func MapEntitiesToTags(entities *neo4jentity.TagEntities) []*model.Tag {
 	var tags []*model.Tag
 	for _, tagEntity := range *entities {
-		tags = append(tags, MapEntityToTag(tagEntity))
+		tags = append(tags, MapEntityToTag(&tagEntity))
 	}
 	return tags
 }

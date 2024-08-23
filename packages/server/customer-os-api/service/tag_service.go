@@ -18,7 +18,7 @@ import (
 
 type TagService interface {
 	Merge(ctx context.Context, tag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
-	Update(ctx context.Context, tag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
+	Update(ctx context.Context, tagId, name string) error
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 	GetAll(ctx context.Context) (*neo4jentity.TagEntities, error)
 	GetById(ctx context.Context, tagId string) (*neo4jentity.TagEntity, error)
@@ -56,12 +56,23 @@ func (s *tagService) Merge(ctx context.Context, tag *neo4jentity.TagEntity) (*ne
 	return neo4jmapper.MapDbNodeToTagEntity(tagNodePtr), nil
 }
 
-func (s *tagService) Update(ctx context.Context, tag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error) {
-	tagNodePtr, err := s.repositories.TagRepository.Update(ctx, common.GetTenantFromContext(ctx), *tag)
-	if err != nil {
-		return nil, err
+func (s *tagService) Update(ctx context.Context, tagId, name string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("tagId", tagId), log.String("name", name))
+
+	if name == "" {
+		return nil
 	}
-	return neo4jmapper.MapDbNodeToTagEntity(tagNodePtr), nil
+
+	err := s.repositories.Neo4jRepositories.TagWriteRepository.UpdateName(ctx, common.GetTenantFromContext(ctx), tagId, name)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("Error updating tag name: %s", err.Error())
+		return err
+	}
+	return nil
 }
 
 func (s *tagService) UnlinkAndDelete(ctx context.Context, id string) (bool, error) {

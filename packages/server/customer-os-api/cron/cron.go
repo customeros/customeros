@@ -87,7 +87,7 @@ func refreshApiCache(config *config.Config, services *service.Services) {
 			if rowData.Tags != nil && len(rowData.Tags) > 0 {
 				organizationGraph.Tags = make([]*model.Tag, 0)
 				for _, tagId := range rowData.Tags {
-					organizationGraph.Tags = append(organizationGraph.Tags, mapper.MapEntityToTag(neo4jentity.TagEntity{
+					organizationGraph.Tags = append(organizationGraph.Tags, mapper.MapEntityToTag(&neo4jentity.TagEntity{
 						Id: *tagId,
 					}))
 				}

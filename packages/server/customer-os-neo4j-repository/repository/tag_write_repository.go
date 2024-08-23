@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -15,6 +14,7 @@ type TagWriteRepository interface {
 	LinkTagByIdToEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string, taggedAt time.Time) error
 	UnlinkTagByIdFromEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string) error
 	UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error
+	UpdateName(ctx context.Context, tenant, tagId, name string) error
 }
 
 type tagWriteRepository struct {
@@ -48,14 +48,8 @@ func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tenant, ta
 		"taggedAt": taggedAt,
 		"entityId": linkedEntityId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }
 
 func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string) error {
@@ -73,14 +67,8 @@ func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tenant
 		"id":       tagId,
 		"entityId": linkedEntityId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }
 
 func (r *tagWriteRepository) UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error {
@@ -95,12 +83,24 @@ func (r *tagWriteRepository) UnlinkAllAndDelete(ctx context.Context, tenant, tag
 		"tenant": tenant,
 		"tagId":  tagId,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+}
+
+func (r *tagWriteRepository) UpdateName(ctx context.Context, tenant, tagId, name string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UpdateName")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("tagId", tagId), log.String("name", name))
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$tagId}) 
+				SET tag.name=$name, tag.updatedAt=datetime()`
+	params := map[string]any{
+		"tenant": tenant,
+		"tagId":  tagId,
+		"name":   name,
 	}
-	return err
+
+	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
 }
