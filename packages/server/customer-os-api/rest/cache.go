@@ -107,7 +107,7 @@ func OrganizationsPatchesCacheHandler(serviceContainer *service.Services) gin.Ha
 			if patches[i].Tags != nil && len(patches[i].Tags) > 0 {
 				organizationGraph.Tags = make([]*model.Tag, 0)
 				for _, tagId := range patches[i].Tags {
-					organizationGraph.Tags = append(organizationGraph.Tags, mapper.MapEntityToTag(neo4jentity.TagEntity{
+					organizationGraph.Tags = append(organizationGraph.Tags, mapper.MapEntityToTag(&neo4jentity.TagEntity{
 						Id: *tagId,
 					}))
 				}

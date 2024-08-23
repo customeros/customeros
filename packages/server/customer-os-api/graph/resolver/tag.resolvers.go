@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/pkg/errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -27,7 +28,7 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 		graphql.AddErrorf(ctx, "Failed to create tag %s", input.Name)
 		return nil, err
 	}
-	return mapper.MapEntityToTag(*createdTag), nil
+	return mapper.MapEntityToTag(createdTag), nil
 }
 
 // TagUpdate is the resolver for the tag_Update field.
@@ -37,13 +38,23 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	updatedTag, err := r.Services.TagService.Update(ctx, mapper.MapTagUpdateInputToEntity(input))
+	err := r.Services.TagService.Update(ctx, input.ID, input.Name)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to update tag"))
+		r.log.Errorf("failed to update tag: %s", err)
 		graphql.AddErrorf(ctx, "Failed to update tag %s", input.ID)
 		return nil, err
 	}
-	return mapper.MapEntityToTag(*updatedTag), nil
+
+	tagEntity, err := r.Services.TagService.GetById(ctx, input.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to fetch tag"))
+		r.log.Errorf("failed to fetch tag: %s", err)
+		graphql.AddErrorf(ctx, "Failed to fetch tag %s", input.ID)
+		return nil, err
+	}
+
+	return mapper.MapEntityToTag(tagEntity), nil
 }
 
 // TagDelete is the resolver for the tag_Delete field.

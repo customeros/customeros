@@ -13,7 +13,6 @@ import (
 
 type TagRepository interface {
 	Merge(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
-	Update(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
 }
 
 type tagRepository struct {
@@ -55,33 +54,6 @@ func (r *tagRepository) Merge(ctx context.Context, tenant string, tag neo4jentit
 				"sourceOfTruth": tag.SourceOfTruth,
 				"appSource":     tag.AppSource,
 				"now":           utils.Now(),
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
-}
-
-func (r *tagRepository) Update(ctx context.Context, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagRepository.Update")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, `
-			MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
-			SET tag.name=$name, tag.updatedAt=datetime()
-			RETURN tag`,
-			map[string]any{
-				"tenant": tenant,
-				"id":     tag.Id,
-				"name":   tag.Name,
-				"now":    utils.Now(),
 			})
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}); err != nil {

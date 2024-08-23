@@ -3,7 +3,9 @@ package repository
 import (
 	"fmt"
 	"github.com/cenkalti/backoff/v4"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -70,4 +72,15 @@ func WaitForNodeDeletedFromNeo4j(ctx context.Context, repositories *Repositories
 	} else {
 		span.LogFields(log.Bool("result.deleted", true))
 	}
+}
+
+func LogAndExecuteWriteQuery(ctx context.Context, driver neo4j.DriverWithContext, cypher string, params map[string]any, span opentracing.Span) error {
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
 }

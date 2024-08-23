@@ -24,8 +24,8 @@ input TagInput {
 }
 
 input TagUpdateInput {
-    id: ID!
-    name: String!
+    id:     ID!
+    name:   String!
 }
 
 input TagIdOrNameInput {
