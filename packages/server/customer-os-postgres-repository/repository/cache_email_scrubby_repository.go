@@ -12,7 +12,7 @@ import (
 )
 
 type CacheEmailScrubbyRepository interface {
-	Add(ctx context.Context, email string) (*entity.CacheEmailScrubby, error)
+	Save(ctx context.Context, cacheEmailScrubby entity.CacheEmailScrubby) (*entity.CacheEmailScrubby, error)
 	GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailScrubby, error)
 	GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailScrubby, error)
 	SetStatus(ctx context.Context, id, status string) (*entity.CacheEmailScrubby, error)
@@ -27,30 +27,27 @@ func NewCacheEmailScrubbyRepository(gormDb *gorm.DB) CacheEmailScrubbyRepository
 	return &cacheEmailScrubbyRepository{db: gormDb}
 }
 
-func (c cacheEmailScrubbyRepository) Add(ctx context.Context, email string) (*entity.CacheEmailScrubby, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.Add")
+func (r *cacheEmailScrubbyRepository) Save(ctx context.Context, cacheEmailScrubby entity.CacheEmailScrubby) (*entity.CacheEmailScrubby, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(log.String("email", email))
+	tracing.LogObjectAsJson(span, "cacheEmailScrubby", cacheEmailScrubby)
 
-	cacheEmailScrubby := entity.CacheEmailScrubby{
-		Email: email,
-	}
-	if err := c.db.WithContext(ctx).Create(&cacheEmailScrubby).Error; err != nil {
+	if err := r.db.WithContext(ctx).Save(&cacheEmailScrubby).Error; err != nil {
 		return nil, err
 	}
 
 	return &cacheEmailScrubby, nil
 }
 
-func (c cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetAllByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("email", email))
 
 	var cacheEmailScrubbys []entity.CacheEmailScrubby
-	result := c.db.WithContext(ctx).Where("email = ?", email).Find(&cacheEmailScrubbys)
+	result := r.db.WithContext(ctx).Where("email = ?", email).Order("created_at desc").Find(&cacheEmailScrubbys)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -59,14 +56,14 @@ func (c cacheEmailScrubbyRepository) GetAllByEmail(ctx context.Context, email st
 	return cacheEmailScrubbys, nil
 }
 
-func (c cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetLatestByEmail")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("email", email))
 
 	var cacheEmailScrubby entity.CacheEmailScrubby
-	result := c.db.WithContext(ctx).Where("email = ?", email).Order("created_at desc").First(&cacheEmailScrubby)
+	result := r.db.WithContext(ctx).Where("email = ?", email).Order("created_at desc").First(&cacheEmailScrubby)
 
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
@@ -79,14 +76,14 @@ func (c cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, email
 	return &cacheEmailScrubby, nil
 }
 
-func (c cacheEmailScrubbyRepository) SetStatus(ctx context.Context, id, status string) (*entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) SetStatus(ctx context.Context, id, status string) (*entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.SetStatus")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("id", id), log.String("status", status))
 
 	var cacheEmailScrubby entity.CacheEmailScrubby
-	result := c.db.WithContext(ctx).Where("id = ?", id).First(&cacheEmailScrubby)
+	result := r.db.WithContext(ctx).Where("id = ?", id).First(&cacheEmailScrubby)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -95,21 +92,21 @@ func (c cacheEmailScrubbyRepository) SetStatus(ctx context.Context, id, status s
 	cacheEmailScrubby.Status = status
 	cacheEmailScrubby.CheckedAt = utils.Now()
 
-	if err := c.db.WithContext(ctx).Save(&cacheEmailScrubby).Error; err != nil {
+	if err := r.db.WithContext(ctx).Save(&cacheEmailScrubby).Error; err != nil {
 		return nil, err
 	}
 
 	return &cacheEmailScrubby, nil
 }
 
-func (c cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id string) (*entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id string) (*entity.CacheEmailScrubby, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.SetJustChecked")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogFields(log.String("id", id))
 
 	var cacheEmailScrubby entity.CacheEmailScrubby
-	result := c.db.WithContext(ctx).Where("id = ?", id).First(&cacheEmailScrubby)
+	result := r.db.WithContext(ctx).Where("id = ?", id).First(&cacheEmailScrubby)
 
 	if result.Error != nil {
 		return nil, result.Error
@@ -117,7 +114,7 @@ func (c cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id stri
 
 	cacheEmailScrubby.CheckedAt = utils.Now()
 
-	if err := c.db.WithContext(ctx).Save(&cacheEmailScrubby).Error; err != nil {
+	if err := r.db.WithContext(ctx).Save(&cacheEmailScrubby).Error; err != nil {
 		return nil, err
 	}
 
