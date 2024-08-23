@@ -63,7 +63,7 @@ export const getOptionsForCategory = (category: DeliverabilityStatus) => {
     case DeliverabilityStatus.NotDeliverable:
       return [
         {
-          label: 'Invalid mailbox',
+          label: 'Mailbox doesn’t exist',
           value: EmailVerificationStatus.InvalidMailbox,
         },
         {
