@@ -185,7 +185,7 @@ func (s *interactionSessionService) GetInteractionSessionBySessionIdentifier(ctx
 
 	queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		result, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (e:InteractionSession_%s {identifier:$identifier}) RETURN e`,
+			MATCH (e:InteractionSession_%s {identifier:$identifier}) RETURN e LIMIT 1`,
 			common.GetTenantFromContext(ctx)),
 			map[string]interface{}{
 				"identifier": sessionIdentifier,

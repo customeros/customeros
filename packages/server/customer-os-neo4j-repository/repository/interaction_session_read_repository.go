@@ -101,7 +101,7 @@ func (r *interactionSessionReadRepository) GetByIdentifierAndChannel(ctx context
 	tracing.LogObjectAsJson(span, "identifier", identifier)
 	tracing.LogObjectAsJson(span, "channel", channel)
 
-	cypher := fmt.Sprintf(`MATCH (i:InteractionSession_%s {identifier:$identifier, channel:$channel}) RETURN i`, tenant)
+	cypher := fmt.Sprintf(`MATCH (i:InteractionSession_%s {identifier:$identifier, channel:$channel}) RETURN i LIMIT 1`, tenant)
 	params := map[string]any{
 		"tenant":     tenant,
 		"identifier": identifier,
