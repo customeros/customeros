@@ -63,22 +63,30 @@ func (r *interactionEventRepository) GetInteractionEventIdByExternalId(ctx conte
 }
 
 func (r *interactionEventRepository) MergeInteractionSession(ctx context.Context, tx neo4j.ManagedTransaction, tenant, identifier string, syncDate time.Time, message entity.EmailMessageData, source, appSource string) (string, error) {
-	query := "MATCH (:Tenant {name:$tenant}) " +
-		" MERGE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) " +
-		" ON CREATE SET " +
-		"  is:InteractionSession, " +
-		"  is.id=randomUUID(), " +
-		"  is.syncDate=$syncDate, " +
-		"  is.createdAt=$createdAt, " +
-		"  is.name=$name, " +
-		"  is.status=$status," +
-		"  is.type=$type," +
-		"  is.sourceOfTruth=$sourceOfTruth, " +
-		"  is.appSource=$appSource " +
-		" WITH is " +
-		" RETURN is.id"
+	cypher := ""
+	if identifier == "" {
+		cypher += `MATCH (:Tenant {name:$tenant}) 
+			 	CREATE (is:InteractionSession_%s {identifier:$identifier, channel:$channel})
+				SET `
+	} else {
+		cypher += `MATCH (:Tenant {name:$tenant}) 
+			 	MERGE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) 
+			 	ON CREATE SET `
+	}
 
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+	cypher += ` is:InteractionSession,
+			is.id=randomUUID(),
+			is.syncDate=$syncDate,
+			is.createdAt=$createdAt,
+			is.name=$name,
+			is.status=$status,
+			is.type=$type,
+			is.sourceOfTruth=$sourceOfTruth,
+			is.appSource=$appSource
+		WITH is
+		RETURN is.id`
+
+	queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, tenant),
 		map[string]interface{}{
 			"tenant":        tenant,
 			"source":        source,

@@ -39,24 +39,28 @@ func (r *interactionEventRepository) MergeEmailInteractionSession(ctx context.Co
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
 	defer session.Close(ctx)
 
-	query := "MERGE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) " +
-		" ON CREATE SET " +
-		"  is:InteractionSession, " +
-		"  is.id=randomUUID(), " +
-		"  is.syncDate=$syncDate, " +
-		"  is.externalUrl=$externalUrl, " +
-		"  is.createdAt=$createdAt, " +
-		"  is.createdAt=datetime(), " +
-		"  is.name=$name, " +
-		"  is.status=$status," +
-		"  is.type=$type," +
-		"  is.sourceOfTruth=$sourceOfTruth, " +
-		"  is.appSource=$appSource " +
-		" WITH is " +
-		" RETURN is.id"
+	cypher := ""
+	if message.EmailThreadId == "" {
+		cypher += "CREATE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) SET"
+	} else {
+		cypher += `MERGE (is:InteractionSession_%s {identifier:$identifier, channel:$channel}) ON CREATE SET `
+	}
+	cypher += ` is:InteractionSession, 
+		  is.id=randomUUID(), 
+		  is.syncDate=$syncDate, 
+		  is.externalUrl=$externalUrl, 
+		  is.createdAt=$createdAt, 
+		  is.createdAt=datetime(), 
+		  is.name=$name, 
+		  is.status=$status,
+		  is.type=$type,
+		  is.sourceOfTruth=$sourceOfTruth, 
+		  is.appSource=$appSource 
+		 WITH is 
+		 RETURN is.id`
 
 	dbRecord, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(cypher, tenant),
 			map[string]interface{}{
 				"tenant":        tenant,
 				"source":        message.ExternalSystem,
