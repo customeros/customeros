@@ -38,13 +38,11 @@ test('convert org to customer', async ({ page }) => {
   await customersPage.ensureNumberOfCustomersExist(1);
 });
 
-test('create and delete contracts', async ({ page }) => {
+test('create people in organization', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const addressBookPage = new AddressBookPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);
-  const organizationAccountPage = new OrganizationAccountPage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
-  const organizationTimelinePage = new OrganizationTimelinePage(page);
 
   // Login
   await loginPage.login();
@@ -61,15 +59,56 @@ test('create and delete contracts', async ({ page }) => {
   // Go to People page
   await organizationSideNavPage.goToPeople();
   await organizationPeoplePage.createContactFromEmpty();
+});
+
+test('create timeline entries in organization', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const addressBookPage = new AddressBookPage(page);
+  const organizationSideNavPage = new OrganizationSideNavPage(page);
+  const organizationTimelinePage = new OrganizationTimelinePage(page);
+
+  // Login
+  await loginPage.login();
+  // Wait for redirect and load All Orgs page
+  await addressBookPage.waitForPageLoad();
+
+  // Add organization and check new entry
+  await addressBookPage.addOrganization();
+
+  //Access newly created organization
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await addressBookPage.goToOrganization();
+
+  // Go to Account page and update org
+  await organizationSideNavPage.goToAccount();
+  await organizationTimelinePage.ensureEmailPermissionPromptIsRedirecting();
+  await page.goBack();
+  await organizationTimelinePage.ensureLogEntryCanBeAdded();
+  await organizationTimelinePage.ensureReminderCanBeAdded();
+});
+
+test('create contracts in organization', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const addressBookPage = new AddressBookPage(page);
+  const organizationAccountPage = new OrganizationAccountPage(page);
+  const organizationSideNavPage = new OrganizationSideNavPage(page);
+
+  // Login
+  await loginPage.login();
+  // Wait for redirect and load All Orgs page
+  await addressBookPage.waitForPageLoad();
+
+  // Add organization and check new entry
+  await addressBookPage.addOrganization();
+
+  //Access newly created organization
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await addressBookPage.goToOrganization();
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
   await organizationAccountPage.updateOrgToCustomer();
   await organizationAccountPage.addNoteToOrg();
-  await organizationTimelinePage.ensureEmailPermissionPromptIsRedirecting();
-  await page.goBack();
-  await organizationTimelinePage.ensureLogEntryCanBeAdded();
-  await organizationTimelinePage.ensureReminderCanBeAdded();
 
   // Add the first contract to organization and check new entry
   await organizationAccountPage.addContractEmpty();
