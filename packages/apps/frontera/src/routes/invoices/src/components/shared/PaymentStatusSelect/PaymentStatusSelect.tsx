@@ -1,4 +1,4 @@
-import { cloneElement } from 'react';
+import { MouseEvent, cloneElement } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
@@ -13,24 +13,27 @@ import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 
 export const PaymentStatusSelect = observer(
   ({
-    value,
     invoiceNumber,
     variant = 'invoice-finder',
   }: {
     invoiceNumber: string;
-    value: InvoiceStatus | null;
     variant?: 'invoice-preview' | 'invoice-finder';
   }) => {
-    const Status = renderStatusNode(value) ?? <>{value}</>;
-    const isPaid = value === InvoiceStatus.Paid;
-
     const store = useStore();
 
     const invoice = invoiceNumber
       ? store.invoices.value.get(invoiceNumber)
       : null;
 
-    const handleClick = (status: InvoiceStatus) => {
+    const invoiceStatus = invoice?.value?.status;
+    const Status = renderStatusNode(invoiceStatus) ?? <>{invoiceStatus}</>;
+    const isPaid = invoiceStatus === InvoiceStatus.Paid;
+
+    const handleClick = (
+      e: MouseEvent<HTMLDivElement>,
+      status: InvoiceStatus,
+    ) => {
+      e.stopPropagation();
       invoice?.update((invoiceData) => {
         invoiceData.status = status;
 
@@ -40,12 +43,16 @@ export const PaymentStatusSelect = observer(
 
     return (
       <Menu>
-        <MenuButton asChild disabled={value === InvoiceStatus.Scheduled}>
+        <MenuButton
+          asChild
+          onClick={(e) => e.stopPropagation()}
+          disabled={invoiceStatus === InvoiceStatus.Scheduled}
+        >
           {cloneElement(Status, {
             className: cn(
               'cursor-pointer',
               variant === 'invoice-preview' && 'px-2 py-0.5 text-md',
-              value === InvoiceStatus.Scheduled &&
+              invoiceStatus === InvoiceStatus.Scheduled &&
                 'opacity-50 cursor-not-allowed',
             ),
           })}
@@ -57,7 +64,7 @@ export const PaymentStatusSelect = observer(
         >
           <MenuItem
             disabled={isPaid}
-            onClick={() => handleClick(InvoiceStatus.Void)}
+            onClick={(e) => handleClick(e, InvoiceStatus.Void)}
           >
             <div className='flex gap-2 items-center'>
               <SlashCircle01
@@ -66,13 +73,13 @@ export const PaymentStatusSelect = observer(
               <span>Void</span>
             </div>
           </MenuItem>
-          <MenuItem onClick={() => handleClick(InvoiceStatus.Paid)}>
+          <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Paid)}>
             <div className='flex gap-2 items-center'>
               <CheckCircle className='text-gray-500' />
               <span>Paid</span>
             </div>
           </MenuItem>
-          <MenuItem onClick={() => handleClick(InvoiceStatus.Due)}>
+          <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Due)}>
             <div className='flex gap-2 items-center'>
               <Clock className='text-gray-500' />
               <span>Due</span>

@@ -16,9 +16,8 @@ export const InvoiceActionHeader = observer(
   ({ status, id, number }: InvoiceProps) => {
     return (
       <div className='flex justify-between w-full'>
-        {status ? (
+        {number ? (
           <PaymentStatusSelect
-            value={status}
             variant='invoice-preview'
             invoiceNumber={number ?? ''}
           />
