@@ -65,6 +65,7 @@ export class TagStore implements Store<Tag> {
     } catch (error) {
       console.error(error);
     }
+    this.root.ui.toastSuccess('Tag updated', 'tag-updated');
   }
 
   private async save(operation: Operation) {
