@@ -28,9 +28,9 @@ type Tracking struct {
 	EventData string `gorm:"column:event_data;type:text;" json:"eventData"`
 	Timestamp int    `gorm:"column:timestamp;type:bigint;" json:"timestamp"`
 
-	Href             string `gorm:"column:href;type:varchar(255);" json:"href"`
+	Href             string `gorm:"column:href;type:varchar(1000);" json:"href"`
 	Origin           string `gorm:"column:origin;type:varchar(255);" json:"origin"`
-	Search           string `gorm:"column:search;type:varchar(255);" json:"search"`
+	Search           string `gorm:"column:search;type:varchar(1000);" json:"search"`
 	Hostname         string `gorm:"column:hostname;type:varchar(255);" json:"hostname"`
 	Pathname         string `gorm:"column:pathname;type:varchar(255);" json:"pathname"`
 	Referrer         string `gorm:"column:referrer;type:varchar(2000);" json:"referrer"`
