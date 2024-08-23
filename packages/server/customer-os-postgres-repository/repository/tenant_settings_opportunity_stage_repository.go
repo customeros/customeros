@@ -32,7 +32,7 @@ func (r *tenantSettingsOpportunityStageRepository) GetById(c context.Context, te
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.GetById")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(tracingLog.String("id", id))
 
 	var result entity.TenantSettingsOpportunityStage
@@ -56,7 +56,7 @@ func (r *tenantSettingsOpportunityStageRepository) GetOrInitialize(c context.Con
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Get")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 
 	var entities []*entity.TenantSettingsOpportunityStage
 	err := r.gormDb.
@@ -94,7 +94,7 @@ func (r *tenantSettingsOpportunityStageRepository) Init(c context.Context, tenan
 	span, ctx := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Init")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 
 	r.Store(ctx, entity.TenantSettingsOpportunityStage{
 		Tenant:  tenant,
@@ -142,7 +142,7 @@ func (r *tenantSettingsOpportunityStageRepository) Store(c context.Context, enti
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsOpportunityStageRepository.Store")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, entity.Tenant)
+	tracing.TagTenant(span, entity.Tenant)
 
 	err := r.gormDb.Save(&entity).Error
 
@@ -160,7 +160,7 @@ func (r *tenantSettingsOpportunityStageRepository) Update(ctx context.Context, t
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsOpportunityStageRepository.Update")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(tracingLog.String("id", id))
 
 	// update label, rate and visible if not null

@@ -31,7 +31,7 @@ func (r flowSequenceRepositoryImpl) Count(ctx context.Context, tenant, flowId st
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Count")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("flowId", flowId))
 
@@ -56,7 +56,7 @@ func (r flowSequenceRepositoryImpl) Get(ctx context.Context, tenant, flowId stri
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Get")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("flowId", flowId), tracingLog.Int("page", page), tracingLog.Int("limit", limit))
 
@@ -82,7 +82,7 @@ func (r flowSequenceRepositoryImpl) GetById(ctx context.Context, tenant, id stri
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.GetById")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("id", id))
 
@@ -110,7 +110,7 @@ func (repo *flowSequenceRepositoryImpl) Store(ctx context.Context, tenant string
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Store")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.Object("entity", entity))
 
@@ -130,7 +130,7 @@ func (repo flowSequenceRepositoryImpl) Delete(ctx context.Context, tenant, id st
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Delete")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("id", id))
 

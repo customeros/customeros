@@ -37,7 +37,7 @@ func (repo *apiCacheRepositoryImpl) GetAll(ctx context.Context) ([]*entity.ApiCa
 func (repo *apiCacheRepositoryImpl) Get(ctx context.Context, tenant, typee string) (*entity.ApiCache, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "ApiCacheRepository.Get")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("typee", typee))
 
 	var entity entity.ApiCache

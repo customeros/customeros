@@ -31,7 +31,7 @@ func (r flowSequenceSenderRepository) Count(ctx context.Context, tenant, sequenc
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Count")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	var result int64
@@ -55,7 +55,7 @@ func (r flowSequenceSenderRepository) Get(ctx context.Context, tenant, sequenceI
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Get")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("sequenceId", sequenceId))
 
@@ -81,7 +81,7 @@ func (r flowSequenceSenderRepository) GetById(ctx context.Context, tenant, id st
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.GetById")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	span.LogFields(tracingLog.String("id", id))
@@ -110,7 +110,7 @@ func (repo flowSequenceSenderRepository) Store(ctx context.Context, tenant strin
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Store")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	span.LogFields(tracingLog.Object("entity", entity))
@@ -131,7 +131,7 @@ func (repo flowSequenceSenderRepository) Delete(ctx context.Context, tenant, id 
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceSenderRepository.Delete")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("id", id))
 

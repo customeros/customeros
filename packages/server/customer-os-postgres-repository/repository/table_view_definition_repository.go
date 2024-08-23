@@ -33,7 +33,7 @@ func (t tableViewDefinitionRepository) GetTableViewDefinitions(ctx context.Conte
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.GetTableViewDefinitions")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagUserId, userId)
 
 	var tableViewDefinitions []entity.TableViewDefinition
@@ -67,7 +67,7 @@ func (t tableViewDefinitionRepository) CreateTableViewDefinition(ctx context.Con
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.CreateTableViewDefinition")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
-	span.SetTag(tracing.SpanTagTenant, viewDefinition.Tenant)
+	tracing.TagTenant(span, viewDefinition.Tenant)
 	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
 
 	// if the view is a preset, set the UserId to empty string
@@ -88,7 +88,7 @@ func (t tableViewDefinitionRepository) UpdateTableViewDefinition(ctx context.Con
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.UpdateTableViewDefinition")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
-	span.SetTag(tracing.SpanTagTenant, viewDefinition.Tenant)
+	tracing.TagTenant(span, viewDefinition.Tenant)
 	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
 
 	// Retrieve the existing record by ID
@@ -134,7 +134,7 @@ func (t tableViewDefinitionRepository) UpdateTableViewSharedDefinition(ctx conte
 	span, _ := opentracing.StartSpanFromContext(ctx, "TableViewDefinitionRepository.UpdateTableViewSharedDefinition")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, "postgresRepository")
-	span.SetTag(tracing.SpanTagTenant, viewDefinition.Tenant)
+	tracing.TagTenant(span, viewDefinition.Tenant)
 	span.SetTag(tracing.SpanTagUserId, viewDefinition.UserId)
 
 	// Retrieve the existing record by ID

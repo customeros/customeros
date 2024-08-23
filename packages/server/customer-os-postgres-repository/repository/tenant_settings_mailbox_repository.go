@@ -27,7 +27,7 @@ func (r *tenantSettingsMailboxRepository) Get(c context.Context, tenant string) 
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.Get")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, tracing.SpanTagComponentPostgresRepository)
 
 	var result []*entity.TenantSettingsMailbox
@@ -51,7 +51,7 @@ func (r *tenantSettingsMailboxRepository) GetByMailbox(c context.Context, tenant
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.GetByMailbox")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, tracing.SpanTagComponentPostgresRepository)
 
 	span.LogFields(tracingLog.String("mailbox", mailbox))
@@ -80,7 +80,7 @@ func (r *tenantSettingsMailboxRepository) GetById(c context.Context, tenant, id 
 	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.GetById")
 	defer span.Finish()
 
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, tracing.SpanTagComponentPostgresRepository)
 
 	span.LogFields(tracingLog.String("id", id))

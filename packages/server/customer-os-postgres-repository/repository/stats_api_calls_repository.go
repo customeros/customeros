@@ -26,7 +26,7 @@ func (r statsApiCallsRepository) Increment(ctx context.Context, tenant, api stri
 	span, _ := opentracing.StartSpanFromContext(ctx, "StatsApiCallsRepository.Increment")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("api", api))
 
 	// Check if the record already exists

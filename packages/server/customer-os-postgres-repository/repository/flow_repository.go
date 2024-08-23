@@ -30,7 +30,7 @@ func NewFlowRepository(gormDb *gorm.DB) FlowRepository {
 func (r flowRepositoryImpl) Count(ctx context.Context, tenant string) (int64, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Count")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	var result int64
@@ -52,8 +52,7 @@ func (r flowRepositoryImpl) Count(ctx context.Context, tenant string) (int64, er
 func (r flowRepositoryImpl) Get(ctx context.Context, tenant string, page, limit int) ([]*entity.Flow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Get")
 	defer span.Finish()
-
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	span.LogFields(tracingLog.Int("page", page), tracingLog.Int("limit", limit))
@@ -78,8 +77,7 @@ func (r flowRepositoryImpl) Get(ctx context.Context, tenant string, page, limit 
 func (r flowRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*entity.Flow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.GetById")
 	defer span.Finish()
-
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	span.LogFields(tracingLog.String("id", id))
@@ -107,8 +105,7 @@ func (r flowRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*en
 func (repo *flowRepositoryImpl) Store(ctx context.Context, entity *entity.Flow) (*entity.Flow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Store")
 	defer span.Finish()
-
-	span.SetTag(tracing.SpanTagTenant, entity.Tenant)
+	tracing.TagTenant(span, entity.Tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.Object("entity", entity))
 
@@ -127,8 +124,7 @@ func (repo *flowRepositoryImpl) Store(ctx context.Context, entity *entity.Flow) 
 func (repo *flowRepositoryImpl) Delete(ctx context.Context, tenant, id string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Delete")
 	defer span.Finish()
-
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	span.LogFields(tracingLog.String("id", id))
 

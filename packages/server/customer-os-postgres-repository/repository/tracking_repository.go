@@ -218,7 +218,7 @@ func (repo *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.T
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 	if tracking.Tenant != "" {
-		span.SetTag(tracing.SpanTagTenant, tracking.Tenant)
+		tracing.TagTenant(span, tracking.Tenant)
 	}
 	tracing.LogObjectAsJson(span, "tracking", tracking)
 

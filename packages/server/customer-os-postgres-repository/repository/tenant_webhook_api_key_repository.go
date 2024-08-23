@@ -27,7 +27,7 @@ func NewTenantWebhookApiKeyRepository(gormDb *gorm.DB) TenantWebhookApiKeyReposi
 func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantWebhookApiKeyRepository.CreateApiKey")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
 
 	apiKey := entity.TenantWebhookApiKey{
