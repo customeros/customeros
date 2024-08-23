@@ -25,8 +25,9 @@ func NewEmailLookupRepository(gormDb *gorm.DB) EmailLookupRepository {
 }
 
 func (e emailLookupRepository) GetById(ctx context.Context, id string) (*entity.EmailLookup, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetById")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.GetById")
 	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
 
 	span.LogFields(tracingLog.String("id", id))
 
@@ -52,7 +53,8 @@ func (e emailLookupRepository) GetById(ctx context.Context, id string) (*entity.
 func (e emailLookupRepository) Create(ctx context.Context, emailLookup entity.EmailLookup) (*entity.EmailLookup, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailLookupRepository.Create")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, emailLookup.Tenant)
+	tracing.TagTenant(span, emailLookup.Tenant)
+	tracing.TagComponentPostgresRepository(span)
 
 	emailLookup.ID = utils.GenerateRandomString(64)
 

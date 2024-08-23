@@ -47,7 +47,7 @@ func (repo *GoogleServiceAccountKeyRepositoryImpl) GetApiKeyByTenantService(ctx 
 func (repo *GoogleServiceAccountKeyRepositoryImpl) SaveKey(ctx context.Context, tenant, key, value string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleServiceAccountKeyRepository.SaveKey")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("key", key), log.String("value", value))
 
 	existing, err := repo.GetApiKeyByTenantService(ctx, tenant, key)
@@ -77,7 +77,7 @@ func (repo *GoogleServiceAccountKeyRepositoryImpl) SaveKey(ctx context.Context, 
 func (repo *GoogleServiceAccountKeyRepositoryImpl) DeleteKey(ctx context.Context, tenant, key string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "GoogleServiceAccountKeyRepository.SaveKey")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("key", key))
 
 	existing, err := repo.GetApiKeyByTenantService(ctx, tenant, key)

@@ -53,7 +53,7 @@ func (repo oAuthTokenRepository) GetAll(ctx context.Context) ([]entity.OAuthToke
 func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant string) ([]entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByTenant")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 
 	var entities []entity.OAuthTokenEntity
 
@@ -71,7 +71,7 @@ func (repo oAuthTokenRepository) GetByTenant(ctx context.Context, tenant string)
 func (repo oAuthTokenRepository) GetByProvider(ctx context.Context, tenant string, provider string) ([]entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetAllByProvider")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 
 	span.LogFields(log.String("provider", provider))
 
@@ -92,7 +92,7 @@ func (repo oAuthTokenRepository) GetByProvider(ctx context.Context, tenant strin
 func (repo oAuthTokenRepository) GetByEmailOnly(ctx context.Context, tenant, email string) (*entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByEmail")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("email", email))
 
 	var oAuthTokenEntity entity.OAuthTokenEntity
@@ -115,7 +115,7 @@ func (repo oAuthTokenRepository) GetByEmailOnly(ctx context.Context, tenant, ema
 func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provider, email string) (*entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByEmail")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("provider", provider), log.String("email", email))
 
 	var oAuthTokenEntity entity.OAuthTokenEntity
@@ -139,7 +139,7 @@ func (repo oAuthTokenRepository) GetByEmail(ctx context.Context, tenant, provide
 func (repo oAuthTokenRepository) GetByPlayerId(ctx context.Context, tenant, provider, playerId string) (*entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.GetByPlayerId")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("playerId", playerId), log.String("provider", provider))
 
 	var oAuthTokenEntity entity.OAuthTokenEntity
@@ -175,7 +175,7 @@ func (repo oAuthTokenRepository) Save(ctx context.Context, oAuthToken entity.OAu
 func (repo oAuthTokenRepository) Update(ctx context.Context, tenant, playerId, provider, accessToken, refreshToken string, expiresAt time.Time) (*entity.OAuthTokenEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.Update")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("playerId", playerId), log.String("provider", provider), log.String("expiresAt", expiresAt.String()))
 
 	existing, err := repo.GetByPlayerId(ctx, tenant, provider, playerId)
@@ -224,7 +224,7 @@ func (repo oAuthTokenRepository) MarkForManualRefresh(ctx context.Context, tenan
 func (repo oAuthTokenRepository) DeleteByEmail(ctx context.Context, tenant, provider, email string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OAuthTokenRepository.DeleteByEmail")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
+	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("provider", provider), log.String("email", email))
 
 	existing, err := repo.GetByEmail(ctx, tenant, provider, email)
