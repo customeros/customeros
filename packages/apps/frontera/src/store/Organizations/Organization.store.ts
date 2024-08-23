@@ -195,6 +195,12 @@ export class OrganizationStore extends Syncable<Organization> {
     return `Organization:${this.id}`;
   }
 
+  deleteTag(tagId: string) {
+    this.value.tags = (this.value?.tags || []).filter(
+      (tag) => tag.id !== tagId,
+    );
+  }
+
   async invalidate() {
     try {
       this.isLoading = true;

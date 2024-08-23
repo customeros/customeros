@@ -103,6 +103,12 @@ export class ContactStore implements Store<Contact>, ContractStore {
     return this.value.metadata.id;
   }
 
+  deletePersona(personaId: string) {
+    this.value.tags = (this.value?.tags || []).filter(
+      (id) => id.id !== personaId,
+    );
+  }
+
   private async save(operation: Operation) {
     const diff = operation.diff?.[0];
     const type = diff?.op;

@@ -7,17 +7,18 @@ import { Link01 } from '@ui/media/icons/Link01';
 import { Receipt } from '@ui/media/icons/Receipt';
 import { useStore } from '@shared/hooks/useStore';
 import { Dataflow03 } from '@ui/media/icons/Dataflow03';
-import { Building03 } from '@ui/media/icons/Building03';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { ArrowNarrowLeft } from '@ui/media/icons/ArrowNarrowLeft';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
-import { NotificationCenter } from '@shared/components/Notifications/NotificationCenter';
 import { useKeyboardNavigation } from '@shared/components/RootSidenav/hooks/useKeyboardNavigation';
+
+import { WorkspaceSection } from './components';
 
 export const SettingsSidenav = () => {
   const navigate = useNavigate();
   const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
+
   const [lastActivePosition, setLastActivePosition] = useLocalStorage(
     `customeros-player-last-position`,
     { ['settings']: 'oauth', root: 'organization' },
@@ -65,24 +66,14 @@ export const SettingsSidenav = () => {
       </div>
 
       <div className='flex flex-col space-y-2 w-full'>
-        <SidenavItem
-          label='Workspace'
-          onClick={handleItemClick('workspace')}
-          isActive={checkIsActive('workspace') || !searchParams?.get('tab')}
-          icon={
-            <Building03
-              className={cn(
-                checkIsActive('workspace') ? 'text-gray-700' : 'text-gray-500',
-                'size-5',
-              )}
-            />
-          }
+        <WorkspaceSection
+          checkIsActive={checkIsActive}
+          handleItemClick={handleItemClick}
         />
-
         <SidenavItem
           label='Accounts'
-          isActive={checkIsActive('oauth')}
           onClick={handleItemClick('oauth')}
+          isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           icon={
             <Link01
               className={cn(
@@ -121,7 +112,7 @@ export const SettingsSidenav = () => {
         />
       </div>
       <div className='flex flex-col space-y-1 flex-grow justify-end'>
-        <NotificationCenter />
+        {/* <NotificationCenter /> */}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 import { Tag, TagInput } from '@shared/types/__generated__/graphql.types';
 
 import { TagStore } from './Tag.store';
+import { TagService } from './Tag.service';
 
 export class TagsStore implements GroupStore<Tag> {
   channel?: Channel | undefined;
@@ -24,8 +25,10 @@ export class TagsStore implements GroupStore<Tag> {
   sync = makeAutoSyncableGroup.sync;
   load = makeAutoSyncableGroup.load<Tag>();
   subscribe = makeAutoSyncableGroup.subscribe;
+  private service: TagService;
 
   constructor(public root: RootStore, public transport: Transport) {
+    this.service = new TagService(transport);
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'Tags',
@@ -109,7 +112,28 @@ export class TagsStore implements GroupStore<Tag> {
         options?.onSucces?.(serverId);
       }
     }
+    this.root.ui.toastSuccess('Tag created', 'tag-created');
   };
+
+  async deleteTag(tagId: string) {
+    this.value.delete(tagId);
+
+    try {
+      this.isLoading = true;
+      await this.service.deleteTag({
+        id: tagId,
+      });
+    } catch (error) {
+      console.error(error);
+    } finally {
+      this.isLoading = false;
+    }
+    this.sync({
+      action: 'DELETE',
+      ids: [tagId],
+    });
+    this.root.ui.toastSuccess('Tag deleted', 'tag-deleted');
+  }
 
   toArray() {
     return Array.from(this.value.values());
