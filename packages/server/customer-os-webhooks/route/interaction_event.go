@@ -185,7 +185,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 				return
 			}
 
-			err = services.CommonServices.PostgresRepositories.RawEmailRepository.Store(externalSystem, tenantByName, username, emailRawData.ProviderMessageId, messageId, string(jsonContent), emailRawData.Sent, entity.REAL_TIME)
+			err = services.CommonServices.PostgresRepositories.RawEmailRepository.Store(ctx, externalSystem, tenantByName, username, emailRawData.ProviderMessageId, messageId, string(jsonContent), emailRawData.Sent, entity.REAL_TIME)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
