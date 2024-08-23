@@ -280,7 +280,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     })
 
     .with(
-      { property: 'email_verification' },
+      { property: 'EMAIL_VERIFICATION' },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
 
@@ -295,11 +295,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
             category: string;
             values: EmailVerificationStatus[];
           }) =>
-            (categoryFilter.category === 'is_deliverable' &&
+            (categoryFilter.category === 'IS_DELIVERABLE' &&
               isDeliverable(categoryFilter.values, emailValidationData)) ||
-            (categoryFilter.category === 'is_not_deliverable' &&
+            (categoryFilter.category === 'IS_NOT_DELIVERABLE' &&
               isNotDeliverable(categoryFilter.values, emailValidationData)) ||
-            (categoryFilter.category === 'is_deliverable_unknown' &&
+            (categoryFilter.category === 'IS_DELIVERABLE_UNKNOWN' &&
               isDeliverableUnknown(categoryFilter.values, emailValidationData)),
         );
       },

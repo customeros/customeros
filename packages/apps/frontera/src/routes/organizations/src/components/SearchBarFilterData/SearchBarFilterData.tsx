@@ -9,6 +9,7 @@ import { Switch } from '@ui/form/Switch';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
 import { useTablePlaceholder } from '@organizations/hooks/useTablePlaceholder.tsx';
+import { filterOptions } from '@organizations/components/SearchBarFilterData/utils.ts';
 import {
   Menu,
   MenuItem,
@@ -22,13 +23,17 @@ export const SearchBarFilterData = observer(() => {
   const [searchParams] = useSearchParams();
   const preset = searchParams.get('preset');
   const tableViewName = store.tableViewDefs.getById(preset || '')?.value.name;
-  const [filters, setFilters] = useState<Array<{ filter: FilterItem }>>([]);
+  const [filters, setFilters] = useState<
+    Map<string, FilterItem & { active: boolean }>
+  >(new Map());
+
+  const [isOpen, setIsOpen] = useState(false);
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const { multi: multiResultPlaceholder, single: singleResultPlaceholder } =
     useTablePlaceholder(tableViewName);
 
   const [optionsMap] = useTableColumnOptionsMap(tableViewDef?.value?.tableType);
-
+  const filterOptionMap = { ...filterOptions, ...optionsMap };
   const appliedFilters = tableViewDef
     ?.getFilters()
     ?.AND?.filter(
@@ -37,10 +42,27 @@ export const SearchBarFilterData = observer(() => {
     );
 
   useEffect(() => {
-    if (!isEqual(filters, appliedFilters)) {
-      setFilters(appliedFilters);
+    if (!isOpen) {
+      const newFiltersMap: Map<string, FilterItem & { active: boolean }> =
+        new Map(
+          appliedFilters?.map(
+            (item: { filter: FilterItem & { active: boolean } }) => [
+              item.filter.property,
+              item.filter,
+            ],
+          ) || [],
+        );
+
+      if (
+        !isEqual(
+          Array.from(filters.entries()),
+          Array.from(newFiltersMap.entries()),
+        )
+      ) {
+        setFilters(newFiltersMap);
+      }
     }
-  }, [appliedFilters, filters]);
+  }, [appliedFilters, isOpen]);
 
   const totalResults = store.ui.searchCount;
 
@@ -48,33 +70,23 @@ export const SearchBarFilterData = observer(() => {
     totalResults === 1 ? singleResultPlaceholder : multiResultPlaceholder;
 
   const handleApplyChanges = () => {
-    filters.forEach(({ filter }) => {
-      if (filter.active) return;
-
-      tableViewDef?.removeFilter(filter.property);
+    filters.forEach((filter, property) => {
+      if (!filter.active) {
+        tableViewDef?.removeFilter(property);
+      }
     });
   };
 
   const handleChange = (property: string, active: boolean) => {
-    const filter = filters.find((item) => item?.filter.property === property);
+    setFilters((prev) => {
+      const newFilters = new Map(prev);
 
-    if (filter) {
-      setFilters((prev) => {
-        return prev.map((item) => {
-          if (item?.filter.property === property) {
-            return {
-              ...item,
-              filter: {
-                ...item.filter,
-                active,
-              },
-            };
-          }
+      if (newFilters.has(property)) {
+        newFilters.set(property, { ...newFilters.get(property)!, active });
+      }
 
-          return item;
-        });
-      });
-    }
+      return newFilters;
+    });
   };
 
   return (
@@ -85,9 +97,11 @@ export const SearchBarFilterData = observer(() => {
         className={'font-medium flex items-center gap-1 break-keep w-max '}
       >
         {totalResults}{' '}
-        {appliedFilters?.length ? (
+        {appliedFilters.length ? (
           <Menu
             onOpenChange={(open) => {
+              setIsOpen(open);
+
               if (!open) {
                 handleApplyChanges();
               }
@@ -101,32 +115,34 @@ export const SearchBarFilterData = observer(() => {
                 <span className='capitalize mr-1'>{tableName}</span>
                 filtered by:{' '}
               </p>
-              {appliedFilters?.map(({ filter }: { filter: FilterItem }) => (
-                <MenuItem
-                  key={filter.property}
-                  className='flex justify-between font-normal capitalize mb-1 '
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    e.preventDefault();
-                  }}
-                >
-                  {optionsMap[filter.property]}
+              {appliedFilters.map(
+                ({ filter: { property } }: { filter: FilterItem }) => (
+                  <MenuItem
+                    key={property}
+                    className='flex justify-between font-normal capitalize mb-1 '
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                    }}
+                  >
+                    {filterOptionMap[property]}
 
-                  <div className='ml-2 flex items-center'>
-                    <Switch
-                      size='sm'
-                      onChange={(e) => {
-                        handleChange(filter.property, e);
-                      }}
-                      isChecked={
-                        filters?.find(
-                          (e) => e?.filter.property === filter.property,
-                        )?.filter.active
-                      }
-                    />
-                  </div>
-                </MenuItem>
-              ))}
+                    <div className='ml-2 flex items-center'>
+                      <Switch
+                        size='sm'
+                        onChange={(e) => {
+                          handleChange(property, e);
+                        }}
+                        isChecked={
+                          filters.has(property)
+                            ? filters.get(property)!.active
+                            : false
+                        }
+                      />
+                    </div>
+                  </MenuItem>
+                ),
+              )}
             </MenuList>
           </Menu>
         ) : (

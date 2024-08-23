@@ -23,9 +23,9 @@ export enum EmailVerificationStatus {
   VerificationInProgress = 'verification_in_progress',
 
   // category
-  IsDeliverable = 'is_deliverable',
-  IsNotDeliverable = 'is_not_deliverable',
-  IsUnknown = 'is_unknown',
+  IsDeliverable = 'IS_DELIVERABLE',
+  IsNotDeliverable = 'IS_NOT_DELIVERABLE',
+  IsUnknown = 'IS_DELIVERABLE_UNKNOWN',
 }
 
 export const getCategoryString = (

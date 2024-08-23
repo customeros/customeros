@@ -40,7 +40,7 @@ const DEFAULT_FILTER: FilterItem = {
 };
 
 const DEFAULT_VERIFICATION_FILTER: FilterItem = {
-  property: 'email_verification',
+  property: 'EMAIL_VERIFICATION',
   value: [],
   active: false,
   caseSensitive: false,
@@ -61,7 +61,7 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
     ) ?? { ...DEFAULT_FILTER, property: property || DEFAULT_FILTER.property };
 
     const verificationFilter =
-      tableViewDef?.getFilter('email_verification') ??
+      tableViewDef?.getFilter('EMAIL_VERIFICATION') ??
       DEFAULT_VERIFICATION_FILTER;
 
     const toggle = () => {
