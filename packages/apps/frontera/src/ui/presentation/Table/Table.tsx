@@ -66,7 +66,7 @@ interface TableProps<T extends object> {
   enableColumnResizing?: boolean;
   contentHeight?: number | string;
   enableKeyboardShortcuts?: boolean;
-  onFullRowSelection?: (id?: string) => void;
+  onFullRowSelection?: (row?: T) => void;
   onSortingChange?: OnChangeFn<SortingState>;
   getRowId?: (row: T, index: number) => string;
   onResizeColumn?: OnChangeFn<ColumnSizingState>;
@@ -402,7 +402,7 @@ interface TableBodyProps<T extends object> {
   enableRowSelection?: boolean;
   focusedRowIndex: number | null;
   enableKeyboardShortcuts?: boolean;
-  onFullRowSelection?: (id?: string) => void;
+  onFullRowSelection?: (row: T) => void;
   setSelectedIndex: (index: number | null) => void;
   setFocusedRowIndex: (index: number | null) => void;
   rowVirtualizer: Virtualizer<HTMLDivElement, Element>;
@@ -489,10 +489,7 @@ const TableBody = <T extends object>({
                 ? (s) => {
                     row?.getToggleSelectedHandler()(s);
 
-                    /// @ts-expect-error improve this later
-                    const rowId = (row.original as unknown)?.id;
-
-                    onFullRowSelection?.(rowId);
+                    onFullRowSelection?.(row.original);
                     setFocusedRowIndex(row?.index);
                   }
                 : undefined

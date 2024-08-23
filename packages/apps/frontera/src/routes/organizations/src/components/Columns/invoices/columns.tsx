@@ -1,4 +1,5 @@
 import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
+import { PaymentStatusSelect } from '@invoices/components/shared';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
@@ -17,7 +18,6 @@ import {
   AmountCell,
   ContractCell,
   BillingCycleCell,
-  PaymentStatusCell,
   InvoicePreviewCell,
 } from './Cells';
 
@@ -160,9 +160,9 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <PaymentStatusCell
+      <PaymentStatusSelect
         value={props.getValue()?.value?.status}
-        invoiceId={props.getValue()?.value?.metadata?.id}
+        invoiceNumber={props.getValue()?.number}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
@@ -206,10 +206,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <InvoicePreviewCell
-        value={props.getValue()?.value?.invoiceNumber}
-        invoiceId={props.getValue()?.value?.metadata?.id}
-      />
+      <InvoicePreviewCell value={props.getValue()?.value?.invoiceNumber} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
@@ -230,10 +227,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <InvoicePreviewCell
-        value={props.getValue()?.value?.invoiceNumber}
-        invoiceId={props.getValue()?.value?.metadata?.id}
-      />
+      <InvoicePreviewCell value={props.getValue()?.value?.invoiceNumber} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
