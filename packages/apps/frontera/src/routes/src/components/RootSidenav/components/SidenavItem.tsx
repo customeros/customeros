@@ -10,7 +10,7 @@ interface SidenavItemProps {
   isActive?: boolean;
   onClick?: () => void;
   rightElement?: ReactElement | null;
-  icon: ((isActive: boolean) => ReactElement) | ReactElement;
+  icon?: ((isActive: boolean) => ReactElement) | ReactElement;
 }
 
 export const SidenavItem = ({

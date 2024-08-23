@@ -22,7 +22,7 @@ type UploadResponse = {
   downloadUrl: string;
 };
 
-export const Workspace = () => {
+export const General = () => {
   const store = useStore();
   const [name, setName] = useState(
     () => store.settings.tenant.value?.workspaceName,
@@ -78,9 +78,9 @@ export const Workspace = () => {
   };
 
   return (
-    <div className='px-6 pb-4 pt-2 max-w-[415px] border-r border-gray-200 h-full'>
+    <div className='px-6 pb-4 pt-2 max-w-[500px] border-r border-gray-200 h-full'>
       <div className='flex flex-col gap-4'>
-        <p className='text-gray-700  font-semibold'>Workspace</p>
+        <p className='text-gray-700  font-semibold'>General</p>
         <div className='flex flex-col'>
           <div className='flex justify-between items-center'>
             <p className='text-sm text-gray-900 w-fit whitespace-nowrap font-semibold'>
