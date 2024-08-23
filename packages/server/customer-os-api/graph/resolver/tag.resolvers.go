@@ -6,7 +6,7 @@ package resolver
 
 import (
 	"context"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -40,7 +40,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 
 	err := r.Services.TagService.Update(ctx, input.ID, input.Name)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to update tag"))
+		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to update tag"))
 		r.log.Errorf("failed to update tag: %s", err)
 		graphql.AddErrorf(ctx, "Failed to update tag %s", input.ID)
 		return nil, err
@@ -48,7 +48,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 
 	tagEntity, err := r.Services.TagService.GetById(ctx, input.ID)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to fetch tag"))
+		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to fetch tag"))
 		r.log.Errorf("failed to fetch tag: %s", err)
 		graphql.AddErrorf(ctx, "Failed to fetch tag %s", input.ID)
 		return nil, err
