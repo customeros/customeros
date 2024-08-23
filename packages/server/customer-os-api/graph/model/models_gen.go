@@ -1043,13 +1043,6 @@ type EmailValidationDetails struct {
 	IsRoleAccount     *bool   `json:"isRoleAccount,omitempty"`
 	IsFreeAccount     *bool   `json:"isFreeAccount,omitempty"`
 	SMTPSuccess       *bool   `json:"smtpSuccess,omitempty"`
-	Validated         *bool   `json:"validated,omitempty"`
-	IsReachable       *string `json:"isReachable,omitempty"`
-	AcceptsMail       *bool   `json:"acceptsMail,omitempty"`
-	HasFullInbox      *bool   `json:"hasFullInbox,omitempty"`
-	IsDisabled        *bool   `json:"isDisabled,omitempty"`
-	IsDisposable      *bool   `json:"isDisposable,omitempty"`
-	Error             *string `json:"error,omitempty"`
 }
 
 type EntityTemplate struct {

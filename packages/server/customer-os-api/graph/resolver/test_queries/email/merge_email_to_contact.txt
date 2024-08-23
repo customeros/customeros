@@ -18,7 +18,8 @@ mutation MergeEmailToContact($contactId: ID!){
         createdAt
         updatedAt
         emailValidationDetails {
-            validated
+            isRisky
+            verified
         }
       }
 }
