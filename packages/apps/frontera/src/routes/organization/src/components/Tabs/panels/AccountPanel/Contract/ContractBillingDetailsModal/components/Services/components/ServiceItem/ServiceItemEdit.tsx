@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
+import { ResizableInput } from '@ui/form/Input';
 import { ContractStatus } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
@@ -165,24 +166,28 @@ export const ServiceItemEdit = observer(
 
           {sliCurrencySymbol}
 
-          <MaskedResizableInput
+          <ResizableInput
             size='xs'
-            type='number'
-            mask={Number}
-            autofix={true}
+            step='0.01'
+            type={'number'}
             placeholder='0'
             className={inputClasses}
             onFocus={(e) => e.target.select()}
+            value={service?.tempValue?.price ?? ''}
             min={type === 'one-time' ? -999999999999 : 0}
-            value={service?.tempValue?.price?.toString() ?? ''}
-            onChange={(e) => {
-              updatePrice(e.target.value ?? '');
+            onBlur={(e) => {
+              const value = e.target?.value || '0';
+
+              updatePrice(value);
             }}
-            onBlur={(e) =>
-              !e.target.value?.length
-                ? updatePrice('0')
-                : updatePrice(e.target.value)
-            }
+            onChange={(e) => {
+              const formatted =
+                type === 'subscription'
+                  ? e.target.value?.replace('-', '')
+                  : e.target.value;
+
+              updatePrice(formatted ?? '');
+            }}
           />
 
           {type === 'one-time' ? (
