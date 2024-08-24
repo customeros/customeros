@@ -312,6 +312,7 @@ func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *entity.TenantEntity {
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Active:    utils.GetBoolPropOrTrue(props, "active"),
 	}
 	return &tenant
 }

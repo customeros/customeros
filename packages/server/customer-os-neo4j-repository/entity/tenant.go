@@ -12,4 +12,5 @@ type TenantEntity struct {
 	Source    DataSource
 	AppSource string
 	Settings  TenantSettingsEntity
+	Active    bool
 }

@@ -967,7 +967,7 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 				WHERE org.hide = false AND
 				(org.techLastTouchpointRequestedAt IS NULL OR org.techLastTouchpointRequestedAt < datetime() - duration({minutes: $delayFromPreviousCheckMin}))
 				RETURN t.name, org.id

@@ -236,7 +236,7 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 		log.Int("delayFromLastValidationAttemptInMinutes", delayFromLastValidationAttemptInMinutes),
 		log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
+	cypher := `MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
 				WHERE
 					e.techValidatedAt IS NULL AND
 					e.rawEmail <> '' AND

@@ -125,12 +125,13 @@ func (r *tenantWriteRepository) CreateTenantIfNotExistAndReturn(ctx context.Cont
 		  t.createdAt=datetime(), 
 		  t.updatedAt=datetime(), 
 		  t.source=$source, 
-		  t.appSource=$appSource
+		  t.appSource=$appSource,
+		  t.active=true
 		WITH t
 		MERGE (t)-[:HAS_SETTINGS]->(ts:TenantSettings {tenant:$name})
 		ON CREATE SET
 			ts.id=randomUUID(),
-		  	ts.createdAt=datetime(),
+		  	ts.createdAt=datetime(),	
 			ts.updatedAt=datetime(),
 			ts.invoicingEnabled=$invoicingEnabled,
 			ts.invoicingPostpaid=$invoicingPostpaid,
