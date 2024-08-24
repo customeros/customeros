@@ -14,6 +14,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -52,6 +53,7 @@ func (s *organizationService) RefreshLastTouchpoint() {
 	}
 
 	limit := 2000
+	delayFromPreviousCheckInMinutes := 15 // 15 minutes
 
 	for {
 		select {
@@ -62,8 +64,7 @@ func (s *organizationService) RefreshLastTouchpoint() {
 			// continue as normal
 		}
 
-		delayFromPreviousCheck := 5 * 60
-		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint(ctx, limit, delayFromPreviousCheck)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForUpdateLastTouchpoint(ctx, limit, delayFromPreviousCheckInMinutes)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations for renewals: %v", err)
@@ -85,13 +86,13 @@ func (s *organizationService) RefreshLastTouchpoint() {
 				})
 			})
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(err, "error refreshing last touchpoint"))
 				s.log.Errorf("Error refreshing last touchpoint for organization {%s}: %s", record.OrganizationId, err.Error())
 			}
 
-			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyLastTouchpointRequestedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyLastTouchpointRequestedAt), utils.NowPtr())
 			if err != nil {
-				tracing.TraceErr(span, err)
+				tracing.TraceErr(span, errors.Wrap(err, "error updating last touchpoint requested at"))
 				s.log.Errorf("Error updating refresh last touchpoint requested at: %s", err.Error())
 			}
 		}
