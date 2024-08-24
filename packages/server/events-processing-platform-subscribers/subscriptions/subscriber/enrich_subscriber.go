@@ -12,11 +12,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/email"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	emailevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 	"strings"
@@ -106,10 +104,6 @@ func (s *EnrichSubscriber) ProcessEvents(ctx context.Context, sub *esdb.Persiste
 }
 
 func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "EnrichSubscriber.When", evt)
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
-
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}

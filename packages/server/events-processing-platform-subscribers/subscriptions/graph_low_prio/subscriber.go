@@ -18,7 +18,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -122,10 +121,6 @@ func (s *GraphLowPrioSubscriber) ProcessEvents(ctx context.Context, stream *esdb
 }
 
 func (s *GraphLowPrioSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphLowPrioSubscriber.When", evt)
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
-
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}

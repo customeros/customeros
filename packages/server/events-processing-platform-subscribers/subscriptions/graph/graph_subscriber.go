@@ -40,7 +40,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"golang.org/x/sync/errgroup"
 
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 )
 
@@ -188,10 +187,6 @@ func (s *GraphSubscriber) ProcessEvents(ctx context.Context, stream *esdb.Persis
 }
 
 func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphSubscriber.When", evt)
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
-
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
@@ -511,6 +506,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
+		span, _ := opentracing.StartSpanFromContext(ctx, "GraphSubscriber.When")
+		defer span.Finish()
+		tracing.TraceErr(span, err)
 		return err
 	}
 }

@@ -12,7 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/opentracing/opentracing-go/log"
+	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 	"strings"
@@ -100,10 +100,6 @@ func (s *InteractionEventSubscriber) ProcessEvents(ctx context.Context, sub *esd
 }
 
 func (s *InteractionEventSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "InteractionEventSubscriber.When", evt)
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
-
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
@@ -120,10 +116,12 @@ func (s *InteractionEventSubscriber) When(ctx context.Context, evt eventstore.Ev
 		return nil
 
 	default:
-		tracing.TraceErr(span, eventstore.ErrInvalidEventType)
 		s.log.Warnf("Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
+		span, _ := opentracing.StartSpanFromContext(ctx, "InteractionEventSubscriber.When")
+		defer span.Finish()
+		tracing.TraceErr(span, err)
 		return err
 	}
 }
