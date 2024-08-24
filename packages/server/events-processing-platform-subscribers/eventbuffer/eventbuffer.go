@@ -3,10 +3,12 @@ package eventbuffer
 import (
 	"context"
 	"encoding/json"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	orgaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	reminder "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/pkg/errors"
 	"os"
@@ -75,7 +77,7 @@ func (eb *EventBufferWatcher) Stop() {
 func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventBufferWatcher.Dispatch")
 	defer span.Finish()
-	now := time.Now().UTC()
+	now := utils.Now()
 	eventBuffers, err := eb.ebr.GetByExpired(now)
 	if err != nil {
 		return err
@@ -86,7 +88,7 @@ func (eb *EventBufferWatcher) Dispatch(ctx context.Context) error {
 	tracing.LogObjectAsJson(span, "expiredEvents", eventBuffers)
 	for _, eventBuffer := range eventBuffers {
 		if err := eb.HandleEvent(ctx, eventBuffer); err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "error handling event"))
 			eb.logger.Errorf("EventBufferWatcher.Dispatch: error handling event: %s", err.Error())
 			continue
 		}
@@ -141,7 +143,9 @@ func (eb *EventBufferWatcher) handleEvent(ctx context.Context, evt eventstore.Ev
 			return err
 		}
 		return err
-	case reminder.ReminderNotificationV1:
+	case reminder.ReminderNotificationV1,
+		generic.LinkEntityWithEntityV1:
+		// TODO: implement the logic for the reminder and generic events
 		return nil
 	default:
 		return errors.New("Event type not supported")
