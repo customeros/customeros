@@ -373,6 +373,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "http.NewRequest"))
+					span.LogFields(log.Int("failedPageNumber", page))
 					return
 				}
 
@@ -382,6 +383,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				res, err := client.Do(req)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "client.Do"))
+					span.LogFields(log.Int("failedPageNumber", page))
 					return
 				}
 				defer res.Body.Close()
@@ -389,6 +391,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				responseBody, err := io.ReadAll(res.Body)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "io.ReadAll"))
+					span.LogFields(log.Int("failedPageNumber", page))
 					return
 				}
 
@@ -398,6 +401,7 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				err = json.Unmarshal(responseBody, &contactList)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
+					span.LogFields(log.Int("failedPageNumber", page))
 					s.log.Errorf("Error unmarshalling weconnect response: {%s}", string(responseBody))
 					return
 				}
