@@ -101,10 +101,8 @@ export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
   if (!data) return null;
 
   return (
-    <>
-      <Tooltip side='right' label={data?.message}>
-        <div>{data?.icon}</div>
-      </Tooltip>
-    </>
+    <Tooltip side='right' label={data?.message}>
+      <div className='flex items-center'>{data?.icon}</div>
+    </Tooltip>
   );
 };
