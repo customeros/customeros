@@ -61,10 +61,7 @@ export const columns = [
       />
     ),
     cell: (props) => (
-      <PaymentStatusSelect
-        invoiceNumber={props.getValue()?.number}
-        value={props.getValue()?.value?.status || null}
-      />
+      <PaymentStatusSelect invoiceNumber={props.getValue()?.number} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),

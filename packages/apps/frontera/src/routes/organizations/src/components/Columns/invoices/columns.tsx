@@ -160,10 +160,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <PaymentStatusSelect
-        value={props.getValue()?.value?.status}
-        invoiceNumber={props.getValue()?.number}
-      />
+      <PaymentStatusSelect invoiceNumber={props.getValue()?.number} />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),

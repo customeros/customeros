@@ -46,7 +46,6 @@ export const Preview = observer(() => {
               {invoice?.value?.status ? (
                 <PaymentStatusSelect
                   variant='invoice-preview'
-                  value={invoice?.value?.status}
                   invoiceNumber={invoice?.number}
                 />
               ) : (
