@@ -1,8 +1,7 @@
 import { useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { TableCellTooltip } from '@ui/presentation/Table';
@@ -22,12 +21,6 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
     .find((e) => e.contracts.find((c) => c.metadata.id === contractId))?.id;
 
   const linkRef = useRef<HTMLParagraphElement>(null);
-  const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
-  const search = searchParams.get('search');
-  const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-last-search-for-preset`, { root: 'root' });
 
   const handleNavigate = () => {
     if (!id) return;
@@ -36,12 +29,6 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
 
     if (!href) return;
 
-    if (preset) {
-      setLastSearchForPreset({
-        ...lastSearchForPreset,
-        [preset]: search ?? '',
-      });
-    }
     navigate(href);
   };
 

@@ -1,5 +1,5 @@
 import { memo, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -23,16 +23,10 @@ export const AvatarCell = memo(
   ({ name, id, icon, logo, description }: AvatarCellProps) => {
     const [isOpen, setIsOpen] = useState(false);
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const preset = searchParams.get('preset');
 
     const [tabs] = useLocalStorage<{
       [key: string]: string;
     }>(`customeros-player-last-position`, { root: 'organization' });
-    const search = searchParams.get('search');
-    const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
-      [key: string]: string;
-    }>(`customeros-last-search-for-preset`, { root: 'root' });
 
     const src = icon || logo;
     const fullName = name || 'Unnamed';
@@ -41,12 +35,6 @@ export const AvatarCell = memo(
       const lastPositionParams = tabs[id];
       const href = getHref(id, lastPositionParams);
 
-      if (preset) {
-        setLastSearchForPreset({
-          ...lastSearchForPreset,
-          [preset]: search ?? '',
-        });
-      }
       navigate(href);
     };
 

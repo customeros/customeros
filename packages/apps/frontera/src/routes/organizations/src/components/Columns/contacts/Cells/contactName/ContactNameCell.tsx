@@ -1,4 +1,4 @@
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -26,12 +26,6 @@ export const ContactNameCell = observer(
     const [tabs] = useLocalStorage<{
       [key: string]: string;
     }>(`customeros-player-last-position`, { root: 'organization' });
-    const [searchParams] = useSearchParams();
-    const preset = searchParams.get('preset');
-    const search = searchParams.get('search');
-    const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
-      [key: string]: string;
-    }>(`customeros-last-search-for-preset`, { root: 'root' });
 
     const lastPositionParams = contactStore?.organizationId
       ? tabs[contactStore?.organizationId]
@@ -74,12 +68,6 @@ export const ContactNameCell = observer(
 
       if (!href) return;
 
-      if (preset) {
-        setLastSearchForPreset({
-          ...lastSearchForPreset,
-          [preset]: search ?? '',
-        });
-      }
       navigate(href);
     };
 
