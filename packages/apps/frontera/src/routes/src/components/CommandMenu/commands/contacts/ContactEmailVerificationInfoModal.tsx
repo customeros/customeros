@@ -141,6 +141,15 @@ export const ContactEmailVerificationInfoModal = observer(() => {
         <p>These email addresses have not been verified by CustomerOS yet.</p>
       ),
     }))
+    .with(EmailVerificationStatus.VerificationInProgress, () => ({
+      title: `Don't know • Verification in progress`,
+      description: (
+        <p>
+          These emails are currently being verified. This typically takes one or
+          two days.
+        </p>
+      ),
+    }))
     .otherwise(() => ({
       title: '',
       description: '',
