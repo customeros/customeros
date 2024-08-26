@@ -68,9 +68,9 @@ export const AddContactViaLinkedInUrl = observer(() => {
         </p>
       )}
       <Command.List>
-        <CommandItem
-          onSelect={handleConfirm}
-        >{`Add contact via LinkedIn "${url}"`}</CommandItem>
+        <CommandItem className='' onSelect={handleConfirm}>
+          <span className='overflow-hidden text-ellipsis whitespace-nowrap'>{`Add contact via LinkedIn "${url}"`}</span>
+        </CommandItem>
       </Command.List>
     </Command>
   );
