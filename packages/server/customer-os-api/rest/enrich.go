@@ -46,10 +46,12 @@ type EnrichPersonData struct {
 }
 
 type EnrichPersonEmail struct {
-	Address       string  `json:"address"`
-	IsDeliverable *bool   `json:"isDeliverable,omitempty"`
-	IsRisky       *bool   `json:"isRisky,omitempty"`
-	Type          *string `json:"type,omitempty"`
+	Address     string  `json:"address"`
+	Deliverable *string `json:"deliverable,omitempty"`
+	IsRisky     *bool   `json:"isRisky,omitempty"`
+	Type        *string `json:"type,omitempty"`
+	// Deprecated
+	IsDeliverable *bool `json:"isDeliverable,omitempty"`
 }
 
 type EnrichPersonJob struct {
@@ -219,12 +221,11 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 					tracing.TraceErr(span, errors.New("failed to validate email"))
 					continue
 				}
-				emailRecord.IsDeliverable = utils.BoolPtr(emailValidationResult.Data.EmailData.IsDeliverable)
+				emailRecord.Deliverable = utils.StringPtr(emailValidationResult.Data.EmailData.Deliverable)
 				emailRecord.IsRisky = utils.BoolPtr(emailValidationResult.Data.DomainData.IsFirewalled ||
 					emailValidationResult.Data.EmailData.IsRoleAccount ||
 					emailValidationResult.Data.EmailData.IsFreeAccount ||
-					emailValidationResult.Data.EmailData.IsMailboxFull ||
-					emailValidationResult.Data.DomainData.IsCatchAll)
+					emailValidationResult.Data.EmailData.IsMailboxFull)
 				if emailValidationResult.Data.EmailData.IsFreeAccount {
 					emailRecord.Type = utils.StringPtr(emailTypePersonal)
 				} else {
@@ -338,7 +339,8 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		}
 
 		// call email verify
-		for _, email := range response.Data.Emails {
+		for i := range response.Data.Emails {
+			email := &response.Data.Emails[i] // Get a pointer to the email in the slice
 			if email.Address != "" {
 				emailValidationResult, err := callApiValidateEmail(ctx, services, span, email.Address)
 				if err != nil {
@@ -349,12 +351,11 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 					tracing.TraceErr(span, errors.New("failed to validate email"))
 					continue
 				}
-				email.IsDeliverable = utils.BoolPtr(emailValidationResult.Data.EmailData.IsDeliverable)
+				email.Deliverable = utils.StringPtr(emailValidationResult.Data.EmailData.Deliverable)
 				email.IsRisky = utils.BoolPtr(emailValidationResult.Data.DomainData.IsFirewalled ||
 					emailValidationResult.Data.EmailData.IsRoleAccount ||
 					emailValidationResult.Data.EmailData.IsFreeAccount ||
-					emailValidationResult.Data.EmailData.IsMailboxFull ||
-					emailValidationResult.Data.DomainData.IsCatchAll)
+					emailValidationResult.Data.EmailData.IsMailboxFull)
 				if emailValidationResult.Data.EmailData.IsFreeAccount {
 					email.Type = utils.StringPtr(emailTypePersonal)
 				} else {

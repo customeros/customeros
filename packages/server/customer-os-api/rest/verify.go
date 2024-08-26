@@ -72,15 +72,18 @@ type IpIntelligenceOrganization struct {
 }
 
 type EmailVerificationResponse struct {
-	Status        string                  `json:"status"`
-	Message       string                  `json:"message,omitempty"`
-	Email         string                  `json:"email"`
-	IsDeliverable bool                    `json:"isDeliverable"`
-	Provider      string                  `json:"provider"`
-	IsRisky       bool                    `json:"isRisky"`
-	Risk          EmailVerificationRisk   `json:"risk"`
-	Syntax        EmailVerificationSyntax `json:"syntax"`
-	Smtp          EmailVerificationSmtp   `json:"smtp"`
+	Status      string                  `json:"status"`
+	Message     string                  `json:"message,omitempty"`
+	Email       string                  `json:"email"`
+	Deliverable string                  `json:"deliverable"`
+	Provider    string                  `json:"provider"`
+	IsRisky     bool                    `json:"isRisky"`
+	IsCatchAll  bool                    `json:"isCatchAll"`
+	Risk        EmailVerificationRisk   `json:"risk"`
+	Syntax      EmailVerificationSyntax `json:"syntax"`
+	Smtp        EmailVerificationSmtp   `json:"smtp"`
+	// Deprecated
+	IsDeliverable bool `json:"isDeliverable"`
 }
 
 type EmailVerificationRisk struct {
@@ -88,7 +91,6 @@ type EmailVerificationRisk struct {
 	IsRoleMailbox  bool `json:"isRoleMailbox"`
 	IsFreeProvider bool `json:"isFreeProvider"`
 	IsMailboxFull  bool `json:"isMailboxFull"`
-	IsCatchAll     bool `json:"isCatchAll"`
 }
 
 type EmailVerificationSyntax struct {
@@ -273,14 +275,14 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		}
 
 		emailVerificationResponse := EmailVerificationResponse{
-			Status:   "success",
-			Email:    emailAddress,
-			Provider: result.Data.DomainData.Provider,
+			Status:     "success",
+			Email:      emailAddress,
+			Provider:   result.Data.DomainData.Provider,
+			IsCatchAll: result.Data.DomainData.IsCatchAll,
 			IsRisky: result.Data.DomainData.IsFirewalled ||
 				result.Data.EmailData.IsRoleAccount ||
 				result.Data.EmailData.IsFreeAccount ||
-				result.Data.EmailData.IsMailboxFull ||
-				result.Data.DomainData.IsCatchAll,
+				result.Data.EmailData.IsMailboxFull,
 			Syntax: EmailVerificationSyntax{
 				IsValid: syntaxValidation.IsValid,
 				Domain:  syntaxValidation.Domain,
@@ -291,14 +293,13 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 				IsRoleMailbox:  result.Data.EmailData.IsRoleAccount,
 				IsFreeProvider: result.Data.EmailData.IsFreeAccount,
 				IsMailboxFull:  result.Data.EmailData.IsMailboxFull,
-				IsCatchAll:     result.Data.DomainData.IsCatchAll,
 			},
 			Smtp: EmailVerificationSmtp{
 				Description:  result.Data.EmailData.Description,
 				ErrorCode:    result.Data.EmailData.ErrorCode,
 				ResponseCode: result.Data.EmailData.ResponseCode,
 			},
-			IsDeliverable: result.Data.EmailData.IsDeliverable,
+			Deliverable: result.Data.EmailData.Deliverable,
 		}
 
 		c.JSON(http.StatusOK, emailVerificationResponse)

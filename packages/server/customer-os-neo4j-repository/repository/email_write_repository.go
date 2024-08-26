@@ -21,27 +21,24 @@ type EmailCreateFields struct {
 }
 
 type EmailValidatedFields struct {
-	EmailAddress   string    `json:"emailAddress"`
-	Domain         string    `json:"domain"`
-	CanConnectSmtp bool      `json:"canConnectSmtp"`
-	IsCatchAll     bool      `json:"isCatchAll"`
-	IsDeliverable  bool      `json:"isDeliverable"`
-	IsValidSyntax  bool      `json:"isValidSyntax"`
-	Username       string    `json:"username"`
-	ValidatedAt    time.Time `json:"validatedAt"`
-	IsRoleAccount  bool      `json:"isRoleAccount"`
-	IsRisky        bool      `json:"isRisky"`
-	IsFirewalled   bool      `json:"isFirewalled"`
-	Provider       string    `json:"provider"`
-	Firewall       string    `json:"firewall"`
-	CanConnectSMTP bool      `json:"canConnectSMTP"`
-	IsMailboxFull  bool      `json:"isMailboxFull"`
-	IsFreeAccount  bool      `json:"isFreeAccount"`
-	SmtpSuccess    bool      `json:"smtpSuccess"`
-	ResponseCode   string    `json:"responseCode"`
-	ErrorCode      string    `json:"errorCode"`
-	Description    string    `json:"description"`
-	SmtpResponse   string    `json:"smtpResponse"`
+	EmailAddress  string    `json:"emailAddress"`
+	Domain        string    `json:"domain"`
+	IsCatchAll    bool      `json:"isCatchAll"`
+	Deliverable   string    `json:"deliverable"`
+	IsValidSyntax bool      `json:"isValidSyntax"`
+	Username      string    `json:"username"`
+	ValidatedAt   time.Time `json:"validatedAt"`
+	IsRoleAccount bool      `json:"isRoleAccount"`
+	IsRisky       bool      `json:"isRisky"`
+	IsFirewalled  bool      `json:"isFirewalled"`
+	Provider      string    `json:"provider"`
+	Firewall      string    `json:"firewall"`
+	IsMailboxFull bool      `json:"isMailboxFull"`
+	IsFreeAccount bool      `json:"isFreeAccount"`
+	SmtpSuccess   bool      `json:"smtpSuccess"`
+	ResponseCode  string    `json:"responseCode"`
+	ErrorCode     string    `json:"errorCode"`
+	Description   string    `json:"description"`
 }
 
 type EmailWriteRepository interface {
@@ -142,9 +139,8 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
 		 		SET e.email = $email,
-					e.canConnectSmtp = $canConnectSmtp,
 					e.isCatchAll = $isCatchAll,
-					e.isDeliverable = $isDeliverable,
+					e.deliverable = $deliverable,
 					e.isValidSyntax = $isValidSyntax,
 					e.username = $username,
 					e.updatedAt = datetime(),
@@ -154,14 +150,12 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.isFirewalled = $isFirewalled,
 					e.provider = $provider,
 					e.firewall = $firewall,
-					e.canConnectSMTP = $canConnectSMTP,
 					e.isMailboxFull = $isMailboxFull,
 					e.isFreeAccount = $isFreeAccount,
 					e.smtpSuccess = $smtpSuccess,
 					e.verifyResponseCode = $verifyResponseCode,
 					e.verifyErrorCode = $verifyErrorCode,
-					e.verifyDescription = $verifyDescription,
-					e.verifySmtpResponse = $verifySmtpResponse
+					e.verifyDescription = $verifyDescription
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
@@ -177,9 +171,8 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"tenant":             tenant,
 		"email":              data.EmailAddress,
 		"domain":             strings.ToLower(data.Domain),
-		"canConnectSmtp":     data.CanConnectSmtp,
 		"isCatchAll":         data.IsCatchAll,
-		"isDeliverable":      data.IsDeliverable,
+		"deliverable":        data.Deliverable,
 		"isValidSyntax":      data.IsValidSyntax,
 		"username":           data.Username,
 		"validatedAt":        data.ValidatedAt,
@@ -188,14 +181,12 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"isFirewalled":       data.IsFirewalled,
 		"provider":           data.Provider,
 		"firewall":           data.Firewall,
-		"canConnectSMTP":     data.CanConnectSMTP,
 		"isMailboxFull":      data.IsMailboxFull,
 		"isFreeAccount":      data.IsFreeAccount,
 		"smtpSuccess":        data.SmtpSuccess,
 		"verifyResponseCode": data.ResponseCode,
 		"verifyErrorCode":    data.ErrorCode,
 		"verifyDescription":  data.Description,
-		"verifySmtpResponse": data.SmtpResponse,
 		"now":                utils.Now(),
 		"source":             constants.SourceOpenline,
 		"appSource":          constants.AppSourceEventProcessingPlatform,
@@ -316,9 +307,8 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
 				WHERE e:Email_%s
 		 		SET e.email = "",
-					e.canConnectSmtp = null,
 					e.isCatchAll = null,
-					e.isDeliverable = null,
+					e.deliverable = null,
 					e.isValidSyntax = null,
 					e.username = null,
 					e.isRoleAccount = null,
@@ -327,14 +317,12 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 					e.isFirewalled = null,
 					e.provider = null,
 					e.firewall = null,
-					e.canConnectSMTP = null,
 					e.isMailboxFull = null,
 					e.isFreeAccount = null,
 					e.smtpSuccess = null,
 					e.verifyResponseCode = null,
 					e.verifyErrorCode = null,
 					e.verifyDescription = null,
-					e.verifySmtpResponse = null,
 					e.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":     emailId,

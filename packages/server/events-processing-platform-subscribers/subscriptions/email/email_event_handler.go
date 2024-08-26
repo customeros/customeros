@@ -105,22 +105,19 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 			IsRisky: emailValidationResponse.Data.DomainData.IsFirewalled ||
 				emailValidationResponse.Data.EmailData.IsRoleAccount ||
 				emailValidationResponse.Data.EmailData.IsFreeAccount ||
-				emailValidationResponse.Data.EmailData.IsMailboxFull ||
-				emailValidationResponse.Data.DomainData.IsCatchAll,
-			IsFirewalled:   emailValidationResponse.Data.DomainData.IsFirewalled,
-			Provider:       emailValidationResponse.Data.DomainData.Provider,
-			Firewall:       emailValidationResponse.Data.DomainData.Firewall,
-			IsCatchAll:     emailValidationResponse.Data.DomainData.IsCatchAll,
-			CanConnectSMTP: emailValidationResponse.Data.DomainData.CanConnectSMTP,
-			IsDeliverable:  emailValidationResponse.Data.EmailData.IsDeliverable,
-			IsMailboxFull:  emailValidationResponse.Data.EmailData.IsMailboxFull,
-			IsRoleAccount:  emailValidationResponse.Data.EmailData.IsRoleAccount,
-			IsFreeAccount:  emailValidationResponse.Data.EmailData.IsFreeAccount,
-			SmtpSuccess:    emailValidationResponse.Data.EmailData.SmtpSuccess,
-			ResponseCode:   emailValidationResponse.Data.EmailData.ResponseCode,
-			ErrorCode:      emailValidationResponse.Data.EmailData.ErrorCode,
-			Description:    emailValidationResponse.Data.EmailData.Description,
-			SmtpResponse:   emailValidationResponse.Data.EmailData.SmtpResponse,
+				emailValidationResponse.Data.EmailData.IsMailboxFull,
+			IsFirewalled:  emailValidationResponse.Data.DomainData.IsFirewalled,
+			Provider:      emailValidationResponse.Data.DomainData.Provider,
+			Firewall:      emailValidationResponse.Data.DomainData.Firewall,
+			IsCatchAll:    emailValidationResponse.Data.DomainData.IsCatchAll,
+			Deliverable:   emailValidationResponse.Data.EmailData.Deliverable,
+			IsMailboxFull: emailValidationResponse.Data.EmailData.IsMailboxFull,
+			IsRoleAccount: emailValidationResponse.Data.EmailData.IsRoleAccount,
+			IsFreeAccount: emailValidationResponse.Data.EmailData.IsFreeAccount,
+			SmtpSuccess:   emailValidationResponse.Data.EmailData.SmtpSuccess,
+			ResponseCode:  emailValidationResponse.Data.EmailData.ResponseCode,
+			ErrorCode:     emailValidationResponse.Data.EmailData.ErrorCode,
+			Description:   emailValidationResponse.Data.EmailData.Description,
 		}
 		return h.grpcClients.EmailClient.UpdateEmailValidation(ctx, &request)
 	})

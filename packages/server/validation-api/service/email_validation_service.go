@@ -82,6 +82,17 @@ func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context
 	result.DomainData.CanConnectSMTP = domainValidation.CanConnectSMTP
 	result.DomainData.Provider = domainValidation.Provider
 	result.DomainData.Firewall = domainValidation.Firewall
+	result.DomainData.HasMXRecord = domainValidation.HasMXRecord
+	result.DomainData.HasSPFRecord = domainValidation.HasSPFRecord
+	result.DomainData.TLSRequired = domainValidation.TLSRequired
+	result.DomainData.ResponseCode = domainValidation.ResponseCode
+	result.DomainData.ErrorCode = domainValidation.ErrorCode
+	result.DomainData.Description = domainValidation.Description
+
+	if domainValidation.HealthIsGreylisted || domainValidation.HealthIsBlacklisted {
+		result.EmailData.Deliverable = string(model.EmailDeliverableStatusUnknown)
+		return result, nil
+	}
 
 	var providersToSkip []string
 	if s.config.EmailConfig.EmailValidationSkipProvidersCommaSeparated != "" {
@@ -99,7 +110,7 @@ func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context
 			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 			return nil, err
 		}
-		result.EmailData.IsDeliverable = emailValidation.IsDeliverable
+		result.EmailData.Deliverable = emailValidation.Deliverable
 		result.EmailData.IsMailboxFull = emailValidation.IsMailboxFull
 		result.EmailData.IsRoleAccount = emailValidation.IsRoleAccount
 		result.EmailData.IsFreeAccount = emailValidation.IsFreeAccount
@@ -108,9 +119,10 @@ func (s *emailValidationService) ValidateEmailWithMailsherpa(ctx context.Context
 		result.EmailData.ErrorCode = emailValidation.ErrorCode
 		result.EmailData.Description = emailValidation.Description
 		result.EmailData.RetryValidation = emailValidation.RetryValidation
-		result.EmailData.SmtpResponse = emailValidation.SmtpResponse
+		result.EmailData.TLSRequired = emailValidation.TLSRequired
 	} else {
 		result.EmailData.SkippedValidation = true
+		result.EmailData.Deliverable = string(model.EmailDeliverableStatusUnknown)
 	}
 
 	return result, nil
@@ -127,21 +139,34 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 
 	if cacheDomain == nil || cacheDomain.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailDomainValidationCacheTtlDays).Before(utils.Now()) {
 		// get domain data with mailsherpa
-		domainValidation, err := mailsherpa.ValidateDomain(mailsherpa.EmailValidationRequest{
+		domainValidation := mailsherpa.ValidateDomain(mailsherpa.EmailValidationRequest{
 			Email:      email,
 			FromDomain: s.config.EmailConfig.EmailValidationFromDomain,
-		}, true)
+		})
+		jsonData, err := json.Marshal(domainValidation)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain data with mailsherpa"))
-			return nil, err
+			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal domain validation data"))
 		}
 		cacheDomain, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Save(ctx, postgresentity.CacheEmailValidationDomain{
-			Domain:         domain,
-			IsCatchAll:     domainValidation.IsCatchAll,
-			IsFirewalled:   domainValidation.IsFirewalled,
-			CanConnectSMTP: domainValidation.CanConnectSMTP,
-			Provider:       domainValidation.Provider,
-			Firewall:       domainValidation.Firewall,
+			Domain:              domain,
+			Provider:            domainValidation.Provider,
+			Firewall:            domainValidation.Firewall,
+			IsCatchAll:          domainValidation.IsCatchAll,
+			IsFirewalled:        domainValidation.IsFirewalled,
+			HasMXRecord:         domainValidation.HasMXRecord,
+			HasSPFRecord:        domainValidation.HasSPFRecord,
+			Error:               domainValidation.Error,
+			CanConnectSMTP:      domainValidation.SmtpResponse.CanConnectSMTP,
+			TLSRequired:         domainValidation.SmtpResponse.TLSRequired,
+			ResponseCode:        domainValidation.SmtpResponse.ResponseCode,
+			ErrorCode:           domainValidation.SmtpResponse.ErrorCode,
+			Description:         domainValidation.SmtpResponse.Description,
+			HealthFromEmail:     domainValidation.MailServerHealth.FromEmail,
+			HealthServerIP:      domainValidation.MailServerHealth.ServerIP,
+			HealthIsGreylisted:  domainValidation.MailServerHealth.IsGreylisted,
+			HealthIsBlacklisted: domainValidation.MailServerHealth.IsBlacklisted,
+			HealthRetryAfter:    domainValidation.MailServerHealth.RetryAfter,
+			Data:                string(jsonData),
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save domain data"))
@@ -167,7 +192,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 		cachedEmail.RetryValidation ||
 		cachedEmail.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) {
 		// get email data with mailsherpa
-		emailValidation, err := mailsherpa.ValidateEmail(mailsherpa.EmailValidationRequest{
+		emailValidation := mailsherpa.ValidateEmail(mailsherpa.EmailValidationRequest{
 			Email:      email,
 			FromDomain: s.config.EmailConfig.EmailValidationFromDomain,
 		})
@@ -175,21 +200,32 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data with mailsherpa"))
 			return nil, err
 		}
+		jsonData, err := json.Marshal(emailValidation)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal email validation data"))
+		}
 		cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, postgresentity.CacheEmailValidation{
-			Email:           email,
-			IsDeliverable:   emailValidation.IsDeliverable,
-			IsMailboxFull:   emailValidation.IsMailboxFull,
-			IsRoleAccount:   emailValidation.IsRoleAccount,
-			IsFreeAccount:   emailValidation.IsFreeAccount,
-			SmtpSuccess:     emailValidation.SmtpSuccess,
-			ResponseCode:    emailValidation.ResponseCode,
-			ErrorCode:       emailValidation.ErrorCode,
-			Description:     emailValidation.Description,
-			RetryValidation: emailValidation.RetryValidation,
-			SmtpResponse:    emailValidation.SmtpResponse,
-			Username:        syntaxValidation.User,
-			NormalizedEmail: syntaxValidation.CleanEmail,
-			Domain:          syntaxValidation.Domain,
+			Email:               email,
+			Deliverable:         emailValidation.IsDeliverable,
+			IsMailboxFull:       emailValidation.IsMailboxFull,
+			IsRoleAccount:       emailValidation.IsRoleAccount,
+			IsFreeAccount:       emailValidation.IsFreeAccount,
+			RetryValidation:     emailValidation.RetryValidation,
+			Error:               emailValidation.Error,
+			Data:                string(jsonData),
+			HealthIsGreylisted:  emailValidation.MailServerHealth.IsGreylisted,
+			HealthIsBlacklisted: emailValidation.MailServerHealth.IsBlacklisted,
+			HealthServerIP:      emailValidation.MailServerHealth.ServerIP,
+			HealthFromEmail:     emailValidation.MailServerHealth.FromEmail,
+			HealthRetryAfter:    emailValidation.MailServerHealth.RetryAfter,
+			SmtpSuccess:         emailValidation.SmtpResponse.CanConnectSMTP,
+			ResponseCode:        emailValidation.SmtpResponse.ResponseCode,
+			ErrorCode:           emailValidation.SmtpResponse.ErrorCode,
+			Description:         emailValidation.SmtpResponse.Description,
+			TLSRequired:         emailValidation.SmtpResponse.TLSRequired,
+			Username:            syntaxValidation.User,
+			NormalizedEmail:     syntaxValidation.CleanEmail,
+			Domain:              syntaxValidation.Domain,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save email data"))

@@ -33,7 +33,6 @@ message EmailValidationGrpcRequest {
   string Provider = 12;
   string Firewall = 13;
   bool isCatchAll = 14;
-  bool canConnectSMTP = 15;
   bool isDeliverable = 16;
   bool isMailboxFull = 17;
   bool isRoleAccount = 18;
@@ -42,7 +41,7 @@ message EmailValidationGrpcRequest {
   string responseCode = 21;
   string errorCode = 22;
   string description = 23;
-  string smtpResponse = 24;
+  string deliverable = 25;
 }
 
 message RequestEmailValidationGrpcRequest {

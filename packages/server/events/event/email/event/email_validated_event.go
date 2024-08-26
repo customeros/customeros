@@ -9,57 +9,53 @@ import (
 )
 
 type EmailValidatedEventV2 struct {
-	Tenant         string    `json:"tenant" validate:"required"`
-	RawEmail       string    `json:"rawEmail" validate:"required"`
-	ValidatedAt    time.Time `json:"validatedAt" validate:"required"`
-	Email          string    `json:"email"`
-	Domain         string    `json:"domain"`
-	Username       string    `json:"username"`
-	IsValidSyntax  bool      `json:"isValidSyntax"`
-	IsRisky        bool      `json:"isRisky"`
-	IsFirewalled   bool      `json:"isFirewalled"`
-	Provider       string    `json:"provider"`
-	Firewall       string    `json:"firewall"`
-	IsCatchAll     bool      `json:"isCatchAll"`
-	CanConnectSMTP bool      `json:"canConnectSMTP"`
-	IsDeliverable  bool      `json:"isDeliverable"`
-	IsMailboxFull  bool      `json:"isMailboxFull"`
-	IsRoleAccount  bool      `json:"isRoleAccount"`
-	IsFreeAccount  bool      `json:"isFreeAccount"`
-	SmtpSuccess    bool      `json:"smtpSuccess"`
-	ResponseCode   string    `json:"responseCode"`
-	ErrorCode      string    `json:"errorCode"`
-	Description    string    `json:"description"`
-	SmtpResponse   string    `json:"smtpResponse"`
+	Tenant        string    `json:"tenant" validate:"required"`
+	RawEmail      string    `json:"rawEmail" validate:"required"`
+	ValidatedAt   time.Time `json:"validatedAt" validate:"required"`
+	Email         string    `json:"email"`
+	Domain        string    `json:"domain"`
+	Username      string    `json:"username"`
+	IsValidSyntax bool      `json:"isValidSyntax"`
+	IsRisky       bool      `json:"isRisky"`
+	IsFirewalled  bool      `json:"isFirewalled"`
+	Provider      string    `json:"provider"`
+	Firewall      string    `json:"firewall"`
+	IsCatchAll    bool      `json:"isCatchAll"`
+	Deliverable   string    `json:"deliverable"`
+	IsMailboxFull bool      `json:"isMailboxFull"`
+	IsRoleAccount bool      `json:"isRoleAccount"`
+	IsFreeAccount bool      `json:"isFreeAccount"`
+	SmtpSuccess   bool      `json:"smtpSuccess"`
+	ResponseCode  string    `json:"responseCode"`
+	ErrorCode     string    `json:"errorCode"`
+	Description   string    `json:"description"`
 }
 
 func NewEmailValidatedEventV2(aggregate eventstore.Aggregate, tenant, rawEmail, email, domain, username string,
-	isValidSyntax, risky, firewalled bool, provider, firewall string,
-	isCatchAll, canConnectSMTP, isDeliverable, isMailboxFull, isRoleAccount, isFreeAccount, smtpSuccess bool,
-	responseCode, errorCode, description, smtpResponse string) (eventstore.Event, error) {
+	isValidSyntax, risky, firewalled bool, provider, firewall, deliverable string,
+	isCatchAll, isMailboxFull, isRoleAccount, isFreeAccount, smtpSuccess bool,
+	responseCode, errorCode, description string) (eventstore.Event, error) {
 	eventData := EmailValidatedEventV2{
-		Tenant:         tenant,
-		RawEmail:       rawEmail,
-		Email:          email,
-		ValidatedAt:    utils.Now(),
-		Domain:         domain,
-		Username:       username,
-		IsValidSyntax:  isValidSyntax,
-		IsRisky:        risky,
-		IsFirewalled:   firewalled,
-		Provider:       provider,
-		Firewall:       firewall,
-		IsCatchAll:     isCatchAll,
-		CanConnectSMTP: canConnectSMTP,
-		IsDeliverable:  isDeliverable,
-		IsMailboxFull:  isMailboxFull,
-		IsRoleAccount:  isRoleAccount,
-		IsFreeAccount:  isFreeAccount,
-		SmtpSuccess:    smtpSuccess,
-		ResponseCode:   responseCode,
-		ErrorCode:      errorCode,
-		Description:    description,
-		SmtpResponse:   smtpResponse,
+		Tenant:        tenant,
+		RawEmail:      rawEmail,
+		Email:         email,
+		ValidatedAt:   utils.Now(),
+		Domain:        domain,
+		Username:      username,
+		IsValidSyntax: isValidSyntax,
+		IsRisky:       risky,
+		IsFirewalled:  firewalled,
+		Provider:      provider,
+		Firewall:      firewall,
+		IsCatchAll:    isCatchAll,
+		Deliverable:   deliverable,
+		IsMailboxFull: isMailboxFull,
+		IsRoleAccount: isRoleAccount,
+		IsFreeAccount: isFreeAccount,
+		SmtpSuccess:   smtpSuccess,
+		ResponseCode:  responseCode,
+		ErrorCode:     errorCode,
+		Description:   description,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

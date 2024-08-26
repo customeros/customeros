@@ -3,6 +3,7 @@ package mapper
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
@@ -45,9 +46,7 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 			Verified:          entity.EmailInternalFields.ValidatedAt != nil,
 			VerifyingCheckAll: false,
 			IsValidSyntax:     entity.IsValidSyntax,
-			CanConnectSMTP:    entity.CanConnectSMTP,
 			IsCatchAll:        entity.IsCatchAll,
-			IsDeliverable:     entity.IsDeliverable,
 			IsRoleAccount:     entity.IsRoleAccount,
 			IsRisky:           entity.IsRisky,
 			IsFirewalled:      entity.IsFirewalled,
@@ -56,6 +55,7 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 			IsMailboxFull:     entity.IsMailboxFull,
 			IsFreeAccount:     entity.IsFreeAccount,
 			SMTPSuccess:       entity.SmtpSuccess,
+			Deliverable:       enummapper.MapDeliverableToModelPtr(entity.Deliverable),
 		},
 	}
 }

@@ -1,5 +1,13 @@
 package model
 
+type EmailDeliverableStatus string
+
+const (
+	EmailDeliverableStatusDeliverable   EmailDeliverableStatus = "true"
+	EmailDeliverableStatusUndeliverable EmailDeliverableStatus = "false"
+	EmailDeliverableStatusUnknown       EmailDeliverableStatus = "unknown"
+)
+
 type ValidateEmailRequest struct {
 	Email string `json:"email"`
 }
@@ -25,10 +33,16 @@ type ValidateEmailMailSherpaData struct {
 		Firewall       string `json:"firewall"`
 		IsCatchAll     bool   `json:"isCatchAll"`
 		CanConnectSMTP bool   `json:"canConnectSMTP"`
+		HasMXRecord    bool   `json:"hasMXRecord"`
+		HasSPFRecord   bool   `json:"hasSPFRecord"`
+		TLSRequired    bool   `json:"tlsRequired"`
+		ResponseCode   string `json:"responseCode"`
+		ErrorCode      string `json:"errorCode"`
+		Description    string `json:"description"`
 	} `json:"domainData"`
 	EmailData struct {
 		SkippedValidation bool   `json:"skippedValidation"` // if true, email validation was skipped
-		IsDeliverable     bool   `json:"isDeliverable"`
+		Deliverable       string `json:"deliverable"`
 		IsMailboxFull     bool   `json:"isMailboxFull"`
 		IsRoleAccount     bool   `json:"isRoleAccount"`
 		IsFreeAccount     bool   `json:"isFreeAccount"`
@@ -37,7 +51,7 @@ type ValidateEmailMailSherpaData struct {
 		ErrorCode         string `json:"errorCode"`
 		Description       string `json:"description"`
 		RetryValidation   bool   `json:"retryValidation"` // if true, email validation should be retried
-		SmtpResponse      string `json:"smtpResponse"`
+		TLSRequired       bool   `json:"tlsRequired"`
 	} `json:"emailData"`
 }
 

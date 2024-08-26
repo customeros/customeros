@@ -52,9 +52,10 @@ func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEma
 
 	query := `
         INSERT INTO cache_email_validation_domain (
-            domain, is_catch_all, is_firewalled, can_connect_smtp, provider, firewall, created_at, updated_at
+            domain, is_catch_all, is_firewalled, can_connect_smtp, provider, firewall, created_at, updated_at, data, error, has_mx_record, has_spf_record, tls_required,
+			response_code, error_code, description, health_is_greylisted, health_is_blacklisted, health_server_ip, health_from_email, health_retry_after
         ) VALUES (
-            ?, ?, ?, ?, ?, ?, ?, ?
+            ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
         )
         ON CONFLICT (domain) DO UPDATE SET
             is_catch_all = EXCLUDED.is_catch_all,
@@ -62,7 +63,20 @@ func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEma
             can_connect_smtp = EXCLUDED.can_connect_smtp,
             provider = EXCLUDED.provider,
             firewall = EXCLUDED.firewall,
-            updated_at = EXCLUDED.updated_at
+            updated_at = EXCLUDED.updated_at,
+            data = EXCLUDED.data,
+            error = EXCLUDED.error,
+            has_mx_record = EXCLUDED.has_mx_record,
+            has_spf_record = EXCLUDED.has_spf_record,
+            tls_required = EXCLUDED.tls_required,
+            response_code = EXCLUDED.response_code,
+            error_code = EXCLUDED.error_code,
+            description = EXCLUDED.description,
+            health_is_greylisted = EXCLUDED.health_is_greylisted,
+            health_is_blacklisted = EXCLUDED.health_is_blacklisted,
+            health_server_ip = EXCLUDED.health_server_ip,
+            health_from_email = EXCLUDED.health_from_email,
+            health_retry_after = EXCLUDED.health_retry_after
         RETURNING *
     `
 
@@ -78,6 +92,19 @@ func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEma
 		cacheEmailValidationDomain.Firewall,
 		now,
 		now,
+		cacheEmailValidationDomain.Data,
+		cacheEmailValidationDomain.Error,
+		cacheEmailValidationDomain.HasMXRecord,
+		cacheEmailValidationDomain.HasSPFRecord,
+		cacheEmailValidationDomain.TLSRequired,
+		cacheEmailValidationDomain.ResponseCode,
+		cacheEmailValidationDomain.ErrorCode,
+		cacheEmailValidationDomain.Description,
+		cacheEmailValidationDomain.HealthIsGreylisted,
+		cacheEmailValidationDomain.HealthIsBlacklisted,
+		cacheEmailValidationDomain.HealthServerIP,
+		cacheEmailValidationDomain.HealthFromEmail,
+		cacheEmailValidationDomain.HealthRetryAfter,
 	).Scan(&result).Error
 
 	if err != nil {

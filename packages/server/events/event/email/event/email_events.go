@@ -87,26 +87,6 @@ type EmailFailedValidationEvent struct {
 	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
 }
 
-type EmailValidatedEvent struct {
-	Tenant          string    `json:"tenant" validate:"required"`
-	RawEmail        string    `json:"rawEmail" validate:"required"`
-	IsReachable     string    `json:"isReachable" validate:"required"`
-	ValidatedAt     time.Time `json:"validatedAt" validate:"required"`
-	ValidationError string    `json:"validationError"`
-	AcceptsMail     bool      `json:"acceptsMail"`
-	CanConnectSmtp  bool      `json:"canConnectSmtp"`
-	HasFullInbox    bool      `json:"hasFullInbox"`
-	IsCatchAll      bool      `json:"isCatchAll"`
-	IsDeliverable   bool      `json:"isDeliverable"`
-	IsDisabled      bool      `json:"isDisabled"`
-	IsDisposable    bool      `json:"isDisposable"`
-	IsRoleAccount   bool      `json:"isRoleAccount"`
-	Domain          string    `json:"domain"`
-	IsValidSyntax   bool      `json:"isValidSyntax"`
-	Username        string    `json:"username"`
-	EmailAddress    string    `json:"email"`
-}
-
 type EmailRequestValidationEvent struct {
 	Tenant string `json:"tenant" validate:"required"`
 }

@@ -1029,20 +1029,21 @@ type EmailUpdateAddressInput struct {
 }
 
 type EmailValidationDetails struct {
-	Verified          bool    `json:"verified"`
-	VerifyingCheckAll bool    `json:"verifyingCheckAll"`
-	IsValidSyntax     *bool   `json:"isValidSyntax,omitempty"`
-	IsRisky           *bool   `json:"isRisky,omitempty"`
-	IsFirewalled      *bool   `json:"isFirewalled,omitempty"`
-	Provider          *string `json:"provider,omitempty"`
-	Firewall          *string `json:"firewall,omitempty"`
-	IsCatchAll        *bool   `json:"isCatchAll,omitempty"`
-	CanConnectSMTP    *bool   `json:"canConnectSmtp,omitempty"`
-	IsDeliverable     *bool   `json:"isDeliverable,omitempty"`
-	IsMailboxFull     *bool   `json:"isMailboxFull,omitempty"`
-	IsRoleAccount     *bool   `json:"isRoleAccount,omitempty"`
-	IsFreeAccount     *bool   `json:"isFreeAccount,omitempty"`
-	SMTPSuccess       *bool   `json:"smtpSuccess,omitempty"`
+	Verified          bool              `json:"verified"`
+	VerifyingCheckAll bool              `json:"verifyingCheckAll"`
+	IsValidSyntax     *bool             `json:"isValidSyntax,omitempty"`
+	IsRisky           *bool             `json:"isRisky,omitempty"`
+	IsFirewalled      *bool             `json:"isFirewalled,omitempty"`
+	Provider          *string           `json:"provider,omitempty"`
+	Firewall          *string           `json:"firewall,omitempty"`
+	IsCatchAll        *bool             `json:"isCatchAll,omitempty"`
+	CanConnectSMTP    *bool             `json:"canConnectSmtp,omitempty"`
+	IsMailboxFull     *bool             `json:"isMailboxFull,omitempty"`
+	IsRoleAccount     *bool             `json:"isRoleAccount,omitempty"`
+	IsFreeAccount     *bool             `json:"isFreeAccount,omitempty"`
+	SMTPSuccess       *bool             `json:"smtpSuccess,omitempty"`
+	Deliverable       *EmailDeliverable `json:"deliverable,omitempty"`
+	IsDeliverable     *bool             `json:"isDeliverable,omitempty"`
 }
 
 type EntityTemplate struct {
@@ -4057,6 +4058,49 @@ func (e *DataSource) UnmarshalGQL(v interface{}) error {
 }
 
 func (e DataSource) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EmailDeliverable string
+
+const (
+	EmailDeliverableUnknown       EmailDeliverable = "UNKNOWN"
+	EmailDeliverableDeliverable   EmailDeliverable = "DELIVERABLE"
+	EmailDeliverableUndeliverable EmailDeliverable = "UNDELIVERABLE"
+)
+
+var AllEmailDeliverable = []EmailDeliverable{
+	EmailDeliverableUnknown,
+	EmailDeliverableDeliverable,
+	EmailDeliverableUndeliverable,
+}
+
+func (e EmailDeliverable) IsValid() bool {
+	switch e {
+	case EmailDeliverableUnknown, EmailDeliverableDeliverable, EmailDeliverableUndeliverable:
+		return true
+	}
+	return false
+}
+
+func (e EmailDeliverable) String() string {
+	return string(e)
+}
+
+func (e *EmailDeliverable) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailDeliverable(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailDeliverable", str)
+	}
+	return nil
+}
+
+func (e EmailDeliverable) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

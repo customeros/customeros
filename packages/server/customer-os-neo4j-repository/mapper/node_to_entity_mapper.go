@@ -683,21 +683,20 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	return &entity.EmailEntity{
-		Id:             utils.GetStringPropOrEmpty(props, "id"),
-		Email:          utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyEmail)),
-		RawEmail:       utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyRawEmail)),
-		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Primary:        utils.GetBoolPropOrFalse(props, "primary"),
-		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
-		Label:          utils.GetStringPropOrEmpty(props, "label"),
-		IsValidSyntax:  utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsValidSyntax)),
-		CanConnectSMTP: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyCanConnectSMTP)),
-		IsCatchAll:     utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsCatchAll)),
-		IsDeliverable:  utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsDeliverable)),
-		IsRoleAccount:  utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsRoleAccount)),
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		Email:         utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyEmail)),
+		RawEmail:      utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyRawEmail)),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Label:         utils.GetStringPropOrEmpty(props, "label"),
+		IsValidSyntax: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsValidSyntax)),
+		IsCatchAll:    utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsCatchAll)),
+		Deliverable:   utils.GetStringPropOrNil(props, string(entity.EmailPropertyDeliverable)),
+		IsRoleAccount: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsRoleAccount)),
 		EmailInternalFields: entity.EmailInternalFields{
 			ValidatedAt:           utils.GetTimePropOrNil(props, string(entity.EmailPropertyValidatedAt)),
 			ValidationRequestedAt: utils.GetTimePropOrNil(props, string(entity.EmailPropertyValidationRequestedAt)),
@@ -713,7 +712,6 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 		ResponseCode:  utils.GetStringPropOrNil(props, string(entity.EmailPropertyResponseCode)),
 		ErrorCode:     utils.GetStringPropOrNil(props, string(entity.EmailPropertyErrorCode)),
 		Description:   utils.GetStringPropOrNil(props, string(entity.EmailPropertyDescription)),
-		SmtpResponse:  utils.GetStringPropOrNil(props, string(entity.EmailPropertySmtpResponse)),
 	}
 }
 
