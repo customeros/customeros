@@ -83,6 +83,9 @@ export const LinkedInInput = ({
           onBlur={handleBlur}
           placeholder='Unknown'
           onKeyDown={handleKeyEvents}
+          onFocus={(e) => {
+            e.target.select();
+          }}
         />
       )}
       {isHovered && !isEdit && (

@@ -9,6 +9,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
+import { JobTitleCell } from '@organizations/components/Columns/contacts/Cells/jobTitle';
 import {
   User,
   Social,
@@ -288,7 +289,7 @@ const columns: Record<string, Column> = {
       </div>
     ),
   }),
-  [ColumnViewType.ContactsJobTitle]: columnHelper.accessor('value.jobRoles', {
+  [ColumnViewType.ContactsJobTitle]: columnHelper.accessor('value', {
     id: ColumnViewType.ContactsJobTitle,
     minSize: 120,
     maxSize: 650,
@@ -296,9 +297,9 @@ const columns: Record<string, Column> = {
     enableColumnFilter: true,
     enableSorting: false,
     cell: (props) => {
-      const value = props.getValue()?.[0]?.jobTitle;
+      const value = props.getValue()?.id;
 
-      return <TextCell text={value} />;
+      return <JobTitleCell contactId={value} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -535,7 +536,7 @@ const columns: Record<string, Column> = {
   ),
   [ColumnViewType.ContactsLastInteraction]: columnHelper.accessor('value', {
     id: ColumnViewType.ContactsLastInteraction,
-    minSize: 125,
+    minSize: 150,
     maxSize: 600,
     enableResizing: true,
     cell: (_props) => {

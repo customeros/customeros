@@ -50,7 +50,7 @@ const columnHelper = createColumnHelper<ColumnDatum>();
 const columns: Record<string, Column> = {
   [ColumnViewType.ContractsName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsName,
-    minSize: 150,
+    minSize: 160,
     maxSize: 650,
     enableResizing: true,
     enableColumnFilter: true,
@@ -143,8 +143,7 @@ const columns: Record<string, Column> = {
 
   [ColumnViewType.ContractsCurrency]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.ContractsCurrency,
-    minSize: 100,
-    size: 100,
+    minSize: 120,
     maxSize: 350,
     enableResizing: true,
     enableColumnFilter: true,

@@ -277,6 +277,10 @@ export const Table = <T extends object>({
   const THeaderMinW =
     table.getCenterTotalSize() + (enableRowSelection ? 32 : 22);
 
+  const includesAvatar = table
+    .getHeaderGroups()?.[0]
+    ?.headers?.[0]?.id?.includes('AVATAR');
+
   return (
     <div className={cn('flex flex-col relative w-full min-w-[300px]')}>
       <TContent
@@ -335,14 +339,15 @@ export const Table = <T extends object>({
                     return (
                       <THeaderCell
                         key={header.id}
-                        className={cn(`relative group/header-item`, {
-                          'cursor-col-resize': header.column.getIsResizing(),
-                          'pl-6': index === 1,
-                        })}
                         style={{
                           width: `calc(var(--header-${header?.id}-size) * 1px)`,
                           minWidth: `calc(var(--header-${header?.id}-size) * 1px)`,
                         }}
+                        className={cn(`relative group/header-item`, {
+                          'cursor-col-resize': header.column.getIsResizing(),
+                          'pl-6': index === 1 && includesAvatar,
+                          'pl-4': index === 0 && !includesAvatar,
+                        })}
                       >
                         {header.isPlaceholder
                           ? null
@@ -357,7 +362,7 @@ export const Table = <T extends object>({
                               onTouchStart={header.getResizeHandler()}
                               onDoubleClick={() => header.column.resetSize()}
                               className={cn(
-                                `absolute top-0 h-full px-1 cursor-col-resize  right-6 opacity-0 group-hover/header-item:visible group-hover/header-item:opacity-100`,
+                                `absolute top-0 h-full px-1 cursor-col-resize right-6 opacity-0 group-hover/header-item:visible group-hover/header-item:opacity-100`,
                                 {
                                   'opacity-100': header.column.getIsResizing(),
                                 },
@@ -379,6 +384,7 @@ export const Table = <T extends object>({
           isLoading={isLoading}
           totalItems={totalItems}
           rowVirtualizer={rowVirtualizer}
+          includesAvatar={includesAvatar}
           focusedRowIndex={focusedRowIndex}
           fullRowSelection={fullRowSelection}
           setSelectedIndex={setSelectedIndex}
@@ -398,6 +404,7 @@ interface TableBodyProps<T extends object> {
   totalItems: number;
   isLoading?: boolean;
   table: TableInstance<T>;
+  includesAvatar?: boolean;
   fullRowSelection?: boolean;
   enableRowSelection?: boolean;
   focusedRowIndex: number | null;
@@ -419,6 +426,7 @@ const TableBody = <T extends object>({
   onFullRowSelection,
   setFocusedRowIndex,
   enableRowSelection,
+  includesAvatar,
 }: TableBodyProps<T>) => {
   const { rows } = table.getRowModel();
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -528,15 +536,16 @@ const TableBody = <T extends object>({
                   <TCell
                     key={cell.id}
                     data-index={cell.row.index}
-                    className={cn(
-                      index === 1 && 'pl-6',
-                      index > 1 && 'ml-[24px]',
-                    )}
                     style={{
                       width: `calc((var(--col-${
                         cell.column.id
-                      }-size) * 1px) - ${index > 0 ? 24 : 0}px)`,
+                      }-size) * 1px) - ${index > 0 ? 26 : 0}px)`,
                     }}
+                    className={cn({
+                      'pl-6': index === 1 && includesAvatar,
+                      'pl-4': index === 0 && !includesAvatar,
+                      'ml-[26px]': index > 1,
+                    })}
                   >
                     {row
                       ? flexRender(
