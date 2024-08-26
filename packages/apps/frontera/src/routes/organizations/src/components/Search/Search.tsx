@@ -4,7 +4,6 @@ import { useRef, useEffect, startTransition } from 'react';
 import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Input } from '@ui/form/Input/Input';
@@ -21,6 +20,7 @@ import {
   LeftElement,
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
+import { useSearchPersistence } from '@organizations/components/Search/useSearchPersistance.ts';
 import { TableViewsToggleNavigation } from '@organizations/components/TableViewsToggleNavigation';
 import { SearchBarFilterData } from '@organizations/components/SearchBarFilterData/SearchBarFilterData';
 
@@ -38,11 +38,9 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   const floatingActionPropmterRef = useRef<HTMLDivElement>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
-  const [lastSearchForPreset] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-last-search-for-preset`, { root: 'root' });
 
   const displayIcp = useFeatureIsOn('icp');
+  const { lastSearchForPreset } = useSearchPersistence();
 
   useEffect(() => {
     onClose();

@@ -16,10 +16,6 @@ export const TableViewsToggleNavigation = observer(() => {
   const [tabs, setLastActivePosition] = useLocalStorage<{
     [key: string]: string;
   }>('customeros-player-last-position', { root: 'organizations' });
-  const search = searchParams.get('search');
-  const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-last-search-for-preset`, { root: 'root' });
 
   const tableViewDefs = store.tableViewDefs.toArray();
   const tableViewDef = store.tableViewDefs.getById(preset || '')?.value;
@@ -65,13 +61,6 @@ export const TableViewsToggleNavigation = observer(() => {
       ...tabs,
       root: `finder?preset=${newPreset}`,
     });
-
-    if (preset) {
-      setLastSearchForPreset({
-        ...lastSearchForPreset,
-        [preset]: search ?? '',
-      });
-    }
   };
 
   const showToggle =

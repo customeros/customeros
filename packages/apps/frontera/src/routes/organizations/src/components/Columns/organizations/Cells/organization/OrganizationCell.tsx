@@ -1,5 +1,5 @@
 import { useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
@@ -24,13 +24,6 @@ export const OrganizationCell = ({
   const navigate = useNavigate();
 
   const linkRef = useRef<HTMLParagraphElement>(null);
-  const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
-  const search = searchParams.get('search');
-  const [lastSearchForPreset, setLastSearchForPreset] = useLocalStorage<{
-    [key: string]: string;
-  }>(`customeros-last-search-for-preset`, { root: 'root' });
-
   const fullName = name || 'Unnamed';
 
   const handleNavigate = () => {
@@ -39,12 +32,6 @@ export const OrganizationCell = ({
 
     if (!href) return;
 
-    if (preset) {
-      setLastSearchForPreset({
-        ...lastSearchForPreset,
-        [preset]: search ?? '',
-      });
-    }
     navigate(href);
   };
 
