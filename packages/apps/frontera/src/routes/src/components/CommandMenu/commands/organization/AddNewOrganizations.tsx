@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 import { useDidMount, useKeyBindings } from 'rooks';
 
 import { Input } from '@ui/form/Input';
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Command } from '@ui/overlay/CommandMenu';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
@@ -80,15 +81,15 @@ export const AddNewOrganization = observer(() => {
 
   return (
     <Command label={`Rename `}>
-      <div className='p-6 pb-4 flex flex-col gap-2 '>
-        <p className='text-lg font-semibold'>Create new Organization</p>
+      <div className='p-6 pb-4 flex flex-col gap-1 '>
+        <p className='text-lg font-semibold'>Create new organization</p>
         <p className='text-sm'>
           We’ll auto-enrich this organization using its werbsite
         </p>
       </div>
 
-      <div className='pr-6 pl-6 pb-6 pb-4 flex flex-col gap-2 border-b border-b-gray-100'>
-        <div className='flex flex-col'>
+      <div className='pr-6 pl-6 pb-6 flex flex-col gap-2 '>
+        <div className='flex flex-col mb-0'>
           <label htmlFor='website' className='text-sm font-semibold'>
             Organization's website (optional)
           </label>
@@ -134,6 +135,25 @@ export const AddNewOrganization = observer(() => {
             }}
           />
         </div>
+      </div>
+
+      <div className='flex w-full gap-2 pl-6 pr-6 pb-6'>
+        <Button
+          className='w-full'
+          onClick={() => {
+            store.ui.commandMenu.setOpen(false);
+            store.ui.commandMenu.setType('OrganizationCommands');
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          className='w-full'
+          colorScheme='primary'
+          onClick={handleConfirm}
+        >
+          Create
+        </Button>
       </div>
     </Command>
   );

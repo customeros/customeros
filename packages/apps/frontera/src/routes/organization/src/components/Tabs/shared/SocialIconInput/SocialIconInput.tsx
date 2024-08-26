@@ -93,6 +93,8 @@ export const SocialIconInput = ({
               setSocialIconValue(e.target.value);
             }}
             onKeyDown={(e) => {
+              e.stopPropagation();
+
               if (e.key === 'Enter') {
                 handleNewSocial?.();
               }

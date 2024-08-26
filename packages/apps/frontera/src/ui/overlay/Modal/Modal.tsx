@@ -14,8 +14,6 @@ import { cva } from 'class-variance-authority';
 import * as Dialog from '@radix-ui/react-dialog';
 
 import { cn } from '@ui/utils/cn';
-import { XClose } from '@ui/media/icons/XClose';
-import { IconButton } from '@ui/form/IconButton/IconButton';
 import {
   FeaturedIcon,
   FeaturedIconStyleProps,
@@ -66,18 +64,7 @@ export const ModalClose = (props: DialogCloseProps) => {
 };
 
 export const ModalCloseButton = (props: DialogCloseProps) => {
-  return (
-    <Dialog.Close asChild {...props}>
-      <IconButton
-        size='lg'
-        variant='ghost'
-        colorScheme='gray'
-        aria-label='Close modal'
-        className='absolute top-4 right-4'
-        icon={<XClose className='w-5 h-5' />}
-      />
-    </Dialog.Close>
-  );
+  return <Dialog.Close asChild {...props}></Dialog.Close>;
 };
 
 const modalContentVariant = cva(
