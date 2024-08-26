@@ -7,7 +7,6 @@ import { useDidMount, useKeyBindings } from 'rooks';
 import { Input } from '@ui/form/Input';
 import { useStore } from '@shared/hooks/useStore';
 import { Command } from '@ui/overlay/CommandMenu';
-import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 
 function isValidURL(url: string) {
@@ -81,14 +80,17 @@ export const AddNewOrganization = observer(() => {
 
   return (
     <Command label={`Rename `}>
-      <div className='p-6 pb-4 flex flex-col gap-2 border-b border-b-gray-100'>
-        <Tag size='md' variant='subtle' colorScheme='gray'>
-          <TagLabel>Create new organization</TagLabel>
-        </Tag>
+      <div className='p-6 pb-4 flex flex-col gap-2 '>
+        <p className='text-lg font-semibold'>Create new Organization</p>
+        <p className='text-sm'>
+          We’ll auto-enrich this organization using its werbsite
+        </p>
+      </div>
 
+      <div className='pr-6 pl-6 pb-6 pb-4 flex flex-col gap-2 border-b border-b-gray-100'>
         <div className='flex flex-col'>
-          <label htmlFor='website' className='absolute top-[-999999px]'>
-            Organization's website
+          <label htmlFor='website' className='text-sm font-semibold'>
+            Organization's website (optional)
           </label>
           <Input
             autoFocus
@@ -112,7 +114,7 @@ export const AddNewOrganization = observer(() => {
           )}
         </div>
         <div className='flex flex-col'>
-          <label htmlFor='name' className='absolute top-[-999999px]'>
+          <label htmlFor='name' className='text-sm font-semibold'>
             Organization name
           </label>
           <Input
