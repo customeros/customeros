@@ -541,7 +541,6 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 									e.verifyResponseCode=$verifyResponseCode,
 									e.verifyErrorCode=$verifyErrorCode,
 									e.verifyDescription=$verifyDescription,
-									e.verifySmtpResponse=$verifySmtpResponse,
 									e.createdAt=$createdAt,
 									e.updatedAt=$updatedAt
 							`, tenant)
