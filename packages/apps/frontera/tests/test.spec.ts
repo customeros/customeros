@@ -9,7 +9,7 @@ import { OrganizationTimelinePage } from './pages/organization/organizationTimel
 
 test.setTimeout(180000);
 
-test('convert org to customer', async ({ page }) => {
+test('convert org to customer', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const customersPage = new CustomersPage(page);
@@ -20,8 +20,11 @@ test('convert org to customer', async ({ page }) => {
   await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await organizationsPage.addOrganization();
-  await organizationsPage.checkNewEntry();
+  const organizationId = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
+
+  await organizationsPage.checkNewOrganizationEntry(organizationId);
 
   // Go to Customers page and ensure no new org
   await organizationsPage.goToCustomersPage();
@@ -31,14 +34,14 @@ test('convert org to customer', async ({ page }) => {
   await organizationsPage.goToAllOrgsPage();
 
   // Make the organization a customer
-  await organizationsPage.updateOrgToCustomer();
+  await organizationsPage.updateOrgToCustomer(organizationId);
 
   // Go to Customers page and ensure we have a new customer
   await organizationsPage.goToCustomersPage();
   await customersPage.ensureNumberOfCustomersExist(1);
 });
 
-test('create people in organization', async ({ page }) => {
+test('create people in organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);
@@ -50,18 +53,20 @@ test('create people in organization', async ({ page }) => {
   await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await organizationsPage.addOrganization();
+  const organizationId = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization();
+  await organizationsPage.goToOrganization(organizationId);
 
   // Go to People page
   await organizationSideNavPage.goToPeople();
   await organizationPeoplePage.createContactFromEmpty();
 });
 
-test('create timeline entries in organization', async ({ page }) => {
+test('create timeline entries in organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
@@ -73,11 +78,13 @@ test('create timeline entries in organization', async ({ page }) => {
   await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await organizationsPage.addOrganization();
+  const organizationId = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization();
+  await organizationsPage.goToOrganization(organizationId);
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
@@ -87,7 +94,7 @@ test('create timeline entries in organization', async ({ page }) => {
   await organizationTimelinePage.ensureReminderCanBeAdded();
 });
 
-test('create contracts in organization', async ({ page }) => {
+test('create contracts in organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationAccountPage = new OrganizationAccountPage(page);
@@ -99,11 +106,13 @@ test('create contracts in organization', async ({ page }) => {
   await organizationsPage.waitForPageLoad();
 
   // Add organization and check new entry
-  await organizationsPage.addOrganization();
+  const organizationId = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization();
+  await organizationsPage.goToOrganization(organizationId);
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();

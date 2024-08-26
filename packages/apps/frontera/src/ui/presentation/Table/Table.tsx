@@ -49,6 +49,7 @@ declare module '@tanstack/table-core' {
 
 interface TableProps<T extends object> {
   data: T[];
+  dataTest?: string;
   rowHeight?: number;
   isLoading?: boolean;
   totalItems?: number;
@@ -80,6 +81,7 @@ interface TableProps<T extends object> {
 
 export const Table = <T extends object>({
   data,
+  dataTest,
   columns,
   tableRef,
   getRowId,
@@ -376,6 +378,7 @@ export const Table = <T extends object>({
 
         <TableBody
           table={table}
+          dataTest={dataTest}
           isLoading={isLoading}
           totalItems={totalItems}
           rowVirtualizer={rowVirtualizer}
@@ -395,6 +398,7 @@ export const Table = <T extends object>({
 };
 
 interface TableBodyProps<T extends object> {
+  dataTest?: string;
   totalItems: number;
   isLoading?: boolean;
   table: TableInstance<T>;
@@ -410,6 +414,7 @@ interface TableBodyProps<T extends object> {
 
 const TableBody = <T extends object>({
   table,
+  dataTest,
   isLoading,
   totalItems,
   rowVirtualizer,
@@ -428,7 +433,7 @@ const TableBody = <T extends object>({
   );
 
   return (
-    <TBody className='w-full'>
+    <TBody className='w-full' data-test={dataTest}>
       {!virtualRows.length && !isLoading && <NoResults />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
@@ -556,6 +561,7 @@ const TableBody = <T extends object>({
 
 interface GenericProps {
   tabIndex?: number;
+  dataTest?: string;
   className?: string;
   children?: React.ReactNode;
   style?: React.CSSProperties;
@@ -563,11 +569,12 @@ interface GenericProps {
 }
 
 const TBody = forwardRef<HTMLDivElement, GenericProps>(
-  ({ className, children, style, ...props }, ref) => {
+  ({ className, children, style, dataTest, ...props }, ref) => {
     return (
       <div
         ref={ref}
         style={style}
+        data-test={dataTest}
         className={twMerge('flex w-full flex-1 relative', className)}
         {...props}
       >
@@ -615,6 +622,7 @@ const TCell = forwardRef<HTMLDivElement, GenericProps>(
 );
 
 interface TContentProps {
+  dataTest?: string;
   className?: string;
   borderColor?: string;
   isScrolling?: boolean;

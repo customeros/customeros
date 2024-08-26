@@ -1,8 +1,10 @@
-import { Page, expect } from '@playwright/test';
+import { randomUUID } from 'crypto';
+import { Page, expect, TestInfo } from '@playwright/test';
 
 import {
   retryOperation,
   assertWithRetry,
+  clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
 } from '../helper';
 
@@ -10,7 +12,11 @@ export class OrganizationsPage {
   private page: Page;
 
   private sideNavItemAllOrgs = 'button[data-test="side-nav-item-all-orgs"]';
+  private finderTableOrganizations =
+    'div[data-test="finder-table-ORGANIZATIONS"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
+  private createOrganizationFromTable =
+    'button[data-test="create-organization-from-table"]';
   private organizationsCreateNewOrgOrgName =
     'input[data-test="organizations-create-new-org-org-name"]';
   private organizationNameInAllOrgsTable =
@@ -52,12 +58,43 @@ export class OrganizationsPage {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
-  async addOrganization() {
+  async addInitialOrganization() {
+    return await this.addOrganization(this.allOrgsAddOrg);
+  }
+
+  async addNonInitialOrganization(testInfo: TestInfo) {
+    return await this.addOrganization(
+      this.createOrganizationFromTable,
+      testInfo,
+    );
+  }
+
+  async addOrganization(
+    organizationCreatorLocator: string,
+    testInfo?: TestInfo,
+  ) {
     await clickLocatorsThatAreVisible(
       this.page,
-      this.allOrgsAddOrg,
+      organizationCreatorLocator,
       this.organizationsCreateNewOrgOrgName,
     );
+
+    const organizationName = randomUUID();
+
+    if (testInfo) {
+      process.stdout.write(
+        '\nOrganization ' +
+          organizationName +
+          'was created for the test: ' +
+          testInfo.title,
+      );
+    } else {
+      process.stdout.write(
+        '\nInitial Organization ' + organizationName + ' was created',
+      );
+    }
+
+    await this.page.keyboard.type(organizationName);
     await this.page.keyboard.press('Enter');
 
     const orgCreationResp = await this.page.waitForResponse(
@@ -69,14 +106,25 @@ export class OrganizationsPage {
       'error' in orgCreationJson,
       `The createOrganization mutation returned errors`,
     ).toBe(false);
-    await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
+    await this.page.waitForSelector(
+      `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
+      { timeout: 30000 },
+    );
+
+    return organizationName;
   }
 
-  async checkNewEntry() {
+  async checkNewOrganizationEntry(organizationId: string) {
     const maxAttempts = 3;
     const retryInterval = 20000;
 
-    const newEntry = this.page.locator('[data-index="0"]');
+    const newEntry = this.page
+      .locator(
+        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationId}")`,
+      )
+      .locator('..')
+      .locator('..')
+      .locator('..');
 
     await this.page.waitForTimeout(2000);
     await this.page.reload();
@@ -85,16 +133,14 @@ export class OrganizationsPage {
     await assertWithRetry(async () => {
       const organization = await newEntry
         .locator(this.organizationNameInAllOrgsTable)
-        .first()
         .innerText();
 
-      expect(organization).toBe('Unnamed');
+      expect(organization).toBe(organizationId);
     });
 
     await assertWithRetry(async () => {
       const website = await newEntry
         .locator(this.organizationWebsiteInAllOrgsTable)
-        .first()
         .innerText();
 
       expect(website).toBe('Unknown');
@@ -266,32 +312,49 @@ export class OrganizationsPage {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
-  async updateOrgToCustomer() {
-    await clickLocatorsThatAreVisible(
-      this.page,
-      this.organizationRelationshipButtonInAllOrgsTable,
-      this.relationshipCustomer,
-    );
+  async updateOrgToCustomer(organizationId: string) {
+    const newEntry = this.page
+      .locator(
+        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationId}")`,
+      )
+      .locator('..')
+      .locator('..')
+      .locator('..');
+
+    await newEntry
+      .locator(this.organizationRelationshipButtonInAllOrgsTable)
+      .click();
+    await clickLocatorThatIsVisible(this.page, this.relationshipCustomer);
   }
 
-  async goToOrganization() {
-    await clickLocatorsThatAreVisible(
-      this.page,
-      this.organizationNameInAllOrgsTable,
-    );
+  async goToOrganization(organizationId: string) {
+    await this.page
+      .locator(
+        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationId}")`,
+      )
+      .click();
   }
 
   async selectAllOrgs(): Promise<boolean> {
     const allOrgsSelectAllOrgs = this.page.locator(this.allOrgsSelectAllOrgs);
 
-    await allOrgsSelectAllOrgs.waitFor({ state: 'visible', timeout: 2000 });
+    try {
+      await allOrgsSelectAllOrgs.waitFor({ state: 'visible', timeout: 2000 });
 
-    const isVisible = await allOrgsSelectAllOrgs.isVisible();
+      const isVisible = await allOrgsSelectAllOrgs.isVisible();
 
-    if (isVisible) {
-      await allOrgsSelectAllOrgs.click();
+      if (isVisible) {
+        await allOrgsSelectAllOrgs.click();
 
-      return true;
+        return true;
+      }
+    } catch (error) {
+      if (error.name === 'TimeoutError') {
+        // Silently return false if the element is not found
+        return false;
+      }
+      // Re-throw any other errors
+      throw error;
     }
 
     return false;
@@ -302,6 +365,21 @@ export class OrganizationsPage {
   }
 
   async confirmArchiveOrgs() {
+    const responsePromise = this.page.waitForResponse(async (response) => {
+      if (
+        response.request().method() === 'POST' &&
+        response.url().includes('customer-os-api')
+      ) {
+        const responseBody = await response.json();
+
+        return responseBody.data?.organization_HideAll?.result !== undefined;
+      }
+
+      return false;
+    });
+
     await clickLocatorsThatAreVisible(this.page, this.orgActionsConfirmArchive);
+
+    await Promise.all([responsePromise]);
   }
 }

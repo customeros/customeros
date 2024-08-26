@@ -216,7 +216,7 @@ export class OrganizationAccountPage {
         if (postData) {
           const parsedData = JSON.parse(postData);
 
-          return parsedData.variables.input.notes === '<p>Test Note!</p>';
+          return parsedData.variables?.input?.notes === '<p>Test Note!</p>';
         }
       }
 
@@ -231,7 +231,6 @@ export class OrganizationAccountPage {
       ) {
         const responseBody = await response.json();
 
-        // Adjust this condition based on your API response structure
         return (
           responseBody.data?.organization_Update?.metadata?.id !== undefined
         );
