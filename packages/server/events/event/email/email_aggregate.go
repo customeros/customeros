@@ -64,9 +64,8 @@ func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.
 		request.IsFirewalled,
 		request.Provider,
 		request.Firewall,
+		request.Deliverable,
 		request.IsCatchAll,
-		request.CanConnectSMTP,
-		request.IsDeliverable,
 		request.IsMailboxFull,
 		request.IsRoleAccount,
 		request.IsFreeAccount,
@@ -74,7 +73,6 @@ func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.
 		request.ResponseCode,
 		request.ErrorCode,
 		request.Description,
-		request.SmtpResponse,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)

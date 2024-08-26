@@ -78,11 +78,18 @@ type EmailValidationDetails {
     firewall:       String
     isCatchAll:     Boolean
     canConnectSmtp: Boolean
-    isDeliverable:  Boolean
     isMailboxFull:  Boolean
     isRoleAccount:  Boolean
     isFreeAccount:  Boolean
     smtpSuccess:    Boolean
+    deliverable:    EmailDeliverable
+    isDeliverable:  Boolean @deprecated
+}
+
+enum EmailDeliverable {
+    UNKNOWN
+    DELIVERABLE
+    UNDELIVERABLE
 }
 
 """

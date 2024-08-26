@@ -12,9 +12,8 @@ const (
 	EmailPropertyRawEmail              EmailProperty = "rawEmail"
 	EmailPropertyIsRoleAccount         EmailProperty = "isRoleAccount"
 	EmailPropertyIsValidSyntax         EmailProperty = "isValidSyntax"
-	EmailPropertyCanConnectSMTP        EmailProperty = "canConnectSMTP"
 	EmailPropertyIsCatchAll            EmailProperty = "isCatchAll"
-	EmailPropertyIsDeliverable         EmailProperty = "isDeliverable"
+	EmailPropertyDeliverable           EmailProperty = "deliverable"
 	EmailPropertyValidatedAt           EmailProperty = "techValidatedAt"
 	EmailPropertyValidationRequestedAt EmailProperty = "techValidationRequestedAt"
 	EmailPropertyUsername              EmailProperty = "username"
@@ -28,7 +27,6 @@ const (
 	EmailPropertyResponseCode          EmailProperty = "verifyResponseCode"
 	EmailPropertyErrorCode             EmailProperty = "verifyErrorCode"
 	EmailPropertyDescription           EmailProperty = "verifyDescription"
-	EmailPropertySmtpResponse          EmailProperty = "verifySmtpResponse"
 )
 
 type EmailEntity struct {
@@ -44,23 +42,21 @@ type EmailEntity struct {
 	CreatedAt     time.Time
 	UpdatedAt     time.Time
 
-	IsValidSyntax  *bool
-	Username       *string
-	IsRisky        *bool
-	IsFirewalled   *bool
-	Provider       *string
-	Firewall       *string
-	IsCatchAll     *bool
-	CanConnectSMTP *bool
-	IsDeliverable  *bool
-	IsMailboxFull  *bool
-	IsRoleAccount  *bool
-	IsFreeAccount  *bool
-	SmtpSuccess    *bool
-	ResponseCode   *string
-	ErrorCode      *string
-	Description    *string
-	SmtpResponse   *string
+	IsValidSyntax *bool
+	Username      *string
+	IsRisky       *bool
+	IsFirewalled  *bool
+	Provider      *string
+	Firewall      *string
+	IsCatchAll    *bool
+	Deliverable   *string
+	IsMailboxFull *bool
+	IsRoleAccount *bool
+	IsFreeAccount *bool
+	SmtpSuccess   *bool
+	ResponseCode  *string
+	ErrorCode     *string
+	Description   *string
 
 	EmailInternalFields EmailInternalFields
 

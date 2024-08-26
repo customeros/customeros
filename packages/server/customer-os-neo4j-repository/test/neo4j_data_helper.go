@@ -526,9 +526,8 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 								ON CREATE SET e:Email_%s,
 									e.email=$email,
 									e.rawEmail=$rawEmail,
-									e.canConnectSMTP=$canConnectSMTP,
 									e.isCatchAll=$isCatchAll,
-									e.isDeliverable=$isDeliverable,
+									e.deliverable=$deliverable,
 									e.isValidSyntax=$isValidSyntax,
 									e.isRoleAccount=$isRoleAccount,
 									e.username=$username,
@@ -553,9 +552,8 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 		"rawEmail":           entity.RawEmail,
 		"createdAt":          entity.CreatedAt,
 		"updatedAt":          entity.UpdatedAt,
-		"canConnectSMTP":     entity.CanConnectSMTP,
 		"isCatchAll":         entity.IsCatchAll,
-		"isDeliverable":      entity.IsDeliverable,
+		"deliverable":        entity.Deliverable,
 		"isValidSyntax":      entity.IsValidSyntax,
 		"isRoleAccount":      entity.IsRoleAccount,
 		"username":           entity.Username,
@@ -569,7 +567,6 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 		"verifyResponseCode": entity.ResponseCode,
 		"verifyErrorCode":    entity.ErrorCode,
 		"verifyDescription":  entity.Description,
-		"verifySmtpResponse": entity.SmtpResponse,
 	})
 	return emailId
 }

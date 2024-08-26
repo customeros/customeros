@@ -209,7 +209,7 @@
         },
         {
           "name": "Emails not validated",
-          "query": "MATCH (t:Tenant {active:true})--(e:Email) WHERE e.rawEmail CONTAINS '@' AND e.techValidatedAt IS NULL AND e.updatedAt < datetime() - duration({minutes:30}) RETURN count(e)"
+          "query": "MATCH (t:Tenant {active:true})--(e:Email) WHERE date(e.createdAt) > date('2024-08-26') AND  e.rawEmail <> '' AND e.techValidatedAt IS NULL AND e.updatedAt < datetime() - duration({minutes:30}) RETURN count(e)"
         }
       ]
     },
