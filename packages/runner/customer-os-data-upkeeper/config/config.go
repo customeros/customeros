@@ -33,6 +33,10 @@ type Config struct {
 		Url    string `env:"BETTER_CONTACT_API_URL" validate:"required"`
 		ApiKey string `env:"BETTER_CONTACT_API_KEY" validate:"required"`
 	}
+	ScrubbyIoConfig struct {
+		ApiUrl string `env:"SCRUBBY_IO_API_URL" envDefault:"https://api.scrubby.io" validate:"required"`
+		ApiKey string `env:"SCRUBBY_IO_API_KEY" validate:"required"`
+	}
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
 	Limits             Limits

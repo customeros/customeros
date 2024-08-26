@@ -4,6 +4,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
@@ -124,7 +125,9 @@ func validateEmailWithScrubby(ctx context.Context, r *gin.Engine, services *serv
 			}
 			span.LogFields(log.String("result.validationStatus", validationStatus))
 
-			if validationStatus != "valid" && validationStatus != "invalid" && validationStatus != "pending" {
+			if validationStatus != string(postgresentity.ScrubbyStatusLowercaseValid) &&
+				validationStatus != string(postgresentity.ScrubbyStatusLowercaseInvalid) &&
+				validationStatus != string(postgresentity.ScrubbyStatusLowercasePending) {
 				validationStatus = "unknown"
 				l.Errorf("Unknown validation status: %s", validationStatus)
 				tracing.TraceErr(span, errors.New("Unknown validation status"))
@@ -132,10 +135,10 @@ func validateEmailWithScrubby(ctx context.Context, r *gin.Engine, services *serv
 
 			c.JSON(http.StatusOK, model.ValidateEmailWithScrubbyResponse{
 				Status:         "success",
-				EmailIsValid:   validationStatus == "valid",
-				EmailIsInvalid: validationStatus == "invalid",
+				EmailIsValid:   validationStatus == string(postgresentity.ScrubbyStatusLowercaseValid),
+				EmailIsInvalid: validationStatus == string(postgresentity.ScrubbyStatusLowercaseInvalid),
 				EmailIsUnknown: validationStatus == "unknown",
-				EmailIsPending: validationStatus == "pending",
+				EmailIsPending: validationStatus == string(postgresentity.ScrubbyStatusLowercasePending),
 			})
 		})
 }

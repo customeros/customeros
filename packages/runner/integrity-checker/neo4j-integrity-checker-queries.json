@@ -174,7 +174,7 @@
       "queries": [
         {
           "name": "Tenant nodes with missing mandatory properties",
-          "query": "MATCH (t:Tenant) WHERE t.name IS NULL or t.name = '' RETURN count(t)",
+          "query": "MATCH (t:Tenant) WHERE t.name IS NULL or t.name = '' or t.active IS NULL RETURN count(t)",
           "description": "Tenant property is mandatory."
         },
         {
