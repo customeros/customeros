@@ -64,6 +64,13 @@ export const SearchBarFilterData = observer(() => {
     }
   }, [appliedFilters, isOpen]);
 
+  const isEmailFilterActive = () => {
+    return (
+      (filters.get('EMAIL_VERIFICATION')?.active ||
+        filters.get('CONTACTS_EMAILS')?.active) ??
+      false
+    );
+  };
   const totalResults = store.ui.searchCount;
 
   const tableName =
@@ -87,6 +94,63 @@ export const SearchBarFilterData = observer(() => {
 
       return newFilters;
     });
+  };
+
+  const renderEmailFilter = () => {
+    if (filters.has('EMAIL_VERIFICATION') || filters.has('CONTACTS_EMAILS')) {
+      return (
+        <MenuItem
+          key='EmailFilter'
+          className='flex justify-between font-normal capitalize mb-1'
+          onClick={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+          }}
+        >
+          Email
+          <div className='ml-2 flex items-center'>
+            <Switch
+              size='sm'
+              isChecked={isEmailFilterActive()}
+              onChange={(newState) => {
+                handleChange('EMAIL_VERIFICATION', newState);
+                handleChange('CONTACTS_EMAILS', newState);
+              }}
+            />
+          </div>
+        </MenuItem>
+      );
+    }
+
+    return null;
+  };
+
+  const renderFilterItem = (property: string) => {
+    if (property === 'EMAIL_VERIFICATION' || property === 'CONTACTS_EMAILS') {
+      return null; // These will be handled by renderEmailFilter
+    }
+
+    return (
+      <MenuItem
+        key={property}
+        className='flex justify-between font-normal capitalize mb-1'
+        onClick={(e) => {
+          e.stopPropagation();
+          e.preventDefault();
+        }}
+      >
+        {filterOptionMap[property]}
+        <div className='ml-2 flex items-center'>
+          <Switch
+            size='sm'
+            isChecked={filters.get(property)?.active ?? false}
+            onChange={(newState) => {
+              handleChange(property, newState);
+            }}
+          />
+        </div>
+      </MenuItem>
+    );
   };
 
   return (
@@ -115,33 +179,10 @@ export const SearchBarFilterData = observer(() => {
                 <span className='capitalize mr-1'>{tableName}</span>
                 filtered by:{' '}
               </p>
+              {renderEmailFilter()}
               {appliedFilters?.map(
-                ({ filter: { property } }: { filter: FilterItem }) => (
-                  <MenuItem
-                    key={property}
-                    className='flex justify-between font-normal capitalize mb-1 '
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                    }}
-                  >
-                    {filterOptionMap[property]}
-
-                    <div className='ml-2 flex items-center'>
-                      <Switch
-                        size='sm'
-                        onChange={(e) => {
-                          handleChange(property, e);
-                        }}
-                        isChecked={
-                          filters.has(property)
-                            ? filters.get(property)!.active
-                            : false
-                        }
-                      />
-                    </div>
-                  </MenuItem>
-                ),
+                ({ filter: { property } }: { filter: FilterItem }) =>
+                  renderFilterItem(property),
               )}
             </MenuList>
           </Menu>
