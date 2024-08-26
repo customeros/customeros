@@ -57,5 +57,6 @@ type Config struct {
 
 	// Email
 	// Defaults to each 2 minutes
-	CronScheduleValidateEmails string `env:"CRON_SCHEDULE_VALIDATE_EMAILS" envDefault:"0 */2 * * * *"`
+	CronScheduleValidateEmails     string `env:"CRON_SCHEDULE_VALIDATE_EMAILS" envDefault:"0 */2 * * * *"`
+	CronScheduleCheckScrubbyResult string `env:"CRON_SCHEDULE_CHECK_SCRUBBY_RESULT" envDefault:"0 45 */1 * * *"`
 }

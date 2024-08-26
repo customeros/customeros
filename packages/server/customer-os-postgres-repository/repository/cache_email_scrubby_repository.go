@@ -9,14 +9,16 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"gorm.io/gorm"
+	"time"
 )
 
 type CacheEmailScrubbyRepository interface {
 	Save(ctx context.Context, cacheEmailScrubby entity.CacheEmailScrubby) (*entity.CacheEmailScrubby, error)
 	GetAllByEmail(ctx context.Context, email string) ([]entity.CacheEmailScrubby, error)
 	GetLatestByEmail(ctx context.Context, email string) (*entity.CacheEmailScrubby, error)
-	SetStatus(ctx context.Context, id, status string) (*entity.CacheEmailScrubby, error)
+	SetStatus(ctx context.Context, email, status string) error
 	SetJustChecked(ctx context.Context, id string) (*entity.CacheEmailScrubby, error)
+	GetToCheck(ctx context.Context, delayFromPreviousCheckInHours, limit int) ([]entity.CacheEmailScrubby, error)
 }
 
 type cacheEmailScrubbyRepository struct {
@@ -32,6 +34,10 @@ func (r *cacheEmailScrubbyRepository) Save(ctx context.Context, cacheEmailScrubb
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.LogObjectAsJson(span, "cacheEmailScrubby", cacheEmailScrubby)
+
+	now := utils.Now()
+	cacheEmailScrubby.CreatedAt = now
+	cacheEmailScrubby.CheckedAt = now
 
 	if err := r.db.WithContext(ctx).Save(&cacheEmailScrubby).Error; err != nil {
 		return nil, err
@@ -76,27 +82,30 @@ func (r *cacheEmailScrubbyRepository) GetLatestByEmail(ctx context.Context, emai
 	return &cacheEmailScrubby, nil
 }
 
-func (r *cacheEmailScrubbyRepository) SetStatus(ctx context.Context, id, status string) (*entity.CacheEmailScrubby, error) {
+func (r *cacheEmailScrubbyRepository) SetStatus(ctx context.Context, email, status string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.SetStatus")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(log.String("id", id), log.String("status", status))
+	span.LogFields(log.String("email", email), log.String("status", status))
 
-	var cacheEmailScrubby entity.CacheEmailScrubby
-	result := r.db.WithContext(ctx).Where("id = ?", id).First(&cacheEmailScrubby)
+	result := r.db.WithContext(ctx).
+		Model(&entity.CacheEmailScrubby{}).
+		Where("email = ?", email).
+		Updates(map[string]interface{}{
+			"status":     status,
+			"checked_at": utils.Now(),
+		})
 
 	if result.Error != nil {
-		return nil, result.Error
+		return result.Error
 	}
 
-	cacheEmailScrubby.Status = status
-	cacheEmailScrubby.CheckedAt = utils.Now()
-
-	if err := r.db.WithContext(ctx).Save(&cacheEmailScrubby).Error; err != nil {
-		return nil, err
+	// If no records were affected, it's not considered an error
+	if result.RowsAffected == 0 {
+		span.LogFields(log.String("message", "No records found for the given email"))
 	}
 
-	return &cacheEmailScrubby, nil
+	return nil
 }
 
 func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id string) (*entity.CacheEmailScrubby, error) {
@@ -119,4 +128,28 @@ func (r *cacheEmailScrubbyRepository) SetJustChecked(ctx context.Context, id str
 	}
 
 	return &cacheEmailScrubby, nil
+}
+
+func (r *cacheEmailScrubbyRepository) GetToCheck(ctx context.Context, delayFromPreviousCheckInHours, limit int) ([]entity.CacheEmailScrubby, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "CacheEmailScrubbyRepository.GetToCheck")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.Int("delayFromPreviousCheckInHours", delayFromPreviousCheckInHours), log.Int("limit", limit))
+
+	var cacheEmailScrubbys []entity.CacheEmailScrubby
+
+	// Calculate the cutoff time
+	cutoffTime := time.Now().Add(-time.Duration(delayFromPreviousCheckInHours) * time.Hour)
+
+	result := r.db.WithContext(ctx).
+		Where("status = ? AND checked_at < ?", string(entity.ScrubbyStatusPending), cutoffTime).
+		Order("checked_at asc").
+		Limit(limit).
+		Find(&cacheEmailScrubbys)
+
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	return cacheEmailScrubbys, nil
 }

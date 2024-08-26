@@ -2,6 +2,18 @@ package entity
 
 import "time"
 
+type ScrubbyStatus string
+
+const (
+	ScrubbyStatusPending ScrubbyStatus = "pending"
+	ScrubbyStatusValid   ScrubbyStatus = "Valid"
+	ScrubbyStatusInvalid ScrubbyStatus = "Invalid"
+
+	ScrubbyStatusLowercasePending ScrubbyStatus = "pending"
+	ScrubbyStatusLowercaseValid   ScrubbyStatus = "valid"
+	ScrubbyStatusLowercaseInvalid ScrubbyStatus = "invalid"
+)
+
 type CacheEmailScrubby struct {
 	ID        string    `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"id"`
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
