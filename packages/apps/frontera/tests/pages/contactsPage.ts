@@ -21,17 +21,31 @@ export class ContactsPage {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllContacts);
   }
 
-  async selectAllOrgs(): Promise<boolean> {
-    const allOrgsSelectAllOrgs = this.page.locator(this.allOrgsSelectAllOrgs);
+  async selectAllContacts(): Promise<boolean> {
+    const allContactsSelectAllContacts = this.page.locator(
+      this.allOrgsSelectAllOrgs,
+    );
 
-    await allOrgsSelectAllOrgs.waitFor({ state: 'visible', timeout: 2000 });
+    try {
+      await allContactsSelectAllContacts.waitFor({
+        state: 'visible',
+        timeout: 2000,
+      });
 
-    const isVisible = await allOrgsSelectAllOrgs.isVisible();
+      const isVisible = await allContactsSelectAllContacts.isVisible();
 
-    if (isVisible) {
-      await allOrgsSelectAllOrgs.click();
+      if (isVisible) {
+        await allContactsSelectAllContacts.click();
 
-      return true;
+        return true;
+      }
+    } catch (error) {
+      if (error.name === 'TimeoutError') {
+        // Silently return false if the element is not found
+        return false;
+      }
+      // Re-throw any other errors
+      throw error;
     }
 
     return false;

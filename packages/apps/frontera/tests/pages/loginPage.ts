@@ -1,9 +1,12 @@
 import { Page, expect } from '@playwright/test';
 
+// import config from '../config';
+
 export class LoginPage {
   constructor(private page: Page) {}
 
   async login() {
+    // const loginUrl = config.LOCAL_LOGIN_URL;
     const loginUrl = process.env.PROD_FE_TEST_USER_URL;
 
     // Listen to all responses from the page

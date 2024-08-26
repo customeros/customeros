@@ -520,6 +520,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         onSortingChange={setSorting}
         onResizeColumn={handleColumnSizing}
         onFocusedRowChange={handleSetFocused}
+        dataTest={`finder-table-${tableType}`}
         onSelectedIndexChange={setSelectedIndex}
         isLoading={store.organizations.isLoading}
         onSelectionChange={handleSelectionChange}
