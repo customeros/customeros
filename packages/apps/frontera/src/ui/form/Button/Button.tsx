@@ -77,6 +77,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         {...props}
+        style={{ outline: 'none' }}
         disabled={isLoading || isDisabled}
         className={twMerge(
           buttonVariant({ colorScheme, className }),

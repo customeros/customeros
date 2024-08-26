@@ -1,4 +1,4 @@
-import React, { ReactNode } from 'react';
+import { ReactNode } from 'react';
 
 import { Command, CommandInput } from '@ui/overlay/CommandMenu';
 import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands';

@@ -148,7 +148,11 @@ export const AlertDialogConfirmButton = forwardRef<
   RadixAlertDialog.AlertDialogActionProps
 >(({ children, ...props }, ref) => {
   return (
-    <RadixAlertDialog.Action ref={ref} className='w-full' {...props}>
+    <RadixAlertDialog.Action
+      ref={ref}
+      className='w-full outline-none'
+      {...props}
+    >
       {children}
     </RadixAlertDialog.Action>
   );

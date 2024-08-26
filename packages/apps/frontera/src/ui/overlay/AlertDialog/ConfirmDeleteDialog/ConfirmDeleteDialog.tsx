@@ -71,8 +71,8 @@ export const ConfirmDeleteDialog = ({
                   ref={cancelRef}
                   variant='outline'
                   colorScheme={'gray'}
+                  className='bg-white '
                   isDisabled={isLoading}
-                  className='bg-white w-full'
                 >
                   {cancelButtonLabel}
                 </Button>
@@ -81,8 +81,8 @@ export const ConfirmDeleteDialog = ({
                 <Button
                   size='md'
                   variant='outline'
-                  className='w-full'
                   onClick={onConfirm}
+                  className='w-full '
                   data-test={dataTest}
                   isLoading={isLoading}
                   loadingText={loadingButtonLabel}

@@ -270,6 +270,7 @@ const columns: Record<string, Column> = {
     header: (props) => (
       <THead<HTMLInputElement>
         title='Persona'
+        filterWidth='14rem'
         id={ColumnViewType.ContactsPersona}
         renderFilter={(initialFocusRef) => (
           <PersonaFilter
