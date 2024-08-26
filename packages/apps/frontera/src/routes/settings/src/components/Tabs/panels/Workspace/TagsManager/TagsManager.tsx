@@ -132,11 +132,18 @@ export const TagsManager = observer(() => {
 
   const totalTagCount = Number(organizationTagCount) + Number(contactTagCount);
 
+  const deleteTagDescription =
+    totalTagCount > 1
+      ? `This action will remove this tag from ${totalTagCount} contacts or organizations.`
+      : totalTagCount === 1
+      ? `This action will remove this tag from ${totalTagCount} contact or organization.`
+      : 'This tag action will remove  this tag ';
+
   return (
     <>
       <div className='px-6 pb-4 max-w-[500px] h-full overflow-y-auto  border-r border-gray-200'>
         <div className='flex flex-col '>
-          <div className='flex justify-between items-center pt-[5px]'>
+          <div className='flex justify-between items-center pt-[5px] sticky top-0 bg-gray-25 '>
             <p className='text-gray-700 font-semibold'>Tags</p>
             <Button size='xs' leftIcon={<Plus />} onClick={handleAddNewTag}>
               New Tag
@@ -164,10 +171,11 @@ export const TagsManager = observer(() => {
             <div className='border border-gray-200 rounded-md mb-1'>
               <Input
                 autoFocus
+                size='sm'
                 value={newTag}
-                className='pl-3'
                 variant='unstyled'
                 placeholder='Enter new tag name...'
+                className='pl-6 placeholder:text-sm text-sm'
                 onChange={(e) => {
                   setNewTag(e.target.value);
                 }}
@@ -200,7 +208,7 @@ export const TagsManager = observer(() => {
             filteredTags.map((tag) => (
               <div
                 key={tag.value.id}
-                className='py-2 mb-1 border rounded-md border-gray-200 flex justify-between items-center group'
+                className='py-1 max-h-[32px] mb-1 border rounded-md border-gray-200 flex justify-between items-center group'
               >
                 <div className='flex-grow'>
                   {editingTag?.id === tag.value.id ? (
@@ -210,9 +218,13 @@ export const TagsManager = observer(() => {
                       variant='unstyled'
                       className='ml-6 mt-[2px]'
                       defaultValue={tag.value.name}
-                      onBlur={() => setEditingTag(null)}
+                      onChange={(e) => setNewTag(e.target.value)}
                       onFocus={(e) => {
                         e.target.select();
+                      }}
+                      onBlur={() => {
+                        handleEditTag(tag.value.id, newTag);
+                        setEditingTag(null);
                       }}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
@@ -222,7 +234,7 @@ export const TagsManager = observer(() => {
                     />
                   ) : (
                     <span
-                      className='cursor-pointer ml-6 text-sm'
+                      className='cursor-pointer ml-6 text-sm line-clamp-1'
                       onClick={() =>
                         setEditingTag({
                           id: tag.value.id,
@@ -256,8 +268,8 @@ export const TagsManager = observer(() => {
         hideCloseButton
         onClose={onClose}
         confirmButtonLabel='Delete tag'
-        label={`Delete ${deletingTag?.name}?`}
-        description={`Deleting this tag will remove it from ${totalTagCount} contacts or organizations.`}
+        description={deleteTagDescription}
+        label={`Delete '${deletingTag?.name}'?`}
         onConfirm={() => {
           if (deletingTag?.id) {
             handleDeleteTag(deletingTag.id);
@@ -265,7 +277,7 @@ export const TagsManager = observer(() => {
         }}
         body={
           <div className='flex flex-col gap-2'>
-            <p>This action cannot be undone</p>
+            <p>This action cannot be undone.</p>
           </div>
         }
       />

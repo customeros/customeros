@@ -125,7 +125,7 @@ export const PersonaFilter = observer(
           </Checkbox>
         </div>
 
-        <div className='max-h-[80vh] overflow-y-auto -mr-3'>
+        <div className='max-h-[80vh] overflow-y-auto -mr-3 '>
           {options
             .filter((e) =>
               searchValue?.length
@@ -135,11 +135,13 @@ export const PersonaFilter = observer(
             ?.map((e) => (
               <Checkbox
                 size='md'
-                className='mt-2'
+                className='mt-2 '
                 key={`option-${e}`}
                 onChange={() => handleChange(e)}
-                labelProps={{ className: 'text-sm mt-2' }}
                 isChecked={filter.value.includes(e) ?? false}
+                labelProps={{
+                  className: 'text-sm mt-2 line-clamp-1 w-[150px]',
+                }}
               >
                 {e ?? 'Unnamed'}
               </Checkbox>
