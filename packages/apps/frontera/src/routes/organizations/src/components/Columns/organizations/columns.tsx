@@ -157,7 +157,7 @@ export const columns: Record<string, Column> = {
     'value.relationship',
     {
       id: ColumnViewType.OrganizationsRelationship,
-      minSize: 145,
+      minSize: 160,
       maxSize: 400,
       enableColumnFilter: true,
       enableResizing: true,
