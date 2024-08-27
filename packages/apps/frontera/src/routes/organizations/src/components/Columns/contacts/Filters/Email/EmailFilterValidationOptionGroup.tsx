@@ -4,6 +4,7 @@ import { CheckedState } from '@radix-ui/react-checkbox';
 
 import { cn } from '@ui/utils/cn.ts';
 import { IconButton } from '@ui/form/IconButton';
+import { EmailDeliverable } from '@graphql/types';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import { InfoCircle } from '@ui/media/icons/InfoCircle';
 import {
@@ -11,11 +12,7 @@ import {
   CollapsibleContent,
 } from '@ui/transitions/Collapse/Collapse';
 
-import {
-  CategoryHeaderLabel,
-  DeliverabilityStatus,
-  EmailVerificationStatus,
-} from './utils';
+import { CategoryHeaderLabel, EmailVerificationStatus } from './utils';
 
 interface CheckboxOption {
   label: string;
@@ -25,9 +22,9 @@ interface CheckboxOption {
 
 interface CheckboxGroupProps {
   options: CheckboxOption[];
-  category: DeliverabilityStatus;
+  category: EmailDeliverable;
   isCategoryChecked: boolean | CheckedState;
-  onToggleCategory: (category: DeliverabilityStatus) => void;
+  onToggleCategory: (category: EmailDeliverable) => void;
   isOptionChecked: (value: EmailVerificationStatus) => boolean;
   onToggleOption: (
     value: EmailVerificationStatus,

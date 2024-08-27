@@ -1,13 +1,9 @@
-export enum DeliverabilityStatus {
-  Deliverable = 'deliverable',
-  NotDeliverable = 'not_deliverable',
-  Unknown = 'unknown',
-}
+import { EmailDeliverable } from '@graphql/types';
 
 export const CategoryHeaderLabel = {
-  [DeliverabilityStatus.Deliverable]: 'Deliverable',
-  [DeliverabilityStatus.NotDeliverable]: 'Not Deliverable',
-  [DeliverabilityStatus.Unknown]: 'Don’t know',
+  [EmailDeliverable.Deliverable]: 'Deliverable',
+  [EmailDeliverable.Undeliverable]: 'Not Deliverable',
+  [EmailDeliverable.Unknown]: 'Don’t know',
 };
 
 export enum EmailVerificationStatus {
@@ -21,29 +17,11 @@ export enum EmailVerificationStatus {
   CatchAll = 'catch_all',
   NotVerified = 'not_verified',
   VerificationInProgress = 'verification_in_progress',
-
-  // category
-  IsDeliverable = 'IS_DELIVERABLE',
-  IsNotDeliverable = 'IS_NOT_DELIVERABLE',
-  IsUnknown = 'IS_DELIVERABLE_UNKNOWN',
 }
 
-export const getCategoryString = (
-  category: DeliverabilityStatus,
-): EmailVerificationStatus => {
+export const getOptionsForCategory = (category: EmailDeliverable) => {
   switch (category) {
-    case DeliverabilityStatus.Deliverable:
-      return EmailVerificationStatus.IsDeliverable;
-    case DeliverabilityStatus.NotDeliverable:
-      return EmailVerificationStatus.IsNotDeliverable;
-    case DeliverabilityStatus.Unknown:
-      return EmailVerificationStatus.IsUnknown;
-  }
-};
-
-export const getOptionsForCategory = (category: DeliverabilityStatus) => {
-  switch (category) {
-    case DeliverabilityStatus.Deliverable:
+    case EmailDeliverable.Deliverable:
       return [
         { label: 'No risk', value: EmailVerificationStatus.NoRisk },
         {
@@ -60,7 +38,7 @@ export const getOptionsForCategory = (category: DeliverabilityStatus) => {
           value: EmailVerificationStatus.GroupMailbox,
         },
       ];
-    case DeliverabilityStatus.NotDeliverable:
+    case EmailDeliverable.Undeliverable:
       return [
         {
           label: 'Mailbox doesn’t exist',
@@ -75,7 +53,7 @@ export const getOptionsForCategory = (category: DeliverabilityStatus) => {
           value: EmailVerificationStatus.IncorrectFormat,
         },
       ];
-    case DeliverabilityStatus.Unknown:
+    case EmailDeliverable.Unknown:
       return [
         { label: 'Catch all', value: EmailVerificationStatus.CatchAll },
         {

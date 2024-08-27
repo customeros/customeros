@@ -450,7 +450,7 @@ const CONTACTS_QUERY = gql`
             firewall
             isCatchAll
             canConnectSmtp
-            isDeliverable
+            deliverable
             isMailboxFull
             isRoleAccount
             isFreeAccount

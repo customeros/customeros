@@ -1335,6 +1335,12 @@ export type Email = {
   users: Array<User>;
 };
 
+export enum EmailDeliverable {
+  Deliverable = 'DELIVERABLE',
+  Undeliverable = 'UNDELIVERABLE',
+  Unknown = 'UNKNOWN',
+}
+
 /**
  * Describes an email address associated with a `Contact` in customerOS.
  * **A `create` object.**
@@ -1400,32 +1406,20 @@ export type EmailUpdateAddressInput = {
 
 export type EmailValidationDetails = {
   __typename?: 'EmailValidationDetails';
-  /** @deprecated No longer supported */
-  acceptsMail?: Maybe<Scalars['Boolean']['output']>;
   canConnectSmtp?: Maybe<Scalars['Boolean']['output']>;
-  /** @deprecated No longer supported */
-  error?: Maybe<Scalars['String']['output']>;
+  deliverable?: Maybe<EmailDeliverable>;
   firewall?: Maybe<Scalars['String']['output']>;
-  /** @deprecated No longer supported */
-  hasFullInbox?: Maybe<Scalars['Boolean']['output']>;
   isCatchAll?: Maybe<Scalars['Boolean']['output']>;
+  /** @deprecated No longer supported */
   isDeliverable?: Maybe<Scalars['Boolean']['output']>;
-  /** @deprecated No longer supported */
-  isDisabled?: Maybe<Scalars['Boolean']['output']>;
-  /** @deprecated No longer supported */
-  isDisposable?: Maybe<Scalars['Boolean']['output']>;
   isFirewalled?: Maybe<Scalars['Boolean']['output']>;
   isFreeAccount?: Maybe<Scalars['Boolean']['output']>;
   isMailboxFull?: Maybe<Scalars['Boolean']['output']>;
-  /** @deprecated No longer supported */
-  isReachable?: Maybe<Scalars['String']['output']>;
   isRisky?: Maybe<Scalars['Boolean']['output']>;
   isRoleAccount?: Maybe<Scalars['Boolean']['output']>;
   isValidSyntax?: Maybe<Scalars['Boolean']['output']>;
   provider?: Maybe<Scalars['String']['output']>;
   smtpSuccess?: Maybe<Scalars['Boolean']['output']>;
-  /** @deprecated No longer supported */
-  validated?: Maybe<Scalars['Boolean']['output']>;
   verified: Scalars['Boolean']['output'];
   verifyingCheckAll: Scalars['Boolean']['output'];
 };

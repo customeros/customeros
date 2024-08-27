@@ -1,9 +1,9 @@
 import { XCircle } from '@ui/media/icons/XCircle.tsx';
-import { EmailValidationDetails } from '@graphql/types';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { HelpCircle } from '@ui/media/icons/HelpCircle.tsx';
 import { AlertCircle } from '@ui/media/icons/AlertCircle.tsx';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward.tsx';
+import { EmailDeliverable, EmailValidationDetails } from '@graphql/types';
 import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken.tsx';
 
 interface Props {
@@ -80,14 +80,20 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
     return emailStatuses.INCORRECT_FORMAT;
   }
 
-  if (emailData?.isDeliverable && emailData?.verified) {
+  if (
+    emailData?.deliverable === EmailDeliverable.Deliverable &&
+    emailData?.verified
+  ) {
     if (!emailData?.isRisky) return emailStatuses.DELIVERABLE_NO_RISK;
     if (emailData?.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
     if (emailData?.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
     if (emailData?.isCatchAll) return emailStatuses.CATCH_ALL;
   }
 
-  if (emailData?.isDeliverable === false && emailData?.verified) {
+  if (
+    emailData?.deliverable !== EmailDeliverable.Deliverable &&
+    emailData?.verified
+  ) {
     if (emailData?.isMailboxFull) return emailStatuses.MAILBOX_FULL;
     if (!emailData?.canConnectSmtp) return emailStatuses.INVALID_MAILBOX;
   }
