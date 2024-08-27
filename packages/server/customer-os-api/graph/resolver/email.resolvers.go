@@ -6,6 +6,8 @@ package resolver
 
 import (
 	"context"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	"github.com/pkg/errors"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -426,6 +428,43 @@ func (r *mutationResolver) EmailUpdate(ctx context.Context, input model.EmailUpd
 	}
 
 	return mapper.MapEntityToEmail(emailEntity), nil
+}
+
+// EmailValidate is the resolver for the email_Validate field.
+func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailValidate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.emailID", id))
+
+	emailNode, err := r.Services.EmailService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Failed to get email by id"))
+		graphql.AddErrorf(ctx, "Email not found by id: %s", id)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	if emailNode == nil || emailNode.RawEmail == "" {
+		graphql.AddErrorf(ctx, "Email address is empty")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+		return r.Clients.EmailClient.RequestEmailValidation(ctx, &emailpb.RequestEmailValidationGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			Id:             id,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error requesting email validation"))
+		r.log.Errorf("Error requesting email validation for %s: %s", id, err.Error())
+		graphql.AddErrorf(ctx, "Error requesting email validation for %s", id)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
 }
 
 // Email is the resolver for the email field.

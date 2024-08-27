@@ -20,6 +20,7 @@ extend type Mutation {
 
     emailDelete(id: ID!): Result!
     emailUpdate(input: EmailUpdateAddressInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    email_Validate(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type CustomerEmail {
