@@ -14,6 +14,7 @@ type Config struct {
 	IpHunterConfig  IpHunterConfig
 	EmailConfig     EmailConfig
 	ScrubbyIoConfig ScrubbyIoConfig
+	TrueinboxConfig TrueinboxConfig
 
 	Postgres config.PostgresConfig
 	Neo4j    config.Neo4jConfig
@@ -47,4 +48,10 @@ type ScrubbyIoConfig struct {
 	ApiKey       string `env:"SCRUBBY_IO_API_KEY" validate:"required"`
 	CacheTtlDays int    `env:"SCRUBBY_IO_CACHE_TTL_DAYS" envDefault:"90" validate:"required"`
 	CallbackUrl  string `env:"SCRUBBY_IO_CALLBACK_URL"`
+}
+
+type TrueinboxConfig struct {
+	ApiUrl       string `env:"TRUEINBOX_API_URL" envDefault:"https://api.trueinbox.io" validate:"required"`
+	ApiKey       string `env:"TRUEINBOX_API_KEY" validate:"required"`
+	CacheTtlDays int    `env:"TRUEINBOX_CACHE_TTL_DAYS" envDefault:"90" validate:"required"`
 }

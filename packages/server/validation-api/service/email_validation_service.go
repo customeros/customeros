@@ -17,6 +17,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/http"
+	"net/url"
 	"strings"
 )
 
@@ -35,6 +36,7 @@ type ScrubbyIoResponse struct {
 type EmailValidationService interface {
 	ValidateEmailWithMailsherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error)
 	ValidateEmailScrubby(ctx context.Context, email string) (string, error)
+	ValidateEmailTrueInbox(ctx context.Context, email string) (*postgresentity.TrueInboxResponseBody, error)
 }
 
 type emailValidationService struct {
@@ -342,4 +344,97 @@ func (s *emailValidationService) callScrubbyIo(ctx context.Context, identifier, 
 	tracing.LogObjectAsJson(span, "response.scrubby", scrubbyIoResponse)
 
 	return scrubbyIoResponse, nil
+}
+
+func (s *emailValidationService) ValidateEmailTrueInbox(ctx context.Context, email string) (*postgresentity.TrueInboxResponseBody, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailTrueInbox")
+	defer span.Finish()
+	span.LogFields(log.String("email", email))
+
+	cachedTrueInboxRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailTrueinboxRepository.GetLatestByEmail(ctx, email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
+		return nil, err
+	}
+
+	var result *postgresentity.TrueInboxResponseBody
+	if cachedTrueInboxRecord == nil || cachedTrueInboxRecord.CreatedAt.AddDate(0, 0, s.config.TrueinboxConfig.CacheTtlDays).Before(utils.Now()) {
+		trueInboxResponse, err := s.callTrueinboxToValidateEmail(ctx, email)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email with trueinbox"))
+			s.log.Errorf("failed to validate email with trueinbox: %s", err.Error())
+			return nil, err
+		}
+		responseJson, err := json.Marshal(trueInboxResponse)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal trueinbox response"))
+			s.log.Errorf("failed to marshal trueinbox response: %s", err.Error())
+			return nil, err
+		}
+		_, err = s.Services.CommonServices.PostgresRepositories.CacheEmailTrueinboxRepository.Create(ctx, postgresentity.CacheEmailTrueinbox{
+			Email:  email,
+			Data:   string(responseJson),
+			Result: trueInboxResponse.Result,
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to save trueinbox data"))
+			s.log.Errorf("failed to save trueinbox data: %s", err.Error())
+			return nil, err
+		}
+	} else {
+		err = json.Unmarshal([]byte(cachedTrueInboxRecord.Data), result)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal trueinbox data"))
+			s.log.Errorf("failed to unmarshal trueinbox data: %s", err.Error())
+			return nil, err
+		}
+	}
+	return result, nil
+
+}
+
+func (s *emailValidationService) callTrueinboxToValidateEmail(ctx context.Context, email string) (postgresentity.TrueInboxResponseBody, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.callTrueinboxToValidateEmail")
+	defer span.Finish()
+	span.LogFields(log.String("email", email))
+
+	// Construct the URL with the email as a query parameter
+	requestUrl := fmt.Sprintf("%s/v1/api/verify-single-email?email=%s", s.config.TrueinboxConfig.ApiUrl, url.QueryEscape(email))
+
+	// Create a new request
+	req, err := http.NewRequestWithContext(ctx, "GET", requestUrl, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		return postgresentity.TrueInboxResponseBody{}, err
+	}
+
+	// Set the request headers
+	req.Header.Set("Authorization", "Bearer "+s.config.TrueinboxConfig.ApiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		return postgresentity.TrueInboxResponseBody{}, err
+	}
+	defer response.Body.Close()
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("TrueInbox returned %d status code", response.StatusCode)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get response from TrueInbox"))
+		return postgresentity.TrueInboxResponseBody{}, err
+	}
+
+	var trueInboxResponse postgresentity.TrueInboxResponseBody
+	err = json.NewDecoder(response.Body).Decode(&trueInboxResponse)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode TrueInbox response"))
+		s.log.Errorf("failed to decode TrueInbox response: %s", err.Error())
+		return trueInboxResponse, err
+	}
+	tracing.LogObjectAsJson(span, "response.trueinbox", trueInboxResponse)
+
+	return trueInboxResponse, nil
 }
