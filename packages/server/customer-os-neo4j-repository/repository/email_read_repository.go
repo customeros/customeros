@@ -244,7 +244,6 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 					(e.updatedAt < datetime() - duration({minutes: $delayFromLastUpdateInMinutes})) AND
 					(e.techValidationRequestedAt IS NULL OR e.techValidationRequestedAt < datetime() - duration({minutes: $delayFromLastValidationAttemptInMinutes}))
 				WITH t.name as tenant, e.id as emailId
-				ORDER BY CASE WHEN e.techValidationRequestedAt IS NULL THEN 0 ELSE 1 END, e.techValidationRequestedAt ASC
 				ORDER BY 
     			CASE 
         			WHEN e.techValidationRequestedAt IS NULL THEN 0 
