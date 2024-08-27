@@ -75,7 +75,7 @@ export const OrganizationRelationshipCell = observer(
               icon={<Edit03 className='text-gray-500' />}
               data-test='organization-relationship-button-in-all-orgs-table'
               className={cn(
-                'rounded-md opacity-0 group-hover/relationship:opacity-100',
+                'rounded-md opacity-0 group-hover/relationship:opacity-100 min-w-5',
                 isEditing && 'opacity-100',
               )}
             />

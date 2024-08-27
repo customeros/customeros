@@ -105,28 +105,39 @@ const InvoiceStatusChangeAction = ({
   );
 };
 
-const formatInvoiceText = (text: string, metadata: InvoiceStubMetadata) => {
-  if (!metadata) {
-    return text;
-  }
-  const invoiceNumberPattern = /N° \w+-\d+/;
-  const formattedAmount = formatCurrency(metadata.amount, 2, metadata.currency);
-  const beforeInvoiceNumber = text.split(invoiceNumberPattern)[0];
-  const betweenInvoiceNumberAndAmount = text
-    .split(invoiceNumberPattern)[1]
-    .replace(formattedAmount, '')
-    .trim();
+const formatInvoiceText = (
+  text: string,
+  metadata: InvoiceStubMetadata,
+): React.ReactNode => {
+  if (!metadata) return text;
 
-  const afterAmount = text.split(`${metadata.amount}`)[1];
+  const { number, amount, currency } = metadata;
+  const formattedAmount = formatCurrency(amount, 2, currency);
+
+  const invoiceNumberRegex = /N°\s+(\w+-\d+)/;
+  const amountRegex = new RegExp(
+    `\\$?${amount.toString().replace('.', '\\.')}`,
+  );
+
+  const invoiceNumberMatch = text.match(invoiceNumberRegex);
+  const amountMatch = text.match(amountRegex);
+
+  if (!invoiceNumberMatch || !amountMatch) return text;
+
+  const invoiceNumberIndex = invoiceNumberMatch.index!;
+  const amountIndex = amountMatch.index!;
 
   return (
-    <div>
-      {beforeInvoiceNumber}
-      <span className='font-medium mr-1'>N° {metadata.number}</span>
-      {betweenInvoiceNumberAndAmount}
-      <span className='font-medium mx-1'>{formattedAmount}</span>
-      {afterAmount}
-    </div>
+    <>
+      {text.substring(0, invoiceNumberIndex)}
+      <span className='font-medium'>N° {number}</span>
+      {text.substring(
+        invoiceNumberIndex + invoiceNumberMatch[0].length,
+        amountIndex,
+      )}
+      <span className='font-medium'>{formattedAmount}</span>
+      {text.substring(amountIndex + amountMatch[0].length)}
+    </>
   );
 };
 
