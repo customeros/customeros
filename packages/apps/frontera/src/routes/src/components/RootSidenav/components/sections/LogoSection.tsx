@@ -53,7 +53,7 @@ export const LogoSection = () => {
           )}
         </div>
       </MenuButton>
-      <MenuList side='bottom' align='center' className='w-[180px] ml-2'>
+      <MenuList align='start' side='bottom' className='w-[180px] ml-2'>
         <MenuItem className='group' onClick={() => navigate('/settings')}>
           <div className='flex gap-2 items-center'>
             <Settings02 className='group-hover:text-gray-700 text-gray-500' />

@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 
-import { useKeyBindings } from 'rooks';
+import { CommandGroup } from 'cmdk';
 import { observer } from 'mobx-react-lite';
 
 import { DataSource } from '@graphql/types';
@@ -9,12 +9,7 @@ import { Tag as TagType } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
-import {
-  Command,
-  CommandItem,
-  CommandInput,
-  useCommandState,
-} from '@ui/overlay/CommandMenu';
+import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 export const EditPersonaTag = observer(() => {
   const store = useStore();
@@ -126,6 +121,9 @@ export const EditPersonaTag = observer(() => {
 
       return 0;
     });
+  const filteredTags = sortedTags?.filter((tag) =>
+    tag.value.name.toLowerCase().includes(search.toLowerCase()),
+  );
 
   useModKey('Enter', () => {
     store.ui.commandMenu.setOpen(false);
@@ -140,49 +138,50 @@ export const EditPersonaTag = observer(() => {
         placeholder='Edit persona tag...'
       />
 
-      <EmptySearch createOption={handleCreateOption} />
-      <Command.List>
-        {sortedTags?.map((tag) => (
-          <CommandItem
-            key={tag.id}
-            onSelect={handleSelect(tag.value)}
-            rightAccessory={
-              newSelectedTags.has(tag.value.name) ? <Check /> : null
-            }
-          >
-            {tag.value.name}
-          </CommandItem>
-        ))}
-      </Command.List>
+      <CommandGroup>
+        <Command.List>
+          {filteredTags?.map((tag) => (
+            <CommandItem
+              key={tag.id}
+              onSelect={handleSelect(tag.value)}
+              rightAccessory={
+                newSelectedTags.has(tag.value.name) ? <Check /> : null
+              }
+            >
+              {tag.value.name}
+            </CommandItem>
+          ))}
+          {search && (
+            <CommandItem
+              leftAccessory={<Plus />}
+              onSelect={() => handleCreateOption(search)}
+            >
+              <span className='text-gray-700 ml-1'>Create new tag:</span>
+              <span className='text-gray-500 ml-1'>{search}</span>
+            </CommandItem>
+          )}
+        </Command.List>
+      </CommandGroup>
     </Command>
   );
 });
 
-const EmptySearch = ({
-  createOption,
-}: {
-  createOption: (data: string) => void;
-}) => {
-  const search = useCommandState((state) => state.search);
-
-  useKeyBindings({
-    Enter: () => {
-      createOption(search);
-    },
-  });
-
-  return (
-    <Command.Empty>
-      <div
-        tabIndex={0}
-        role='button'
-        onClick={() => createOption(search)}
-        className='mx-5 my-3 p-2 flex flex-1 items-center text-gray-500 text-sm hover:bg-gray-50 rounded cursor-pointer'
-      >
-        <Plus />
-        <span className='text-gray-700 ml-1'>Create new tag:</span>
-        <span className='text-gray-500 ml-1'>{search}</span>
-      </div>
-    </Command.Empty>
-  );
-};
+// const EmptySearch = ({
+//   createOption,
+//   search,
+// }: {
+//   search: string;
+//   createOption: (data: string) => void;
+// }) => {
+//   return (
+//     <div
+//       tabIndex={0}
+//       onClick={() => createOption(search)}
+//       className='mx-5 my-3 p-2 flex flex-1 items-center text-gray-500 text-sm hover:bg-gray-50 rounded cursor-pointer'
+//     >
+//       <Plus />
+//       <span className='text-gray-700 ml-1'>Create new tag:</span>
+//       <span className='text-gray-500 ml-1'>{search}</span>
+//     </div>
+//   );
+// };
