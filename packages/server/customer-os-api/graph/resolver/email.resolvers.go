@@ -7,7 +7,7 @@ package resolver
 import (
 	"context"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	"github.com/pkg/errors"
+	pkgerrors "github.com/pkg/errors"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -439,7 +439,7 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 
 	emailNode, err := r.Services.EmailService.GetById(ctx, id)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Failed to get email by id"))
+		tracing.TraceErr(span, pkgerrors.Wrap(err, "Failed to get email by id"))
 		graphql.AddErrorf(ctx, "Email not found by id: %s", id)
 		return &model.ActionResponse{Accepted: false}, nil
 	}
@@ -458,7 +458,7 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 		})
 	})
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error requesting email validation"))
+		tracing.TraceErr(span, pkgerrors.Wrap(err, "Error requesting email validation"))
 		r.log.Errorf("Error requesting email validation for %s: %s", id, err.Error())
 		graphql.AddErrorf(ctx, "Error requesting email validation for %s", id)
 		return &model.ActionResponse{Accepted: false}, nil
