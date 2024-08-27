@@ -206,6 +206,7 @@ export const OrganizationTableActions = ({
 
           <ActionItem
             onClick={onHide}
+            tooltip='Archive'
             dataTest='org-actions-archive'
             icon={<Archive className='text-inherit size-3' />}
           >

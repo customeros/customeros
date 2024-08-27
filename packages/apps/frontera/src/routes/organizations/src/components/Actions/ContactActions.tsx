@@ -103,6 +103,7 @@ export const ContactTableActions = ({
         )}
 
         <ActionItem
+          tooltip='Archive'
           onClick={() => onHideContacts()}
           dataTest='contacts-actions-archive'
           icon={<Archive className='text-inherit size-3' />}
