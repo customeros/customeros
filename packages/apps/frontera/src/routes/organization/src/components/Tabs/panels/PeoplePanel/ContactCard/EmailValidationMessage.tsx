@@ -1,3 +1,6 @@
+import { observer } from 'mobx-react-lite';
+
+import { useStore } from '@shared/hooks/useStore';
 import { XCircle } from '@ui/media/icons/XCircle.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { HelpCircle } from '@ui/media/icons/HelpCircle.tsx';
@@ -5,6 +8,7 @@ import { AlertCircle } from '@ui/media/icons/AlertCircle.tsx';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward.tsx';
 import { EmailDeliverable, EmailValidationDetails } from '@graphql/types';
 import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken.tsx';
+import { EmailVerificationStatus } from '@organizations/components/Columns/contacts/Filters/Email/utils.ts';
 
 interface Props {
   email: string;
@@ -15,38 +19,47 @@ const emailStatuses = {
   DELIVERABLE_NO_RISK: {
     message: 'Deliverable • No risk',
     icon: <CheckCircleBroken className='text-greenLight-500 size-3' />,
+    value: EmailVerificationStatus.NoRisk,
   },
   DELIVERABLE_FIREWALL: {
     message: 'Deliverable • Firewall protected',
     icon: <CheckCircleBroken className='text-greenLight-500 size-3' />,
+    value: EmailVerificationStatus.FirewallProtected,
   },
   DELIVERABLE_FREE_ACCOUNT: {
     message: 'Deliverable • Free account',
     icon: <CheckCircleBroken className='text-warning-400 size-3' />,
+    value: EmailVerificationStatus.FreeAccount,
   },
   CATCH_ALL: {
     message: "Don't know • Catch-all",
     icon: <AlertCircle className='text-gray-500 size-3' />,
+    value: EmailVerificationStatus.CatchAll,
   },
   NOT_VERIFIED: {
     message: "Don't know • Not verified yet",
     icon: <HelpCircle className='text-gray-500 size-3' />,
+    value: EmailVerificationStatus.NotVerified,
   },
   VERIFICATION_IN_PROGRESS: {
     message: "Don't know • Verification in progress",
     icon: <ClockFastForward className='text-primary-600 size-3' />,
+    value: EmailVerificationStatus.VerificationInProgress,
   },
   MAILBOX_FULL: {
     message: 'Not deliverable • Mailbox full',
     icon: <XCircle className='text-error-500 size-3' />,
+    value: EmailVerificationStatus.MailboxFull,
   },
   INVALID_MAILBOX: {
     message: 'Not deliverable • Mailbox doesn’t exist',
     icon: <XCircle className='text-error-500 size-3' />,
+    value: EmailVerificationStatus.InvalidMailbox,
   },
   INCORRECT_FORMAT: {
     message: 'Not deliverable • Incorrect format',
     icon: <XCircle className='text-error-500 size-3' />,
+    value: EmailVerificationStatus.IncorrectFormat,
   },
 };
 
@@ -101,14 +114,31 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
   return null;
 }
 
-export const EmailValidationMessage = ({ email, validationDetails }: Props) => {
-  const data = checkEmailStatus(validationDetails, email);
+export const EmailValidationMessage = observer(
+  ({ email, validationDetails }: Props) => {
+    const data = checkEmailStatus(validationDetails, email);
+    const store = useStore();
 
-  if (!data) return null;
+    if (!data) return null;
 
-  return (
-    <Tooltip side='right' label={data?.message}>
-      <div className='flex items-center'>{data?.icon}</div>
-    </Tooltip>
-  );
-};
+    return (
+      <Tooltip side='right' label={data?.message}>
+        <div
+          role='button'
+          className='flex items-center cursor-pointer'
+          onClick={() => {
+            store.ui.commandMenu.setType('ContactEmailVerificationInfoModal');
+            store.ui.commandMenu.setContext({
+              ids: [],
+              entity: 'Contact',
+              property: data?.value,
+            });
+            store.ui.commandMenu.setOpen(true);
+          }}
+        >
+          {data?.icon}
+        </div>
+      </Tooltip>
+    );
+  },
+);
