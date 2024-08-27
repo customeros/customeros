@@ -62,14 +62,14 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
   }
 
   if (email && !emailData) {
-    return emailStatuses.NOT_VERIFIED;
-  }
-
-  if (!emailData?.verified) {
     const isValidSyntax = isValidEmail(email);
 
     if (!isValidSyntax) return emailStatuses.INCORRECT_FORMAT;
 
+    return emailStatuses.NOT_VERIFIED;
+  }
+
+  if (!emailData?.verified) {
     return emailStatuses.NOT_VERIFIED;
   }
 
