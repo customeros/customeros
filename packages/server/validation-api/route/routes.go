@@ -24,6 +24,7 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 	validatePhoneNumber(ctx, r, services)
 	validateEmailV2(ctx, r, services, logger)
 	validateEmailWithScrubby(ctx, r, services, logger)
+	validateEmailWithTrueInbox(ctx, r, services, logger)
 	ipLookup(ctx, r, services, logger)
 }
 
@@ -139,6 +140,55 @@ func validateEmailWithScrubby(ctx context.Context, r *gin.Engine, services *serv
 				EmailIsInvalid: validationStatus == string(postgresentity.ScrubbyStatusLowercaseInvalid),
 				EmailIsUnknown: validationStatus == "unknown",
 				EmailIsPending: validationStatus == string(postgresentity.ScrubbyStatusLowercasePending),
+			})
+		})
+}
+
+func validateEmailWithTrueInbox(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
+	r.POST("/validateEmailWithTrueInbox",
+		tracing.TracingEnhancer(ctx, "POST /validateEmailWithTrueInbox"),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API),
+		func(c *gin.Context) {
+			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ValidateEmailWithTrueInbox")
+			defer span.Finish()
+
+			var request model.ValidateEmailRequest
+
+			if err := c.BindJSON(&request); err != nil {
+				l.Errorf("Fail reading request: %v", err.Error())
+				c.JSON(http.StatusBadRequest, model.ValidateEmailWithTrueinboxResponse{
+					Status:  "error",
+					Message: "Invalid request body",
+				})
+				return
+			}
+			span.LogFields(log.String("request.email", request.Email))
+
+			// check email is present
+			if request.Email == "" {
+				tracing.TraceErr(span, errors.New("Missing email parameter"))
+				l.Errorf("Missing email parameter")
+				c.JSON(http.StatusBadRequest, model.ValidateEmailWithTrueinboxResponse{
+					Status:  "error",
+					Message: "Missing email parameter",
+				})
+				return
+			}
+
+			validationResult, err := services.EmailValidationService.ValidateEmailTrueInbox(ctx, request.Email)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				l.Errorf("Error on : %v", err.Error())
+				c.JSON(http.StatusInternalServerError, model.ValidateEmailWithTrueinboxResponse{
+					Status:  "error",
+					Message: "Internal server error",
+				})
+				return
+			}
+
+			c.JSON(http.StatusOK, model.ValidateEmailWithTrueinboxResponse{
+				Status: "success",
+				Data:   validationResult,
 			})
 		})
 }

@@ -1,5 +1,7 @@
 package model
 
+import postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+
 type EmailDeliverableStatus string
 
 const (
@@ -63,4 +65,10 @@ type ValidateEmailWithScrubbyResponse struct {
 	EmailIsInvalid  bool   `json:"emailIsInvalid"`
 	EmailIsUnknown  bool   `json:"emailIsUnknown"`
 	EmailIsPending  bool   `json:"emailIsPending"`
+}
+
+type ValidateEmailWithTrueinboxResponse struct {
+	Status  string                                `json:"status"`
+	Message string                                `json:"message,omitempty"`
+	Data    *postgresentity.TrueInboxResponseBody `json:"data,omitempty"`
 }
