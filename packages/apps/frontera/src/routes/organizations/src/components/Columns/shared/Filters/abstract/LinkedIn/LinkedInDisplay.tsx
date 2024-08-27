@@ -96,6 +96,7 @@ export const LinkedInDisplay = ({
               ? handleUpdateSocial(`linkedin.com/${type}${displayLink}`)
               : handleUpdateSocial('');
             e.target.focus();
+            setTimeout(() => e.target.select(), 0);
           }}
         />
       ) : (

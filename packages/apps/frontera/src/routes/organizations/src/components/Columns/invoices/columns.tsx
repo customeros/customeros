@@ -99,8 +99,8 @@ const columns: Record<string, Column> = {
   }),
   [ColumnViewType.InvoicesContract]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesContract,
-    size: 150,
-    minSize: 150,
+    size: 160,
+    minSize: 160,
     maxSize: 600,
     enableResizing: true,
     enableColumnFilter: false,

@@ -4,7 +4,6 @@ import { Store } from '@store/store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
 import { cn } from '@ui/utils/cn.ts';
-import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
@@ -584,19 +583,7 @@ export const columns: Record<string, Column> = {
       cell: (props) => {
         const value = props.row.original.value.accountDetails?.churned;
 
-        return (
-          <p
-            className={cn(
-              'text-gray-700 cursor-default',
-              !value && 'text-gray-400',
-            )}
-          >
-            {DateTimeUtils.format(
-              value,
-              DateTimeUtils.defaultFormatShortString,
-            ) || 'Unknown'}
-          </p>
-        );
+        return <DateCell value={value} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>

@@ -46,7 +46,7 @@ export const ContractCell = observer(({ contractId }: ContractCellProps) => {
           ref={linkRef}
           onClick={handleNavigate}
           data-test='Contract-name-in-all-orgs-table'
-          className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
+          className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer pr-7'
         >
           {contract?.value?.contractName ?? 'Unknown'}
         </p>
