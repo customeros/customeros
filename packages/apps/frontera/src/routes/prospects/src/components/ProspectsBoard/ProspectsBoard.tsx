@@ -166,7 +166,7 @@ export const ProspectsBoard = observer(() => {
               />
             );
           })}
-          <div className='flex-shrink-0 w-6'></div>
+          <div className='w-6'></div>
         </div>
       </DragDropContext>
     </>
