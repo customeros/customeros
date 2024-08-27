@@ -107,23 +107,26 @@ jobs:
         run: |
           BUILD_URL="https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
           RESULTS="${{ steps.test_results.outputs.results }}"
-          echo "$RESULTS: $RESULTS"
 
           # Count passed and failed tests
-          PASSED_TESTS=$(echo "$RESULTS" | grep -c "✅")
-          FAILED_TESTS=$(echo "$RESULTS" | grep -c "❌")
+          PASSED_TESTS=$(echo "$RESULTS" | grep -c "✅" || true)
+          FAILED_TESTS=$(echo "$RESULTS" | grep -c "❌" || true)
           TOTAL_TESTS=$((PASSED_TESTS + FAILED_TESTS))
 
           # Create summary statistic
           SUMMARY="✅ $PASSED_TESTS passed, ❌ $FAILED_TESTS failed ($TOTAL_TESTS total)"
 
-          # Format Linear Issues
-          LINEAR_ISSUES=$(echo -e "${{ env.ISSUE_INFO }}" | sed '/^$/d' | sort)
-          echo "LINEAR_ISSUES: $LINEAR_ISSUES"
+          # Initialize MESSAGE with the common part
+          MESSAGE="<$BUILD_URL|Playwright Test Results>:\n$SUMMARY"
 
-          MESSAGE="<$BUILD_URL|Playwright Test Results>:\n$SUMMARY\n\nLinear Issues:\n$LINEAR_ISSUES"
-          echo "MESSAGE: $MESSAGE"
-          curl -X POST -H 'Content-type: application/json' --data "{
+          # Format Linear Issues (only if there are any)
+          LINEAR_ISSUES=""
+          if [ "${{ env.ISSUE_INFO }}" != "" ]; then
+            LINEAR_ISSUES=$(echo -e "${{ env.ISSUE_INFO }}" | sed '/^$/d' | sort)
+            MESSAGE="$MESSAGE\n\nLinear Issues:\n$LINEAR_ISSUES"
+          fi
+
+          curl --fail -X POST -H 'Content-type: application/json' --data "{
             \"text\": \"$MESSAGE\"
           }" ${{ secrets.SLACK_FE_TESTS_WEBHOOK_URL }}
 
