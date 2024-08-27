@@ -35,8 +35,8 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
           size='xxs'
           variant='ghost'
           className='ml-3'
-          icon={<Edit01 />}
           aria-label='Edit tags'
+          icon={<Edit01 className='text-gray-500' />}
           onClick={() => {
             store.ui.commandMenu.setType('ChangeTags');
             store.ui.commandMenu.setOpen(true);

@@ -134,10 +134,10 @@ export const TagsManager = observer(() => {
 
   const deleteTagDescription =
     totalTagCount > 1
-      ? `This action will remove this tag from ${totalTagCount} contacts or organizations.`
+      ? `Deleting this tag will remove it from ${totalTagCount} contacts or organizations.`
       : totalTagCount === 1
-      ? `This action will remove this tag from ${totalTagCount} contact or organization.`
-      : 'This tag action will remove  this tag ';
+      ? `Deleting this tag will remove it from ${totalTagCount} contact or organization.`
+      : 'Deleting this tag will not affect any contacts or organizations, as it is not currently added to any';
 
   return (
     <>
@@ -216,14 +216,14 @@ export const TagsManager = observer(() => {
                       autoFocus
                       size='xs'
                       variant='unstyled'
-                      className='ml-6 mt-[2px]'
+                      className='ml-6 mb-[1px]'
                       defaultValue={tag.value.name}
                       onChange={(e) => setNewTag(e.target.value)}
                       onFocus={(e) => {
                         e.target.select();
                       }}
                       onBlur={() => {
-                        handleEditTag(tag.value.id, newTag);
+                        handleEditTag(tag.value.id, newTag || tag.value.name);
                         setEditingTag(null);
                       }}
                       onKeyDown={(e) => {
