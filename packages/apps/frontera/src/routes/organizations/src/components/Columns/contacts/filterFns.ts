@@ -9,6 +9,7 @@ import {
   Filter,
   Social,
   ColumnViewType,
+  EmailDeliverable,
   ComparisonOperator,
   EmailValidationDetails,
 } from '@graphql/types';
@@ -295,11 +296,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
             category: string;
             values: EmailVerificationStatus[];
           }) =>
-            (categoryFilter.category === 'IS_DELIVERABLE' &&
+            (categoryFilter.category === EmailDeliverable.Deliverable &&
               isDeliverable(categoryFilter.values, emailValidationData)) ||
-            (categoryFilter.category === 'IS_NOT_DELIVERABLE' &&
+            (categoryFilter.category === EmailDeliverable.Undeliverable &&
               isNotDeliverable(categoryFilter.values, emailValidationData)) ||
-            (categoryFilter.category === 'IS_DELIVERABLE_UNKNOWN' &&
+            (categoryFilter.category === EmailDeliverable.Unknown &&
               isDeliverableUnknown(categoryFilter.values, emailValidationData)),
         );
       },
@@ -319,9 +320,10 @@ function isNotDeliverable(
   statuses: EmailVerificationStatus[],
   data: EmailValidationDetails,
 ): boolean {
-  if (!!data?.isDeliverable || !data.verified) return false;
+  if (data?.deliverable !== EmailDeliverable.Undeliverable || !data.verified)
+    return false;
 
-  if (!statuses.length && !data.isDeliverable && data.verified) return true;
+  if (!statuses.length && data.deliverable && data.verified) return true;
 
   const statusChecks: Record<string, () => boolean> = {
     [EmailVerificationStatus.InvalidMailbox]: () => !data.canConnectSmtp,
@@ -345,7 +347,9 @@ function isDeliverableUnknown(
 
   const statusChecks: Record<string, () => boolean> = {
     [EmailVerificationStatus.CatchAll]: () =>
-      !!data?.isDeliverable && !!data?.isCatchAll && !!data?.verified,
+      data?.deliverable === EmailDeliverable.Unknown &&
+      !!data?.isCatchAll &&
+      !!data?.verified,
     [EmailVerificationStatus.NotVerified]: () => !data.verified,
     [EmailVerificationStatus.VerificationInProgress]: () =>
       data.verifyingCheckAll,
@@ -358,9 +362,8 @@ function isDeliverable(
   statuses: EmailVerificationStatus[],
   data: EmailValidationDetails,
 ): boolean {
-  if (!data?.isDeliverable || !data.verified) return false;
-
-  if (!statuses.length && data.isDeliverable && data.verified) return true;
+  if (data?.deliverable !== EmailDeliverable.Deliverable || !data.verified)
+    return false;
 
   const statusChecks: Record<string, () => boolean> = {
     [EmailVerificationStatus.NoRisk]: () => !data.isRisky,

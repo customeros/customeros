@@ -6,19 +6,18 @@ import { observer } from 'mobx-react-lite';
 import { CheckedState } from '@radix-ui/react-checkbox';
 
 import { useStore } from '@shared/hooks/useStore';
-import { ColumnViewType, ComparisonOperator } from '@graphql/types';
+import {
+  ColumnViewType,
+  EmailDeliverable,
+  ComparisonOperator,
+} from '@graphql/types';
 import { EmailFilterValidationOptionGroup } from '@organizations/components/Columns/contacts/Filters/Email/EmailFilterValidationOptionGroup';
 
+import { getOptionsForCategory, EmailVerificationStatus } from './utils';
 import {
   FilterHeader,
   DebouncedSearchInput,
 } from '../../../shared/Filters/abstract';
-import {
-  getCategoryString,
-  DeliverabilityStatus,
-  getOptionsForCategory,
-  EmailVerificationStatus,
-} from './utils';
 
 interface EmailFilterProps {
   property?: ColumnViewType;
@@ -27,7 +26,7 @@ interface EmailFilterProps {
 
 interface EmailVerificationFilterValue {
   category: string;
-  values: EmailVerificationStatus[];
+  values: (EmailVerificationStatus | EmailDeliverable)[];
 }
 
 const DEFAULT_FILTER: FilterItem = {
@@ -88,11 +87,10 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
     }, [verificationFilter.active, filter.active]);
 
     const handleFilterCategory = (
-      category: DeliverabilityStatus,
+      category: EmailDeliverable,
       value: EmailVerificationStatus,
       checked?: CheckedState,
     ) => {
-      const categoryString = getCategoryString(category);
       const currentValues =
         verificationFilter.value as EmailVerificationFilterValue[];
 
@@ -100,7 +98,7 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
         currentValues.map((item) => [item.category, item.values]),
       );
 
-      let categoryValues = categoryMap.get(categoryString) || [];
+      let categoryValues = categoryMap.get(category) || [];
 
       if (checked) {
         categoryValues = [...new Set([...categoryValues, value])];
@@ -108,19 +106,18 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
         categoryValues = categoryValues.filter((v) => v !== value);
       }
 
-      categoryMap.set(categoryString, categoryValues);
+      categoryMap.set(category, categoryValues);
 
-      const allOptions = new Set(
-        getOptionsForCategory(category).map((option) => option.value),
-      );
+      const allOptions: Set<EmailDeliverable | EmailVerificationStatus> =
+        new Set(getOptionsForCategory(category).map((option) => option.value));
       const allOptionsSelected =
         allOptions.size === categoryValues.length &&
         categoryValues.every((v) => allOptions.has(v));
 
       if (allOptionsSelected) {
-        categoryValues.push(categoryString);
+        categoryValues.push(category);
       } else {
-        const index = categoryValues.indexOf(categoryString);
+        const index = categoryValues.indexOf(category);
 
         if (index !== -1) {
           categoryValues.splice(index, 1);
@@ -139,25 +136,23 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
     };
 
     const isOptionChecked = (
-      category: DeliverabilityStatus,
+      category: EmailDeliverable,
       value: EmailVerificationStatus,
     ): boolean => {
       const currentValues =
         verificationFilter.value as EmailVerificationFilterValue[];
       const categoryItem = currentValues.find(
-        (item) => item.category === getCategoryString(category),
+        (item) => item.category === category,
       );
 
       return categoryItem ? categoryItem.values.includes(value) : false;
     };
 
-    const isCategoryChecked = (
-      category: DeliverabilityStatus,
-    ): CheckedState => {
+    const isCategoryChecked = (category: EmailDeliverable): CheckedState => {
       const currentValues =
         verificationFilter.value as EmailVerificationFilterValue[];
       const categoryItem = currentValues.find(
-        (item) => item.category === getCategoryString(category),
+        (item) => item.category === category,
       );
 
       if (!categoryItem) return false;
@@ -175,29 +170,29 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
       return 'indeterminate';
     };
 
-    const handleToggleCategory = (category: DeliverabilityStatus) => {
+    const handleToggleCategory = (category: EmailDeliverable) => {
       const currentValues =
         verificationFilter.value as EmailVerificationFilterValue[];
-      const categoryString = getCategoryString(category);
 
       // Use Map for O(1) lookup and modification
       const categoryMap = new Map(
         currentValues.map((item) => [item.category, item.values]),
       );
 
-      const categoryValues = categoryMap.get(categoryString);
+      const categoryValues = categoryMap.get(category);
 
-      if (!categoryValues || !categoryValues.includes(categoryString)) {
-        const allOptions = new Set(
-          getOptionsForCategory(category)
-            .filter((option) => !option.disabled)
-            .map((option) => option.value),
-        );
+      if (!categoryValues || !categoryValues.includes(category)) {
+        const allOptions: Set<EmailDeliverable | EmailVerificationStatus> =
+          new Set(
+            getOptionsForCategory(category)
+              .filter((option) => !option.disabled)
+              .map((option) => option.value),
+          );
 
-        allOptions.add(categoryString);
-        categoryMap.set(categoryString, Array.from(allOptions));
+        allOptions.add(category);
+        categoryMap.set(category, Array.from(allOptions));
       } else {
-        categoryMap.delete(categoryString);
+        categoryMap.delete(category);
       }
 
       const newValues = Array.from(categoryMap)
@@ -226,7 +221,7 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
       store.ui.commandMenu.setOpen(true);
     };
 
-    const renderCheckboxGroup = (category: DeliverabilityStatus) => (
+    const renderCheckboxGroup = (category: EmailDeliverable) => (
       <EmailFilterValidationOptionGroup
         category={category}
         onOpenInfoModal={handleOpenInfoModal}
@@ -255,9 +250,9 @@ export const EmailFilter: React.FC<EmailFilterProps> = observer(
           placeholder='e.g. john.doe@acme.com'
         />
         <div className='flex flex-col gap-2 mt-2 items-start'>
-          {renderCheckboxGroup(DeliverabilityStatus.Deliverable)}
-          {renderCheckboxGroup(DeliverabilityStatus.NotDeliverable)}
-          {renderCheckboxGroup(DeliverabilityStatus.Unknown)}
+          {renderCheckboxGroup(EmailDeliverable.Deliverable)}
+          {renderCheckboxGroup(EmailDeliverable.Undeliverable)}
+          {renderCheckboxGroup(EmailDeliverable.Unknown)}
         </div>
       </>
     );
