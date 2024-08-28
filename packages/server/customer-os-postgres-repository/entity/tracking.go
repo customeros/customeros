@@ -45,6 +45,7 @@ type Tracking struct {
 	OrganizationDomain  *string                     `gorm:"column:organization_domain;type:varchar(255);" json:"organizationDomain"`
 	OrganizationWebsite *string                     `gorm:"column:organization_website;type:varchar(255);" json:"organizationWebsite"`
 	Notified            bool                        `gorm:"column:notified;type:boolean;default:false" json:"notified"`
+	NotificationTry     int                         `gorm:"column:notification_try;type:integer;default:0" json:"notificationTry"`
 }
 
 func (Tracking) TableName() string {
