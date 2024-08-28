@@ -18,6 +18,9 @@ const (
 	Attio          ExternalSystemId = "attio"
 	WeConnect      ExternalSystemId = "weconnect"
 	ZendeskSell    ExternalSystemId = "zendesk-sell"
+	GCal           ExternalSystemId = "gcal"
+	GMail          ExternalSystemId = "gmail"
+	Mailstack      ExternalSystemId = "mailstack"
 )
 
 func (e ExternalSystemId) String() string {

@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
 	"sync"
@@ -70,21 +71,21 @@ func syncEmails(services *service.Services) {
 
 	for _, dt := range distinctUsersForImport {
 
-		_, err = services.Repositories.ExternalSystemRepository.Merge(ctx, dt.Tenant, "gmail")
+		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.GMail.String(), neo4jenum.GMail.String())
 		if err != nil {
-			logrus.Errorf("failed to merge external system: %v", err)
+			logrus.Errorf("failed to merge external system: %s", err.Error())
 			return
 		}
 
-		_, err = services.Repositories.ExternalSystemRepository.Merge(ctx, dt.Tenant, "outlook")
+		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.Outlook.String(), neo4jenum.Outlook.String())
 		if err != nil {
-			logrus.Errorf("failed to merge external system: %v", err)
+			logrus.Errorf("failed to merge external system: %s", err.Error())
 			return
 		}
 
-		_, err = services.Repositories.ExternalSystemRepository.Merge(ctx, dt.Tenant, "mailstack")
+		err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, dt.Tenant, neo4jenum.Mailstack.String(), neo4jenum.Mailstack.String())
 		if err != nil {
-			logrus.Errorf("failed to merge external system: %v", err)
+			logrus.Errorf("failed to merge external system: %s", err.Error())
 			return
 		}
 
@@ -126,13 +127,14 @@ func syncCalendarEvents(services *service.Services) {
 
 			logrus.Infof("syncing calendar events for tenant: %s", tenant)
 
-			externalSystemId, err := services.Repositories.ExternalSystemRepository.Merge(ctx, tenant.Name, "gcal")
+			gcalExternalSystemId := neo4jenum.GCal.String()
+			err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(context.Background(), tenant.Name, gcalExternalSystemId, gcalExternalSystemId)
 			if err != nil {
 				logrus.Errorf("failed to merge external system: %v", err)
 				return
 			}
 
-			services.MeetingService.SyncCalendarEvents(externalSystemId, tenant.Name)
+			services.MeetingService.SyncCalendarEvents(gcalExternalSystemId, tenant.Name)
 
 			logrus.Infof("syncing calendar events for tenant: %s completed", tenant)
 		}(*tenant)
