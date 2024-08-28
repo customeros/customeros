@@ -406,7 +406,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 func checkSharedPresetsExist(viewDefs []postgresEntity.TableViewDefinition) bool {
 	for _, def := range viewDefs {
-		if def.IsShared && def.TableType == model.TableViewTypeOrganizations.String() {
+		if def.IsShared && def.TableType == model.TableViewTypeOpportunities.String() {
 			return true
 		}
 	}
