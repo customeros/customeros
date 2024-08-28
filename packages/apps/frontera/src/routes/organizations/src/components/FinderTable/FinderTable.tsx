@@ -14,18 +14,24 @@ import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { useTableActions } from '@invoices/hooks/useTableActions';
 import { ContractStore } from '@store/Contracts/Contract.store.ts';
+import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Invoice, WorkflowType, TableViewType } from '@graphql/types';
 import { useColumnSizing } from '@organizations/hooks/useColumnSizing.ts';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import { getOpportunitiesSortFn } from '@organizations/components/Columns/opportunities/sortFns.ts';
 import {
   Table,
   SortingState,
   TableInstance,
   RowSelectionState,
 } from '@ui/presentation/Table';
+import {
+  getOpportunityFilterFns,
+  getOpportunityColumnsConfig,
+} from '@organizations/components/Columns/opportunities';
 import {
   getContractSortFn,
   getContractFilterFns,
@@ -59,7 +65,11 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const tableRef = useRef<TableInstance<
-    OrganizationStore | ContactStore | InvoiceStore | ContractStore
+    | OrganizationStore
+    | ContactStore
+    | InvoiceStore
+    | ContractStore
+    | OpportunityStore
   > | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
@@ -73,7 +83,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
-  const tableType = tableViewDef?.value?.tableType;
+
+  const tableType =
+    tableViewDef?.value?.tableType || TableViewType.Organizations;
   const getWorkFlow = store.workFlows
     .toArray()
     .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
@@ -86,6 +98,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const contractColumns = getContractColumnsConfig(tableViewDef?.value);
   const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
   const invoiceColumns = getInvoiceColumnsConfig(tableViewDef?.value);
+  const opportunityColumns = getOpportunityColumnsConfig(tableViewDef?.value);
 
   const tableColumns = (
     tableType === TableViewType.Organizations
@@ -94,11 +107,16 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       ? contactColumns
       : tableType === TableViewType.Contracts
       ? contractColumns
+      : tableType === TableViewType.Opportunities
+      ? opportunityColumns
       : invoiceColumns
   ) as ColumnDef<
-    OrganizationStore | ContactStore | InvoiceStore | ContractStore
+    | OrganizationStore
+    | ContactStore
+    | InvoiceStore
+    | ContractStore
+    | OpportunityStore
   >[];
-
   const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
 
   const removeAccents = (str: string) => {
@@ -249,14 +267,53 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     return arr;
   });
 
-  const data =
-    tableType === TableViewType.Organizations
-      ? organizationsData
-      : tableType === TableViewType.Contacts
-      ? contactsData
-      : tableType === TableViewType.Contracts
-      ? contractsData
-      : invoicesData;
+  const opportunityData = store.opportunities.toComputedArray((arr) => {
+    if (tableType !== TableViewType.Opportunities) return arr;
+    const filters = getOpportunityFilterFns(tableViewDef?.getFilters());
+
+    if (filters) {
+      arr = arr.filter((v) => filters.every((fn) => fn(v)));
+    }
+
+    if (searchTerm) {
+      const normalizedSearchTerm = removeAccents(searchTerm);
+
+      arr = arr.filter((entity) => {
+        const name = entity.value?.name || '';
+        const org = entity.organization?.value.name || '';
+        const email = entity.owner?.name || '';
+
+        return (
+          removeAccents(name).includes(normalizedSearchTerm) ||
+          removeAccents(org).includes(normalizedSearchTerm) ||
+          removeAccents(email).includes(normalizedSearchTerm)
+        );
+      });
+    }
+
+    if (tableType) {
+      const columnId = sorting[0]?.id;
+      const isDesc = sorting[0]?.desc;
+
+      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
+        getOpportunitiesSortFn(columnId),
+      );
+
+      return computed;
+    }
+
+    return arr;
+  });
+
+  const dataMap = {
+    [TableViewType.Organizations]: organizationsData,
+    [TableViewType.Contacts]: contactsData,
+    [TableViewType.Contracts]: contractsData,
+    [TableViewType.Opportunities]: opportunityData,
+    [TableViewType.Invoices]: invoicesData,
+  };
+
+  const data = dataMap[tableType];
 
   const handleSelectionChange: OnChangeFn<RowSelectionState> = (
     nextSelection,
@@ -508,7 +565,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   return (
     <div className='flex'>
-      <Table<OrganizationStore | ContactStore | InvoiceStore | ContractStore>
+      <Table<
+        | OrganizationStore
+        | ContactStore
+        | InvoiceStore
+        | ContractStore
+        | OpportunityStore
+      >
         data={data}
         manualFiltering
         sorting={sorting}

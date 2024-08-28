@@ -111,6 +111,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     .with(TableViewType.Contracts, () => 'by contract name...')
     .with(TableViewType.Organizations, () => 'by organization name...')
     .with(TableViewType.Invoices, () => 'by contract name...')
+    .with(
+      TableViewType.Opportunities,
+      () => 'by name, organization or owner...',
+    )
     .otherwise(() => 'by organization name...');
 
   const handleToogleFlow = () => {
@@ -208,7 +212,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       <TableViewsToggleNavigation />
 
-      {tableViewType && <ViewSettings type={tableViewType} />}
+      {tableViewType && <ViewSettings tableId={tableId} type={tableViewType} />}
 
       {TableIdType.Targets === tableId && displayIcp && (
         <IconButton

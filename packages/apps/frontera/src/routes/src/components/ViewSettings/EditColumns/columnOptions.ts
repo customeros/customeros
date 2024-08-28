@@ -182,3 +182,22 @@ export const contractsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContractsRenewalDate]: 'E.g 12 Oct 2026',
   [ColumnViewType.ContractsForecastArr]: 'E.g. $120,930',
 };
+
+export const opportunitiesMap: Record<string, string> = {
+  [ColumnViewType.OpportunitiesName]: 'Name',
+  [ColumnViewType.OpportunitiesOrganization]: 'Organization',
+  [ColumnViewType.OpportunitiesStage]: 'Stage',
+  [ColumnViewType.OpportunitiesTimeInStage]: 'Time in Stage',
+  [ColumnViewType.OpportunitiesEstimatedArr]: 'Estimated ARR',
+  [ColumnViewType.OpportunitiesCreatedDate]: 'Created',
+  [ColumnViewType.OpportunitiesNextStep]: 'Next Step',
+};
+export const opportunitiesHelperTextMap: Record<string, string> = {
+  [ColumnViewType.OpportunitiesName]: 'E.g. CustomerOs opportunity',
+  [ColumnViewType.OpportunitiesOrganization]: 'E.g. CustomerOs',
+  [ColumnViewType.OpportunitiesStage]: 'E.g. Identified',
+  [ColumnViewType.OpportunitiesTimeInStage]: 'E.g. 6 days',
+  [ColumnViewType.OpportunitiesEstimatedArr]: 'E.g. $30,000',
+  [ColumnViewType.OpportunitiesCreatedDate]: 'E.g. 12 Oct 2023',
+  [ColumnViewType.OpportunitiesNextStep]: 'E.g. Qualified',
+};

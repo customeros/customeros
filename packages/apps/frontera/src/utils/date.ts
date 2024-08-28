@@ -1,4 +1,5 @@
 import { format, toZonedTime } from 'date-fns-tz';
+import { differenceInDays } from 'date-fns/differenceInDays';
 import { differenceInHours } from 'date-fns/differenceInHours';
 import {
   set,
@@ -7,6 +8,7 @@ import {
   differenceInMinutes,
   FormatDurationOptions,
   isPast as isPastDateFns,
+  FormatDistanceStrictUnit,
   isToday as isTodayDateFns,
   addDays as addDaysDateFns,
   formatDistanceToNowStrict,
@@ -97,12 +99,25 @@ export class DateTimeUtils {
     return formatter(this.getDate(date), options);
   }
 
+  public static getDistanceToNowStrict(
+    date: string,
+    unit: FormatDistanceStrictUnit,
+  ) {
+    return formatDistanceToNowStrict(this.getDate(date), {
+      unit,
+    });
+  }
+
   public static isBeforeNow(date: string | number): boolean {
     return isBeforeDateFns(new Date(), new Date(date));
   }
 
   public static isBefore(dateLeft: string, dateRight: string): boolean {
     return isBeforeDateFns(this.getDate(dateLeft), this.getDate(dateRight));
+  }
+
+  public static getDaysSinceDate(date: string | number) {
+    return differenceInDays(new Date(), this.getDate(date));
   }
 
   public static toHoursAndMinutes(totalSeconds: number) {

@@ -5,6 +5,7 @@ import { match } from 'ts-pattern';
 import { TableViewType } from '@graphql/types';
 import {
   contractsMap,
+  opportunitiesMap,
   contactsOptionsMap,
   invoicesOptionsMap,
   contactsHelperTextMap,
@@ -12,6 +13,7 @@ import {
   contractsHelperTextMap,
   organizationsOptionsMap,
   organizationsHelperTextMap,
+  opportunitiesHelperTextMap,
 } from '@shared/components/ViewSettings/EditColumns/columnOptions.ts';
 
 export const useTableColumnOptionsMap = (type?: TableViewType) => {
@@ -29,6 +31,10 @@ export const useTableColumnOptionsMap = (type?: TableViewType) => {
         .with(TableViewType.Contracts, () => [
           contractsMap,
           contractsHelperTextMap,
+        ])
+        .with(TableViewType.Opportunities, () => [
+          opportunitiesMap,
+          opportunitiesHelperTextMap,
         ])
         .otherwise(() => [organizationsOptionsMap, organizationsHelperTextMap]),
     [type],

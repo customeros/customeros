@@ -4,13 +4,18 @@ import { TableCellTooltip } from '@ui/presentation/Table';
 
 interface TextCellProps {
   text: string;
+  unknownText?: string;
   leftIcon?: ReactNode;
 }
 
-export const TextCell = ({ text, leftIcon }: TextCellProps) => {
+export const TextCell = ({
+  text,
+  leftIcon,
+  unknownText = 'Unknown',
+}: TextCellProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
-  if (!text) return <div className='text-gray-400'>Unknown</div>;
+  if (!text) return <div className='text-gray-400'>{unknownText}</div>;
 
   return (
     <TableCellTooltip

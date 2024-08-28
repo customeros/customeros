@@ -1,5 +1,5 @@
-import { TableViewType } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
+import { TableIdType, TableViewType } from '@graphql/types';
 import { ViewSettings } from '@shared/components/ViewSettings';
 
 import { Search } from './src/components/Search';
@@ -17,7 +17,10 @@ export const ProspectsBoardPage = () => {
         className='flex justify-between pr-4 border-b border-b-gray-200 bg-gray-25 sticky top-0 z-50 '
       >
         <Search />
-        <ViewSettings type={TableViewType.Opportunities} />
+        <ViewSettings
+          type={TableViewType.Opportunities}
+          tableId={TableIdType.Opportunities}
+        />
       </div>
       <ProspectsBoard />
     </div>
