@@ -11,6 +11,7 @@ export interface UrlInputProps
   extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   value: string;
   label?: string;
+  dataTest?: string;
   isLabelVisible?: boolean;
   labelProps?: React.LabelHTMLAttributes<HTMLLabelElement>;
 }
@@ -22,6 +23,7 @@ export const UrlInput = memo(
     isLabelVisible,
     label,
     labelProps,
+    dataTest,
     ...rest
   }: UrlInputProps) => {
     const [isFocused, setIsFocused] = useState(false);
@@ -57,6 +59,7 @@ export const UrlInput = memo(
             ref={inputRef}
             variant='unstyled'
             onBlur={handleBlur}
+            data-test={dataTest}
             onFocus={handleFocus}
             className='border border-transparent text-md'
             {...rest}

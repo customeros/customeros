@@ -9,40 +9,31 @@ export class OrganizationSideNavPage {
 
   private page: Page;
 
-  private aboutInTheOrganizationPage =
-    'button[data-test="org-side-nav-item-about"]';
-  private peopleInTheOrganizationPage =
-    'button[data-test="org-side-nav-item-people"]';
-  private accountInTheOrganizationPage =
+  private orgSideNavItemAbout = 'button[data-test="org-side-nav-item-about"]';
+  private orgSideNavItemPeople = 'button[data-test="org-side-nav-item-people"]';
+  private orgSideNavItemAccount =
     'button[data-test="org-side-nav-item-account"]';
-  private successInTheOrganizationPage =
+  private orgSideNavItemSuccess =
     'button[data-test="org-side-nav-item-success"]';
-  private issuesInTheOrganizationPage =
-    'button[data-test="org-side-nav-item-issues"]';
+  private orgSideNavItemIssues = 'button[data-test="org-side-nav-item-issues"]';
 
   async goToAbout() {
-    await this.page.click(this.aboutInTheOrganizationPage);
+    await this.page.click(this.orgSideNavItemAbout);
   }
 
   async goToPeople() {
-    await clickLocatorsThatAreVisible(
-      this.page,
-      this.peopleInTheOrganizationPage,
-    );
+    await clickLocatorsThatAreVisible(this.page, this.orgSideNavItemPeople);
   }
 
   async goToAccount() {
-    await clickLocatorsThatAreVisible(
-      this.page,
-      this.accountInTheOrganizationPage,
-    );
+    await clickLocatorsThatAreVisible(this.page, this.orgSideNavItemAccount);
   }
 
   async goToSuccess() {
-    await this.page.click(this.successInTheOrganizationPage);
+    await this.page.click(this.orgSideNavItemSuccess);
   }
 
   async goToIssues() {
-    await this.page.click(this.issuesInTheOrganizationPage);
+    await this.page.click(this.orgSideNavItemIssues);
   }
 }

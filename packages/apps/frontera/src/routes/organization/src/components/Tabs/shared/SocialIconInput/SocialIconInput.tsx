@@ -8,6 +8,7 @@ import { SocialInput } from './SocialInput';
 
 interface SocialIconInputProps {
   name?: string;
+  dataTest?: string;
   isReadOnly?: boolean;
   placeholder?: string;
   leftElement?: React.ReactNode;
@@ -30,6 +31,7 @@ export const SocialIconInput = ({
   leftElement,
   isReadOnly,
   onBlur,
+  dataTest,
   onChange,
   onCreate,
   onKeyDown,
@@ -88,6 +90,7 @@ export const SocialIconInput = ({
           <Input
             name={name}
             ref={newInputRef}
+            data-test={dataTest}
             onBlur={handleNewSocial}
             onChange={(e) => {
               setSocialIconValue(e.target.value);

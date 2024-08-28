@@ -221,6 +221,7 @@ export const AboutPanel = observer(() => {
             autoComplete='off'
             variant='unstyled'
             onChange={handleChange}
+            data-test='org-about-name'
             placeholder='Company name'
             disabled={orgNameReadOnly}
             onFocus={(e) => e.target.select()}
@@ -252,6 +253,7 @@ export const AboutPanel = observer(() => {
           autoComplete='off'
           placeholder='www.'
           onChange={handleChange}
+          dataTest='org-about-www'
           value={organization?.value?.website || ''}
         />
         <Textarea
@@ -260,10 +262,12 @@ export const AboutPanel = observer(() => {
           className='mb-6 mt-2'
           name='valueProposition'
           onChange={handleChange}
+          data-test='org-about-description'
           placeholder={placeholders.valueProposition}
           value={organization?.value?.valueProposition || ''}
         />
         <Tags
+          dataTest='org-about-tags'
           value={filteredTags || []}
           placeholder='Organization tags'
           onCreateOption={handleCreateOption}
@@ -285,7 +289,7 @@ export const AboutPanel = observer(() => {
           <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
         )}
         <div className='flex items-center justify-center w-full'>
-          <div className='flex-2'>
+          <div className='flex-2' data-test='org-about-relationship'>
             <Menu>
               <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
                 {
@@ -332,7 +336,7 @@ export const AboutPanel = observer(() => {
 
           {organization?.value?.relationship ===
             OrganizationRelationship.Prospect && (
-            <div className='flex-1'>
+            <div className='flex-1' data-test='org-about-stage'>
               <Menu>
                 <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
                   <Target05 className='text-gray-500 mb-0.5' />
@@ -367,6 +371,7 @@ export const AboutPanel = observer(() => {
             name='industry'
             placeholder='Industry'
             options={industryOptions}
+            dataTest='org-about-industry'
             leftElement={<Building07 className='text-gray-500 mr-3' />}
             onChange={(value) => {
               organization?.update((org) => {
@@ -391,6 +396,7 @@ export const AboutPanel = observer(() => {
             name='businessType'
             placeholder='Business Type'
             options={businessTypeOptions}
+            dataTest='org-about-business-type'
             leftElement={<Briefcase02 className='text-gray-500 mr-3' />}
             value={businessTypeOptions.map((option) =>
               option.value === organization?.value.market ? option : null,
@@ -412,6 +418,7 @@ export const AboutPanel = observer(() => {
                 name='lastFundingRound'
                 placeholder='Last funding round'
                 options={lastFundingRoundOptions}
+                dataTest='org-about-last-funding-round'
                 leftElement={
                   <HorizontalBarChart03 className='text-gray-500 mr-3' />
                 }
@@ -437,6 +444,7 @@ export const AboutPanel = observer(() => {
             name='employees'
             options={employeesOptions}
             placeholder='Number of employees'
+            dataTest='org-about-number-of-employees'
             leftElement={<Users03 className='text-gray-500 mr-3' />}
             value={employeesOptions.map((option) =>
               option.value === organization?.value.employees ? option : null,
@@ -450,7 +458,11 @@ export const AboutPanel = observer(() => {
             }}
           />
 
-          <OwnerInput id={id} owner={organization?.value.owner} />
+          <OwnerInput
+            id={id}
+            dataTest='org-about-org-owner'
+            owner={organization?.value.owner}
+          />
           <SocialIconInput
             name='socials'
             placeholder='Social link'
@@ -458,6 +470,7 @@ export const AboutPanel = observer(() => {
             onChange={handleSocialChange}
             onCreate={handleCreateSocial}
             onKeyDown={handleSocialKeyDown}
+            dataTest='org-about-social-link'
             leftElement={<Share07 className='text-gray-500' />}
             value={organization?.value.socialMedia.map((s) => ({
               value: s.id,
