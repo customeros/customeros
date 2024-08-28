@@ -61,6 +61,10 @@ export const ServiceItemEdit = observer(
       const findCurrentService = () => {
         if (isDraft) return null;
 
+        if (allServices?.length === 1) {
+          return allServices[0]?.tempValue?.serviceStarted;
+        }
+
         return allServices?.find((serviceData) => {
           const serviceStarted = serviceData?.tempValue?.serviceStarted;
           const serviceEnded = serviceData?.tempValue?.serviceEnded;
@@ -78,18 +82,51 @@ export const ServiceItemEdit = observer(
         date: Date,
         currentService: Date | null,
       ) => {
+        if (allServices?.length === 1) {
+          return false;
+        }
+
         return (
           currentService &&
           DateTimeUtils.isBefore(date.toString(), currentService.toString())
         );
       };
 
+      const checkIfBeforeToday = (date: Date) => {
+        if (isDraft) return null;
+
+        if (allServices?.length === 1) {
+          return DateTimeUtils.isBefore(date.toString(), new Date().toString());
+        }
+
+        return false;
+      };
+
       const existingServiceStarted = checkExistingServiceStarted(e);
+      const isTodayOrBefore = checkIfBeforeToday(e);
       const currentService = findCurrentService();
       const isBeforeCurrentService = checkIfBeforeCurrentService(
         e,
         currentService,
       );
+
+      if (isTodayOrBefore) {
+        toastError(
+          `Select a service start date that is in the future`,
+          `${service?.tempValue?.metadata?.id}-service-started-date-update-error`,
+        );
+
+        return;
+      }
+
+      if (isBeforeCurrentService) {
+        toastError(
+          `Modifications must be effective after the current service`,
+          `${service?.tempValue?.metadata?.id}-service-started-date-update-error`,
+        );
+
+        return;
+      }
 
       if (isBeforeCurrentService) {
         toastError(
