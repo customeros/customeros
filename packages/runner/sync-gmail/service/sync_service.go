@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go/log"
 	"net/mail"
@@ -155,11 +156,11 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		stage := neo4jenum.Lead.String()
 		leadSource := ""
 
-		if source == "gmail" {
+		if source == neo4jentity.DataSourceGmail.String() {
 			leadSource = "Gmail"
-		} else if source == "outlook" {
+		} else if source == neo4jentity.DataSourceOutlook.String() {
 			leadSource = "Outlook"
-		} else if source == "mailstack" {
+		} else if source == neo4jentity.DataSourceMailstack.String() {
 			leadSource = "Mailstack"
 			stage = neo4jenum.Target.String()
 		} else {
