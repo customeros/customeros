@@ -5,45 +5,21 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type UpdateOrganizationMutationVariables = Types.Exact<{
   input: Types.OrganizationUpdateInput;
 }>;
 
-export type UpdateOrganizationMutation = {
-  __typename?: 'Mutation';
-  organization_Update: {
-    __typename?: 'Organization';
-    id: string;
-    name: string;
-    note?: string | null;
-    description?: string | null;
-    domains: Array<string>;
-    website?: string | null;
-    industry?: string | null;
-    isPublic?: boolean | null;
-    market?: Types.Market | null;
-    employees?: any | null;
-    stage?: Types.OrganizationStage | null;
-    relationship?: Types.OrganizationRelationship | null;
-    targetAudience?: string | null;
-    valueProposition?: string | null;
-    lastFundingRound?: Types.FundingRound | null;
-    lastFundingAmount?: string | null;
-  };
-};
+
+export type UpdateOrganizationMutation = { __typename?: 'Mutation', organization_Update: { __typename?: 'Organization', id: string, name: string, note?: string | null, description?: string | null, domains: Array<string>, website?: string | null, industry?: string | null, isPublic?: boolean | null, market?: Types.Market | null, employees?: any | null, stage?: Types.OrganizationStage | null, relationship?: Types.OrganizationRelationship | null, targetAudience?: string | null, valueProposition?: string | null, lastFundingRound?: Types.FundingRound | null, lastFundingAmount?: string | null } };
+
+
 
 export const UpdateOrganizationDocument = `
     mutation updateOrganization($input: OrganizationUpdateInput!) {
@@ -69,46 +45,23 @@ export const UpdateOrganizationDocument = `
     `;
 
 export const useUpdateOrganizationMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    UpdateOrganizationMutation,
-    TError,
-    UpdateOrganizationMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    UpdateOrganizationMutation,
-    TError,
-    UpdateOrganizationMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<UpdateOrganizationMutation, TError, UpdateOrganizationMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<UpdateOrganizationMutation, TError, UpdateOrganizationMutationVariables, TContext>(
+      {
     mutationKey: ['updateOrganization'],
-    mutationFn: (variables?: UpdateOrganizationMutationVariables) =>
-      fetcher<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>(
-        client,
-        UpdateOrganizationDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: UpdateOrganizationMutationVariables) => fetcher<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>(client, UpdateOrganizationDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useUpdateOrganizationMutation.getKey = () => ['updateOrganization'];
 
-useUpdateOrganizationMutation.fetcher = (
-  client: GraphQLClient,
-  variables: UpdateOrganizationMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>(
-    client,
-    UpdateOrganizationDocument,
-    variables,
-    headers,
-  );
+
+useUpdateOrganizationMutation.fetcher = (client: GraphQLClient, variables: UpdateOrganizationMutationVariables, headers?: RequestInit['headers']) => fetcher<UpdateOrganizationMutation, UpdateOrganizationMutationVariables>(client, UpdateOrganizationDocument, variables, headers);

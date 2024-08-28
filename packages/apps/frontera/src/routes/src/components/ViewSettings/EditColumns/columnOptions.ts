@@ -61,38 +61,6 @@ export const invoicesHelperTextMap: Record<
   [ColumnViewType.InvoicesInvoiceStatus]: 'E.g. Scheduled',
 };
 
-type RenewalsColumnType =
-  | ColumnViewType.RenewalsAvatar
-  | ColumnViewType.RenewalsForecastArr
-  | ColumnViewType.RenewalsLastTouchpoint
-  | ColumnViewType.RenewalsName
-  | ColumnViewType.RenewalsOwner
-  | ColumnViewType.RenewalsRenewalDate
-  | ColumnViewType.RenewalsRenewalLikelihood;
-
-export const renewalsOptionsMap: Record<RenewalsColumnType | string, string> = {
-  [ColumnViewType.RenewalsAvatar]: 'Logo',
-  [ColumnViewType.RenewalsForecastArr]: 'ARR Forecast',
-  [ColumnViewType.RenewalsLastTouchpoint]: 'Last Touchpoint',
-  [ColumnViewType.RenewalsName]: 'Name',
-  [ColumnViewType.RenewalsOwner]: 'Owner',
-  [ColumnViewType.RenewalsRenewalDate]: 'Next Renewal',
-  [ColumnViewType.RenewalsRenewalLikelihood]: 'Health',
-};
-
-export const renewalsHelperTextMap: Record<
-  RenewalsColumnType | string,
-  string
-> = {
-  [ColumnViewType.RenewalsAvatar]: 'E.g. Logo',
-  [ColumnViewType.RenewalsForecastArr]: 'E.g. $6,450',
-  [ColumnViewType.RenewalsLastTouchpoint]: 'E.g. Issue updated',
-  [ColumnViewType.RenewalsName]: 'E.g. Pile Contract',
-  [ColumnViewType.RenewalsOwner]: 'E.g. Howard Hu',
-  [ColumnViewType.RenewalsRenewalDate]: 'E.g. 1 month',
-  [ColumnViewType.RenewalsRenewalLikelihood]: 'E.g. High',
-};
-
 type OrganizationsColumnType =
   | ColumnViewType.OrganizationsAvatar
   | ColumnViewType.OrganizationsForecastArr

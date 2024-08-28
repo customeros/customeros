@@ -5,30 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type ResetLogEntryTagsMutationVariables = Types.Exact<{
   id: Types.Scalars['ID']['input'];
-  input?: Types.InputMaybe<
-    Array<Types.TagIdOrNameInput> | Types.TagIdOrNameInput
-  >;
+  input?: Types.InputMaybe<Array<Types.TagIdOrNameInput> | Types.TagIdOrNameInput>;
 }>;
 
-export type ResetLogEntryTagsMutation = {
-  __typename?: 'Mutation';
-  logEntry_ResetTags: string;
-};
+
+export type ResetLogEntryTagsMutation = { __typename?: 'Mutation', logEntry_ResetTags: string };
+
+
 
 export const ResetLogEntryTagsDocument = `
     mutation resetLogEntryTags($id: ID!, $input: [TagIdOrNameInput!]) {
@@ -37,46 +29,23 @@ export const ResetLogEntryTagsDocument = `
     `;
 
 export const useResetLogEntryTagsMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    ResetLogEntryTagsMutation,
-    TError,
-    ResetLogEntryTagsMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    ResetLogEntryTagsMutation,
-    TError,
-    ResetLogEntryTagsMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<ResetLogEntryTagsMutation, TError, ResetLogEntryTagsMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<ResetLogEntryTagsMutation, TError, ResetLogEntryTagsMutationVariables, TContext>(
+      {
     mutationKey: ['resetLogEntryTags'],
-    mutationFn: (variables?: ResetLogEntryTagsMutationVariables) =>
-      fetcher<ResetLogEntryTagsMutation, ResetLogEntryTagsMutationVariables>(
-        client,
-        ResetLogEntryTagsDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: ResetLogEntryTagsMutationVariables) => fetcher<ResetLogEntryTagsMutation, ResetLogEntryTagsMutationVariables>(client, ResetLogEntryTagsDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useResetLogEntryTagsMutation.getKey = () => ['resetLogEntryTags'];
 
-useResetLogEntryTagsMutation.fetcher = (
-  client: GraphQLClient,
-  variables: ResetLogEntryTagsMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<ResetLogEntryTagsMutation, ResetLogEntryTagsMutationVariables>(
-    client,
-    ResetLogEntryTagsDocument,
-    variables,
-    headers,
-  );
+
+useResetLogEntryTagsMutation.fetcher = (client: GraphQLClient, variables: ResetLogEntryTagsMutationVariables, headers?: RequestInit['headers']) => fetcher<ResetLogEntryTagsMutation, ResetLogEntryTagsMutationVariables>(client, ResetLogEntryTagsDocument, variables, headers);

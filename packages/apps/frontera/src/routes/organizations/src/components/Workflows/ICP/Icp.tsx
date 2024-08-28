@@ -15,7 +15,6 @@ import { useStore } from '@shared/hooks/useStore';
 import { Globe05 } from '@ui/media/icons/Globe05';
 import { Linkedin } from '@ui/media/icons/Linkedin';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { TableViewType } from '@shared/types/tableDef';
 import { Building05 } from '@ui/media/icons/Building05';
 import { StopCircle } from '@ui/media/icons/StopCircle';
 import { SelectOption } from '@shared/types/SelectOptions';
@@ -31,7 +30,6 @@ import {
 
 import { industryOptions, locationsOptions } from '../../utils';
 import { ICPRangeSelector, MultiSelectFilter } from '../components';
-import { getOrganizationFilterFns } from '../../Columns/organizations';
 import { getFlowFilterFns } from '../../Columns/organizations/flowFilters';
 
 const options = ['between', 'less than', 'more than'];
@@ -79,8 +77,6 @@ export const Icp = observer(() => {
       ? 'less than'
       : 'more than' ?? options[1],
   );
-
-  const leadsPreset = store.tableViewDefs.leadsPreset;
 
   const handleEmployeesFilter = () => {
     const currentIndex = options.indexOf(employeesFilter);
@@ -167,28 +163,18 @@ export const Icp = observer(() => {
     return filter ? filter.value : [];
   };
 
-  const tableViewDef = store.tableViewDefs.getById(leadsPreset ?? '1');
-
-  const tableType = tableViewDef?.value.tableType;
-
   const toatalResults = store.organizations
     ?.toArray()
     .filter((v) => v.value.stage === OrganizationStage.Lead).length;
 
   const organizationsData = store.organizations?.toComputedArray((arr) => {
-    if (tableType !== TableViewType.Organizations) return arr;
-
-    const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
-
     const flowFilters = getFlowFilterFns(workFlow?.getFilters());
 
     if (flowFilters.length) {
       arr = arr.filter((v) => flowFilters.every((fn) => fn(v)));
     }
 
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
+    arr = arr.filter((v) => v.value.stage === OrganizationStage.Lead);
 
     return arr;
   });
@@ -475,7 +461,7 @@ export const Icp = observer(() => {
         title='Start auto-qualifying leads'
         confirmButtonLabel='Start automation'
         body={'You can manually change this stage at any time again.'}
-        description={`Starting this automation will immediately qualify ${filteredResults} Leads into Targets and continue to qualify matching leads in the background until stopped. 
+        description={`Starting this automation will immediately qualify ${filteredResults} Leads into Targets and continue to qualify matching leads in the background until stopped.
          `}
         onConfirm={() => {
           organizationsChangeStage();

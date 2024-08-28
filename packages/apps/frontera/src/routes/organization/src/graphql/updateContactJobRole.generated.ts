@@ -5,28 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type UpdateContactRoleMutationVariables = Types.Exact<{
   contactId: Types.Scalars['ID']['input'];
   input: Types.JobRoleUpdateInput;
 }>;
 
-export type UpdateContactRoleMutation = {
-  __typename?: 'Mutation';
-  jobRole_Update: { __typename?: 'JobRole'; id: string };
-};
+
+export type UpdateContactRoleMutation = { __typename?: 'Mutation', jobRole_Update: { __typename?: 'JobRole', id: string } };
+
+
 
 export const UpdateContactRoleDocument = `
     mutation updateContactRole($contactId: ID!, $input: JobRoleUpdateInput!) {
@@ -37,46 +31,23 @@ export const UpdateContactRoleDocument = `
     `;
 
 export const useUpdateContactRoleMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    UpdateContactRoleMutation,
-    TError,
-    UpdateContactRoleMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    UpdateContactRoleMutation,
-    TError,
-    UpdateContactRoleMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<UpdateContactRoleMutation, TError, UpdateContactRoleMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<UpdateContactRoleMutation, TError, UpdateContactRoleMutationVariables, TContext>(
+      {
     mutationKey: ['updateContactRole'],
-    mutationFn: (variables?: UpdateContactRoleMutationVariables) =>
-      fetcher<UpdateContactRoleMutation, UpdateContactRoleMutationVariables>(
-        client,
-        UpdateContactRoleDocument,
-        variables,
-        headers,
-      )(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: UpdateContactRoleMutationVariables) => fetcher<UpdateContactRoleMutation, UpdateContactRoleMutationVariables>(client, UpdateContactRoleDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useUpdateContactRoleMutation.getKey = () => ['updateContactRole'];
 
-useUpdateContactRoleMutation.fetcher = (
-  client: GraphQLClient,
-  variables: UpdateContactRoleMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<UpdateContactRoleMutation, UpdateContactRoleMutationVariables>(
-    client,
-    UpdateContactRoleDocument,
-    variables,
-    headers,
-  );
+
+useUpdateContactRoleMutation.fetcher = (client: GraphQLClient, variables: UpdateContactRoleMutationVariables, headers?: RequestInit['headers']) => fetcher<UpdateContactRoleMutation, UpdateContactRoleMutationVariables>(client, UpdateContactRoleDocument, variables, headers);

@@ -1,16 +1,14 @@
 import { useMemo, useState } from 'react';
 
-import { set } from 'lodash';
+import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
-import {
-  getLikelihoodColor,
-  getRenewalLikelihoodLabel,
-} from '@renewals/components/Columns/Cells/renewal/utils.ts';
 
 import { cn } from '@ui/utils/cn';
 import { useStore } from '@shared/hooks/useStore';
 import { Opportunity, OpportunityRenewalLikelihood } from '@graphql/types';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
+
+import { getLikelihoodColor, getRenewalLikelihoodLabel } from './utils.ts';
 
 interface RenewalLikelihoodCellProps {
   id: string;

@@ -32,7 +32,7 @@ export const ProspectsBoard = observer(() => {
     return arr;
   });
 
-  const currency = store.settings.tenant.value?.baseCurrency ?? Currency.Usd;
+  const currency = store.settings.tenant.value?.baseCurrency || Currency.Usd;
   const count = opportunities.length;
   const totalArr = opportunities.reduce(
     (acc, card) => acc + card.value.maxAmount,

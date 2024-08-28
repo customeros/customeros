@@ -3428,13 +3428,6 @@ const (
 	ColumnViewTypeOrganizationsLinkedinFollowerCount ColumnViewType = "ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT"
 	ColumnViewTypeOrganizationsTags                  ColumnViewType = "ORGANIZATIONS_TAGS"
 	ColumnViewTypeOrganizationsHeadquarters          ColumnViewType = "ORGANIZATIONS_HEADQUARTERS"
-	ColumnViewTypeRenewalsAvatar                     ColumnViewType = "RENEWALS_AVATAR"
-	ColumnViewTypeRenewalsName                       ColumnViewType = "RENEWALS_NAME"
-	ColumnViewTypeRenewalsRenewalLikelihood          ColumnViewType = "RENEWALS_RENEWAL_LIKELIHOOD"
-	ColumnViewTypeRenewalsRenewalDate                ColumnViewType = "RENEWALS_RENEWAL_DATE"
-	ColumnViewTypeRenewalsForecastArr                ColumnViewType = "RENEWALS_FORECAST_ARR"
-	ColumnViewTypeRenewalsOwner                      ColumnViewType = "RENEWALS_OWNER"
-	ColumnViewTypeRenewalsLastTouchpoint             ColumnViewType = "RENEWALS_LAST_TOUCHPOINT"
 	ColumnViewTypeContactsAvatar                     ColumnViewType = "CONTACTS_AVATAR"
 	ColumnViewTypeContactsName                       ColumnViewType = "CONTACTS_NAME"
 	ColumnViewTypeContactsOrganization               ColumnViewType = "CONTACTS_ORGANIZATION"
@@ -3505,13 +3498,6 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeOrganizationsLinkedinFollowerCount,
 	ColumnViewTypeOrganizationsTags,
 	ColumnViewTypeOrganizationsHeadquarters,
-	ColumnViewTypeRenewalsAvatar,
-	ColumnViewTypeRenewalsName,
-	ColumnViewTypeRenewalsRenewalLikelihood,
-	ColumnViewTypeRenewalsRenewalDate,
-	ColumnViewTypeRenewalsForecastArr,
-	ColumnViewTypeRenewalsOwner,
-	ColumnViewTypeRenewalsLastTouchpoint,
 	ColumnViewTypeContactsAvatar,
 	ColumnViewTypeContactsName,
 	ColumnViewTypeContactsOrganization,
@@ -3548,7 +3534,7 @@ var AllColumnViewType = []ColumnViewType{
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeRenewalsAvatar, ColumnViewTypeRenewalsName, ColumnViewTypeRenewalsRenewalLikelihood, ColumnViewTypeRenewalsRenewalDate, ColumnViewTypeRenewalsForecastArr, ColumnViewTypeRenewalsOwner, ColumnViewTypeRenewalsLastTouchpoint, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth:
 		return true
 	}
 	return false
@@ -5371,17 +5357,10 @@ type TableIDType string
 const (
 	TableIDTypeOrganizations                  TableIDType = "ORGANIZATIONS"
 	TableIDTypeCustomers                      TableIDType = "CUSTOMERS"
-	TableIDTypeMyPortfolio                    TableIDType = "MY_PORTFOLIO"
-	TableIDTypeLeads                          TableIDType = "LEADS"
-	TableIDTypeNurture                        TableIDType = "NURTURE"
-	TableIDTypeChurn                          TableIDType = "CHURN"
+	TableIDTypeTargets                        TableIDType = "TARGETS"
 	TableIDTypeUpcomingInvoices               TableIDType = "UPCOMING_INVOICES"
 	TableIDTypePastInvoices                   TableIDType = "PAST_INVOICES"
-	TableIDTypeMonthlyRenewals                TableIDType = "MONTHLY_RENEWALS"
-	TableIDTypeQuarterlyRenewals              TableIDType = "QUARTERLY_RENEWALS"
-	TableIDTypeAnnualRenewals                 TableIDType = "ANNUAL_RENEWALS"
 	TableIDTypeContacts                       TableIDType = "CONTACTS"
-	TableIDTypeContactsForTargerOrganizations TableIDType = "CONTACTS_FOR_TARGER_ORGANIZATIONS"
 	TableIDTypeContactsForTargetOrganizations TableIDType = "CONTACTS_FOR_TARGET_ORGANIZATIONS"
 	TableIDTypeOpportunities                  TableIDType = "OPPORTUNITIES"
 	TableIDTypeContracts                      TableIDType = "CONTRACTS"
@@ -5390,17 +5369,10 @@ const (
 var AllTableIDType = []TableIDType{
 	TableIDTypeOrganizations,
 	TableIDTypeCustomers,
-	TableIDTypeMyPortfolio,
-	TableIDTypeLeads,
-	TableIDTypeNurture,
-	TableIDTypeChurn,
+	TableIDTypeTargets,
 	TableIDTypeUpcomingInvoices,
 	TableIDTypePastInvoices,
-	TableIDTypeMonthlyRenewals,
-	TableIDTypeQuarterlyRenewals,
-	TableIDTypeAnnualRenewals,
 	TableIDTypeContacts,
-	TableIDTypeContactsForTargerOrganizations,
 	TableIDTypeContactsForTargetOrganizations,
 	TableIDTypeOpportunities,
 	TableIDTypeContracts,
@@ -5408,7 +5380,7 @@ var AllTableIDType = []TableIDType{
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeMyPortfolio, TableIDTypeLeads, TableIDTypeNurture, TableIDTypeChurn, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeMonthlyRenewals, TableIDTypeQuarterlyRenewals, TableIDTypeAnnualRenewals, TableIDTypeContacts, TableIDTypeContactsForTargerOrganizations, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeContracts:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeContracts:
 		return true
 	}
 	return false
@@ -5440,7 +5412,6 @@ type TableViewType string
 const (
 	TableViewTypeOrganizations TableViewType = "ORGANIZATIONS"
 	TableViewTypeInvoices      TableViewType = "INVOICES"
-	TableViewTypeRenewals      TableViewType = "RENEWALS"
 	TableViewTypeContacts      TableViewType = "CONTACTS"
 	TableViewTypeOpportunities TableViewType = "OPPORTUNITIES"
 	TableViewTypeContracts     TableViewType = "CONTRACTS"
@@ -5449,7 +5420,6 @@ const (
 var AllTableViewType = []TableViewType{
 	TableViewTypeOrganizations,
 	TableViewTypeInvoices,
-	TableViewTypeRenewals,
 	TableViewTypeContacts,
 	TableViewTypeOpportunities,
 	TableViewTypeContracts,
@@ -5457,7 +5427,7 @@ var AllTableViewType = []TableViewType{
 
 func (e TableViewType) IsValid() bool {
 	switch e {
-	case TableViewTypeOrganizations, TableViewTypeInvoices, TableViewTypeRenewals, TableViewTypeContacts, TableViewTypeOpportunities, TableViewTypeContracts:
+	case TableViewTypeOrganizations, TableViewTypeInvoices, TableViewTypeContacts, TableViewTypeOpportunities, TableViewTypeContracts:
 		return true
 	}
 	return false

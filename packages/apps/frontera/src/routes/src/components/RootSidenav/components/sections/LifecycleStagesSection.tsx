@@ -74,7 +74,7 @@ export const LifecycleStagesSection = observer(
           <>
             {lifecycleStagesView.map((view) => {
               const preset =
-                view.value.tableId === TableIdType.Nurture && contractsPreset
+                view.value.tableId === TableIdType.Targets && contractsPreset
                   ? [view.value.id, contractsPreset]
                   : view.value.id;
 
@@ -118,7 +118,7 @@ export const LifecycleStagesSection = observer(
                   }
                   rightElement={
                     noOfOrganizationsMovedByICP > 0 &&
-                    view.value.tableId === TableIdType.Nurture ? (
+                    view.value.tableId === TableIdType.Targets ? (
                       <Tag size='sm' variant='solid' colorScheme='gray'>
                         <TagLabel>{noOfOrganizationsMovedByICP}</TagLabel>
                       </Tag>

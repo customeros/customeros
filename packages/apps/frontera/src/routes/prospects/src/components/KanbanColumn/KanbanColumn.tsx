@@ -17,9 +17,9 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Percent03 } from '@ui/media/icons/Percent03';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { Opportunity, InternalStage } from '@graphql/types';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
+import { Currency, Opportunity, InternalStage } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 import { WinProbabilityModal } from './WinProbabilityModal';
@@ -88,10 +88,11 @@ export const KanbanColumn = observer(
       return arr;
     });
 
+    const currency = store.settings.tenant.value?.baseCurrency || Currency.Usd;
     const totalSum = formatCurrency(
       cards.reduce((acc, card) => acc + card.value.maxAmount, 0),
       0,
-      store.settings.tenant.value?.baseCurrency as string,
+      currency,
     );
 
     const stageLikelihoodRate = match(stage)

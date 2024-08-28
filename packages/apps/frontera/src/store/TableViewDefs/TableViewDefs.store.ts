@@ -133,21 +133,9 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     )?.value.id;
   }
 
-  get leadsPreset() {
-    return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Leads && t.value.isPreset,
-    )?.value.id;
-  }
-
   get targetsPreset() {
     return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Nurture && t.value.isPreset,
-    )?.value.id;
-  }
-
-  get churnedPreset() {
-    return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.Churn && t.value.isPreset,
+      (t) => t.value.tableId === TableIdType.Targets && t.value.isPreset,
     )?.value.id;
   }
 
@@ -179,12 +167,6 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   get contractsPreset() {
     return this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Contracts && t.value.isPreset,
-    )?.value.id;
-  }
-
-  get myPortfolioPreset() {
-    return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.MyPortfolio && t.value.isPreset,
     )?.value.id;
   }
 
