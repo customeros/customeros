@@ -10,9 +10,10 @@ type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OwnerProps {
   id: string;
   owner?: Owner;
+  dataTest?: string;
 }
 
-export const OwnerInput = observer(({ id, owner }: OwnerProps) => {
+export const OwnerInput = observer(({ id, owner, dataTest }: OwnerProps) => {
   const store = useStore();
   const users = store.users.toComputedArray((arr) => {
     return arr.filter(
@@ -54,6 +55,7 @@ export const OwnerInput = observer(({ id, owner }: OwnerProps) => {
       isLoading={false}
       options={options}
       placeholder='Owner'
+      dataTest={dataTest}
       backspaceRemovesValue
       onChange={handleSelect}
       leftElement={<Key01 className='text-gray-500 mr-3' />}
