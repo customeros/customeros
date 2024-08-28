@@ -12,25 +12,7 @@ import (
 )
 
 // ColumnView represents a column in a table view with type and width.
-func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgresEntity.TableViewDefinition {
-	monthlyRenewalsTableViewDefinition, err := DefaultTableViewDefinitionMonthlyRenewals(span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
-	quarterlyRenewalsTableViewDefinition, err := DefaultTableViewDefinitionQuarterlyRenewals(span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
-	annualRenewalsTableViewDefinition, err := DefaultTableViewDefinitionAnnualRenewals(span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
+func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span opentracing.Span) []postgresEntity.TableViewDefinition {
 	upcomingInvoicesTableViewDefinition, err := DefaultTableViewDefinitionUpcomingInvoices(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -49,31 +31,7 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	myPortfolioTableViewDefinition, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
 	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices(span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
-	leadsTableViewDefinition, err := DefaultTableViewDefinitionLeads(span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
-	nurtureTableViewDefinition, err := DefaultTableViewDefinitionNurture(span)
-	if err != nil {
-		fmt.Println("Error: ", err)
-		return []postgresEntity.TableViewDefinition{}
-	}
-
-	churnTableViewDefinition, err := DefaultTableViewDefinitionChurn(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
 		return []postgresEntity.TableViewDefinition{}
@@ -103,92 +61,21 @@ func DefaultTableViewDefinitions(userId string, span opentracing.Span) []postgre
 		return []postgresEntity.TableViewDefinition{}
 	}
 
-	return []postgresEntity.TableViewDefinition{
-		monthlyRenewalsTableViewDefinition,
-		quarterlyRenewalsTableViewDefinition,
-		annualRenewalsTableViewDefinition,
+	defaultViewDefinitions := []postgresEntity.TableViewDefinition{
 		upcomingInvoicesTableViewDefinition,
 		pastInvoicesTableViewDefinition,
 		organizationsTableViewDefinition,
 		customersTableViewDefinition,
-		myPortfolioTableViewDefinition,
-		leadsTableViewDefinition,
-		nurtureTableViewDefinition,
-		churnTableViewDefinition,
 		contactsTableViewDefinition,
 		targetOrganizationContactsTableViewDefinition,
-		opportunitiesTableViewDefinition,
 		contractsTableViewDefinition,
 	}
-}
 
-func DefaultTableViewDefinitionMonthlyRenewals(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeMonthlyRenewals.String())
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		fmt.Println("Error serializing data:", err)
-		return postgresEntity.TableViewDefinition{}, err
+	if !hasSharedPresets {
+		defaultViewDefinitions = append(defaultViewDefinitions, opportunitiesTableViewDefinition)
 	}
 
-	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeRenewals.String(),
-		TableId:     model.TableIDTypeMonthlyRenewals.String(),
-		Name:        "Monthly renewals",
-		ColumnsJson: string(jsonData),
-		Order:       1,
-		Icon:        "ClockFastForward",
-		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"MONTHLY","operation":"EQ","includeEmpty":false}}]}`,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    false,
-	}, nil
-}
-
-func DefaultTableViewDefinitionQuarterlyRenewals(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeQuarterlyRenewals.String())
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		fmt.Println("Error serializing data:", err)
-		return postgresEntity.TableViewDefinition{}, err
-	}
-
-	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeRenewals.String(),
-		TableId:     model.TableIDTypeQuarterlyRenewals.String(),
-		Name:        "Quarterly renewals",
-		ColumnsJson: string(jsonData),
-		Order:       2,
-		Icon:        "ClockFastForward",
-		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"QUARTERLY","operation":"EQ","includeEmpty":false}}]}`,
-		Sorting:     ``,
-		IsPreset:    true,
-		IsShared:    false,
-	}, nil
-}
-
-func DefaultTableViewDefinitionAnnualRenewals(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeAnnualRenewals.String())
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		fmt.Println("Error serializing data:", err)
-		return postgresEntity.TableViewDefinition{}, err
-	}
-
-	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeRenewals.String(),
-		TableId:     model.TableIDTypeAnnualRenewals.String(),
-		Name:        "Annual renewals",
-		ColumnsJson: string(jsonData),
-		Order:       3,
-		Icon:        "ClockFastForward",
-		Filters:     `{"AND":[{"filter":{"property":"RENEWAL_CYCLE","value":"ANNUALLY","operation":"EQ","includeEmpty":false}}]}`,
-		Sorting:     "",
-		IsPreset:    true,
-		IsShared:    false,
-	}, nil
+	return defaultViewDefinitions
 }
 
 func DefaultTableViewDefinitionPastInvoices(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
@@ -283,98 +170,6 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 	}, nil
 }
 
-func DefaultTableViewDefinitionMyPortfolio(userId string, span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeMyPortfolio.String())
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		fmt.Println("Error serializing data:", err)
-		return postgresEntity.TableViewDefinition{}, err
-	}
-
-	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOrganizations.String(),
-		TableId:     model.TableIDTypeMyPortfolio.String(),
-		Name:        "My portfolio",
-		ColumnsJson: string(jsonData),
-		Order:       6,
-		Icon:        "Briefcase01",
-		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"OWNER_ID","value":["%s"]}}]}`, userId),
-		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
-	}, nil
-}
-
-func DefaultTableViewDefinitionLeads(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeLeads.String())
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		fmt.Println("Error serializing data:", err)
-		return postgresEntity.TableViewDefinition{}, err
-	}
-
-	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOrganizations.String(),
-		TableId:     model.TableIDTypeLeads.String(),
-		Name:        "Leads",
-		ColumnsJson: string(jsonData),
-		Order:       3,
-		Icon:        "SwitchHorizontal01",
-		Filters:     `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["LEAD"]}}]}`,
-		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
-	}, nil
-}
-
-func DefaultTableViewDefinitionNurture(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeNurture.String())
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		fmt.Println("Error serializing data:", err)
-		return postgresEntity.TableViewDefinition{}, err
-	}
-
-	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOrganizations.String(),
-		TableId:     model.TableIDTypeNurture.String(),
-		Name:        "Targets",
-		ColumnsJson: string(jsonData),
-		Order:       4,
-		Icon:        "HeartHand",
-		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
-		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
-	}, nil
-}
-
-func DefaultTableViewDefinitionChurn(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeChurn.String())
-	jsonData, err := json.Marshal(columns)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		fmt.Println("Error serializing data:", err)
-		return postgresEntity.TableViewDefinition{}, err
-	}
-
-	return postgresEntity.TableViewDefinition{
-		TableType:   model.TableViewTypeOrganizations.String(),
-		TableId:     model.TableIDTypeChurn.String(),
-		Name:        "Churn",
-		ColumnsJson: string(jsonData),
-		Order:       5,
-		Icon:        "BrokenHeart",
-		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.FormerCustomer.String()),
-		Sorting:     `{"id": "ORGANIZATIONS_CHURN_DATE", "desc": true}`,
-		IsPreset:    true,
-		IsShared:    false,
-	}, nil
-}
-
 func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := DefaultColumns(model.TableIDTypeContacts.String())
 	jsonData, err := json.Marshal(columns)
@@ -390,7 +185,7 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 		Name:        "Contacts",
 		ColumnsJson: string(jsonData),
 		Order:       0,
-		Icon:        "users_01",
+		Icon:        "Users01",
 		Filters:     ``,
 		Sorting:     ``,
 		IsPreset:    true,
@@ -469,71 +264,6 @@ func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgresEntity.
 
 func DefaultColumns(tableId string) postgresEntity.Columns {
 	switch tableId {
-	case model.TableIDTypeChurn.String():
-		return postgresEntity.Columns{
-			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeOrganizationsChurnDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeOrganizationsLtv.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-			},
-		}
-	case model.TableIDTypeNurture.String():
-		return postgresEntity.Columns{
-			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 8, ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 9, ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 10, ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 11, ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 12, ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 13, ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 14, ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 15, ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 16, ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-			},
-		}
-	case model.TableIDTypeLeads.String():
-		return postgresEntity.Columns{
-			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpointDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 8, ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 9, ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 10, ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 11, ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 12, ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 13, ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 14, ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 15, ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-			},
-		}
-	case model.TableIDTypeMyPortfolio.String():
-		return postgresEntity.Columns{
-			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeOrganizationsRelationship.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeOrganizationsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeOrganizationsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeOrganizationsOnboardingStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 8, ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 9, ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 10, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-			},
-		}
 	case model.TableIDTypeCustomers.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
@@ -602,42 +332,6 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 6, ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 8, ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 9, ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: false, Name: "", Filter: ""},
-			},
-		}
-	case model.TableIDTypeAnnualRenewals.String():
-		return postgresEntity.Columns{
-			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-			},
-		}
-	case model.TableIDTypeQuarterlyRenewals.String():
-		return postgresEntity.Columns{
-			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-			},
-		}
-	case model.TableIDTypeMonthlyRenewals.String():
-		return postgresEntity.Columns{
-			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeRenewalsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 2, ColumnType: model.ColumnViewTypeRenewalsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeRenewalsRenewalDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 4, ColumnType: model.ColumnViewTypeRenewalsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeRenewalsRenewalLikelihood.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeRenewalsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeRenewalsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeContacts.String():

@@ -252,8 +252,12 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		return nil, nil
 	}
 	tableViewDefinitions, ok := result.Result.([]postgresEntity.TableViewDefinition)
+
 	if ok && len(tableViewDefinitions) <= 1 {
-		for _, def := range DefaultTableViewDefinitions(userId, span) {
+		// check if shared presets exist
+		hasSharedPreset := checkSharedPresetsExist(tableViewDefinitions)
+
+		for _, def := range DefaultTableViewDefinitions(userId, hasSharedPreset, span) {
 			def.Tenant = tenant
 			def.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, def)
@@ -268,28 +272,16 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 
 	// check all organization table view definitions are created
-	organizationFound, customersFound, myPortfolioFound, leadsFound, nurtureFound, churnFound := false, false, false, false, false, false
+	organizationFound, customersFound := false, false
 	contactsFound, contactsForTargetOrganizationsFound := false, false
 	opportunitiesFound, contractsFound := false, false
 
 	for _, def := range tableViewDefinitions {
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeMyPortfolio.String() {
-			myPortfolioFound = true
-		}
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeCustomers.String() {
 			customersFound = true
 		}
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeOrganizations.String() {
 			organizationFound = true
-		}
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeLeads.String() {
-			leadsFound = true
-		}
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeNurture.String() {
-			nurtureFound = true
-		}
-		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeChurn.String() {
-			churnFound = true
 		}
 		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeContacts.String() {
 			contactsFound = true
@@ -323,42 +315,6 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
 	}
-	if !myPortfolioFound {
-		tvDef, err := DefaultTableViewDefinitionMyPortfolio(userId, span)
-		if err == nil {
-			viewsUpdated = true
-			tvDef.Tenant = tenant
-			tvDef.UserId = userId
-			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-		}
-	}
-	if !leadsFound {
-		tvDef, err := DefaultTableViewDefinitionLeads(span)
-		if err == nil {
-			viewsUpdated = true
-			tvDef.Tenant = tenant
-			tvDef.UserId = userId
-			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-		}
-	}
-	if !nurtureFound {
-		tvDef, err := DefaultTableViewDefinitionNurture(span)
-		if err == nil {
-			viewsUpdated = true
-			tvDef.Tenant = tenant
-			tvDef.UserId = userId
-			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-		}
-	}
-	if !churnFound {
-		tvDef, err := DefaultTableViewDefinitionChurn(span)
-		if err == nil {
-			viewsUpdated = true
-			tvDef.Tenant = tenant
-			tvDef.UserId = userId
-			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
-		}
-	}
 	if !contactsFound {
 		tvDef, err := DefaultTableViewDefinitionContacts(span)
 		if err == nil {
@@ -382,7 +338,6 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
-			tvDef.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
 	}
@@ -447,4 +402,13 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 
 	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions, span), nil
+}
+
+func checkSharedPresetsExist(viewDefs []postgresEntity.TableViewDefinition) bool {
+	for _, def := range viewDefs {
+		if def.IsShared && def.TableType == model.TableViewTypeOrganizations.String() {
+			return true
+		}
+	}
+	return false
 }
