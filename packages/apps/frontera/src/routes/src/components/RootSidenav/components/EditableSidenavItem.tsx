@@ -97,13 +97,19 @@ export const EditableSideNavItem = observer(
                   });
                   store.ui.commandMenu.setType('RenameTableViewDef');
                   store.ui.commandMenu.setOpen(true);
+                  setIsEditing(false);
                 }}
               >
                 <TextInput className='text-gray-500' />
                 Rename view
               </MenuItem>
               <MenuItem
-                onClick={() => store.tableViewDefs.createFavorite(preset)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  store.tableViewDefs.createFavorite(preset);
+                  setIsEditing(false);
+                }}
               >
                 <LayersTwo01 className='text-gray-500' />
                 Duplicate view
