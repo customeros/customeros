@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -36,7 +37,7 @@ func NewTrackingRepository(gormDb *gorm.DB) TrackingRepository {
 	return &trackingRepositoryImpl{gormDb: gormDb}
 }
 
-func (r trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetById")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
@@ -63,7 +64,7 @@ func (r trackingRepositoryImpl) GetById(ctx context.Context, id string) (*entity
 	return &result, nil
 }
 
-func (r trackingRepositoryImpl) GetNewRecords(ctx context.Context) ([]*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetNewRecords(ctx context.Context) ([]*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetNewRecords")
 	defer span.Finish()
 
@@ -85,7 +86,7 @@ func (r trackingRepositoryImpl) GetNewRecords(ctx context.Context) ([]*entity.Tr
 	return entities, nil
 }
 
-func (r trackingRepositoryImpl) GetForPrefilter(ctx context.Context) ([]*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetForPrefilter(ctx context.Context) ([]*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForPrefilter")
 	defer span.Finish()
 
@@ -101,7 +102,7 @@ func (r trackingRepositoryImpl) GetForPrefilter(ctx context.Context) ([]*entity.
 	return entities, nil
 }
 
-func (r trackingRepositoryImpl) GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetReadyForIdentification")
 	defer span.Finish()
 
@@ -124,7 +125,7 @@ func (r trackingRepositoryImpl) GetReadyForIdentification(ctx context.Context) (
 	return entities, nil
 }
 
-func (r trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context) ([]*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context) ([]*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetIdentifiedWithDistinctIP")
 	defer span.Finish()
 
@@ -147,7 +148,7 @@ func (r trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context)
 	return entities, nil
 }
 
-func (r trackingRepositoryImpl) GetForSlackNotifications(ctx context.Context) ([]*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetForSlackNotifications(ctx context.Context) ([]*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForSlackNotifications")
 	defer span.Finish()
 
@@ -177,7 +178,7 @@ func (r trackingRepositoryImpl) GetForSlackNotifications(ctx context.Context) ([
 	return entities, nil
 }
 
-func (r trackingRepositoryImpl) MarkAllWithState(ctx context.Context, ip string, state entity.TrackingIdentificationState) error {
+func (r *trackingRepositoryImpl) MarkAllWithState(ctx context.Context, ip string, state entity.TrackingIdentificationState) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.MarkAllWithState")
 	defer span.Finish()
 
@@ -195,7 +196,7 @@ func (r trackingRepositoryImpl) MarkAllWithState(ctx context.Context, ip string,
 	return nil
 }
 
-func (r trackingRepositoryImpl) MarkAllExcludeIdWithState(ctx context.Context, excludeId, ip string, state entity.TrackingIdentificationState) error {
+func (r *trackingRepositoryImpl) MarkAllExcludeIdWithState(ctx context.Context, excludeId, ip string, state entity.TrackingIdentificationState) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.MarkAllExcludeIdWithState")
 	defer span.Finish()
 
@@ -214,7 +215,7 @@ func (r trackingRepositoryImpl) MarkAllExcludeIdWithState(ctx context.Context, e
 	return nil
 }
 
-func (repo *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.Tracking) (string, error) {
+func (r *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.Tracking) (string, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.Store")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagComponent, constants.ComponentPostgresRepository)
@@ -223,7 +224,11 @@ func (repo *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.T
 	}
 	tracing.LogObjectAsJson(span, "tracking", tracking)
 
-	err := repo.gormDb.Save(&tracking).Error
+	if tracking.ID == "" {
+		tracking.CreatedAt = utils.Now()
+	}
+
+	err := r.gormDb.Save(&tracking).Error
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -235,7 +240,7 @@ func (repo *trackingRepositoryImpl) Store(ctx context.Context, tracking entity.T
 	return tracking.ID, nil
 }
 
-func (r trackingRepositoryImpl) SetStateById(c context.Context, id string, newState entity.TrackingIdentificationState) error {
+func (r *trackingRepositoryImpl) SetStateById(c context.Context, id string, newState entity.TrackingIdentificationState) error {
 	span, _ := opentracing.StartSpanFromContext(c, "TrackingRepository.SetStateById")
 	defer span.Finish()
 	span.LogFields(tracingLog.String("ip", id), tracingLog.String("newState", string(newState)))
@@ -253,7 +258,7 @@ func (r trackingRepositoryImpl) SetStateById(c context.Context, id string, newSt
 	return err
 }
 
-func (r trackingRepositoryImpl) MarkAsNotified(c context.Context, id string) error {
+func (r *trackingRepositoryImpl) MarkAsNotified(c context.Context, id string) error {
 	span, _ := opentracing.StartSpanFromContext(c, "TrackingRepository.MarkAsNotified")
 	defer span.Finish()
 	span.LogFields(tracingLog.String("ip", id))
@@ -271,7 +276,7 @@ func (r trackingRepositoryImpl) MarkAsNotified(c context.Context, id string) err
 	return err
 }
 
-func (r trackingRepositoryImpl) MarkAsOrganizationCreated(c context.Context, id, organizationId string, organizationName, organizationDomain, organizationWebsite *string) error {
+func (r *trackingRepositoryImpl) MarkAsOrganizationCreated(c context.Context, id, organizationId string, organizationName, organizationDomain, organizationWebsite *string) error {
 	span, _ := opentracing.StartSpanFromContext(c, "TrackingRepository.MarkAsOrganizationCreated")
 	defer span.Finish()
 	span.LogFields(tracingLog.String("ip", id), tracingLog.String("organizationId", organizationId))
