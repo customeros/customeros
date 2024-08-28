@@ -135,8 +135,11 @@ func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, em
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
 	// prepare validation api request
-	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequest{
+	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
 		Email: emailAddress,
+		Options: validationmodel.ValidateEmailRequestOptions{
+			CallTrueInbox: true,
+		},
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))

@@ -14,6 +14,15 @@ type ValidateEmailRequest struct {
 	Email string `json:"email"`
 }
 
+type ValidateEmailRequestWithOptions struct {
+	Email   string                      `json:"email"`
+	Options ValidateEmailRequestOptions `json:"options"`
+}
+
+type ValidateEmailRequestOptions struct {
+	CallTrueInbox bool `json:"callTrueInbox"`
+}
+
 type ValidateEmailResponse struct {
 	Status          string                       `json:"status"`
 	Message         string                       `json:"message,omitempty"`

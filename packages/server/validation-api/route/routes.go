@@ -40,7 +40,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "ValidateEmailV2")
 			defer span.Finish()
 
-			var request model.ValidateEmailRequest
+			var request model.ValidateEmailRequestWithOptions
 
 			if err := c.BindJSON(&request); err != nil {
 				l.Errorf("Fail reading request: %v", err.Error())
@@ -50,7 +50,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				})
 				return
 			}
-			span.LogFields(log.String("request.email", request.Email))
+			tracing.LogObjectAsJson(span, "request", request)
 
 			// check email is present
 			if request.Email == "" {
@@ -63,7 +63,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				return
 			}
 
-			response, err := services.EmailValidationService.ValidateEmailWithMailsherpa(ctx, request.Email)
+			emailValidationData, err := services.EmailValidationService.ValidateEmailWithMailSherpa(ctx, request.Email)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				l.Errorf("Error on : %v", err.Error())
@@ -75,9 +75,28 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				return
 			}
 
+			if emailValidationData != nil && emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown) {
+				if request.Options.CallTrueInbox {
+					// call TrueInbox
+					trueInboxResponse, err := services.EmailValidationService.ValidateEmailTrueInbox(ctx, request.Email)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "failed to call TrueInbox"))
+					} else if trueInboxResponse != nil {
+						if trueInboxResponse.Result == "valid" {
+							emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
+							if emailValidationData.DomainData.Provider == "" {
+								emailValidationData.DomainData.Provider = mapProvider(trueInboxResponse.SmtpProvider)
+							}
+						} else if trueInboxResponse.Result == "invalid" {
+							emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+						}
+					}
+				}
+			}
+
 			c.JSON(http.StatusOK, model.ValidateEmailResponse{
 				Status: "success",
-				Data:   response,
+				Data:   emailValidationData,
 			})
 		})
 }
@@ -354,4 +373,13 @@ func ipLookup(ctx context.Context, r *gin.Engine, services *service.Services, l 
 				IpData: response,
 			})
 		})
+}
+
+func mapProvider(input string) string {
+	switch input {
+	case "Google":
+		return "google workspace"
+	default:
+		return input
+	}
 }

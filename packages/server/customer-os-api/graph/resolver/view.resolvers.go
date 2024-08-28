@@ -349,6 +349,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
+			tvDef.UserId = userId
 			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
 		}
 	}
