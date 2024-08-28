@@ -61,6 +61,12 @@ func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span open
 		return []postgresEntity.TableViewDefinition{}
 	}
 
+	opportunitiesRecordsTableViewDefinition, err := DefaultTableViewDefinitionOpportunitiesRecords(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
 	contractsTableViewDefinition, err := DefaultTableViewDefinitionContracts(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -76,6 +82,7 @@ func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span open
 		targetOrganizationContactsTableViewDefinition,
 		contractsTableViewDefinition,
 		targetsTableViewDefinition,
+		opportunitiesRecordsTableViewDefinition,
 	}
 
 	if !hasSharedPresets {
@@ -269,6 +276,29 @@ func DefaultTableViewDefinitionOpportunities(span opentracing.Span) (postgresEnt
 	}, nil
 }
 
+func DefaultTableViewDefinitionOpportunitiesRecords(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := DefaultColumns(model.TableIDTypeOpportunitiesRecords.String())
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOpportunities.String(),
+		TableId:     model.TableIDTypeOpportunitiesRecords.String(),
+		Name:        "Opportunities",
+		ColumnsJson: string(jsonData),
+		Order:       7,
+		Icon:        "CoinsStacked01",
+		Filters:     ``,
+		Sorting:     ``,
+		IsPreset:    true,
+		IsShared:    false,
+	}, nil
+}
+
 func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
 	columns := DefaultColumns(model.TableIDTypeContracts.String())
 	jsonData, err := json.Marshal(columns)
@@ -283,7 +313,7 @@ func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgresEntity.
 		TableId:     model.TableIDTypeContracts.String(),
 		Name:        "Contracts",
 		ColumnsJson: string(jsonData),
-		Order:       7,
+		Order:       8,
 		Icon:        "Signature",
 		Filters:     ``,
 		Sorting:     ``,
@@ -443,6 +473,19 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 5, ColumnType: model.ColumnViewTypeOpportunitiesCommonColumn.String(), Width: 100, Visible: true, Name: "Lost", Filter: `{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"internalStage","value":"CLOSED_LOST"}}]}`},
 			},
 		}
+	case model.TableIDTypeOpportunitiesRecords.String():
+		return postgresEntity.Columns{
+			Columns: []postgresEntity.ColumnView{
+				{ColumnId: 1, ColumnType: model.ColumnViewTypeOpportunitiesName.String(), Width: 100, Visible: true, Name: "Name", Filter: ``},
+				{ColumnId: 2, ColumnType: model.ColumnViewTypeOpportunitiesOrganization.String(), Width: 100, Visible: true, Name: "Organization", Filter: ``},
+				{ColumnId: 3, ColumnType: model.ColumnViewTypeOpportunitiesStage.String(), Width: 100, Visible: true, Name: "Stage", Filter: ``},
+				{ColumnId: 4, ColumnType: model.ColumnViewTypeOpportunitiesEstimatedArr.String(), Width: 100, Visible: true, Name: "Estimated ARR", Filter: ``},
+				{ColumnId: 5, ColumnType: model.ColumnViewTypeOpportunitiesOwner.String(), Width: 100, Visible: true, Name: "Owner", Filter: ``},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeOpportunitiesTimeInStage.String(), Width: 100, Visible: true, Name: "Time in Stage", Filter: ``},
+				{ColumnId: 7, ColumnType: model.ColumnViewTypeOpportunitiesCreatedDate.String(), Width: 100, Visible: true, Name: "Created", Filter: ``},
+				{ColumnId: 8, ColumnType: model.ColumnViewTypeOpportunitiesNextStep.String(), Width: 100, Visible: true, Name: "Next Step", Filter: ``},
+			},
+		}
 	case model.TableIDTypeContracts.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
@@ -461,4 +504,13 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 		}
 	}
 	return postgresEntity.Columns{}
+}
+
+func CheckSharedPresetsExist(viewDefs []postgresEntity.TableViewDefinition) bool {
+	for _, def := range viewDefs {
+		if def.IsShared && def.TableType == model.TableViewTypeOpportunities.String() {
+			return true
+		}
+	}
+	return false
 }

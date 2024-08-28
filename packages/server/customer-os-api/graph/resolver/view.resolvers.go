@@ -255,7 +255,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 
 	if ok && len(tableViewDefinitions) <= 1 {
 		// check if shared presets exist
-		hasSharedPreset := checkSharedPresetsExist(tableViewDefinitions)
+		hasSharedPreset := CheckSharedPresetsExist(tableViewDefinitions)
 
 		for _, def := range DefaultTableViewDefinitions(userId, hasSharedPreset, span) {
 			def.Tenant = tenant
@@ -274,7 +274,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	// check all organization table view definitions are created
 	organizationFound, customersFound := false, false
 	contactsFound, contactsForTargetOrganizationsFound := false, false
-	opportunitiesFound, contractsFound := false, false
+	opportunitiesFound, opportunitiesRecordsFound, contractsFound := false, false, false
 
 	for _, def := range tableViewDefinitions {
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeCustomers.String() {
@@ -291,6 +291,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 		if def.TableType == model.TableViewTypeOpportunities.String() && def.TableId == model.TableIDTypeOpportunities.String() {
 			opportunitiesFound = true
+		}
+		if def.TableType == model.TableViewTypeOpportunities.String() && def.TableId == model.TableIDTypeOpportunitiesRecords.String() {
+			opportunitiesRecordsFound = true
 		}
 		if def.TableType == model.TableViewTypeContracts.String() && def.TableId == model.TableIDTypeContracts.String() {
 			contractsFound = true
@@ -335,6 +338,14 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !opportunitiesFound {
 		tvDef, err := DefaultTableViewDefinitionOpportunities(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !opportunitiesRecordsFound {
+		tvDef, err := DefaultTableViewDefinitionOpportunitiesRecords(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
@@ -402,19 +413,4 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 
 	return mapper.MapTableViewDefinitionsToModel(tableViewDefinitions, span), nil
-}
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func checkSharedPresetsExist(viewDefs []postgresEntity.TableViewDefinition) bool {
-	for _, def := range viewDefs {
-		if def.IsShared && def.TableType == model.TableViewTypeOpportunities.String() {
-			return true
-		}
-	}
-	return false
 }
