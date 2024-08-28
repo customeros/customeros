@@ -5,7 +5,6 @@ import (
 	"context"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/DusanKasan/parsemail"
 	"github.com/araddon/dateparse"
@@ -18,6 +17,7 @@ import (
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"github.com/sirupsen/logrus"
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
@@ -27,6 +27,7 @@ import (
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/option"
 	"io"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -258,16 +259,30 @@ func (s *googleService) GetGmailServiceWithOauthToken(ctx context.Context, token
 	//Request had invalid authentication credentials. Expected OAuth 2 access token, login cookie or other valid authentication credential.
 	//See https://developers.google.com/identity/sign-in/web/devconsole-project.
 	_, err2 := gmailService.Users.GetProfile("me").Do()
-	if err2 != nil && err2.(*googleapi.Error) != nil && err2.(*googleapi.Error).Code == 401 {
-		err3 := s.postgresRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
-		if err3 != nil {
-			tracing.TraceErr(span, err)
-			return nil, err3
+	if err2 != nil {
+		var googleApiErr *googleapi.Error
+		var urlErr *url.Error
+
+		switch {
+		case errors.As(err2, &googleApiErr) && googleApiErr.Code == 401:
+			// Handle 401 Unauthorized error
+			err3 := s.postgresRepositories.OAuthTokenRepository.MarkForManualRefresh(ctx, tokenEntity.TenantName, tokenEntity.PlayerIdentityId, tokenEntity.Provider)
+			if err3 != nil {
+				tracing.TraceErr(span, errors.Wrap(err3, "failed to mark token for manual refresh"))
+				return nil, err3
+			}
+			return nil, fmt.Errorf("token is invalid and marked for manual refresh")
+
+		case errors.As(err2, &urlErr):
+			// Handle URL error (e.g., network issues)
+			tracing.TraceErr(span, errors.Wrap(urlErr, "network error occurred"))
+			return nil, fmt.Errorf("network error occurred: %w", urlErr)
+
+		default:
+			// Handle any other errors
+			tracing.TraceErr(span, errors.Wrap(err2, "unexpected error occurred"))
+			return nil, fmt.Errorf("unexpected error occurred: %w", err2)
 		}
-		return nil, fmt.Errorf("token is invalid and marked for manual refresh")
-	} else if err2 != nil {
-		tracing.TraceErr(span, err)
-		return nil, err2
 	}
 
 	return gmailService, nil
