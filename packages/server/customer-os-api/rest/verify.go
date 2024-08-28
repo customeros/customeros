@@ -308,8 +308,11 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 
 func callApiValidateEmail(ctx context.Context, services *service.Services, span opentracing.Span, emailAddress string) (*validationmodel.ValidateEmailResponse, error) {
 	// prepare validation api request
-	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequest{
+	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
 		Email: emailAddress,
+		Options: validationmodel.ValidateEmailRequestOptions{
+			CallTrueInbox: true,
+		},
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))

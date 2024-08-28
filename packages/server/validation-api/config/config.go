@@ -53,5 +53,5 @@ type ScrubbyIoConfig struct {
 type TrueinboxConfig struct {
 	ApiUrl       string `env:"TRUEINBOX_API_URL" envDefault:"https://api.trueinbox.io" validate:"required"`
 	ApiKey       string `env:"TRUEINBOX_API_KEY" validate:"required"`
-	CacheTtlDays int    `env:"TRUEINBOX_CACHE_TTL_DAYS" envDefault:"90" validate:"required"`
+	CacheTtlDays int    `env:"TRUEINBOX_CACHE_TTL_DAYS" envDefault:"30" validate:"required"`
 }
