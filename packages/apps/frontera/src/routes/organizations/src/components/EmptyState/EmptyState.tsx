@@ -45,19 +45,6 @@ export const EmptyState = observer(() => {
             navigate(`/finder?preset=${allOrgsView}`);
           },
         };
-      case TableIdType.MyPortfolio:
-        return {
-          title: 'No organizations assigned to you yet',
-          description:
-            'Currently, you have not been assigned to any organizations.\n' +
-            '\n' +
-            'Head to your list of organizations and assign yourself as an owner to one of them.',
-          buttonLabel: 'Go to Organizations',
-          dataTest: 'portfolio-go-to-all-orgs',
-          onClick: () => {
-            navigate(`/finder?preset=${allOrgsView}`);
-          },
-        };
       case TableIdType.Customers:
         return {
           title: 'Who will be first?',
@@ -70,24 +57,13 @@ export const EmptyState = observer(() => {
           },
         };
 
-      case TableIdType.Nurture:
+      case TableIdType.Targets:
         return {
           title: 'Bullseye pending',
           description:
             'We’re sorting through your Leads in the Organizations view using your Ideal Company Profile. Once qualified, they will automatically show up here as Targets.',
           buttonLabel: 'Go to Organizations',
           dataTest: 'targets-go-to-leads',
-          onClick: () => {
-            navigate(`/finder?preset=${allOrgsView}`);
-          },
-        };
-      case TableIdType.Churn:
-        return {
-          title: 'Smooth sailing',
-          description:
-            'Seems like your customers are loyal! No one has churned yet. Keep up the strong relationships.',
-          buttonLabel: 'Go to Organizations',
-          dataTest: 'churn-go-to-all-orgs',
           onClick: () => {
             navigate(`/finder?preset=${allOrgsView}`);
           },
@@ -120,16 +96,14 @@ export const EmptyState = observer(() => {
             {options.description}
           </p>
 
-          {currentPreset !== TableIdType.Leads && (
-            <Button
-              variant='outline'
-              onClick={options.onClick}
-              data-test={options.dataTest}
-              className='mt-4 min-w-min text-sm bg-white'
-            >
-              {options.buttonLabel}
-            </Button>
-          )}
+          <Button
+            variant='outline'
+            onClick={options.onClick}
+            data-test={options.dataTest}
+            className='mt-4 min-w-min text-sm bg-white'
+          >
+            {options.buttonLabel}
+          </Button>
         </div>
       </div>
     </div>

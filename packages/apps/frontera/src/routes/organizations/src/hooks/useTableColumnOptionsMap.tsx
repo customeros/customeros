@@ -7,10 +7,8 @@ import {
   contractsMap,
   contactsOptionsMap,
   invoicesOptionsMap,
-  renewalsOptionsMap,
   contactsHelperTextMap,
   invoicesHelperTextMap,
-  renewalsHelperTextMap,
   contractsHelperTextMap,
   organizationsOptionsMap,
   organizationsHelperTextMap,
@@ -28,11 +26,6 @@ export const useTableColumnOptionsMap = (type?: TableViewType) => {
           invoicesOptionsMap,
           invoicesHelperTextMap,
         ])
-        .with(TableViewType.Renewals, () => [
-          renewalsOptionsMap,
-          renewalsHelperTextMap,
-        ])
-
         .with(TableViewType.Contracts, () => [
           contractsMap,
           contractsHelperTextMap,

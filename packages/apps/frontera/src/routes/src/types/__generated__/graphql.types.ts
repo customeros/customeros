@@ -402,13 +402,6 @@ export enum ColumnViewType {
   OrganizationsTags = 'ORGANIZATIONS_TAGS',
   OrganizationsWebsite = 'ORGANIZATIONS_WEBSITE',
   OrganizationsYearFounded = 'ORGANIZATIONS_YEAR_FOUNDED',
-  RenewalsAvatar = 'RENEWALS_AVATAR',
-  RenewalsForecastArr = 'RENEWALS_FORECAST_ARR',
-  RenewalsLastTouchpoint = 'RENEWALS_LAST_TOUCHPOINT',
-  RenewalsName = 'RENEWALS_NAME',
-  RenewalsOwner = 'RENEWALS_OWNER',
-  RenewalsRenewalDate = 'RENEWALS_RENEWAL_DATE',
-  RenewalsRenewalLikelihood = 'RENEWALS_RENEWAL_LIKELIHOOD',
 }
 
 export type Comment = {
@@ -2392,6 +2385,7 @@ export type Mutation = {
   emailUpdateInContact: Email;
   emailUpdateInOrganization: Email;
   emailUpdateInUser: Email;
+  email_Validate: ActionResponse;
   entityTemplateCreate: EntityTemplate;
   externalSystem_Create: Scalars['ID']['output'];
   fieldSetDeleteFromContact: Result;
@@ -2802,6 +2796,10 @@ export type MutationEmailUpdateInOrganizationArgs = {
 export type MutationEmailUpdateInUserArgs = {
   input: EmailRelationUpdateInput;
   userId: Scalars['ID']['input'];
+};
+
+export type MutationEmail_ValidateArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationEntityTemplateCreateArgs = {
@@ -4787,21 +4785,14 @@ export type SuggestedMergeOrganization = {
 };
 
 export enum TableIdType {
-  AnnualRenewals = 'ANNUAL_RENEWALS',
-  Churn = 'CHURN',
   Contacts = 'CONTACTS',
-  ContactsForTargerOrganizations = 'CONTACTS_FOR_TARGER_ORGANIZATIONS',
   ContactsForTargetOrganizations = 'CONTACTS_FOR_TARGET_ORGANIZATIONS',
   Contracts = 'CONTRACTS',
   Customers = 'CUSTOMERS',
-  Leads = 'LEADS',
-  MonthlyRenewals = 'MONTHLY_RENEWALS',
-  MyPortfolio = 'MY_PORTFOLIO',
-  Nurture = 'NURTURE',
   Opportunities = 'OPPORTUNITIES',
   Organizations = 'ORGANIZATIONS',
   PastInvoices = 'PAST_INVOICES',
-  QuarterlyRenewals = 'QUARTERLY_RENEWALS',
+  Targets = 'TARGETS',
   UpcomingInvoices = 'UPCOMING_INVOICES',
 }
 
@@ -4851,7 +4842,6 @@ export enum TableViewType {
   Invoices = 'INVOICES',
   Opportunities = 'OPPORTUNITIES',
   Organizations = 'ORGANIZATIONS',
-  Renewals = 'RENEWALS',
 }
 
 export type Tag = {

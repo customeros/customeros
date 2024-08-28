@@ -4,7 +4,6 @@ import { Layout } from '@shared/components/Layout/Layout';
 
 import { AuthRoute } from './auth/route';
 import { Error } from './src/components/Error';
-import { RenewalsRoute } from './renewals/route';
 import { SettingsRoute } from './settings/route';
 import { ProspectsRoute } from './prospects/route';
 import { FinderRoute } from './organizations/route';
@@ -22,7 +21,6 @@ export const RootRoute: RouteObject = {
   element: <Layout />,
   children: [
     AuthRoute,
-    RenewalsRoute,
     SettingsRoute,
     OrganizationRoute,
     FinderRoute,

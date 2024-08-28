@@ -46,6 +46,7 @@ enum TableViewType {
 enum TableIdType {
     ORGANIZATIONS
     CUSTOMERS
+    TARGETS
     UPCOMING_INVOICES
     PAST_INVOICES
     CONTACTS

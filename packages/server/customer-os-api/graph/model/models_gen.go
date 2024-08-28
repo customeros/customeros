@@ -5357,6 +5357,7 @@ type TableIDType string
 const (
 	TableIDTypeOrganizations                  TableIDType = "ORGANIZATIONS"
 	TableIDTypeCustomers                      TableIDType = "CUSTOMERS"
+	TableIDTypeTargets                        TableIDType = "TARGETS"
 	TableIDTypeUpcomingInvoices               TableIDType = "UPCOMING_INVOICES"
 	TableIDTypePastInvoices                   TableIDType = "PAST_INVOICES"
 	TableIDTypeContacts                       TableIDType = "CONTACTS"
@@ -5368,6 +5369,7 @@ const (
 var AllTableIDType = []TableIDType{
 	TableIDTypeOrganizations,
 	TableIDTypeCustomers,
+	TableIDTypeTargets,
 	TableIDTypeUpcomingInvoices,
 	TableIDTypePastInvoices,
 	TableIDTypeContacts,
@@ -5378,7 +5380,7 @@ var AllTableIDType = []TableIDType{
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeContracts:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeContracts:
 		return true
 	}
 	return false

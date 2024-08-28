@@ -31,6 +31,12 @@ func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span open
 		return []postgresEntity.TableViewDefinition{}
 	}
 
+	targetsTableViewDefinition, err := DefaultTableViewDefinitionTargets(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
 	pastInvoicesTableViewDefinition, err := DefaultTableViewDefinitionPastInvoices(span)
 	if err != nil {
 		fmt.Println("Error: ", err)
@@ -69,6 +75,7 @@ func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span open
 		contactsTableViewDefinition,
 		targetOrganizationContactsTableViewDefinition,
 		contractsTableViewDefinition,
+		targetsTableViewDefinition,
 	}
 
 	if !hasSharedPresets {
@@ -164,6 +171,29 @@ func DefaultTableViewDefinitionCustomers(span opentracing.Span) (postgresEntity.
 		Order:       1,
 		Icon:        "CheckHeart",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Customer.String()),
+		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
+		IsPreset:    true,
+		IsShared:    false,
+	}, nil
+}
+
+func DefaultTableViewDefinitionTargets(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := DefaultColumns(model.TableIDTypeTargets.String())
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeOrganizations.String(),
+		TableId:     model.TableIDTypeTargets.String(),
+		Name:        "Targets",
+		ColumnsJson: string(jsonData),
+		Order:       1,
+		Icon:        "Target05",
+		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
 		Sorting:     `{"id": "ORGANIZATIONS_LAST_TOUCHPOINT", "desc": true}`,
 		IsPreset:    true,
 		IsShared:    false,
@@ -306,6 +336,27 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 22, ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 23, ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 24, ColumnType: model.ColumnViewTypeOrganizationsHeadquarters.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+			},
+		}
+	case model.TableIDTypeTargets.String():
+		return postgresEntity.Columns{
+			Columns: []postgresEntity.ColumnView{
+				{ColumnId: 1, ColumnType: model.ColumnViewTypeOrganizationsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 2, ColumnType: model.ColumnViewTypeOrganizationsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 3, ColumnType: model.ColumnViewTypeOrganizationsWebsite.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 4, ColumnType: model.ColumnViewTypeOrganizationsSocials.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 5, ColumnType: model.ColumnViewTypeOrganizationsCreatedDate.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 7, ColumnType: model.ColumnViewTypeOrganizationsLeadSource.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 8, ColumnType: model.ColumnViewTypeOrganizationsEmployeeCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 9, ColumnType: model.ColumnViewTypeOrganizationsYearFounded.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 10, ColumnType: model.ColumnViewTypeOrganizationsIndustry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 11, ColumnType: model.ColumnViewTypeOrganizationsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 12, ColumnType: model.ColumnViewTypeOrganizationsIsPublic.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 13, ColumnType: model.ColumnViewTypeOrganizationsStage.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 14, ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 15, ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 16, ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeUpcomingInvoices.String():

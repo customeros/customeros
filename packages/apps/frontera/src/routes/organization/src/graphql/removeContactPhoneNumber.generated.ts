@@ -5,28 +5,22 @@ import { GraphQLClient } from 'graphql-request';
 import { RequestInit } from 'graphql-request/dist/types.dom';
 import { useMutation, UseMutationOptions } from '@tanstack/react-query';
 
-function fetcher<TData, TVariables extends { [key: string]: any }>(
-  client: GraphQLClient,
-  query: string,
-  variables?: TVariables,
-  requestHeaders?: RequestInit['headers'],
-) {
-  return async (): Promise<TData> =>
-    client.request({
-      document: query,
-      variables,
-      requestHeaders,
-    });
+function fetcher<TData, TVariables extends { [key: string]: any }>(client: GraphQLClient, query: string, variables?: TVariables, requestHeaders?: RequestInit['headers']) {
+  return async (): Promise<TData> => client.request({
+    document: query,
+    variables,
+    requestHeaders
+  });
 }
 export type RemoveContactPhoneNumberMutationVariables = Types.Exact<{
   contactId: Types.Scalars['ID']['input'];
   id: Types.Scalars['ID']['input'];
 }>;
 
-export type RemoveContactPhoneNumberMutation = {
-  __typename?: 'Mutation';
-  phoneNumberRemoveFromContactById: { __typename?: 'Result'; result: boolean };
-};
+
+export type RemoveContactPhoneNumberMutation = { __typename?: 'Mutation', phoneNumberRemoveFromContactById: { __typename?: 'Result', result: boolean } };
+
+
 
 export const RemoveContactPhoneNumberDocument = `
     mutation removeContactPhoneNumber($contactId: ID!, $id: ID!) {
@@ -37,42 +31,23 @@ export const RemoveContactPhoneNumberDocument = `
     `;
 
 export const useRemoveContactPhoneNumberMutation = <
-  TError = unknown,
-  TContext = unknown,
->(
-  client: GraphQLClient,
-  options?: UseMutationOptions<
-    RemoveContactPhoneNumberMutation,
-    TError,
-    RemoveContactPhoneNumberMutationVariables,
-    TContext
-  >,
-  headers?: RequestInit['headers'],
-) => {
-  return useMutation<
-    RemoveContactPhoneNumberMutation,
-    TError,
-    RemoveContactPhoneNumberMutationVariables,
-    TContext
-  >({
+      TError = unknown,
+      TContext = unknown
+    >(
+      client: GraphQLClient,
+      options?: UseMutationOptions<RemoveContactPhoneNumberMutation, TError, RemoveContactPhoneNumberMutationVariables, TContext>,
+      headers?: RequestInit['headers']
+    ) => {
+    
+    return useMutation<RemoveContactPhoneNumberMutation, TError, RemoveContactPhoneNumberMutationVariables, TContext>(
+      {
     mutationKey: ['removeContactPhoneNumber'],
-    mutationFn: (variables?: RemoveContactPhoneNumberMutationVariables) =>
-      fetcher<
-        RemoveContactPhoneNumberMutation,
-        RemoveContactPhoneNumberMutationVariables
-      >(client, RemoveContactPhoneNumberDocument, variables, headers)(),
-    ...options,
-  });
-};
+    mutationFn: (variables?: RemoveContactPhoneNumberMutationVariables) => fetcher<RemoveContactPhoneNumberMutation, RemoveContactPhoneNumberMutationVariables>(client, RemoveContactPhoneNumberDocument, variables, headers)(),
+    ...options
+  }
+    )};
 
 useRemoveContactPhoneNumberMutation.getKey = () => ['removeContactPhoneNumber'];
 
-useRemoveContactPhoneNumberMutation.fetcher = (
-  client: GraphQLClient,
-  variables: RemoveContactPhoneNumberMutationVariables,
-  headers?: RequestInit['headers'],
-) =>
-  fetcher<
-    RemoveContactPhoneNumberMutation,
-    RemoveContactPhoneNumberMutationVariables
-  >(client, RemoveContactPhoneNumberDocument, variables, headers);
+
+useRemoveContactPhoneNumberMutation.fetcher = (client: GraphQLClient, variables: RemoveContactPhoneNumberMutationVariables, headers?: RequestInit['headers']) => fetcher<RemoveContactPhoneNumberMutation, RemoveContactPhoneNumberMutationVariables>(client, RemoveContactPhoneNumberDocument, variables, headers);

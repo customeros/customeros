@@ -1,1 +1,0 @@
-export { RenewalsTable } from './RenewalsTable';
