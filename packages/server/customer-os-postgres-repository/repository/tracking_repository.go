@@ -17,7 +17,7 @@ type TrackingRepository interface {
 	GetForPrefilter(ctx context.Context) ([]*entity.Tracking, error)
 	GetReadyForIdentification(ctx context.Context) ([]*entity.Tracking, error)
 	GetIdentifiedWithDistinctIP(ctx context.Context) ([]*entity.Tracking, error)
-	GetForSlackNotifications(ctx context.Context) ([]*entity.Tracking, error)
+	GetForSlackNotifications(ctx context.Context, limit int) ([]*entity.Tracking, error)
 
 	Store(ctx context.Context, tracking entity.Tracking) (string, error)
 
@@ -27,6 +27,7 @@ type TrackingRepository interface {
 	MarkAsOrganizationCreated(ctx context.Context, id, organizationId string, organizationName, organizationDomain, organizationWebsite *string) error
 	MarkAllWithState(ctx context.Context, ip string, state entity.TrackingIdentificationState) error
 	MarkAllExcludeIdWithState(ctx context.Context, excludeId, ip string, state entity.TrackingIdentificationState) error
+	IncrementNotificationTry(ctx context.Context, id string) error
 }
 
 type trackingRepositoryImpl struct {
@@ -148,7 +149,7 @@ func (r *trackingRepositoryImpl) GetIdentifiedWithDistinctIP(ctx context.Context
 	return entities, nil
 }
 
-func (r *trackingRepositoryImpl) GetForSlackNotifications(ctx context.Context) ([]*entity.Tracking, error) {
+func (r *trackingRepositoryImpl) GetForSlackNotifications(ctx context.Context, limit int) ([]*entity.Tracking, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.GetForSlackNotifications")
 	defer span.Finish()
 
@@ -163,9 +164,10 @@ func (r *trackingRepositoryImpl) GetForSlackNotifications(ctx context.Context) (
 		Where("organization_id is not null").
 		Where("event_type = 'page_exit'").
 		Where("state in ?", stateIn).
+		Where("notification_try < 5").
 		Distinct("ip", "id", "tenant", "created_at").
 		Order("created_at asc").
-		Limit(100).
+		Limit(limit).
 		Find(&entities).Error
 
 	if err != nil {
@@ -289,6 +291,24 @@ func (r *trackingRepositoryImpl) MarkAsOrganizationCreated(c context.Context, id
 		Update("organization_name", organizationName).
 		Update("organization_domain", organizationDomain).
 		Update("organization_website", organizationWebsite).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	return err
+}
+
+func (r *trackingRepositoryImpl) IncrementNotificationTry(ctx context.Context, id string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingRepository.IncrementNotificationTry")
+	defer span.Finish()
+	span.LogFields(tracingLog.String("id", id))
+
+	err := r.gormDb.
+		Model(&entity.Tracking{}).
+		Where("id = ?", id).
+		Update("notification_try", gorm.Expr("notification_try + 1")).
 		Error
 
 	if err != nil {

@@ -30,7 +30,7 @@ type TrackingService interface {
 	ProcessIPDataResponses(ctx context.Context) error
 	IdentifyTrackingRecords(ctx context.Context) error
 	CreateOrganizationsFromTrackedData(ctx context.Context) error
-	NotifyOnSlack(ctx context.Context) error
+	NotifyOnSlack(ctx context.Context)
 }
 
 type trackingService struct {
@@ -235,35 +235,37 @@ func (s *trackingService) CreateOrganizationsFromTrackedData(ctx context.Context
 	return nil
 }
 
-func (s *trackingService) NotifyOnSlack(ctx context.Context) error {
+func (s *trackingService) NotifyOnSlack(ctx context.Context) {
 	span, ctx := tracing.StartTracerSpan(ctx, "TrackingService.NotifyOnSlack")
 	defer span.Finish()
 
 	if s.cfg.SlackBotApiKey == "" {
 		span.LogFields(log.String("skip", "no slack bot api key"))
-		return nil
+		return
 	}
 
-	notifyOnSlackRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForSlackNotifications(ctx)
+	limit := 100
+	notifyOnSlackRecords, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetForSlackNotifications(ctx, limit)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get records for slack notifications"))
+		s.services.Logger.Errorf("failed to get records for slack notifications: %s", err.Error())
+		return
 	}
 
 	if len(notifyOnSlackRecords) == 0 {
 		span.LogFields(log.String("skip", "no records to notify"))
-		return nil
+		return
 	}
 
 	for _, r := range notifyOnSlackRecords {
 		err := s.notifyOnSlack(ctx, r)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
+			tracing.TraceErr(span, errors.Wrap(err, "failed to notify on slack"))
+			return
 		}
 	}
 
-	return nil
+	return
 }
 
 func (s *trackingService) processNewRecord(c context.Context, newRecord *entity.Tracking) error {
@@ -518,8 +520,13 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 
 	record, err := s.services.CommonServices.PostgresRepositories.TrackingRepository.GetById(ctx, r.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get tracking record"))
 		return err
+	}
+
+	err = s.services.CommonServices.PostgresRepositories.TrackingRepository.IncrementNotificationTry(ctx, record.ID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to increment notification try"))
 	}
 
 	if record.Notified || record.OrganizationId == nil {
@@ -549,7 +556,7 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 
 		workspaceNodeList, err := s.services.CommonServices.Neo4jRepositories.WorkspaceReadRepository.Get(ctx, record.Tenant)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get workspace nodes"))
 			return err
 		}
 
