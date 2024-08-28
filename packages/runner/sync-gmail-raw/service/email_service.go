@@ -60,7 +60,7 @@ func (s *emailService) SyncEmailsForState(ctx context.Context, importState *post
 			return nil, fmt.Errorf("unable to read emails from google: %v", err)
 		}
 	} else if importState.Provider == "azure-ad" {
-		externalSystem = "outlook"
+		externalSystem = neo4jenum.Outlook.String()
 		rawEmails, next, err = s.services.CommonServices.AzureService.ReadEmailsFromAzureAd(ctx, importState)
 		if err != nil {
 			return nil, fmt.Errorf("unable to read emails from azure ad: %v", err)
