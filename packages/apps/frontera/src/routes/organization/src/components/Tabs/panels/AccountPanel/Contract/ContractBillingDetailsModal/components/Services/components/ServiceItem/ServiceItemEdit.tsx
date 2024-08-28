@@ -112,7 +112,7 @@ export const ServiceItemEdit = observer(
 
       if (isTodayOrBefore) {
         toastError(
-          `Service start date must be tomorrow or later`,
+          `Select a service start date that is in the future`,
           `${service?.tempValue?.metadata?.id}-service-started-date-update-error`,
         );
 
