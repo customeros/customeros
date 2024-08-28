@@ -16,4 +16,5 @@ enum DataSource {
     SHOPIFY
     ATTIO
     ZENDESK_SELL
+    MAILSTACK
 }

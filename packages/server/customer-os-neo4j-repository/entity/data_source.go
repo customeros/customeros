@@ -21,6 +21,7 @@ const (
 	DataSourceShopify        DataSource = "shopify"
 	DataSourceAttio          DataSource = "attio"
 	DataSourceZendeskSell    DataSource = "zendesk-sell"
+	DataSourceMailstack      DataSource = "mailstack"
 )
 
 var AllDataSource = []DataSource{
@@ -40,6 +41,7 @@ var AllDataSource = []DataSource{
 	DataSourceShopify,
 	DataSourceAttio,
 	DataSourceZendeskSell,
+	DataSourceMailstack,
 }
 
 func (ds DataSource) String() string {
