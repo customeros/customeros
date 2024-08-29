@@ -70,12 +70,12 @@ func (h *EmailEventHandler) OnEmailValidate(ctx context.Context, evt eventstore.
 	return h.validateEmail(ctx, eventData.Tenant, emailId, emailEntity.RawEmail)
 }
 
-func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, emailToValidate string) error {
+func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, emailAddressToValidate string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.validateEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 
-	emailValidationResponse, err := h.callApiValidateEmail(ctx, tenant, emailToValidate)
+	emailValidationResponse, err := h.callApiValidateEmail(ctx, tenant, emailAddressToValidate)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "error while calling email validation api"))
 		return nil
@@ -97,7 +97,7 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 			Tenant:        tenant,
 			EmailId:       emailId,
 			AppSource:     constants.AppSourceEventProcessingPlatformSubscribers,
-			RawEmail:      emailToValidate,
+			RawEmail:      emailAddressToValidate,
 			Email:         emailValidationResponse.Data.Syntax.CleanEmail,
 			Domain:        emailValidationResponse.Data.Syntax.Domain,
 			Username:      emailValidationResponse.Data.Syntax.User,
@@ -138,7 +138,7 @@ func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, em
 	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
 		Email: emailAddress,
 		Options: validationmodel.ValidateEmailRequestOptions{
-			CallTrueInbox: true,
+			CallTrueInbox: false,
 		},
 	})
 	if err != nil {
@@ -171,6 +171,9 @@ func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, em
 	err = json.NewDecoder(response.Body).Decode(&validationResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
+		responseBody := new(bytes.Buffer)
+		responseBody.ReadFrom(response.Body)
+		span.LogFields(log.String("response.body", responseBody.String()))
 		return nil, err
 	}
 	if validationResponse.Data == nil {

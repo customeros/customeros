@@ -81,6 +81,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 					trueInboxResponse, err := services.EmailValidationService.ValidateEmailTrueInbox(ctx, request.Email)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "failed to call TrueInbox"))
+						l.Errorf("Error on calling Trueinbox : %s", err.Error())
 					} else if trueInboxResponse != nil {
 						if trueInboxResponse.Result == "valid" {
 							emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
