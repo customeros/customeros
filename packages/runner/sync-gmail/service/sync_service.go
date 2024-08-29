@@ -12,6 +12,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"net/mail"
 	"strings"
 	"time"
@@ -26,10 +27,8 @@ type syncService struct {
 }
 
 type SyncService interface {
-	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, now time.Time, source string) (string, error)
-
+	GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, source string) (string, error)
 	BuildEmailsListExcludingPersonalEmails(usernameSource, from string, to []string, cc []string, bcc []string) ([]string, error)
-
 	ConvertToUTC(datetimeStr string) (time.Time, error)
 	IsValidEmailSyntax(email string) bool
 }
@@ -99,7 +98,7 @@ func hasPersonalEmailProvider(providers []string, domain string) bool {
 	return false
 }
 
-func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, interactionEventId, email string, now time.Time, source string) (string, error) {
+func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, source string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -116,13 +115,16 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	//if it's a personal email, we create just the email node in tenant
 	domain := utils.ExtractDomain(email)
 	if domain == "" {
-		return "", fmt.Errorf("unable to extract domain from email: %s", email)
+		err = errors.New("unable to extract domain from email: " + email)
+		tracing.TraceErr(span, err)
+		return "", err
 	}
 	for _, personalEmailProvider := range s.services.Cache.GetPersonalEmailProviders() {
-		if strings.Contains(domain, personalEmailProvider) {
+		if domain == personalEmailProvider {
 			emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, source, AppSource)
 			if err != nil {
-				return "", fmt.Errorf("unable to create email: %v", err)
+				tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
+				return "", err
 			}
 			return emailId, nil
 		}

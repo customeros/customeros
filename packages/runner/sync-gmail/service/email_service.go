@@ -267,7 +267,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 
 		//from
 		//check if domain exists for tenant by email. if so, link the email to the user otherwise create a contact and link the email to the contact
-		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, from, now, rawEmail.ExternalSystem)
+		fromEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, from, now, rawEmail.ExternalSystem)
 		if err != nil {
 			logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 			return entity.ERROR, nil, err
@@ -286,7 +286,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 
 		//to
 		for _, toEmail := range to {
-			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, toEmail, now, rawEmail.ExternalSystem)
+			toEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, toEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -312,7 +312,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			if ccEmail == "" {
 				continue
 			}
-			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, ccEmail, now, rawEmail.ExternalSystem)
+			ccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, ccEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
@@ -339,7 +339,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 				continue
 			}
 
-			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, interactionEventId, bccEmail, now, rawEmail.ExternalSystem)
+			bccEmailId, err := s.services.SyncService.GetEmailIdForEmail(ctx, tx, tenant, bccEmail, now, rawEmail.ExternalSystem)
 			if err != nil {
 				logrus.Errorf("unable to retrieve email id for tenant: %v", err)
 				return entity.ERROR, nil, err
