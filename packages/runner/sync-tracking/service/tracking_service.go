@@ -329,22 +329,43 @@ func (s *trackingService) askAndStoreIPData(c context.Context, request *entity.E
 	}
 
 	shouldIdentify := true
+	skipIdenitifyReason := ""
 
 	if ipLookupResponse.IpData == nil {
 		shouldIdentify = false
+		skipIdenitifyReason = "ip data is nil"
 	} else if ipLookupResponse.IpData.Ip == "" {
+		skipIdenitifyReason = "ip is empty"
 		shouldIdentify = false
 	} else if ipLookupResponse.IpData.Carrier != nil {
+		skipIdenitifyReason = "carrier is not nil"
 		shouldIdentify = false
-	} else if ipLookupResponse.IpData.Threat.IsTor ||
-		ipLookupResponse.IpData.Threat.IsIcloudRelay ||
-		ipLookupResponse.IpData.Threat.IsProxy ||
-		ipLookupResponse.IpData.Threat.IsDatacenter ||
-		ipLookupResponse.IpData.Threat.IsAnonymous ||
-		ipLookupResponse.IpData.Threat.IsKnownAttacker ||
-		ipLookupResponse.IpData.Threat.IsKnownAbuser ||
-		ipLookupResponse.IpData.Threat.IsThreat ||
-		ipLookupResponse.IpData.Threat.IsBogon {
+	} else if ipLookupResponse.IpData.Threat.IsTor {
+		skipIdenitifyReason = "tor detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsIcloudRelay {
+		skipIdenitifyReason = "icloud relay detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsProxy {
+		skipIdenitifyReason = "proxy detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsDatacenter {
+		skipIdenitifyReason = "datacenter detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsAnonymous {
+		skipIdenitifyReason = "anonymous detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsKnownAttacker {
+		skipIdenitifyReason = "known attacker detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsKnownAbuser {
+		skipIdenitifyReason = "known abuser detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsThreat {
+		skipIdenitifyReason = "threat detected"
+		shouldIdentify = false
+	} else if ipLookupResponse.IpData.Threat.IsBogon {
+		skipIdenitifyReason = "bogon detected"
 		shouldIdentify = false
 	}
 
@@ -355,7 +376,7 @@ func (s *trackingService) askAndStoreIPData(c context.Context, request *entity.E
 			return fmt.Errorf("failed to marshal response body: %v", err)
 		}
 
-		err = s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterResponse(ctx, request.IP, shouldIdentify, string(marshal))
+		err = s.services.CommonServices.PostgresRepositories.EnrichDetailsPrefilterTrackingRepository.RegisterResponse(ctx, request.IP, shouldIdentify, skipIdenitifyReason, string(marshal))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return fmt.Errorf("failed to store response: %v", err)

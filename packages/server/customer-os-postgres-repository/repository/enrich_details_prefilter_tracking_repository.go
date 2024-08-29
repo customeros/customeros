@@ -20,7 +20,7 @@ type EnrichDetailsPrefilterTrackingRepository interface {
 	GetByIP(ctx context.Context, IP string) (*entity.EnrichDetailsPreFilterTracking, error)
 
 	RegisterRequest(ctx context.Context, ip string) error
-	RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, response string) error
+	RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, skipIdenitifyReason, response string) error
 }
 
 func NewEnrichDetailsPrefilterTrackingRepository(gormDb *gorm.DB) EnrichDetailsPrefilterTrackingRepository {
@@ -92,11 +92,11 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterRequest(ctx context.Co
 	return nil
 }
 
-func (r enrichDetailsPrefilterTrackingRepository) RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, response string) error {
+func (r enrichDetailsPrefilterTrackingRepository) RegisterResponse(ctx context.Context, ip string, shouldIdentify bool, skipIdenitifyReason, response string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsPrefilterTrackingRepository.RegisterResponse")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(tracingLog.String("ip", ip), tracingLog.Bool("shouldIdentify", shouldIdentify), tracingLog.String("response", response))
+	span.LogFields(tracingLog.String("ip", ip), tracingLog.Bool("shouldIdentify", shouldIdentify), tracingLog.String("response", response), tracingLog.String("skipIdenitifyReason", skipIdenitifyReason))
 
 	byId, err := r.GetByIP(ctx, ip)
 	if err != nil {
@@ -106,6 +106,7 @@ func (r enrichDetailsPrefilterTrackingRepository) RegisterResponse(ctx context.C
 
 	byId.ShouldIdentify = &shouldIdentify
 	byId.Response = &response
+	byId.SkipIdentifyReason = skipIdenitifyReason
 
 	err = r.gormDb.Save(byId).Error
 
