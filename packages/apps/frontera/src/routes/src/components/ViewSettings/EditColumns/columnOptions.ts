@@ -200,4 +200,5 @@ export const opportunitiesHelperTextMap: Record<string, string> = {
   [ColumnViewType.OpportunitiesEstimatedArr]: 'E.g. $30,000',
   [ColumnViewType.OpportunitiesCreatedDate]: 'E.g. 12 Oct 2023',
   [ColumnViewType.OpportunitiesNextStep]: 'E.g. Qualified',
+  [ColumnViewType.OpportunitiesOwner]: 'E.g. Howard Hu',
 };
