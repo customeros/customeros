@@ -289,7 +289,7 @@ export const AboutPanel = observer(() => {
           <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
         )}
         <div className='flex items-center justify-center w-full'>
-          <div className='flex-2'>
+          <div className='flex-2' data-test='org-about-relationship'>
             <Menu>
               <MenuButton
                 data-test='org-about-relationship'

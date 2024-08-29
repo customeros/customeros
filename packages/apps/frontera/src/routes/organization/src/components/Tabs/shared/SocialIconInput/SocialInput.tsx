@@ -70,6 +70,7 @@ export const SocialInput = memo(
               <Input
                 ref={inputRef}
                 onBlur={handleBlur}
+                data-test={dataTest}
                 readOnly={isReadOnly}
                 onFocus={handleFocus}
                 value={isFocused ? value : ''}
