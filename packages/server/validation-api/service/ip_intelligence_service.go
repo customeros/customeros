@@ -48,7 +48,6 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*postg
 		return nil, err
 	}
 	var data *postgresentity.IPDataResponseBody
-
 	// if cached data is missing or last time fetched > 90 days ago
 	if cacheIpData == nil || cacheIpData.UpdatedAt.AddDate(0, 0, s.config.IpDataConfig.IpDataCacheTtlDays).Before(utils.Now()) {
 		// get data from IPData
@@ -68,7 +67,8 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*postg
 		})
 	} else {
 		// unmarshal cached data
-		if err = json.Unmarshal([]byte(cacheIpData.Data), &data); err != nil {
+		data = &postgresentity.IPDataResponseBody{}
+		if err = json.Unmarshal([]byte(cacheIpData.Data), data); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal cache data"))
 			return nil, err
 		}

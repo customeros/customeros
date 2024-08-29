@@ -376,12 +376,14 @@ func (s *emailValidationService) ValidateEmailTrueInbox(ctx context.Context, ema
 			Data:   string(responseJson),
 			Result: trueInboxResponse.Result,
 		})
+		result = &trueInboxResponse
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save trueinbox data"))
 			s.log.Errorf("failed to save trueinbox data: %s", err.Error())
 			return nil, err
 		}
 	} else {
+		result = &postgresentity.TrueInboxResponseBody{}
 		err = json.Unmarshal([]byte(cachedTrueInboxRecord.Data), result)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal trueinbox data"))
