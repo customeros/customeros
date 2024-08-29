@@ -523,6 +523,9 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get tracking record"))
 		return err
 	}
+	if record.Tenant != "" {
+		tracing.TagTenant(span, record.Tenant)
+	}
 
 	err = s.services.CommonServices.PostgresRepositories.TrackingRepository.IncrementNotificationTry(ctx, record.ID)
 	if err != nil {
