@@ -995,6 +995,12 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		tracing.TraceErr(span, err)
 		return nil
 	}
+	tenantSettingsDbNode, err := h.services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
 
 	cc := contractEntity.InvoiceEmailCC
 	cc = utils.RemoveEmpties(cc)
@@ -1019,6 +1025,13 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		},
 		Attachments: []service.PostmarkEmailAttachment{},
 	}
+	if tenantSettingsEntity.StripeCustomerPortalLink != "" {
+		postmarkEmail.TemplateData["{{includeStripeFooter}}"] = "true"
+		postmarkEmail.TemplateData["{{stripePortalLink}}"] = tenantSettingsEntity.StripeCustomerPortalLink
+	} else {
+		postmarkEmail.TemplateData["{{includeStripeFooter}}"] = "false"
+	}
+
 	if eventTriggeredByUser {
 		postmarkEmail.WorkflowId = notifications.WorkflowInvoicePaymentReceived
 		postmarkEmail.Subject = fmt.Sprintf(notifications.WorkflowInvoicePaymentReceivedSubject, invoiceEntity.Number, invoiceEntity.Provider.Name)

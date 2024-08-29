@@ -9,24 +9,26 @@ import (
 type TenantSettingsProperty string
 
 const (
-	TenantSettingsPropertyLogoRepositoryFileId TenantSettingsProperty = "logoRepositoryFileId"
-	TenantSettingsPropertyBaseCurrency         TenantSettingsProperty = "baseCurrency"
-	TenantSettingsPropertyInvoicingEnabled     TenantSettingsProperty = "invoicingEnabled"
-	TenantSettingsPropertyInvoicingPostpaid    TenantSettingsProperty = "invoicingPostpaid"
-	TenantSettingsPropertyWorkspaceLogo        TenantSettingsProperty = "workspaceLogo"
-	TenantSettingsPropertyWorkspaceName        TenantSettingsProperty = "workspaceName"
-	TenantSettingsPropertyEnrichContacts       TenantSettingsProperty = "enrichContacts"
+	TenantSettingsPropertyLogoRepositoryFileId     TenantSettingsProperty = "logoRepositoryFileId"
+	TenantSettingsPropertyBaseCurrency             TenantSettingsProperty = "baseCurrency"
+	TenantSettingsPropertyInvoicingEnabled         TenantSettingsProperty = "invoicingEnabled"
+	TenantSettingsPropertyInvoicingPostpaid        TenantSettingsProperty = "invoicingPostpaid"
+	TenantSettingsPropertyWorkspaceLogo            TenantSettingsProperty = "workspaceLogo"
+	TenantSettingsPropertyWorkspaceName            TenantSettingsProperty = "workspaceName"
+	TenantSettingsPropertyEnrichContacts           TenantSettingsProperty = "enrichContacts"
+	TenantSettingsPropertyStripeCustomerPortalLink TenantSettingsProperty = "stripeCustomerPortalLink"
 )
 
 type TenantSettingsEntity struct {
-	Id                   string
-	LogoRepositoryFileId string
-	BaseCurrency         enum.Currency
-	InvoicingEnabled     bool
-	InvoicingPostpaid    bool
-	WorkspaceLogo        string
-	WorkspaceName        string
-	CreatedAt            time.Time
-	UpdatedAt            time.Time
-	EnrichContacts       bool
+	Id                       string
+	LogoRepositoryFileId     string
+	BaseCurrency             enum.Currency
+	InvoicingEnabled         bool
+	InvoicingPostpaid        bool
+	WorkspaceLogo            string
+	WorkspaceName            string
+	CreatedAt                time.Time
+	UpdatedAt                time.Time
+	EnrichContacts           bool
+	StripeCustomerPortalLink string
 }
