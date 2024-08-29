@@ -1281,6 +1281,7 @@ export enum DataSource {
   Close = 'CLOSE',
   Hubspot = 'HUBSPOT',
   Intercom = 'INTERCOM',
+  Mailstack = 'MAILSTACK',
   Mixpanel = 'MIXPANEL',
   Na = 'NA',
   Openline = 'OPENLINE',
