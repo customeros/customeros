@@ -63,11 +63,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     }
   }, [preset]);
 
-  const tableViewType = store.tableViewDefs.getById(preset || '')?.value
-    .tableType;
-  const tableId = store.tableViewDefs.getById(preset || '')?.value.tableId;
+  const tableViewDef = store.tableViewDefs.getById(preset || '');
+  const tableViewType = tableViewDef?.value.tableType;
+  const tableId = tableViewDef?.value.tableId;
 
-  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
   const totalResults = store.ui.searchCount;
 
@@ -214,14 +213,16 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       {tableViewType && <ViewSettings tableId={tableId} type={tableViewType} />}
 
-      {TableIdType.Targets === tableId && displayIcp && (
-        <IconButton
-          size='xs'
-          icon={<Star06 />}
-          aria-label='toogle-flow'
-          onClick={handleToogleFlow}
-        />
-      )}
+      {tableViewDef?.value?.isPreset &&
+        TableIdType.Targets === tableId &&
+        displayIcp && (
+          <IconButton
+            size='xs'
+            icon={<Star06 />}
+            aria-label='toogle-flow'
+            onClick={handleToogleFlow}
+          />
+        )}
       <TableViewMenu />
       <span ref={measureRef} className={`z-[-1] absolute h-0 invisible flex`}>
         <div className='ml-2'>
