@@ -18,6 +18,7 @@ const options: SelectOption<InvoiceStatus>[] = [
   { label: 'Scheduled', value: InvoiceStatus.Scheduled },
   { label: 'Void', value: InvoiceStatus.Void },
   { label: 'Overdue', value: InvoiceStatus.Overdue },
+  { label: 'Paid', value: InvoiceStatus.Paid },
 ];
 
 const defaultFilter: FilterItem = {
