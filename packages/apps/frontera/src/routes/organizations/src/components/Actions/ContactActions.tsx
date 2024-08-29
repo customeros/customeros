@@ -86,7 +86,9 @@ export const ContactTableActions = ({
 
   useKeyBindings(
     {
-      Space: () => {
+      Space: (e) => {
+        e.stopPropagation();
+        e.preventDefault();
         store.ui.setContactPreviewCardOpen(true);
       },
     },

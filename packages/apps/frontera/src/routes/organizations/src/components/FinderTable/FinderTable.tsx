@@ -1,10 +1,10 @@
 import { useSearchParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
-import { useKey } from 'rooks';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 import difference from 'lodash/difference';
+import { useKey, useKeyBindings } from 'rooks';
 import intersection from 'lodash/intersection';
 import { OnChangeFn } from '@tanstack/table-core';
 import { ColumnDef } from '@tanstack/react-table';
@@ -513,6 +513,23 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       setLastFocusedId(focusedId);
     }
   }, [focusedId]);
+
+  useEffect(() => {
+    return () => {
+      store.ui.setContactPreviewCardOpen(false);
+    };
+  }, []);
+
+  useKeyBindings(
+    {
+      Escape: () => {
+        store.ui.setContactPreviewCardOpen(false);
+      },
+    },
+    {
+      when: store.ui.contactPreviewCardOpen,
+    },
+  );
 
   return (
     <div className='flex'>
