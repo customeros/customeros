@@ -39,6 +39,7 @@ import { getInvoiceFilterFns } from '../Columns/invoices/filterFns';
 import { getInvoiceColumnsConfig } from '../Columns/invoices/columns';
 import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
+import { ContactPreviewCard } from '../ContactPreviewCard/ContactPreviewCard';
 import {
   getContactSortFn,
   getContactFilterFns,
@@ -68,6 +69,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [lastFocusedId, setLastFocusedId] = useState<string | null>(null);
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
 
@@ -506,6 +508,12 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     store.ui.commandMenu.setOpen(true);
   };
 
+  useEffect(() => {
+    if (focusedId && !store.ui.contactPreviewCardOpen) {
+      setLastFocusedId(focusedId);
+    }
+  }, [focusedId]);
+
   return (
     <div className='flex'>
       <Table<OrganizationStore | ContactStore | InvoiceStore | ContractStore>
@@ -607,6 +615,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
       />
       {isSidePanelOpen && <SidePanel />}
+      {store.ui.contactPreviewCardOpen && (
+        <ContactPreviewCard contactId={lastFocusedId || ''} />
+      )}
       <ConfirmDeleteDialog
         onClose={reset}
         hideCloseButton

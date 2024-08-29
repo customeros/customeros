@@ -215,7 +215,7 @@ export const Table = <T extends object>({
 
         if (!focusedRowIndex) return;
       },
-      Space: () => {
+      Enter: () => {
         if (focusedRowIndex === null) return;
 
         const row = rows[focusedRowIndex];

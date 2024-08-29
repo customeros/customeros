@@ -7,6 +7,7 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { Tag } from '@graphql/types';
 import { X } from '@ui/media/icons/X';
 import { Archive } from '@ui/media/icons/Archive';
+import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { TableInstance } from '@ui/presentation/Table';
 import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
@@ -31,7 +32,7 @@ export const ContactTableActions = ({
   focusedId,
 }: TableActionsProps) => {
   const [targetId, setTargetId] = useState<string | null>(null);
-
+  const store = useStore();
   const selection = table.getState().rowSelection;
   const selectedIds = Object.keys(selection);
   const selectCount = selectedIds.length;
@@ -81,6 +82,15 @@ export const ContactTableActions = ({
       Escape: clearSelection,
     },
     { when: enableKeyboardShortcuts },
+  );
+
+  useKeyBindings(
+    {
+      Space: () => {
+        store.ui.setContactPreviewCardOpen(true);
+      },
+    },
+    { when: !!focusedId },
   );
 
   if (!selectCount && !targetId) return null;
