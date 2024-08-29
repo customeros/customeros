@@ -323,16 +323,17 @@ func MapDbNodeToTenantSettingsEntity(dbNode *dbtype.Node) *entity.TenantSettings
 	}
 	props := utils.GetPropsFromNode(*dbNode)
 	tenantSettingsEntity := entity.TenantSettingsEntity{
-		Id:                   utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:            utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:            utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		LogoRepositoryFileId: utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyLogoRepositoryFileId)),
-		InvoicingEnabled:     utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingEnabled)),
-		InvoicingPostpaid:    utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingPostpaid)),
-		WorkspaceLogo:        utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceLogo)),
-		WorkspaceName:        utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceName)),
-		BaseCurrency:         enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyBaseCurrency))),
-		EnrichContacts:       utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyEnrichContacts)),
+		Id:                       utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:                utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:                utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		LogoRepositoryFileId:     utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyLogoRepositoryFileId)),
+		InvoicingEnabled:         utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingEnabled)),
+		InvoicingPostpaid:        utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyInvoicingPostpaid)),
+		WorkspaceLogo:            utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceLogo)),
+		WorkspaceName:            utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyWorkspaceName)),
+		BaseCurrency:             enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyBaseCurrency))),
+		EnrichContacts:           utils.GetBoolPropOrFalse(props, string(entity.TenantSettingsPropertyEnrichContacts)),
+		StripeCustomerPortalLink: utils.GetStringPropOrEmpty(props, string(entity.TenantSettingsPropertyStripeCustomerPortalLink)),
 	}
 	return &tenantSettingsEntity
 }
