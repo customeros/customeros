@@ -93,7 +93,7 @@ export const ServiceItemEdit = observer(
       };
 
       const checkIfBeforeToday = (date: Date) => {
-        if (isDraft) return null;
+        if (isDraft || type === 'one-time') return null;
 
         if (allServices?.length === 1) {
           return DateTimeUtils.isBefore(date.toString(), new Date().toString());
