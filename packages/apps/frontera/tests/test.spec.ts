@@ -2,6 +2,7 @@ import { test } from './hooks';
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
 import { OrganizationsPage } from './pages/organizationsPage';
+import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
 import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
 import { OrganizationAccountPage } from './pages/organization/organizationAccountPage';
 import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
@@ -9,7 +10,7 @@ import { OrganizationTimelinePage } from './pages/organization/organizationTimel
 
 test.setTimeout(180000);
 
-test('convert org to customer', async ({ page }, testInfo) => {
+test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const customersPage = new CustomersPage(page);
@@ -41,7 +42,36 @@ test('convert org to customer', async ({ page }, testInfo) => {
   await customersPage.ensureNumberOfCustomersExist(1);
 });
 
-test('create people in organization', async ({ page }, testInfo) => {
+test('Add About information to an Organization', async ({ page }, testInfo) => {
+  const loginPage = new LoginPage(page);
+  const organizationsPage = new OrganizationsPage(page);
+  const organizationAboutPage = new OrganizationAboutPage(page);
+  const organizationSideNavPage = new OrganizationSideNavPage(page);
+
+  // Login
+  await loginPage.login();
+  // Wait for redirect and load All Orgs page
+  await organizationsPage.waitForPageLoad();
+
+  // Add organization and check new entry
+  const organizationId = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
+
+  //Access newly created organization
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await organizationsPage.goToOrganization(organizationId);
+
+  // Go to People page
+  await organizationSideNavPage.goToAbout();
+  await organizationAboutPage.populateAboutFields();
+  await organizationAboutPage.checkPopulatedAboutFields(
+    organizationId,
+    'customeros.fe.testing',
+  );
+});
+
+test('Create People entry in an Organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);
@@ -66,7 +96,9 @@ test('create people in organization', async ({ page }, testInfo) => {
   await organizationPeoplePage.createContactFromEmpty();
 });
 
-test('create timeline entries in organization', async ({ page }, testInfo) => {
+test('Create Timeline entries in an Organization', async ({
+  page,
+}, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
@@ -94,7 +126,7 @@ test('create timeline entries in organization', async ({ page }, testInfo) => {
   await organizationTimelinePage.ensureReminderCanBeAdded();
 });
 
-test('create contracts in organization', async ({ page }, testInfo) => {
+test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationAccountPage = new OrganizationAccountPage(page);

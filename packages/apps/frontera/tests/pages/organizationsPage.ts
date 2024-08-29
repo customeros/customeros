@@ -85,7 +85,7 @@ export class OrganizationsPage {
       process.stdout.write(
         '\nOrganization ' +
           organizationName +
-          'was created for the test: ' +
+          ' was created for the test: ' +
           testInfo.title,
       );
     } else {
@@ -339,7 +339,7 @@ export class OrganizationsPage {
     const allOrgsSelectAllOrgs = this.page.locator(this.allOrgsSelectAllOrgs);
 
     try {
-      await allOrgsSelectAllOrgs.waitFor({ state: 'visible', timeout: 2000 });
+      await allOrgsSelectAllOrgs.waitFor({ state: 'visible', timeout: 10000 });
 
       const isVisible = await allOrgsSelectAllOrgs.isVisible();
 

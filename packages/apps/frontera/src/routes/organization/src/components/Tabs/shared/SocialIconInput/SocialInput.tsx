@@ -14,6 +14,7 @@ interface SocialInputGroupProps extends InputProps {
   bg?: string;
   value: string;
   index?: number;
+  dataTest?: string;
   isReadOnly?: boolean;
   leftElement?: React.ReactNode;
 }
@@ -23,6 +24,7 @@ export const SocialInput = memo(
     bg,
     value,
     onBlur,
+    dataTest,
     leftElement,
     isReadOnly,
     ...rest
@@ -68,6 +70,7 @@ export const SocialInput = memo(
               <Input
                 ref={inputRef}
                 onBlur={handleBlur}
+                data-test={dataTest}
                 readOnly={isReadOnly}
                 onFocus={handleFocus}
                 value={isFocused ? value : ''}
@@ -86,6 +89,7 @@ export const SocialInput = memo(
                   }
                 >
                   <p
+                    data-test={dataTest}
                     onClick={handleFocus}
                     className='top-0 text-base cursor-auto overflow-hidden overflow-ellipsis'
                   >
