@@ -72,6 +72,7 @@ export const SocialIconInput = ({
           key={v}
           value={l}
           name={name}
+          dataTest={dataTest}
           onBlur={handleBlur}
           onChange={handleChange}
           isReadOnly={isReadOnly}

@@ -85,7 +85,7 @@ export class OrganizationsPage {
       process.stdout.write(
         '\nOrganization ' +
           organizationName +
-          'was created for the test: ' +
+          ' was created for the test: ' +
           testInfo.title,
       );
     } else {

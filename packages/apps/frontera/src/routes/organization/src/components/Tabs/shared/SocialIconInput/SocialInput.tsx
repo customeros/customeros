@@ -70,7 +70,6 @@ export const SocialInput = memo(
               <Input
                 ref={inputRef}
                 onBlur={handleBlur}
-                data-test={dataTest}
                 readOnly={isReadOnly}
                 onFocus={handleFocus}
                 value={isFocused ? value : ''}
@@ -89,6 +88,7 @@ export const SocialInput = memo(
                   }
                 >
                   <p
+                    data-test={dataTest}
                     onClick={handleFocus}
                     className='top-0 text-base cursor-auto overflow-hidden overflow-ellipsis'
                   >

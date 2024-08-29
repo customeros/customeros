@@ -211,7 +211,7 @@ export const AboutPanel = observer(() => {
     }));
 
   return (
-    <div className=' flex pt-[6px] px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
+    <div className='flex pt-[6px] px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
         <div className='flex items-center justify-between'>
           <Input
@@ -289,9 +289,12 @@ export const AboutPanel = observer(() => {
           <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
         )}
         <div className='flex items-center justify-center w-full'>
-          <div className='flex-2' data-test='org-about-relationship'>
+          <div className='flex-2'>
             <Menu>
-              <MenuButton className='min-h-[40px] outline-none focus:outline-none'>
+              <MenuButton
+                data-test='org-about-relationship'
+                className='min-h-[40px] outline-none focus:outline-none'
+              >
                 {
                   iconMap[
                     selectedRelationshipOption?.label as keyof typeof iconMap
