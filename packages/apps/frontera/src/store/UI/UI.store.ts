@@ -13,6 +13,7 @@ export class UIStore {
   isEditingTableCell: boolean = false;
   dirtyEditor: string | null = null;
   activeConfirmation: string | null = null;
+  contactPreviewCardOpen: boolean = false;
   movedIcpOrganization: number = 0;
   commandMenu = new CommandMenuStore();
   private activeConfirmationCallback: () => void = () => {};
@@ -75,5 +76,9 @@ export class UIStore {
 
   setMovedIcpOrganization(value: number) {
     this.movedIcpOrganization = value;
+  }
+
+  setContactPreviewCardOpen(value: boolean) {
+    this.contactPreviewCardOpen = value;
   }
 }

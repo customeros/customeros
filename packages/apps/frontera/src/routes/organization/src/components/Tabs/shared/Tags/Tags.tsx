@@ -14,8 +14,8 @@ interface TagsProps {
   placeholder: string;
   autofocus?: boolean;
   hideBorder?: boolean;
-  icon: React.ReactNode;
   value: SelectOption[];
+  icon?: React.ReactNode;
   closeMenuOnSelect?: boolean;
   menuPortalTarget?: HTMLElement;
   onCreateOption?: (value: string) => void;

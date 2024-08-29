@@ -1,10 +1,10 @@
 import { useSearchParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
-import { useKey } from 'rooks';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 import difference from 'lodash/difference';
+import { useKey, useKeyBindings } from 'rooks';
 import intersection from 'lodash/intersection';
 import { OnChangeFn } from '@tanstack/table-core';
 import { ColumnDef } from '@tanstack/react-table';
@@ -45,6 +45,7 @@ import { getInvoiceFilterFns } from '../Columns/invoices/filterFns';
 import { getInvoiceColumnsConfig } from '../Columns/invoices/columns';
 import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 import { ContactTableActions, OrganizationTableActions } from '../Actions';
+import { ContactPreviewCard } from '../ContactPreviewCard/ContactPreviewCard';
 import {
   getContactSortFn,
   getContactFilterFns,
@@ -78,6 +79,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const [isShiftPressed, setIsShiftPressed] = useState(false);
   const [focusIndex, setFocusIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [lastFocusedId, setLastFocusedId] = useState<string | null>(null);
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
 
@@ -563,6 +565,29 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     store.ui.commandMenu.setOpen(true);
   };
 
+  useEffect(() => {
+    if (focusedId && !store.ui.contactPreviewCardOpen) {
+      setLastFocusedId(focusedId);
+    }
+  }, [focusedId]);
+
+  useEffect(() => {
+    return () => {
+      store.ui.setContactPreviewCardOpen(false);
+    };
+  }, []);
+
+  useKeyBindings(
+    {
+      Escape: () => {
+        store.ui.setContactPreviewCardOpen(false);
+      },
+    },
+    {
+      when: store.ui.contactPreviewCardOpen,
+    },
+  );
+
   return (
     <div className='flex'>
       <Table<
@@ -670,6 +695,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
       />
       {isSidePanelOpen && <SidePanel />}
+      {store.ui.contactPreviewCardOpen && (
+        <ContactPreviewCard contactId={lastFocusedId || ''} />
+      )}
       <ConfirmDeleteDialog
         onClose={reset}
         hideCloseButton
