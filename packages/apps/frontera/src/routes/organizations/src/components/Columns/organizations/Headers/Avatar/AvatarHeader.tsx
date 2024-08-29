@@ -12,7 +12,7 @@ export const AvatarHeader = observer(() => {
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
 
   return (
-    <div className='flex w-[24px] items-center justify-center'>
+    <div className='flex w-[26px] items-center justify-center'>
       <Tooltip
         asChild
         side='bottom'
