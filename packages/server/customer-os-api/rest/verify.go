@@ -344,6 +344,12 @@ func callApiValidateEmail(ctx context.Context, services *service.Services, span 
 	err = json.NewDecoder(response.Body).Decode(&validationResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
+		responseBody := new(bytes.Buffer)
+		_, readErr := responseBody.ReadFrom(response.Body)
+		if readErr != nil {
+			tracing.TraceErr(span, errors.Wrap(readErr, "failed to read response body"))
+		}
+		span.LogFields(log.String("response.body", responseBody.String()))
 		return nil, err
 	}
 	if validationResponse.Data == nil {

@@ -143,6 +143,7 @@ func (r *emailReadRepository) GetById(ctx context.Context, tenant, emailId strin
 	if err != nil {
 		return nil, err
 	}
+	span.LogFields(log.Bool("result.found", dbRecord != nil))
 	return dbRecord.(*dbtype.Node), err
 }
 
