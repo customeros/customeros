@@ -271,6 +271,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const opportunityData = store.opportunities.toComputedArray((arr) => {
     if (tableType !== TableViewType.Opportunities) return arr;
+    arr = arr.filter((opp) => opp.value.internalType === 'NBO');
+
     const filters = getOpportunityFilterFns(tableViewDef?.getFilters());
 
     if (filters) {
@@ -414,6 +416,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     if (tableType === TableViewType.Organizations) {
       store.ui.commandMenu.setType('OrganizationHub');
+    } else if (tableType === TableViewType.Opportunities) {
+      store.ui.commandMenu.setType('OpportunityHub');
     } else {
       store.ui.commandMenu.setType('ContactHub');
     }
@@ -508,6 +512,22 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         });
       }
     }
+
+    if (tableType === TableViewType.Opportunities) {
+      if (typeof index !== 'number') {
+        store.ui.commandMenu.setType('OpportunityHub');
+
+        return;
+      }
+
+      if (index > -1 && Object.keys(selection).length === 0) {
+        store.ui.commandMenu.setType('OpportunityCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Opportunity',
+          ids: [data?.[index]?.id],
+        });
+      }
+    }
   };
 
   const handleOpenCommandKMenu = () => {
@@ -537,6 +557,16 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         store.ui.commandMenu.setType('OrganizationBulkCommands');
         store.ui.commandMenu.setContext({
           entity: 'Organizations',
+          ids: selectedIds,
+        });
+      }
+    } else if (tableType === TableViewType.Opportunities) {
+      if (selectedIds.length === 1) {
+        reset();
+
+        store.ui.commandMenu.setType('OpportunityCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Opportunity',
           ids: selectedIds,
         });
       }
@@ -617,7 +647,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         enableKeyboardShortcuts={
           !isEditing && !isFiltering && !isCommandMenuPrompted
         }
-        enableRowSelection={
+        enableTableActions={
           tableType &&
           [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
             ? false
@@ -625,9 +655,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             ? enableFeature
             : true
         }
-        enableTableActions={
+        enableRowSelection={
           tableType &&
-          [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
+          [
+            TableViewType.Invoices,
+            TableViewType.Contracts,
+            TableViewType.Opportunities,
+          ].includes(tableType)
             ? false
             : enableFeature !== null
             ? enableFeature
