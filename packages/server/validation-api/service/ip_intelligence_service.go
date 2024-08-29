@@ -70,6 +70,7 @@ func (s *ipIntelligenceService) LookupIp(ctx context.Context, ip string) (*postg
 		data = &postgresentity.IPDataResponseBody{}
 		if err = json.Unmarshal([]byte(cacheIpData.Data), data); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal cache data"))
+			s.log.Error("failed to unmarshal cached data", err)
 			return nil, err
 		}
 	}

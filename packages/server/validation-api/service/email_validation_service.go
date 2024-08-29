@@ -357,7 +357,7 @@ func (s *emailValidationService) ValidateEmailTrueInbox(ctx context.Context, ema
 		return nil, err
 	}
 
-	var result *postgresentity.TrueInboxResponseBody
+	var data *postgresentity.TrueInboxResponseBody
 	if cachedTrueInboxRecord == nil || cachedTrueInboxRecord.CreatedAt.AddDate(0, 0, s.config.TrueinboxConfig.CacheTtlDays).Before(utils.Now()) {
 		trueInboxResponse, err := s.callTrueinboxToValidateEmail(ctx, email)
 		if err != nil {
@@ -376,23 +376,22 @@ func (s *emailValidationService) ValidateEmailTrueInbox(ctx context.Context, ema
 			Data:   string(responseJson),
 			Result: trueInboxResponse.Result,
 		})
-		result = &trueInboxResponse
+		data = &trueInboxResponse
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save trueinbox data"))
 			s.log.Errorf("failed to save trueinbox data: %s", err.Error())
 			return nil, err
 		}
 	} else {
-		result = &postgresentity.TrueInboxResponseBody{}
-		err = json.Unmarshal([]byte(cachedTrueInboxRecord.Data), result)
+		data = &postgresentity.TrueInboxResponseBody{}
+		err = json.Unmarshal([]byte(cachedTrueInboxRecord.Data), data)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal trueinbox data"))
 			s.log.Errorf("failed to unmarshal trueinbox data: %s", err.Error())
 			return nil, err
 		}
 	}
-	return result, nil
-
+	return data, nil
 }
 
 func (s *emailValidationService) callTrueinboxToValidateEmail(ctx context.Context, email string) (postgresentity.TrueInboxResponseBody, error) {
