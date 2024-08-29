@@ -133,6 +133,15 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     )?.value.id;
   }
 
+  get opportunitiesTablePreset() {
+    return this?.toArray().find(
+      (t) =>
+        t.value.tableId === TableIdType.OpportunitiesRecords &&
+        !t.value.isShared &&
+        t.value.isPreset,
+    )?.value.id;
+  }
+
   get targetsPreset() {
     return this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Targets && t.value.isPreset,

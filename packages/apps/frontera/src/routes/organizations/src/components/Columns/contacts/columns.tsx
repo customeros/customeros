@@ -27,10 +27,10 @@ import { ContactsTagsCell } from './Cells/tags';
 import { ContactLinkedInCell } from './Cells/socials';
 import { ContactNameCell } from './Cells/contactName';
 import { ContactAvatarHeader } from './Headers/Avatar';
-import { OrganizationCell } from './Cells/organization';
 import { PersonaFilter } from './Filters/PersonaFilter';
 import { ConnectedUsers } from './Cells/connectedUsers';
 import { SocialsFilter } from '../shared/Filters/Socials';
+import { OrganizationCell } from '../shared/Cells/organization';
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
 import { NumericValueFilter } from '../shared/Filters/NumericValueFilter';
@@ -107,12 +107,7 @@ const columns: Record<string, Column> = {
 
       if (!organization) return '-';
 
-      return (
-        <OrganizationCell
-          id={organization.id}
-          name={organization.name || 'Unknown'}
-        />
-      );
+      return <OrganizationCell id={organization.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>

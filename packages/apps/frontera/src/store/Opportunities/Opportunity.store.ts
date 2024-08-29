@@ -60,6 +60,16 @@ export class OpportunityStore implements Store<Opportunity> {
     return this.root.organizations.value.get(organizationId);
   }
 
+  get externalStage() {
+    const stages = this.root.settings.tenant.value?.opportunityStages;
+
+    const stage = stages?.find((s) => s.value === this.value.externalStage);
+
+    if (!stage) return null;
+
+    return stage;
+  }
+
   get owner() {
     const ownerId = this.value.owner?.id;
 

@@ -12,22 +12,28 @@ import {
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns02 } from '@ui/media/icons/Columns02';
-import { Filter, TableViewType, ColumnViewType } from '@graphql/types';
 import { Menu, MenuList, MenuGroup, MenuButton } from '@ui/overlay/Menu/Menu';
+import {
+  Filter,
+  TableIdType,
+  TableViewType,
+  ColumnViewType,
+} from '@graphql/types';
 import { useTableColumnOptionsMap } from '@organizations/hooks/useTableColumnOptionsMap.tsx';
 
 import { ColumnItem, DraggableColumnItem } from './ColumnItem';
 
 interface EditColumnsProps {
   type: TableViewType;
+  tableId?: TableIdType;
 }
 
-export const EditColumns = observer(({ type }: EditColumnsProps) => {
+export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
   const store = useStore();
   const [searchParams] = useSearchParams();
-  const preset = match(type)
+  const preset = match(tableId)
     .with(
-      TableViewType.Opportunities,
+      TableIdType.Opportunities,
       () => store.tableViewDefs.opportunitiesPreset,
     )
     .otherwise(() => searchParams?.get('preset'));
@@ -43,8 +49,8 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
       helperText: helperTextMap[c.columnType],
     })) ?? [];
 
-  const leadingPinnedColumns = match(tableViewDef?.value?.tableType)
-    .with(TableViewType.Organizations, () =>
+  const leadingPinnedColumns = match(tableViewDef?.value?.tableId)
+    .with(TableIdType.Organizations, () =>
       columns.filter(({ columnType }) =>
         [
           ColumnViewType.OrganizationsAvatar,
@@ -52,14 +58,14 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
         ].includes(columnType),
       ),
     )
-    .with(TableViewType.Contacts, () =>
+    .with(TableIdType.Contacts, () =>
       columns.filter(({ columnType }) =>
         [ColumnViewType.ContactsAvatar, ColumnViewType.ContactsName].includes(
           columnType,
         ),
       ),
     )
-    .with(TableViewType.Opportunities, () =>
+    .with(TableIdType.Opportunities, () =>
       columns.filter((c) => {
         const filter = JSON.parse(c.filter) as Filter;
         const externalStage = filter?.AND?.find(
@@ -71,8 +77,8 @@ export const EditColumns = observer(({ type }: EditColumnsProps) => {
     )
     .otherwise(() => [columns[0]]);
 
-  const traillingPinnedColumn = match(tableViewDef?.value?.tableType)
-    .with(TableViewType.Opportunities, () =>
+  const traillingPinnedColumn = match(tableViewDef?.value?.tableId)
+    .with(TableIdType.Opportunities, () =>
       columns.filter((c) => {
         const filter = JSON.parse(c.filter) as Filter;
         const internalStage = filter?.AND?.find(

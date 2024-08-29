@@ -11,6 +11,7 @@ import { Invoice } from '@ui/media/icons/Invoice.tsx';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Signature } from '@ui/media/icons/Signature.tsx';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
+import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
 import { CollapsibleSection } from '../CollapsibleSection';
@@ -44,6 +45,9 @@ export const GeneralViewsSection = observer(
     const contractsView = store.tableViewDefs.getById(
       store.tableViewDefs.contractsPreset ?? '',
     );
+    const opportunitiesView = store.tableViewDefs.getById(
+      store.tableViewDefs.opportunitiesTablePreset ?? '',
+    );
 
     const invoicesViews = [
       store.tableViewDefs.getById(
@@ -58,7 +62,7 @@ export const GeneralViewsSection = observer(
 
     return (
       <CollapsibleSection
-        title='Records'
+        title='Explore'
         isOpen={preferences.isViewsOpen}
         onToggle={() => togglePreference('isViewsOpen')}
       >
@@ -97,6 +101,26 @@ export const GeneralViewsSection = observer(
               })}
               icon={(isActive) => (
                 <Users01
+                  className={cn(
+                    'size-4 min-w-4 text-gray-500',
+                    isActive && 'text-gray-700',
+                  )}
+                />
+              )}
+            />
+
+            <RootSidenavItem
+              label='Opportunities'
+              id={opportunitiesView?.value?.id}
+              dataTest={`side-nav-item-all-opportunities`}
+              onClick={() =>
+                handleItemClick(`finder?preset=${opportunitiesView?.value?.id}`)
+              }
+              isActive={checkIsActive('finder', {
+                preset: opportunitiesView?.value?.id ?? '',
+              })}
+              icon={(isActive) => (
+                <CoinsStacked01
                   className={cn(
                     'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',

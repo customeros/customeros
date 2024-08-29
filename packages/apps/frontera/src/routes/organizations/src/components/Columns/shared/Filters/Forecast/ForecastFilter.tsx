@@ -20,6 +20,7 @@ import { FilterHeader } from '../abstract/FilterHeader';
 
 interface ForecastFilterProps {
   property?: ColumnViewType;
+  hideCurrencySymbol?: boolean;
   initialFocusRef: React.RefObject<HTMLInputElement>;
 }
 
@@ -33,7 +34,7 @@ const defaultFilter: FilterItem = {
 };
 
 export const ForecastFilter = observer(
-  ({ initialFocusRef, property }: ForecastFilterProps) => {
+  ({ initialFocusRef, property, hideCurrencySymbol }: ForecastFilterProps) => {
     const [searchParams] = useSearchParams();
     const preset = searchParams.get('preset');
 
@@ -94,6 +95,7 @@ export const ForecastFilter = observer(
               ref={initialFocusRef}
               value={displayValue[0]}
               onChange={handleInputChange(0)}
+              hideCurrencySymbol={hideCurrencySymbol}
             />
           </div>
           <div className='flex flex-col flex-1'>
@@ -102,6 +104,7 @@ export const ForecastFilter = observer(
               min={displayValue[0]}
               value={displayValue[1]}
               onChange={handleInputChange(1)}
+              hideCurrencySymbol={hideCurrencySymbol}
             />
           </div>
         </div>
@@ -133,69 +136,86 @@ interface DebouncedNumberInputProps {
   value: number;
   placeholder?: string;
   defaultValue?: number;
+  hideCurrencySymbol?: boolean;
   onChange: (value: number) => void;
 }
 
 export const DebouncedNumberInput = forwardRef<
   HTMLInputElement,
   DebouncedNumberInputProps
->(({ min, max, onChange, placeholder, value, defaultValue = 0 }, ref) => {
-  const [displayValue, setDisplayValue] = useState(value);
-  const timeout = useRef<NodeJS.Timeout>();
+>(
+  (
+    {
+      min,
+      max,
+      onChange,
+      placeholder,
+      value,
+      hideCurrencySymbol,
+      defaultValue = 0,
+    },
+    ref,
+  ) => {
+    const [displayValue, setDisplayValue] = useState(value);
+    const timeout = useRef<NodeJS.Timeout>();
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.valueAsNumber;
+    const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.valueAsNumber;
 
-    setDisplayValue(value);
+      setDisplayValue(value);
 
-    if (timeout.current) {
-      clearTimeout(timeout.current);
-    }
-
-    timeout.current = setTimeout(() => {
-      if (max && value > max) {
-        onChange(max);
-
-        return;
+      if (timeout.current) {
+        clearTimeout(timeout.current);
       }
 
-      if (min && value < min) {
-        onChange(min);
+      timeout.current = setTimeout(() => {
+        if (max && value > max) {
+          onChange(max);
 
-        return;
-      }
+          return;
+        }
 
-      onChange(value);
-    }, 250);
-  };
+        if (min && value < min) {
+          onChange(min);
 
-  useEffect(() => {
-    return () => {
-      timeout.current && clearTimeout(timeout.current);
+          return;
+        }
+
+        onChange(value);
+      }, 250);
     };
-  }, []);
 
-  useEffect(() => {
-    setDisplayValue(value);
-  }, [value]);
+    useEffect(() => {
+      return () => {
+        timeout.current && clearTimeout(timeout.current);
+      };
+    }, []);
 
-  return (
-    <InputGroup>
-      <LeftElement className='mb-1'>
-        <CurrencyDollar className='text-gray-500' />
-      </LeftElement>
-      <Input
-        ref={ref}
-        min={min}
-        max={max}
-        type='number'
-        variant='flushed'
-        value={displayValue}
-        onChange={handleChange}
-        placeholder={placeholder}
-        defaultValue={defaultValue}
-        className='border-transparent focus:border-transparent focus:hover:border-transparent hover:border-transparent'
-      />
-    </InputGroup>
-  );
-});
+    useEffect(() => {
+      setDisplayValue(value);
+    }, [value]);
+
+    return (
+      <InputGroup>
+        {!hideCurrencySymbol && (
+          <LeftElement className='mb-1'>
+            <CurrencyDollar className='text-gray-500' />
+          </LeftElement>
+        )}
+
+        <Input
+          ref={ref}
+          min={min}
+          max={max}
+          type='number'
+          variant='flushed'
+          value={displayValue}
+          onChange={handleChange}
+          placeholder={placeholder}
+          defaultValue={defaultValue}
+          className='border-transparent focus:border-transparent focus:hover:border-transparent hover:border-transparent'
+        />
+      </InputGroup>
+    );
+  },
+);
