@@ -436,20 +436,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     { eventTypes: ['keydown', 'keyup'] },
   );
 
-  if (
-    (tableViewDef?.value.tableType === TableViewType.Organizations &&
-      store.organizations?.toArray().length === 0 &&
-      !store.organizations.isLoading) ||
-    (tableViewDef?.value.tableType === TableViewType.Contacts &&
-      store.contacts?.toArray().length === 0 &&
-      !store.contacts.isLoading) ||
-    (tableViewDef?.value.tableType === TableViewType.Invoices &&
-      store.invoices?.toArray().length === 0 &&
-      !store.invoices.isLoading)
-  ) {
-    return <EmptyState />;
-  }
-
   const isEditing = store.ui.isEditingTableCell;
   const isFiltering = store.ui.isFilteringTable;
   const isSearching =
@@ -617,6 +603,20 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       when: store.ui.contactPreviewCardOpen,
     },
   );
+
+  if (
+    (tableViewDef?.value.tableType === TableViewType.Organizations &&
+      store.organizations?.toArray().length === 0 &&
+      !store.organizations.isLoading) ||
+    (tableViewDef?.value.tableType === TableViewType.Contacts &&
+      store.contacts?.toArray().length === 0 &&
+      !store.contacts.isLoading) ||
+    (tableViewDef?.value.tableType === TableViewType.Invoices &&
+      store.invoices?.toArray().length === 0 &&
+      !store.invoices.isLoading)
+  ) {
+    return <EmptyState />;
+  }
 
   return (
     <div className='flex'>
