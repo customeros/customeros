@@ -9,6 +9,7 @@ import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { Switch } from '@ui/form/Switch';
 import { DateTimeUtils } from '@utils/date.ts';
 import { useStore } from '@shared/hooks/useStore';
+import { Radio, RadioGroup } from '@ui/form/Radio';
 import { Button } from '@ui/form/Button/Button.tsx';
 import { ModalBody } from '@ui/overlay/Modal/Modal.tsx';
 import { Divider } from '@ui/presentation/Divider/Divider.tsx';
@@ -323,7 +324,7 @@ export const ContractBillingDetailsForm = observer(
               <Divider />
             </div>
 
-            <div className='flex flex-col gap-1 mb-2'>
+            <div className='flex flex-col gap-2 mb-2'>
               <div className='flex flex-col w-full justify-between items-start'>
                 <div className='flex  items-center justify-between w-full'>
                   <PaymentDetailsPopover
@@ -350,7 +351,8 @@ export const ContractBillingDetailsForm = observer(
                         ...contract,
                         billingDetails: {
                           ...contract.billingDetails,
-                          payAutomatically: !!value,
+                          payAutomatically: value,
+                          payOnline: false,
                         },
                       }));
                     }}
@@ -358,40 +360,42 @@ export const ContractBillingDetailsForm = observer(
                 </div>
               </div>
 
-              <div className='flex w-full justify-between items-center'>
-                <PaymentDetailsPopover
-                  withNavigation
-                  content={isStripeActive ? '' : 'No payment provider enabled'}
-                >
-                  <div className='text-base font-normal whitespace-nowrap'>
-                    Payment link via Stripe
-                  </div>
-                </PaymentDetailsPopover>
-                <Switch
-                  size='sm'
-                  name='payOnline'
-                  isInvalid={!isStripeActive}
-                  isChecked={
-                    !!contractStore?.tempValue?.billingDetails?.payOnline
-                  }
-                  onChange={(value) =>
-                    contractStore?.updateTemp((contract) => ({
-                      ...contract,
-                      billingDetails: {
-                        ...contract.billingDetails,
-                        payOnline: value,
-                      },
-                    }))
-                  }
-                />
-              </div>
+              <RadioGroup
+                name='created-date'
+                disabled={
+                  !contractStore.tempValue.billingDetails?.payAutomatically
+                }
+                value={
+                  contractStore.tempValue.billingDetails?.payAutomatically
+                    ? `${!!contractStore.tempValue.billingDetails?.payOnline}`
+                    : 'undefined'
+                }
+                onValueChange={(newValue) => {
+                  contractStore?.updateTemp((contract) => ({
+                    ...contract,
+                    billingDetails: {
+                      ...contract.billingDetails,
+                      payOnline: newValue === 'true',
+                    },
+                  }));
+                }}
+              >
+                <div className='flex flex-col gap-2 items-start'>
+                  <Radio value={'true'}>
+                    <span>Auto-charge card</span>
+                  </Radio>
+                  <Radio value={'false'}>
+                    <span>One-off payment link</span>
+                  </Radio>
+                </div>
+              </RadioGroup>
 
               <div className='flex w-full justify-between items-center'>
                 <PaymentDetailsPopover
                   withNavigation
                   content={bankTransferPopoverContent}
                 >
-                  <div className='text-base font-normal whitespace-nowrap'>
+                  <div className='font-normal whitespace-nowrap'>
                     Bank transfer
                   </div>
                 </PaymentDetailsPopover>
@@ -422,9 +426,7 @@ export const ContractBillingDetailsForm = observer(
                     tenantBillingProfile?.check ? '' : 'Check not enabled yet'
                   }
                 >
-                  <div className='text-base font-normal whitespace-nowrap'>
-                    Checks
-                  </div>
+                  <div className='font-normal whitespace-nowrap'>Checks</div>
                 </PaymentDetailsPopover>
                 <Switch
                   size='sm'
