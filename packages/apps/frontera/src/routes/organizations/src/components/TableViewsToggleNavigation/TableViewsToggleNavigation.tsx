@@ -23,8 +23,8 @@ export const TableViewsToggleNavigation = observer(() => {
   const tableViewType = tableViewDef?.tableType;
 
   const findPresetTable = (tableIdTypes: TableIdType[]): string | null => {
-    const presetTable = tableViewDefs.find(
-      (def) => tableIdTypes.includes(def.value.tableId) && def.value.isPreset,
+    const presetTable = tableViewDefs.find((def) =>
+      tableIdTypes.includes(def.value.tableId),
     );
 
     return presetTable ? presetTable.value.id : null;
@@ -33,12 +33,13 @@ export const TableViewsToggleNavigation = observer(() => {
   const getTablePair = (): [string | null, string | null] => {
     switch (tableViewId) {
       case TableIdType.Targets:
-      case TableIdType.ContactsForTargetOrganizations:
+
+      case TableIdType.ContactsForTargetOrganizations: {
         return [
           findPresetTable([TableIdType.Targets]),
           findPresetTable([TableIdType.ContactsForTargetOrganizations]),
         ];
-
+      }
       case TableIdType.UpcomingInvoices:
       case TableIdType.PastInvoices:
         return [
@@ -67,14 +68,16 @@ export const TableViewsToggleNavigation = observer(() => {
     (tableViewType &&
       [TableViewType.Contacts, TableViewType.Invoices].includes(
         tableViewType,
-      )) ||
+      ) &&
+      tableViewDef?.isPreset) ||
     (tableViewId &&
       [
         TableIdType.Organizations,
         TableIdType.Targets,
         TableIdType.UpcomingInvoices,
         TableIdType.PastInvoices,
-      ].includes(tableViewId));
+      ].includes(tableViewId) &&
+      tableViewDef?.isPreset);
 
   const getButtonLabels = (): [string, string] => {
     if (
