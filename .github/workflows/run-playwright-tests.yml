@@ -2,6 +2,15 @@ name: Playwright Tests
 
 on:
   workflow_dispatch:
+  repository_dispatch:
+    types:
+      - frontera-app * deployed
+      - frontera-middleware * deployed
+      - realtime-api * deployed
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.client_payload.version || github.sha }}
+  cancel-in-progress: false
 
 jobs:
   test:
