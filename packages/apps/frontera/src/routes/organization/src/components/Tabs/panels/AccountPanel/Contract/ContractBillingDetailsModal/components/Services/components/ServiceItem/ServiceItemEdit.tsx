@@ -1,8 +1,9 @@
+import { useState } from 'react';
+
 import { observer } from 'mobx-react-lite';
 import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
 
 import { DateTimeUtils } from '@utils/date.ts';
-import { ResizableInput } from '@ui/form/Input';
 import { ContractStatus } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { toastError } from '@ui/presentation/Toast';
@@ -41,7 +42,9 @@ export const ServiceItemEdit = observer(
     contractStatus,
   }: ServiceItemProps) => {
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
-
+    const [value, setValue] = useState(
+      () => service?.value.price.toString() ?? '',
+    );
     const isDraft =
       contractStatus &&
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
@@ -203,27 +206,30 @@ export const ServiceItemEdit = observer(
 
           {sliCurrencySymbol}
 
-          <ResizableInput
-            size='xs'
-            step='0.01'
-            type={'number'}
+          <MaskedResizableInput
+            mask={`num`}
+            value={value}
             placeholder='0'
             className={inputClasses}
             onFocus={(e) => e.target.select()}
-            value={service?.tempValue?.price ?? ''}
-            min={type === 'one-time' ? -999999999999 : 0}
-            onBlur={(e) => {
-              const value = e.target?.value || '0';
-
-              updatePrice(value);
+            onAccept={(val, maskRef) => {
+              updatePrice(maskRef._unmaskedValue);
+              setValue(val);
             }}
-            onChange={(e) => {
-              const formatted =
-                type === 'subscription'
-                  ? e.target.value?.replace('-', '')
-                  : e.target.value;
-
-              updatePrice(formatted ?? '');
+            blocks={{
+              num: {
+                mask: Number,
+                scale: 2,
+                radix: '.',
+                mapToRadix: [','],
+                lazy: false,
+                min: type === 'one-time' ? -9999999999 : 0,
+                placeholderChar: '#',
+                thousandsSeparator: ',',
+                normalizeZeros: true,
+                padFractionalZeros: true,
+                autofix: true,
+              },
             }}
           />
 
