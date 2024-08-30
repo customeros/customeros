@@ -53,7 +53,11 @@ export const RootSidenavItem = observer(
 
         return;
       }
-      store.tableViewDefs.createFavorite(id);
+      store.ui.commandMenu.toggle('DuplicateView');
+      store.ui.commandMenu.setContext({
+        ids: [id],
+        entity: 'TableViewDef',
+      });
     };
 
     return (
@@ -92,7 +96,7 @@ export const RootSidenavItem = observer(
             <MenuList align='end' side='bottom'>
               <MenuItem onClick={handleAddToMyViews}>
                 <LayersTwo01 className='text-gray-500' />
-                Duplicate to My Views
+                Duplicate view...
               </MenuItem>
             </MenuList>
           </Menu>
