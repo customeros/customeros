@@ -152,7 +152,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 		cacheDomain, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Save(ctx, postgresentity.CacheEmailValidationDomain{
 			Domain:              domain,
 			Provider:            domainValidation.Provider,
-			Firewall:            domainValidation.Firewall,
+			Firewall:            domainValidation.SecureGatewayProvider,
 			IsCatchAll:          domainValidation.IsCatchAll,
 			IsFirewalled:        domainValidation.IsFirewalled,
 			HasMXRecord:         domainValidation.HasMXRecord,
