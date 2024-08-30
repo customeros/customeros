@@ -945,6 +945,8 @@ github.com/customeros/mailsherpa v0.2.1 h1:ZcR8o8GmaKSYk0WdRarVeVzQ7wKb+MRdnB8ES
 github.com/customeros/mailsherpa v0.2.1/go.mod h1:q04Xk7+i6M7XTxrY9tS3uYN68urvgrswbCw8Vi6Zbjw=
 github.com/customeros/mailsherpa v0.2.2 h1:4FrJqQpOkC1PdCdWynkgawaXWaOURtg2BxziK380MOU=
 github.com/customeros/mailsherpa v0.2.2/go.mod h1:q04Xk7+i6M7XTxrY9tS3uYN68urvgrswbCw8Vi6Zbjw=
+github.com/customeros/mailsherpa v0.2.3 h1:LCW5e/tYUewtTpXqybhWIEp4T8rhswuBMglfyNshEQE=
+github.com/customeros/mailsherpa v0.2.3/go.mod h1:q04Xk7+i6M7XTxrY9tS3uYN68urvgrswbCw8Vi6Zbjw=
 github.com/cyphar/filepath-securejoin v0.2.3/go.mod h1:aPGpWjXOXUn2NCNjFvBE6aRxGGx79pTxQpKOJNYHHl4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
