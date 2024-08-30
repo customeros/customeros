@@ -116,7 +116,9 @@ export const columns: Record<string, Column> = {
         />
       ),
       cell: (props) => {
-        return <StageCell stage={props.getValue()} />;
+        return (
+          <StageCell stage={props.getValue()} id={props.row.original.id} />
+        );
       },
       skeleton: () => <Skeleton className='w-[100%] h-[14px]' />,
     },

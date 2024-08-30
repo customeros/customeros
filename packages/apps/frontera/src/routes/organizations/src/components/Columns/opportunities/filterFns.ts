@@ -64,7 +64,10 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
-        return filterValue.includes(row.value.externalStage);
+        return (
+          filterValue.includes(row.value.externalStage) ||
+          filterValue.includes(row.value.internalStage)
+        );
       },
     )
     .with(
