@@ -73,7 +73,6 @@ export const EditPersonaTag = observer(() => {
 
   const handleCreateOption = (value: string) => {
     store.tags?.create({ name: value });
-
     contact?.update((c) => {
       c.tags = [
         ...(c.tags || []),
@@ -130,12 +129,17 @@ export const EditPersonaTag = observer(() => {
   });
 
   return (
-    <Command label='Change or add tags...'>
+    <Command shouldFilter={false} label='Change or add tags...'>
       <CommandInput
         label={label}
         value={search}
         onValueChange={setSearch}
         placeholder='Edit persona tag...'
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
       />
 
       <CommandGroup>
@@ -165,23 +169,3 @@ export const EditPersonaTag = observer(() => {
     </Command>
   );
 });
-
-// const EmptySearch = ({
-//   createOption,
-//   search,
-// }: {
-//   search: string;
-//   createOption: (data: string) => void;
-// }) => {
-//   return (
-//     <div
-//       tabIndex={0}
-//       onClick={() => createOption(search)}
-//       className='mx-5 my-3 p-2 flex flex-1 items-center text-gray-500 text-sm hover:bg-gray-50 rounded cursor-pointer'
-//     >
-//       <Plus />
-//       <span className='text-gray-700 ml-1'>Create new tag:</span>
-//       <span className='text-gray-500 ml-1'>{search}</span>
-//     </div>
-//   );
-// };

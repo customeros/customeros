@@ -26,7 +26,15 @@ export const CommandsContainer = ({
         return 0;
       }}
     >
-      <CommandInput label={label} placeholder='Type a command or search' />
+      <CommandInput
+        label={label}
+        placeholder='Type a command or search'
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
+      />
       <Command.List>
         <Command.Group>{children}</Command.Group>
         <GlobalSearchResultNavigationCommands />

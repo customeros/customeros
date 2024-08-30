@@ -46,6 +46,11 @@ export const EditPhoneNumber = observer(() => {
         value={number}
         placeholder='Edit phone number'
         onValueChange={(value) => setPhone(value)}
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
       />
       <Command.List>
         <CommandItem

@@ -55,6 +55,11 @@ export const EditJobTitle = observer(() => {
         value={name || ''}
         placeholder='Edit job title'
         onValueChange={(value) => setName(value)}
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
       />
       <Command.List>
         <CommandItem

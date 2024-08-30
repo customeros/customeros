@@ -14,6 +14,7 @@ interface CommandInputProps
   placeholder: string;
   children?: React.ReactNode;
   onValueChange?: (value: string) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
 
 export const CommandInput = ({
@@ -22,6 +23,7 @@ export const CommandInput = ({
   children,
   placeholder,
   onValueChange,
+  onKeyDown,
   ...rest
 }: CommandInputProps) => {
   return (
