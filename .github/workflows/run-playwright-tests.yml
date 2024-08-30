@@ -9,7 +9,7 @@ on:
       - realtime-api * deployed
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.client_payload.version || github.sha }}
+  group: ${{ github.workflow }}-global
   cancel-in-progress: false
 
 jobs:
