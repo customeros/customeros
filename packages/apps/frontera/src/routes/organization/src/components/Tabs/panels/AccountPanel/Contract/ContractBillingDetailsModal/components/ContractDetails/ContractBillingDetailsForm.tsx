@@ -352,7 +352,7 @@ export const ContractBillingDetailsForm = observer(
                         billingDetails: {
                           ...contract.billingDetails,
                           payAutomatically: value,
-                          payOnline: false,
+                          payOnline: true,
                         },
                       }));
                     }}
@@ -360,35 +360,34 @@ export const ContractBillingDetailsForm = observer(
                 </div>
               </div>
 
-              <RadioGroup
-                name='created-date'
-                disabled={
-                  !contractStore.tempValue.billingDetails?.payAutomatically
-                }
-                value={
-                  contractStore.tempValue.billingDetails?.payAutomatically
-                    ? `${!!contractStore.tempValue.billingDetails?.payOnline}`
-                    : 'undefined'
-                }
-                onValueChange={(newValue) => {
-                  contractStore?.updateTemp((contract) => ({
-                    ...contract,
-                    billingDetails: {
-                      ...contract.billingDetails,
-                      payOnline: newValue === 'true',
-                    },
-                  }));
-                }}
-              >
-                <div className='flex flex-col gap-2 items-start'>
-                  <Radio value={'true'}>
-                    <span>Auto-charge card</span>
-                  </Radio>
-                  <Radio value={'false'}>
-                    <span>One-off payment link</span>
-                  </Radio>
-                </div>
-              </RadioGroup>
+              {contractStore?.tempValue.billingDetails?.payAutomatically && (
+                <RadioGroup
+                  name='created-date'
+                  value={`${!!contractStore.tempValue.billingDetails
+                    ?.payOnline}`}
+                  disabled={
+                    !contractStore.tempValue.billingDetails?.payAutomatically
+                  }
+                  onValueChange={(newValue) => {
+                    contractStore?.updateTemp((contract) => ({
+                      ...contract,
+                      billingDetails: {
+                        ...contract.billingDetails,
+                        payOnline: newValue === 'true',
+                      },
+                    }));
+                  }}
+                >
+                  <div className='flex flex-col gap-2 items-start'>
+                    <Radio value={'true'}>
+                      <span>Auto-charge card</span>
+                    </Radio>
+                    <Radio value={'false'}>
+                      <span>One-off payment link</span>
+                    </Radio>
+                  </div>
+                </RadioGroup>
+              )}
 
               <div className='flex w-full justify-between items-center'>
                 <PaymentDetailsPopover
