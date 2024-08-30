@@ -88,7 +88,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			Email:                 emailAddress,
 			Deliverable:           result.Data.EmailData.Deliverable,
 			Provider:              result.Data.DomainData.Provider,
-			SecureGatewayProvider: result.Data.DomainData.Firewall,
+			SecureGatewayProvider: result.Data.DomainData.SecureGatewayProvider,
 			IsCatchAll:            result.Data.DomainData.IsCatchAll,
 			IsRisky: result.Data.DomainData.IsFirewalled ||
 				result.Data.EmailData.IsRoleAccount ||

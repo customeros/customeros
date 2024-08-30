@@ -39,17 +39,17 @@ type ValidateEmailMailSherpaData struct {
 		CleanEmail string `json:"cleanEmail"`
 	} `json:"syntax"`
 	DomainData struct {
-		IsFirewalled   bool   `json:"isFirewalled"`
-		Provider       string `json:"provider"`
-		Firewall       string `json:"firewall"`
-		IsCatchAll     bool   `json:"isCatchAll"`
-		CanConnectSMTP bool   `json:"canConnectSMTP"`
-		HasMXRecord    bool   `json:"hasMXRecord"`
-		HasSPFRecord   bool   `json:"hasSPFRecord"`
-		TLSRequired    bool   `json:"tlsRequired"`
-		ResponseCode   string `json:"responseCode"`
-		ErrorCode      string `json:"errorCode"`
-		Description    string `json:"description"`
+		IsFirewalled          bool   `json:"isFirewalled"`
+		Provider              string `json:"provider"`
+		SecureGatewayProvider string `json:"secureGatewayProvider"`
+		IsCatchAll            bool   `json:"isCatchAll"`
+		CanConnectSMTP        bool   `json:"canConnectSMTP"`
+		HasMXRecord           bool   `json:"hasMXRecord"`
+		HasSPFRecord          bool   `json:"hasSPFRecord"`
+		TLSRequired           bool   `json:"tlsRequired"`
+		ResponseCode          string `json:"responseCode"`
+		ErrorCode             string `json:"errorCode"`
+		Description           string `json:"description"`
 	} `json:"domainData"`
 	EmailData struct {
 		SkippedValidation bool   `json:"skippedValidation"` // if true, email validation was skipped
