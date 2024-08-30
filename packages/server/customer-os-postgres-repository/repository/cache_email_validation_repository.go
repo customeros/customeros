@@ -85,6 +85,7 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 			"health_server_ip":      cacheEmailValidation.HealthServerIP,
 			"health_from_email":     cacheEmailValidation.HealthFromEmail,
 			"health_retry_after":    cacheEmailValidation.HealthRetryAfter,
+			"alternate_email":       cacheEmailValidation.AlternateEmail,
 			"error":                 cacheEmailValidation.Error,
 			"data":                  cacheEmailValidation.Data,
 		}

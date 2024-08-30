@@ -25,6 +25,7 @@ type CacheEmailValidation struct {
 	HealthServerIP      string    `gorm:"column:health_server_ip;type:varchar(255)" json:"healthServerIP"`
 	HealthFromEmail     string    `gorm:"column:health_from_email;type:varchar(255)" json:"healthFromEmail"`
 	HealthRetryAfter    int       `gorm:"column:health_retry_after;type:integer" json:"healthRetryAfter"`
+	AlternateEmail      string    `gorm:"column:alternate_email;type:varchar(255)" json:"alternateEmail"`
 	Error               string    `gorm:"column:error;type:varchar(255)" json:"error"`
 	Data                string    `gorm:"column:data;type:text" json:"data"`
 }

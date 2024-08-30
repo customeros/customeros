@@ -235,10 +235,12 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 					continue
 				}
 				emailRecord.Deliverable = utils.StringPtr(emailValidationResult.Data.EmailData.Deliverable)
-				emailRecord.IsRisky = utils.BoolPtr(emailValidationResult.Data.DomainData.IsFirewalled ||
-					emailValidationResult.Data.EmailData.IsRoleAccount ||
-					emailValidationResult.Data.EmailData.IsFreeAccount ||
-					emailValidationResult.Data.EmailData.IsMailboxFull)
+				emailRecord.IsRisky = utils.BoolPtr(
+					emailValidationResult.Data.DomainData.IsFirewalled ||
+						emailValidationResult.Data.EmailData.IsRoleAccount ||
+						emailValidationResult.Data.EmailData.IsFreeAccount ||
+						emailValidationResult.Data.EmailData.IsMailboxFull ||
+						!emailValidationResult.Data.DomainData.IsPrimaryDomain)
 				if emailValidationResult.Data.EmailData.IsFreeAccount {
 					emailRecord.Type = utils.StringPtr(emailTypePersonal)
 				} else {
@@ -374,10 +376,12 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 					continue
 				}
 				email.Deliverable = utils.StringPtr(emailValidationResult.Data.EmailData.Deliverable)
-				email.IsRisky = utils.BoolPtr(emailValidationResult.Data.DomainData.IsFirewalled ||
-					emailValidationResult.Data.EmailData.IsRoleAccount ||
-					emailValidationResult.Data.EmailData.IsFreeAccount ||
-					emailValidationResult.Data.EmailData.IsMailboxFull)
+				email.IsRisky = utils.BoolPtr(
+					emailValidationResult.Data.DomainData.IsFirewalled ||
+						emailValidationResult.Data.EmailData.IsRoleAccount ||
+						emailValidationResult.Data.EmailData.IsFreeAccount ||
+						emailValidationResult.Data.EmailData.IsMailboxFull ||
+						!emailValidationResult.Data.DomainData.IsPrimaryDomain)
 				if emailValidationResult.Data.EmailData.IsFreeAccount {
 					email.Type = utils.StringPtr(emailTypePersonal)
 				} else {

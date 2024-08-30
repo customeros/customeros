@@ -29,13 +29,15 @@ type EmailVerificationResponse struct {
 	IsCatchAll            bool                    `json:"isCatchAll"`
 	Risk                  EmailVerificationRisk   `json:"risk"`
 	Syntax                EmailVerificationSyntax `json:"syntax"`
+	AlternateEmail        string                  `json:"alternateEmail"`
 }
 
 type EmailVerificationRisk struct {
-	IsFirewalled   bool `json:"isFirewalled"`
-	IsRoleMailbox  bool `json:"isRoleMailbox"`
-	IsFreeProvider bool `json:"isFreeProvider"`
-	IsMailboxFull  bool `json:"isMailboxFull"`
+	IsFirewalled    bool `json:"isFirewalled"`
+	IsRoleMailbox   bool `json:"isRoleMailbox"`
+	IsFreeProvider  bool `json:"isFreeProvider"`
+	IsMailboxFull   bool `json:"isMailboxFull"`
+	IsPrimaryDomain bool `json:"isPrimaryDomain"`
 }
 
 type EmailVerificationSyntax struct {
@@ -93,18 +95,21 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			IsRisky: result.Data.DomainData.IsFirewalled ||
 				result.Data.EmailData.IsRoleAccount ||
 				result.Data.EmailData.IsFreeAccount ||
-				result.Data.EmailData.IsMailboxFull,
+				result.Data.EmailData.IsMailboxFull ||
+				!result.Data.DomainData.IsPrimaryDomain,
 			Syntax: EmailVerificationSyntax{
 				IsValid: syntaxValidation.IsValid,
 				Domain:  syntaxValidation.Domain,
 				User:    syntaxValidation.User,
 			},
 			Risk: EmailVerificationRisk{
-				IsFirewalled:   result.Data.DomainData.IsFirewalled,
-				IsRoleMailbox:  result.Data.EmailData.IsRoleAccount,
-				IsFreeProvider: result.Data.EmailData.IsFreeAccount,
-				IsMailboxFull:  result.Data.EmailData.IsMailboxFull,
+				IsFirewalled:    result.Data.DomainData.IsFirewalled,
+				IsRoleMailbox:   result.Data.EmailData.IsRoleAccount,
+				IsFreeProvider:  result.Data.EmailData.IsFreeAccount,
+				IsMailboxFull:   result.Data.EmailData.IsMailboxFull,
+				IsPrimaryDomain: result.Data.DomainData.IsPrimaryDomain,
 			},
+			AlternateEmail: result.Data.EmailData.AlternateEmail,
 		}
 
 		c.JSON(http.StatusOK, emailVerificationResponse)

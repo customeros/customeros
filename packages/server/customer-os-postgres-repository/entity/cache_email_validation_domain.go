@@ -25,6 +25,8 @@ type CacheEmailValidationDomain struct {
 	HealthServerIP      string    `gorm:"column:health_server_ip;type:varchar(255)" json:"healthServerIP"`
 	HealthFromEmail     string    `gorm:"column:health_from_email;type:varchar(255)" json:"healthFromEmail"`
 	HealthRetryAfter    int       `gorm:"column:health_retry_after;type:integer" json:"healthRetryAfter"`
+	IsPrimaryDomain     *bool     `gorm:"column:is_primary_domain;type:boolean" json:"isPrimaryDomain"`
+	PrimaryDomain       string    `gorm:"column:primary_domain;type:varchar(255)" json:"primaryDomain"`
 }
 
 func (CacheEmailValidationDomain) TableName() string {

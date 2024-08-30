@@ -105,19 +105,23 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 			IsRisky: emailValidationResponse.Data.DomainData.IsFirewalled ||
 				emailValidationResponse.Data.EmailData.IsRoleAccount ||
 				emailValidationResponse.Data.EmailData.IsFreeAccount ||
-				emailValidationResponse.Data.EmailData.IsMailboxFull,
-			IsFirewalled:  emailValidationResponse.Data.DomainData.IsFirewalled,
-			Provider:      emailValidationResponse.Data.DomainData.Provider,
-			Firewall:      emailValidationResponse.Data.DomainData.SecureGatewayProvider,
-			IsCatchAll:    emailValidationResponse.Data.DomainData.IsCatchAll,
-			Deliverable:   emailValidationResponse.Data.EmailData.Deliverable,
-			IsMailboxFull: emailValidationResponse.Data.EmailData.IsMailboxFull,
-			IsRoleAccount: emailValidationResponse.Data.EmailData.IsRoleAccount,
-			IsFreeAccount: emailValidationResponse.Data.EmailData.IsFreeAccount,
-			SmtpSuccess:   emailValidationResponse.Data.EmailData.SmtpSuccess,
-			ResponseCode:  emailValidationResponse.Data.EmailData.ResponseCode,
-			ErrorCode:     emailValidationResponse.Data.EmailData.ErrorCode,
-			Description:   emailValidationResponse.Data.EmailData.Description,
+				emailValidationResponse.Data.EmailData.IsMailboxFull ||
+				!emailValidationResponse.Data.DomainData.IsPrimaryDomain,
+			IsFirewalled:    emailValidationResponse.Data.DomainData.IsFirewalled,
+			Provider:        emailValidationResponse.Data.DomainData.Provider,
+			Firewall:        emailValidationResponse.Data.DomainData.SecureGatewayProvider,
+			IsCatchAll:      emailValidationResponse.Data.DomainData.IsCatchAll,
+			Deliverable:     emailValidationResponse.Data.EmailData.Deliverable,
+			IsMailboxFull:   emailValidationResponse.Data.EmailData.IsMailboxFull,
+			IsRoleAccount:   emailValidationResponse.Data.EmailData.IsRoleAccount,
+			IsFreeAccount:   emailValidationResponse.Data.EmailData.IsFreeAccount,
+			SmtpSuccess:     emailValidationResponse.Data.EmailData.SmtpSuccess,
+			ResponseCode:    emailValidationResponse.Data.EmailData.ResponseCode,
+			ErrorCode:       emailValidationResponse.Data.EmailData.ErrorCode,
+			Description:     emailValidationResponse.Data.EmailData.Description,
+			IsPrimaryDomain: emailValidationResponse.Data.DomainData.IsPrimaryDomain,
+			PrimaryDomain:   emailValidationResponse.Data.DomainData.PrimaryDomain,
+			AlternateEmail:  emailValidationResponse.Data.EmailData.AlternateEmail,
 		}
 		return h.grpcClients.EmailClient.UpdateEmailValidation(ctx, &request)
 	})
