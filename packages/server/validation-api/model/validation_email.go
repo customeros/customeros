@@ -50,6 +50,8 @@ type ValidateEmailMailSherpaData struct {
 		ResponseCode          string `json:"responseCode"`
 		ErrorCode             string `json:"errorCode"`
 		Description           string `json:"description"`
+		IsPrimaryDomain       bool   `json:"isPrimaryDomain"`
+		PrimaryDomain         string `json:"primaryDomain"`
 	} `json:"domainData"`
 	EmailData struct {
 		SkippedValidation bool   `json:"skippedValidation"` // if true, email validation was skipped
@@ -63,6 +65,7 @@ type ValidateEmailMailSherpaData struct {
 		Description       string `json:"description"`
 		RetryValidation   bool   `json:"retryValidation"` // if true, email validation should be retried
 		TLSRequired       bool   `json:"tlsRequired"`
+		AlternateEmail    string `json:"alternateEmail"`
 	} `json:"emailData"`
 }
 

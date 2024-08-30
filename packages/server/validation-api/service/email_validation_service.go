@@ -90,6 +90,8 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 	result.DomainData.ResponseCode = domainValidation.ResponseCode
 	result.DomainData.ErrorCode = domainValidation.ErrorCode
 	result.DomainData.Description = domainValidation.Description
+	result.DomainData.IsPrimaryDomain = *domainValidation.IsPrimaryDomain
+	result.DomainData.PrimaryDomain = domainValidation.PrimaryDomain
 
 	if domainValidation.HealthIsGreylisted || domainValidation.HealthIsBlacklisted {
 		result.EmailData.Deliverable = string(model.EmailDeliverableStatusUnknown)
@@ -107,10 +109,17 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 
 	// Check for providers that are marked for skip
 	if len(providersToSkip) == 0 || !utils.Contains(providersToSkip, domainValidation.Provider) {
-		emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation)
+		emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation, utils.IfNotNilBool(domainValidation.IsPrimaryDomain, func() bool { return true }), domainValidation.PrimaryDomain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 			return nil, err
+		}
+		alternateEmailValidation := postgresentity.CacheEmailValidation{}
+		if emailValidation.AlternateEmail != "" {
+			alternateEmailValidation, err = s.getEmailValidation(ctx, emailValidation.AlternateEmail, syntaxValidation, true, "")
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to validate alternate email"))
+			}
 		}
 		result.EmailData.Deliverable = emailValidation.Deliverable
 		result.EmailData.IsMailboxFull = emailValidation.IsMailboxFull
@@ -122,6 +131,9 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 		result.EmailData.Description = emailValidation.Description
 		result.EmailData.RetryValidation = emailValidation.RetryValidation
 		result.EmailData.TLSRequired = emailValidation.TLSRequired
+		if emailValidation.AlternateEmail != "" && alternateEmailValidation.Deliverable == string(model.EmailDeliverableStatusDeliverable) {
+			result.EmailData.AlternateEmail = emailValidation.AlternateEmail
+		}
 	} else {
 		result.EmailData.SkippedValidation = true
 		result.EmailData.Deliverable = string(model.EmailDeliverableStatusUnknown)
@@ -130,7 +142,7 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 	return result, nil
 }
 
-func (s *emailValidationService) getDomainValidation(ctx context.Context, domain, email string) (*postgresentity.CacheEmailValidationDomain, error) {
+func (s *emailValidationService) getDomainValidation(ctx context.Context, domain, email string) (postgresentity.CacheEmailValidationDomain, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getDomainValidation")
 	defer span.Finish()
 
@@ -139,7 +151,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
 	}
 
-	if cacheDomain == nil || cacheDomain.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailDomainValidationCacheTtlDays).Before(utils.Now()) {
+	if cacheDomain == nil || cacheDomain.IsPrimaryDomain == nil || cacheDomain.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailDomainValidationCacheTtlDays).Before(utils.Now()) {
 		// get domain data with mailsherpa
 		domainValidation := mailsherpa.ValidateDomain(mailsherpa.EmailValidationRequest{
 			Email:      email,
@@ -168,21 +180,26 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 			HealthIsGreylisted:  domainValidation.MailServerHealth.IsGreylisted,
 			HealthIsBlacklisted: domainValidation.MailServerHealth.IsBlacklisted,
 			HealthRetryAfter:    domainValidation.MailServerHealth.RetryAfter,
+			IsPrimaryDomain:     &domainValidation.IsPrimaryDomain,
+			PrimaryDomain:       domainValidation.PrimaryDomain,
 			Data:                string(jsonData),
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save domain data"))
-			return nil, err
+			return postgresentity.CacheEmailValidationDomain{}, err
 		}
 	}
 
-	return cacheDomain, nil
+	return *cacheDomain, nil
 }
 
-func (s *emailValidationService) getEmailValidation(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation) (*postgresentity.CacheEmailValidation, error) {
+func (s *emailValidationService) getEmailValidation(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation, isPrimaryDomain bool, primaryDomain string) (postgresentity.CacheEmailValidation, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getEmailValidation")
 	defer span.Finish()
-	span.LogFields(log.String("email", email))
+	span.LogFields(
+		log.String("email", email),
+		log.Bool("isPrimaryDomain", isPrimaryDomain),
+		log.String("primaryDomain", primaryDomain))
 
 	cachedEmail, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Get(ctx, email)
 	if err != nil {
@@ -194,13 +211,18 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 		cachedEmail.RetryValidation ||
 		cachedEmail.UpdatedAt.AddDate(0, 0, s.config.EmailConfig.EmailValidationCacheTtlDays).Before(utils.Now()) {
 		// get email data with mailsherpa
-		emailValidation := mailsherpa.ValidateEmail(mailsherpa.EmailValidationRequest{
+		emailValidationRequest := mailsherpa.EmailValidationRequest{
 			Email:      email,
 			FromDomain: s.config.EmailConfig.EmailValidationFromDomain,
-		})
+			DomainValidationParams: &mailsherpa.DomainValidationParams{
+				IsPrimaryDomain: isPrimaryDomain,
+				PrimaryDomain:   primaryDomain,
+			},
+		}
+		emailValidation := mailsherpa.ValidateEmail(emailValidationRequest)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data with mailsherpa"))
-			return nil, err
+			return postgresentity.CacheEmailValidation{}, err
 		}
 		jsonData, err := json.Marshal(emailValidation)
 		if err != nil {
@@ -228,14 +250,15 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			Username:            syntaxValidation.User,
 			NormalizedEmail:     syntaxValidation.CleanEmail,
 			Domain:              syntaxValidation.Domain,
+			AlternateEmail:      emailValidation.AlternateEmail.Email,
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save email data"))
-			return nil, err
+			return postgresentity.CacheEmailValidation{}, err
 		}
 	}
 
-	return cachedEmail, nil
+	return *cachedEmail, nil
 }
 
 func (s *emailValidationService) ValidateEmailScrubby(ctx context.Context, email string) (string, error) {
