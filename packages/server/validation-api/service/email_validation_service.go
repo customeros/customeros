@@ -83,7 +83,7 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 	result.DomainData.IsCatchAll = domainValidation.IsCatchAll
 	result.DomainData.CanConnectSMTP = domainValidation.CanConnectSMTP
 	result.DomainData.Provider = domainValidation.Provider
-	result.DomainData.Firewall = domainValidation.Firewall
+	result.DomainData.SecureGatewayProvider = domainValidation.Firewall
 	result.DomainData.HasMXRecord = domainValidation.HasMXRecord
 	result.DomainData.HasSPFRecord = domainValidation.HasSPFRecord
 	result.DomainData.TLSRequired = domainValidation.TLSRequired
