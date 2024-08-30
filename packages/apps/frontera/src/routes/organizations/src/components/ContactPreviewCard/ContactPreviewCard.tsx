@@ -181,6 +181,7 @@ export const ContactPreviewCard = observer(
               variant='unstyled'
               value={role || ''}
               placeholder='Enter title'
+              onFocus={(e) => e.target.select()}
               className='w-[290px] overflow-hidden text-ellipsis whitespace-nowrap'
               onChange={(e) => {
                 contact?.update((value) => {
@@ -215,6 +216,7 @@ export const ContactPreviewCard = observer(
                 size='xs'
                 variant='unstyled'
                 placeholder='Email address'
+                onFocus={(e) => e.target.select()}
                 className='text-ellipsis ml-[-2px]'
                 value={contact?.value.emails?.[0]?.email || ''}
                 onBlur={() => {
@@ -281,6 +283,7 @@ export const ContactPreviewCard = observer(
                   variant='unstyled'
                   value={fromatedUrl}
                   className='text-ellipsis'
+                  onFocus={(e) => e.target.select()}
                   placeholder='LinkedIn profile link'
                   onChange={(e) => {
                     handleUpdateSocial(e.target.value);

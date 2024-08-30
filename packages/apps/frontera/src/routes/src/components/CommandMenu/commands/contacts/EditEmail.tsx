@@ -51,6 +51,11 @@ export const EditEmail = observer(() => {
         label={label}
         value={email || ''}
         placeholder='Edit email'
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
         onValueChange={(value) => {
           setEmail(value);
           contact?.update(

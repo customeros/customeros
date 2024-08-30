@@ -58,6 +58,11 @@ export const EditTimeZone = observer(() => {
         onValueChange={setSearch}
         placeholder='Choose a timezone...'
         value={search ?? contactTimeZone?.label}
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
       />
       <Command.List>
         {timezoneOptions

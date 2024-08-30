@@ -36,6 +36,11 @@ export const EditName = observer(() => {
         value={name || ''}
         placeholder='Edit name'
         onValueChange={(value) => setName(value)}
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
       />
       <Command.List>
         <CommandItem

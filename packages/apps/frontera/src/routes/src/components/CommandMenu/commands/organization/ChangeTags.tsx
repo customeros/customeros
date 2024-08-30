@@ -186,7 +186,7 @@ export const ChangeTags = observer(() => {
   );
 
   return (
-    <Command label='Change or add tags...'>
+    <Command shouldFilter={false} label='Change or add tags...'>
       <CommandInput
         label={label}
         value={search}

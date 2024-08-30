@@ -72,6 +72,11 @@ export const ChangeOrAddJobRoles = observer(() => {
         value={search}
         onValueChange={setSearch}
         placeholder='Edit job roles...'
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
       />
 
       <Command.List>

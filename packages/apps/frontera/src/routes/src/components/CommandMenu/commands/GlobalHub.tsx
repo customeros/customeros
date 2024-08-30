@@ -15,7 +15,14 @@ import {
 export const GlobalHub = () => {
   return (
     <Command>
-      <CommandInput placeholder='Type a command or search' />
+      <CommandInput
+        placeholder='Type a command or search'
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
+      />
 
       <Command.List>
         <GlobalSharedCommands />
