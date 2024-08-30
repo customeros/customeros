@@ -3,6 +3,7 @@ package rest
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
@@ -133,10 +134,11 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		email := c.Query("email")
 		firstName := c.Query("firstName")
 		lastName := c.Query("lastName")
-		searchPhoneNumberParam := c.Query("phoneNumber")
+		enrichPhoneNumberParam := c.Query("includeMobileNumber")
 		// convert to boolean
-		searchPhoneNumber := searchPhoneNumberParam == "true"
+		enrichPhoneNumber := enrichPhoneNumberParam == "true"
 
+		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(email) == "" {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing required parameters linkedinUrl or email"})
 			return
@@ -145,7 +147,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		span.LogFields(
 			log.String("request.email", email),
 			log.String("request.linkedinUrl", linkedinUrl),
-			log.Bool("request.searchPhoneNumber", searchPhoneNumber),
+			log.Bool("request.includeMobileNumber", enrichPhoneNumber),
 			log.String("request.firstName", firstName),
 			log.String("request.lastName", lastName))
 
@@ -168,7 +170,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		enrichedPersonData := mapScrapInData(&scrapInPersonResponse)
 
 		// Call findWorkEmail API
-		findWorkEmailApiResponse, err := callApiFindWorkEmail(ctx, services, span, *enrichPersonApiResponse)
+		findWorkEmailApiResponse, err := callApiFindWorkEmail(ctx, services, span, *enrichPersonApiResponse, enrichPhoneNumber)
 		if err != nil || findWorkEmailApiResponse == nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
 			return
@@ -196,14 +198,25 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			}
 			response.IsComplete = false
 			response.PendingFields = []string{"email"}
+			if enrichPhoneNumber {
+				response.PendingFields = append(response.PendingFields, "phone number")
+			}
 			response.ResultURL = services.Cfg.Services.CustomerOsApiUrl + enrichPersonAcceptedUrl + "/" + dbRecord.ID.String()
 		} else {
 			response.IsComplete = true
-			for _, datas := range betterContactResponseBody.Data {
-				if datas.ContactEmailAddress != "" {
+			for _, item := range betterContactResponseBody.Data {
+				if item.ContactEmailAddress != "" {
 					response.Data.Emails = append(response.Data.Emails, EnrichPersonEmail{
-						Address: datas.ContactEmailAddress,
+						Address: item.ContactEmailAddress,
 					})
+				}
+				if enrichPhoneNumber {
+					if item.ContactPhoneNumber != nil && fmt.Sprintf("%v", item.ContactPhoneNumber) != "" {
+						response.Data.PhoneNumbers = append(response.Data.PhoneNumbers, EnrichPersonPhoneNumber{
+							Number: fmt.Sprintf("%v", item.ContactPhoneNumber),
+							Type:   "mobile",
+						})
+					}
 				}
 			}
 		}
@@ -326,13 +339,22 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		if betterContactResponseBody == nil {
 			response.IsComplete = false
 			response.PendingFields = []string{"email"}
+			if betterContactDbRecord.EnrichPhoneNumber {
+				response.PendingFields = append(response.PendingFields, "phone number")
+			}
 			response.ResultURL = services.Cfg.Services.CustomerOsApiUrl + enrichPersonAcceptedUrl + "/" + tempId
 		} else {
 			response.IsComplete = true
-			for _, datas := range betterContactResponseBody.Data {
-				if datas.ContactEmailAddress != "" {
+			for _, item := range betterContactResponseBody.Data {
+				if item.ContactEmailAddress != "" {
 					response.Data.Emails = append(response.Data.Emails, EnrichPersonEmail{
-						Address: datas.ContactEmailAddress,
+						Address: item.ContactEmailAddress,
+					})
+				}
+				if item.ContactPhoneNumber != nil && fmt.Sprintf("%v", item.ContactPhoneNumber) != "" {
+					response.Data.PhoneNumbers = append(response.Data.PhoneNumbers, EnrichPersonPhoneNumber{
+						Number: fmt.Sprintf("%v", item.ContactPhoneNumber),
+						Type:   "mobile",
 					})
 				}
 			}
@@ -415,18 +437,19 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 	return &enrichPersonApiResponse, nil
 }
 
-func callApiFindWorkEmail(ctx context.Context, services *service.Services, span opentracing.Span, enrichPersonApiResponse enrichmentmodel.EnrichPersonResponse) (*enrichmentmodel.FindWorkEmailResponse, error) {
+func callApiFindWorkEmail(ctx context.Context, services *service.Services, span opentracing.Span, enrichPersonApiResponse enrichmentmodel.EnrichPersonResponse, enrichPhoneNumber bool) (*enrichmentmodel.FindWorkEmailResponse, error) {
 	companyName, companyDomain := "", ""
 	if enrichPersonApiResponse.Data.PersonProfile.Company != nil {
 		companyName = enrichPersonApiResponse.Data.PersonProfile.Company.Name
 		companyDomain = services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl)
 	}
 	requestJSON, err := json.Marshal(enrichmentmodel.FindWorkEmailRequest{
-		LinkedinUrl:   enrichPersonApiResponse.Data.PersonProfile.Person.LinkedInUrl,
-		FirstName:     enrichPersonApiResponse.Data.PersonProfile.Person.FirstName,
-		LastName:      enrichPersonApiResponse.Data.PersonProfile.Person.LastName,
-		CompanyName:   companyName,
-		CompanyDomain: companyDomain,
+		LinkedinUrl:       enrichPersonApiResponse.Data.PersonProfile.Person.LinkedInUrl,
+		FirstName:         enrichPersonApiResponse.Data.PersonProfile.Person.FirstName,
+		LastName:          enrichPersonApiResponse.Data.PersonProfile.Person.LastName,
+		CompanyName:       companyName,
+		CompanyDomain:     companyDomain,
+		EnrichPhoneNumber: enrichPhoneNumber,
 	})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
