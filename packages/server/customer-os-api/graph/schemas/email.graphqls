@@ -70,20 +70,23 @@ type Email {
 }
 
 type EmailValidationDetails {
-    verified:       Boolean!
-    verifyingCheckAll: Boolean!
-    isValidSyntax:  Boolean
-    isRisky:        Boolean
-    isFirewalled:   Boolean
-    provider:       String
-    firewall:       String
-    isCatchAll:     Boolean
-    canConnectSmtp: Boolean
-    isMailboxFull:  Boolean
-    isRoleAccount:  Boolean
-    isFreeAccount:  Boolean
-    smtpSuccess:    Boolean
-    deliverable:    EmailDeliverable
+    verified:           Boolean!
+    verifyingCheckAll:  Boolean!
+    isValidSyntax:      Boolean
+    isRisky:            Boolean
+    isFirewalled:       Boolean
+    provider:           String
+    firewall:           String
+    isCatchAll:         Boolean
+    canConnectSmtp:     Boolean
+    isMailboxFull:      Boolean
+    isRoleAccount:      Boolean
+    isFreeAccount:      Boolean
+    smtpSuccess:        Boolean
+    deliverable:        EmailDeliverable
+    isPrimaryDomain:    Boolean
+    primaryDomain:      String
+    alternateEmail:     String
     isDeliverable:  Boolean @deprecated
 }
 

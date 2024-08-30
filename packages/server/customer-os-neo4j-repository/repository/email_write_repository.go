@@ -21,24 +21,27 @@ type EmailCreateFields struct {
 }
 
 type EmailValidatedFields struct {
-	EmailAddress  string    `json:"emailAddress"`
-	Domain        string    `json:"domain"`
-	IsCatchAll    bool      `json:"isCatchAll"`
-	Deliverable   string    `json:"deliverable"`
-	IsValidSyntax bool      `json:"isValidSyntax"`
-	Username      string    `json:"username"`
-	ValidatedAt   time.Time `json:"validatedAt"`
-	IsRoleAccount bool      `json:"isRoleAccount"`
-	IsRisky       bool      `json:"isRisky"`
-	IsFirewalled  bool      `json:"isFirewalled"`
-	Provider      string    `json:"provider"`
-	Firewall      string    `json:"firewall"`
-	IsMailboxFull bool      `json:"isMailboxFull"`
-	IsFreeAccount bool      `json:"isFreeAccount"`
-	SmtpSuccess   bool      `json:"smtpSuccess"`
-	ResponseCode  string    `json:"responseCode"`
-	ErrorCode     string    `json:"errorCode"`
-	Description   string    `json:"description"`
+	EmailAddress    string    `json:"emailAddress"`
+	Domain          string    `json:"domain"`
+	IsCatchAll      bool      `json:"isCatchAll"`
+	Deliverable     string    `json:"deliverable"`
+	IsValidSyntax   bool      `json:"isValidSyntax"`
+	Username        string    `json:"username"`
+	ValidatedAt     time.Time `json:"validatedAt"`
+	IsRoleAccount   bool      `json:"isRoleAccount"`
+	IsRisky         bool      `json:"isRisky"`
+	IsFirewalled    bool      `json:"isFirewalled"`
+	Provider        string    `json:"provider"`
+	Firewall        string    `json:"firewall"`
+	IsMailboxFull   bool      `json:"isMailboxFull"`
+	IsFreeAccount   bool      `json:"isFreeAccount"`
+	SmtpSuccess     bool      `json:"smtpSuccess"`
+	ResponseCode    string    `json:"responseCode"`
+	ErrorCode       string    `json:"errorCode"`
+	Description     string    `json:"description"`
+	IsPrimaryDomain bool      `json:"isPrimaryDomain"`
+	PrimaryDomain   string    `json:"primaryDomain"`
+	AlternateEmail  string    `json:"alternateEmail"`
 }
 
 type EmailWriteRepository interface {
@@ -155,7 +158,10 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.smtpSuccess = $smtpSuccess,
 					e.verifyResponseCode = $verifyResponseCode,
 					e.verifyErrorCode = $verifyErrorCode,
-					e.verifyDescription = $verifyDescription
+					e.verifyDescription = $verifyDescription,
+					e.isPrimaryDomain = $isPrimaryDomain,
+					e.primaryDomain = $primaryDomain,
+					e.alternateEmail = $alternateEmail
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
@@ -187,6 +193,9 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"verifyResponseCode": data.ResponseCode,
 		"verifyErrorCode":    data.ErrorCode,
 		"verifyDescription":  data.Description,
+		"isPrimaryDomain":    data.IsPrimaryDomain,
+		"primaryDomain":      data.PrimaryDomain,
+		"alternateEmail":     data.AlternateEmail,
 		"now":                utils.Now(),
 		"source":             constants.SourceOpenline,
 		"appSource":          constants.AppSourceEventProcessingPlatform,
@@ -323,6 +332,9 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 					e.verifyResponseCode = null,
 					e.verifyErrorCode = null,
 					e.verifyDescription = null,
+					e.isPrimaryDomain = null,
+					e.primaryDomain = null,
+					e.alternateEmail = null,
 					e.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":     emailId,

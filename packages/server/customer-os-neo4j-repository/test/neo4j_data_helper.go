@@ -541,6 +541,9 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 									e.verifyResponseCode=$verifyResponseCode,
 									e.verifyErrorCode=$verifyErrorCode,
 									e.verifyDescription=$verifyDescription,
+									e.isPrimaryDomain=$isPrimaryDomain,
+									e.primaryDomain=$primaryDomain,
+									e.alternateEmail=$alternateEmail,
 									e.createdAt=$createdAt,
 									e.updatedAt=$updatedAt
 							`, tenant)
@@ -566,6 +569,9 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 		"verifyResponseCode": entity.ResponseCode,
 		"verifyErrorCode":    entity.ErrorCode,
 		"verifyDescription":  entity.Description,
+		"isPrimaryDomain":    entity.IsPrimaryDomain,
+		"primaryDomain":      entity.PrimaryDomain,
+		"alternateEmail":     entity.AlternateEmail,
 	})
 	return emailId
 }
