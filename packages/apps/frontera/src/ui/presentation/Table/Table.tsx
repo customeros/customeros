@@ -448,7 +448,7 @@ const TableBody = <T extends object>({
 
         const minW = table.getCenterTotalSize() + (enableRowSelection ? 32 : 0);
         const top = `${virtualRow.start}px`;
-        const hoverStyle = fullRowSelection ? 'hover:cursor-pointer' : 'group';
+        const hoverStyle = 'group';
 
         const enabledRowOpacity = enableRowSelection
           ? 'opacity-100'
@@ -457,18 +457,6 @@ const TableBody = <T extends object>({
         const enabledRowPointer = enableRowSelection
           ? 'pointer-events-auto'
           : 'pointer-events-none';
-
-        const fullRowSelectionStyleDynamic = cn(
-          virtualRow.index === 0
-            ? 'hover:before:top-[-1px]'
-            : 'hover:before:top-[-2px]',
-          `hover:after:contents-[""] hover:after:h-[2px] hover:after:w-full hover:after:bg-gray-200 hover:after:bottom-[-1px] hover:after:absolute
-           hover:before:contents-[""] hover:before:w-full hover:before:bg-gray-200 hover:before:h-[2px] hover:before:absolute`,
-        );
-
-        const rowHoverStyle = fullRowSelection
-          ? fullRowSelectionStyleDynamic
-          : undefined;
 
         const focusStyle = 'data-[focused=true]:bg-grayModern-100';
 
@@ -492,7 +480,6 @@ const TableBody = <T extends object>({
             }}
             className={twMerge(
               hoverStyle,
-              rowHoverStyle,
               focusStyle,
               'group',
               row?.getIsSelected() && 'bg-gray-50',
