@@ -19,15 +19,16 @@ import (
 )
 
 type EmailVerificationResponse struct {
-	Status      string                  `json:"status"`
-	Message     string                  `json:"message,omitempty"`
-	Email       string                  `json:"email"`
-	Deliverable string                  `json:"deliverable"`
-	Provider    string                  `json:"provider"`
-	IsRisky     bool                    `json:"isRisky"`
-	IsCatchAll  bool                    `json:"isCatchAll"`
-	Risk        EmailVerificationRisk   `json:"risk"`
-	Syntax      EmailVerificationSyntax `json:"syntax"`
+	Status                string                  `json:"status"`
+	Message               string                  `json:"message,omitempty"`
+	Email                 string                  `json:"email"`
+	Deliverable           string                  `json:"deliverable"`
+	Provider              string                  `json:"provider"`
+	SecureGatewayProvider string                  `json:"secureGatewayProvider"`
+	IsRisky               bool                    `json:"isRisky"`
+	IsCatchAll            bool                    `json:"isCatchAll"`
+	Risk                  EmailVerificationRisk   `json:"risk"`
+	Syntax                EmailVerificationSyntax `json:"syntax"`
 }
 
 type EmailVerificationRisk struct {
@@ -83,11 +84,12 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		}
 
 		emailVerificationResponse := EmailVerificationResponse{
-			Status:      "success",
-			Email:       emailAddress,
-			Deliverable: result.Data.EmailData.Deliverable,
-			Provider:    result.Data.DomainData.Provider,
-			IsCatchAll:  result.Data.DomainData.IsCatchAll,
+			Status:                "success",
+			Email:                 emailAddress,
+			Deliverable:           result.Data.EmailData.Deliverable,
+			Provider:              result.Data.DomainData.Provider,
+			SecureGatewayProvider: result.Data.DomainData.Firewall,
+			IsCatchAll:            result.Data.DomainData.IsCatchAll,
 			IsRisky: result.Data.DomainData.IsFirewalled ||
 				result.Data.EmailData.IsRoleAccount ||
 				result.Data.EmailData.IsFreeAccount ||
