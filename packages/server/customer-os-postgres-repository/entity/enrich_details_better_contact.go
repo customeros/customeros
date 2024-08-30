@@ -14,6 +14,7 @@ type EnrichDetailsBetterContact struct {
 	ContactLinkedInUrl string    `gorm:"column:contact_linkedin_url;type:varchar(255);" json:"contactLinkedInUrl"`
 	CompanyName        string    `gorm:"column:company_name;type:varchar(255);" json:"companyName"`
 	CompanyDomain      string    `gorm:"column:company_domain;type:varchar(255);" json:"companyDomain"`
+	EnrichPhoneNumber  bool      `gorm:"column:enrich_phone_number;type:boolean;DEFAULT:false" json:"enrichPhoneNumber"`
 	Request            string    `gorm:"column:request;type:text;" json:"request"`
 	Response           string    `gorm:"column:response;type:text;" json:"response"`
 }

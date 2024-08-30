@@ -19,7 +19,7 @@ import (
 )
 
 type BettercontactService interface {
-	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string) (string, string, *postgresentity.BetterContactResponseBody, error)
+	FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (string, string, *postgresentity.BetterContactResponseBody, error)
 }
 
 type bettercontactService struct {
@@ -37,8 +37,9 @@ func NewBettercontactService(config *config.Config, services *Services, log logg
 }
 
 type BetterContactRequestBody struct {
-	Data    []BetterContactData `json:"data"`
-	Webhook string              `json:"webhook"`
+	Data              []BetterContactData `json:"data"`
+	Webhook           string              `json:"webhook"`
+	EnrichPhoneNumber bool                `json:"enrich_phone_number"`
 }
 
 type BetterContactData struct {
@@ -55,10 +56,16 @@ type BetterContactResponseBody struct {
 	Message string `json:"message"`
 }
 
-func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string) (string, string, *postgresentity.BetterContactResponseBody, error) {
+func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, firstName, lastName, companyName, companyDomain string, enrichPhoneNumber bool) (string, string, *postgresentity.BetterContactResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "BettercontactService.FindWorkEmail")
 	defer span.Finish()
-	span.LogFields(log.String("linkedInUrl", linkedInUrl), log.String("firstName", firstName), log.String("lastName", lastName), log.String("companyDomain", companyDomain), log.String("companyName", companyName))
+	span.LogFields(
+		log.String("linkedInUrl", linkedInUrl),
+		log.String("firstName", firstName),
+		log.String("lastName", lastName),
+		log.String("companyDomain", companyDomain),
+		log.String("companyName", companyName),
+		log.Bool("enrichPhoneNumber", enrichPhoneNumber))
 
 	firstName = strings.TrimSpace(firstName)
 	lastName = strings.TrimSpace(lastName)
@@ -81,7 +88,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 	var existingBetterContactData *postgresentity.EnrichDetailsBetterContact
 
 	if linkedInUrl != "" {
-		betterContactByLinkedInUrl, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByLinkedInUrl(ctx, linkedInUrl)
+		betterContactByLinkedInUrl, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByLinkedInUrl(ctx, linkedInUrl, enrichPhoneNumber)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
 			return "", "", nil, err
@@ -91,7 +98,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 			existingBetterContactData = betterContactByLinkedInUrl
 		}
 	} else {
-		detailsBetterContactList, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetBy(ctx, firstName, lastName, companyName, companyDomain)
+		detailsBetterContactList, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetBy(ctx, firstName, lastName, companyName, companyDomain, enrichPhoneNumber)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get better contact details"))
 			return "", "", nil, err
@@ -128,6 +135,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 	}
 
 	requestBodyDtls.Webhook = s.config.BetterContactConfig.CallbackUrl
+	requestBodyDtls.EnrichPhoneNumber = enrichPhoneNumber
 
 	// Marshal request body to JSON
 	requestBody, err := json.Marshal(requestBodyDtls)
@@ -172,6 +180,7 @@ func (s bettercontactService) FindWorkEmail(ctx context.Context, linkedInUrl, fi
 		ContactLinkedInUrl: linkedInUrl,
 		CompanyName:        companyName,
 		CompanyDomain:      companyDomain,
+		EnrichPhoneNumber:  enrichPhoneNumber,
 		Request:            string(requestBody),
 	})
 	if err != nil {
