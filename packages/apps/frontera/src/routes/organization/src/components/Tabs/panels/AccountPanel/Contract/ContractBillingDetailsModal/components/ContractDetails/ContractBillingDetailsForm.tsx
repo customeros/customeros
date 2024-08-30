@@ -343,16 +343,15 @@ export const ContractBillingDetailsForm = observer(
                     name='payAutomatically'
                     isInvalid={!isStripeActive}
                     isChecked={
-                      !!contractStore?.tempValue?.billingDetails
-                        ?.payAutomatically
+                      !!contractStore?.tempValue?.billingDetails?.payOnline
                     }
                     onChange={(value) => {
                       contractStore?.updateTemp((contract) => ({
                         ...contract,
                         billingDetails: {
                           ...contract.billingDetails,
+                          payOnline: value,
                           payAutomatically: value,
-                          payOnline: true,
                         },
                       }));
                     }}
@@ -360,20 +359,17 @@ export const ContractBillingDetailsForm = observer(
                 </div>
               </div>
 
-              {contractStore?.tempValue.billingDetails?.payAutomatically && (
+              {contractStore?.tempValue.billingDetails?.payOnline && (
                 <RadioGroup
                   name='created-date'
                   value={`${!!contractStore.tempValue.billingDetails
-                    ?.payOnline}`}
-                  disabled={
-                    !contractStore.tempValue.billingDetails?.payAutomatically
-                  }
+                    ?.payAutomatically}`}
                   onValueChange={(newValue) => {
                     contractStore?.updateTemp((contract) => ({
                       ...contract,
                       billingDetails: {
                         ...contract.billingDetails,
-                        payOnline: newValue === 'true',
+                        payAutomatically: newValue === 'true',
                       },
                     }));
                   }}
