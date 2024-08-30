@@ -5,7 +5,11 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
-import { ColumnViewType, ComparisonOperator } from '@graphql/types';
+import {
+  InternalStage,
+  ColumnViewType,
+  ComparisonOperator,
+} from '@graphql/types';
 
 import { FilterHeader } from '../../../shared/Filters/abstract/FilterHeader';
 
@@ -17,6 +21,11 @@ const defaultFilter: FilterItem = {
   includeEmpty: false,
   operation: ComparisonOperator.In,
 };
+
+const internalStageOptions = [
+  { label: 'Closed Lost', value: InternalStage.ClosedLost },
+  { label: 'Closed Won', value: InternalStage.ClosedWon },
+];
 
 export const StageFilter = observer(() => {
   const [searchParams] = useSearchParams();
@@ -54,7 +63,7 @@ export const StageFilter = observer(() => {
         isChecked={filter.active ?? false}
       />
       <div className='flex flex-col gap-2 items-start'>
-        {statuses.map((option) => (
+        {[...statuses, ...internalStageOptions].map((option) => (
           <Checkbox
             key={option.value.toString()}
             onChange={handleSelect(option.value)}
