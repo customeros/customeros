@@ -22,7 +22,7 @@ export const SetOpportunityNextSteps = observer(() => {
     .with('Opportunity', () => `Opportunity - ${opportunity?.value?.name}`)
     .otherwise(() => 'Change ARR estimate');
 
-  const handleEnterKey = (e: React.KeyboardEvent) => {
+  const handleEnterKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (e.key === 'Enter' && e.metaKey) {
       opportunity?.update((o) => {
         const plainTextValue = value;
@@ -44,6 +44,7 @@ export const SetOpportunityNextSteps = observer(() => {
           size='md'
           usePlainText
           className='cursor-text'
+          onKeyDown={handleEnterKey}
           namespace='opportunity-next-step'
           placeholderClassName='cursor-text'
           onChange={(html) => setValue(extractPlainText(html))}

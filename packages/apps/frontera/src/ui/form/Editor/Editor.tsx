@@ -72,6 +72,7 @@ interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   onMentionsSearch?: (q: string | null) => void;
   onHashtagsChange?: (hashtags: SelectOption[]) => void;
   onBlur?: (e: React.FocusEvent<HTMLDivElement>) => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
@@ -93,6 +94,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       mentionsOptions = [],
       usePlainText = false,
       placeholderClassName,
+      onKeyDown,
       placeholder = 'Type something',
     },
     ref,
@@ -199,7 +201,9 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
                   onBlur={onBlur}
                   spellCheck='false'
                   data-test={dataTest}
-                  onKeyDown={(e) => e.stopPropagation()}
+                  onKeyDown={(e) =>
+                    onKeyDown ? onKeyDown(e) : e.stopPropagation()
+                  }
                   className={twMerge(
                     contentEditableVariants({ size, className }),
                   )}
