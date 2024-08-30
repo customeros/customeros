@@ -42,6 +42,9 @@ message EmailValidationGrpcRequest {
   string errorCode = 22;
   string description = 23;
   string deliverable = 25;
+  bool isPrimaryDomain = 26;
+  string primaryDomain = 27;
+  string alternateEmail = 28;
 }
 
 message RequestEmailValidationGrpcRequest {

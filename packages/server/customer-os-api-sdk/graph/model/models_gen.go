@@ -1045,6 +1045,9 @@ type EmailValidationDetails struct {
 	IsFreeAccount     *bool             `json:"isFreeAccount,omitempty"`
 	SMTPSuccess       *bool             `json:"smtpSuccess,omitempty"`
 	Deliverable       *EmailDeliverable `json:"deliverable,omitempty"`
+	IsPrimaryDomain   *bool             `json:"isPrimaryDomain,omitempty"`
+	PrimaryDomain     *string           `json:"primaryDomain,omitempty"`
+	AlternateEmail    *string           `json:"alternateEmail,omitempty"`
 	IsDeliverable     *bool             `json:"isDeliverable,omitempty"`
 }
 

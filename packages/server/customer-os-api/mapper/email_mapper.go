@@ -56,6 +56,9 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 			IsFreeAccount:     entity.IsFreeAccount,
 			SMTPSuccess:       entity.SmtpSuccess,
 			Deliverable:       enummapper.MapDeliverableToModelPtr(entity.Deliverable),
+			IsPrimaryDomain:   entity.IsPrimaryDomain,
+			PrimaryDomain:     entity.PrimaryDomain,
+			AlternateEmail:    entity.AlternateEmail,
 		},
 	}
 }
