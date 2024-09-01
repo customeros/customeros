@@ -1026,10 +1026,13 @@ func (h *InvoiceEventHandler) onInvoicePaidV1(ctx context.Context, evt eventstor
 		Attachments: []service.PostmarkEmailAttachment{},
 	}
 	if tenantSettingsEntity.StripeCustomerPortalLink != "" {
-		postmarkEmail.TemplateData["{{includeStripeFooter}}"] = "true"
-		postmarkEmail.TemplateData["{{stripePortalLink}}"] = tenantSettingsEntity.StripeCustomerPortalLink
+		postmarkEmail.TemplateData["{{stripeFooterHtml}}"] = fmt.Sprintf(`PS: If you pay by card you can manage your billing details <a href="%s">here</a>.`, tenantSettingsEntity.StripeCustomerPortalLink)
+		postmarkEmail.TemplateData["{{stripeFooterTxt}}"] = `PS: If you pay by card you can manage your billing details here.`
+		postmarkEmail.TemplateData["{{stripeFooterLink}}"] = tenantSettingsEntity.StripeCustomerPortalLink
 	} else {
-		postmarkEmail.TemplateData["{{includeStripeFooter}}"] = "false"
+		postmarkEmail.TemplateData["{{stripeFooterHtml}}"] = ""
+		postmarkEmail.TemplateData["{{stripeFooterTxt}}"] = ""
+		postmarkEmail.TemplateData["{{stripeFooterLink}}"] = ""
 	}
 
 	if eventTriggeredByUser {
