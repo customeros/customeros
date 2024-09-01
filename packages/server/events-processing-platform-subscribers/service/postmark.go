@@ -222,7 +222,7 @@ func (np *PostmarkProvider) ConvertMjmlToHtml(ctx context.Context, filledTemplat
 	span, ctx := opentracing.StartSpanFromContext(ctx, "PostmarkProvider.ConvertMjmlToHtml")
 	defer span.Finish()
 
-	html, err := mjml.ToHTML(context.Background(), filledTemplate)
+	html, err := mjml.ToHTML(ctx, filledTemplate)
 	var mjmlError mjml.Error
 	if errors.As(err, &mjmlError) {
 		tracing.TraceErr(span, err)
