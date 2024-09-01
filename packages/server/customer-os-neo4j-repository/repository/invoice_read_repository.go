@@ -227,6 +227,7 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 				i.dryRun = false AND
 				NOT i.status IN $ignoredStatuses AND
 				(i.techPayNotificationRequestedAt IS NULL OR i.techPayNotificationRequestedAt + duration({hours: 1}) < $referenceTime) AND
+				i.techInvoiceFinalizedWebhookProcessedAt IS NOT NULL AND
 				i.customerEmail IS NOT NULL AND
 				i.customerEmail <> '' AND	
 				i.techPayInvoiceNotificationSentAt IS NULL AND
@@ -306,6 +307,7 @@ func (r *invoiceReadRepository) GetInvoicesForPaymentLinkRequest(ctx context.Con
 				i.dryRun = false AND
 				i.status IN $acceptedStatuses AND
 				i.techPaymentLinkRequestedAt IS NULL AND
+				i.techInvoiceFinalizedWebhookProcessedAt IS NOT NULL AND
 				c.payOnline = true AND
 				i.createdAt+duration({days: $lookbackWindow}) > $now AND
 				(i.updatedAt + duration({minutes: $delay}) < $referenceTime OR i.techInvoiceFinalizedSentAt + duration({minutes: $delay}) < $referenceTime)
@@ -686,6 +688,7 @@ func (r *invoiceReadRepository) GetReadyInvoicesForFinalizedEvent(ctx context.Co
 				i.dryRun = false AND
 				i.status IN $acceptedStatuses AND
 				i.techInvoiceFinalizedSentAt IS NULL AND
+				i.techInvoiceFinalizedWebhookProcessedAt IS NOT NULL AND
 				i.updatedAt + duration({minutes: $minutesFromLastUpdate}) < $referenceTime
 			RETURN distinct(i), t.name limit $limit`
 	params := map[string]any{
