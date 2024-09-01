@@ -2,8 +2,6 @@ package command
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
-	iecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/command_handler"
-	iscmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/command_handler"
 	issuecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/command_handler"
 	jobrolecmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/commands"
 	locationcmdhandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/command_handler"
@@ -20,18 +18,16 @@ import (
 )
 
 type CommandHandlers struct {
-	Organization       *organizationcmdhandler.CommandHandlers
-	PhoneNumber        *phonenumbercmdhandler.CommandHandlers
-	User               *usercmdhandler.CommandHandlers
-	Location           *locationcmdhandler.CommandHandlers
-	JobRole            *jobrolecmdhandler.CommandHandlers
-	InteractionEvent   *iecmdhandler.CommandHandlers
-	InteractionSession *iscmdhandler.CommandHandlers
-	LogEntry           *logentrycmdhandler.CommandHandlers
-	Issue              *issuecmdhandler.CommandHandlers
-	Opportunity        *opportunitycmdhandler.CommandHandlers
-	MasterPlan         *masterplancmdhandler.CommandHandlers
-	OrganizationPlan   *orgplanevents.EventHandlers
+	Organization     *organizationcmdhandler.CommandHandlers
+	PhoneNumber      *phonenumbercmdhandler.CommandHandlers
+	User             *usercmdhandler.CommandHandlers
+	Location         *locationcmdhandler.CommandHandlers
+	JobRole          *jobrolecmdhandler.CommandHandlers
+	LogEntry         *logentrycmdhandler.CommandHandlers
+	Issue            *issuecmdhandler.CommandHandlers
+	Opportunity      *opportunitycmdhandler.CommandHandlers
+	MasterPlan       *masterplancmdhandler.CommandHandlers
+	OrganizationPlan *orgplanevents.EventHandlers
 }
 
 func NewCommandHandlers(log logger.Logger,
@@ -41,17 +37,15 @@ func NewCommandHandlers(log logger.Logger,
 ) *CommandHandlers {
 
 	return &CommandHandlers{
-		Organization:       organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, ebs),
-		InteractionEvent:   iecmdhandler.NewCommandHandlers(log, aggregateStore),
-		InteractionSession: iscmdhandler.NewCommandHandlers(log, aggregateStore),
-		PhoneNumber:        phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		Location:           locationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		User:               usercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		JobRole:            jobrolecmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		LogEntry:           logentrycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		Issue:              issuecmdhandler.NewCommandHandlers(log, aggregateStore),
-		Opportunity:        opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		MasterPlan:         masterplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
-		OrganizationPlan:   orgplanevents.NewEventHandlers(log, cfg, aggregateStore),
+		Organization:     organizationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore, ebs),
+		PhoneNumber:      phonenumbercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Location:         locationcmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		User:             usercmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		JobRole:          jobrolecmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		LogEntry:         logentrycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		Issue:            issuecmdhandler.NewCommandHandlers(log, aggregateStore),
+		Opportunity:      opportunitycmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		MasterPlan:       masterplancmdhandler.NewCommandHandlers(log, cfg, aggregateStore),
+		OrganizationPlan: orgplanevents.NewEventHandlers(log, cfg, aggregateStore),
 	}
 }

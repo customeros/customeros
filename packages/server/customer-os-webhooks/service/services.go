@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
@@ -29,11 +28,9 @@ type Services struct {
 	SyncStatusService         SyncStatusService
 	ExternalSystemService     ExternalSystemService
 	FinderService             FinderService
-	InteractionEventService   InteractionEventService
 	InteractionSessionService InteractionSessionService
 	CommentService            CommentService
 	InvoiceService            InvoiceService
-	SyncEmailService          SyncEmailService
 	OrderService              OrderService
 }
 
@@ -63,10 +60,8 @@ func InitServices(log logger.Logger,
 	services.LogEntryService = NewLogEntryService(log, repositories, grpcClients, &services)
 	services.IssueService = NewIssueService(log, repositories, grpcClients, &services)
 	services.FinderService = NewFinderService(log, repositories, &services)
-	services.InteractionEventService = NewInteractionEventService(log, repositories, grpcClients, &services)
 	services.CommentService = NewCommentService(log, repositories, grpcClients, &services)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
-	services.SyncEmailService = NewSyncEmailService(log, repositories, grpcClients, &services, cache, []postgresEntity.PersonalEmailProvider{})
 	services.OrderService = NewOrderService(log, repositories, grpcClients, &services)
 	return &services
 }

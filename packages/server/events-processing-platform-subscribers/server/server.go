@@ -23,7 +23,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	graph_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph"
 	graph_low_prio_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/graph_low_prio"
-	interaction_event_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/interaction_event"
 	invoice_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/invoice"
 	location_validation_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/location"
 	notifications_subscription "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/notifications"
@@ -210,17 +209,6 @@ func (server *Server) InitSubscribers(ctx context.Context, grpcClients *grpc_cli
 			err := organizationWebscrapeSubscriber.Connect(ctx, organizationWebscrapeSubscriber.ProcessEvents)
 			if err != nil {
 				server.Log.Errorf("(organizationWebscrapeSubscriber.Connect) err: {%s}", err.Error())
-				cancel()
-			}
-		}()
-	}
-
-	if server.Config.Subscriptions.InteractionEventSubscription.Enabled {
-		interactionEventSubscriber := interaction_event_subscription.NewInteractionEventSubscriber(server.Log, esdb, server.Config, server.Services, grpcClients)
-		go func() {
-			err := interactionEventSubscriber.Connect(ctx, interactionEventSubscriber.ProcessEvents)
-			if err != nil {
-				server.Log.Errorf("(interactionEventSubscriber.Connect) err: {%s}", err.Error())
 				cancel()
 			}
 		}()

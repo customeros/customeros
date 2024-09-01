@@ -23,28 +23,26 @@ type Services struct {
 	RequestHandler           *requestHandler // generic grpc request handler
 
 	//GRPC services
-	ContactService            *contactService
-	OrganizationService       *organizationService
-	PhoneNumberService        *phoneNumberService
-	EmailService              *emailService
-	UserService               *userService
-	LocationService           *locationService
-	JobRoleService            *jobRoleService
-	InteractionEventService   *interactionEventService
-	InteractionSessionService *interactionSessionService
-	LogEntryService           *logEntryService
-	IssueService              *issueService
-	CommentService            *commentService
-	OpportunityService        *opportunityService
-	ContractService           *contractService
-	ServiceLineItemService    *serviceLineItemService
-	MasterPlanService         *masterPlanService
-	OrganizationPlanService   *organizationPlanService
-	InvoiceService            *invoiceService
-	TenantService             *tenantService
-	CountryService            *countryService
-	OrderService              *orderService
-	EventStoreService         *eventStoreService
+	ContactService          *contactService
+	OrganizationService     *organizationService
+	PhoneNumberService      *phoneNumberService
+	EmailService            *emailService
+	UserService             *userService
+	LocationService         *locationService
+	JobRoleService          *jobRoleService
+	LogEntryService         *logEntryService
+	IssueService            *issueService
+	CommentService          *commentService
+	OpportunityService      *opportunityService
+	ContractService         *contractService
+	ServiceLineItemService  *serviceLineItemService
+	MasterPlanService       *masterPlanService
+	OrganizationPlanService *organizationPlanService
+	InvoiceService          *invoiceService
+	TenantService           *tenantService
+	CountryService          *countryService
+	OrderService            *orderService
+	EventStoreService       *eventStoreService
 }
 
 func InitServices(cfg *config.Config, repositories *repository.Repositories, aggregateStore eventstore.AggregateStore, commandHandlers *command.CommandHandlers, log logger.Logger, ebs *eventbuffer.EventBufferStoreService) *Services {
@@ -65,8 +63,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
-	services.InteractionEventService = NewInteractionEventService(log, commandHandlers.InteractionEvent)
-	services.InteractionSessionService = NewInteractionSessionService(log, commandHandlers.InteractionSession)
 	services.LogEntryService = NewLogEntryService(log, commandHandlers.LogEntry)
 	services.IssueService = NewIssueService(log, commandHandlers.Issue)
 	services.CommentService = NewCommentService(&services, log, aggregateStore, cfg)
