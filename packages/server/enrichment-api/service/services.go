@@ -12,7 +12,7 @@ import (
 type Services struct {
 	Logger                logger.Logger
 	CommonServices        *commonservice.Services
-	PersonScrapeInService ScrapinPersonService
+	PersonScrapeInService ScrapinService
 	BettercontactService  BettercontactService
 }
 

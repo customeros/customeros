@@ -541,7 +541,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 
 		if scrapIn != nil && scrapIn.Success && scrapIn.CompanyFound {
 
-			var scrapinContactResponse entity.ScrapInPersonResponse
+			var scrapinContactResponse entity.ScrapInResponseBody
 			err := json.Unmarshal([]byte(scrapIn.Data), &scrapinContactResponse)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))

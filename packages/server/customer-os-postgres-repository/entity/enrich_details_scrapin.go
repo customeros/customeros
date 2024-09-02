@@ -5,8 +5,10 @@ import "time"
 type ScrapInFlow string
 
 const (
-	ScrapInFlowPersonSearch  ScrapInFlow = "PERSON_SEARCH"
-	ScrapInFlowPersonProfile ScrapInFlow = "PERSON_PROFILE"
+	ScrapInFlowPersonSearch   ScrapInFlow = "PERSON_SEARCH"
+	ScrapInFlowPersonProfile  ScrapInFlow = "PERSON_PROFILE"
+	ScrapInFlowCompanySearch  ScrapInFlow = "COMPANY_SEARCH"
+	ScrapInFlowCompanyProfile ScrapInFlow = "COMPANY_PROFILE"
 )
 
 type EnrichDetailsScrapIn struct {
@@ -29,8 +31,8 @@ func (EnrichDetailsScrapIn) TableName() string {
 	return "enrich_details_scrapin"
 }
 
-// ScrapInPersonResponse is getting serialized in the Data field
-type ScrapInPersonResponse struct {
+// ScrapInResponseBody is getting serialized in the Data field
+type ScrapInResponseBody struct {
 	Success       bool                   `json:"success"`
 	Email         string                 `json:"email"`
 	EmailType     string                 `json:"emailType"`

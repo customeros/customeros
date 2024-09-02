@@ -171,7 +171,7 @@ func (h *ContactEventHandler) getContactEmail(ctx context.Context, tenant, conta
 	return foundEmailAddress, nil
 }
 
-func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, contact *neo4jentity.ContactEntity, enrichPersonResponse *enrichmentmodel.EnrichPersonResponse) error {
+func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.Context, tenant string, contact *neo4jentity.ContactEntity, enrichPersonResponse *enrichmentmodel.EnrichPersonScrapinResponse) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.enrichContactWithScrapInEnrichDetails")
 	defer span.Finish()
 
@@ -464,7 +464,7 @@ func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt ev
 	return nil
 }
 
-func (h *ContactEventHandler) callApiEnrichPerson(ctx context.Context, tenant, linkedinUrl, email, firstName, lastName, domain string) (*enrichmentmodel.EnrichPersonResponse, error) {
+func (h *ContactEventHandler) callApiEnrichPerson(ctx context.Context, tenant, linkedinUrl, email, firstName, lastName, domain string) (*enrichmentmodel.EnrichPersonScrapinResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.callApiEnrichPerson")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -504,7 +504,7 @@ func (h *ContactEventHandler) callApiEnrichPerson(ctx context.Context, tenant, l
 	defer response.Body.Close()
 	span.LogFields(log.Int("response.status.enrichPerson", response.StatusCode))
 
-	var enrichPersonApiResponse enrichmentmodel.EnrichPersonResponse
+	var enrichPersonApiResponse enrichmentmodel.EnrichPersonScrapinResponse
 	err = json.NewDecoder(response.Body).Decode(&enrichPersonApiResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode enrich person response"))

@@ -21,14 +21,14 @@ func (e *EnrichPersonRequest) Normalize() {
 	e.Domain = strings.TrimSpace(e.Domain)
 }
 
-type EnrichPersonResponse struct {
+type EnrichPersonScrapinResponse struct {
 	Status      string              `json:"status"`
 	Message     string              `json:"message,omitempty"`
 	RecordId    uint64              `json:"recordId,omitempty"`
 	PersonFound bool                `json:"personFound"`
-	Data        *EnrichedPersonData `json:"data,omitempty"`
+	Data        *EnrichedPersonData `json:"data,omitempty"` // TODO replace directly with *postgresEntity.ScrapInResponseBody
 }
 
 type EnrichedPersonData struct {
-	PersonProfile *postgresEntity.ScrapInPersonResponse `json:"scrapinPersonProfile,omitempty"`
+	PersonProfile *postgresEntity.ScrapInResponseBody `json:"scrapinPersonProfile,omitempty"`
 }
