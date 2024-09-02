@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/sirupsen/logrus"
 	"time"
@@ -180,6 +181,9 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 
 func (s *meetingService) GetAttendeeEmailIdAndType(tx neo4j.ManagedTransaction, tenant, meetingId, emailAddress string, now time.Time) (*string, error) {
 	ctx := context.Background()
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.GetAttendeeEmailIdAndType")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
 
 	fromEmailId, err := s.repositories.EmailRepository.GetEmailIdInTx(ctx, tx, tenant, emailAddress)
 	if err != nil {
