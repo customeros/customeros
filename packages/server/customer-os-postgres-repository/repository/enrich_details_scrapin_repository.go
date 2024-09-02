@@ -20,6 +20,7 @@ type EnrichDetailsScrapInRepository interface {
 	GetAllByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) ([]entity.EnrichDetailsScrapIn, error)
 	GetLatestByParam1AndFlow(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 	GetLatestByParam1AndFlowWithPersonFound(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
+	GetLatestByParam1AndFlowWithCompanyFound(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 	GetLatestByAllParamsAndFlow(ctx context.Context, param1, param2, param3, param4 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 	GetLatestByAllParamsAndFlowWithPersonFound(ctx context.Context, param1, param2, param3, param4 string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error)
 	GetById(ctx context.Context, id uint64) (*entity.EnrichDetailsScrapIn, error)
@@ -113,6 +114,23 @@ func (r enrichDetailsScrapInRepository) GetLatestByAllParamsAndFlow(ctx context.
 
 func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithPersonFound(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithPersonFound")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var data entity.EnrichDetailsScrapIn
+	err := r.db.Where("param1 = ? AND flow = ? AND person_found = ?", param, flow, true).Order("created_at desc").First(&data).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil // Return nil if no record found
+		}
+		return nil, err // Return other errors as usual
+	}
+
+	return &data, nil
+}
+
+func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlowWithCompanyFound(ctx context.Context, param string, flow entity.ScrapInFlow) (*entity.EnrichDetailsScrapIn, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithCompanyFound")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 

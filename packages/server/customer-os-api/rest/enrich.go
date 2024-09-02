@@ -163,7 +163,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		}
 
 		// map the response to the customer-os model
-		scrapInPersonResponse := postgresentity.ScrapInPersonResponse{}
+		scrapInPersonResponse := postgresentity.ScrapInResponseBody{}
 		if enrichPersonApiResponse.Data != nil && enrichPersonApiResponse.Data.PersonProfile != nil {
 			scrapInPersonResponse = *enrichPersonApiResponse.Data.PersonProfile
 		}
@@ -314,7 +314,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		}
 
 		// extract scrapin data
-		var scrapInPersonResponse postgresentity.ScrapInPersonResponse
+		var scrapInPersonResponse postgresentity.ScrapInResponseBody
 		err = json.Unmarshal([]byte(scrapInDbRecord.Data), &scrapInPersonResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin record"))
@@ -398,7 +398,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func callApiEnrichPerson(ctx context.Context, services *service.Services, span opentracing.Span, email, linkedinUrl, firstName, lastName string) (*enrichmentmodel.EnrichPersonResponse, error) {
+func callApiEnrichPerson(ctx context.Context, services *service.Services, span opentracing.Span, email, linkedinUrl, firstName, lastName string) (*enrichmentmodel.EnrichPersonScrapinResponse, error) {
 	requestJSON, err := json.Marshal(enrichmentmodel.EnrichPersonRequest{
 		Email:       email,
 		LinkedinUrl: linkedinUrl,
@@ -432,7 +432,7 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 	defer response.Body.Close()
 	span.LogFields(log.Int("response.status.enrichPerson", response.StatusCode))
 
-	var enrichPersonApiResponse enrichmentmodel.EnrichPersonResponse
+	var enrichPersonApiResponse enrichmentmodel.EnrichPersonScrapinResponse
 	err = json.NewDecoder(response.Body).Decode(&enrichPersonApiResponse)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode enrich person response"))
@@ -441,7 +441,7 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 	return &enrichPersonApiResponse, nil
 }
 
-func callApiFindWorkEmail(ctx context.Context, services *service.Services, span opentracing.Span, enrichPersonApiResponse enrichmentmodel.EnrichPersonResponse, enrichPhoneNumber bool) (*enrichmentmodel.FindWorkEmailResponse, error) {
+func callApiFindWorkEmail(ctx context.Context, services *service.Services, span opentracing.Span, enrichPersonApiResponse enrichmentmodel.EnrichPersonScrapinResponse, enrichPhoneNumber bool) (*enrichmentmodel.FindWorkEmailResponse, error) {
 	companyName, companyDomain := "", ""
 	if enrichPersonApiResponse.Data.PersonProfile.Company != nil {
 		companyName = enrichPersonApiResponse.Data.PersonProfile.Company.Name
@@ -491,7 +491,7 @@ func callApiFindWorkEmail(ctx context.Context, services *service.Services, span 
 	return &findWorkEmailApiResponse, nil
 }
 
-func mapScrapInData(source *postgresentity.ScrapInPersonResponse) *EnrichPersonData {
+func mapScrapInData(source *postgresentity.ScrapInResponseBody) *EnrichPersonData {
 	if source == nil {
 		return nil
 	}
