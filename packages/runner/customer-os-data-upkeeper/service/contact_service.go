@@ -394,6 +394,8 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
 					span.LogFields(log.Int("failedPageNumber", page))
+					truncatedResponseBody := string(responseBody)[:min(len(string(responseBody)), 8192)]
+					span.LogFields(log.String("responseBody", truncatedResponseBody))
 					s.log.Errorf("Error unmarshalling weconnect response: {%s}", string(responseBody))
 					return
 				}
