@@ -70,6 +70,10 @@ export const DeleteConfirmationModal = observer(() => {
         store.opportunities.archive(context.ids?.[0]);
         context.callback?.();
       })
+      .with('Opportunities', () => {
+        store.opportunities.archiveMany(context.ids);
+        context.callback?.();
+      })
       .with('TableViewDef', () => {
         store.tableViewDefs.archive(context.ids?.[0], {
           onSuccess: () => {
@@ -96,6 +100,10 @@ export const DeleteConfirmationModal = observer(() => {
     .with(
       'Organizations',
       () => `Archive ${context.ids?.length} organizations?`,
+    )
+    .with(
+      'Opportunities',
+      () => `Archive ${context.ids?.length} opportunities?`,
     )
     .with(
       'Opportunity',

@@ -16,7 +16,11 @@ export const AssignOwner = observer(() => {
 
   const entity = match(context.entity)
     .returnType<
-      OpportunityStore | OrganizationStore | OrganizationStore[] | undefined
+      | OpportunityStore
+      | OrganizationStore
+      | OrganizationStore[]
+      | OpportunityStore[]
+      | undefined
     >()
     .with('Opportunity', () =>
       store.opportunities.value.get((context.ids as string[])?.[0]),
@@ -27,6 +31,13 @@ export const AssignOwner = observer(() => {
         context.ids?.map((e: string) =>
           store.organizations.value.get(e),
         ) as OrganizationStore[],
+    )
+    .with(
+      'Opportunities',
+      () =>
+        context.ids?.map((e: string) =>
+          store.opportunities.value.get(e),
+        ) as OpportunityStore[],
     )
     .with('Organization', () =>
       store.organizations.value.get((context.ids as string[])?.[0]),
@@ -42,6 +53,7 @@ export const AssignOwner = observer(() => {
       () => `Organization - ${(entity as OrganizationStore)?.value?.name}`,
     )
     .with('Organizations', () => `${context.ids?.length} organizations`)
+    .with('Opportunities', () => `${context.ids?.length} opportunities`)
     .otherwise(() => undefined);
 
   const handleSelect = (userId: string) => () => {
@@ -82,6 +94,22 @@ export const AssignOwner = observer(() => {
       .with('Organizations', () => {
         if (!(entity as OrganizationStore[])?.length) return;
         (entity as OrganizationStore[]).forEach((org) => {
+          org.update((value) => {
+            if (!value.owner) {
+              Object.assign(value, { owner: user.value });
+
+              return value;
+            }
+
+            Object.assign(value.owner, user.value);
+
+            return value;
+          });
+        });
+      })
+      .with('Opportunities', () => {
+        if (!(entity as OpportunityStore[])?.length) return;
+        (entity as OpportunityStore[]).forEach((org) => {
           org.update((value) => {
             if (!value.owner) {
               Object.assign(value, { owner: user.value });

@@ -4,34 +4,29 @@ import { useKeys, useKeyBindings } from 'rooks';
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 
-import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import { TableInstance } from '@ui/presentation/Table';
-
-import { SharedTableActions } from './components/SharedActions';
+import { SharedTableActions } from '@organizations/components/Actions/components/SharedActions.tsx';
 
 interface TableActionsProps {
   focusedId: string | null;
   onOpenCommandK: () => void;
-  onHideContacts: () => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<ContactStore>;
   handleOpen: (type: CommandMenuType) => void;
 }
 
-export const ContactTableActions = ({
+export const OpportunitiesTableActions = ({
   table,
   enableKeyboardShortcuts,
   onOpenCommandK,
   handleOpen,
-  onHideContacts,
   focusedId,
 }: TableActionsProps) => {
   const [targetId, setTargetId] = useState<string | null>(null);
-  const store = useStore();
   const selection = table.getState().rowSelection;
   const selectedIds = Object.keys(selection);
   const selectCount = selectedIds.length;
-
   const clearSelection = () => table.resetRowSelection();
 
   useEffect(() => {
@@ -45,20 +40,20 @@ export const ContactTableActions = ({
   }, [selectCount]);
 
   useKeys(
-    ['Shift', 'T'],
+    ['Shift', 'S'],
     (e) => {
       e.stopPropagation();
       e.preventDefault();
-      handleOpen('EditPersonaTag');
+      handleOpen('ChangeStage');
     },
     { when: enableKeyboardShortcuts },
   );
   useKeys(
-    ['Shift', 'E'],
+    ['Shift', 'O'],
     (e) => {
       e.stopPropagation();
       e.preventDefault();
-      handleOpen('EditEmail');
+      handleOpen('AssignOwner');
     },
     { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
   );
@@ -68,9 +63,17 @@ export const ContactTableActions = ({
     (e) => {
       e.stopPropagation();
       e.preventDefault();
-      handleOpen('EditName');
+      handleOpen('RenameOpportunityName');
     },
     { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
+  );
+
+  useModKey(
+    'Backspace',
+    () => {
+      handleOpen('DeleteConfirmationModal');
+    },
+    { when: enableKeyboardShortcuts },
   );
   useKeyBindings(
     {
@@ -79,25 +82,14 @@ export const ContactTableActions = ({
     { when: enableKeyboardShortcuts },
   );
 
-  useKeyBindings(
-    {
-      Space: (e) => {
-        e.stopPropagation();
-        e.preventDefault();
-        store.ui.setContactPreviewCardOpen(true);
-      },
-    },
-    { when: !!focusedId },
-  );
-
   if (!selectCount && !targetId) return null;
 
   return (
     <SharedTableActions
       table={table}
-      onHide={onHideContacts}
       handleOpen={handleOpen}
       onOpenCommandK={onOpenCommandK}
+      onHide={() => handleOpen('DeleteConfirmationModal')}
     />
   );
 };
