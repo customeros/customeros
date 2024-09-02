@@ -11,8 +11,21 @@ import (
 )
 
 const (
-	charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	charset                  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	charsetLowerAlphaNumeric = "abcdefghijklmnopqrstuvwxyz0123456789"
 )
+
+func GenerateKey(length int) string {
+	bytes := make([]byte, length)
+	for i := range bytes {
+		num, err := rand.Int(rand.Reader, big.NewInt(int64(len(charsetLowerAlphaNumeric))))
+		if err != nil {
+			panic(err)
+		}
+		bytes[i] = charsetLowerAlphaNumeric[num.Int64()]
+	}
+	return string(bytes)
+}
 
 func GenerateRandomString(length int) string {
 	bytes := make([]byte, length)

@@ -14,11 +14,11 @@ import (
 
 func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
 	r.GET("/enrichPerson",
-		tracing.TracingEnhancer(ctx, "/enrichPerson"),
+		tracing.TracingEnhancer(ctx, "GET /enrichPerson"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.ENRICHMENT_API),
 		enrichPerson(services))
 	r.GET("/findWorkEmail",
-		tracing.TracingEnhancer(ctx, "/findWorkEmail"),
+		tracing.TracingEnhancer(ctx, "GET /findWorkEmail"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.ENRICHMENT_API),
 		findWorkEmail(services))
 }

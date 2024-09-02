@@ -65,7 +65,7 @@ func main() {
 	routes.InitIntegrationRoutes(r, services)
 	routes.InitUserSettingsRoutes(r, services)
 	routes.InitPersonalIntegrationRoutes(r, services)
-	routes.InitTenantSettingsRoutes(r, services)
+	routes.InitTenantSettingsRoutes(ctx, r, services)
 	routes.InitMailboxesRoutes(r, services)
 	routes.InitSequenceRoutes(r, services)
 
