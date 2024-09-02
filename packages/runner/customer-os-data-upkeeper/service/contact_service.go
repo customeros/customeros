@@ -379,19 +379,11 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 
 				req.Header.Add("Content-Type", "application/json")
 
-				client := &http.Client{}
-				res, err := client.Do(req)
+				responseBody, err := s.callWeconnectHttpAndReturnResponseBody(req)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "client.Do"))
+					tracing.TraceErr(span, errors.Wrap(err, "callWeconnectHttpAndReturnResponseBody"))
 					span.LogFields(log.Int("failedPageNumber", page))
-					return
-				}
-				defer res.Body.Close()
-
-				responseBody, err := io.ReadAll(res.Body)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "io.ReadAll"))
-					span.LogFields(log.Int("failedPageNumber", page))
+					s.log.Errorf("Error calling weconnect: %s", err.Error())
 					return
 				}
 
@@ -498,6 +490,21 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 	}
 
 	waitGroup.Wait()
+}
+
+func (s *contactService) callWeconnectHttpAndReturnResponseBody(req *http.Request) ([]byte, error) {
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	responseBody, err := io.ReadAll(res.Body)
+	if err != nil {
+		return nil, err
+	}
+	return responseBody, nil
 }
 
 func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx context.Context) {

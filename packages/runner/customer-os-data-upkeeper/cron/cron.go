@@ -181,7 +181,7 @@ func StartCron(cont *container.Container) *cron.Cron {
 		lockAndRunJob(cont, contactEnrichGroup, enrichContacts)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "weConnectContacts", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, func() {

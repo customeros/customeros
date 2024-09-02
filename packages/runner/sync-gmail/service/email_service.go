@@ -10,7 +10,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 	"regexp"
 	"strings"
@@ -126,6 +128,9 @@ func (s *emailService) syncEmails(tenant string, emails []entity.RawEmail) {
 
 func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawState, *string, error) {
 	ctx := context.Background()
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.syncEmail")
+	defer span.Finish()
+	span.LogFields(log.String("emailId", emailId.String()))
 
 	emailIdString := emailId.String()
 
@@ -146,9 +151,9 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		return entity.ERROR, nil, err
 	}
 
-	emailExlusion := s.services.Cache.GetEmailExclusion(tenant)
+	emailExclusion := s.services.Cache.GetEmailExclusion(tenant)
 
-	for _, exclusion := range emailExlusion {
+	for _, exclusion := range emailExclusion {
 		if exclusion.ExcludeSubject != nil {
 			if strings.Contains(rawEmailData.Subject, *exclusion.ExcludeSubject) {
 				reason := "excluded by subject"
