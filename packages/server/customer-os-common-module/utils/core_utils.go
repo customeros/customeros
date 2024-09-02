@@ -215,6 +215,24 @@ func IfNotNilBool(check any, valueExtractor ...func() bool) bool {
 	return *out
 }
 
+func BoolDefaultIfNil(check any, def bool) bool {
+	if check == nil {
+		return def
+	}
+
+	switch v := check.(type) {
+	case bool:
+		return v
+	case *bool:
+		if v != nil {
+			return *v
+		}
+		return def
+	default:
+		return def
+	}
+}
+
 func IfNotNilTimeWithDefault(check any, defaultValue time.Time) time.Time {
 	if check == nil {
 		return defaultValue

@@ -109,7 +109,7 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 
 	// Check for providers that are marked for skip
 	if len(providersToSkip) == 0 || !utils.Contains(providersToSkip, domainValidation.Provider) {
-		emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation, utils.IfNotNilBool(domainValidation.IsPrimaryDomain, func() bool { return true }), domainValidation.PrimaryDomain)
+		emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation, utils.BoolDefaultIfNil(domainValidation.IsPrimaryDomain, true), domainValidation.PrimaryDomain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 			return nil, err
