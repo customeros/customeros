@@ -2,6 +2,7 @@ import { cn } from '@ui/utils/cn.ts';
 import { Bubbles } from '@ui/media/icons/Bubbles';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
 import { SidenavItem } from '@shared/components/RootSidenav/components/SidenavItem';
+import { TeamViewsSectionSection } from '@shared/components/RootSidenav/components/sections/TeamViewsSection.tsx';
 
 import { FavoritesSection } from './FavoritesSection';
 import { GeneralViewsSection } from './GeneralViewsSection';
@@ -39,8 +40,13 @@ export const NavigationSections = ({
           />
         )}
       />
-
       <LifecycleStagesSection
+        preferences={preferences}
+        checkIsActive={checkIsActive}
+        handleItemClick={handleItemClick}
+        togglePreference={togglePreference}
+      />
+      <TeamViewsSectionSection
         preferences={preferences}
         checkIsActive={checkIsActive}
         handleItemClick={handleItemClick}
@@ -52,7 +58,6 @@ export const NavigationSections = ({
         handleItemClick={handleItemClick}
         togglePreference={togglePreference}
       />
-
       <GeneralViewsSection
         preferences={preferences}
         checkIsActive={checkIsActive}

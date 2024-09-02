@@ -34,6 +34,7 @@ export type CommandMenuType =
   | 'EditTimeZone'
   | 'RenameTableViewDef'
   | 'ContactEmailVerificationInfoModal'
+  | 'DuplicateView'
   | 'ContactBulkCommands';
 
 export type Context = {

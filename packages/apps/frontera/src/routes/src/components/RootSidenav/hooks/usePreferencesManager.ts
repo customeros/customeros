@@ -4,6 +4,7 @@ interface Preferences {
   isViewsOpen: boolean;
   isMyViewsOpen: boolean;
   isFavoritesOpen: boolean;
+  isTeamViewsOpen: boolean;
   isLifecycleViewsOpen: boolean;
 }
 
@@ -15,6 +16,7 @@ export const usePreferencesManager = () => {
       isMyViewsOpen: true,
       isViewsOpen: true,
       isFavoritesOpen: true,
+      isTeamViewsOpen: true,
     } as Preferences,
   );
 

@@ -1,3 +1,4 @@
+import { MouseEventHandler } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
@@ -27,15 +28,33 @@ export const TableViewMenu = observer(() => {
 
   const isPreset = tableViewDef?.value?.isPreset;
 
+  const handleAddToMyViews: MouseEventHandler<HTMLDivElement> = (e) => {
+    e.stopPropagation();
+
+    if (!preset) {
+      store.ui.toastError(
+        `We were unable to add this view to favorites`,
+        'dup-view-error',
+      );
+
+      return;
+    }
+    store.ui.commandMenu.toggle('DuplicateView');
+    store.ui.commandMenu.setContext({
+      ids: [preset],
+      entity: 'TableViewDef',
+    });
+  };
+
   return (
     <Menu>
       <MenuButton className='w-6 h-6 mr-2 outline-none focus:outline-none text-gray-400 hover:text-gray-500'>
         <DotsVertical />
       </MenuButton>
       <MenuList align='end' side='bottom'>
-        <MenuItem onClick={() => store.tableViewDefs.createFavorite(preset)}>
+        <MenuItem onClick={handleAddToMyViews}>
           <LayersTwo01 className='text-gray-500' />
-          Duplicate to My Views
+          Duplicate view...
         </MenuItem>
         {tableType !== TableViewType.Invoices && (
           <MenuItem className='py-1.5' onClick={downloadCSV}>

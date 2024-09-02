@@ -10,6 +10,7 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
+import { DuplicateView } from '@shared/components/CommandMenu/commands/tableViewDef/DuplicateView.tsx';
 import {
   Modal,
   ModalBody,
@@ -91,6 +92,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   RenameOrganizationProperty: <RenameOrganizationProperty />,
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
   ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
+  DuplicateView: <DuplicateView />,
 };
 
 export const CommandMenu = observer(() => {

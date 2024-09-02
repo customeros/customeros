@@ -180,22 +180,33 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
   }
 
   createFavorite = async (
-    favoritePresetId: string,
+    {
+      id,
+      isShared,
+      name,
+    }: {
+      id: string;
+      name?: string;
+      isShared: boolean;
+    },
     options?: { onSuccess?: (serverId: string) => void },
   ) => {
-    const favoritePreset = this.getById(favoritePresetId)?.getPayloadToCopy();
+    const favoritePreset = this.getById(id)?.getPayloadToCopy();
 
     const newTableViewDef = new TableViewDefStore(this.root, this.transport);
 
     newTableViewDef.value = {
       ...getDefaultValue(),
       ...favoritePreset,
-      name: `Copy of ${
-        favoritePreset?.tableType === TableViewType.Invoices
-          ? ` ${favoritePreset?.name} Invoices`
-          : favoritePreset?.name
-      }`,
+      name: name
+        ? name
+        : `Copy of ${
+            favoritePreset?.tableType === TableViewType.Invoices
+              ? ` ${favoritePreset?.name} Invoices`
+              : favoritePreset?.name
+          }`,
       isPreset: false,
+      isShared,
     };
 
     const { id: _id, createdAt, updatedAt, ...payload } = newTableViewDef.value;
@@ -237,7 +248,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
         setTimeout(() => {
           this.invalidate();
           options?.onSuccess?.(serverId);
-        }, 1000);
+        }, 100);
       }
     }
   };

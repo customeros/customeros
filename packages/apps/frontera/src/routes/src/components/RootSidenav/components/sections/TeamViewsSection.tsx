@@ -10,7 +10,7 @@ import { EditableSideNavItem } from '@shared/components/RootSidenav/components/E
 
 import { CollapsibleSection } from '../CollapsibleSection';
 
-interface FavoritesSectionProps {
+interface TeamViewsSectionSectionProps {
   preferences: Preferences;
   handleItemClick: (data: string) => void;
   togglePreference: (data: keyof Preferences) => void;
@@ -20,31 +20,31 @@ interface FavoritesSectionProps {
   ) => boolean;
 }
 
-export const FavoritesSection = observer(
+export const TeamViewsSectionSection = observer(
   ({
     preferences,
     togglePreference,
     handleItemClick,
     checkIsActive,
-  }: FavoritesSectionProps) => {
+  }: TeamViewsSectionSectionProps) => {
     const store = useStore();
     const tableViewDefsList = store.tableViewDefs.toArray();
 
-    const favoritesView =
+    const teamViewsSectionView =
       tableViewDefsList
-        .filter((c) => !c.value.isPreset && !c.value.isShared)
+        .filter((c) => !c.value.isPreset && c.value.isShared)
         .sort((a, b) => a.value.order - b.value.order) ?? [];
 
-    if (!favoritesView.length) return null;
+    if (!teamViewsSectionView.length) return null;
 
     return (
       <CollapsibleSection
-        title='My views'
-        isOpen={preferences.isFavoritesOpen}
-        onToggle={() => togglePreference('isFavoritesOpen')}
+        title='Team views'
+        isOpen={preferences.isTeamViewsOpen}
+        onToggle={() => togglePreference('isTeamViewsOpen')}
       >
-        {preferences.isFavoritesOpen &&
-          favoritesView.map((view) => (
+        {preferences.isTeamViewsOpen &&
+          teamViewsSectionView.map((view) => (
             <EditableSideNavItem
               id={view.value.id}
               key={view.value.id}

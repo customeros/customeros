@@ -1,4 +1,3 @@
-import { useSearchParams } from 'react-router-dom';
 import React, { useState, ReactElement, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -38,8 +37,6 @@ export const EditableSideNavItem = observer(
     id,
   }: EditableSideNavItemProps) => {
     const store = useStore();
-    const [searchParams] = useSearchParams();
-    const preset = searchParams.get('preset') ?? '1';
     const [isEditing, setIsEditing] = useState(false);
 
     const handleClick: MouseEventHandler = (e) => {
@@ -107,7 +104,12 @@ export const EditableSideNavItem = observer(
                 onClick={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  store.tableViewDefs.createFavorite(preset);
+                  store.ui.commandMenu.toggle('DuplicateView');
+                  store.ui.commandMenu.setContext({
+                    ids: [id],
+                    entity: 'TableViewDef',
+                  });
+                  // store.tableViewDefs.createFavorite(preset);
                   setIsEditing(false);
                 }}
               >
