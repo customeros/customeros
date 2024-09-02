@@ -9,21 +9,16 @@ import { MaskedInput } from '@ui/form/Input/MaskedInput';
 import { currencySymbol } from '@shared/util/currencyOptions';
 import { Command, CommandInput } from '@ui/overlay/CommandMenu';
 
-export const ChangeArrEstimate = observer(() => {
+export const ChangeBulkArrEstimate = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const opportunity = store.opportunities.value.get(
     (context.ids as string[])?.[0],
   );
   const [unmaskedValue, setUnmaskedValue] = useState('');
-  const [value, setValue] = useState(
-    () => opportunity?.value.maxAmount.toString() ?? '',
-  );
+  const [value, setValue] = useState(() => '');
 
-  const label = match(context.entity)
-    .with('Opportunity', () => `Opportunity - ${opportunity?.value?.name}`)
-    .with('Opportunities', () => `${context.ids?.length} opportunities`)
-    .otherwise(() => 'Change ARR estimate');
+  const label = `${context.ids?.length} opportunities`;
 
   const defaultCurrency = match(store.settings.tenant.value?.baseCurrency)
     .with(P.nullish, () => Currency.Usd)
@@ -38,12 +33,17 @@ export const ChangeArrEstimate = observer(() => {
 
   const handleEnterKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
-      opportunity?.update((value) => {
-        value.maxAmount = parseFloat(unmaskedValue);
+      context.ids?.forEach((id) => {
+        const opportunity = store.opportunities.value.get(id);
 
-        return value;
+        opportunity?.update((value) => {
+          value.maxAmount = parseFloat(unmaskedValue);
+
+          return value;
+        });
       });
-      store.ui.commandMenu.setType('OpportunityCommands');
+
+      store.ui.commandMenu.setType('OpportunityBulkCommands');
       store.ui.commandMenu.setOpen(false);
     }
   };

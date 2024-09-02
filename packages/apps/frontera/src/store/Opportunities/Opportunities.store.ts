@@ -5,7 +5,11 @@ import { GroupOperation } from '@store/types';
 import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import { Opportunity, OpportunityCreateInput } from '@graphql/types';
+import {
+  Opportunity,
+  InternalStage,
+  OpportunityCreateInput,
+} from '@graphql/types';
 
 import mock from './mock.json';
 import { OpportunityStore } from './Opportunity.store';
@@ -201,4 +205,33 @@ export class OpportunitiesStore implements GroupStore<Opportunity> {
       this.root.ui.toastSuccess('Opportunity archived', 'archive-opportunity');
     }
   }
+
+  async archiveMany(ids: string[]) {
+    ids.forEach((id) => {
+      this.archive(id);
+    });
+  }
+
+  updateStage = (ids: string[], value: InternalStage | string) => {
+    ids.forEach((id) => {
+      this.value.get(id)?.update(
+        (opp) => {
+          if (
+            [InternalStage.ClosedLost, InternalStage.ClosedWon].includes(
+              value as InternalStage,
+            )
+          ) {
+            opp.internalStage = value as InternalStage;
+
+            return opp;
+          }
+          opp.internalStage = InternalStage.Open;
+          opp.externalStage = value;
+
+          return opp;
+        },
+        { mutate: true },
+      );
+    });
+  };
 }

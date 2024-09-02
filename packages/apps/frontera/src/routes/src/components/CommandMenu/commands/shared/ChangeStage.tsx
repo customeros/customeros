@@ -32,7 +32,11 @@ export const ChangeStage = observer(() => {
 
   const entity = match(context.entity)
     .returnType<
-      OpportunityStore | OrganizationStore | OrganizationStore[] | undefined
+      | OpportunityStore
+      | OrganizationStore
+      | OrganizationStore[]
+      | OpportunityStore[]
+      | undefined
     >()
     .with('Opportunity', () =>
       store.opportunities.value.get(context.ids?.[0] as string),
@@ -47,6 +51,13 @@ export const ChangeStage = observer(() => {
           store.organizations.value.get(e),
         ) as OrganizationStore[],
     )
+    .with(
+      'Opportunities',
+      () =>
+        context.ids?.map((e: string) =>
+          store.opportunities.value.get(e),
+        ) as OpportunityStore[],
+    )
     .otherwise(() => undefined);
 
   const label = match(context.entity)
@@ -59,6 +70,7 @@ export const ChangeStage = observer(() => {
       'Opportunity',
       () => `Opportunity - ${(entity as OpportunityStore)?.value?.name}`,
     )
+    .with('Opportunities', () => `${context.ids?.length} opportunities`)
     .otherwise(() => '');
 
   const selectedStageOption = match(context.entity)
@@ -68,6 +80,13 @@ export const ChangeStage = observer(() => {
       ),
     )
     .with('Opportunity', () =>
+      opportunityStages?.find(
+        (option) =>
+          option.value === (entity as OpportunityStore)?.value?.externalStage ||
+          option.value === (entity as OpportunityStore)?.value?.internalStage,
+      ),
+    )
+    .with('Opportunities', () =>
       opportunityStages?.find(
         (option) =>
           option.value === (entity as OpportunityStore)?.value?.externalStage ||
@@ -84,6 +103,7 @@ export const ChangeStage = observer(() => {
       getStageOptions(OrganizationRelationship.Prospect),
     )
     .with('Opportunity', () => opportunityStages ?? [])
+    .with('Opportunities', () => opportunityStages ?? [])
     .otherwise(() => []);
 
   const handleSelect = (value: OrganizationStage | OpportunityStage) => () => {
@@ -105,6 +125,9 @@ export const ChangeStage = observer(() => {
           value as OrganizationStage,
         );
       })
+      .with('Opportunities', () => {
+        store.opportunities.updateStage(context.ids as string[], value);
+      })
       .with('Opportunity', () => {
         (entity as OpportunityStore)?.update((opp) => {
           if (
@@ -116,6 +139,7 @@ export const ChangeStage = observer(() => {
 
             return opp;
           }
+          opp.internalStage = InternalStage.Open;
           opp.externalStage = value;
 
           return opp;

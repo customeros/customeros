@@ -21,7 +21,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { Invoice, WorkflowType, TableViewType } from '@graphql/types';
 import { useColumnSizing } from '@organizations/hooks/useColumnSizing.ts';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { getOpportunitiesSortFn } from '@organizations/components/Columns/opportunities/sortFns.ts';
+import { getOpportunitiesSortFn } from '@organizations/components/Columns/opportunities/sortFns';
+import { OpportunitiesTableActions } from '@organizations/components/Actions/OpportunityActions';
 import {
   Table,
   SortingState,
@@ -391,6 +392,26 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             ids: selectedIds,
           });
         }
+      } else if (tableType === TableViewType.Opportunities) {
+        if (selectedIds.length === 1) {
+          reset();
+
+          store.ui.commandMenu.setType('OpportunityCommands');
+          store.ui.commandMenu.setContext({
+            entity: 'Opportunity',
+            ids: selectedIds,
+          });
+        }
+
+        if (selectedIds.length > 1) {
+          reset();
+
+          store.ui.commandMenu.setType('OpportunityBulkCommands');
+          store.ui.commandMenu.setContext({
+            entity: 'Opportunities',
+            ids: selectedIds,
+          });
+        }
       } else {
         if (selectedIds.length === 1) {
           store.ui.commandMenu.setType('ContactCommands');
@@ -556,6 +577,16 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           ids: selectedIds,
         });
       }
+
+      if (selectedIds.length > 1) {
+        reset();
+
+        store.ui.commandMenu.setType('OpportunityBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Opportunities',
+          ids: selectedIds,
+        });
+      }
     } else {
       if (selectedIds.length === 1) {
         reset();
@@ -657,76 +688,99 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
         enableRowSelection={
           tableType &&
-          [
-            TableViewType.Invoices,
-            TableViewType.Contracts,
-            TableViewType.Opportunities,
-          ].includes(tableType)
+          [TableViewType.Invoices, TableViewType.Contracts].includes(tableType)
             ? false
             : enableFeature !== null
             ? enableFeature
             : true
         }
-        renderTableActions={(table) =>
-          tableType === TableViewType.Organizations ? (
-            <OrganizationTableActions
-              focusedId={focusedId}
-              onCreateContact={createSocial}
-              onOpenCommandK={handleOpenCommandKMenu}
-              isCommandMenuOpen={isCommandMenuPrompted}
-              onUpdateStage={store.organizations.updateStage}
-              table={table as TableInstance<OrganizationStore>}
-              enableKeyboardShortcuts={
-                !isEditing &&
-                !isFiltering &&
-                !isSearching &&
-                !isCommandMenuPrompted
-              }
-              onHide={() => {
-                store.ui.commandMenu.setCallback(() =>
-                  table.resetRowSelection(),
-                );
-                handleOpenCommandKMenu();
-                store.ui.commandMenu.setType('DeleteConfirmationModal');
-              }}
-              handleOpen={(type: CommandMenuType, context) => {
-                handleOpenCommandKMenu();
-                store.ui.commandMenu.setType(type);
-
-                if (context) {
-                  store.ui.commandMenu.setContext({
-                    ...store.ui.commandMenu.context,
-                    ...context,
-                  });
+        renderTableActions={(table) => {
+          if (tableType === TableViewType.Organizations) {
+            return (
+              <OrganizationTableActions
+                focusedId={focusedId}
+                onCreateContact={createSocial}
+                onOpenCommandK={handleOpenCommandKMenu}
+                isCommandMenuOpen={isCommandMenuPrompted}
+                onUpdateStage={store.organizations.updateStage}
+                table={table as TableInstance<OrganizationStore>}
+                enableKeyboardShortcuts={
+                  !isEditing &&
+                  !isFiltering &&
+                  !isSearching &&
+                  !isCommandMenuPrompted
                 }
-              }}
-            />
-          ) : tableType === TableViewType.Contacts ? (
-            <ContactTableActions
-              focusedId={focusedId}
-              onAddTags={store.contacts.updateTags}
-              onOpenCommandK={handleOpenCommandKMenu}
-              table={table as TableInstance<ContactStore>}
-              handleOpen={(type: CommandMenuType) => {
-                handleOpenCommandKMenu();
-                store.ui.commandMenu.setType(type);
-              }}
-              enableKeyboardShortcuts={
-                !isSearching &&
-                !isFiltering &&
-                !isEditing &&
-                !isCommandMenuPrompted
-              }
-              onHideContacts={() => {
-                store.ui.commandMenu.setCallback(() =>
-                  table.resetRowSelection(),
-                );
-                handleOpenCommandKMenu();
-                store.ui.commandMenu.setType('DeleteConfirmationModal');
-              }}
-            />
-          ) : null
-        }
+                onHide={() => {
+                  store.ui.commandMenu.setCallback(() =>
+                    table.resetRowSelection(),
+                  );
+                  handleOpenCommandKMenu();
+                  store.ui.commandMenu.setType('DeleteConfirmationModal');
+                }}
+                handleOpen={(type: CommandMenuType, context) => {
+                  handleOpenCommandKMenu();
+                  store.ui.commandMenu.setType(type);
+
+                  if (context) {
+                    store.ui.commandMenu.setContext({
+                      ...store.ui.commandMenu.context,
+                      ...context,
+                    });
+                  }
+                }}
+              />
+            );
+          }
+
+          if (tableType === TableViewType.Contacts) {
+            return (
+              <ContactTableActions
+                focusedId={focusedId}
+                onOpenCommandK={handleOpenCommandKMenu}
+                table={table as TableInstance<ContactStore>}
+                handleOpen={(type: CommandMenuType) => {
+                  handleOpenCommandKMenu();
+                  store.ui.commandMenu.setType(type);
+                }}
+                enableKeyboardShortcuts={
+                  !isSearching &&
+                  !isFiltering &&
+                  !isEditing &&
+                  !isCommandMenuPrompted
+                }
+                onHideContacts={() => {
+                  store.ui.commandMenu.setCallback(() =>
+                    table.resetRowSelection(),
+                  );
+                  handleOpenCommandKMenu();
+                  store.ui.commandMenu.setType('DeleteConfirmationModal');
+                }}
+              />
+            );
+          }
+
+          if (tableType === TableViewType.Opportunities) {
+            return (
+              <OpportunitiesTableActions
+                focusedId={focusedId}
+                onOpenCommandK={handleOpenCommandKMenu}
+                table={table as TableInstance<ContactStore>}
+                handleOpen={(type: CommandMenuType) => {
+                  handleOpenCommandKMenu();
+                  store.ui.commandMenu.setType(type);
+                }}
+                enableKeyboardShortcuts={
+                  !isSearching &&
+                  !isFiltering &&
+                  !isEditing &&
+                  !isCommandMenuPrompted
+                }
+              />
+            );
+          }
+
+          return null;
+        }}
       />
       {isSidePanelOpen && <SidePanel />}
       {store.ui.contactPreviewCardOpen && (

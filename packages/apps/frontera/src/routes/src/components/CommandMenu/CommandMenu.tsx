@@ -10,7 +10,8 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
-import { DuplicateView } from '@shared/components/CommandMenu/commands/tableViewDef/DuplicateView.tsx';
+import { DuplicateView } from '@shared/components/CommandMenu/commands/tableViewDef/DuplicateView';
+import { OpportunityBulkCommands } from '@shared/components/CommandMenu/commands/OpportunityBulkCommands';
 import {
   Modal,
   ModalBody,
@@ -18,6 +19,7 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
+import { ChangeBulkArrEstimate } from '@shared/components/CommandMenu/commands/opportunity/ChangeBulkArrEstimate';
 
 import {
   EditName,
@@ -93,6 +95,8 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
   ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
   DuplicateView: <DuplicateView />,
+  OpportunityBulkCommands: <OpportunityBulkCommands />,
+  ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
 };
 
 export const CommandMenu = observer(() => {

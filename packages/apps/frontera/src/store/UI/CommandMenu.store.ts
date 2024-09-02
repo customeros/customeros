@@ -35,6 +35,8 @@ export type CommandMenuType =
   | 'RenameTableViewDef'
   | 'ContactEmailVerificationInfoModal'
   | 'DuplicateView'
+  | 'OpportunityBulkCommands'
+  | 'ChangeBulkArrEstimate'
   | 'ContactBulkCommands';
 
 export type Context = {
@@ -47,6 +49,7 @@ export type Context = {
     | 'Opportunity'
     | 'Organization'
     | 'Organizations'
+    | 'Opportunities'
     | 'Contact'
     | 'TableViewDef'
     | null;

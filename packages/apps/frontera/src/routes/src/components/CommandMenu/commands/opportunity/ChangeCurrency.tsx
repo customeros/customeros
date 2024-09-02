@@ -18,14 +18,30 @@ export const ChangeCurrency = observer(() => {
 
   const label = match(context.entity)
     .with('Opportunity', () => `Opportunity - ${opportunity?.value?.name}`)
+    .with('Opportunities', () => `${context?.ids?.length} opportunities`)
     .otherwise(() => undefined);
 
   const handleSelect = (currency: Currency) => {
-    opportunity?.update((value) => {
-      Object.assign(value, { currency });
+    match(context.entity)
+      .with('Opportunity', () => {
+        opportunity?.update((value) => {
+          Object.assign(value, { currency });
 
-      return value;
-    });
+          return value;
+        });
+      })
+      .with('Opportunities', () => {
+        context.ids?.forEach((id) => {
+          const opportunity = store.opportunities.value.get(id);
+
+          opportunity?.update((value) => {
+            Object.assign(value, { currency });
+
+            return value;
+          });
+        });
+      })
+      .otherwise(() => undefined);
 
     store.ui.commandMenu.setOpen(false);
   };

@@ -14,7 +14,7 @@ import { CommandKbd } from '@ui/overlay/CommandMenu';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableInstance } from '@ui/presentation/Table';
 import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
-import { ActionItem } from '@organizations/components/Actions/ActionItem';
+import { ActionItem } from '@organizations/components/Actions/components/ActionItem.tsx';
 
 interface TableActionsProps {
   onHide: () => void;
