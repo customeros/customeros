@@ -80,8 +80,7 @@ export const ChangeOrAddJobRoles = observer(() => {
           if (e.metaKey && e.key === 'Enter') {
             store.ui.commandMenu.setOpen(false);
           } else {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            handleSelect(search as any);
+            handleSelect([{ value: search, label: search }]);
           }
         }}
       />
