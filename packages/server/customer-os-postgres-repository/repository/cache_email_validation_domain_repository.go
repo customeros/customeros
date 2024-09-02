@@ -107,6 +107,8 @@ func (r cacheEmailValidationDomainRepository) Save(ctx context.Context, cacheEma
 		cacheEmailValidationDomain.HealthServerIP,
 		cacheEmailValidationDomain.HealthFromEmail,
 		cacheEmailValidationDomain.HealthRetryAfter,
+		cacheEmailValidationDomain.IsPrimaryDomain,
+		cacheEmailValidationDomain.PrimaryDomain,
 	).Scan(&result).Error
 
 	if err != nil {
