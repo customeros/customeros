@@ -1,3 +1,5 @@
+import { toZonedTime } from 'date-fns-tz';
+
 import { DateTimeUtils } from '@utils/date';
 
 interface TimeToRenewalCellProps {
@@ -17,12 +19,11 @@ export const TimeToRenewalCell = ({
       </span>
     );
 
+  const parsedDate = toZonedTime(nextRenewalDate, 'UTC').toUTCString();
+
   return (
     <span className='text-sm text-gray-700'>
-      {DateTimeUtils.format(
-        nextRenewalDate,
-        DateTimeUtils.dateWithAbreviatedMonth,
-      )}
+      {DateTimeUtils.format(parsedDate, DateTimeUtils.dateWithAbreviatedMonth)}
     </span>
   );
 };

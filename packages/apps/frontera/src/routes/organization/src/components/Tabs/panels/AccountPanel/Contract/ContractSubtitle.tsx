@@ -37,12 +37,23 @@ export const ContractSubtitle = observer(({ id }: { id: string }) => {
 
   const renewalCalculatedDate = useMemo(() => {
     if (!serviceStarted) return null;
+
     const parsed = data?.committedPeriodInMonths
       ? parseFloat(data?.committedPeriodInMonths)
       : 1;
 
-    return DateTimeUtils.addMonth(serviceStarted, parsed).toString();
+    let nextRenewalDate = serviceStarted;
+
+    while (DateTimeUtils.isPast(nextRenewalDate)) {
+      nextRenewalDate = DateTimeUtils.addMonth(
+        nextRenewalDate,
+        parsed,
+      ).toUTCString();
+    }
+
+    return nextRenewalDate;
   }, [data?.serviceStarted, data?.committedPeriodInMonths]);
+
   const renewalDate = renewalCalculatedDate
     ? DateTimeUtils.format(
         renewalCalculatedDate,
