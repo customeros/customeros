@@ -122,6 +122,28 @@ const columns: Record<string, Column> = {
     },
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),
+  [ColumnViewType.OrganizationsName]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.OrganizationsName,
+    size: 160,
+    minSize: 160,
+    maxSize: 600,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        title='Organization Name'
+        id={ColumnViewType.InvoicesContract}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (props) => {
+      const orgName = props.getValue()?.value.organization?.value?.name;
+
+      return <p>{orgName}</p>;
+    },
+    skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
+  }),
   [ColumnViewType.InvoicesBillingCycle]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.InvoicesBillingCycle,
     size: 150,

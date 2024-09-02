@@ -9,7 +9,7 @@ interface ViewSettingsProps {
 
 export const ViewSettings = ({ type, tableId }: ViewSettingsProps) => {
   return (
-    <div className='flex items-center'>
+    <div className='flex'>
       <EditColumns type={type} tableId={tableId} />
     </div>
   );

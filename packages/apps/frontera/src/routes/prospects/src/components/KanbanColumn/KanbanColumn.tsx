@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
@@ -26,6 +27,7 @@ import { WinProbabilityModal } from './WinProbabilityModal';
 import { KanbanCard, DraggableKanbanCard } from '../KanbanCard/KanbanCard';
 
 interface CardColumnProps {
+  idx: number;
   columnId: number;
   isLoading: boolean;
   onBlur: () => void;
@@ -35,8 +37,11 @@ interface CardColumnProps {
   stage: string | InternalStage.ClosedLost | InternalStage.ClosedWon;
 }
 
+// Other imports...
+
 export const KanbanColumn = observer(
   ({
+    idx,
     stage,
     onBlur,
     onFocus,
@@ -47,6 +52,7 @@ export const KanbanColumn = observer(
   }: CardColumnProps) => {
     const store = useStore();
     const [searchParams] = useSearchParams();
+    const [height, setHeight] = useState<number | null>(null); // State for height
     const { open, onOpen, onToggle } = useDisclosure();
     const viewDef = store.tableViewDefs.getById(
       store.tableViewDefs.opportunitiesPreset ?? '',
@@ -137,11 +143,22 @@ export const KanbanColumn = observer(
       });
     };
 
+    useEffect(() => {
+      if (idx === 0) {
+        const calculatedHeight = cards.length * 38 + 1050;
+
+        setHeight(calculatedHeight);
+      }
+    }, [idx, cards.length]);
+
     return (
-      <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'>
-        <div className=' sticky rounded-t-[4px] top-[114px] bg-white z-50'>
+      <div
+        style={{ height: `${height}px` }}
+        className={cn('flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded ')}
+      >
+        <div className='rounded-t-[4px] bg-white sticky top-0 z-20'>
           <div className='flex items-center justify-between p-3 pb-0 bg-gray-100 rounded-t-[4px]'>
-            <div className='flex flex-col items-center mb-2 w-full '>
+            <div className='flex flex-col items-center mb-2 w-full'>
               <div className='flex justify-between w-full'>
                 <Tooltip
                   asChild
@@ -191,6 +208,7 @@ export const KanbanColumn = observer(
           </div>
         </div>
 
+        {/* Droppable area */}
         <Droppable
           type={`COLUMN`}
           droppableId={stage}
@@ -214,7 +232,7 @@ export const KanbanColumn = observer(
           ) => (
             <div
               ref={dropProvided.innerRef}
-              className={cn('flex flex-col pb-2 p-3 h-[100vh - 40px] ', {
+              className={cn('flex flex-col pb-2 p-3 h-full', {
                 'bg-gray-100': dropSnapshot?.isDraggingOver,
               })}
               {...dropProvided.droppableProps}

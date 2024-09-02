@@ -149,12 +149,12 @@ export const ProspectsBoard = observer(() => {
         totalArr={totalArr}
         totalWeightedArr={totalWeightedArr}
       />
-
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className='flex flex-grow px-4 space-x-2'>
-          {(columns ?? []).map((column) => {
+        <div className='flex px-4 space-x-2 overflow-auto'>
+          {(columns ?? []).map((column, idx) => {
             return (
               <KanbanColumn
+                idx={idx}
                 key={column.name}
                 onBlur={handleBlur}
                 focusedId={focused}

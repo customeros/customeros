@@ -1,5 +1,4 @@
 import { Currency } from '@graphql/types';
-import { useStore } from '@shared/hooks/useStore';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 
 interface PipelineMetricsProps {
@@ -15,16 +14,8 @@ export const PipelineMetrics = ({
   totalArr = 0,
   totalWeightedArr = 0,
 }: PipelineMetricsProps) => {
-  const store = useStore();
-  const numberOfColumns =
-    store.settings.tenant.value?.opportunityStages.length ?? 0;
-
   return (
-    <div
-      style={{ minWidth: `${numberOfColumns * 150}px` }}
-      className='
-       sticky top-[42px] z-20 bg-white '
-    >
+    <div>
       <div className='px-3 py-2 mx-4 mt-4 mb-4 bg-gray-100 flex justify-center gap-4 rounded-[4px] '>
         <span className=''>
           <span className='font-semibold'>{count}</span>{' '}
