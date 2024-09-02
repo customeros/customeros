@@ -9,6 +9,7 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { DateCell } from '@organizations/components/Columns/shared/Cells/DateCell/DateCell.tsx';
 import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
 
+import { OrganizationName } from './Cells/OrganizationName';
 import {
   IssueDateFilter,
   BillingCycleFilter,
@@ -119,6 +120,29 @@ const columns: Record<string, Column> = {
           organizationId={props.getValue()?.value?.organization?.metadata?.id}
         />
       );
+    },
+    skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
+  }),
+
+  [ColumnViewType.InvoicesOrganization]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.InvoicesOrganization,
+    size: 160,
+    minSize: 160,
+    maxSize: 600,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        title='Organization'
+        id={ColumnViewType.InvoicesOrganization}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (props) => {
+      const orgId = props.getValue()?.value?.organization?.metadata?.id;
+
+      return <OrganizationName orgId={orgId} />;
     },
     skeleton: () => <Skeleton className='w-[100px] h-[18px]' />,
   }),

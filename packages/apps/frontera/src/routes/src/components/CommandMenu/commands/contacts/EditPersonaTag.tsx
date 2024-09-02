@@ -139,6 +139,13 @@ export const EditPersonaTag = observer(() => {
           if (e.key === ' ') {
             e.stopPropagation();
           }
+
+          if (e.metaKey && e.key === 'Enter') {
+            store.ui.commandMenu.setOpen(false);
+          } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            handleSelect(search as any);
+          }
         }}
       />
 

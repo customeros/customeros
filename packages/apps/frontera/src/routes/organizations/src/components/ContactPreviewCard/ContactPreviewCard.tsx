@@ -129,7 +129,7 @@ export const ContactPreviewCard = observer(
         {store.ui.contactPreviewCardOpen && (
           <div
             data-state={store.ui.contactPreviewCardOpen ? 'open' : 'closed'}
-            className='data-[state=open]:animate-slideLeftAndFade data-[state=closed]:animate-slideRightAndFade flex flex-col absolute right-[12px] -top-[-53px] p-4 max-w-[390px] border border-gray-200 rounded-lg z-50 bg-white'
+            className='data-[state=open]:animate-slideLeftAndFade data-[state=closed]:animate-slideRightAndFade flex flex-col absolute right-[12px] -top-[-53px] p-4 max-w-[390px] min-w-[350px] border border-gray-200 rounded-lg z-50 bg-white'
           >
             <Avatar
               size='sm'
@@ -202,7 +202,7 @@ export const ContactPreviewCard = observer(
               )}
               {city && timezone && <span>•</span>}
               {timezone && (
-                <span className='w-[180px] text-sm'>
+                <span className='w-[150px] text-sm'>
                   {getTimezone(timezone || '')} local time
                 </span>
               )}

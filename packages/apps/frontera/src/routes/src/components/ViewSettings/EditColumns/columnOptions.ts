@@ -21,6 +21,7 @@ export const invoicesOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.InvoicesIssueDate]: 'Issue Date',
   [ColumnViewType.InvoicesIssueDatePast]: 'Created At',
   [ColumnViewType.InvoicesInvoiceStatus]: 'Invoice Status',
+  [ColumnViewType.InvoicesOrganization]: 'Organization Name',
 };
 
 export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {

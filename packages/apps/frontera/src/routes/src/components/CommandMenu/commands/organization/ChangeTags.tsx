@@ -192,6 +192,15 @@ export const ChangeTags = observer(() => {
         value={search}
         onValueChange={setSearch}
         placeholder='Change or add tags...'
+        onKeyDownCapture={(e) => {
+          if (e.metaKey && e.key === 'Enter') {
+            store.ui.commandMenu.setOpen(false);
+          } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            handleSelect(search as any);
+          }
+          e.stopPropagation();
+        }}
       />
       <CommandGroup>
         <Command.List>
@@ -199,9 +208,6 @@ export const ChangeTags = observer(() => {
             <CommandItem
               key={tag.id}
               onSelect={handleSelect(tag.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') handleSelect(tag.value);
-              }}
               rightAccessory={
                 newSelectedTags.has(tag.value.name) ? <Check /> : null
               }

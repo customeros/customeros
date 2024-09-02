@@ -701,7 +701,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
                 }
               }}
             />
-          ) : (
+          ) : tableType === TableViewType.Contacts ? (
             <ContactTableActions
               focusedId={focusedId}
               onAddTags={store.contacts.updateTags}
@@ -725,7 +725,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
                 store.ui.commandMenu.setType('DeleteConfirmationModal');
               }}
             />
-          )
+          ) : null
         }
       />
       {isSidePanelOpen && <SidePanel />}

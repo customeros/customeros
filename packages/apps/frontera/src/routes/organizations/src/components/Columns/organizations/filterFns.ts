@@ -4,6 +4,7 @@ import { isAfter } from 'date-fns/isAfter';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import {
+  Tag,
   Filter,
   Social,
   ColumnViewType,
@@ -396,6 +397,19 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         }
 
         return true;
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsTags },
+      (filter) => (row: OrganizationStore) => {
+        if (!filter.active) return true;
+        const tags = row.value.tags?.map((l: Tag) => l.name);
+
+        if (!filter.value?.length) return true;
+
+        if (!tags?.length) return false;
+
+        return filter.value.some((f: string) => tags.includes(f));
       },
     )
 
