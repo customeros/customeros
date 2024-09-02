@@ -56,6 +56,7 @@ type Invoice implements MetadataInterface {
     subtotal:                   Float!
     taxDue:                     Float!
     paymentLink:                String
+    billingCycleInMonths:       Int64!
 }
 
 type InvoiceCustomer {
