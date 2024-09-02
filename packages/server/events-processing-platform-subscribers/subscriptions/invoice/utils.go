@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
+	"golang.org/x/net/context"
 	"html/template"
 	"io"
 	"io/ioutil"
@@ -25,7 +26,9 @@ func setEventSpanTagsAndLogFields(span opentracing.Span, evt eventstore.Event) {
 	span.SetTag(tracing.SpanTagAggregateId, evt.GetAggregateID())
 }
 
-func FillInvoiceHtmlTemplate(tmpFile *os.File, invoiceData map[string]interface{}) error {
+func FillInvoiceHtmlTemplate(ctx context.Context, tmpFile *os.File, invoiceData map[string]interface{}) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ConvertInvoiceHtmlToPdf")
+	defer span.Finish()
 
 	// Get the current directory
 	currentDir, err := os.Getwd()
@@ -69,7 +72,9 @@ func FillInvoiceHtmlTemplate(tmpFile *os.File, invoiceData map[string]interface{
 	return nil
 }
 
-func ConvertInvoiceHtmlToPdf(fsc fsc.FileStoreApiService, pdfConverterUrl string, tmpFile *os.File, invoiceData map[string]interface{}, span opentracing.Span) (*[]byte, error) {
+func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, pdfConverterUrl string, tmpFile *os.File, invoiceData map[string]interface{}) (*[]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ConvertInvoiceHtmlToPdf")
+	defer span.Finish()
 	// This is doing a request like this:
 	//curl \
 	//--request POST 'http://localhost:11006/forms/chromium/convert/html' \
