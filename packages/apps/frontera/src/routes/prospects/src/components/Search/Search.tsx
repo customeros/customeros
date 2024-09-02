@@ -7,7 +7,12 @@ import { observer } from 'mobx-react-lite';
 import { Input } from '@ui/form/Input/Input';
 import { useStore } from '@shared/hooks/useStore';
 import { SearchSm } from '@ui/media/icons/SearchSm';
+import { ViewSettings } from '@shared/components/ViewSettings';
 import { InputGroup, LeftElement } from '@ui/form/InputGroup/InputGroup';
+import {
+  TableIdType,
+  TableViewType,
+} from '@shared/types/__generated__/graphql.types';
 
 export const Search = observer(() => {
   const store = useStore();
@@ -53,7 +58,7 @@ export const Search = observer(() => {
   return (
     <div
       ref={wrapperRef}
-      className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-2'
+      className='flex items-center justify-between pr-1 w-full data-[focused]:animate-focus gap-2 static'
     >
       <InputGroup className='relative w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2 flex items-center gap-1'>
@@ -95,6 +100,10 @@ export const Search = observer(() => {
           }}
         />
       </InputGroup>
+      <ViewSettings
+        type={TableViewType.Opportunities}
+        tableId={TableIdType.Opportunities}
+      />
     </div>
   );
 });

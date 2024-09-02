@@ -16,7 +16,6 @@ import { KanbanColumn } from '../KanbanColumn/KanbanColumn';
 export const ProspectsBoard = observer(() => {
   const store = useStore();
   const [focused, setFocused] = useState<string | null>(null);
-
   const opportunitiesPresetId = store.tableViewDefs.opportunitiesPreset;
   const viewDef = store.tableViewDefs.getById(opportunitiesPresetId ?? '');
   const stageLikelihoods = new Map(
@@ -151,23 +150,20 @@ export const ProspectsBoard = observer(() => {
       />
 
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className='flex flex-grow px-4 space-x-2'>
-          {(columns ?? []).map((column) => {
-            return (
-              <KanbanColumn
-                key={column.name}
-                onBlur={handleBlur}
-                focusedId={focused}
-                stage={column.stage}
-                onFocus={handleFocus}
-                columnId={column.columnId}
-                filterFns={column.filterFns ?? []}
-                isLoading={store.organizations.isLoading}
-              />
-            );
-          })}
-          <div className='w-6'></div>
+        <div className='flex px-4 gap-2 overflow-auto h-screen'>
+          {(columns ?? []).map((column) => (
+            <KanbanColumn
+              onBlur={handleBlur}
+              focusedId={focused}
+              stage={column.stage}
+              onFocus={handleFocus}
+              columnId={column.columnId}
+              filterFns={column.filterFns ?? []}
+              isLoading={store.organizations.isLoading}
+            />
+          ))}
         </div>
+        <div className='w-6'></div>
       </DragDropContext>
     </>
   );

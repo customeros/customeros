@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
@@ -137,11 +138,51 @@ export const KanbanColumn = observer(
       });
     };
 
+    const opportunities = store.opportunities.value;
+    const stageOpportunityCounts = useMemo(() => {
+      const counts = new Map<string, number>();
+
+      opportunities.forEach((opp) => {
+        const stage = opp.value.externalStage;
+
+        if (Array.isArray(stage)) {
+          stage.forEach((s) => {
+            counts.set(s, (counts.get(s) ?? 0) + 1);
+          });
+        } else {
+          counts.set(stage, (counts.get(stage) ?? 0) + 1);
+        }
+      });
+
+      return counts;
+    }, [opportunities]);
+
+    const getColumnHeight = (stage: string): number => {
+      return stageOpportunityCounts.get(stage) ?? 0;
+    };
+
+    const maxOpportunityStage = useMemo(() => {
+      let maxStage: string | null = null;
+      let maxCount = 0;
+
+      stageOpportunityCounts.forEach((count, stage) => {
+        if (count > maxCount) {
+          maxCount = count;
+          maxStage = stage;
+        }
+      });
+
+      return maxStage;
+    }, [stageOpportunityCounts]);
+
     return (
-      <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'>
-        <div className=' sticky rounded-t-[4px] top-[114px] bg-white z-10'>
-          <div className='flex items-center justify-between p-3 pb-0 bg-gray-100 rounded-t-[4px]'>
-            <div className='flex flex-col items-center mb-2 w-full '>
+      <div
+        style={{ height: getColumnHeight(maxOpportunityStage || '') * 38 + 40 }}
+        className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-fit min-h-screen'
+      >
+        <div className='sticky top-0 z-[1] rounded-t-[4px]'>
+          <div className='flex items-center justify-between p-3 pb-0 bg-gray-100 rounded-t-[4px] '>
+            <div className='flex flex-col items-center mb-2 w-full'>
               <div className='flex justify-between w-full'>
                 <Tooltip
                   asChild
@@ -214,11 +255,11 @@ export const KanbanColumn = observer(
           ) => (
             <div
               ref={dropProvided.innerRef}
-              className={cn('flex flex-col pb-2 p-3 h-[100vh - 40px] ', {
+              className={cn('flex flex-col pb-2 p-3 h-[100vh - 40px]', {
                 'bg-gray-100': dropSnapshot?.isDraggingOver,
               })}
               {...dropProvided.droppableProps}
-              style={{ height: 'calc(100% - 40px)' }}
+              style={{ height: 'calc(100vh - 40px)' }}
             >
               {cards.map((card, index) => (
                 <DraggableKanbanCard
