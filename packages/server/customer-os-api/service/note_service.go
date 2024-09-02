@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -16,6 +17,7 @@ import (
 )
 
 type NoteService interface {
+	GetById(ctx context.Context, id string) (*entity.NoteEntity, error)
 	GetNotesForMeetings(ctx context.Context, ids []string) (*entity.NoteEntities, error)
 
 	CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error)
@@ -25,8 +27,8 @@ type NoteService interface {
 	UpdateNote(ctx context.Context, entity *entity.NoteEntity) (*entity.NoteEntity, error)
 	DeleteNote(ctx context.Context, noteId string) (bool, error)
 
-	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
-	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error)
+	NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) error
+	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) error
 
 	mapDbNodeToNoteEntity(node dbtype.Node) *entity.NoteEntity
 }
@@ -49,30 +51,55 @@ func (s *noteService) getNeo4jDriver() neo4j.DriverWithContext {
 	return *s.repositories.Drivers.Neo4jDriver
 }
 
-func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
+func (s *noteService) GetById(ctx context.Context, id string) (*entity.NoteEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.GetById")
+	defer span.Finish()
+
+	byId, err := s.services.CommonServices.Neo4jRepositories.CommonReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), id, commonModel.NodeLabelNote)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if byId == nil {
+		return nil, nil
+	}
+
+	return s.mapDbNodeToNoteEntity(*byId), nil
+}
+
+func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, attachmentID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.NoteLinkAttachment")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
 
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_NOTE, nil, attachmentID, noteID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := s.services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, noteID, commonModel.NOTE, commonModel.INCLUDES, nil, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return err
 	}
-	return s.mapDbNodeToNoteEntity(*node), nil
+
+	return nil
 }
 
-func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*entity.NoteEntity, error) {
+func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "NoteService.NoteUnlinkAttachment")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("noteID", noteID), log.String("attachmentID", attachmentID))
 
-	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_NOTE, nil, attachmentID, noteID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := s.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, noteID, commonModel.NOTE, commonModel.INCLUDES, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return err
 	}
-	return s.mapDbNodeToNoteEntity(*node), nil
+
+	return nil
 }
 
 func (s *noteService) CreateNoteForContact(ctx context.Context, contactId string, entity *entity.NoteEntity) (*entity.NoteEntity, error) {

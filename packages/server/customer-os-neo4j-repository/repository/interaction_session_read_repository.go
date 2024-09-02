@@ -15,6 +15,7 @@ type InteractionSessionReadRepository interface {
 	GetForInteractionEvent(ctx context.Context, tenant, interactionEventId string) (*neo4j.Node, error)
 	GetAllForInteractionEvents(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeAndId, error)
 	GetByIdentifierAndChannel(ctx context.Context, tenant, identifier, channel string) (*neo4j.Node, error)
+	GetAttendedByParticipantsForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error)
 }
 
 type interactionSessionReadRepository struct {
@@ -127,6 +128,44 @@ func (r *interactionSessionReadRepository) GetByIdentifierAndChannel(ctx context
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r *interactionSessionReadRepository) GetAttendedByParticipantsForInteractionSessions(ctx context.Context, tenant string, ids []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionReadRepository.GetAttendedByParticipantsForInteractionSessions")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	query := fmt.Sprintf(`
+				MATCH (is:InteractionSession_%s)-[rel:ATTENDED_BY]->(p)
+				WHERE is.id IN $ids
+				RETURN distinct(p), rel, is.id
+				UNION
+				MATCH (is:InteractionSession_%s)<-[:PART_OF]-(ie:InteractionEvent_%s)-[rel:SENT_BY]->(p)
+				WHERE is.id IN $ids
+				RETURN distinct(p), rel, is.id
+				UNION
+				MATCH (is:InteractionSession_%s)<-[:PART_OF]-(ie:InteractionEvent_%s)-[rel:SENT_TO]->(p)
+				WHERE is.id IN $ids
+				RETURN distinct(p), rel, is.id`, tenant, tenant, tenant, tenant, tenant)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, query,
+			map[string]any{
+				"tenant": tenant,
+				"ids":    ids,
+			}); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
 func (r *interactionSessionReadRepository) prepareReadSession(ctx context.Context) neo4j.SessionWithContext {

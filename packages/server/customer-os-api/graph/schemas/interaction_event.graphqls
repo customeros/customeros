@@ -2,88 +2,20 @@ union InteractionEventParticipant = EmailParticipant | PhoneNumberParticipant | 
 union InteractionSessionParticipant = EmailParticipant | PhoneNumberParticipant | ContactParticipant | UserParticipant
 
 extend type Query {
-    interactionSession(id: ID!): InteractionSession!
-    interactionSession_BySessionIdentifier(sessionIdentifier: String!): InteractionSession!
-    interactionSession_ByEventIdentifier(eventIdentifier: String!): InteractionSession!
-
     interactionEvent(id: ID!): InteractionEvent!
-    interactionEvent_ByEventIdentifier(eventIdentifier: String!): InteractionEvent!
 }
 
 extend type Mutation {
-    interactionSession_Create(
-        session: InteractionSessionInput!
-    ): InteractionSession!
-    interactionSession_LinkAttachment(sessionId: ID!, attachmentId: ID!): InteractionSession!
-
-    interactionEvent_Create(
-        event: InteractionEventInput!
-    ): InteractionEvent!
-    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): InteractionEvent!
-
-}
-
-input InteractionEventParticipantInput  {
-    email: String
-    phoneNumber: String
-    contactID: ID
-    userID: ID
-    type: String
-}
-
-input InteractionSessionParticipantInput  {
-    email: String
-    phoneNumber: String
-    contactID: ID
-    userID: ID
-    type: String
-}
-
-input InteractionSessionInput {
-    sessionIdentifier: String
-    name: String!
-    status: String!
-    type: String
-    channel: String
-    channelData: String
-    attendedBy: [InteractionSessionParticipantInput!]
-    appSource: String!
-}
-
-input InteractionEventInput {
-    customerOSInternalIdentifier: String
-    eventIdentifier: String
-    externalId: String
-    externalSystemId: String
-    content: String
-    contentType: String
-    channel: String
-    channelData: String
-    interactionSession: ID
-    meetingId: ID
-    sentBy: [InteractionEventParticipantInput!]!
-    sentTo: [InteractionEventParticipantInput!]!
-    repliesTo: ID
-    eventType: String
-    appSource: String!
-    createdAt: Time
-
+    interactionEvent_LinkAttachment(eventId: ID!, attachmentId: ID!): Result!
 }
 
 type InteractionSession implements Node {
     id: ID!
-    """
-    Deprecated
-    """
-    startedAt: Time! @deprecated(reason: "Use createdAt instead")
-    """
-    Deprecated
-    """
-    endedAt: Time @deprecated(reason: "Use updatedAt instead")
+
     createdAt: Time!
     updatedAt: Time!
 
-    sessionIdentifier: String
+    identifier: String!
     name: String!
     status: String!
     type: String
@@ -94,8 +26,6 @@ type InteractionSession implements Node {
     appSource: String!
     events: [InteractionEvent!]! @goField(forceResolver: true)
     attendedBy: [InteractionSessionParticipant!]! @goField(forceResolver: true)
-    includes: [Attachment!]! @goField(forceResolver: true)
-    describedBy: [Analysis!]! @goField(forceResolver: true)
 }
 
 type InteractionEvent implements Node {
@@ -104,9 +34,9 @@ type InteractionEvent implements Node {
 
     customerOSInternalIdentifier: String
     eventIdentifier: String
+    channel: String!
     content: String
     contentType: String
-    channel: String
     channelData: String
     interactionSession: InteractionSession @goField(forceResolver: true)
     issue: Issue @goField(forceResolver: true)
@@ -115,7 +45,6 @@ type InteractionEvent implements Node {
     sentTo: [InteractionEventParticipant!]! @goField(forceResolver: true)
     repliesTo: InteractionEvent @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
-    summary: Analysis @goField(forceResolver: true)
     actions: [Action!] @goField(forceResolver: true)
     actionItems: [ActionItem!] @goField(forceResolver: true)
     source: DataSource!

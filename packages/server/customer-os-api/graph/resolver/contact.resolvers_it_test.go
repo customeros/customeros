@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -734,7 +733,6 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
 	secAgo40 := now.Add(time.Duration(-40) * time.Second)
 	secAgo50 := now.Add(time.Duration(-50) * time.Second)
-	secAgo55 := now.Add(time.Duration(-55) * time.Second)
 	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 
 	// prepare page views
@@ -762,10 +760,7 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	})
 	neo4jt.CreatePageView(ctx, driver, contactId2, entity.PageViewEntity{})
 
-	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
-
-	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo55)
-	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, voiceSession, string(repository.LINKED_WITH_INTERACTION_SESSION))
+	voiceSession := neo4jtest.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
 
 	// prepare meeting
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "meeting-name", secAgo60)
@@ -773,8 +768,8 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 
 	// prepare interaction events
 	channel := "EMAIL"
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, secAgo40)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, secAgo50)
+	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel, secAgo40)
+	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel, secAgo50)
 	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "email1", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")
@@ -788,7 +783,6 @@ func TestQueryResolver_Contact_WithTimelineEvents(t *testing.T) {
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Analysis"))
 	require.Equal(t, 6, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 
 	rawResponse, err := c.RawPost(getQuery("contact/get_contact_with_timeline_events"),
@@ -898,8 +892,8 @@ func TestQueryResolver_Contact_WithTimelineEventsTotalCount(t *testing.T) {
 
 	// prepare interaction events
 	channel := "EMAIL"
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", &channel, now)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", &channel, now)
+	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", channel, now)
+	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text", "application/json", channel, now)
 	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "email1", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId, "+1234", false, "WORK")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId1, emailId, "")

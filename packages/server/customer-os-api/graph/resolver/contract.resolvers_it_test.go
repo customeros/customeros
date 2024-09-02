@@ -4,7 +4,6 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -673,7 +672,7 @@ func TestMutationResolver_AddAttachmentToContract(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
-	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme.txt",
 	})
@@ -707,12 +706,12 @@ func TestMutationResolver_RemoveAttachmentFromContract(t *testing.T) {
 	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
-	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme1.txt",
 	})
 
-	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme2.txt",
 	})

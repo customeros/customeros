@@ -705,9 +705,6 @@ const ORGANIZATIONS_QUERY = gql`
                 }
               }
             }
-            ... on Analysis {
-              id
-            }
             ... on Meeting {
               id
               name

@@ -142,9 +142,6 @@ query getOrganizations(
               }
             }
           }
-          ... on Analysis {
-            id
-          }
           ... on Meeting {
             id
             name

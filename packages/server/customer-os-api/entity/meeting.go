@@ -40,13 +40,6 @@ func (MeetingEntity) TimelineEventLabel() string {
 	return model.NodeLabelMeeting
 }
 
-func (MeetingEntity) IsAnalysisDescribe() {
-}
-
-func (MeetingEntity) AnalysisDescribeLabel() string {
-	return model.NodeLabelMeeting
-}
-
 func (meeting *MeetingEntity) SetDataloaderKey(key string) {
 	meeting.DataloaderKey = key
 }

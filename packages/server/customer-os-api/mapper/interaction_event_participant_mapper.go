@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -25,7 +24,7 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *n
 			Type:                   utils.StringPtrNillable(phoneNumberEntity.InteractionEventParticipantDetails.Type),
 		}
 	case model2.NodeLabelUser:
-		userEntity := (*interactionEventParticipantEntity).(*entity.UserEntity)
+		userEntity := (*interactionEventParticipantEntity).(*neo4jentity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 			Type:            utils.StringPtrNillable(userEntity.InteractionEventParticipantDetails.Type),
@@ -43,7 +42,7 @@ func MapEntityToInteractionEventParticipant(interactionEventParticipantEntity *n
 			Type:                    utils.StringPtrNillable(organizationEntity.InteractionEventParticipantDetails.Type),
 		}
 	case model2.NodeLabelJobRole:
-		jobRoleEntity := (*interactionEventParticipantEntity).(*entity.JobRoleEntity)
+		jobRoleEntity := (*interactionEventParticipantEntity).(*neo4jentity.JobRoleEntity)
 		return model.JobRoleParticipant{
 			JobRoleParticipant: MapEntityToJobRole(jobRoleEntity),
 			Type:               utils.StringPtrNillable(jobRoleEntity.InteractionEventParticipantDetails.Type),

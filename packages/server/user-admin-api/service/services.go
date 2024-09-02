@@ -20,7 +20,6 @@ type Services struct {
 	CustomerOsClient    CustomerOsClient
 	CustomerOSApiClient service.CustomerOSApiClient
 	RegistrationService RegistrationService
-	TenantDataInjector  TenantDataInjector
 }
 
 func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients, cache *caches.Cache) *Services {
@@ -33,7 +32,6 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 
 	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.GoogleOAuth}, db, driver, cfg.Neo4j.Database, grpcClients)
 	services.RegistrationService = NewRegistrationService(&services)
-	services.TenantDataInjector = NewTenantDataInjector(&services)
 
 	return &services
 }

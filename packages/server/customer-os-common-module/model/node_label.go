@@ -27,7 +27,6 @@ const (
 	NodeLabelTag                       = "Tag"
 	NodeLabelIssue                     = "Issue"
 	NodeLabelUser                      = "User"
-	NodeLabelAnalysis                  = "Analysis"
 	NodeLabelAttachment                = "Attachment"
 	NodeLabelMeeting                   = "Meeting"
 	NodeLabelSocial                    = "Social"
@@ -47,7 +46,6 @@ const (
 	NodeLabelOrganizationPlan          = "OrganizationPlan"
 	NodeLabelOrganizationPlanMilestone = "OrganizationPlanMilestone"
 	NodeLabelReminder                  = "Reminder"
-	NodeLabelOrder                     = "Order"
 	NodeLabelOffering                  = "Offering"
 )
 

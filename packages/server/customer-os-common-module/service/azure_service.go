@@ -9,6 +9,7 @@ import (
 	mimemail "github.com/emersion/go-message/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
@@ -203,7 +204,7 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto
 			return nil, fmt.Errorf("failed to create request: %v", err)
 		}
 	} else {
-		interactionEventNode, err := s.services.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEvent(ctx, tenant, *request.ReplyTo)
+		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

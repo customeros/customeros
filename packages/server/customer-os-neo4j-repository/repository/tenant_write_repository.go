@@ -396,7 +396,6 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		model2.NodeLabelTag,
 		model2.NodeLabelIssue,
 		model2.NodeLabelUser,
-		model2.NodeLabelAnalysis,
 		model2.NodeLabelAttachment,
 		model2.NodeLabelMeeting,
 		model2.NodeLabelSocial,
@@ -413,7 +412,6 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		model2.NodeLabelOrganizationPlan,
 		model2.NodeLabelOrganizationPlanMilestone,
 		model2.NodeLabelReminder,
-		model2.NodeLabelOrder,
 		model2.NodeLabelOffering,
 	}
 

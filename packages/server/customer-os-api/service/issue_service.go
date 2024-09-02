@@ -177,7 +177,7 @@ func (s *issueService) convertDbNodesToIssueParticipants(records []*utils.DbNode
 	issueParticipants := neo4jentity.IssueParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, model.NodeLabelUser) {
-			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToUserEntity(v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			issueParticipants = append(issueParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, model.NodeLabelContact) {

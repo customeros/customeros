@@ -1392,20 +1392,6 @@ func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *mo
 	return issueSummaryByStatus, nil
 }
 
-// Orders is the resolver for the orders field.
-func (r *organizationResolver) Orders(ctx context.Context, obj *model.Organization) ([]*model.Order, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	entities, err := dataloader.For(ctx).GetOrdersForOrganization(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get orders for organization %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get orders for organization %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToOrders(entities), err
-}
-
 // ContactCount is the resolver for the contactCount field.
 func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Organization) (int64, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))

@@ -11,6 +11,7 @@ import (
 	mimemail "github.com/emersion/go-message/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -569,7 +570,7 @@ func (s *googleService) SendEmail(ctx context.Context, tenant string, request dt
 
 	if request.ReplyTo != nil {
 		span.LogFields(log.String("replyTo", *request.ReplyTo))
-		interactionEventNode, err := s.services.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEvent(ctx, tenant, *request.ReplyTo)
+		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

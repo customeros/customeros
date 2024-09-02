@@ -15,9 +15,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -279,6 +280,8 @@ func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contractID", contractID), log.String("request.attachmentID", attachmentID))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	_, err := r.Services.ContractService.GetById(ctx, contractID)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -286,14 +289,14 @@ func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID
 		return &model.Contract{ID: contractID}, nil
 	}
 
-	_, err = r.Services.AttachmentService.GetAttachmentById(ctx, attachmentID)
+	_, err = r.Services.CommonServices.AttachmentService.GetById(ctx, attachmentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching attachment details. Attachment id: %s", contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
 
-	_, err = r.Services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_CONTRACT, nil, attachmentID, contractID)
+	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, contractID, commonModel.CONTRACT, commonModel.INCLUDES, nil, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to link attachment %s with contract %s", attachmentID, contractID)
@@ -310,6 +313,8 @@ func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contrac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contractID", contractID), log.String("request.attachmentID", attachmentID))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	_, err := r.Services.ContractService.GetById(ctx, contractID)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -317,14 +322,14 @@ func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contrac
 		return &model.Contract{ID: contractID}, nil
 	}
 
-	_, err = r.Services.AttachmentService.GetAttachmentById(ctx, attachmentID)
+	_, err = r.Services.CommonServices.AttachmentService.GetById(ctx, attachmentID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching attachment details. Attachment id: %s", contractID)
 		return &model.Contract{ID: contractID}, nil
 	}
 
-	_, err = r.Services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_CONTRACT, nil, attachmentID, contractID)
+	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, contractID, commonModel.CONTRACT, commonModel.INCLUDES, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove attachment %s from contract %s", attachmentID, contractID)

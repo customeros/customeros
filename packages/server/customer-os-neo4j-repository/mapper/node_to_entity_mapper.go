@@ -12,8 +12,54 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-func MapDbNodeToWorkspaceEntity(dbNode dbtype.Node) *entity.WorkspaceEntity {
-	props := utils.GetPropsFromNode(dbNode)
+func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *entity.JobRoleEntity {
+	if dbNode == nil {
+		return &entity.JobRoleEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	result := entity.JobRoleEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		JobTitle:      utils.GetStringPropOrEmpty(props, "jobTitle"),
+		Description:   utils.GetStringPropOrNil(props, "description"),
+		Company:       utils.GetStringPropOrNil(props, "company"),
+		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		StartedAt:     utils.GetTimePropOrNil(props, "startedAt"),
+		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
+	}
+	return &result
+}
+
+func MapDbNodeToAttachmentEntity(dbNode *dbtype.Node) *entity.AttachmentEntity {
+	if dbNode == nil {
+		return &entity.AttachmentEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
+	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
+	attachmentEntity := entity.AttachmentEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     &createdAt,
+		FileName:      utils.GetStringPropOrEmpty(props, "fileName"),
+		MimeType:      utils.GetStringPropOrEmpty(props, "mimeType"),
+		CdnUrl:        utils.GetStringPropOrEmpty(props, "cdnUrl"),
+		BasePath:      utils.GetStringPropOrEmpty(props, "basePath"),
+		Size:          utils.GetInt64PropOrZero(props, "size"),
+		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+	}
+	return &attachmentEntity
+}
+
+func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *entity.WorkspaceEntity {
+	if dbNode == nil {
+		return &entity.WorkspaceEntity{}
+	}
+	props := utils.GetPropsFromNode(*dbNode)
 	domain := entity.WorkspaceEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Name:          utils.GetStringPropOrEmpty(props, "domain"),
@@ -194,8 +240,8 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          utils.GetStringPropOrEmpty(props, "source"),
-		SourceOfTruth:   utils.GetStringPropOrEmpty(props, "sourceOfTruth"),
+		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
@@ -634,25 +680,6 @@ func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
 	return &reminder
 }
 
-func MapDbNodeToOrderEntity(dbNode *dbtype.Node) *entity.OrderEntity {
-	if dbNode == nil {
-		return &entity.OrderEntity{}
-	}
-	props := utils.GetPropsFromNode(*dbNode)
-	return &entity.OrderEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		ConfirmedAt:   utils.GetTimePropOrNil(props, "confirmedAt"),
-		PaidAt:        utils.GetTimePropOrNil(props, "paidAt"),
-		FulfilledAt:   utils.GetTimePropOrNil(props, "fulfilledAt"),
-		CancelledAt:   utils.GetTimePropOrNil(props, "cancelledAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-	}
-}
-
 func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity {
 	if dbNode == nil {
 		return &entity.BankAccountEntity{}
@@ -938,24 +965,6 @@ func MapDbNodeToActionEntity(node *dbtype.Node) *entity.ActionEntity {
 	return &action
 }
 
-func MapDbNodeToAnalysisEntity(node *dbtype.Node) *entity.AnalysisEntity {
-	if node == nil {
-		return &entity.AnalysisEntity{}
-	}
-	props := utils.GetPropsFromNode(*node)
-	analysisEntity := entity.AnalysisEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		AnalysisType:  utils.GetStringPropOrEmpty(props, "analysisType"),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-	}
-	return &analysisEntity
-}
-
 func MapDbNodeToNoteEntity(node *dbtype.Node) *entity.NoteEntity {
 	if node == nil {
 		return &entity.NoteEntity{}
@@ -974,27 +983,32 @@ func MapDbNodeToNoteEntity(node *dbtype.Node) *entity.NoteEntity {
 	return &note
 }
 
-func MapDbNodeToInteractionEventEntity(node *dbtype.Node) *entity.InteractionEventEntity {
+func MapDbNodeToInteractionEventEntity(node *neo4j.Node) *entity.InteractionEventEntity {
 	if node == nil {
 		return &entity.InteractionEventEntity{}
 	}
 	props := utils.GetPropsFromNode(*node)
-	interactionEvent := entity.InteractionEventEntity{
+
+	return MapDbPropsToInteractionEventEntity(props)
+}
+
+func MapDbPropsToInteractionEventEntity(props map[string]interface{}) *entity.InteractionEventEntity {
+	interactionEventEntity := entity.InteractionEventEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Content:       utils.GetStringPropOrEmpty(props, "content"),
-		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
-		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
-		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
-		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
-		EventType:     utils.GetStringPropOrEmpty(props, "eventType"),
-		Hide:          utils.GetBoolPropOrFalse(props, "hide"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Identifier:    utils.GetStringPropOrEmpty(props, "identifier"),
+		Channel:       utils.GetStringPropOrEmpty(props, "channel"),
+		ChannelData:   utils.GetStringPropOrEmpty(props, "channelData"),
+		EventType:     utils.GetStringPropOrEmpty(props, "eventType"),
+		Hide:          utils.GetBoolPropOrFalse(props, "hide"),
+		Content:       utils.GetStringPropOrEmpty(props, "content"),
+		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
-	return &interactionEvent
+	return &interactionEventEntity
 }
 
 func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionSessionEntity {
@@ -1067,8 +1081,6 @@ func MapDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
 		return MapDbNodeToNoteEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, model.NodeLabelInteractionEvent) {
 		return MapDbNodeToInteractionEventEntity(dbNode)
-	} else if slices.Contains(dbNode.Labels, model.NodeLabelAnalysis) {
-		return MapDbNodeToAnalysisEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, model.NodeLabelMeeting) {
 		return MapDbNodeToMeetingEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, model.NodeLabelAction) {

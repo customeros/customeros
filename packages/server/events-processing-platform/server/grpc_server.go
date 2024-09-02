@@ -1,7 +1,6 @@
 package server
 
 import (
-	orderpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/order"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"net"
 	"time"
@@ -95,6 +94,5 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	countrypb.RegisterCountryGrpcServiceServer(grpcServer, services.CountryService)
 	tenantpb.RegisterTenantGrpcServiceServer(grpcServer, services.TenantService)
 	orgplanpb.RegisterOrganizationPlanGrpcServiceServer(grpcServer, services.OrganizationPlanService)
-	orderpb.RegisterOrderGrpcServiceServer(grpcServer, services.OrderService)
 	eventstorepb.RegisterEventStoreGrpcServiceServer(grpcServer, services.EventStoreService)
 }

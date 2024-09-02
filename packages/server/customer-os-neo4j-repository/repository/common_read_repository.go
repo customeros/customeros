@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -17,6 +18,8 @@ type CommonReadRepository interface {
 	GenerateId(ctx context.Context, tenant, label string) (string, error)
 
 	ExistsById(ctx context.Context, tenant, id, label string) (bool, error)
+	ExistsByIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, label string) (bool, error)
+	GetById(ctx context.Context, tenant, id, label string) (*dbtype.Node, error)
 	IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error)
 	ExistsByIdLinkedTo(ctx context.Context, tenant, id, label, linkedToId, linkedToLabel, linkRelationship string) (bool, error)
 	ExistsByIdLinkedFrom(ctx context.Context, tenant, id, label, linkedFromId, linkedFromLabel, linkRelationship string) (bool, error)
@@ -67,6 +70,27 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("id", id), log.String("label", label))
 
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return r.ExistsByIdInTx(ctx, tx, tenant, id, label)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	span.LogFields(log.Bool("result.exists", result.(bool)))
+	return result.(bool), err
+}
+
+func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, label string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.ExistsByIdInTx")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("id", id), log.String("label", label))
+
 	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n.id LIMIT 1`, label, label, tenant)
 	params := map[string]any{
 		"id": id,
@@ -77,19 +101,46 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return false, err
-		} else {
-			return queryResult.Next(ctx), nil
-		}
-	})
+	queryResult, err := tx.Run(ctx, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return false, err
 	}
-	span.LogFields(log.Bool("result.exists", result.(bool)))
-	return result.(bool), err
+	result := queryResult.Next(ctx)
+
+	span.LogFields(log.Bool("result.exists", result))
+	return result, err
+}
+
+func (r *commonReadRepository) GetById(ctx context.Context, tenant, id, label string) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonReadRepository.GetById")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("id", id), log.String("label", label))
+
+	cypher := fmt.Sprintf(`MATCH (n:%s {id:$id}) WHERE n:%s_%s RETURN n`, label, label, tenant)
+	params := map[string]any{
+		"id": id,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.found", false))
+		return nil, err
+	}
+
+	span.LogFields(log.Bool("result.found", result != nil))
+	return result.(*dbtype.Node), nil
 }
 
 func (r *commonReadRepository) IsLinkedWith(ctx context.Context, tenant, parentId string, parentType model.EntityType, relationship, childId string, childType model.EntityType) (bool, error) {

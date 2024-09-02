@@ -4,7 +4,6 @@ import (
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/routes/generate"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	"log"
 	"strings"
@@ -38,7 +37,7 @@ func getRouter(config *config.Config, services *service.Services) *gin.Engine {
 
 	addRegistrationRoutes(route, config, services)
 	addSlackRoutes(route, config, services)
-	generate.AddDemoTenantRoutes(route, config, services)
+	addMailRoutes(route, config, services)
 
 	addHealthRoutes(route)
 

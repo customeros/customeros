@@ -41,7 +41,6 @@ type Services struct {
 	InvoiceService          *invoiceService
 	TenantService           *tenantService
 	CountryService          *countryService
-	OrderService            *orderService
 	EventStoreService       *eventStoreService
 }
 
@@ -74,7 +73,6 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.InvoiceService = NewInvoiceService(repositories, &services, log, aggregateStore)
 	services.TenantService = NewTenantService(&services, log, aggregateStore, cfg)
 	services.CountryService = NewCountryService(&services, log, aggregateStore, cfg)
-	services.OrderService = NewOrderService(log, aggregateStore, cfg)
 	services.EventStoreService = NewEventStoreService(&services, log, aggregateStore)
 
 	services.EventStoreGenericService = genericServices.NewEventStoreGenericService(log, aggregateStore)

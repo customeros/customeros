@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
@@ -121,7 +120,7 @@ func refreshApiCache(config *config.Config, services *service.Services) {
 			}
 
 			if rowData.Owner != nil {
-				organizationGraph.Owner = mapper.MapEntityToUser(&entity.UserEntity{
+				organizationGraph.Owner = mapper.MapEntityToUser(&neo4jentity.UserEntity{
 					Id: *rowData.Owner,
 				})
 			}

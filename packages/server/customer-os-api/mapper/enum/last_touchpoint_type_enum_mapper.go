@@ -15,7 +15,6 @@ var lastTouchpointTypeModel = map[model.LastTouchpointType]string{
 	model.LastTouchpointTypeInteractionEventPhoneCall:     string(neo4jenum.TouchpointTypeInteractionEventPhoneCall),
 	model.LastTouchpointTypeInteractionEventChat:          string(neo4jenum.TouchpointTypeInteractionEventChat),
 	model.LastTouchpointTypeMeeting:                       string(neo4jenum.TouchpointTypeMeeting),
-	model.LastTouchpointTypeAnalysis:                      string(neo4jenum.TouchpointTypeAnalysis),
 	model.LastTouchpointTypeActionCreated:                 string(neo4jenum.TouchpointTypeActionCreated),
 	model.LastTouchpointTypeAction:                        string(neo4jenum.TouchpointTypeAction),
 	model.LastTouchpointTypeLogEntry:                      string(neo4jenum.TouchpointTypeLogEntry),

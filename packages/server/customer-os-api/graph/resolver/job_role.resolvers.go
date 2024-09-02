@@ -55,7 +55,7 @@ func (r *mutationResolver) JobRoleDelete(ctx context.Context, contactID string, 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.jobRoleID", roleID), log.String("request.contactID", contactID))
 
-	result, err := r.Services.JobRoleService.DeleteJobRole(ctx, contactID, roleID)
+	result, err := r.Services.CommonServices.JobRoleService.DeleteJobRole(ctx, contactID, roleID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed remove job role %s from contact %s", roleID, contactID)
@@ -74,7 +74,7 @@ func (r *mutationResolver) JobRoleCreate(ctx context.Context, contactID string, 
 	tracing.LogObjectAsJson(span, "request.input", input)
 	span.LogFields(log.String("request.contactID", contactID))
 
-	result, err := r.Services.JobRoleService.CreateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleInputToEntity(&input))
+	result, err := r.Services.CommonServices.JobRoleService.CreateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed add job role to contact %s", contactID)
@@ -91,7 +91,7 @@ func (r *mutationResolver) JobRoleUpdate(ctx context.Context, contactID string, 
 	tracing.LogObjectAsJson(span, "request.input", input)
 	span.LogFields(log.String("request.contactID", contactID))
 
-	result, err := r.Services.JobRoleService.UpdateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleUpdateInputToEntity(&input))
+	result, err := r.Services.CommonServices.JobRoleService.UpdateJobRole(ctx, contactID, input.OrganizationID, mapper.MapJobRoleUpdateInputToEntity(&input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed update role %s", input.ID)

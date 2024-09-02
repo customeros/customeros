@@ -39,8 +39,6 @@ type CustomerOsClient interface {
 
 	CreateMeeting(tenant, username string, input model.MeetingInput) (string, error)
 
-	CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error)
-	CreateInteractionEvent(tenant, username string, options ...InteractionEventBuilderOption) (*string, error)
 	CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error)
 
 	AddContactToOrganization(tenant, username, contactId, organizationId, jobTitle, description string) error
@@ -612,139 +610,6 @@ func (s *customerOsClient) CreateMeeting(tenant, username string, input model.Me
 	return graphqlResponse.MeetingCreate.Id, nil
 }
 
-func (s *customerOsClient) CreateInteractionSession(tenant, username string, options ...InteractionSessionBuilderOption) (*string, error) {
-	graphqlRequest := graphql.NewRequest(
-		`mutation CreateInteractionSession($sessionIdentifier: String, $channel: String, $name: String!, $type: String, $status: String!, $appSource: String!, $attendedBy: [InteractionSessionParticipantInput!]) {
-				interactionSession_Create(
-				session: {
-					sessionIdentifier: $sessionIdentifier
-        			channel: $channel
-        			name: $name
-        			status: $status
-					type: $type
-        			appSource: $appSource
-                    attendedBy: $attendedBy
-    			}
-  			) {
-				id
-   			}
-		}
-	`)
-
-	params := InteractionSessionBuilderOptions{}
-	for _, opt := range options {
-		opt(&params)
-	}
-
-	graphqlRequest.Var("sessionIdentifier", params.sessionIdentifier)
-	graphqlRequest.Var("channel", params.channel)
-	graphqlRequest.Var("name", params.name)
-	graphqlRequest.Var("status", params.status)
-	graphqlRequest.Var("appSource", params.appSource)
-	graphqlRequest.Var("attendedBy", params.attendedBy)
-	graphqlRequest.Var("type", params.sessionType)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
-	if err != nil {
-		return nil, fmt.Errorf("interactionSession_Create: %w", err)
-	}
-
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, fmt.Errorf("interactionSession_Create: %v", err)
-	}
-	defer cancel()
-
-	var graphqlResponse map[string]map[string]string
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("CreateInteractionSession: %w", err)
-	}
-	id := graphqlResponse["interactionSession_Create"]["id"]
-	return &id, nil
-
-}
-
-func (s *customerOsClient) CreateInteractionEvent(tenant, username string, options ...InteractionEventBuilderOption) (*string, error) {
-	graphqlRequest := graphql.NewRequest(
-		`mutation CreateInteractionEvent(
-				$sessionId: ID, 
-				$meetingId: ID,
-				$eventIdentifier: String,
-				$externalId: String,
-				$externalSystemId: String,
-				$channel: String,
-				$channelData: String,
-				$sentBy: [InteractionEventParticipantInput!]!, 
-				$sentTo: [InteractionEventParticipantInput!]!, 
-				$appSource: String!, 
-				$repliesTo: ID, 
-				$content: String, 
-				$contentType: String
-				$eventType: String,
-				$createdAt: Time) {
-  					interactionEvent_Create(
-    					event: {interactionSession: $sessionId, 
-								meetingId: $meetingId,
-								eventIdentifier: $eventIdentifier,
-								externalId: $externalId,
-								externalSystemId: $externalSystemId,
-								channel: $channel, 
-								channelData: $channelData,
-								sentBy: $sentBy, 
-								sentTo: $sentTo, 
-								appSource: $appSource, 
-								repliesTo: $repliesTo, 
-								content: $content, 
-								contentType: $contentType
-								eventType: $eventType,
-								createdAt: $createdAt}
-  					) {
-						id
-					  }
-					}`)
-
-	params := InteractionEventBuilderOptions{
-		sentTo: []model.InteractionEventParticipantInput{},
-		sentBy: []model.InteractionEventParticipantInput{},
-	}
-	for _, opt := range options {
-		opt(&params)
-	}
-
-	graphqlRequest.Var("sessionId", params.sessionId)
-	graphqlRequest.Var("eventIdentifier", params.eventIdentifier)
-	graphqlRequest.Var("externalId", params.externalId)
-	graphqlRequest.Var("externalSystemId", params.externalSystemId)
-	graphqlRequest.Var("content", params.content)
-	graphqlRequest.Var("contentType", params.contentType)
-	graphqlRequest.Var("channelData", params.channelData)
-	graphqlRequest.Var("channel", params.channel)
-	graphqlRequest.Var("eventType", params.eventType)
-	graphqlRequest.Var("sentBy", params.sentBy)
-	graphqlRequest.Var("sentTo", params.sentTo)
-	graphqlRequest.Var("appSource", params.appSource)
-	graphqlRequest.Var("meetingId", params.meetingId)
-	graphqlRequest.Var("createdAt", params.createdAt)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, &tenant, &username)
-
-	if err != nil {
-		return nil, fmt.Errorf("error while adding headers to graph request: %w", err)
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, fmt.Errorf("GetInteractionEvent: %w", err)
-	}
-	defer cancel()
-
-	var graphqlResponse map[string]map[string]string
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return nil, fmt.Errorf("CreateInteractionSession: %w", err)
-	}
-	id := graphqlResponse["interactionEvent_Create"]["id"]
-	return &id, nil
-}
-
 func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationId, author, content, contentType string, startedAt time.Time) (*string, error) {
 	graphqlRequest := graphql.NewRequest(
 		`mutation CreateLogEntry($organizationId: ID!, $content: String, $contentType: String, $startedAt: Time) {
@@ -767,7 +632,7 @@ func (s *customerOsClient) CreateLogEntry(tenant, username string, organizationI
 	}
 	ctx, cancel, err := s.contextWithTimeout()
 	if err != nil {
-		return nil, fmt.Errorf("GetInteractionEvent: %w", err)
+		return nil, fmt.Errorf("GetById: %w", err)
 	}
 	defer cancel()
 

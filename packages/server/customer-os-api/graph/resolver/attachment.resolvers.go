@@ -22,7 +22,11 @@ func (r *mutationResolver) AttachmentCreate(ctx context.Context, input model.Att
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	attachmentCreated, err := r.Services.AttachmentService.Create(ctx, mapper.MapAttachmentInputToEntity(&input), neo4jentity.DataSourceOpenline, neo4jentity.DataSourceOpenline)
+	entity := mapper.MapAttachmentInputToEntity(&input)
+	entity.Source = neo4jentity.DataSourceOpenline
+	entity.SourceOfTruth = neo4jentity.DataSourceOpenline
+
+	attachmentCreated, err := r.Services.CommonServices.AttachmentService.Create(ctx, entity)
 
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -40,7 +44,7 @@ func (r *queryResolver) Attachment(ctx context.Context, id string) (*model.Attac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.ID", id))
 
-	attachmentEntity, err := r.Services.AttachmentService.GetAttachmentById(ctx, id)
+	attachmentEntity, err := r.Services.CommonServices.AttachmentService.GetById(ctx, id)
 	if err != nil || attachmentEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Attachment with id %s not found", id)

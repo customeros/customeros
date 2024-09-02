@@ -1,18 +1,5 @@
 mutation AddAttachmentToInteractionEvent($eventId: ID!, $attachmentId: ID!) {
-    interactionEvent_LinkAttachment(
-            eventId: $eventId,
-            attachmentId: $attachmentId) {
-    id
-    createdAt
-    content
-    contentType
-    channel
-    appSource
-      includes {
-        id
-        fileName
-        mimeType
-        size
-      }
+    interactionEvent_LinkAttachment(eventId: $eventId, attachmentId: $attachmentId) {
+      result
     }
 }

@@ -21,11 +21,9 @@ export function useUpdateCacheWithExistingEvent() {
               if (
                 // those entities need fragments on the query string in order to have `id` field present
                 // we filter them out on this condition to avoid TS saying there's no `id` present when checking.
-                event.__typename !== 'Analysis' &&
                 event.__typename !== 'InteractionSession' &&
                 event.__typename !== 'Note' &&
                 event.__typename !== 'PageView' &&
-                event.__typename !== 'Order' &&
                 event.id === updatedEvent?.id
               ) {
                 return { ...event, ...updatedEvent };

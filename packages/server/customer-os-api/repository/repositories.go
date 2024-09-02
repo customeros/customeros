@@ -33,8 +33,6 @@ type Repositories struct {
 	//Deprecated
 	NoteRepository NoteRepository
 	//Deprecated
-	JobRoleRepository JobRoleRepository
-	//Deprecated
 	CalendarRepository CalendarRepository
 	LocationRepository LocationRepository
 	//Deprecated
@@ -51,14 +49,6 @@ type Repositories struct {
 	DomainRepository DomainRepository
 	//Deprecated
 	IssueRepository IssueRepository
-	//Deprecated
-	InteractionEventRepository InteractionEventRepository
-	//Deprecated
-	InteractionSessionRepository InteractionSessionRepository
-	//Deprecated
-	AnalysisRepository AnalysisRepository
-	//Deprecated
-	AttachmentRepository AttachmentRepository
 	//Deprecated
 	MeetingRepository MeetingRepository
 	//Deprecated
@@ -90,7 +80,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB
 	repositories.UserRepository = NewUserRepository(driver, database)
 	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	repositories.NoteRepository = NewNoteRepository(driver)
-	repositories.JobRoleRepository = NewJobRoleRepository(driver)
 	repositories.CalendarRepository = NewCalendarRepository(driver)
 	repositories.LocationRepository = NewLocationRepository(driver)
 	repositories.EmailRepository = NewEmailRepository(driver, database)
@@ -100,10 +89,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB
 	repositories.DashboardRepository = NewDashboardRepository(driver)
 	repositories.DomainRepository = NewDomainRepository(driver, database)
 	repositories.IssueRepository = NewIssueRepository(driver, database)
-	repositories.InteractionEventRepository = NewInteractionEventRepository(driver, database)
-	repositories.InteractionSessionRepository = NewInteractionSessionRepository(driver)
-	repositories.AnalysisRepository = NewAnalysisRepository(driver)
-	repositories.AttachmentRepository = NewAttachmentRepository(driver)
 	repositories.MeetingRepository = NewMeetingRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
 	repositories.ActionItemRepository = NewActionItemRepository(driver)

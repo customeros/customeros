@@ -1,7 +1,6 @@
 package routes
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -26,7 +25,6 @@ import (
 	tokenOauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	googleOauth "google.golang.org/api/oauth2/v2"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
@@ -569,7 +567,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			return err
 		}
 
-		err := services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, userId, commonModel.USER, "HAS", emailId, commonModel.EMAIL)
+		err := services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, userId, commonModel.USER, commonModel.HAS, nil, emailId, commonModel.EMAIL)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -699,129 +697,128 @@ func registerNewTenantAsLeadInProviderTenant(ctx context.Context, config *config
 
 	span.LogFields(tracingLog.String("emailId", emailId))
 
-	url := config.Comms.CommsAPI
-	method := "POST"
+	//TODO EDI
 
-	type EmailPayload struct {
-		Channel   string   `json:"channel"`
-		Username  string   `json:"username"`
-		Direction string   `json:"direction"`
-		To        []string `json:"to"`
-		Cc        []string `json:"cc"`
-		Bcc       []string `json:"bcc"`
-		Content   string   `json:"content"`
-		Subject   string   `json:"subject"`
-	}
+	//	type EmailPayload struct {
+	//		Channel   string   `json:"channel"`
+	//		Username  string   `json:"username"`
+	//		Direction string   `json:"direction"`
+	//		To        []string `json:"to"`
+	//		Cc        []string `json:"cc"`
+	//		Bcc       []string `json:"bcc"`
+	//		Content   string   `json:"content"`
+	//		Subject   string   `json:"subject"`
+	//	}
+	//
+	//	payload := EmailPayload{
+	//		Channel:   "EMAIL",
+	//		Username:  config.Service.ProviderUsername,
+	//		Direction: "OUTBOUND",
+	//		To:        []string{registeredEmail},
+	//		Cc:        []string{},
+	//		Bcc:       []string{},
+	//		Subject:   "Welcome to CustomerOS",
+	//		Content: `<!DOCTYPE html>
+	//<html lang="en">
+	//<head>
+	//    <meta charset="UTF-8">
+	//    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	//    <title>Welcome to CustomerOS</title>
+	//    <style>
+	//        body {
+	//            font-family: Arial, sans-serif;
+	//            line-height: 1.6;
+	//        }
+	//        .header {
+	//            font-size: 1.4em;
+	//            margin-bottom: 10px;
+	//        }
+	//        .content {
+	//            margin-bottom: 20px;
+	//        }
+	//        .footer {
+	//            font-size: 0.9em;
+	//            color: #888;
+	//        }
+	//        .signature {
+	//            margin-top: 20px;
+	//        }
+	//    </style>
+	//</head>
+	//<body>
+	//<div>
+	//    <div class="header">Hey, welcome to CustomerOS!</div>
+	//    <div class="content">
+	//        <p>Thanks for trying us out.</p>
+	//        <p>To be honest, our self-service onboarding kinda sucks right now as we’re still building it out. I’d love to get you setup and using the tool, would you be open to spending 10 mins with me to help you get things configured?</p>
+	//        <p>Please grab any slot on my <a href="https://app.customeros.ai/organization/cal.com/mbrown/20min" target="_blank">calendar.</a></p>
+	//    </div>
+	//    <div class="signature">
+	//        <p>Thanks again,</p>
+	//        <p>Matt Brown<br>
+	//            CEO @ <a href="https://customeros.ai/?utm_source=signature&utm_medium=email&utm_campaign=signup" target="_blank">CustomerOS</a></p>
+	//        <p class="footer">
+	//            Follow me on <a href="https://www.linkedin.com/in/mateocafe/" target="_blank">LinkedIn</a><br>
+	//            US: +1 650 977 2199<br>
+	//            UK: +44 7700 155 600
+	//        </p>
+	//    </div>
+	//</div>
+	//</body>
+	//</html>`,
+	//	}
 
-	payload := EmailPayload{
-		Channel:   "EMAIL",
-		Username:  config.Service.ProviderUsername,
-		Direction: "OUTBOUND",
-		To:        []string{registeredEmail},
-		Cc:        []string{},
-		Bcc:       []string{},
-		Subject:   "Welcome to CustomerOS",
-		Content: `<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome to CustomerOS</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-        }
-        .header {
-            font-size: 1.4em;
-            margin-bottom: 10px;
-        }
-        .content {
-            margin-bottom: 20px;
-        }
-        .footer {
-            font-size: 0.9em;
-            color: #888;
-        }
-        .signature {
-            margin-top: 20px;
-        }
-    </style>
-</head>
-<body>
-<div>
-    <div class="header">Hey, welcome to CustomerOS!</div>
-    <div class="content">
-        <p>Thanks for trying us out.</p>
-        <p>To be honest, our self-service onboarding kinda sucks right now as we’re still building it out. I’d love to get you setup and using the tool, would you be open to spending 10 mins with me to help you get things configured?</p>
-        <p>Please grab any slot on my <a href="https://app.customeros.ai/organization/cal.com/mbrown/20min" target="_blank">calendar.</a></p>
-    </div>
-    <div class="signature">
-        <p>Thanks again,</p>
-        <p>Matt Brown<br>
-            CEO @ <a href="https://customeros.ai/?utm_source=signature&utm_medium=email&utm_campaign=signup" target="_blank">CustomerOS</a></p>
-        <p class="footer">
-            Follow me on <a href="https://www.linkedin.com/in/mateocafe/" target="_blank">LinkedIn</a><br>
-            US: +1 650 977 2199<br>
-            UK: +44 7700 155 600
-        </p>
-    </div>
-</div>
-</body>
-</html>`,
-	}
+	//payloadBytes, err := json.Marshal(payload)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
 
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	body := bytes.NewBuffer(payloadBytes)
+	//body := bytes.NewBuffer(payloadBytes)
 
 	// Create new request
-	req, err := http.NewRequest(method, url+"/mail/send", body)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
+	//req, err := http.NewRequest(method, url+"/mail/send", body)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
+	//
+	//// Set headers
+	//req.Header.Add("X-Openline-Mail-Api-Key", config.Comms.CommsAPIKey)
+	//req.Header.Add("X-Openline-USERNAME", config.Service.ProviderUsername)
+	//req.Header.Add("Content-Type", "application/json")
+	//
+	//// Create HTTP client and make request
+	//client := &http.Client{}
+	//res, err := client.Do(req)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
+	//defer res.Body.Close()
+	//
+	//mapBody := make(map[string]interface{})
+	//
+	//// Read response
+	//responseBody, err := ioutil.ReadAll(res.Body)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
+	//
+	//// Convert response to map
+	//err = json.Unmarshal(responseBody, &mapBody)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	return err
+	//}
+	//
+	//if mapBody["error"] != nil {
+	//	tracing.TraceErr(span, fmt.Errorf("error: %v", mapBody["error"]))
+	//	return fmt.Errorf("error: %v", mapBody["error"])
+	//}
 
-	// Set headers
-	req.Header.Add("X-Openline-Mail-Api-Key", config.Comms.CommsAPIKey)
-	req.Header.Add("X-Openline-USERNAME", config.Service.ProviderUsername)
-	req.Header.Add("Content-Type", "application/json")
-
-	// Create HTTP client and make request
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	defer res.Body.Close()
-
-	mapBody := make(map[string]interface{})
-
-	// Read response
-	responseBody, err := ioutil.ReadAll(res.Body)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// Convert response to map
-	err = json.Unmarshal(responseBody, &mapBody)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if mapBody["error"] != nil {
-		tracing.TraceErr(span, fmt.Errorf("error: %v", mapBody["error"]))
-		return fmt.Errorf("error: %v", mapBody["error"])
-	}
-
-	span.LogFields(tracingLog.Object("email sent: ", mapBody))
+	//span.LogFields(tracingLog.Object("email sent: ", mapBody))
 
 	return nil
 }

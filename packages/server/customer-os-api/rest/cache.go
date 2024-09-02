@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
@@ -141,7 +140,7 @@ func OrganizationsPatchesCacheHandler(serviceContainer *service.Services) gin.Ha
 			}
 
 			if patches[i].Owner != nil {
-				organizationGraph.Owner = mapper.MapEntityToUser(&entity.UserEntity{
+				organizationGraph.Owner = mapper.MapEntityToUser(&neo4jentity.UserEntity{
 					Id: *patches[i].Owner,
 				})
 			}

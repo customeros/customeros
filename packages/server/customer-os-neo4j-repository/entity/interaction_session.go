@@ -21,6 +21,8 @@ type InteractionSessionEntity struct {
 	SourceOfTruth DataSource
 }
 
+type InteractionSessionEntities []InteractionSessionEntity
+
 func (InteractionSessionEntity) IsTimelineEvent() {
 }
 

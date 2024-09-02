@@ -37,7 +37,7 @@ extend type Mutation {
     meeting_UnlinkAttachment(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_LinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
     meeting_UnlinkRecording(meetingId: ID!, attachmentId: ID!): Meeting!
-    meeting_AddNewLocation(meetingId: ID!): Location!
+    meeting_AddNewLocation(meetingId: ID!): Meeting!
     meeting_AddNote(meetingId: ID!, note: NoteInput): Meeting!
 }
 
@@ -98,7 +98,6 @@ type Meeting implements Node {
     attendedBy: [MeetingParticipant!]! @goField(forceResolver: true)
     createdBy: [MeetingParticipant!]! @goField(forceResolver: true)
     includes: [Attachment!]! @goField(forceResolver: true)
-    describedBy: [Analysis!]! @goField(forceResolver: true)
     note: [Note!]! @goField(forceResolver: true)
     events: [InteractionEvent!]! @goField(forceResolver: true)
     recording: Attachment @goField(forceResolver: true)

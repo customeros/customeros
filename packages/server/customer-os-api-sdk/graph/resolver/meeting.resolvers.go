@@ -27,11 +27,6 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	panic(fmt.Errorf("not implemented: Includes - includes"))
 }
 
-// DescribedBy is the resolver for the describedBy field.
-func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error) {
-	panic(fmt.Errorf("not implemented: DescribedBy - describedBy"))
-}
-
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error) {
 	panic(fmt.Errorf("not implemented: Note - note"))
@@ -93,7 +88,7 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 }
 
 // MeetingAddNewLocation is the resolver for the meeting_AddNewLocation field.
-func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Location, error) {
+func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Meeting, error) {
 	panic(fmt.Errorf("not implemented: MeetingAddNewLocation - meeting_AddNewLocation"))
 }
 

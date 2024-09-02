@@ -37,19 +37,5 @@ query GetTimelineEvents($ids: [ID!]!) {
       channel
       createdAt
     }
-    ... on Analysis {
-      id
-      content
-      contentType
-      analysisType
-      createdAt
-    }
-    ... on Order {
-      id
-      confirmedAt
-      paidAt
-      fulfilledAt
-      cancelledAt
-    }
   }
 }

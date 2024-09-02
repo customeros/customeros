@@ -11,10 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph"
 )
 
-type DescriptionNode interface {
-	IsDescriptionNode()
-}
-
 type ExtensibleEntity interface {
 	IsNode()
 	IsExtensibleEntity()
@@ -103,37 +99,6 @@ type ActionItem struct {
 
 type ActionResponse struct {
 	Accepted bool `json:"accepted"`
-}
-
-type Analysis struct {
-	ID            string            `json:"id"`
-	CreatedAt     time.Time         `json:"createdAt"`
-	Content       *string           `json:"content,omitempty"`
-	ContentType   *string           `json:"contentType,omitempty"`
-	AnalysisType  *string           `json:"analysisType,omitempty"`
-	Describes     []DescriptionNode `json:"describes"`
-	Source        DataSource        `json:"source"`
-	SourceOfTruth DataSource        `json:"sourceOfTruth"`
-	AppSource     string            `json:"appSource"`
-}
-
-func (Analysis) IsNode()            {}
-func (this Analysis) GetID() string { return this.ID }
-
-func (Analysis) IsTimelineEvent() {}
-
-type AnalysisDescriptionInput struct {
-	InteractionEventID   *string `json:"interactionEventId,omitempty"`
-	InteractionSessionID *string `json:"interactionSessionId,omitempty"`
-	MeetingID            *string `json:"meetingId,omitempty"`
-}
-
-type AnalysisInput struct {
-	Content      *string                     `json:"content,omitempty"`
-	ContentType  *string                     `json:"contentType,omitempty"`
-	AnalysisType *string                     `json:"analysisType,omitempty"`
-	Describes    []*AnalysisDescriptionInput `json:"describes"`
-	AppSource    string                      `json:"appSource"`
 }
 
 type Attachment struct {
@@ -1192,9 +1157,9 @@ type InteractionEvent struct {
 	CreatedAt                    time.Time                     `json:"createdAt"`
 	CustomerOSInternalIdentifier *string                       `json:"customerOSInternalIdentifier,omitempty"`
 	EventIdentifier              *string                       `json:"eventIdentifier,omitempty"`
+	Channel                      string                        `json:"channel"`
 	Content                      *string                       `json:"content,omitempty"`
 	ContentType                  *string                       `json:"contentType,omitempty"`
-	Channel                      *string                       `json:"channel,omitempty"`
 	ChannelData                  *string                       `json:"channelData,omitempty"`
 	InteractionSession           *InteractionSession           `json:"interactionSession,omitempty"`
 	Issue                        *Issue                        `json:"issue,omitempty"`
@@ -1203,7 +1168,6 @@ type InteractionEvent struct {
 	SentTo                       []InteractionEventParticipant `json:"sentTo"`
 	RepliesTo                    *InteractionEvent             `json:"repliesTo,omitempty"`
 	Includes                     []*Attachment                 `json:"includes"`
-	Summary                      *Analysis                     `json:"summary,omitempty"`
 	Actions                      []*Action                     `json:"actions,omitempty"`
 	ActionItems                  []*ActionItem                 `json:"actionItems,omitempty"`
 	Source                       DataSource                    `json:"source"`
@@ -1213,88 +1177,32 @@ type InteractionEvent struct {
 	ExternalLinks                []*ExternalSystem             `json:"externalLinks"`
 }
 
-func (InteractionEvent) IsDescriptionNode() {}
-
 func (InteractionEvent) IsNode()            {}
 func (this InteractionEvent) GetID() string { return this.ID }
 
 func (InteractionEvent) IsTimelineEvent() {}
 
-type InteractionEventInput struct {
-	CustomerOSInternalIdentifier *string                             `json:"customerOSInternalIdentifier,omitempty"`
-	EventIdentifier              *string                             `json:"eventIdentifier,omitempty"`
-	ExternalID                   *string                             `json:"externalId,omitempty"`
-	ExternalSystemID             *string                             `json:"externalSystemId,omitempty"`
-	Content                      *string                             `json:"content,omitempty"`
-	ContentType                  *string                             `json:"contentType,omitempty"`
-	Channel                      *string                             `json:"channel,omitempty"`
-	ChannelData                  *string                             `json:"channelData,omitempty"`
-	InteractionSession           *string                             `json:"interactionSession,omitempty"`
-	MeetingID                    *string                             `json:"meetingId,omitempty"`
-	SentBy                       []*InteractionEventParticipantInput `json:"sentBy"`
-	SentTo                       []*InteractionEventParticipantInput `json:"sentTo"`
-	RepliesTo                    *string                             `json:"repliesTo,omitempty"`
-	EventType                    *string                             `json:"eventType,omitempty"`
-	AppSource                    string                              `json:"appSource"`
-	CreatedAt                    *time.Time                          `json:"createdAt,omitempty"`
-}
-
-type InteractionEventParticipantInput struct {
-	Email       *string `json:"email,omitempty"`
-	PhoneNumber *string `json:"phoneNumber,omitempty"`
-	ContactID   *string `json:"contactID,omitempty"`
-	UserID      *string `json:"userID,omitempty"`
-	Type        *string `json:"type,omitempty"`
-}
-
 type InteractionSession struct {
-	ID string `json:"id"`
-	// Deprecated
-	StartedAt time.Time `json:"startedAt"`
-	// Deprecated
-	EndedAt           *time.Time                      `json:"endedAt,omitempty"`
-	CreatedAt         time.Time                       `json:"createdAt"`
-	UpdatedAt         time.Time                       `json:"updatedAt"`
-	SessionIdentifier *string                         `json:"sessionIdentifier,omitempty"`
-	Name              string                          `json:"name"`
-	Status            string                          `json:"status"`
-	Type              *string                         `json:"type,omitempty"`
-	Channel           *string                         `json:"channel,omitempty"`
-	ChannelData       *string                         `json:"channelData,omitempty"`
-	Source            DataSource                      `json:"source"`
-	SourceOfTruth     DataSource                      `json:"sourceOfTruth"`
-	AppSource         string                          `json:"appSource"`
-	Events            []*InteractionEvent             `json:"events"`
-	AttendedBy        []InteractionSessionParticipant `json:"attendedBy"`
-	Includes          []*Attachment                   `json:"includes"`
-	DescribedBy       []*Analysis                     `json:"describedBy"`
+	ID            string                          `json:"id"`
+	CreatedAt     time.Time                       `json:"createdAt"`
+	UpdatedAt     time.Time                       `json:"updatedAt"`
+	Identifier    string                          `json:"identifier"`
+	Name          string                          `json:"name"`
+	Status        string                          `json:"status"`
+	Type          *string                         `json:"type,omitempty"`
+	Channel       *string                         `json:"channel,omitempty"`
+	ChannelData   *string                         `json:"channelData,omitempty"`
+	Source        DataSource                      `json:"source"`
+	SourceOfTruth DataSource                      `json:"sourceOfTruth"`
+	AppSource     string                          `json:"appSource"`
+	Events        []*InteractionEvent             `json:"events"`
+	AttendedBy    []InteractionSessionParticipant `json:"attendedBy"`
 }
-
-func (InteractionSession) IsDescriptionNode() {}
 
 func (InteractionSession) IsNode()            {}
 func (this InteractionSession) GetID() string { return this.ID }
 
 func (InteractionSession) IsTimelineEvent() {}
-
-type InteractionSessionInput struct {
-	SessionIdentifier *string                               `json:"sessionIdentifier,omitempty"`
-	Name              string                                `json:"name"`
-	Status            string                                `json:"status"`
-	Type              *string                               `json:"type,omitempty"`
-	Channel           *string                               `json:"channel,omitempty"`
-	ChannelData       *string                               `json:"channelData,omitempty"`
-	AttendedBy        []*InteractionSessionParticipantInput `json:"attendedBy,omitempty"`
-	AppSource         string                                `json:"appSource"`
-}
-
-type InteractionSessionParticipantInput struct {
-	Email       *string `json:"email,omitempty"`
-	PhoneNumber *string `json:"phoneNumber,omitempty"`
-	ContactID   *string `json:"contactID,omitempty"`
-	UserID      *string `json:"userID,omitempty"`
-	Type        *string `json:"type,omitempty"`
-}
 
 type Invoice struct {
 	Metadata           *Metadata      `json:"metadata"`
@@ -1737,7 +1645,6 @@ type Meeting struct {
 	AttendedBy         []MeetingParticipant `json:"attendedBy"`
 	CreatedBy          []MeetingParticipant `json:"createdBy"`
 	Includes           []*Attachment        `json:"includes"`
-	DescribedBy        []*Analysis          `json:"describedBy"`
 	Note               []*Note              `json:"note"`
 	Events             []*InteractionEvent  `json:"events"`
 	Recording          *Attachment          `json:"recording,omitempty"`
@@ -1749,8 +1656,6 @@ type Meeting struct {
 	ExternalSystem     []*ExternalSystem    `json:"externalSystem"`
 	Status             MeetingStatus        `json:"status"`
 }
-
-func (Meeting) IsDescriptionNode() {}
 
 func (Meeting) IsNode()            {}
 func (this Meeting) GetID() string { return this.ID }
@@ -2057,20 +1962,6 @@ type OpportunityUpdateInput struct {
 	Currency            *Currency      `json:"currency,omitempty"`
 }
 
-type Order struct {
-	ID            string     `json:"id"`
-	CreatedAt     time.Time  `json:"createdAt"`
-	ConfirmedAt   *time.Time `json:"confirmedAt,omitempty"`
-	PaidAt        *time.Time `json:"paidAt,omitempty"`
-	FulfilledAt   *time.Time `json:"fulfilledAt,omitempty"`
-	CancelledAt   *time.Time `json:"cancelledAt,omitempty"`
-	Source        DataSource `json:"source"`
-	SourceOfTruth DataSource `json:"sourceOfTruth"`
-	AppSource     string     `json:"appSource"`
-}
-
-func (Order) IsTimelineEvent() {}
-
 type OrgAccountDetails struct {
 	RenewalSummary *RenewalSummary    `json:"renewalSummary,omitempty"`
 	Onboarding     *OnboardingDetails `json:"onboarding,omitempty"`
@@ -2132,7 +2023,6 @@ type Organization struct {
 	TimelineEventsTotalCount int64                         `json:"timelineEventsTotalCount"`
 	ExternalLinks            []*ExternalSystem             `json:"externalLinks"`
 	IssueSummaryByStatus     []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
-	Orders                   []*Order                      `json:"orders"`
 	ContactCount             int64                         `json:"contactCount"`
 	InboundCommsCount        int64                         `json:"inboundCommsCount"`
 	OutboundCommsCount       int64                         `json:"outboundCommsCount"`
@@ -4618,7 +4508,6 @@ const (
 	LastTouchpointTypeInteractionEventPhoneCall     LastTouchpointType = "INTERACTION_EVENT_PHONE_CALL"
 	LastTouchpointTypeInteractionEventChat          LastTouchpointType = "INTERACTION_EVENT_CHAT"
 	LastTouchpointTypeMeeting                       LastTouchpointType = "MEETING"
-	LastTouchpointTypeAnalysis                      LastTouchpointType = "ANALYSIS"
 	LastTouchpointTypeActionCreated                 LastTouchpointType = "ACTION_CREATED"
 	LastTouchpointTypeAction                        LastTouchpointType = "ACTION"
 	LastTouchpointTypeLogEntry                      LastTouchpointType = "LOG_ENTRY"
@@ -4635,7 +4524,6 @@ var AllLastTouchpointType = []LastTouchpointType{
 	LastTouchpointTypeInteractionEventPhoneCall,
 	LastTouchpointTypeInteractionEventChat,
 	LastTouchpointTypeMeeting,
-	LastTouchpointTypeAnalysis,
 	LastTouchpointTypeActionCreated,
 	LastTouchpointTypeAction,
 	LastTouchpointTypeLogEntry,
@@ -4645,7 +4533,7 @@ var AllLastTouchpointType = []LastTouchpointType{
 
 func (e LastTouchpointType) IsValid() bool {
 	switch e {
-	case LastTouchpointTypePageView, LastTouchpointTypeInteractionSession, LastTouchpointTypeNote, LastTouchpointTypeInteractionEventEmailSent, LastTouchpointTypeInteractionEventEmailReceived, LastTouchpointTypeInteractionEventPhoneCall, LastTouchpointTypeInteractionEventChat, LastTouchpointTypeMeeting, LastTouchpointTypeAnalysis, LastTouchpointTypeActionCreated, LastTouchpointTypeAction, LastTouchpointTypeLogEntry, LastTouchpointTypeIssueCreated, LastTouchpointTypeIssueUpdated:
+	case LastTouchpointTypePageView, LastTouchpointTypeInteractionSession, LastTouchpointTypeNote, LastTouchpointTypeInteractionEventEmailSent, LastTouchpointTypeInteractionEventEmailReceived, LastTouchpointTypeInteractionEventPhoneCall, LastTouchpointTypeInteractionEventChat, LastTouchpointTypeMeeting, LastTouchpointTypeActionCreated, LastTouchpointTypeAction, LastTouchpointTypeLogEntry, LastTouchpointTypeIssueCreated, LastTouchpointTypeIssueUpdated:
 		return true
 	}
 	return false

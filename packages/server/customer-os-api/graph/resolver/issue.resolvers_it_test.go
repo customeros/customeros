@@ -43,7 +43,7 @@ func TestQueryResolver_Issue(t *testing.T) {
 	neo4jt.TagIssue(ctx, driver, issueId, tagId2)
 
 	channel := "EMAIL"
-	interactionEventId := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, utils.Now())
+	interactionEventId := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", channel, utils.Now())
 	neo4jt.InteractionEventPartOfIssue(ctx, driver, interactionEventId, issueId)
 
 	yesterday := utils.Now().AddDate(0, 0, -1)

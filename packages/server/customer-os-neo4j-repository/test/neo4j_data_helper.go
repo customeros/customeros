@@ -1327,56 +1327,6 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	return socialId
 }
 
-func CreateOrder(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, order entity.OrderEntity) string {
-	orderId := utils.NewUUIDIfEmpty(order.Id)
-
-	query := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})
-							MERGE (t)<-[:ORDER_BELONGS_TO_TENANT]-(or:Order {id:$orderId}) 
-							ON CREATE SET
-								or.createdAt=$createdAt,
-								or:Order_%s,
-								or:TimelineEvent,
-								or:TimelineEvent_%s
-							SET 
-								or.updatedAt=$updatedAt,
-								or.source=$source,
-								or.sourceOfTruth=$sourceOfTruth,
-								or.appSource=$appSource
-							`, tenant, tenant)
-	params := map[string]any{
-		"tenant":         tenant,
-		"organizationId": organizationId,
-		"orderId":        orderId,
-		"createdAt":      order.CreatedAt,
-		"updatedAt":      order.UpdatedAt,
-		"source":         order.Source,
-		"sourceOfTruth":  order.Source,
-		"appSource":      order.AppSource,
-	}
-
-	if order.ConfirmedAt != nil {
-		query += `, or.confirmedAt=$confirmedAt`
-		params["confirmedAt"] = *order.ConfirmedAt
-	}
-	if order.PaidAt != nil {
-		query += `, or.paidAt=$paidAt`
-		params["paidAt"] = *order.PaidAt
-	}
-	if order.FulfilledAt != nil {
-		query += `, or.fulfilledAt=$fulfilledAt`
-		params["fulfilledAt"] = *order.FulfilledAt
-	}
-	if order.CancelledAt != nil {
-		query += `, or.canceledAt=$canceledAt`
-		params["canceledAt"] = *order.CancelledAt
-	}
-	query += ` WITH o, or 
-				MERGE (o)-[:HAS]->(or) `
-
-	ExecuteWriteQuery(ctx, driver, query, params)
-	return orderId
-}
-
 func UserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
 	query := `MATCH (o:Organization {id:$organizationId}),
 			        (u:User {id:$userId})
@@ -1428,4 +1378,85 @@ func CreateComment(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 		"createdAt":   comment.CreatedAt,
 	})
 	return commentId
+}
+
+func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType string, channel string, createdAt time.Time) string {
+	return CreateInteractionEventFromEntity(ctx, driver, tenant, entity.InteractionEventEntity{
+		Identifier:  identifier,
+		Content:     content,
+		ContentType: contentType,
+		Channel:     channel,
+		CreatedAt:   createdAt,
+	})
+}
+
+func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, ie entity.InteractionEventEntity) string {
+	var interactionEventId, _ = uuid.NewRandom()
+
+	query := "MERGE (ie:InteractionEvent {id:$id})" +
+		" ON CREATE SET " +
+		"	ie.content=$content, " +
+		"	ie.createdAt=$createdAt, " +
+		"	ie.channel=$channel, " +
+		"	ie.contentType=$contentType, " +
+		"	ie.source=$source, " +
+		"   ie.hide=$hide, " +
+		"	ie.sourceOfTruth=$sourceOfTruth, " +
+		"	ie.appSource=$appSource," +
+		"	ie:InteractionEvent_%s, ie:TimelineEvent, ie:TimelineEvent_%s," +
+		"   ie.identifier=$identifier"
+	ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
+		"id":            interactionEventId.String(),
+		"content":       ie.Content,
+		"contentType":   ie.ContentType,
+		"channel":       ie.Channel,
+		"createdAt":     ie.CreatedAt,
+		"source":        "openline",
+		"sourceOfTruth": "openline",
+		"appSource":     "test",
+		"identifier":    ie.Identifier,
+		"hide":          ie.Hide,
+	})
+	return interactionEventId.String()
+}
+
+func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time, inTimeline bool) string {
+	var interactionSessionId, _ = uuid.NewRandom()
+
+	query := "MERGE (is:InteractionSession {id:$id})" +
+		" ON CREATE SET " +
+		"	is.createdAt=$createdAt, " +
+		"	is.updatedAt=$updatedAt, " +
+		"	is.name=$name, " +
+		"	is.type=$type, " +
+		"	is.channel=$channel, " +
+		"	is.status=$status, " +
+		"	is.source=$source, " +
+		"	is.sourceOfTruth=$sourceOfTruth, " +
+		"	is.appSource=$appSource," +
+		"   is.identifier=$identifier, " +
+		"	is:InteractionSession_%s"
+
+	resolvedQuery := ""
+	if inTimeline {
+		query += ", is:TimelineEvent, is:TimelineEvent_%s"
+
+		resolvedQuery = fmt.Sprintf(query, tenant, tenant)
+	} else {
+		resolvedQuery = fmt.Sprintf(query, tenant)
+	}
+	ExecuteWriteQuery(ctx, driver, resolvedQuery, map[string]any{
+		"id":            interactionSessionId.String(),
+		"name":          name,
+		"type":          sessionType,
+		"channel":       channel,
+		"status":        status,
+		"createdAt":     createdAt,
+		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
+		"source":        "openline",
+		"sourceOfTruth": "openline",
+		"appSource":     "test",
+		"identifier":    identifier,
+	})
+	return interactionSessionId.String()
 }

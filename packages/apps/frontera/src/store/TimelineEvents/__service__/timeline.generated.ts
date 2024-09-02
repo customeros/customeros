@@ -29,11 +29,10 @@ export type TimelineQuery = {
             profilePhotoUrl?: string | null;
           } | null;
         }
-      | { __typename: 'Analysis' }
       | {
           __typename: 'InteractionEvent';
           id: string;
-          channel?: string | null;
+          channel: string;
           content?: string | null;
           contentType?: string | null;
           source: Types.DataSource;
@@ -61,12 +60,6 @@ export type TimelineQuery = {
             type: Types.ExternalSystemType;
           }>;
           repliesTo?: { __typename?: 'InteractionEvent'; id: string } | null;
-          summary?: {
-            __typename?: 'Analysis';
-            id: string;
-            content?: string | null;
-            contentType?: string | null;
-          } | null;
           actionItems?: Array<{
             __typename?: 'ActionItem';
             id: string;
@@ -233,7 +226,7 @@ export type TimelineQuery = {
             events: Array<{
               __typename?: 'InteractionEvent';
               id: string;
-              channel?: string | null;
+              channel: string;
               date: any;
               sentBy: Array<
                 | {
@@ -808,14 +801,6 @@ export type TimelineQuery = {
           }>;
         }
       | { __typename: 'Note' }
-      | {
-          __typename: 'Order';
-          id: string;
-          confirmedAt?: any | null;
-          fulfilledAt?: any | null;
-          createdAt: any;
-          cancelledAt?: any | null;
-        }
       | { __typename: 'PageView' }
     >;
   } | null;

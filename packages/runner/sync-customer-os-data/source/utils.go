@@ -103,15 +103,3 @@ func MapJsonToInteractionEvent(jsonData, syncId, source string) (entity.Interact
 	interactionEvent.Id = ""
 	return interactionEvent, nil
 }
-
-func MapJsonToOrder(jsonData, syncId, source string) (entity.OrderData, error) {
-	obj := entity.OrderData{}
-	err := json.Unmarshal([]byte(jsonData), &obj)
-	if err != nil {
-		return entity.OrderData{}, err
-	}
-	obj.SyncId = syncId
-	obj.ExternalSystem = source
-	obj.Id = ""
-	return obj, nil
-}

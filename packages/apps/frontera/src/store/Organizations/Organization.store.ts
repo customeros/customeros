@@ -848,9 +848,6 @@ export const ORGANIZATION_QUERY = gql`
               }
             }
           }
-          ... on Analysis {
-            id
-          }
           ... on Meeting {
             id
             name
@@ -1077,7 +1074,6 @@ export const getDefaultValue = (): Organization => ({
   issueSummaryByStatus: [],
   jobRoles: [],
   locations: [],
-  orders: [],
   outboundCommsCount: 0,
   phoneNumbers: [],
   parentCompanies: [],

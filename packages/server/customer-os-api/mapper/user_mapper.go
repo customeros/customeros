@@ -2,14 +2,13 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
-	userEntity := entity.UserEntity{
+func MapUserInputToEntity(input model.UserInput) *neo4jentity.UserEntity {
+	userEntity := neo4jentity.UserEntity{
 		FirstName:       input.FirstName,
 		LastName:        input.LastName,
 		Name:            utils.IfNotNilString(input.Name),
@@ -22,7 +21,7 @@ func MapUserInputToEntity(input model.UserInput) *entity.UserEntity {
 	return &userEntity
 }
 
-func MapEntityToUser(userEntity *entity.UserEntity) *model.User {
+func MapEntityToUser(userEntity *neo4jentity.UserEntity) *model.User {
 	if userEntity == nil {
 		return nil
 	}
@@ -71,7 +70,7 @@ func MapRolesToModel(roles []string) []model.Role {
 	return modelRoles
 }
 
-func MapEntitiesToUsers(userEntities *entity.UserEntities) []*model.User {
+func MapEntitiesToUsers(userEntities *neo4jentity.UserEntities) []*model.User {
 	var users []*model.User
 	for _, userEntity := range *userEntities {
 		users = append(users, MapEntityToUser(&userEntity))

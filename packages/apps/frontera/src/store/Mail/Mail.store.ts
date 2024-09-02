@@ -43,7 +43,7 @@ export class MailStore {
 
     try {
       this.isLoading = true;
-      await this.transport.http.post(`/comms-api/mail/send`, decoratedPayload, {
+      await this.transport.http.post(`/ua/mail/send`, decoratedPayload, {
         headers: {
           'Content-Type': 'application/json',
         },

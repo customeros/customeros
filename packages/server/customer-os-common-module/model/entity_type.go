@@ -3,20 +3,24 @@ package model
 type EntityType string
 
 const (
-	CONTACT           EntityType = "CONTACT"
-	USER              EntityType = "USER"
-	ORGANIZATION      EntityType = "ORGANIZATION"
-	EMAIL             EntityType = "EMAIL"
-	MEETING           EntityType = "MEETING"
-	CONTRACT          EntityType = "CONTRACT"
-	INVOICE           EntityType = "INVOICE"
-	INTERACTION_EVENT EntityType = "INTERACTION_EVENT"
-	COMMENT           EntityType = "COMMENT"
-	ISSUE             EntityType = "ISSUE"
-	LOG_ENTRY         EntityType = "LOG_ENTRY"
-	OPPORTUNITY       EntityType = "OPPORTUNITY"
-	SERVICE_LINE_ITEM EntityType = "SERVICE_LINE_ITEM"
-	REMINDER          EntityType = "REMINDER"
+	CONTACT             EntityType = "CONTACT"
+	USER                EntityType = "USER"
+	ORGANIZATION        EntityType = "ORGANIZATION"
+	EMAIL               EntityType = "EMAIL"
+	PHONE_NUMBER        EntityType = "PHONE_NUMBER"
+	MEETING             EntityType = "MEETING"
+	CONTRACT            EntityType = "CONTRACT"
+	INVOICE             EntityType = "INVOICE"
+	INTERACTION_EVENT   EntityType = "INTERACTION_EVENT"
+	INTERACTION_SESSION EntityType = "INTERACTION_EVENT"
+	COMMENT             EntityType = "COMMENT"
+	ISSUE               EntityType = "ISSUE"
+	LOG_ENTRY           EntityType = "LOG_ENTRY"
+	OPPORTUNITY         EntityType = "OPPORTUNITY"
+	SERVICE_LINE_ITEM   EntityType = "SERVICE_LINE_ITEM"
+	REMINDER            EntityType = "REMINDER"
+	ATTACHMENT          EntityType = "ATTACHMENT"
+	NOTE                EntityType = "NOTE"
 )
 
 func (entityType EntityType) String() string {
@@ -33,6 +37,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelOrganization
 	case EMAIL:
 		return NodeLabelEmail
+	case PHONE_NUMBER:
+		return NodeLabelPhoneNumber
 	case MEETING:
 		return NodeLabelMeeting
 	case CONTRACT:
@@ -49,6 +55,10 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelLogEntry
 	case REMINDER:
 		return NodeLabelReminder
+	case ATTACHMENT:
+		return NodeLabelAttachment
+	case NOTE:
+		return NodeLabelNote
 	}
 	return "Unknown"
 }

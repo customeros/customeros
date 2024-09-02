@@ -212,25 +212,11 @@ async function createServer() {
     followRedirects: true,
   });
 
-  const commsApiProxy = createProxyMiddleware({
-    pathFilter: '/comms-api',
-    pathRewrite: { '^/comms-api': '' },
-    target: process.env.COMMS_API_PATH,
-    changeOrigin: true,
-    headers: {
-      'X-Openline-Mail-Api-Key': process.env.COMMS_MAIL_API_KEY,
-    },
-    logger: console,
-    preserveHeaderKeyCase: true,
-    followRedirects: true,
-  });
-
   app.use(customerOsApiProxy);
   app.use(customerOsStreamProxy);
   app.use(settingsApiProxy);
   app.use(userAdminApiProxy);
   app.use(fileStorageApiProxy);
-  app.use(commsApiProxy);
 
   //login button
   app.use('/google-auth', (_req, res) => {

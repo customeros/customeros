@@ -93,6 +93,13 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 
 	tracing.LogObjectAsJson(span, "input", input)
 
+	if input.Source == "" {
+		input.Source = constants.SourceOpenline
+	}
+	if input.SourceOfTruth == "" {
+		input.SourceOfTruth = constants.SourceOpenline
+	}
+
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
 		 MERGE (t)<-[:USER_BELONGS_TO_TENANT]-(u:User:User_%s {id:$id}) 
 		 ON CREATE SET 	u.name = $name,
@@ -131,8 +138,8 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 		"bot":             input.Bot,
 		"profilePhotoUrl": input.ProfilePhotoUrl,
 		"timezone":        input.Timezone,
-		"source":          utils.StringFirstNonEmpty(input.Source, constants.SourceOpenline),
-		"sourceOfTruth":   utils.StringFirstNonEmpty(input.SourceOfTruth, constants.SourceOpenline),
+		"source":          input.Source,
+		"sourceOfTruth":   input.SourceOfTruth,
 		"appSource":       input.AppSource,
 		"createdAt":       utils.TimeOrNow(input.CreatedAt),
 		"overwrite":       input.SourceOfTruth == constants.SourceOpenline,
