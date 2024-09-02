@@ -32,7 +32,6 @@ type Subscriptions struct {
 	LocationValidationSubscription    LocationValidationSubscription
 	OrganizationSubscription          OrganizationSubscription
 	OrganizationWebscrapeSubscription OrganizationWebscrapeSubscription
-	InteractionEventSubscription      InteractionEventSubscription
 	ContractSubscription              ContractSubscription
 	NotificationsSubscription         NotificationsSubscription
 	InvoiceSubscription               InvoiceSubscription
@@ -102,15 +101,6 @@ type EnrichSubscription struct {
 	MessageTimeoutSec            int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_MESSAGE_TIMEOUT" envDefault:"300" validate:"required,gte=0"`
 	CheckpointLowerBound         int32  `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_CHECKPOINT_LOWER_BOUND" envDefault:"4" validate:"required,gte=0"`
 	DeletePersistentSubscription bool   `env:"EVENT_STORE_SUBSCRIPTIONS_ENRICH_DELETE_SUBSCRIPTION" envDefault:"false"`
-}
-
-type InteractionEventSubscription struct {
-	Enabled           bool   `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_ENABLED" envDefault:"true"`
-	GroupName         string `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_GROUP_NAME" envDefault:"interactionEvent-v2" validate:"required"`
-	Prefix            string `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_PREFIX" envDefault:"interaction_event-" validate:"required"`
-	PoolSize          int    `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
-	BufferSizeClient  uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
-	MessageTimeoutSec int32  `env:"EVENT_STORE_SUBSCRIPTIONS_INTERACTION_EVENT_MESSAGE_TIMEOUT" envDefault:"120" validate:"required,gte=0"`
 }
 
 type ContractSubscription struct {

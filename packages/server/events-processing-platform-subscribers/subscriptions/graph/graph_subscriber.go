@@ -22,8 +22,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	commentevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/comment"
 	contractevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
-	ieevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_event/event"
-	isevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/interaction_session/event"
 	invoiceevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
 	issueevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/issue/event"
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
@@ -44,62 +42,58 @@ import (
 )
 
 type GraphSubscriber struct {
-	log                            logger.Logger
-	db                             *esdb.Client
-	cfg                            *config.Config
-	genericEventHandler            *GenericEventHandler
-	phoneNumberEventHandler        *PhoneNumberEventHandler
-	contactEventHandler            *ContactEventHandler
-	organizationEventHandler       *OrganizationEventHandler
-	emailEventHandler              *EmailEventHandler
-	userEventHandler               *UserEventHandler
-	locationEventHandler           *LocationEventHandler
-	jobRoleEventHandler            *JobRoleEventHandler
-	interactionEventHandler        *InteractionEventHandler
-	interactionSessionEventHandler *InteractionSessionEventHandler
-	logEntryEventHandler           *LogEntryEventHandler
-	issueEventHandler              *IssueEventHandler
-	commentEventHandler            *CommentEventHandler
-	opportunityEventHandler        *OpportunityEventHandler
-	contractEventHandler           *ContractEventHandler
-	serviceLineItemEventHandler    *ServiceLineItemEventHandler
-	masterPlanEventHandler         *MasterPlanEventHandler
-	invoiceEventHandler            *InvoiceEventHandler
-	tenantEventHandler             *TenantEventHandler
-	organizationPlanEventHandler   *OrganizationPlanEventHandler
-	bankAccountEventHandler        *BankAccountEventHandler
-	reminderEventHandler           *ReminderEventHandler
-	orderEventHandler              *OrderEventHandler
+	log                          logger.Logger
+	db                           *esdb.Client
+	cfg                          *config.Config
+	genericEventHandler          *GenericEventHandler
+	phoneNumberEventHandler      *PhoneNumberEventHandler
+	contactEventHandler          *ContactEventHandler
+	organizationEventHandler     *OrganizationEventHandler
+	emailEventHandler            *EmailEventHandler
+	userEventHandler             *UserEventHandler
+	locationEventHandler         *LocationEventHandler
+	jobRoleEventHandler          *JobRoleEventHandler
+	logEntryEventHandler         *LogEntryEventHandler
+	issueEventHandler            *IssueEventHandler
+	commentEventHandler          *CommentEventHandler
+	opportunityEventHandler      *OpportunityEventHandler
+	contractEventHandler         *ContractEventHandler
+	serviceLineItemEventHandler  *ServiceLineItemEventHandler
+	masterPlanEventHandler       *MasterPlanEventHandler
+	invoiceEventHandler          *InvoiceEventHandler
+	tenantEventHandler           *TenantEventHandler
+	organizationPlanEventHandler *OrganizationPlanEventHandler
+	bankAccountEventHandler      *BankAccountEventHandler
+	reminderEventHandler         *ReminderEventHandler
+	orderEventHandler            *OrderEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                            log,
-		db:                             db,
-		cfg:                            cfg,
-		genericEventHandler:            NewGenericEventHandler(log, services, grpcClients),
-		contactEventHandler:            NewContactEventHandler(log, services, grpcClients),
-		organizationEventHandler:       NewOrganizationEventHandler(log, services, grpcClients, cache),
-		phoneNumberEventHandler:        NewPhoneNumberEventHandler(log, services, grpcClients),
-		emailEventHandler:              NewEmailEventHandler(log, services, grpcClients),
-		userEventHandler:               NewUserEventHandler(log, services),
-		locationEventHandler:           NewLocationEventHandler(services),
-		jobRoleEventHandler:            NewJobRoleEventHandler(services),
-		interactionEventHandler:        NewInteractionEventHandler(log, services, grpcClients),
-		interactionSessionEventHandler: NewInteractionSessionEventHandler(log, services, grpcClients),
-		logEntryEventHandler:           NewLogEntryEventHandler(log, services, grpcClients),
-		issueEventHandler:              NewIssueEventHandler(log, services, grpcClients),
-		commentEventHandler:            NewCommentEventHandler(log, services),
-		opportunityEventHandler:        NewOpportunityEventHandler(log, services, grpcClients),
-		contractEventHandler:           NewContractEventHandler(log, services, grpcClients),
-		serviceLineItemEventHandler:    NewServiceLineItemEventHandler(log, services, grpcClients),
-		masterPlanEventHandler:         NewMasterPlanEventHandler(log, services),
-		invoiceEventHandler:            NewInvoiceEventHandler(log, services, grpcClients),
-		tenantEventHandler:             NewTenantEventHandler(log, services),
-		organizationPlanEventHandler:   NewOrganizationPlanEventHandler(log, services),
-		bankAccountEventHandler:        NewBankAccountEventHandler(log, services),
-		reminderEventHandler:           NewReminderEventHandler(log, services),
-		orderEventHandler:              NewOrderEventHandler(log, services, grpcClients),
+		log:                          log,
+		db:                           db,
+		cfg:                          cfg,
+		genericEventHandler:          NewGenericEventHandler(log, services, grpcClients),
+		contactEventHandler:          NewContactEventHandler(log, services, grpcClients),
+		organizationEventHandler:     NewOrganizationEventHandler(log, services, grpcClients, cache),
+		phoneNumberEventHandler:      NewPhoneNumberEventHandler(log, services, grpcClients),
+		emailEventHandler:            NewEmailEventHandler(log, services, grpcClients),
+		userEventHandler:             NewUserEventHandler(log, services),
+		locationEventHandler:         NewLocationEventHandler(services),
+		jobRoleEventHandler:          NewJobRoleEventHandler(services),
+		logEntryEventHandler:         NewLogEntryEventHandler(log, services, grpcClients),
+		issueEventHandler:            NewIssueEventHandler(log, services, grpcClients),
+		commentEventHandler:          NewCommentEventHandler(log, services),
+		opportunityEventHandler:      NewOpportunityEventHandler(log, services, grpcClients),
+		contractEventHandler:         NewContractEventHandler(log, services, grpcClients),
+		serviceLineItemEventHandler:  NewServiceLineItemEventHandler(log, services, grpcClients),
+		masterPlanEventHandler:       NewMasterPlanEventHandler(log, services),
+		invoiceEventHandler:          NewInvoiceEventHandler(log, services, grpcClients),
+		tenantEventHandler:           NewTenantEventHandler(log, services),
+		organizationPlanEventHandler: NewOrganizationPlanEventHandler(log, services),
+		bankAccountEventHandler:      NewBankAccountEventHandler(log, services),
+		reminderEventHandler:         NewReminderEventHandler(log, services),
+		orderEventHandler:            NewOrderEventHandler(log, services, grpcClients),
 	}
 }
 
@@ -348,21 +342,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.locationEventHandler.OnLocationValidated(ctx, evt)
 	case jobroleevents.JobRoleCreateV1:
 		return s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
-
-	case ieevent.InteractionEventRequestSummaryV1,
-		ieevent.InteractionEventRequestActionItemsV1:
-		return nil
-	case ieevent.InteractionEventReplaceSummaryV1:
-		return s.interactionEventHandler.OnSummaryReplace(ctx, evt)
-	case ieevent.InteractionEventReplaceActionItemsV1:
-		return s.interactionEventHandler.OnActionItemsReplace(ctx, evt)
-	case ieevent.InteractionEventCreateV1:
-		return s.interactionEventHandler.OnCreate(ctx, evt)
-	case ieevent.InteractionEventUpdateV1:
-		return s.interactionEventHandler.OnUpdate(ctx, evt)
-
-	case isevent.InteractionSessionCreateV1:
-		return s.interactionSessionEventHandler.OnCreate(ctx, evt)
 
 	case logentryevents.LogEntryCreateV1:
 		return s.logEntryEventHandler.OnCreate(ctx, evt)

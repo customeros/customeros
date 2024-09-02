@@ -124,20 +124,6 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
-	interactionEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
-	interactionEventSubscriptionSettings.MessageTimeout = s.cfg.Subscriptions.InteractionEventSubscription.MessageTimeoutSec * 1000
-	interactionEventSubscriptionSettings.ExtraStatistics = true
-	if err := s.subscribeToAll(ctx,
-		s.cfg.Subscriptions.InteractionEventSubscription.GroupName,
-		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.InteractionEventSubscription.Prefix}},
-		&interactionEventSubscriptionSettings,
-		false,
-		false,
-		esdb.End{},
-	); err != nil {
-		return err
-	}
-
 	notificationEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	notificationEventSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,

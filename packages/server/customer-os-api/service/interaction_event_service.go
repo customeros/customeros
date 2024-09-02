@@ -17,6 +17,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/vektah/gqlparser/v2/ast"
@@ -131,7 +132,10 @@ func (s *interactionEventService) createInteractionEventInDBTxWork(ctx context.C
 			}
 		}
 		if newInteractionEvent.InteractionEventEntity.ExternalId != nil && newInteractionEvent.InteractionEventEntity.ExternalSystemId != nil {
-			err := s.repositories.InteractionEventRepository.LinkWithExternalSystemInTx(ctx, tx, tenant, interactionEventId, *newInteractionEvent.InteractionEventEntity.ExternalId, *newInteractionEvent.InteractionEventEntity.ExternalSystemId)
+			err := s.repositories.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.NodeLabelInteractionEvent, neo4jmodel.ExternalSystem{
+				ExternalId:       *newInteractionEvent.InteractionEventEntity.ExternalId,
+				ExternalSystemId: *newInteractionEvent.InteractionEventEntity.ExternalSystemId,
+			})
 			if err != nil {
 				return nil, err
 			}
@@ -277,7 +281,7 @@ func (s *interactionEventService) GetInteractionEventsForInteractionSessions(ctx
 		}
 	}
 
-	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids, requestContent)
+	interactionEvents, err := s.repositories.Neo4jRepositories.InteractionEventReadRepository.GetAllForInteractionSessions(ctx, common.GetTenantFromContext(ctx), ids, requestContent)
 	if err != nil {
 		return nil, err
 	}
@@ -312,7 +316,7 @@ func (s *interactionEventService) GetInteractionEventsForMeetings(ctx context.Co
 		}
 	}
 
-	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForMeetings(ctx, common.GetTenantFromContext(ctx), ids, requestContent)
+	interactionEvents, err := s.repositories.Neo4jRepositories.InteractionEventReadRepository.GetAllForMeetings(ctx, common.GetTenantFromContext(ctx), ids, requestContent)
 	if err != nil {
 		return nil, err
 	}
@@ -347,7 +351,7 @@ func (s *interactionEventService) GetInteractionEventsForIssues(ctx context.Cont
 		}
 	}
 
-	interactionEvents, err := s.repositories.InteractionEventRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds, requestContent)
+	interactionEvents, err := s.repositories.Neo4jRepositories.InteractionEventReadRepository.GetAllForIssues(ctx, common.GetTenantFromContext(ctx), issueIds, requestContent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
