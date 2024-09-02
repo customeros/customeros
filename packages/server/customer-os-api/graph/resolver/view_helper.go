@@ -400,6 +400,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 6, ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 7, ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 8, ColumnType: model.ColumnViewTypeInvoicesIssueDatePast.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 9, ColumnType: model.ColumnViewTypeInvoicesOrganization.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypePastInvoices.String():
@@ -413,6 +414,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 6, ColumnType: model.ColumnViewTypeInvoicesAmount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 8, ColumnType: model.ColumnViewTypeInvoicesIssueDate.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 9, ColumnType: model.ColumnViewTypeInvoicesInvoiceStatus.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 10, ColumnType: model.ColumnViewTypeInvoicesOrganization.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeContacts.String():
