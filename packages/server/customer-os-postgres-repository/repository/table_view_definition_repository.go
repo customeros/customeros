@@ -183,7 +183,7 @@ func (t tableViewDefinitionRepository) ArchiveTableViewDefinition(ctx context.Co
 
 	result := t.gormDb.
 		Where("tenant = ?", common.GetTenantFromContext(ctx)).
-		Where("user_id = ?", common.GetUserIdFromContext(ctx)).
+		Where("user_id = ? OR is_shared = ?", common.GetUserIdFromContext(ctx), true).
 		Where("id = ?", viewDefinitionId).
 		Delete(&entity.TableViewDefinition{})
 
