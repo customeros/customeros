@@ -6,6 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"net/http"
 	"time"
 
@@ -14,8 +16,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 )
 
-func InitTenantSettingsRoutes(r *gin.Engine, services *service.Services) {
+func InitTenantSettingsRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
 	r.POST("/tenant/settings/organizationStage/:id",
+		tracing.TracingEnhancer(ctx, "/enrichPerson"),
 		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
 		func(ginContext *gin.Context) {
@@ -62,5 +65,40 @@ func InitTenantSettingsRoutes(r *gin.Engine, services *service.Services) {
 			}
 
 			ginContext.JSON(200, opportunityStage)
+		})
+	r.GET("/tenant/settings/apiKey",
+		tracing.TracingEnhancer(ctx, "GET /tenant/settings/apiKey"),
+		security.TenantUserContextEnhancer(security.USERNAME, services.CommonServices.Neo4jRepositories),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.SETTINGS_API),
+		func(c *gin.Context) {
+			span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "GetApiKey")
+			defer span.Finish()
+
+			tenantValue, _ := c.Get(security.KEY_TENANT_NAME)
+			tenant := tenantValue.(string)
+			tracing.TagTenant(span, tenant)
+
+			apiKey, err := services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "GetFirstApiKeyForTenant"))
+				c.JSON(500, gin.H{"error": err.Error()})
+				return
+			}
+			if apiKey == nil {
+				err = services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository.CreateApiKey(ctx, tenant)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "CreateApiKey"))
+					c.JSON(500, gin.H{"error": err.Error()})
+					return
+				}
+				apiKey, err = services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository.GetFirstApiKeyForTenant(ctx, tenant)
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "GetFirstApiKeyForTenant"))
+					c.JSON(500, gin.H{"error": err.Error()})
+					return
+				}
+			}
+
+			c.JSON(200, apiKey.Key)
 		})
 }
