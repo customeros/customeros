@@ -23,6 +23,7 @@ import { DateCell } from '@organizations/components/Columns/shared/Cells/DateCel
 import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig.ts';
 import { NumericValueFilter } from '@organizations/components/Columns/shared/Filters/NumericValueFilter';
 
+import { TagFilter } from './Filters/Tags';
 import { OwnershipTypeFilter } from '../shared/Filters/OwnershipTypeFilter';
 import { LocationFilter } from '../shared/Filters/LocationFilter/LocationFilter';
 import {
@@ -734,7 +735,6 @@ export const columns: Record<string, Column> = {
     maxSize: 400,
     enableResizing: true,
     enableSorting: false,
-    enableColumnFilter: false,
     cell: (props) => {
       const value = props.getValue()?.metadata?.id;
 
@@ -745,6 +745,13 @@ export const columns: Record<string, Column> = {
         title='Tags'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsTags}
+        renderFilter={(initialFocusRef) => (
+          <TagFilter
+            placeholder={'e.g. Solo RevOps'}
+            initialFocusRef={initialFocusRef}
+            property={ColumnViewType.OrganizationsTags}
+          />
+        )}
         {...getTHeadProps<Store<Organization>>(props)}
       />
     ),

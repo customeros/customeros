@@ -93,7 +93,23 @@ export const ChangeRelationship = observer(() => {
 
   return (
     <Command label='Change Relationship'>
-      <CommandInput label={label} placeholder='Change relationship...' />
+      <CommandInput
+        label={label}
+        placeholder='Change relationship...'
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+          }
+
+          if (e.metaKey && e.key === 'Enter') {
+            store.ui.commandMenu.setOpen(false);
+          }
+        }}
+      />
 
       <Command.List>
         {options.map((option) => (

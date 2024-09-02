@@ -76,6 +76,12 @@ export const ChangeOrAddJobRoles = observer(() => {
           if (e.key === ' ') {
             e.stopPropagation();
           }
+
+          if (e.metaKey && e.key === 'Enter') {
+            store.ui.commandMenu.setOpen(false);
+          } else {
+            handleSelect([{ value: search, label: search }]);
+          }
         }}
       />
 

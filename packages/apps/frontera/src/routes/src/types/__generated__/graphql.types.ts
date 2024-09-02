@@ -375,6 +375,7 @@ export enum ColumnViewType {
   InvoicesInvoiceStatus = 'INVOICES_INVOICE_STATUS',
   InvoicesIssueDate = 'INVOICES_ISSUE_DATE',
   InvoicesIssueDatePast = 'INVOICES_ISSUE_DATE_PAST',
+  InvoicesOrganization = 'INVOICES_ORGANIZATION',
   OpportunitiesCommonColumn = 'OPPORTUNITIES_COMMON_COLUMN',
   OpportunitiesCreatedDate = 'OPPORTUNITIES_CREATED_DATE',
   OpportunitiesEstimatedArr = 'OPPORTUNITIES_ESTIMATED_ARR',
@@ -1408,6 +1409,7 @@ export type EmailUpdateAddressInput = {
 
 export type EmailValidationDetails = {
   __typename?: 'EmailValidationDetails';
+  alternateEmail?: Maybe<Scalars['String']['output']>;
   canConnectSmtp?: Maybe<Scalars['Boolean']['output']>;
   deliverable?: Maybe<EmailDeliverable>;
   firewall?: Maybe<Scalars['String']['output']>;
@@ -1417,9 +1419,11 @@ export type EmailValidationDetails = {
   isFirewalled?: Maybe<Scalars['Boolean']['output']>;
   isFreeAccount?: Maybe<Scalars['Boolean']['output']>;
   isMailboxFull?: Maybe<Scalars['Boolean']['output']>;
+  isPrimaryDomain?: Maybe<Scalars['Boolean']['output']>;
   isRisky?: Maybe<Scalars['Boolean']['output']>;
   isRoleAccount?: Maybe<Scalars['Boolean']['output']>;
   isValidSyntax?: Maybe<Scalars['Boolean']['output']>;
+  primaryDomain?: Maybe<Scalars['String']['output']>;
   provider?: Maybe<Scalars['String']['output']>;
   smtpSuccess?: Maybe<Scalars['Boolean']['output']>;
   verified: Scalars['Boolean']['output'];

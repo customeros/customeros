@@ -18,6 +18,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
 import { Building06 } from '@ui/media/icons/Building06';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
+import { InternalStage } from '@shared/types/__generated__/graphql.types';
 
 import { Owner } from './Owner';
 import { MoreMenu } from './MoreMenu';
@@ -93,6 +94,8 @@ export const KanbanCard = observer(
         )
       : 0;
 
+    const cardStage = card.value.internalStage;
+
     if (!card.value.metadata.id) return null;
 
     const handleNextStepsClick = () => {
@@ -161,13 +164,17 @@ export const KanbanCard = observer(
           <div className='flex items-center gap-2 w-full'>
             <Owner opportunityId={card.id} ownerId={card.owner?.id} />
 
-            <div className='flex items-center justify-between w-full'>
+            <div className='flex items-center justify-between w-full mb-[-4px]'>
               <ArrEstimate opportunityId={card.id} />
 
-              <Clock className='text-gray-500 size-4 mr-1' />
-              <span className='text-nowrap text-xs items-center'>
-                {`${daysInStage} ${daysInStage === 1 ? 'day' : 'days'}`}
-              </span>
+              {cardStage === InternalStage.Open && (
+                <>
+                  <Clock className='text-gray-500 size-4 mr-1' />
+                  <span className='text-nowrap text-xs items-center'>
+                    {`${daysInStage} ${daysInStage === 1 ? 'day' : 'days'}`}
+                  </span>
+                </>
+              )}
             </div>
           </div>
         </div>
