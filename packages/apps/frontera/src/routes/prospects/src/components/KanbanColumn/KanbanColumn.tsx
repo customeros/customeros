@@ -139,7 +139,7 @@ export const KanbanColumn = observer(
 
     return (
       <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'>
-        <div className=' sticky rounded-t-[4px] top-[114px] bg-white z-50'>
+        <div className=' sticky rounded-t-[4px] top-[114px] bg-white z-10'>
           <div className='flex items-center justify-between p-3 pb-0 bg-gray-100 rounded-t-[4px]'>
             <div className='flex flex-col items-center mb-2 w-full '>
               <div className='flex justify-between w-full'>
