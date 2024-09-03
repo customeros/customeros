@@ -28,6 +28,7 @@ export class SettingsStore {
   integrations: IntegrationsStore;
   bankAccounts: BankAccountsStore;
   tenantBillingProfiles: TenantBillingProfilesStore;
+  tenantApiKey: string = '';
   isLoading = false;
   error: string | null = null;
 
@@ -80,10 +81,23 @@ export class SettingsStore {
     );
   }
 
+  async getTenantApiKey() {
+    try {
+      const tenantApiKeyResult = await this.transport.http.get(
+        '/sa/tenant/settings/apiKey',
+      );
+
+      this.tenantApiKey = tenantApiKeyResult.data;
+    } catch (e) {
+      this.error = (e as Error)?.message;
+    }
+  }
+
   async bootstrap() {
     if (this.isBootstrapped) return;
 
     await Promise.all([
+      await this.getTenantApiKey(),
       await this.slack.load(),
       await this.oauthToken.load(),
       await this.tenant.bootstrap(),

@@ -30,6 +30,12 @@ export const WorkspaceSection = ({
           isActive={checkIsActive('tags')}
           onClick={handleItemClick('tags')}
         />
+
+        <SidenavItem
+          label='API'
+          isActive={checkIsActive('api')}
+          onClick={handleItemClick('api')}
+        />
       </div>
     </div>
   );
