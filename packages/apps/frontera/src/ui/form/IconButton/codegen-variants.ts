@@ -1,7 +1,7 @@
 import fs from 'fs';
-const { format } = require('prettier');
+import { format } from 'prettier';
 
-const file = require('../../theme/colors');
+import * as file from '../../theme/colors';
 
 const prettierConfig = JSON.parse(
   fs.readFileSync(process.cwd() + '/.prettierrc', 'utf8'),
@@ -126,6 +126,7 @@ const formattedContent = format(fileContent, {
   parser: 'babel',
 });
 
-const filePath = process.cwd() + '/ui/form/IconButton/IconButton.variants.ts';
+const filePath =
+  process.cwd() + '/src/ui/form/IconButton/IconButton.variants.ts';
 
 fs.writeFile(filePath, formattedContent, () => {});

@@ -11,12 +11,12 @@ import { exec } from 'child_process';
  * Button.variants.ts
  */
 
-const files = globSync('ui/**/codegen-variants.ts', {
+const files = globSync('src/ui/**/codegen-variants.ts', {
   ignore: 'node_modules/**',
 });
 
 files.forEach((file: string) => {
-  exec(`ts-node ${file}`, (err: unknown, stdout: unknown, stderr: unknown) => {
+  exec(`npx tsx ${file}`, (err: unknown, stdout: unknown, stderr: unknown) => {
     if (err) {
       console.error(err);
 

@@ -12,7 +12,7 @@ interface IconProps extends React.SVGAttributes<SVGElement> {
 
 
 export const ${name} = ({ className, ...props }: IconProps) => (
-  <svg viewBox='${viewBox}' fill='none' {...props} className={twMerge('inline-block size-4', className)}> 
+  <svg viewBox='${viewBox}' fill='none' {...props} className={twMerge('inline-block size-4', className)}>
     ${content}
   </svg>
 );
@@ -68,7 +68,7 @@ files.forEach((name) => {
       parser: 'babel',
     });
 
-    const filePath = process.cwd() + '/ui/media/icons/' + outFileName;
+    const filePath = process.cwd() + '/src/ui/media/icons/' + outFileName;
 
     writeFileSync(filePath, formattedOutContent);
   } catch (e) {
