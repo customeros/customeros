@@ -1161,6 +1161,12 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	bcc = utils.RemoveEmpties(bcc)
 	bcc = utils.RemoveDuplicates(bcc)
 
+	paymentLink := ""
+	// prepare payment link for email only if invoice payment link was generated
+	if invoiceEntity.PaymentDetails.PaymentLink != "" {
+		paymentLink = h.cfg.Services.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
+	}
+
 	postmarkEmail := service.PostmarkEmail{
 		WorkflowId:    workflowId,
 		MessageStream: service.PostmarkMessageStreamInvoice,
@@ -1174,7 +1180,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 			"{{invoiceNumber}}":    invoiceEntity.Number,
 			"{{currencySymbol}}":   invoiceEntity.Currency.Symbol(),
 			"{{amtDue}}":           fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
-			"{{paymentLink}}":      invoiceEntity.PaymentDetails.PaymentLink,
+			"{{paymentLink}}":      paymentLink,
 		},
 		Attachments: []service.PostmarkEmailAttachment{},
 	}
