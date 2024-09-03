@@ -16,6 +16,7 @@ import (
 
 type InvoiceReadRepository interface {
 	GetInvoiceById(ctx context.Context, tenant, invoiceId string) (*dbtype.Node, error)
+	GetInvoiceByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*dbtype.Node, string, error)
 	GetInvoiceByNumber(ctx context.Context, tenant, invoiceNumber string) (*dbtype.Node, error)
 	CountInvoices(ctx context.Context, tenant, filterString string, filterParams map[string]interface{}) (int64, error)
 	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.Cypher) (*utils.DbNodesWithTotalCount, error)
@@ -183,6 +184,41 @@ func (r *invoiceReadRepository) GetInvoiceById(ctx context.Context, tenant, invo
 	}
 	span.LogFields(log.Bool("result.found", result != nil))
 	return result.(*dbtype.Node), nil
+}
+
+func (r *invoiceReadRepository) GetInvoiceByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*dbtype.Node, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoiceById")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+
+	cypher := `MATCH (t:Tenant)<-[:INVOICE_BELONGS_TO_TENANT]-(i:Invoice {id:$id}) RETURN i, t.name`
+	params := map[string]any{
+		"id": invoiceId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
+	})
+	if err != nil {
+		span.LogFields(log.Bool("result.found", false))
+		tracing.TraceErr(span, err)
+		return nil, "", err
+	}
+
+	convertedResult, _ := result.([]*utils.DbNodeAndTenant)
+	if len(convertedResult) == 0 {
+		span.LogFields(log.Bool("result.found", false))
+		return nil, "", nil
+	}
+	span.LogFields(log.Bool("result.found", true))
+	return convertedResult[0].Node, convertedResult[0].Tenant, err
 }
 
 func (r *invoiceReadRepository) GetInvoiceByNumber(ctx context.Context, tenant, invoiceNumber string) (*dbtype.Node, error) {

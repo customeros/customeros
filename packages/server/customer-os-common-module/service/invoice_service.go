@@ -25,6 +25,7 @@ type InvoiceService interface {
 	GenerateNewRandomInvoiceNumber() string
 
 	GetById(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, error)
+	GetByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, string, error)
 	GetByNumber(ctx context.Context, number string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error)
@@ -90,6 +91,25 @@ func (s *invoiceService) GetById(ctx context.Context, invoiceId string) (*neo4je
 		return nil, wrappedErr
 	} else {
 		return mapper.MapDbNodeToInvoiceEntity(invoiceDbNode), nil
+	}
+}
+
+func (s *invoiceService) GetByIdAcrossAllTenants(ctx context.Context, invoiceId string) (*neo4jentity.InvoiceEntity, string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetByIdAcrossAllTenants")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("invoiceId", invoiceId)
+
+	invoiceDbNode, tenant, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetInvoiceByIdAcrossAllTenants(ctx, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error getting invoice by id"))
+		wrappedErr := errors.Wrap(err, fmt.Sprintf("Invoice with id {%s} not found", invoiceId))
+		return nil, "", wrappedErr
+	}
+	if invoiceDbNode == nil {
+		return nil, "", nil
+	} else {
+		return mapper.MapDbNodeToInvoiceEntity(invoiceDbNode), tenant, nil
 	}
 }
 

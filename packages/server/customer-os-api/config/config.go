@@ -38,8 +38,9 @@ type Config struct {
 		TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
 	}
 	IntegrationApp struct {
-		WorkspaceKey    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
-		WorkspaceSecret string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
+		WorkspaceKey                    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
+		WorkspaceSecret                 string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
+		ApiTriggerUrlCreatePaymentLinks string `env:"INTEGRATION_APP_API_TRIGGER_URL_CREATE_PAYMENT_LINKS"`
 	}
 }
 
