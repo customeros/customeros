@@ -1,16 +1,11 @@
-import { test as base } from '@playwright/test';
+import { chromium } from '@playwright/test';
 
 import { LoginPage } from './pages/loginPage';
 import { ContactsPage } from './pages/contactsPage';
 import { OrganizationsPage } from './pages/organizationsPage';
 
-// Define a custom test fixture
-const test = base.extend({
-  // Custom fixtures can be defined here if needed
-});
-
-test.beforeAll(async ({ browser }) => {
-  // Create a new page instance
+async function globalSetup() {
+  const browser = await chromium.launch();
   const page = await browser.newPage();
 
   const loginPage = new LoginPage(page);
@@ -54,11 +49,11 @@ test.beforeAll(async ({ browser }) => {
   }
 
   await organizationsPage.waitForPageLoad();
+
+  // Create initial organization
   await organizationsPage.addInitialOrganization();
 
-  // Close the page after setup
-  await page.close();
-});
+  await browser.close();
+}
 
-// Export the custom test object
-export { test };
+export default globalSetup;

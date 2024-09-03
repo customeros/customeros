@@ -24,6 +24,7 @@ export default defineConfig({
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   // Update the reporter configuration
   reporter: [['html'], ['list'], ['./playwrightCustomReporter.ts']],
+  globalSetup: './tests/global-setup.ts', // Use the relative path to the global setup file
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */

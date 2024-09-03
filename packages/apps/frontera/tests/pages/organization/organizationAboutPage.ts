@@ -1,6 +1,11 @@
 import { Page, expect } from '@playwright/test';
 
-import { writeTextInLocator, clickLocatorsThatAreVisible } from '../../helper';
+import {
+  writeTextInLocator,
+  createRequestPromise,
+  createResponsePromise,
+  clickLocatorsThatAreVisible,
+} from '../../helper';
 
 export class OrganizationAboutPage {
   constructor(page: Page) {
@@ -36,43 +41,22 @@ export class OrganizationAboutPage {
   async addWebsiteToOrg() {
     await clickLocatorsThatAreVisible(this.page, this.orgAboutWww);
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(
+      this.page,
+      'website',
+      'www.qweasdzxc123ads.com',
+    );
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return (
-            parsedData.variables?.input?.website === 'www.qweasdzxc123ads.com'
-          );
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return (
-          responseBody.data?.organization_Update?.metadata?.id !== undefined
-        );
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Update?.metadata?.id',
+      undefined,
+    );
 
     await this.page
       .locator(this.orgAboutWww)
       .pressSequentially('www.qweasdzxc123ads.com', { delay: 500 });
+
     await Promise.all([requestPromise, responsePromise]);
   }
 
@@ -81,37 +65,17 @@ export class OrganizationAboutPage {
 
     await this.page.waitForSelector('[role="menuitem"]', { state: 'visible' });
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(
+      this.page,
+      'relationship',
+      'NOT_A_FIT',
+    );
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables?.input?.relationship === 'NOT_A_FIT';
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return (
-          responseBody.data?.organization_Update?.metadata?.id !== undefined
-        );
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Update?.metadata?.id',
+      undefined,
+    );
 
     await clickLocatorsThatAreVisible(this.page, this.relationshipNotAFit);
     await Promise.all([requestPromise, responsePromise]);
@@ -124,40 +88,17 @@ export class OrganizationAboutPage {
 
     await this.page.waitForSelector('[role="option"]', { state: 'visible' });
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(
+      this.page,
+      'industry',
+      'Independent Power and Renewable Electricity Producers',
+    );
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return (
-            parsedData.variables?.input?.industry ===
-            'Independent Power and Renewable Electricity Producers'
-          );
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return (
-          responseBody.data?.organization_Update?.metadata?.id !== undefined
-        );
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Update?.metadata?.id',
+      undefined,
+    );
 
     await clickLocatorsThatAreVisible(
       this.page,
@@ -176,37 +117,13 @@ export class OrganizationAboutPage {
 
     await this.page.waitForSelector('[role="option"]', { state: 'visible' });
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(this.page, 'market', 'B2C');
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables?.input?.market === 'B2C';
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return (
-          responseBody.data?.organization_Update?.metadata?.id !== undefined
-        );
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Update?.metadata?.id',
+      undefined,
+    );
 
     await clickLocatorsThatAreVisible(this.page, this.businessTypeB2c);
     await this.page.waitForTimeout(500);
@@ -222,40 +139,17 @@ export class OrganizationAboutPage {
     await this.page.keyboard.press('f');
     await this.page.waitForSelector('[role="option"]', { state: 'visible' });
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(
+      this.page,
+      'lastFundingRound',
+      'FRIENDS_AND_FAMILY',
+    );
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return (
-            parsedData.variables?.input?.lastFundingRound ===
-            'FRIENDS_AND_FAMILY'
-          );
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return (
-          responseBody.data?.organization_Update?.metadata?.id !== undefined
-        );
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Update?.metadata?.id',
+      undefined,
+    );
 
     await clickLocatorsThatAreVisible(
       this.page,
@@ -275,37 +169,13 @@ export class OrganizationAboutPage {
 
     await this.page.waitForSelector('[role="option"]', { state: 'visible' });
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(this.page, 'employees', 10001);
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables?.input?.employees.toString() === '10001';
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return (
-          responseBody.data?.organization_Update?.metadata?.id !== undefined
-        );
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Update?.metadata?.id',
+      undefined,
+    );
 
     await clickLocatorsThatAreVisible(this.page, this.numberOfEmployees10KPlus);
     await this.page.waitForTimeout(500);
