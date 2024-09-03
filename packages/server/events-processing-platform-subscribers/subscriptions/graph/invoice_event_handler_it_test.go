@@ -509,6 +509,7 @@ func TestInvoiceEventHandler_OnInvoiceUpdateV1(t *testing.T) {
 		[]string{invoice.FieldMaskStatus, invoice.FieldMaskPaymentLink},
 		neo4jenum.InvoiceStatusPaid.String(),
 		"link-1",
+		nil,
 	)
 	require.Nil(t, err)
 

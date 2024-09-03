@@ -12,6 +12,8 @@ const (
 	InvoicePropertyFinalizedWebhookProcessedAt InvoiceProperty = "techInvoiceFinalizedWebhookProcessedAt"
 	InvoicePropertyPaidWebhookProcessedAt      InvoiceProperty = "techInvoicePaidWebhookProcessedAt"
 	InvoicePropertyInvoiceFinalizedEventSentAt InvoiceProperty = "techInvoiceFinalizedSentAt"
+	InvoicePropertyPaymentLink                 InvoiceProperty = "paymentLink"
+	InvoicePropertyPaymentLinkValidUntil       InvoiceProperty = "paymentLinkValidUntil"
 )
 
 type InvoiceEntity struct {
@@ -73,7 +75,8 @@ type InvoiceProvider struct {
 }
 
 type PaymentDetails struct {
-	PaymentLink string
+	PaymentLink           string
+	PaymentLinkValidUntil *time.Time
 }
 
 type InvoiceInternalFields struct {
