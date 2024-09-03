@@ -14,6 +14,8 @@ export const featureIconVariant = cva(
         primary: [],
         gray: [],
         grayBlue: [],
+        grayModern: [],
+        grayWarm: [],
         warm: [],
         error: [],
         rose: [],
@@ -27,6 +29,8 @@ export const featureIconVariant = cva(
         fuchsia: [],
         blue: [],
         yellow: [],
+        purple: [],
+        cyan: [],
         orangeDark: [],
       },
     },
@@ -50,9 +54,15 @@ export const featureIconVariant = cva(
         ],
       },
       {
-        colorScheme: 'warm',
+        colorScheme: 'grayModern',
         className: [
-          'bg-warm-100 ring-warm-50 ring-offset-warm-100 text-warm-600',
+          'bg-grayModern-100 ring-grayModern-50 ring-offset-grayModern-100 text-grayModern-600',
+        ],
+      },
+      {
+        colorScheme: 'grayWarm',
+        className: [
+          'bg-grayWarm-100 ring-grayWarm-50 ring-offset-grayWarm-100 text-grayWarm-600',
         ],
       },
       {
@@ -131,6 +141,18 @@ export const featureIconVariant = cva(
         colorScheme: 'orangeDark',
         className: [
           'bg-orangeDark-100 ring-orangeDark-50 ring-offset-orangeDark-100 text-orangeDark-600',
+        ],
+      },
+      {
+        colorScheme: 'purple',
+        className: [
+          'bg-purple-100 ring-purple-50 ring-offset-purple-100 text-purple-600',
+        ],
+      },
+      {
+        colorScheme: 'cyan',
+        className: [
+          'bg-cyan-100 ring-cyan-50 ring-offset-cyan-100 text-cyan-600',
         ],
       },
     ],

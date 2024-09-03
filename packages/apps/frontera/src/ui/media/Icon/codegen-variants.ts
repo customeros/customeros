@@ -1,7 +1,8 @@
 import fs from 'fs';
-const { format } = require('prettier');
+import { format } from 'prettier';
 
-const file = require('../../theme/colors');
+import * as file from '../../theme/colors';
+
 const prettierConfig = JSON.parse(
   fs.readFileSync(process.cwd() + '/.prettierrc', 'utf8'),
 );
@@ -36,11 +37,13 @@ export const featureIconVariant = cva(
   ['flex', 'justify-center', 'items-center', 'rounded-full', 'overflow-visible'],
   {
     variants: {
-     
+
       colorScheme: {
         primary: [],
         gray: [],
         grayBlue: [],
+        grayModern: [],
+        grayWarm: [],
         warm: [],
         error: [],
         rose: [],
@@ -54,6 +57,8 @@ export const featureIconVariant = cva(
         fuchsia: [],
         blue:[],
         yellow: [],
+        purple: [],
+        cyan: [],
         orangeDark: [],
       },
     },
@@ -67,6 +72,6 @@ const formattedContent = format(fileContent, {
   parser: 'babel',
 });
 
-const filePath = process.cwd() + '/ui/media/Icon/Icon.variants.ts';
+const filePath = process.cwd() + '/src/ui/media/Icon/Icon.variants.ts';
 
 fs.writeFile(filePath, formattedContent, () => {});
