@@ -37,6 +37,10 @@ type Config struct {
 	AppConfig struct {
 		TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
 	}
+	IntegrationApp struct {
+		WorkspaceKey    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
+		WorkspaceSecret string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
+	}
 }
 
 func InitConfig() (*Config, error) {

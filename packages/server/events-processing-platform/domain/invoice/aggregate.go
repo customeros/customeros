@@ -290,7 +290,7 @@ func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.Updat
 	status := InvoiceStatus(r.Status).String()
 
 	events := []eventstore.Event{}
-	updateEvent, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status, r.PaymentLink)
+	updateEvent, err := NewInvoiceUpdateEvent(a, updatedAtNotNil, fieldsMask, status, r.PaymentLink, utils.TimestampProtoToTimePtr(r.PaymentLinkValidUntil))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUpdateInvoiceEvent")
@@ -517,6 +517,7 @@ func (a *InvoiceAggregate) onUpdateInvoice(evt eventstore.Event) error {
 	}
 	if eventData.UpdatePaymentLink() {
 		a.Invoice.PaymentLink = eventData.PaymentLink
+		a.Invoice.PaymentLinkValidUntil = eventData.PaymentLinkValidUntil
 	}
 
 	return nil

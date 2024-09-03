@@ -123,6 +123,7 @@ message UpdateInvoiceRequest {
   InvoiceStatus status = 6;
   repeated InvoiceFieldMask fieldsMask = 7;
   string paymentLink = 8;
+  google.protobuf.Timestamp paymentLinkValidUntil = 9;
 }
 
 message PayInvoiceNotificationRequest {

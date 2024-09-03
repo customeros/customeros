@@ -97,7 +97,8 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			Region:               utils.GetStringPropOrEmpty(props, "providerAddressRegion"),
 		},
 		PaymentDetails: entity.PaymentDetails{
-			PaymentLink: utils.GetStringPropOrEmpty(props, "paymentLink"),
+			PaymentLink:           utils.GetStringPropOrEmpty(props, string(entity.InvoicePropertyPaymentLink)),
+			PaymentLinkValidUntil: utils.GetTimePropOrNil(props, string(entity.InvoicePropertyPaymentLinkValidUntil)),
 		},
 		InvoiceInternalFields: entity.InvoiceInternalFields{
 			InvoiceFinalizedSentAt:             utils.GetTimePropOrNil(props, string(entity.InvoicePropertyInvoiceFinalizedEventSentAt)),

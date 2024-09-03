@@ -17,6 +17,7 @@ import (
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -200,6 +201,23 @@ func (s *invoiceService) syncInvoice(ctx context.Context, syncMutex *sync.Mutex,
 		if invoiceInput.PaymentLink != "" {
 			invoiceGrpcRequest.PaymentLink = invoiceInput.PaymentLink
 			fieldsMask = append(invoiceGrpcRequest.FieldsMask, invoicepb.InvoiceFieldMask_INVOICE_FIELD_PAYMENT_LINK)
+
+			if invoiceInput.PaymentLinkValidHours != "" {
+				paymentLinkValidHours, err := strconv.Atoi(invoiceInput.PaymentLinkValidHours)
+				if err != nil {
+					// default to 24 hours
+					paymentLinkValidHours = 24
+				}
+				if paymentLinkValidHours > 1 {
+					// reduce 30 minutes from the valid until time to make sure the payment link is still valid
+					validUntil := utils.Now().Add(time.Minute * time.Duration(paymentLinkValidHours*60-30))
+					invoiceGrpcRequest.PaymentLinkValidUntil = utils.ConvertTimeToTimestampPtr(&validUntil)
+				} else if paymentLinkValidHours == 1 {
+					// reduce 15 minutes from the valid until time to make sure the payment link is still valid
+					validUntil := utils.Now().Add(time.Minute * 45)
+					invoiceGrpcRequest.PaymentLinkValidUntil = utils.ConvertTimeToTimestampPtr(&validUntil)
+				}
+			}
 		}
 		invoiceGrpcRequest.FieldsMask = fieldsMask
 

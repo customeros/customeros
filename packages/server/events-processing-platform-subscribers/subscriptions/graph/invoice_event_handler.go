@@ -293,10 +293,11 @@ func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventst
 	}
 
 	data := neo4jrepository.InvoiceUpdateFields{
-		Status:            neo4jenum.DecodeInvoiceStatus(eventData.Status),
-		PaymentLink:       eventData.PaymentLink,
-		UpdateStatus:      eventData.UpdateStatus(),
-		UpdatePaymentLink: eventData.UpdatePaymentLink(),
+		Status:                neo4jenum.DecodeInvoiceStatus(eventData.Status),
+		PaymentLink:           eventData.PaymentLink,
+		PaymentLinkValidUntil: eventData.PaymentLinkValidUntil,
+		UpdateStatus:          eventData.UpdateStatus(),
+		UpdatePaymentLink:     eventData.UpdatePaymentLink(),
 	}
 	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.UpdateInvoice(ctx, eventData.Tenant, invoiceId, data)
 	if err != nil {
