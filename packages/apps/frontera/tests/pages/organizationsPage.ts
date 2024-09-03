@@ -4,6 +4,8 @@ import { Page, expect, TestInfo } from '@playwright/test';
 import {
   retryOperation,
   assertWithRetry,
+  createRequestPromise,
+  createResponsePromise,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
 } from '../helper';
@@ -94,18 +96,22 @@ export class OrganizationsPage {
       );
     }
 
+    const requestPromise = createRequestPromise(
+      this.page,
+      'name',
+      organizationName,
+    );
+
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Create?.metadata?.id',
+      undefined,
+    );
+
     await this.page.keyboard.type(organizationName);
     await this.page.keyboard.press('Enter');
 
-    const orgCreationResp = await this.page.waitForResponse(
-      '**/customer-os-api',
-    );
-    const orgCreationJson = await orgCreationResp.json();
-
-    expect(
-      'error' in orgCreationJson,
-      `The createOrganization mutation returned errors`,
-    ).toBe(false);
+    await Promise.all([requestPromise, responsePromise]);
     await this.page.waitForSelector(
       `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
       { timeout: 30000 },

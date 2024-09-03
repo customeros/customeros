@@ -2,6 +2,8 @@ import { Page, expect } from '@playwright/test';
 
 import {
   writeTextInLocator,
+  createRequestPromise,
+  createResponsePromise,
   ensureLocatorIsVisible,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
@@ -59,45 +61,13 @@ export class OrganizationPeoplePage {
       this.orgPeopleContactName,
     );
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(this.page, 'name', 'John Doe');
 
-        if (postData) {
-          try {
-            const parsedData = JSON.parse(postData);
-
-            if (parsedData?.variables?.input?.name) {
-              return parsedData.variables.input.name === 'John Doe';
-            }
-          } catch (e) {
-            console.warn('Failed to parse request postData:', e);
-
-            return false;
-          }
-
-          return false;
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return responseBody.data?.contact_Update?.id !== undefined;
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'contact_Update?.id',
+      undefined,
+    );
 
     await orgPeopleContactNameInput.pressSequentially('John Doe', {
       delay: 500,
@@ -111,35 +81,13 @@ export class OrganizationPeoplePage {
       this.orgPeopleContactTitle,
     );
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(this.page, 'jobTitle', 'CTO');
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables.input?.jobTitle === 'CTO';
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return responseBody.data?.jobRole_Create?.id !== undefined;
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'jobRole_Create?.id',
+      undefined,
+    );
 
     await orgPeopleContactTitleInput.pressSequentially('CTO', { delay: 500 });
     await Promise.all([requestPromise, responsePromise]);
@@ -157,35 +105,17 @@ export class OrganizationPeoplePage {
 
     const influencerOption = this.page.locator(this.jobRoleInfluencer);
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(
+      this.page,
+      'description',
+      'Influencer',
+    );
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables.input?.description === 'Influencer';
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return responseBody.data?.jobRole_Create?.id !== undefined;
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'jobRole_Create?.id',
+      undefined,
+    );
 
     await influencerOption.click();
     await this.page.waitForTimeout(500);
@@ -221,35 +151,17 @@ export class OrganizationPeoplePage {
       'www.linkedin.com/in/test',
     );
 
-    const requestPromise = page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(
+      this.page,
+      'url',
+      'www.linkedin.com/in/test',
+    );
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables.input?.url === 'www.linkedin.com/in/test';
-        }
-      }
-
-      return false;
-    });
-
-    const responsePromise = page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return responseBody.data?.contact_AddSocial?.id !== undefined;
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'contact_AddSocial?.id',
+      undefined,
+    );
 
     await clickLocatorsThatAreVisible(page, this.orgPeopleContactTimezone);
     await Promise.all([requestPromise, responsePromise]);

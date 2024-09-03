@@ -2,6 +2,7 @@ import { Page, expect, Locator } from '@playwright/test';
 
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
 import {
+  createRequestPromise,
   ensureLocatorIsVisible,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
@@ -149,18 +150,11 @@ export class OrganizationTimelinePage {
 
     await this.page.waitForResponse('**/customer-os-api');
 
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const payload = JSON.parse(request.postData() || '{}');
-
-        return payload.variables?.input?.content === 'Test Reminder!';
-      }
-
-      return false;
-    });
+    const requestPromise = createRequestPromise(
+      this.page,
+      'content',
+      'Test Reminder!',
+    );
 
     // Type the note
     await timelineReminderEditor.pressSequentially('Test Reminder!', {

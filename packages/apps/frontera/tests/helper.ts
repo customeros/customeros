@@ -161,3 +161,61 @@ export async function clickLocatorThatIsVisibleAndHasText(
 
   await page.click(selector);
 }
+
+export function createRequestPromise(
+  page: Page,
+  requestsKey: string,
+  requestValue: string | number,
+) {
+  return page.waitForRequest((request) => {
+    if (
+      request.method() === 'POST' &&
+      request.url().includes('customer-os-api')
+    ) {
+      const postData = request.postData();
+
+      if (postData) {
+        const parsedData = JSON.parse(postData);
+
+        return parsedData.variables?.input?.[requestsKey] === requestValue;
+      }
+    }
+
+    return false;
+  });
+}
+
+export function createResponsePromise(
+  page: Page,
+  responseKey: string,
+  responseValue: string | undefined,
+) {
+  return page.waitForResponse(async (response) => {
+    if (
+      response.request().method() === 'POST' &&
+      response.url().includes('customer-os-api')
+    ) {
+      const responseBody = await response.json();
+
+      const getNestedProperty = (obj: unknown, path: string): unknown => {
+        return path.split('.').reduce((prev, curr) => {
+          if (curr.endsWith('?')) {
+            curr = curr.slice(0, -1);
+          }
+
+          if (prev && typeof prev === 'object' && curr in prev) {
+            return (prev as Record<string, unknown>)[curr];
+          } else {
+            return undefined;
+          }
+        }, obj);
+      };
+
+      const actualValue = getNestedProperty(responseBody.data, responseKey);
+
+      return actualValue !== responseValue;
+    }
+
+    return false;
+  });
+}

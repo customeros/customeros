@@ -3,6 +3,8 @@ import { Page, expect } from '@playwright/test';
 import {
   retryOperation,
   assertWithRetry,
+  createRequestPromise,
+  createResponsePromise,
   clickLocatorsThatAreVisible,
   clickLocatorThatIsVisibleWithIndex,
   clickLocatorThatIsVisibleAndHasText,
@@ -56,7 +58,7 @@ export class OrganizationAccountPage {
       this.orgAccountEmptyAddContract,
     );
 
-    const response = await this.page.waitForResponse(
+    await this.page.waitForResponse(
       (response) =>
         response.url().includes('customer-os-api') &&
         response
@@ -64,10 +66,6 @@ export class OrganizationAccountPage {
           .then((body) => body.data && body.data.contract_Update !== undefined)
           .catch(() => false),
     );
-
-    // Optional: You can log or assert the response data if needed
-    await response.json();
-    // await this.page.waitForResponse('**/customer-os-api');
   }
 
   async addContractNonEmpty() {
@@ -78,7 +76,6 @@ export class OrganizationAccountPage {
   }
 
   async addBillingAddress(contractIndex: number) {
-    await this.page.waitForResponse('**/customer-os-api');
     await this.openContractDotsMenu(contractIndex);
     await clickLocatorsThatAreVisible(
       this.page,
@@ -205,53 +202,28 @@ export class OrganizationAccountPage {
       '.ProseMirror',
     );
 
-    // Set up the request listener before typing
-    const requestPromise = this.page.waitForRequest((request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+    const requestPromise = createRequestPromise(
+      this.page,
+      'notes',
+      '<p>Test Note!</p>',
+    );
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-
-          return parsedData.variables?.input?.notes === '<p>Test Note!</p>';
-        }
-      }
-
-      return false;
-    });
-
-    // Set up the response listener
-    const responsePromise = this.page.waitForResponse(async (response) => {
-      if (
-        response.request().method() === 'POST' &&
-        response.url().includes('customer-os-api')
-      ) {
-        const responseBody = await response.json();
-
-        return (
-          responseBody.data?.organization_Update?.metadata?.id !== undefined
-        );
-      }
-
-      return false;
-    });
+    const responsePromise = createResponsePromise(
+      this.page,
+      'organization_Update?.metadata?.id',
+      undefined,
+    );
 
     // Type the note
     await editor.pressSequentially('Test Note!', { delay: 500 });
 
-    // Wait for both the request to be sent and the response to be received
     await Promise.all([requestPromise, responsePromise]);
 
-    // Wait a bit to ensure the UI has updated
     await this.page.waitForTimeout(1000);
 
     await this.page.reload();
 
-    // Wait for the editor to be visible after reload
-    await expect(editor).toBeVisible({ timeout: 20000 });
+    await expect(editor).toBeVisible({ timeout: 30000 });
 
     // Use a retry mechanism for checking the text
     await expect(async () => {

@@ -1,4 +1,5 @@
-import { test } from './hooks';
+import { test } from '@playwright/test';
+
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
 import { OrganizationsPage } from './pages/organizationsPage';
