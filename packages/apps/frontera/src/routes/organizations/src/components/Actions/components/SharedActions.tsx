@@ -3,6 +3,7 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 
 import { X } from '@ui/media/icons/X.tsx';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
+import { Delete } from '@ui/media/icons/Delete.tsx';
 import { Archive } from '@ui/media/icons/Archive.tsx';
 import { TableInstance } from '@ui/presentation/Table';
 import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
@@ -46,10 +47,20 @@ export const SharedTableActions = ({
         )}
 
         <ActionItem
-          tooltip='Archive'
           onClick={() => onHide()}
           dataTest='contacts-actions-archive'
           icon={<Archive className='text-inherit size-3' />}
+          tooltip={
+            <div className='flex gap-1'>
+              <span className='text-sm'>Archive</span>
+              <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
+                {isUserPlatformMac() ? '⌘' : 'Ctrl'}
+              </div>
+              <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
+                <Delete className='text-inherit' />
+              </div>
+            </div>
+          }
         >
           Archive
         </ActionItem>
@@ -57,7 +68,7 @@ export const SharedTableActions = ({
           onClick={onOpenCommandK}
           dataTest='org-actions-commandk'
           icon={
-            <span className='text-inherit'>
+            <span className='text-inherit w-auto h-auto'>
               {isUserPlatformMac() ? '⌘' : 'Ctrl'}
             </span>
           }

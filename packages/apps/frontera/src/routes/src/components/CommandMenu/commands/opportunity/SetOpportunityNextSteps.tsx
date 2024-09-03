@@ -23,6 +23,8 @@ export const SetOpportunityNextSteps = observer(() => {
     .otherwise(() => 'Change ARR estimate');
 
   const handleEnterKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    e.stopPropagation();
+
     if (e.key === 'Enter' && e.metaKey) {
       opportunity?.update((o) => {
         const plainTextValue = value;

@@ -9,6 +9,7 @@ import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { OrganizationStage } from '@graphql/types';
+import { Delete } from '@ui/media/icons/Delete.tsx';
 import { useModKey } from '@shared/hooks/useModKey';
 import { CommandKbd } from '@ui/overlay/CommandMenu';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
@@ -179,12 +180,12 @@ export const OrganizationTableActions = ({
         <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
           {selectCount && (
             <Tooltip
-              className='p-1 pl-2'
+              className='p-1.5'
               label={
                 <div className='flex items-center text-sm'>
                   Open command menu
                   <CommandKbd className='bg-gray-600 text-gray-25 mx-1' />
-                  <div className='bg-gray-600 text-xs h-5 w-5 rounded-sm flex justify-center items-center'>
+                  <div className='bg-gray-600 text-xs min-h-5 min-w-5 rounded-sm flex justify-center items-center'>
                     K
                   </div>
                 </div>
@@ -206,15 +207,26 @@ export const OrganizationTableActions = ({
 
           <ActionItem
             onClick={onHide}
-            tooltip='Archive'
             dataTest='org-actions-archive'
             icon={<Archive className='text-inherit size-3' />}
+            tooltip={
+              <div className='flex gap-1'>
+                <span className='text-sm'>Archive</span>
+                <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
+                  {isUserPlatformMac() ? '⌘' : 'Ctrl'}
+                </div>
+                <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
+                  <Delete className='text-inherit' />
+                </div>
+              </div>
+            }
           >
             Archive
           </ActionItem>
           {selectCount > 1 && (
             <ActionItem
               onClick={handleMergeOrganizations}
+              tooltip={<span className='text-sm'>Merge</span>}
               icon={<Copy07 className='text-inherit size-3' />}
             >
               Merge
@@ -224,7 +236,7 @@ export const OrganizationTableActions = ({
             onClick={onOpenCommandK}
             dataTest='org-actions-commandk'
             icon={
-              <span className='text-inherit'>
+              <span className='text-inherit w-auto h-auto'>
                 {isUserPlatformMac() ? '⌘' : 'Ctrl'}
               </span>
             }

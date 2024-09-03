@@ -78,8 +78,15 @@ export class CommandMenuStore {
     },
   ) {
     runInAction(() => {
-      this.isOpen = open;
-      this.type = options?.type ?? this.type;
+      setTimeout(() => {
+        /**
+         * Note: The 10ms timeout prevents event propagation issues
+         * with CMDK's onSelect handler, avoiding conflicts between
+         * the menu and its parent components (e.g., tables).
+         */
+        this.isOpen = open;
+        this.type = options?.type ?? this.type;
+      }, 10);
     });
   }
 
@@ -91,12 +98,19 @@ export class CommandMenuStore {
 
   toggle(type?: CommandMenuType, context?: Context) {
     runInAction(() => {
-      this.isOpen = !this.isOpen;
-      this.type = type ?? 'GlobalHub';
+      /**
+       * Note: The 10ms timeout prevents event propagation issues
+       * with CMDK's onSelect handler, avoiding conflicts between
+       * the menu and its parent components (e.g., tables).
+       */
+      setTimeout(() => {
+        this.isOpen = !this.isOpen;
+        this.type = type ?? 'GlobalHub';
 
-      if (context) {
-        Object.assign(this.context, context);
-      }
+        if (context) {
+          Object.assign(this.context, context);
+        }
+      }, 10);
     });
   }
 
