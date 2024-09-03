@@ -51,6 +51,7 @@ type InvoiceProps = {
   isInvoiceBankDetailsHovered?: boolean;
   isInvoiceBankDetailsFocused?: boolean;
   onOpenAddressDetailsModal?: () => void;
+  billingPeriodsInMonths?: number | null;
   canPayWithBankTransfer?: boolean | null;
   lines: InvoiceLine[] | InvoiceLineSimulate[];
   availableBankAccount?: Partial<BankAccount> | null;
@@ -81,6 +82,7 @@ export function Invoice({
   invoicePeriodEnd,
   onOpenAddressDetailsModal,
   shouldBlurDummy,
+  billingPeriodsInMonths,
 }: InvoiceProps) {
   const isInvoiceMetaSectionBlurred =
     isBilledToFocused || isInvoiceProviderFocused;
@@ -172,6 +174,7 @@ export function Invoice({
             services={lines ?? []}
             invoicePeriodEnd={invoicePeriodEnd}
             invoicePeriodStart={invoicePeriodStart}
+            billingPeriodsInMonths={billingPeriodsInMonths}
           />
           <InvoiceSummary
             tax={tax}

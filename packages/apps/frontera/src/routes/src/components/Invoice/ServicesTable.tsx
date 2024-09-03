@@ -6,6 +6,7 @@ type ServicesTableProps = {
   currency: string;
   invoicePeriodEnd?: string;
   invoicePeriodStart?: string;
+  billingPeriodsInMonths?: number | null;
   services: InvoiceLine[] | InvoiceLineSimulate[];
 };
 
@@ -26,6 +27,7 @@ export function ServicesTable({
   currency,
   invoicePeriodStart,
   invoicePeriodEnd,
+  billingPeriodsInMonths,
 }: ServicesTableProps) {
   return (
     <div className='w-full'>
@@ -81,17 +83,34 @@ export function ServicesTable({
                             {invoicePeriodStart &&
                               DateTimeUtils.format(
                                 invoicePeriodStart,
-                                DateTimeUtils.defaultFormatShortString,
+                                DateTimeUtils.dateWithAbreviatedMonth,
                               )}{' '}
                             {invoicePeriodEnd && invoicePeriodStart && '-'}
                             {''}
                             {invoicePeriodEnd &&
                               DateTimeUtils.format(
                                 invoicePeriodEnd,
-                                DateTimeUtils.defaultFormatShortString,
+                                DateTimeUtils.dateWithAbreviatedMonth,
                               )}
                           </>
                         )}
+
+                        {isGenerated &&
+                          getBilledTypeMonths(
+                            isGenerated?.contractLineItem?.billingCycle,
+                          ) !== billingPeriodsInMonths && (
+                            <span className='ml-2'>
+                              {formatCurrency(
+                                isGenerated.contractLineItem?.price,
+                                2,
+                                currency,
+                              )}
+                              {getBilledTypeLabel(
+                                isGenerated.contractLineItem
+                                  ?.billingCycle as BilledType,
+                              )}
+                            </span>
+                          )}
                       </div>
                     )}
                   </div>
@@ -115,4 +134,32 @@ export function ServicesTable({
       </div>
     </div>
   );
+}
+
+function getBilledTypeLabel(billedType: BilledType): string {
+  switch (billedType) {
+    case BilledType.Annually:
+      return '/year';
+    case BilledType.Monthly:
+      return '/month';
+
+    case BilledType.Quarterly:
+      return '/quarter';
+    default:
+      return '';
+  }
+}
+
+function getBilledTypeMonths(billedType: BilledType): number {
+  switch (billedType) {
+    case BilledType.Annually:
+      return 12;
+    case BilledType.Monthly:
+      return 1;
+
+    case BilledType.Quarterly:
+      return 3;
+    default:
+      return 1;
+  }
 }

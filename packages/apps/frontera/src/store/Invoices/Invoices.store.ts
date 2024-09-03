@@ -154,6 +154,7 @@ const INVOICES_QUERY = gql`
             id
           }
           billingDetails {
+            billingCycleInMonths
             canPayWithBankTransfer
           }
         }
@@ -202,6 +203,7 @@ const INVOICES_QUERY = gql`
           }
           contractLineItem {
             serviceStarted
+            price
             billingCycle
           }
           quantity
