@@ -7,7 +7,6 @@ import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive.tsx';
 import { TextInput } from '@ui/media/icons/TextInput';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { LayersTwo01 } from '@ui/media/icons/LayersTwo01.tsx';
 import {
@@ -46,18 +45,18 @@ export const EditableSideNavItem = observer(
 
     const dynamicClasses = cn(
       isActive
-        ? ['font-semibold', 'bg-gray-100']
+        ? ['font-semibold', 'bg-grayModern-100']
         : ['font-normal', 'bg-transparent'],
     );
 
     return (
       <Button
-        size='md'
+        size='sm'
         variant='ghost'
-        colorScheme='gray'
         data-test={dataTest}
         onClick={handleClick}
-        className={`w-full justify-start px-3 text-gray-700 group focus:shadow-EditableSideNavItemFocus ${dynamicClasses}`}
+        colorScheme='grayModern'
+        className={`w-full justify-start px-3 text-gray-700 group  focus:shadow-EditableSideNavItemFocus ${dynamicClasses}`}
       >
         <div>{typeof icon === 'function' ? icon(!!isActive) : icon}</div>
         <div
@@ -77,11 +76,9 @@ export const EditableSideNavItem = observer(
           )}
         >
           <Menu open={isEditing} onOpenChange={setIsEditing}>
-            <Tooltip label={label}>
-              <MenuButton className='min-w-6 h-5 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500'>
-                <DotsVertical className='text-inherit' />
-              </MenuButton>
-            </Tooltip>
+            <MenuButton className='min-w-6 h-5 rounded-md outline-none focus:outline-none text-gray-400 hover:text-gray-500'>
+              <DotsVertical className='text-inherit' />
+            </MenuButton>
 
             <MenuList align='end' side='bottom'>
               <MenuItem
