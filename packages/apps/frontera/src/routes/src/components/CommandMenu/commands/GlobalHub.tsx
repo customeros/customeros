@@ -11,6 +11,7 @@ import {
   CommandItem,
   CommandInput,
 } from '@ui/overlay/CommandMenu';
+import { GlobalSearchResultNavigationCommands } from '@shared/components/CommandMenu/commands/shared/GlobalSearchResultNavigationCommands.tsx';
 
 export const GlobalHub = () => {
   return (
@@ -25,7 +26,10 @@ export const GlobalHub = () => {
       />
 
       <Command.List>
-        <GlobalSharedCommands />
+        <GlobalSearchResultNavigationCommands />
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
       </Command.List>
     </Command>
   );
