@@ -71,6 +71,9 @@ export const InvoicePreviewModalContent = ({
       invoiceNumber={invoice?.invoiceNumber ?? ''}
       invoicePeriodStart={invoice?.invoicePeriodStart}
       lines={(invoice?.invoiceLineItems as Array<InvoiceLine>) ?? []}
+      billingPeriodsInMonths={
+        invoice?.contract?.billingDetails?.billingCycleInMonths
+      }
       availableBankAccount={
         invoiceStore?.bankAccounts?.find(
           (e) => e?.value.currency === invoice?.currency,
