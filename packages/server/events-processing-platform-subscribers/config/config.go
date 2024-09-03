@@ -169,6 +169,9 @@ type Services struct {
 		ApiKey string `env:"NOVU_API_KEY,required" envDefault:"N/A"`
 	}
 	FileStoreApiConfig fsc.FileStoreApiConfig
+	CustomerOsApi      struct {
+		ApiUrl string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
+	}
 }
 
 type EventNotifications struct {
