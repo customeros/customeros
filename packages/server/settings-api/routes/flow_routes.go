@@ -1,11 +1,9 @@
 package routes
 
 import (
-	"context"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/settings-api/service"
 	"regexp"
 	"strconv"
@@ -1448,203 +1446,203 @@ func InitSequenceRoutes(r *gin.Engine, services *service.Services) {
 //		c.Status(200)
 //	}
 //}
-
-func retrieveFlow(services *service.Services, ctx context.Context, tenant, flowId string) (*postgresEntity.Flow, error) {
-	if !isValidId(flowId) {
-		return nil, nil
-	}
-
-	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
-	if err != nil {
-		return nil, err
-	}
-
-	if flow == nil {
-		return nil, nil
-	}
-
-	return flow, nil
-}
-
-func retrieveFlowSequence(services *service.Services, ctx context.Context, tenant, flowId, sequenceId string) (*postgresEntity.FlowSequence, error) {
-	if !isValidId(flowId) {
-		return nil, nil
-	}
-	if !isValidId(sequenceId) {
-		return nil, nil
-	}
-
-	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
-	if err != nil {
-		return nil, err
-	}
-
-	if flow == nil {
-		return nil, nil
-	}
-
-	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
-	if err != nil {
-		return nil, err
-	}
-
-	if sequence == nil {
-		return nil, nil
-	}
-
-	if sequence.FlowId != flow.ID {
-		return nil, nil
-	}
-
-	return sequence, nil
-}
-
-func retrieveFlowSequenceStep(services *service.Services, ctx context.Context, tenant, flowId, sequenceId, stepId string) (*postgresEntity.FlowSequenceStep, error) {
-	if !isValidId(flowId) {
-		return nil, nil
-	}
-	if !isValidId(sequenceId) {
-		return nil, nil
-	}
-	if !isValidId(stepId) {
-		return nil, nil
-	}
-
-	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
-	if err != nil {
-		return nil, err
-	}
-
-	if flow == nil {
-		return nil, nil
-	}
-
-	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
-	if err != nil {
-		return nil, err
-	}
-
-	if sequence == nil {
-		return nil, nil
-	}
-
-	if sequence.FlowId != flow.ID {
-		return nil, nil
-	}
-
-	step, err := services.CommonServices.FlowService.GetFlowSequenceStepById(ctx, tenant, stepId)
-	if err != nil {
-		return nil, err
-	}
-
-	if step == nil {
-		return nil, nil
-	}
-
-	if step.SequenceId != sequence.ID {
-		return nil, nil
-	}
-
-	return step, nil
-}
-
-func retrieveFlowSequenceContact(services *service.Services, ctx context.Context, tenant, flowId, sequenceId, contactId string) (*postgresEntity.FlowSequenceContact, error) {
-	if !isValidId(flowId) {
-		return nil, nil
-	}
-	if !isValidId(sequenceId) {
-		return nil, nil
-	}
-	if !isValidId(contactId) {
-		return nil, nil
-	}
-
-	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
-	if err != nil {
-		return nil, err
-	}
-
-	if flow == nil {
-		return nil, nil
-	}
-
-	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
-	if err != nil {
-		return nil, err
-	}
-
-	if sequence == nil {
-		return nil, nil
-	}
-
-	if sequence.FlowId != flow.ID {
-		return nil, nil
-	}
-
-	contact, err := services.CommonServices.FlowService.GetFlowSequenceContactById(ctx, tenant, contactId)
-	if err != nil {
-		return nil, err
-	}
-
-	if contact == nil {
-		return nil, nil
-	}
-
-	if contact.SequenceId != sequence.ID {
-		return nil, nil
-	}
-
-	return contact, nil
-}
-
-func retrieveFlowSequenceSender(services *service.Services, ctx context.Context, tenant, flowId, sequenceId, senderId string) (*postgresEntity.FlowSequenceSender, error) {
-	if !isValidId(flowId) {
-		return nil, nil
-	}
-	if !isValidId(sequenceId) {
-		return nil, nil
-	}
-	if !isValidId(senderId) {
-		return nil, nil
-	}
-
-	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
-	if err != nil {
-		return nil, err
-	}
-
-	if flow == nil {
-		return nil, nil
-	}
-
-	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
-	if err != nil {
-		return nil, err
-	}
-
-	if sequence == nil {
-		return nil, nil
-	}
-
-	if sequence.FlowId != flow.ID {
-		return nil, nil
-	}
-
-	sender, err := services.CommonServices.FlowService.GetFlowSequenceSenderById(ctx, tenant, senderId)
-	if err != nil {
-		return nil, err
-	}
-
-	if sender == nil {
-		return nil, nil
-	}
-
-	if sender.SequenceId != sequence.ID {
-		return nil, nil
-	}
-
-	return sender, nil
-}
+//
+//func retrieveFlow(services *service.Services, ctx context.Context, tenant, flowId string) (*postgresEntity.Flow, error) {
+//	if !isValidId(flowId) {
+//		return nil, nil
+//	}
+//
+//	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if flow == nil {
+//		return nil, nil
+//	}
+//
+//	return flow, nil
+//}
+//
+//func retrieveFlowSequence(services *service.Services, ctx context.Context, tenant, flowId, sequenceId string) (*postgresEntity.FlowSequence, error) {
+//	if !isValidId(flowId) {
+//		return nil, nil
+//	}
+//	if !isValidId(sequenceId) {
+//		return nil, nil
+//	}
+//
+//	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if flow == nil {
+//		return nil, nil
+//	}
+//
+//	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if sequence == nil {
+//		return nil, nil
+//	}
+//
+//	if sequence.FlowId != flow.ID {
+//		return nil, nil
+//	}
+//
+//	return sequence, nil
+//}
+//
+//func retrieveFlowSequenceStep(services *service.Services, ctx context.Context, tenant, flowId, sequenceId, stepId string) (*postgresEntity.FlowSequenceStep, error) {
+//	if !isValidId(flowId) {
+//		return nil, nil
+//	}
+//	if !isValidId(sequenceId) {
+//		return nil, nil
+//	}
+//	if !isValidId(stepId) {
+//		return nil, nil
+//	}
+//
+//	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if flow == nil {
+//		return nil, nil
+//	}
+//
+//	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if sequence == nil {
+//		return nil, nil
+//	}
+//
+//	if sequence.FlowId != flow.ID {
+//		return nil, nil
+//	}
+//
+//	step, err := services.CommonServices.FlowService.GetFlowSequenceStepById(ctx, tenant, stepId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if step == nil {
+//		return nil, nil
+//	}
+//
+//	if step.SequenceId != sequence.ID {
+//		return nil, nil
+//	}
+//
+//	return step, nil
+//}
+//
+//func retrieveFlowSequenceContact(services *service.Services, ctx context.Context, tenant, flowId, sequenceId, contactId string) (*postgresEntity.FlowSequenceContact, error) {
+//	if !isValidId(flowId) {
+//		return nil, nil
+//	}
+//	if !isValidId(sequenceId) {
+//		return nil, nil
+//	}
+//	if !isValidId(contactId) {
+//		return nil, nil
+//	}
+//
+//	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if flow == nil {
+//		return nil, nil
+//	}
+//
+//	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if sequence == nil {
+//		return nil, nil
+//	}
+//
+//	if sequence.FlowId != flow.ID {
+//		return nil, nil
+//	}
+//
+//	contact, err := services.CommonServices.FlowService.GetFlowSequenceContactById(ctx, tenant, contactId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if contact == nil {
+//		return nil, nil
+//	}
+//
+//	if contact.SequenceId != sequence.ID {
+//		return nil, nil
+//	}
+//
+//	return contact, nil
+//}
+//
+//func retrieveFlowSequenceSender(services *service.Services, ctx context.Context, tenant, flowId, sequenceId, senderId string) (*postgresEntity.FlowSequenceSender, error) {
+//	if !isValidId(flowId) {
+//		return nil, nil
+//	}
+//	if !isValidId(sequenceId) {
+//		return nil, nil
+//	}
+//	if !isValidId(senderId) {
+//		return nil, nil
+//	}
+//
+//	flow, err := services.CommonServices.FlowService.GetFlowById(ctx, tenant, flowId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if flow == nil {
+//		return nil, nil
+//	}
+//
+//	sequence, err := services.CommonServices.FlowService.GetFlowSequenceById(ctx, tenant, sequenceId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if sequence == nil {
+//		return nil, nil
+//	}
+//
+//	if sequence.FlowId != flow.ID {
+//		return nil, nil
+//	}
+//
+//	sender, err := services.CommonServices.FlowService.GetFlowSequenceSenderById(ctx, tenant, senderId)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	if sender == nil {
+//		return nil, nil
+//	}
+//
+//	if sender.SequenceId != sequence.ID {
+//		return nil, nil
+//	}
+//
+//	return sender, nil
+//}
 
 func getPaginationRequest(c *gin.Context) (*utils.PaginationRequestBody, error) {
 	var paginationRequest utils.PaginationRequestBody
