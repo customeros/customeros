@@ -1,63 +1,36 @@
-import { useState } from 'react';
-
-import { useQueryClient } from '@tanstack/react-query';
-import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
-import { useCreateBankAccountMutation } from '@settings/graphql/createBankAccount.generated';
+import { observer } from 'mobx-react-lite';
 import { currencyIcon } from '@settings/components/Tabs/panels/BillingPanel/components/utils';
 
 import { Plus } from '@ui/media/icons/Plus';
+import { useStore } from '@shared/hooks/useStore';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { currencyOptions } from '@shared/util/currencyOptions';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 
-export const AddAccountButton = ({
-  existingCurrencies,
-  legalName,
-}: {
-  legalName?: string | null;
-  existingCurrencies: Array<string>;
-}) => {
-  const [showCurrencySelect, setShowCurrencySelect] = useState(false);
-  const queryKey = useBankAccountsQuery.getKey();
-  const queryClient = useQueryClient();
-  const client = getGraphQLClient();
+export const AddAccountButton = observer(
+  ({
+    existingCurrencies,
+    legalName,
+  }: {
+    legalName?: string | null;
+    existingCurrencies: Array<string>;
+  }) => {
+    const store = useStore();
 
-  const { mutate } = useCreateBankAccountMutation(client, {
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
-    onSettled: () => {
-      setShowCurrencySelect(false);
-    },
-  });
-
-  return (
-    <>
-      {!showCurrencySelect && (
-        <Tooltip label='Add new bank account'>
-          <IconButton
-            size='xs'
-            icon={<Plus />}
-            variant='ghost'
-            colorScheme='gray'
-            aria-label='Add account'
-            onClick={() => setShowCurrencySelect(true)}
-          />
-        </Tooltip>
-      )}
-
-      {showCurrencySelect && (
+    return (
+      <>
         <Menu>
           <MenuButton>
-            <IconButton
-              size='md'
-              icon={<Plus />}
-              variant='ghost'
-              colorScheme='gray'
-              aria-label='Account currency'
-            />
+            <Tooltip label='Add new bank account'>
+              <IconButton
+                size='sm'
+                variant='ghost'
+                colorScheme='gray'
+                aria-label='Account currency'
+                icon={<Plus className='size-4' />}
+              />
+            </Tooltip>
           </MenuButton>
           <MenuList>
             {currencyOptions.map((option) => (
@@ -65,11 +38,9 @@ export const AddAccountButton = ({
                 key={option.value}
                 disabled={existingCurrencies?.indexOf(option.value) > -1}
                 onSelect={() => {
-                  mutate({
-                    input: {
-                      currency: option.value,
-                      bankName: legalName,
-                    },
+                  store.settings.bankAccounts.create({
+                    currency: option.value,
+                    bankName: `${legalName} account`,
                   });
                 }}
               >
@@ -79,7 +50,7 @@ export const AddAccountButton = ({
             ))}
           </MenuList>
         </Menu>
-      )}
-    </>
-  );
-};
+      </>
+    );
+  },
+);
