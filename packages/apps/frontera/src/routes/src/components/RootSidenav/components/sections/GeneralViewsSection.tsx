@@ -9,6 +9,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Users01 } from '@ui/media/icons/Users01';
 import { Invoice } from '@ui/media/icons/Invoice.tsx';
 import { Building07 } from '@ui/media/icons/Building07';
+import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Signature } from '@ui/media/icons/Signature.tsx';
 import { Preferences } from '@shared/components/RootSidenav/hooks';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
@@ -47,6 +48,9 @@ export const GeneralViewsSection = observer(
     );
     const opportunitiesView = store.tableViewDefs.getById(
       store.tableViewDefs.opportunitiesTablePreset ?? '',
+    );
+    const flowSequencesView = store.tableViewDefs.getById(
+      store.tableViewDefs.flowSequencesPreset ?? '',
     );
 
     const invoicesViews = [
@@ -108,7 +112,6 @@ export const GeneralViewsSection = observer(
                 />
               )}
             />
-
             <RootSidenavItem
               label='Opportunities'
               id={opportunitiesView?.value?.id}
@@ -128,7 +131,6 @@ export const GeneralViewsSection = observer(
                 />
               )}
             />
-
             {showInvoices && upcomingInvoices && (
               <RootSidenavItem
                 label='Invoices'
@@ -165,6 +167,25 @@ export const GeneralViewsSection = observer(
               })}
               icon={(isActive) => (
                 <Signature
+                  className={cn(
+                    'size-4 min-w-4 text-gray-500',
+                    isActive && 'text-gray-700',
+                  )}
+                />
+              )}
+            />
+            <RootSidenavItem
+              label='Sequences'
+              id={flowSequencesView?.value?.id}
+              dataTest={`side-nav-item-all-sequences`}
+              onClick={() =>
+                handleItemClick(`finder?preset=${flowSequencesView?.value?.id}`)
+              }
+              isActive={checkIsActive('finder', {
+                preset: flowSequencesView?.value?.id ?? '',
+              })}
+              icon={(isActive) => (
+                <Shuffle01
                   className={cn(
                     'size-4 min-w-4 text-gray-500',
                     isActive && 'text-gray-700',

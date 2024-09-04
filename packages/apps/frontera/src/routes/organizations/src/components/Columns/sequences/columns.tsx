@@ -1,0 +1,113 @@
+import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
+import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store.ts';
+
+import { Skeleton } from '@ui/feedback/Skeleton';
+import { createColumnHelper } from '@ui/presentation/Table';
+import { TableViewDef, ColumnViewType } from '@graphql/types';
+import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
+import { StatusFilter } from '@organizations/components/Columns/sequences/Filters';
+import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
+import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig';
+
+type ColumnDatum = FlowSequenceStore;
+
+// REASON: we do not care about exhaustively typing this TValue type
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type Column = ColumnDefinition<ColumnDatum, any>;
+
+const columnHelper = createColumnHelper<ColumnDatum>();
+
+const columns: Record<string, Column> = {
+  [ColumnViewType.FlowName]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowName,
+    size: 150,
+    minSize: 150,
+    maxSize: 300,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        title='Sequence'
+        filterWidth={250}
+        id={ColumnViewType.FlowName}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (props) => <TextCell text={props.row?.original?.value?.name ?? ''} />,
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+
+  [ColumnViewType.FlowSequenceName]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowSequenceName,
+    size: 150,
+    minSize: 150,
+    maxSize: 300,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        title='Flow'
+        filterWidth={250}
+        id={ColumnViewType.FlowSequenceName}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (props) => <TextCell text={props.row?.original?.value?.name ?? ''} />,
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+  [ColumnViewType.FlowSequenceStatus]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowSequenceStatus,
+    size: 150,
+    minSize: 150,
+    maxSize: 300,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        title='Status'
+        filterWidth={250}
+        renderFilter={() => <StatusFilter />}
+        id={ColumnViewType.FlowSequenceStatus}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (props) => (
+      <TextCell text={props.row?.original?.value?.status ?? ''} />
+    ),
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+
+  [ColumnViewType.FlowSequenceContactCount]: columnHelper.accessor(
+    (row) => row,
+    {
+      id: ColumnViewType.FlowSequenceContactCount,
+      size: 150,
+      minSize: 150,
+      maxSize: 300,
+      enableResizing: true,
+      enableColumnFilter: false,
+      enableSorting: true,
+      header: (props) => (
+        <THead
+          title='Contacts'
+          filterWidth={250}
+          id={ColumnViewType.FlowSequenceContactCount}
+          {...getTHeadProps(props)}
+        />
+      ),
+      cell: (props) => (
+        <TextCell
+          text={props.row?.original?.value?.contacts?.length?.toString() ?? ''}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+    },
+  ),
+};
+
+export const getSequenceColumnsConfig = (
+  tableViewDef?: Array<TableViewDef>[0],
+) => getColumnConfig<ColumnDatum>(columns, tableViewDef);

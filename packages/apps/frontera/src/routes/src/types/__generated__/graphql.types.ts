@@ -339,6 +339,15 @@ export enum ColumnViewType {
   ContractsRenewal = 'CONTRACTS_RENEWAL',
   ContractsRenewalDate = 'CONTRACTS_RENEWAL_DATE',
   ContractsStatus = 'CONTRACTS_STATUS',
+  FlowName = 'FLOW_NAME',
+  FlowSequenceContactCount = 'FLOW_SEQUENCE_CONTACT_COUNT',
+  FlowSequenceName = 'FLOW_SEQUENCE_NAME',
+  FlowSequenceStatus = 'FLOW_SEQUENCE_STATUS',
+  FlowSequenceStatusInProgressCount = 'FLOW_SEQUENCE_STATUS_IN_PROGRESS_COUNT',
+  FlowSequenceStatusPendingCount = 'FLOW_SEQUENCE_STATUS_PENDING_COUNT',
+  FlowSequenceStatusSuccessfulCount = 'FLOW_SEQUENCE_STATUS_SUCCESSFUL_COUNT',
+  FlowSequenceStatusUnsuccessfulCount = 'FLOW_SEQUENCE_STATUS_UNSUCCESSFUL_COUNT',
+  FlowStatus = 'FLOW_STATUS',
   InvoicesAmount = 'INVOICES_AMOUNT',
   InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
   InvoicesContract = 'INVOICES_CONTRACT',
@@ -1539,6 +1548,65 @@ export type FilterItem = {
   value: Scalars['Any']['input'];
 };
 
+export type Flow = MetadataInterface & {
+  __typename?: 'Flow';
+  description?: Maybe<Scalars['String']['output']>;
+  metadata: Metadata;
+  name?: Maybe<Scalars['String']['output']>;
+  sequences: Array<FlowSequence>;
+  status?: Maybe<FlowStatus>;
+};
+
+export type FlowSequence = MetadataInterface & {
+  __typename?: 'FlowSequence';
+  contacts: Array<FlowSequenceContact>;
+  description?: Maybe<Scalars['String']['output']>;
+  flow: Array<Flow>;
+  mailboxes: Array<Mailbox>;
+  metadata: Metadata;
+  name?: Maybe<Scalars['String']['output']>;
+  status?: Maybe<FlowSequenceStatus>;
+  steps: Array<FlowSequenceStep>;
+};
+
+export type FlowSequenceContact = MetadataInterface & {
+  __typename?: 'FlowSequenceContact';
+  contact: Contact;
+  email: Email;
+  metadata: Metadata;
+};
+
+export enum FlowSequenceStatus {
+  Active = 'ACTIVE',
+  Archived = 'ARCHIVED',
+  Inactive = 'INACTIVE',
+  Paused = 'PAUSED',
+}
+
+export type FlowSequenceStep = MetadataInterface & {
+  __typename?: 'FlowSequenceStep';
+  Template?: Maybe<Scalars['String']['output']>;
+  Text?: Maybe<Scalars['String']['output']>;
+  Type?: Maybe<Scalars['String']['output']>;
+  email: Email;
+  metadata: Metadata;
+  status: FlowSequenceStepStatus;
+};
+
+export enum FlowSequenceStepStatus {
+  Active = 'ACTIVE',
+  Archived = 'ARCHIVED',
+  Inactive = 'INACTIVE',
+  Paused = 'PAUSED',
+}
+
+export enum FlowStatus {
+  Active = 'ACTIVE',
+  Archived = 'ARCHIVED',
+  Inactive = 'INACTIVE',
+  Paused = 'PAUSED',
+}
+
 export enum FundingRound {
   Angel = 'ANGEL',
   Bridge = 'BRIDGE',
@@ -2055,6 +2123,12 @@ export type LogEntryUpdateInput = {
   content?: InputMaybe<Scalars['String']['input']>;
   contentType?: InputMaybe<Scalars['String']['input']>;
   startedAt?: InputMaybe<Scalars['Time']['input']>;
+};
+
+export type Mailbox = MetadataInterface & {
+  __typename?: 'Mailbox';
+  email: Scalars['String']['output'];
+  metadata: Metadata;
 };
 
 export enum Market {
@@ -4159,6 +4233,7 @@ export type Query = {
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
+  flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
   interactionEvent: InteractionEvent;
@@ -4184,6 +4259,7 @@ export type Query = {
   phoneNumber: PhoneNumber;
   reminder: Reminder;
   remindersForOrganization: Array<Reminder>;
+  sequences: Array<FlowSequence>;
   serviceLineItem: ServiceLineItem;
   slack_Channels: SlackChannelPage;
   tableViewDefs: Array<TableViewDef>;
@@ -4653,6 +4729,7 @@ export enum TableIdType {
   ContactsForTargetOrganizations = 'CONTACTS_FOR_TARGET_ORGANIZATIONS',
   Contracts = 'CONTRACTS',
   Customers = 'CUSTOMERS',
+  FlowSequences = 'FLOW_SEQUENCES',
   Opportunities = 'OPPORTUNITIES',
   OpportunitiesRecords = 'OPPORTUNITIES_RECORDS',
   Organizations = 'ORGANIZATIONS',
@@ -4704,6 +4781,7 @@ export type TableViewDefUpdateInput = {
 export enum TableViewType {
   Contacts = 'CONTACTS',
   Contracts = 'CONTRACTS',
+  Flow = 'FLOW',
   Invoices = 'INVOICES',
   Opportunities = 'OPPORTUNITIES',
   Organizations = 'ORGANIZATIONS',
