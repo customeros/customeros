@@ -1,0 +1,486 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Browser Automation Service (B.A.S)",
+    "description": "A sample API that uses a petstore as an example to demonstrate features in the swagger-2.0 specification",
+    "version": "1.0.0"
+  },
+  "host": "bas.customeros.ai",
+  "basePath": "/",
+  "paths": {
+    "/browser/config": {
+      "get": {
+        "summary": "Get the browser configuration for the requesting CustomerOS user",
+        "description": "Returns the BrowserConfig object associated with the current user",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "A BrowserConfig object",
+            "schema": {
+              "type": "object",
+              "items": {
+                "$ref": "#/definitions/BrowserConfig"
+              }
+            },
+            "examples": {
+              "application/json": {
+                "success": true,
+                "data": {
+                  "id": 1,
+                  "userId": "123e4567-e89b-12d3-a456-426655440000",
+                  "tenant": "customeros",
+                  "cookies": "[{\"name\":\"li_at\",\"value\":\"AQEDARsT3pIA9m89AAABkZyVXisAAAGRwKHiK00Aj0CXIvfHIIDSIJ-Vuz2AuEAvjDY16oHgphHCL1BH5mLhmSkxHFx-g_muiKbxNH3-TNDaEvv8EEa-1_tp9xNOGO1BkE6LIFNw1Sd2fJVCOwanlHJG\",\"domain\":\"www.linkedin.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"Lax\"}]",
+                  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+                  "createdAt": "2024-06-01T00:00:00Z",
+                  "updatedAt": "2024-06-01T00:00:00Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a browser configuration for the requesting CustomerOS user",
+        "description": "Creates a new BrowserConfig object",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "BrowserConfigPayload containing the browser configuration details",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BrowserConfigPayload"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A BrowserConfig object",
+            "schema": {
+              "type": "object",
+              "items": {
+                "$ref": "#/definitions/BrowserConfig"
+              }
+            },
+            "examples": {
+              "application/json": {
+                "success": true,
+                "data": {
+                  "id": 1,
+                  "userId": "123e4567-e89b-12d3-a456-426655440000",
+                  "tenant": "customeros",
+                  "cookies": "[{\"name\":\"li_at\",\"value\":\"AQEDARsT3pIA9m89AAABkZyVXisAAAGRwKHiK00Aj0CXIvfHIIDSIJ-Vuz2AuEAvjDY16oHgphHCL1BH5mLhmSkxHFx-g_muiKbxNH3-TNDaEvv8EEa-1_tp9xNOGO1BkE6LIFNw1Sd2fJVCOwanlHJG\",\"domain\":\"www.linkedin.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"Lax\"}]",
+                  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+                  "createdAt": "2024-06-01T00:00:00Z",
+                  "updatedAt": "2024-06-01T00:00:00Z"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "Updates the browser configuration for the requesting CustomerOS user",
+        "description": "Updates an existing BrowserConfig object",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "BrowserConfig object containing the updated browser configuration details",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/BrowserConfig"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A BrowserConfig object",
+            "schema": {
+              "type": "object",
+              "items": {
+                "$ref": "#/definitions/BrowserConfig"
+              }
+            },
+            "examples": {
+              "application/json": {
+                "success": true,
+                "data": {
+                  "id": 1,
+                  "userId": "123e4567-e89b-12d3-a456-426655440000",
+                  "tenant": "customeros",
+                  "cookies": "[{\"name\":\"li_at\",\"value\":\"AQEDARsT3pIA9m89AAABkZyVXisAAAGRwKHiK00Aj0CXIvfHIIDSIJ-Vuz2AuEAvjDY16oHgphHCL1BH5mLhmSkxHFx-g_muiKbxNH3-TNDaEvv8EEa-1_tp9xNOGO1BkE6LIFNw1Sd2fJVCOwanlHJG\",\"domain\":\"www.linkedin.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"Lax\"}]",
+                  "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
+                  "createdAt": "2024-06-01T00:00:00Z",
+                  "updatedAt": "2024-06-01T00:00:00Z"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browser/runs": {
+      "get": {
+        "summary": "Get all browser automation runs for the requesting CustomerOS user",
+        "description": "Returns all browser automation runs for the requesting CustomerOS user",
+        "produces": ["application/json"],
+        "responses": {
+          "200": {
+            "description": "An array of BrowserAutomationRun objects",
+            "schema": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/BrowserAutomationRun"
+              }
+            },
+            "examples": {
+              "application/json": {
+                "success": true,
+                "data": [
+                  {
+                    "id": 1,
+                    "browserConfigId": 1,
+                    "userId": "c15dfe44-de8b-46d7-94c0-4fea9e407540",
+                    "tenant": "customeros",
+                    "type": "SEND_MESSAGE",
+                    "payload": "{\"profileUrl\":\"https://www.linkedin.com/in/johndoe/\",\"message\":\"Hi John, how are you?.\"}",
+                    "status": "SCHEDULED",
+                    "scheduledAt": null,
+                    "createdAt": "2024-09-03 16:11:55.544341",
+                    "updatedAt": "2024-09-03 16:11:55.544341",
+                    "startedAt": null,
+                    "finishedAt": null,
+                    "runDuration": null,
+                    "retryCount": 0,
+                    "triggeredBy": null,
+                    "priority": 0,
+                    "logLocation": null
+                  },
+                  {
+                    "id": 2,
+                    "browserConfigId": 1,
+                    "userId": "c15dfe44-de8b-46d7-94c0-4fea9e407540",
+                    "tenant": "customeros",
+                    "type": "SEND_CONNECTION_REQUEST",
+                    "payload": "{\"profileUrl\":\"https://www.linkedin.com/in/janedoe/\",\"message\":\"Hi Jane, how are you?.\"}",
+                    "status": "SCHEDULED",
+                    "scheduledAt": null,
+                    "createdAt": "2024-09-03 16:11:55.544341",
+                    "updatedAt": "2024-09-03 16:11:55.544341",
+                    "startedAt": null,
+                    "finishedAt": null,
+                    "runDuration": null,
+                    "retryCount": 0,
+                    "triggeredBy": null,
+                    "priority": 0,
+                    "logLocation": null
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/linkedin/message": {
+      "post": {
+        "summary": "Schedule a message to be sent at a LinkedIn user",
+        "description": "Schedules a message to be sent at a LinkedIn user profile. The message will be sent by the CustomerOS user's linkedin profile associated with the provided auth headers.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Payload object containing the target profileUrl and message to be sent.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "profileUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "example": "https://www.linkedin.com/in/johndoe"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Hello, world!"
+                }
+              },
+              "required": ["profileUrl", "message"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A BrowserAutomationRun object",
+            "schema": {
+              "type": "object",
+              "items": {
+                "$ref": "#/definitions/BrowserAutomationRun"
+              }
+            },
+            "examples": {
+              "application/json": {
+                "success": true,
+                "message": "Browser automation scheduled successfully",
+                "data": {
+                  "id": 1,
+                  "browserConfigId": 1,
+                  "userId": "c15dfe44-de8b-46d7-94c0-4fea9e407540",
+                  "tenant": "customeros",
+                  "type": "SEND_MESSAGE",
+                  "payload": "{\"profileUrl\":\"https://www.linkedin.com/in/johndoe/\",\"message\":\"Hi John, how are you?.\"}",
+                  "status": "SCHEDULED",
+                  "scheduledAt": null,
+                  "createdAt": "2024-09-03 16:11:55.544341",
+                  "updatedAt": "2024-09-03 16:11:55.544341",
+                  "startedAt": null,
+                  "finishedAt": null,
+                  "runDuration": null,
+                  "retryCount": 0,
+                  "triggeredBy": null,
+                  "priority": 0,
+                  "logLocation": null
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/linkedin/connect": {
+      "post": {
+        "summary": "Schedule a connection invite to be sent at a LinkedIn user",
+        "description": "Schedules a connection invite to be sent at a LinkedIn user profile. The invite will be sent by the CustomerOS user's linkedin profile associated with the provided auth headers.",
+        "consumes": ["application/json"],
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "in": "body",
+            "name": "body",
+            "description": "Payload object containing the target profileUrl and message to be sent along with the invite.",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "properties": {
+                "profileUrl": {
+                  "type": "string",
+                  "format": "uri",
+                  "example": "https://www.linkedin.com/in/johndoe"
+                },
+                "message": {
+                  "type": "string",
+                  "example": "Hello, world!"
+                }
+              },
+              "required": ["profileUrl", "message"]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A BrowserAutomationRun object",
+            "schema": {
+              "type": "object",
+              "items": {
+                "$ref": "#/definitions/BrowserAutomationRun"
+              }
+            },
+            "examples": {
+              "application/json": {
+                "success": true,
+                "message": "Browser automation scheduled successfully",
+                "data": {
+                  "id": 1,
+                  "browserConfigId": 1,
+                  "userId": "c15dfe44-de8b-46d7-94c0-4fea9e407540",
+                  "tenant": "customeros",
+                  "type": "SEND_CONNECTION_REQUEST",
+                  "payload": "{\"profileUrl\":\"https://www.linkedin.com/in/johndoe/\",\"message\":\"Hi John, how are you?.\"}",
+                  "status": "SCHEDULED",
+                  "scheduledAt": null,
+                  "createdAt": "2024-09-03 16:11:55.544341",
+                  "updatedAt": "2024-09-03 16:11:55.544341",
+                  "startedAt": null,
+                  "finishedAt": null,
+                  "runDuration": null,
+                  "retryCount": 0,
+                  "triggeredBy": null,
+                  "priority": 0,
+                  "logLocation": null
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "BrowserConfig": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "number",
+          "format": "int32",
+          "description": "Primary identifier for the browser configuration"
+        },
+        "userId": {
+          "type": "string",
+          "description": "Associated user id for the browser configuration",
+          "maxLength": 36
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Tenant associated with the browser configuration"
+        },
+        "cookies": {
+          "type": "string",
+          "description": "Stored cookies for the browser configuration",
+          "nullable": true
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "User agent string for the browser configuration",
+          "nullable": true
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the browser configuration was created",
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the browser configuration was last updated",
+          "default": "CURRENT_TIMESTAMP"
+        }
+      }
+    },
+    "BrowserConfigPayload": {
+      "type": "object",
+      "properties": {
+        "cookies": {
+          "type": "string",
+          "description": "Stored cookies for the browser configuration",
+          "required": true
+        },
+        "userAgent": {
+          "type": "string",
+          "description": "User agent string for the browser configuration",
+          "required": true
+        }
+      }
+    },
+    "BrowserAutomationRun": {
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Primary identifier for the browser automation run"
+        },
+        "browserConfigId": {
+          "type": "integer",
+          "format": "int32",
+          "description": "BrowserConfig associated with the browser automation run"
+        },
+        "userId": {
+          "type": "string",
+          "description": "User associated with the browser automation run",
+          "maxLength": 36
+        },
+        "tenant": {
+          "type": "string",
+          "description": "Tenant associated with the browser automation run"
+        },
+        "type": {
+          "type": "string",
+          "description": "Type of browser automation run",
+          "enum": [
+            "FIND_CONNECTIONS",
+            "SEND_CONNECTION_REQUEST",
+            "SEND_MESSAGE"
+          ]
+        },
+        "payload": {
+          "type": "string",
+          "description": "Payload for the browser automation run",
+          "nullable": true
+        },
+        "status": {
+          "type": "string",
+          "description": "Status of the browser automation run",
+          "enum": ["SCHEDULED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED"],
+          "default": "SCHEDULED"
+        },
+        "scheduledAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the run is scheduled to start",
+          "nullable": true
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the run was created",
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the run was last updated",
+          "default": "CURRENT_TIMESTAMP"
+        },
+        "startedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the run started",
+          "nullable": true
+        },
+        "finishedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Timestamp when the run finished",
+          "nullable": true
+        },
+        "runDuration": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Duration of the run in seconds",
+          "nullable": true
+        },
+        "retryCount": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Number of retries for the run",
+          "default": 0
+        },
+        "triggeredBy": {
+          "type": "string",
+          "description": "Trigger type for the run",
+          "enum": ["MANUAL", "SCHEDULER"],
+          "nullable": true
+        },
+        "priority": {
+          "type": "integer",
+          "format": "int32",
+          "description": "Priority of the run",
+          "default": 0
+        },
+        "logLocation": {
+          "type": "string",
+          "description": "Location of the logs for the run",
+          "nullable": true
+        }
+      }
+    }
+  }
+}

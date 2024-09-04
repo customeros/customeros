@@ -1,0 +1,13 @@
+import { defineConfig } from "drizzle-kit";
+
+export default defineConfig({
+  schema: "./src/infrastructure/persistance/postgresql/drizzle/schema.ts",
+  out: "./src/infrastructure/persistance/postgresql/drizzle",
+  dialect: "postgresql",
+  dbCredentials: {
+    host: process.env.POSTGRES_HOST ?? "",
+    user: process.env.POSTGRES_USER ?? "",
+    password: process.env.POSTGRES_PASS ?? "",
+    database: process.env.POSTGRES_NAME ?? "",
+  },
+});
