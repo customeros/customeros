@@ -1,5 +1,3 @@
-import { useField } from 'react-inverted-form';
-
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { currencyOptions } from '@shared/util/currencyOptions';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
@@ -7,17 +5,14 @@ import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
 import { currencyIcon } from './utils';
 
 export const BankTransferCurrencySelect = ({
-  formId,
   currency,
   existingCurrencies,
+  onChange,
 }: {
-  formId: string;
   currency?: string | null;
   existingCurrencies: Array<string>;
+  onChange: (value: string) => void;
 }) => {
-  const { getInputProps } = useField('currency', formId);
-  const { id, onChange } = getInputProps();
-
   return (
     <Menu>
       <MenuButton>
@@ -33,11 +28,10 @@ export const BankTransferCurrencySelect = ({
       <MenuList>
         {currencyOptions.map((option) => (
           <MenuItem
-            id={id}
             key={option.value}
             disabled={existingCurrencies?.indexOf(option.value) > -1}
-            onSelect={(e) => {
-              onChange(e);
+            onSelect={() => {
+              onChange(option.value);
             }}
           >
             {currencyIcon?.[option.value]}

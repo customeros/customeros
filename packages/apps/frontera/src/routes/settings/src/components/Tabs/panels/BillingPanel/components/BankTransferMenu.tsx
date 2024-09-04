@@ -1,23 +1,12 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { useBankAccountsQuery } from '@settings/graphql/getBankAccounts.generated';
-import { useDeleteBankAccountMutation } from '@settings/graphql/deleteBankAccount.generated';
+import { observer } from 'mobx-react-lite';
 
+import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
-export const BankTransferMenu = ({ id }: { id: string }) => {
-  const queryKey = useBankAccountsQuery.getKey();
-  const queryClient = useQueryClient();
-
-  const client = getGraphQLClient();
-  const { mutate } = useDeleteBankAccountMutation(client, {
-    onSuccess: () => {},
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey });
-    },
-  });
+export const BankTransferMenu = observer(({ id }: { id: string }) => {
+  const store = useStore();
 
   return (
     <Menu>
@@ -26,8 +15,8 @@ export const BankTransferMenu = ({ id }: { id: string }) => {
       </MenuButton>
       <MenuList align='end' side='bottom' className='min-w-[150px]'>
         <MenuItem
-          onClick={() => mutate({ id })}
           className='w-auto flex items-center'
+          onClick={() => store.settings.bankAccounts.remove(id)}
         >
           <Archive className='mr-2 text-gray-500' />
           Archive account
@@ -35,4 +24,4 @@ export const BankTransferMenu = ({ id }: { id: string }) => {
       </MenuList>
     </Menu>
   );
-};
+});

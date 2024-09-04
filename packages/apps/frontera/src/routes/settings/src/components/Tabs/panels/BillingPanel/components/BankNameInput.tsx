@@ -1,42 +1,30 @@
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
 
-import { Metadata } from '@graphql/types';
-import { FormInput } from '@ui/form/Input/FormInput';
+import { Store } from '@store/store.ts';
 
-export const BankNameInput = ({
-  formId,
-  metadata,
-}: {
-  formId: string;
-  metadata: Metadata;
-}) => {
+import { Input } from '@ui/form/Input';
+import { BankAccount } from '@graphql/types';
+
+export const BankNameInput = ({ account }: { account: Store<BankAccount> }) => {
   const nameRef = useRef<HTMLInputElement | null>(null);
 
-  useEffect(() => {
-    const wasEdited = metadata.created !== metadata.lastUpdated;
-    const isDefaultName = /^[A-Z]{3}\saccount$/.test(
-      nameRef.current?.value ?? '',
-    );
-
-    if (isDefaultName && !wasEdited) {
-      nameRef.current?.focus();
-      nameRef.current?.setSelectionRange(0, 11);
-    }
-  }, [nameRef, metadata.created, metadata.lastUpdated]);
-
   return (
-    <>
-      <FormInput
-        ref={nameRef}
-        name='bankName'
-        formId={formId}
-        label='Bank Name'
-        autoComplete='off'
-        variant={'unstyled'}
-        placeholder='Bank name'
-        className='text-md font-semibold'
-        labelProps={{ className: 'hidden' }}
-      />
-    </>
+    <Input
+      ref={nameRef}
+      autoComplete='off'
+      variant={'unstyled'}
+      aria-label='Bank Name'
+      placeholder='Bank name'
+      className='text-md font-semibold'
+      onFocus={(e) => e?.target?.select()}
+      value={account?.value?.bankName ?? ''}
+      onChange={(e) =>
+        account?.update((acc) => {
+          acc.bankName = e.target.value;
+
+          return acc;
+        })
+      }
+    />
   );
 };
