@@ -18,7 +18,7 @@ func (r *flowResolver) Sequences(ctx context.Context, obj *model.Flow) ([]*model
 }
 
 // Flow is the resolver for the flow field.
-func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence) ([]*model.Flow, error) {
+func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence) (*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: Flow - flow"))
 }
 

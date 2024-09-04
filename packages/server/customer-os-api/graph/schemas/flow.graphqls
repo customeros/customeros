@@ -7,7 +7,7 @@ type Flow implements MetadataInterface {
     metadata:           Metadata!
     name:               String
     description:        String
-    status: FlowStatus
+    status: FlowStatus!
     sequences: [FlowSequence!]! @goField(forceResolver: true)
 }
 
@@ -15,8 +15,8 @@ type FlowSequence implements MetadataInterface {
     metadata:           Metadata!
     name:               String
     description:        String
-    status: FlowSequenceStatus
-    flow: [Flow!]! @goField(forceResolver: true)
+    status: FlowSequenceStatus!
+    flow: Flow! @goField(forceResolver: true)
     steps: [FlowSequenceStep!]! @goField(forceResolver: true)
     contacts: [FlowSequenceContact!]! @goField(forceResolver: true)
     mailboxes: [Mailbox!]! @goField(forceResolver: true)

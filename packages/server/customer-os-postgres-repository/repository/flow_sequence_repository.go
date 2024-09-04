@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -12,7 +13,9 @@ import (
 type FlowSequenceRepository interface {
 	Count(ctx context.Context, tenant, flowId string) (int64, error)
 	Get(ctx context.Context, tenant, flowId string, page, limit int) ([]*entity.FlowSequence, error)
+	GetList(ctx context.Context, flowId *string) ([]*entity.FlowSequence, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.FlowSequence, error)
+	GetFlowBySequenceId(ctx context.Context, id string) (*entity.Flow, error)
 
 	Store(ctx context.Context, tenant string, entity *entity.FlowSequence) (*entity.FlowSequence, error)
 	Delete(ctx context.Context, tenant, id string) error
@@ -75,6 +78,36 @@ func (r flowSequenceRepositoryImpl) Get(ctx context.Context, tenant, flowId stri
 	return result, nil
 }
 
+func (r flowSequenceRepositoryImpl) GetList(ctx context.Context, flowId *string) ([]*entity.FlowSequence, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.GetList")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	span.LogFields(tracingLog.String("flowId", utils.StringOrEmpty(flowId)))
+
+	var result []*entity.FlowSequence
+
+	db := r.gormDb
+
+	if flowId != nil {
+		db = db.Where("flow_id = ?", flowId)
+	}
+
+	err :=
+		db.
+			Find(&result).
+			Error
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	span.LogFields(tracingLog.Int("result.count", len(result)))
+
+	return result, nil
+}
+
 func (r flowSequenceRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*entity.FlowSequence, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.GetById")
 	defer span.Finish()
@@ -95,6 +128,35 @@ func (r flowSequenceRepositoryImpl) GetById(ctx context.Context, tenant, id stri
 		}
 		tracing.TraceErr(span, err)
 		return nil, err
+	}
+
+	span.LogFields(tracingLog.Bool("result.found", true))
+
+	return &result, nil
+}
+
+func (r flowSequenceRepositoryImpl) GetFlowBySequenceId(ctx context.Context, id string) (*entity.Flow, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.GetFlowBySequenceId")
+	defer span.Finish()
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
+	span.LogFields(tracingLog.String("id", id))
+
+	var result entity.Flow
+	err := r.gormDb.
+		Table("flow_sequence").
+		Select("flows.*").
+		Joins("join flows on flows.id = flow_sequence.flow_id").
+		Where("flow_sequence.id = ?", id).
+		First(&result).
+		Error
+	if err != nil {
+		return nil, err
+	}
+
+	if result.ID == "" {
+		span.LogFields(tracingLog.Bool("result.found", false))
+		return nil, nil
 	}
 
 	span.LogFields(tracingLog.Bool("result.found", true))

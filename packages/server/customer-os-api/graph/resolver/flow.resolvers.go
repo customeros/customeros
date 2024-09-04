@@ -6,60 +6,86 @@ package resolver
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 )
 
 // Sequences is the resolver for the sequences field.
 func (r *flowResolver) Sequences(ctx context.Context, obj *model.Flow) ([]*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Sequences", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	return make([]*model.FlowSequence, 0), nil
 }
 
 // Flow is the resolver for the flow field.
-func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence) ([]*model.Flow, error) {
-	panic(fmt.Errorf("not implemented: Flow - flow"))
+func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence) (*model.Flow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Flow", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.GetFlowBySequenceId(ctx, obj.Metadata.ID)
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow")
+		return nil, err
+	}
+	return mapper.MapEntityToFlow(entity), nil
 }
 
 // Steps is the resolver for the steps field.
 func (r *flowSequenceResolver) Steps(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceStep, error) {
-	panic(fmt.Errorf("not implemented: Steps - steps"))
+	return make([]*model.FlowSequenceStep, 0), nil
 }
 
 // Contacts is the resolver for the contacts field.
 func (r *flowSequenceResolver) Contacts(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceContact, error) {
-	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+	return make([]*model.FlowSequenceContact, 0), nil
 }
 
 // Mailboxes is the resolver for the mailboxes field.
 func (r *flowSequenceResolver) Mailboxes(ctx context.Context, obj *model.FlowSequence) ([]*model.Mailbox, error) {
-	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
+	return make([]*model.Mailbox, 0), nil
 }
 
 // Contact is the resolver for the contact field.
 func (r *flowSequenceContactResolver) Contact(ctx context.Context, obj *model.FlowSequenceContact) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: Contact - contact"))
+	return &model.Contact{}, nil
 }
 
 // Email is the resolver for the email field.
 func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.FlowSequenceContact) (*model.Email, error) {
-	panic(fmt.Errorf("not implemented: Email - email"))
+	return &model.Email{}, nil
 }
 
 // Email is the resolver for the email field.
 func (r *flowSequenceStepResolver) Email(ctx context.Context, obj *model.FlowSequenceStep) (*model.Email, error) {
-	panic(fmt.Errorf("not implemented: Email - email"))
+	return &model.Email{}, nil
 }
 
 // Flows is the resolver for the flows field.
 func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
-	panic(fmt.Errorf("not implemented: Flows - flows"))
+	return make([]*model.Flow, 0), nil
 }
 
 // Sequences is the resolver for the sequences field.
 func (r *queryResolver) Sequences(ctx context.Context) ([]*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Sequences.Query", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := r.Services.CommonServices.FlowService.GetFlowSequencesList(ctx)
+	if err != nil || entities == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow sequences")
+		return nil, err
+	}
+	return mapper.MapEntitiesToFlowSequence(entities), nil
 }
 
 // Flow returns generated.FlowResolver implementation.
