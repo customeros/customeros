@@ -1123,7 +1123,7 @@ type Flow struct {
 	Metadata    *Metadata       `json:"metadata"`
 	Name        *string         `json:"name,omitempty"`
 	Description *string         `json:"description,omitempty"`
-	Status      *FlowStatus     `json:"status,omitempty"`
+	Status      FlowStatus      `json:"status"`
 	Sequences   []*FlowSequence `json:"sequences"`
 }
 
@@ -1134,8 +1134,8 @@ type FlowSequence struct {
 	Metadata    *Metadata              `json:"metadata"`
 	Name        *string                `json:"name,omitempty"`
 	Description *string                `json:"description,omitempty"`
-	Status      *FlowSequenceStatus    `json:"status,omitempty"`
-	Flow        []*Flow                `json:"flow"`
+	Status      FlowSequenceStatus     `json:"status"`
+	Flow        *Flow                  `json:"flow"`
 	Steps       []*FlowSequenceStep    `json:"steps"`
 	Contacts    []*FlowSequenceContact `json:"contacts"`
 	Mailboxes   []*Mailbox             `json:"mailboxes"`

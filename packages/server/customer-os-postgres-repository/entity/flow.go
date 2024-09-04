@@ -1,10 +1,5 @@
 package entity
 
-import (
-	"encoding/json"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-)
-
 type FlowSequenceStepTemplateVariable struct {
 	BaseEntity
 
@@ -20,33 +15,9 @@ type Flow struct {
 	BaseEntity
 	Tenant string `gorm:"not null" json:"-"`
 
-	Name        string `gorm:"type:varchar(255);not null" json:"name"`
-	Description string `gorm:"type:text;" json:"description"`
-	Active      bool   `gorm:"not null;default:false" json:"active"`
-
-	//Schedule
-	ActiveDaysString string `gorm:"type:varchar(255)" json:"-"`
-
-	ActiveTimeWindowStart    string `gorm:"type:varchar(255)" json:"activeTimeWindowStart"` //09:00:00
-	ActiveTimeWindowEnd      string `gorm:"type:varchar(255)" json:"activeTimeWindowEnd"`   //09:00:00
-	PauseOnHolidays          bool   `json:"pauseOnHolidays"`
-	RespectRecipientTimezone bool   `json:"respectRecipientTimezone"`
-
-	MinutesDelayBetweenEmails int `json:"minutesDelayBetweenEmails"`
-
-	EmailsPerMailboxPerHour int `json:"emailsPerMailboxPerHour"`
-	EmailsPerMailboxPerDay  int `json:"emailsPerMailboxPerDay"`
-}
-
-func (s Flow) MarshalJSON() ([]byte, error) {
-	type Alias Flow
-	return json.Marshal(&struct {
-		*Alias
-		ActiveDays []string `json:"activeDays"`
-	}{
-		Alias:      (*Alias)(&s),
-		ActiveDays: utils.StringToSlice(s.ActiveDaysString),
-	})
+	Name        *string    `gorm:"type:varchar(255);" json:"name"`
+	Description *string    `gorm:"type:text;" json:"description"`
+	Status      FlowStatus `gorm:"type:varchar(100);not null;" json:"active"`
 }
 
 type FlowSequence struct {
@@ -54,22 +25,49 @@ type FlowSequence struct {
 
 	FlowId string `gorm:"type:uuid;not null" json:"-"`
 
-	Name        string `gorm:"type:varchar(255);not null" json:"name"`
-	Description string `gorm:"type:text;not null" json:"description"`
-	Active      bool   `gorm:"not null;default:false" json:"active"`
+	Name        *string            `gorm:"type:varchar(255);" json:"name"`
+	Description *string            `gorm:"type:text;" json:"description"`
+	Status      FlowSequenceStatus `gorm:"type:varchar(100);not null;" json:"status"`
 
-	PersonasString string `gorm:"type:text" json:"-"` //used to store days in DB
+	////Schedule
+	//ActiveDaysString string `gorm:"type:varchar(255)" json:"-"`
+	//
+	//ActiveTimeWindowStart    string `gorm:"type:varchar(255)" json:"activeTimeWindowStart"` //09:00:00
+	//ActiveTimeWindowEnd      string `gorm:"type:varchar(255)" json:"activeTimeWindowEnd"`   //09:00:00
+	//PauseOnHolidays          bool   `json:"pauseOnHolidays"`
+	//RespectRecipientTimezone bool   `json:"respectRecipientTimezone"`
+	//
+	//MinutesDelayBetweenEmails int `json:"minutesDelayBetweenEmails"`
+	//
+	//EmailsPerMailboxPerHour int `json:"emailsPerMailboxPerHour"`
+	//EmailsPerMailboxPerDay  int `json:"emailsPerMailboxPerDay"`
+
 }
 
-func (s FlowSequence) MarshalJSON() ([]byte, error) {
-	type Alias FlowSequence
-	return json.Marshal(&struct {
-		*Alias
-		Personas []string `json:"personas"`
-	}{
-		Alias:    (*Alias)(&s),
-		Personas: utils.StringToSlice(s.PersonasString),
-	})
+//func (s Flow) MarshalJSON() ([]byte, error) {
+//	type Alias Flow
+//	return json.Marshal(&struct {
+//		*Alias
+//		ActiveDays []string `json:"activeDays"`
+//	}{
+//		Alias:      (*Alias)(&s),
+//		ActiveDays: utils.StringToSlice(s.ActiveDaysString),
+//	})
+//}
+//
+//func (s FlowSequence) MarshalJSON() ([]byte, error) {
+//	type Alias FlowSequence
+//	return json.Marshal(&struct {
+//		*Alias
+//		Personas []string `json:"personas"`
+//	}{
+//		Alias:    (*Alias)(&s),
+//		Personas: utils.StringToSlice(s.PersonasString),
+//	})
+//}
+
+func (Flow) TableName() string {
+	return "flow"
 }
 
 func (FlowSequence) TableName() string {
@@ -100,9 +98,8 @@ type FlowSequenceContact struct {
 
 	SequenceId string `gorm:"type:uuid;not null" json:"-"`
 
-	FirstName   *string `json:"firstName"`
-	LastName    *string `json:"lastName"`
-	Email       string  `gorm:"not null" json:"email"`
+	ContactId   string  `gorm:"not null" json:"email"`
+	EmailId     string  `gorm:"not null" json:"email"`
 	LinkedinUrl *string `json:"linkedinUrl"`
 }
 
@@ -121,3 +118,21 @@ type FlowSequenceSender struct {
 func (FlowSequenceSender) TableName() string {
 	return "flow_sequence_sender"
 }
+
+type FlowStatus string
+
+const (
+	FlowStatusInactive FlowStatus = "INACTIVE"
+	FlowStatusActive   FlowStatus = "ACTIVE"
+	FlowStatusPaused   FlowStatus = "PAUSED"
+	FlowStatusArchived FlowStatus = "ARCHIVED"
+)
+
+type FlowSequenceStatus string
+
+const (
+	FlowSequenceStatusInactive FlowSequenceStatus = "INACTIVE"
+	FlowSequenceStatusActive   FlowSequenceStatus = "ACTIVE"
+	FlowSequenceStatusPaused   FlowSequenceStatus = "PAUSED"
+	FlowSequenceStatusArchived FlowSequenceStatus = "ARCHIVED"
+)
