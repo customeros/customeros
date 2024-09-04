@@ -7,6 +7,7 @@ export default defineConfig({
   dbCredentials: {
     host: process.env.POSTGRES_HOST ?? "",
     user: process.env.POSTGRES_USER ?? "",
+    port: parseInt(process.env.POSTGRES_PORT ?? "5432"),
     password: process.env.POSTGRES_PASS ?? "",
     database: process.env.POSTGRES_NAME ?? "",
   },
