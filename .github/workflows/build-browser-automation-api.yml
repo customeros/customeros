@@ -52,7 +52,7 @@ jobs:
       - name: Push Docker image
         uses: docker/build-push-action@v6.7.0
         with:
-          context: packages/apps/frontera/
+          context: packages/server/browser-automation-api
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
