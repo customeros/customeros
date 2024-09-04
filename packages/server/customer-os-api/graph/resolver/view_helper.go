@@ -73,6 +73,12 @@ func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span open
 		return []postgresEntity.TableViewDefinition{}
 	}
 
+	flowsTableViewDefinition, err := DefaultTableViewDefinitionFlows(span)
+	if err != nil {
+		fmt.Println("Error: ", err)
+		return []postgresEntity.TableViewDefinition{}
+	}
+
 	defaultViewDefinitions := []postgresEntity.TableViewDefinition{
 		upcomingInvoicesTableViewDefinition,
 		pastInvoicesTableViewDefinition,
@@ -83,6 +89,7 @@ func DefaultTableViewDefinitions(userId string, hasSharedPresets bool, span open
 		contractsTableViewDefinition,
 		targetsTableViewDefinition,
 		opportunitiesRecordsTableViewDefinition,
+		flowsTableViewDefinition,
 	}
 
 	if !hasSharedPresets {
@@ -322,6 +329,29 @@ func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgresEntity.
 	}, nil
 }
 
+func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
+	columns := DefaultColumns(model.TableIDTypeFlowSequences.String())
+	jsonData, err := json.Marshal(columns)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		fmt.Println("Error serializing data:", err)
+		return postgresEntity.TableViewDefinition{}, err
+	}
+
+	return postgresEntity.TableViewDefinition{
+		TableType:   model.TableViewTypeFlow.String(),
+		TableId:     model.TableIDTypeFlowSequences.String(),
+		Name:        "Sequences",
+		ColumnsJson: string(jsonData),
+		Order:       9,
+		Icon:        "Signature",
+		Filters:     ``,
+		Sorting:     ``,
+		IsPreset:    true,
+		IsShared:    false,
+	}, nil
+}
+
 func DefaultColumns(tableId string) postgresEntity.Columns {
 	switch tableId {
 	case model.TableIDTypeCustomers.String():
@@ -502,6 +532,19 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeContractsForecastArr.String(), Width: 100, Visible: true, Name: "ARR Forecast", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeContractsHealth.String(), Width: 100, Visible: true, Name: "Health", Filter: ""},
 				{ColumnId: 12, ColumnType: model.ColumnViewTypeContractsOwner.String(), Width: 100, Visible: true, Name: "Owner", Filter: ""},
+			},
+		}
+	case model.TableIDTypeFlowSequences.String():
+		return postgresEntity.Columns{
+			Columns: []postgresEntity.ColumnView{
+				{ColumnId: 1, ColumnType: model.ColumnViewTypeFlowSequenceName.String(), Width: 100, Visible: true, Name: "Sequence", Filter: ""},
+				{ColumnId: 2, ColumnType: model.ColumnViewTypeFlowName.String(), Width: 100, Visible: true, Name: "Flow", Filter: ""},
+				{ColumnId: 3, ColumnType: model.ColumnViewTypeFlowSequenceStatus.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
+				{ColumnId: 5, ColumnType: model.ColumnViewTypeFlowSequenceContactCount.String(), Width: 100, Visible: true, Name: "Contacts", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowSequenceStatusPendingCount.String(), Width: 100, Visible: true, Name: "Pending", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowSequenceStatusInProgressCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowSequenceStatusSuccessfulCount.String(), Width: 100, Visible: true, Name: "Successful", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowSequenceStatusUnsuccessfulCount.String(), Width: 100, Visible: true, Name: "Unsuccessful", Filter: ""},
 			},
 		}
 	}

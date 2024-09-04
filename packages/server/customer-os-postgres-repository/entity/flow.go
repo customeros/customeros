@@ -28,7 +28,7 @@ type Flow struct {
 	ActiveDaysString string `gorm:"type:varchar(255)" json:"-"`
 
 	ActiveTimeWindowStart    string `gorm:"type:varchar(255)" json:"activeTimeWindowStart"` //09:00:00
-	ActiveTimeWindowEnd      string `gorm:"type:varchar(255)" json:"activeTimeWindowEnd"`   //09:00:00
+	ActiveTimeWindowEnd      string `gorm:"type:varchar(255)" json:"activeTimeWindowEnd"`   //18:00:00
 	PauseOnHolidays          bool   `json:"pauseOnHolidays"`
 	RespectRecipientTimezone bool   `json:"respectRecipientTimezone"`
 
@@ -100,9 +100,9 @@ type FlowSequenceContact struct {
 
 	SequenceId string `gorm:"type:uuid;not null" json:"-"`
 
-	FirstName   *string `json:"firstName"`
-	LastName    *string `json:"lastName"`
-	Email       string  `gorm:"not null" json:"email"`
+	ContactId string `gorm:"type:uuid;not null" json:"-"`
+	EmailId   string `gorm:"type:uuid;not null" json:"-"`
+
 	LinkedinUrl *string `json:"linkedinUrl"`
 }
 

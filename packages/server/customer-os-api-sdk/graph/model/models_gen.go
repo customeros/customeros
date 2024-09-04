@@ -1121,6 +1121,52 @@ type FilterItem struct {
 	IncludeEmpty  *bool              `json:"includeEmpty,omitempty"`
 }
 
+type Flow struct {
+	Metadata    *Metadata       `json:"metadata"`
+	Name        *string         `json:"name,omitempty"`
+	Description *string         `json:"description,omitempty"`
+	Status      *FlowStatus     `json:"status,omitempty"`
+	Sequences   []*FlowSequence `json:"sequences"`
+}
+
+func (Flow) IsMetadataInterface()        {}
+func (this Flow) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowSequence struct {
+	Metadata    *Metadata              `json:"metadata"`
+	Name        *string                `json:"name,omitempty"`
+	Description *string                `json:"description,omitempty"`
+	Status      *FlowSequenceStatus    `json:"status,omitempty"`
+	Flow        []*Flow                `json:"flow"`
+	Steps       []*FlowSequenceStep    `json:"steps"`
+	Contacts    []*FlowSequenceContact `json:"contacts"`
+	Mailboxes   []*Mailbox             `json:"mailboxes"`
+}
+
+func (FlowSequence) IsMetadataInterface()        {}
+func (this FlowSequence) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowSequenceContact struct {
+	Metadata *Metadata `json:"metadata"`
+	Contact  *Contact  `json:"contact"`
+	Email    *Email    `json:"email"`
+}
+
+func (FlowSequenceContact) IsMetadataInterface()        {}
+func (this FlowSequenceContact) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowSequenceStep struct {
+	Metadata *Metadata              `json:"metadata"`
+	Status   FlowSequenceStepStatus `json:"status"`
+	Email    *Email                 `json:"email"`
+	Type     *string                `json:"Type,omitempty"`
+	Text     *string                `json:"Text,omitempty"`
+	Template *string                `json:"Template,omitempty"`
+}
+
+func (FlowSequenceStep) IsMetadataInterface()        {}
+func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
+
 type GCliAttributeKeyValuePair struct {
 	Key     string  `json:"key"`
 	Value   string  `json:"value"`
@@ -1553,6 +1599,14 @@ type LogEntryUpdateInput struct {
 	ContentType *string    `json:"contentType,omitempty"`
 	StartedAt   *time.Time `json:"startedAt,omitempty"`
 }
+
+type Mailbox struct {
+	Metadata *Metadata `json:"metadata"`
+	Email    string    `json:"email"`
+}
+
+func (Mailbox) IsMetadataInterface()        {}
+func (this Mailbox) GetMetadata() *Metadata { return this.Metadata }
 
 type MasterPlan struct {
 	ID                string                 `json:"id"`
@@ -3289,82 +3343,91 @@ func (e ChargePeriod) MarshalGQL(w io.Writer) {
 type ColumnViewType string
 
 const (
-	ColumnViewTypeInvoicesIssueDate                  ColumnViewType = "INVOICES_ISSUE_DATE"
-	ColumnViewTypeInvoicesIssueDatePast              ColumnViewType = "INVOICES_ISSUE_DATE_PAST"
-	ColumnViewTypeInvoicesDueDate                    ColumnViewType = "INVOICES_DUE_DATE"
-	ColumnViewTypeInvoicesContract                   ColumnViewType = "INVOICES_CONTRACT"
-	ColumnViewTypeInvoicesBillingCycle               ColumnViewType = "INVOICES_BILLING_CYCLE"
-	ColumnViewTypeInvoicesInvoiceNumber              ColumnViewType = "INVOICES_INVOICE_NUMBER"
-	ColumnViewTypeInvoicesAmount                     ColumnViewType = "INVOICES_AMOUNT"
-	ColumnViewTypeInvoicesInvoiceStatus              ColumnViewType = "INVOICES_INVOICE_STATUS"
-	ColumnViewTypeInvoicesInvoicePreview             ColumnViewType = "INVOICES_INVOICE_PREVIEW"
-	ColumnViewTypeInvoicesOrganization               ColumnViewType = "INVOICES_ORGANIZATION"
-	ColumnViewTypeOrganizationsAvatar                ColumnViewType = "ORGANIZATIONS_AVATAR"
-	ColumnViewTypeOrganizationsName                  ColumnViewType = "ORGANIZATIONS_NAME"
-	ColumnViewTypeOrganizationsWebsite               ColumnViewType = "ORGANIZATIONS_WEBSITE"
-	ColumnViewTypeOrganizationsRelationship          ColumnViewType = "ORGANIZATIONS_RELATIONSHIP"
-	ColumnViewTypeOrganizationsOnboardingStatus      ColumnViewType = "ORGANIZATIONS_ONBOARDING_STATUS"
-	ColumnViewTypeOrganizationsRenewalLikelihood     ColumnViewType = "ORGANIZATIONS_RENEWAL_LIKELIHOOD"
-	ColumnViewTypeOrganizationsRenewalDate           ColumnViewType = "ORGANIZATIONS_RENEWAL_DATE"
-	ColumnViewTypeOrganizationsForecastArr           ColumnViewType = "ORGANIZATIONS_FORECAST_ARR"
-	ColumnViewTypeOrganizationsOwner                 ColumnViewType = "ORGANIZATIONS_OWNER"
-	ColumnViewTypeOrganizationsLastTouchpoint        ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT"
-	ColumnViewTypeOrganizationsLastTouchpointDate    ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT_DATE"
-	ColumnViewTypeOrganizationsStage                 ColumnViewType = "ORGANIZATIONS_STAGE"
-	ColumnViewTypeOrganizationsContactCount          ColumnViewType = "ORGANIZATIONS_CONTACT_COUNT"
-	ColumnViewTypeOrganizationsSocials               ColumnViewType = "ORGANIZATIONS_SOCIALS"
-	ColumnViewTypeOrganizationsLeadSource            ColumnViewType = "ORGANIZATIONS_LEAD_SOURCE"
-	ColumnViewTypeOrganizationsCreatedDate           ColumnViewType = "ORGANIZATIONS_CREATED_DATE"
-	ColumnViewTypeOrganizationsEmployeeCount         ColumnViewType = "ORGANIZATIONS_EMPLOYEE_COUNT"
-	ColumnViewTypeOrganizationsYearFounded           ColumnViewType = "ORGANIZATIONS_YEAR_FOUNDED"
-	ColumnViewTypeOrganizationsIndustry              ColumnViewType = "ORGANIZATIONS_INDUSTRY"
-	ColumnViewTypeOrganizationsChurnDate             ColumnViewType = "ORGANIZATIONS_CHURN_DATE"
-	ColumnViewTypeOrganizationsLtv                   ColumnViewType = "ORGANIZATIONS_LTV"
-	ColumnViewTypeOrganizationsCity                  ColumnViewType = "ORGANIZATIONS_CITY"
-	ColumnViewTypeOrganizationsIsPublic              ColumnViewType = "ORGANIZATIONS_IS_PUBLIC"
-	ColumnViewTypeOrganizationsLinkedinFollowerCount ColumnViewType = "ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT"
-	ColumnViewTypeOrganizationsTags                  ColumnViewType = "ORGANIZATIONS_TAGS"
-	ColumnViewTypeOrganizationsHeadquarters          ColumnViewType = "ORGANIZATIONS_HEADQUARTERS"
-	ColumnViewTypeContactsAvatar                     ColumnViewType = "CONTACTS_AVATAR"
-	ColumnViewTypeContactsName                       ColumnViewType = "CONTACTS_NAME"
-	ColumnViewTypeContactsOrganization               ColumnViewType = "CONTACTS_ORGANIZATION"
-	ColumnViewTypeContactsEmails                     ColumnViewType = "CONTACTS_EMAILS"
-	ColumnViewTypeContactsPhoneNumbers               ColumnViewType = "CONTACTS_PHONE_NUMBERS"
-	ColumnViewTypeContactsLinkedin                   ColumnViewType = "CONTACTS_LINKEDIN"
-	ColumnViewTypeContactsCity                       ColumnViewType = "CONTACTS_CITY"
-	ColumnViewTypeContactsPersona                    ColumnViewType = "CONTACTS_PERSONA"
-	ColumnViewTypeContactsLastInteraction            ColumnViewType = "CONTACTS_LAST_INTERACTION"
-	ColumnViewTypeContactsCountry                    ColumnViewType = "CONTACTS_COUNTRY"
-	ColumnViewTypeContactsRegion                     ColumnViewType = "CONTACTS_REGION"
-	ColumnViewTypeContactsSkills                     ColumnViewType = "CONTACTS_SKILLS"
-	ColumnViewTypeContactsSchools                    ColumnViewType = "CONTACTS_SCHOOLS"
-	ColumnViewTypeContactsLanguages                  ColumnViewType = "CONTACTS_LANGUAGES"
-	ColumnViewTypeContactsTimeInCurrentRole          ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
-	ColumnViewTypeContactsExperience                 ColumnViewType = "CONTACTS_EXPERIENCE"
-	ColumnViewTypeContactsLinkedinFollowerCount      ColumnViewType = "CONTACTS_LINKEDIN_FOLLOWER_COUNT"
-	ColumnViewTypeContactsJobTitle                   ColumnViewType = "CONTACTS_JOB_TITLE"
-	ColumnViewTypeContactsTags                       ColumnViewType = "CONTACTS_TAGS"
-	ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
-	ColumnViewTypeOpportunitiesCommonColumn          ColumnViewType = "OPPORTUNITIES_COMMON_COLUMN"
-	ColumnViewTypeOpportunitiesName                  ColumnViewType = "OPPORTUNITIES_NAME"
-	ColumnViewTypeOpportunitiesOrganization          ColumnViewType = "OPPORTUNITIES_ORGANIZATION"
-	ColumnViewTypeOpportunitiesStage                 ColumnViewType = "OPPORTUNITIES_STAGE"
-	ColumnViewTypeOpportunitiesEstimatedArr          ColumnViewType = "OPPORTUNITIES_ESTIMATED_ARR"
-	ColumnViewTypeOpportunitiesOwner                 ColumnViewType = "OPPORTUNITIES_OWNER"
-	ColumnViewTypeOpportunitiesTimeInStage           ColumnViewType = "OPPORTUNITIES_TIME_IN_STAGE"
-	ColumnViewTypeOpportunitiesCreatedDate           ColumnViewType = "OPPORTUNITIES_CREATED_DATE"
-	ColumnViewTypeOpportunitiesNextStep              ColumnViewType = "OPPORTUNITIES_NEXT_STEP"
-	ColumnViewTypeContractsName                      ColumnViewType = "CONTRACTS_NAME"
-	ColumnViewTypeContractsEnded                     ColumnViewType = "CONTRACTS_ENDED"
-	ColumnViewTypeContractsPeriod                    ColumnViewType = "CONTRACTS_PERIOD"
-	ColumnViewTypeContractsCurrency                  ColumnViewType = "CONTRACTS_CURRENCY"
-	ColumnViewTypeContractsStatus                    ColumnViewType = "CONTRACTS_STATUS"
-	ColumnViewTypeContractsRenewal                   ColumnViewType = "CONTRACTS_RENEWAL"
-	ColumnViewTypeContractsLtv                       ColumnViewType = "CONTRACTS_LTV"
-	ColumnViewTypeContractsRenewalDate               ColumnViewType = "CONTRACTS_RENEWAL_DATE"
-	ColumnViewTypeContractsForecastArr               ColumnViewType = "CONTRACTS_FORECAST_ARR"
-	ColumnViewTypeContractsOwner                     ColumnViewType = "CONTRACTS_OWNER"
-	ColumnViewTypeContractsHealth                    ColumnViewType = "CONTRACTS_HEALTH"
+	ColumnViewTypeInvoicesIssueDate                   ColumnViewType = "INVOICES_ISSUE_DATE"
+	ColumnViewTypeInvoicesIssueDatePast               ColumnViewType = "INVOICES_ISSUE_DATE_PAST"
+	ColumnViewTypeInvoicesDueDate                     ColumnViewType = "INVOICES_DUE_DATE"
+	ColumnViewTypeInvoicesContract                    ColumnViewType = "INVOICES_CONTRACT"
+	ColumnViewTypeInvoicesBillingCycle                ColumnViewType = "INVOICES_BILLING_CYCLE"
+	ColumnViewTypeInvoicesInvoiceNumber               ColumnViewType = "INVOICES_INVOICE_NUMBER"
+	ColumnViewTypeInvoicesAmount                      ColumnViewType = "INVOICES_AMOUNT"
+	ColumnViewTypeInvoicesInvoiceStatus               ColumnViewType = "INVOICES_INVOICE_STATUS"
+	ColumnViewTypeInvoicesInvoicePreview              ColumnViewType = "INVOICES_INVOICE_PREVIEW"
+	ColumnViewTypeInvoicesOrganization                ColumnViewType = "INVOICES_ORGANIZATION"
+	ColumnViewTypeOrganizationsAvatar                 ColumnViewType = "ORGANIZATIONS_AVATAR"
+	ColumnViewTypeOrganizationsName                   ColumnViewType = "ORGANIZATIONS_NAME"
+	ColumnViewTypeOrganizationsWebsite                ColumnViewType = "ORGANIZATIONS_WEBSITE"
+	ColumnViewTypeOrganizationsRelationship           ColumnViewType = "ORGANIZATIONS_RELATIONSHIP"
+	ColumnViewTypeOrganizationsOnboardingStatus       ColumnViewType = "ORGANIZATIONS_ONBOARDING_STATUS"
+	ColumnViewTypeOrganizationsRenewalLikelihood      ColumnViewType = "ORGANIZATIONS_RENEWAL_LIKELIHOOD"
+	ColumnViewTypeOrganizationsRenewalDate            ColumnViewType = "ORGANIZATIONS_RENEWAL_DATE"
+	ColumnViewTypeOrganizationsForecastArr            ColumnViewType = "ORGANIZATIONS_FORECAST_ARR"
+	ColumnViewTypeOrganizationsOwner                  ColumnViewType = "ORGANIZATIONS_OWNER"
+	ColumnViewTypeOrganizationsLastTouchpoint         ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT"
+	ColumnViewTypeOrganizationsLastTouchpointDate     ColumnViewType = "ORGANIZATIONS_LAST_TOUCHPOINT_DATE"
+	ColumnViewTypeOrganizationsStage                  ColumnViewType = "ORGANIZATIONS_STAGE"
+	ColumnViewTypeOrganizationsContactCount           ColumnViewType = "ORGANIZATIONS_CONTACT_COUNT"
+	ColumnViewTypeOrganizationsSocials                ColumnViewType = "ORGANIZATIONS_SOCIALS"
+	ColumnViewTypeOrganizationsLeadSource             ColumnViewType = "ORGANIZATIONS_LEAD_SOURCE"
+	ColumnViewTypeOrganizationsCreatedDate            ColumnViewType = "ORGANIZATIONS_CREATED_DATE"
+	ColumnViewTypeOrganizationsEmployeeCount          ColumnViewType = "ORGANIZATIONS_EMPLOYEE_COUNT"
+	ColumnViewTypeOrganizationsYearFounded            ColumnViewType = "ORGANIZATIONS_YEAR_FOUNDED"
+	ColumnViewTypeOrganizationsIndustry               ColumnViewType = "ORGANIZATIONS_INDUSTRY"
+	ColumnViewTypeOrganizationsChurnDate              ColumnViewType = "ORGANIZATIONS_CHURN_DATE"
+	ColumnViewTypeOrganizationsLtv                    ColumnViewType = "ORGANIZATIONS_LTV"
+	ColumnViewTypeOrganizationsCity                   ColumnViewType = "ORGANIZATIONS_CITY"
+	ColumnViewTypeOrganizationsIsPublic               ColumnViewType = "ORGANIZATIONS_IS_PUBLIC"
+	ColumnViewTypeOrganizationsLinkedinFollowerCount  ColumnViewType = "ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT"
+	ColumnViewTypeOrganizationsTags                   ColumnViewType = "ORGANIZATIONS_TAGS"
+	ColumnViewTypeOrganizationsHeadquarters           ColumnViewType = "ORGANIZATIONS_HEADQUARTERS"
+	ColumnViewTypeContactsAvatar                      ColumnViewType = "CONTACTS_AVATAR"
+	ColumnViewTypeContactsName                        ColumnViewType = "CONTACTS_NAME"
+	ColumnViewTypeContactsOrganization                ColumnViewType = "CONTACTS_ORGANIZATION"
+	ColumnViewTypeContactsEmails                      ColumnViewType = "CONTACTS_EMAILS"
+	ColumnViewTypeContactsPhoneNumbers                ColumnViewType = "CONTACTS_PHONE_NUMBERS"
+	ColumnViewTypeContactsLinkedin                    ColumnViewType = "CONTACTS_LINKEDIN"
+	ColumnViewTypeContactsCity                        ColumnViewType = "CONTACTS_CITY"
+	ColumnViewTypeContactsPersona                     ColumnViewType = "CONTACTS_PERSONA"
+	ColumnViewTypeContactsLastInteraction             ColumnViewType = "CONTACTS_LAST_INTERACTION"
+	ColumnViewTypeContactsCountry                     ColumnViewType = "CONTACTS_COUNTRY"
+	ColumnViewTypeContactsRegion                      ColumnViewType = "CONTACTS_REGION"
+	ColumnViewTypeContactsSkills                      ColumnViewType = "CONTACTS_SKILLS"
+	ColumnViewTypeContactsSchools                     ColumnViewType = "CONTACTS_SCHOOLS"
+	ColumnViewTypeContactsLanguages                   ColumnViewType = "CONTACTS_LANGUAGES"
+	ColumnViewTypeContactsTimeInCurrentRole           ColumnViewType = "CONTACTS_TIME_IN_CURRENT_ROLE"
+	ColumnViewTypeContactsExperience                  ColumnViewType = "CONTACTS_EXPERIENCE"
+	ColumnViewTypeContactsLinkedinFollowerCount       ColumnViewType = "CONTACTS_LINKEDIN_FOLLOWER_COUNT"
+	ColumnViewTypeContactsJobTitle                    ColumnViewType = "CONTACTS_JOB_TITLE"
+	ColumnViewTypeContactsTags                        ColumnViewType = "CONTACTS_TAGS"
+	ColumnViewTypeContactsConnections                 ColumnViewType = "CONTACTS_CONNECTIONS"
+	ColumnViewTypeOpportunitiesCommonColumn           ColumnViewType = "OPPORTUNITIES_COMMON_COLUMN"
+	ColumnViewTypeOpportunitiesName                   ColumnViewType = "OPPORTUNITIES_NAME"
+	ColumnViewTypeOpportunitiesOrganization           ColumnViewType = "OPPORTUNITIES_ORGANIZATION"
+	ColumnViewTypeOpportunitiesStage                  ColumnViewType = "OPPORTUNITIES_STAGE"
+	ColumnViewTypeOpportunitiesEstimatedArr           ColumnViewType = "OPPORTUNITIES_ESTIMATED_ARR"
+	ColumnViewTypeOpportunitiesOwner                  ColumnViewType = "OPPORTUNITIES_OWNER"
+	ColumnViewTypeOpportunitiesTimeInStage            ColumnViewType = "OPPORTUNITIES_TIME_IN_STAGE"
+	ColumnViewTypeOpportunitiesCreatedDate            ColumnViewType = "OPPORTUNITIES_CREATED_DATE"
+	ColumnViewTypeOpportunitiesNextStep               ColumnViewType = "OPPORTUNITIES_NEXT_STEP"
+	ColumnViewTypeContractsName                       ColumnViewType = "CONTRACTS_NAME"
+	ColumnViewTypeContractsEnded                      ColumnViewType = "CONTRACTS_ENDED"
+	ColumnViewTypeContractsPeriod                     ColumnViewType = "CONTRACTS_PERIOD"
+	ColumnViewTypeContractsCurrency                   ColumnViewType = "CONTRACTS_CURRENCY"
+	ColumnViewTypeContractsStatus                     ColumnViewType = "CONTRACTS_STATUS"
+	ColumnViewTypeContractsRenewal                    ColumnViewType = "CONTRACTS_RENEWAL"
+	ColumnViewTypeContractsLtv                        ColumnViewType = "CONTRACTS_LTV"
+	ColumnViewTypeContractsRenewalDate                ColumnViewType = "CONTRACTS_RENEWAL_DATE"
+	ColumnViewTypeContractsForecastArr                ColumnViewType = "CONTRACTS_FORECAST_ARR"
+	ColumnViewTypeContractsOwner                      ColumnViewType = "CONTRACTS_OWNER"
+	ColumnViewTypeContractsHealth                     ColumnViewType = "CONTRACTS_HEALTH"
+	ColumnViewTypeFlowName                            ColumnViewType = "FLOW_NAME"
+	ColumnViewTypeFlowStatus                          ColumnViewType = "FLOW_STATUS"
+	ColumnViewTypeFlowSequenceName                    ColumnViewType = "FLOW_SEQUENCE_NAME"
+	ColumnViewTypeFlowSequenceStatus                  ColumnViewType = "FLOW_SEQUENCE_STATUS"
+	ColumnViewTypeFlowSequenceContactCount            ColumnViewType = "FLOW_SEQUENCE_CONTACT_COUNT"
+	ColumnViewTypeFlowSequenceStatusPendingCount      ColumnViewType = "FLOW_SEQUENCE_STATUS_PENDING_COUNT"
+	ColumnViewTypeFlowSequenceStatusInProgressCount   ColumnViewType = "FLOW_SEQUENCE_STATUS_IN_PROGRESS_COUNT"
+	ColumnViewTypeFlowSequenceStatusSuccessfulCount   ColumnViewType = "FLOW_SEQUENCE_STATUS_SUCCESSFUL_COUNT"
+	ColumnViewTypeFlowSequenceStatusUnsuccessfulCount ColumnViewType = "FLOW_SEQUENCE_STATUS_UNSUCCESSFUL_COUNT"
 )
 
 var AllColumnViewType = []ColumnViewType{
@@ -3444,11 +3507,20 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeContractsForecastArr,
 	ColumnViewTypeContractsOwner,
 	ColumnViewTypeContractsHealth,
+	ColumnViewTypeFlowName,
+	ColumnViewTypeFlowStatus,
+	ColumnViewTypeFlowSequenceName,
+	ColumnViewTypeFlowSequenceStatus,
+	ColumnViewTypeFlowSequenceContactCount,
+	ColumnViewTypeFlowSequenceStatusPendingCount,
+	ColumnViewTypeFlowSequenceStatusInProgressCount,
+	ColumnViewTypeFlowSequenceStatusSuccessfulCount,
+	ColumnViewTypeFlowSequenceStatusUnsuccessfulCount,
 }
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeInvoicesOrganization, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeOpportunitiesName, ColumnViewTypeOpportunitiesOrganization, ColumnViewTypeOpportunitiesStage, ColumnViewTypeOpportunitiesEstimatedArr, ColumnViewTypeOpportunitiesOwner, ColumnViewTypeOpportunitiesTimeInStage, ColumnViewTypeOpportunitiesCreatedDate, ColumnViewTypeOpportunitiesNextStep, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeInvoicesOrganization, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeOpportunitiesName, ColumnViewTypeOpportunitiesOrganization, ColumnViewTypeOpportunitiesStage, ColumnViewTypeOpportunitiesEstimatedArr, ColumnViewTypeOpportunitiesOwner, ColumnViewTypeOpportunitiesTimeInStage, ColumnViewTypeOpportunitiesCreatedDate, ColumnViewTypeOpportunitiesNextStep, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth, ColumnViewTypeFlowName, ColumnViewTypeFlowStatus, ColumnViewTypeFlowSequenceName, ColumnViewTypeFlowSequenceStatus, ColumnViewTypeFlowSequenceContactCount, ColumnViewTypeFlowSequenceStatusPendingCount, ColumnViewTypeFlowSequenceStatusInProgressCount, ColumnViewTypeFlowSequenceStatusSuccessfulCount, ColumnViewTypeFlowSequenceStatusUnsuccessfulCount:
 		return true
 	}
 	return false
@@ -4199,6 +4271,141 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FlowSequenceStatus string
+
+const (
+	FlowSequenceStatusInactive FlowSequenceStatus = "INACTIVE"
+	FlowSequenceStatusActive   FlowSequenceStatus = "ACTIVE"
+	FlowSequenceStatusPaused   FlowSequenceStatus = "PAUSED"
+	FlowSequenceStatusArchived FlowSequenceStatus = "ARCHIVED"
+)
+
+var AllFlowSequenceStatus = []FlowSequenceStatus{
+	FlowSequenceStatusInactive,
+	FlowSequenceStatusActive,
+	FlowSequenceStatusPaused,
+	FlowSequenceStatusArchived,
+}
+
+func (e FlowSequenceStatus) IsValid() bool {
+	switch e {
+	case FlowSequenceStatusInactive, FlowSequenceStatusActive, FlowSequenceStatusPaused, FlowSequenceStatusArchived:
+		return true
+	}
+	return false
+}
+
+func (e FlowSequenceStatus) String() string {
+	return string(e)
+}
+
+func (e *FlowSequenceStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlowSequenceStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlowSequenceStatus", str)
+	}
+	return nil
+}
+
+func (e FlowSequenceStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FlowSequenceStepStatus string
+
+const (
+	FlowSequenceStepStatusInactive FlowSequenceStepStatus = "INACTIVE"
+	FlowSequenceStepStatusActive   FlowSequenceStepStatus = "ACTIVE"
+	FlowSequenceStepStatusPaused   FlowSequenceStepStatus = "PAUSED"
+	FlowSequenceStepStatusArchived FlowSequenceStepStatus = "ARCHIVED"
+)
+
+var AllFlowSequenceStepStatus = []FlowSequenceStepStatus{
+	FlowSequenceStepStatusInactive,
+	FlowSequenceStepStatusActive,
+	FlowSequenceStepStatusPaused,
+	FlowSequenceStepStatusArchived,
+}
+
+func (e FlowSequenceStepStatus) IsValid() bool {
+	switch e {
+	case FlowSequenceStepStatusInactive, FlowSequenceStepStatusActive, FlowSequenceStepStatusPaused, FlowSequenceStepStatusArchived:
+		return true
+	}
+	return false
+}
+
+func (e FlowSequenceStepStatus) String() string {
+	return string(e)
+}
+
+func (e *FlowSequenceStepStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlowSequenceStepStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlowSequenceStepStatus", str)
+	}
+	return nil
+}
+
+func (e FlowSequenceStepStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FlowStatus string
+
+const (
+	FlowStatusInactive FlowStatus = "INACTIVE"
+	FlowStatusActive   FlowStatus = "ACTIVE"
+	FlowStatusPaused   FlowStatus = "PAUSED"
+	FlowStatusArchived FlowStatus = "ARCHIVED"
+)
+
+var AllFlowStatus = []FlowStatus{
+	FlowStatusInactive,
+	FlowStatusActive,
+	FlowStatusPaused,
+	FlowStatusArchived,
+}
+
+func (e FlowStatus) IsValid() bool {
+	switch e {
+	case FlowStatusInactive, FlowStatusActive, FlowStatusPaused, FlowStatusArchived:
+		return true
+	}
+	return false
+}
+
+func (e FlowStatus) String() string {
+	return string(e)
+}
+
+func (e *FlowStatus) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlowStatus(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlowStatus", str)
+	}
+	return nil
+}
+
+func (e FlowStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -5279,6 +5486,7 @@ const (
 	TableIDTypeOpportunities                  TableIDType = "OPPORTUNITIES"
 	TableIDTypeOpportunitiesRecords           TableIDType = "OPPORTUNITIES_RECORDS"
 	TableIDTypeContracts                      TableIDType = "CONTRACTS"
+	TableIDTypeFlowSequences                  TableIDType = "FLOW_SEQUENCES"
 )
 
 var AllTableIDType = []TableIDType{
@@ -5292,11 +5500,12 @@ var AllTableIDType = []TableIDType{
 	TableIDTypeOpportunities,
 	TableIDTypeOpportunitiesRecords,
 	TableIDTypeContracts,
+	TableIDTypeFlowSequences,
 }
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts, TableIDTypeFlowSequences:
 		return true
 	}
 	return false
@@ -5331,6 +5540,7 @@ const (
 	TableViewTypeContacts      TableViewType = "CONTACTS"
 	TableViewTypeOpportunities TableViewType = "OPPORTUNITIES"
 	TableViewTypeContracts     TableViewType = "CONTRACTS"
+	TableViewTypeFlow          TableViewType = "FLOW"
 )
 
 var AllTableViewType = []TableViewType{
@@ -5339,11 +5549,12 @@ var AllTableViewType = []TableViewType{
 	TableViewTypeContacts,
 	TableViewTypeOpportunities,
 	TableViewTypeContracts,
+	TableViewTypeFlow,
 }
 
 func (e TableViewType) IsValid() bool {
 	switch e {
-	case TableViewTypeOrganizations, TableViewTypeInvoices, TableViewTypeContacts, TableViewTypeOpportunities, TableViewTypeContracts:
+	case TableViewTypeOrganizations, TableViewTypeInvoices, TableViewTypeContacts, TableViewTypeOpportunities, TableViewTypeContracts, TableViewTypeFlow:
 		return true
 	}
 	return false

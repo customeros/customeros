@@ -1,0 +1,67 @@
+extend type Query {
+    flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    sequences: [FlowSequence!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+type Flow implements MetadataInterface {
+    metadata:           Metadata!
+    name:               String
+    description:        String
+    status: FlowStatus
+    sequences: [FlowSequence!]! @goField(forceResolver: true)
+}
+
+type FlowSequence implements MetadataInterface {
+    metadata:           Metadata!
+    name:               String
+    description:        String
+    status: FlowSequenceStatus
+    flow: [Flow!]! @goField(forceResolver: true)
+    steps: [FlowSequenceStep!]! @goField(forceResolver: true)
+    contacts: [FlowSequenceContact!]! @goField(forceResolver: true)
+    mailboxes: [Mailbox!]! @goField(forceResolver: true)
+}
+
+type FlowSequenceStep implements MetadataInterface {
+    metadata: Metadata!
+
+    status: FlowSequenceStepStatus!
+    email:  Email! @goField(forceResolver: true)
+
+    Type: String
+    Text: String
+    Template: String
+}
+
+type FlowSequenceContact implements MetadataInterface {
+    metadata:               Metadata!
+
+    contact: Contact! @goField(forceResolver: true)
+    email: Email! @goField(forceResolver: true)
+}
+
+type Mailbox implements MetadataInterface {
+    metadata: Metadata!
+    email:    String!
+}
+
+enum FlowStatus {
+    INACTIVE
+    ACTIVE
+    PAUSED
+    ARCHIVED
+}
+
+enum FlowSequenceStatus {
+    INACTIVE
+    ACTIVE
+    PAUSED
+    ARCHIVED
+}
+
+enum FlowSequenceStepStatus {
+    INACTIVE
+    ACTIVE
+    PAUSED
+    ARCHIVED
+}
