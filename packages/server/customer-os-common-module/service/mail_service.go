@@ -7,6 +7,7 @@ import (
 	"github.com/DusanKasan/parsemail"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -21,11 +22,11 @@ type mailService struct {
 }
 
 type MailService interface {
-	SaveMail(ctx context.Context, request dto.MailRequest, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*neo4jentity.InteractionEventEntity, error)
+	SaveMail(ctx context.Context, request dto.MailRequest, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*string, error)
 	SendMail(ctx context.Context, request dto.MailRequest, username *string) (*parsemail.Email, error)
 }
 
-func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*neo4jentity.InteractionEventEntity, error) {
+func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, email *parsemail.Email, tenant, user, customerOSInternalIdentifier string) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "MailService.SaveMail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
@@ -33,7 +34,7 @@ func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, ema
 	threadId := email.Header.Get("Thread-Id")
 	span.LogFields(tracingLog.String("threadId", threadId), tracingLog.String("user", user))
 
-	sessionId := ""
+	interactionSessionId := ""
 
 	interactionSessionNode, err := s.services.Neo4jRepositories.InteractionSessionReadRepository.GetByIdentifierAndChannel(ctx, tenant, threadId, "EMAIL")
 	if err != nil {
@@ -41,25 +42,23 @@ func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, ema
 		return nil, fmt.Errorf("failed to get interaction session: %v", err)
 	}
 	if interactionSessionNode != nil {
-		sessionId = neo4jmapper.MapDbNodeToInteractionSessionEntity(interactionSessionNode).Id
+		interactionSessionId = neo4jmapper.MapDbNodeToInteractionSessionEntity(interactionSessionNode).Id
 	}
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
-	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	interactionEventId, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		if sessionId == "" {
+		if interactionSessionId == "" {
 			sessionIdCreated, err := s.services.InteractionSessionService.CreateInTx(ctx, tx, &neo4jentity.InteractionSessionEntity{
 				Status:     "ACTIVE",
 				Type:       "THREAD",
 				Channel:    "EMAIL",
 				Identifier: threadId,
-				Name:       email.Subject,
+				Name:       utils.StringPtrFirstNonEmpty(request.Subject),
 
-				Source:        "EMAIL",
-				SourceOfTruth: "EMAIL",
-				AppSource:     "user-admin-api",
+				AppSource: "user-admin-api",
 			})
 			if err != nil {
 				tracing.TraceErr(span, err)
@@ -70,7 +69,7 @@ func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, ema
 				tracing.TraceErr(span, errors.New("session id is empty"))
 				return nil, fmt.Errorf("session id is empty")
 			} else {
-				sessionId = *sessionIdCreated
+				interactionSessionId = *sessionIdCreated
 			}
 		}
 
@@ -107,7 +106,7 @@ func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, ema
 			return nil, err
 		}
 
-		_, err = s.services.InteractionEventService.CreateInTx(ctx, tx, &InteractionEventCreateData{
+		interactionEventId, err := s.services.InteractionEventService.CreateInTx(ctx, tx, &InteractionEventCreateData{
 			InteractionEventEntity: &neo4jentity.InteractionEventEntity{
 				Content:                      utils.FirstNotEmptyString(email.HTMLBody, email.TextBody),
 				ContentType:                  email.ContentType,
@@ -125,40 +124,27 @@ func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, ema
 			SentCc:            sentCc,
 			SentBcc:           sentBcc,
 			RepliesTo:         request.ReplyTo,
-			SessionIdentifier: &sessionId,
+			SessionIdentifier: &interactionSessionId,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, fmt.Errorf("failed to create interaction event: %v", err)
 		}
 
-		return nil, nil
+		err = s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, *interactionEventId, commonModel.INTERACTION_EVENT, commonModel.PART_OF, nil, interactionSessionId, commonModel.INTERACTION_SESSION)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, fmt.Errorf("failed to link interaction event with interaction session: %v", err)
+		}
+
+		return interactionEventId, nil
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	//
-	//participantTypeTO, participantTypeCC, participantTypeBCC := "TO", "CC", "BCC"
-	//participantsTO := toParticipantInputArr(email.To, &participantTypeTO)
-	//participantsCC := toParticipantInputArr(email.Cc, &participantTypeCC)
-	//participantsBCC := toParticipantInputArr(email.Bcc, &participantTypeBCC)
-	//sentTo := append(append(participantsTO, participantsCC...), participantsBCC...)
-	//sentBy := toParticipantInputArr(email.From, nil)
-	//
-
-	//eventOpts := []service.EventOption{
-
-	//}
-	//response, err := s.services.CustomerOsService.CreateInteractionEvent(eventOpts...)
-	//
-	//if err != nil {
-	//	tracing.TraceErr(span, err)
-	//	return nil, fmt.Errorf("failed to create interaction event: %v", err)
-	//}
-
-	return nil, nil
+	return interactionEventId.(*string), nil
 }
 
 func (s *mailService) SendMail(ctx context.Context, request dto.MailRequest, username *string) (*parsemail.Email, error) {

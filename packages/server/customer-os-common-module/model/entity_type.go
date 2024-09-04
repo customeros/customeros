@@ -12,7 +12,7 @@ const (
 	CONTRACT            EntityType = "CONTRACT"
 	INVOICE             EntityType = "INVOICE"
 	INTERACTION_EVENT   EntityType = "INTERACTION_EVENT"
-	INTERACTION_SESSION EntityType = "INTERACTION_EVENT"
+	INTERACTION_SESSION EntityType = "INTERACTION_SESSION"
 	COMMENT             EntityType = "COMMENT"
 	ISSUE               EntityType = "ISSUE"
 	LOG_ENTRY           EntityType = "LOG_ENTRY"
@@ -47,6 +47,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelInvoice
 	case INTERACTION_EVENT:
 		return NodeLabelInteractionEvent
+	case INTERACTION_SESSION:
+		return NodeLabelInteractionSession
 	case COMMENT:
 		return NodeLabelComment
 	case ISSUE:

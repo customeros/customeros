@@ -43,8 +43,27 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "mail/send", c.Request.Header)
 			defer span.Finish()
 
-			username := common.GetUserEmailFromContext(ctx)
-			tenant := common.GetTenantFromContext(ctx)
+			username := c.GetString(security.KEY_USER_EMAIL)
+			tenant := c.GetString(security.KEY_TENANT_NAME)
+
+			customCtx := &common.CustomContext{}
+			if c.Keys[security.KEY_TENANT_NAME] != nil {
+				customCtx.Tenant = c.Keys[security.KEY_TENANT_NAME].(string)
+			}
+			if c.Keys[security.KEY_USER_ROLES] != nil {
+				customCtx.Roles = c.Keys[security.KEY_USER_ROLES].([]string)
+			}
+			if c.Keys[security.KEY_USER_ID] != nil {
+				customCtx.UserId = c.Keys[security.KEY_USER_ID].(string)
+			}
+			if c.Keys[security.KEY_USER_EMAIL] != nil {
+				customCtx.UserEmail = c.Keys[security.KEY_USER_EMAIL].(string)
+			}
+			if c.Keys[security.KEY_IDENTITY_ID] != nil {
+				customCtx.IdentityId = c.Keys[security.KEY_IDENTITY_ID].(string)
+			}
+
+			ctx = common.WithCustomContext(ctx, customCtx)
 
 			var request dto.MailRequest
 
@@ -80,16 +99,16 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 				return
 			}
 
-			mail, err := services.CommonServices.MailService.SaveMail(ctx, request, replyMail, tenant, username, uniqueInternalIdentifier)
+			interactionEventId, err := services.CommonServices.MailService.SaveMail(ctx, request, replyMail, tenant, username, uniqueInternalIdentifier)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 
-			span.LogFields(tracingLog.String("result - interactionEventId", mail.Id))
+			span.LogFields(tracingLog.String("result - interactionEventId", *interactionEventId))
 			c.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprintf("interaction event created with id: %s", mail.Id),
+				"result": fmt.Sprintf("interaction event created with id: %s", *interactionEventId),
 			})
 
 		})

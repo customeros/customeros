@@ -377,39 +377,52 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 		linkWithId = *linkWIthData.ContactId
 		linkWithLabel = commonModel.CONTACT
 	} else if linkWIthData.Email != nil {
-		linkWithId = *linkWIthData.Email
 		linkWithLabel = commonModel.EMAIL
+
+		emailId, err := s.services.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, *linkWIthData.Email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if emailId != "" {
+			linkWithId = emailId
+		} else {
+			//TODO create and use inTx method
+			createdEmailId, err := s.services.EmailService.Merge(ctx, neo4jentity.EmailEntity{
+				Email: *linkWIthData.Email,
+			}, nil)
+
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			if createdEmailId == nil {
+				tracing.TraceErr(span, errors.New("failed to create email"))
+				return errors.New("failed to create email")
+			}
+
+			linkWithId = *createdEmailId
+		}
+
 	} else if linkWIthData.PhoneNumber != nil {
-		linkWithId = *linkWIthData.PhoneNumber
 		linkWithLabel = commonModel.PHONE_NUMBER
+
+		phoneNumberId, err := s.services.Neo4jRepositories.PhoneNumberReadRepository.GetPhoneNumberIdIfExists(ctx, tenant, *linkWIthData.Email)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+
+		if phoneNumberId != "" {
+			linkWithId = phoneNumberId
+		} else {
+			//TODO create and use inTx method
+		}
 	} else {
 		tracing.TraceErr(span, errors.New("no link with data provided"))
 		return errors.New("no link with data provided")
-	}
-
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsByIdInTx(ctx, tx, tenant, linkWithId, linkWithLabel.Neo4jLabel())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if !exists {
-		//TODO implement this when switching sync-mail to use it
-		if linkWithLabel == commonModel.NodeLabelEmail {
-			//_, err = s.services.ContactService.Create(ctx, &service.ContactCreateData{
-			//	ContactEntity: &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
-			//	EmailEntity:   mapper.MapEmailInputToEntity(&model.EmailInput{Email: *sentBy.Email}),
-			//	Source:        neo4jentity.DataSourceOpenline,
-			//})
-		} else if linkWithLabel == commonModel.NodeLabelPhoneNumber {
-			//_, err = s.services.ContactService.Create(ctx, &service.ContactCreateData{
-			//	ContactEntity:     &neo4jentity.ContactEntity{CreatedAt: utils.Now(), FirstName: "", LastName: ""},
-			//	PhoneNumberEntity: mapper.MapPhoneNumberInputToEntity(&model.PhoneNumberInput{PhoneNumber: *sentTo.PhoneNumber}),
-			//	Source:            neo4jentity.DataSourceOpenline,
-			//})
-		} else {
-			tracing.TraceErr(span, errors.New("node label not supported for creation"))
-			return errors.New("node label not supported for creation")
-		}
 	}
 
 	var relationshipProperties *map[string]interface{}
@@ -420,7 +433,7 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 		}
 	}
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.NodeLabelInteractionEvent, relationship, relationshipProperties, linkWithId, linkWithLabel)
+	err := s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.INTERACTION_EVENT, relationship, relationshipProperties, linkWithId, linkWithLabel)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

@@ -59,24 +59,25 @@ func (r *commonWriteRepository) LinkEntityWithEntityInTx(ctx context.Context, tx
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
-	cypher += fmt.Sprintf(`MATCH (child:%s_%s {id:$withEntityId}) `, withEntityType.Neo4jLabel(), tenant)
-	cypher += fmt.Sprintf(`MERGE (parent)-[:%s]->(child)`, relationship.String())
-
-	// If there are relationship properties, add a SET clause to the Cypher query
-	if relationshipProperties != nil && len(*relationshipProperties) > 0 {
-		cypher += "SET "
-		props := []string{}
-		for key := range *relationshipProperties {
-			props = append(props, fmt.Sprintf("rel.%s = $%s", key, key))
-		}
-		cypher += strings.Join(props, ", ")
-	}
-
 	params := map[string]any{
 		"tenant":       tenant,
 		"entityId":     entityId,
 		"withEntityId": withEntityId,
+	}
+
+	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
+	cypher += fmt.Sprintf(`MATCH (child:%s_%s {id:$withEntityId}) `, withEntityType.Neo4jLabel(), tenant)
+	cypher += fmt.Sprintf(`MERGE (parent)-[rel:%s]->(child)`, relationship.String())
+
+	// If there are relationship properties, add a SET clause to the Cypher query
+	if relationshipProperties != nil && len(*relationshipProperties) > 0 {
+		cypher += " SET "
+		props := []string{}
+		for k, v := range *relationshipProperties {
+			props = append(props, fmt.Sprintf("rel.%s = $rel_%s", k, k))
+			params["rel_"+k] = v
+		}
+		cypher += strings.Join(props, ", ")
 	}
 
 	span.LogFields(log.String("cypher", cypher))
