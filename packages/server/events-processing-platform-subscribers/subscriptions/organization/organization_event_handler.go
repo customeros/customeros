@@ -11,9 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
-	"io"
-	"math/rand"
-	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -44,9 +41,6 @@ const (
 	Unknown = "Unknown"
 )
 
-var nonRetryableErrors = []string{"Invalid Domain Name"}
-var knownBrandfetchErrors = []string{"Invalid Domain Name", "User is not authorized to access this resource with an explicit deny", "API key quota exceeded", "Endpoint request timed out"}
-
 type Socials struct {
 	Github    string `json:"github,omitempty"`
 	Linkedin  string `json:"linkedin,omitempty"`
@@ -54,72 +48,6 @@ type Socials struct {
 	Youtube   string `json:"youtube,omitempty"`
 	Instagram string `json:"instagram,omitempty"`
 	Facebook  string `json:"facebook,omitempty"`
-}
-
-type BrandfetchResponse struct {
-	Message         string            `json:"message,omitempty"`
-	Id              string            `json:"id,omitempty"`
-	Name            string            `json:"name,omitempty"`
-	Domain          string            `json:"domain,omitempty"`
-	Claimed         bool              `json:"claimed"`
-	Description     string            `json:"description,omitempty"`
-	LongDescription string            `json:"longDescription,omitempty"`
-	Links           []BrandfetchLink  `json:"links,omitempty"`
-	Logos           []BranfetchLogo   `json:"logos,omitempty"`
-	QualityScore    float64           `json:"qualityScore,omitempty"`
-	Company         BrandfetchCompany `json:"company,omitempty"`
-	IsNsfw          bool              `json:"isNsfw"`
-}
-
-type BrandfetchLink struct {
-	Name string `json:"name,omitempty"`
-	Url  string `json:"url,omitempty"`
-}
-
-type BranfetchLogo struct {
-	Theme   string                `json:"theme,omitempty"`
-	Type    string                `json:"type,omitempty"`
-	Formats []BranfetchLogoFormat `json:"formats,omitempty"`
-}
-
-type BranfetchLogoFormat struct {
-	Src        string `json:"src,omitempty"`
-	Background string `json:"background,omitempty"`
-	Format     string `json:"format,omitempty"`
-	Height     int64  `json:"height,omitempty"`
-	Width      int64  `json:"width,omitempty"`
-	Size       int64  `json:"size,omitempty"`
-}
-
-type BrandfetchCompany struct {
-	Employees   any                  `json:"employees,omitempty"`
-	FoundedYear int64                `json:"foundedYear,omitempty"`
-	Industries  []BrandfetchIndustry `json:"industries,omitempty"`
-	Kind        string               `json:"kind,omitempty"`
-	Location    struct {
-		City          string `json:"city,omitempty"`
-		Country       string `json:"country,omitempty"`
-		CountryCodeA2 string `json:"countryCode,omitempty"`
-		Region        string `json:"region,omitempty"`
-		State         string `json:"state,omitempty"`
-		SubRegion     string `json:"subRegion,omitempty"`
-	} `json:"location,omitempty"`
-}
-
-func (b *BrandfetchCompany) LocationIsEmpty() bool {
-	return b.Location.City == "" && b.Location.Country == "" && b.Location.State == "" && b.Location.CountryCodeA2 == ""
-}
-
-type BrandfetchIndustry struct {
-	Score  float64 `json:"score,omitempty"`
-	Name   string  `json:"name,omitempty"`
-	Emoji  string  `json:"emoji,omitempty"`
-	Slug   string  `json:"slug,omitempty"`
-	Parent struct {
-		Emoji string `json:"emoji,omitempty"`
-		Name  string `json:"name,omitempty"`
-		Slug  string `json:"slug,omitempty"`
-	} `json:"parent,omitempty"`
 }
 
 type organizationEventHandler struct {
@@ -220,41 +148,10 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	}
 	domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainNode)
 
-	daysAgo10 := utils.Now().Add(-time.Hour * 24 * 10)
-	daysAgo365 := utils.Now().Add(-time.Hour * 24 * 365)
-
-	// if domain is not enriched
-	// or last enrich attempt was more than 10 days ago,
-	// or last enrich was more than 365 days ago
-	// enrich it
-	justEnriched := false
-	if (domainEntity.EnrichDetails.EnrichedAt == nil && (domainEntity.EnrichDetails.EnrichRequestedAt == nil || domainEntity.EnrichDetails.EnrichRequestedAt.Before(daysAgo10))) ||
-		(domainEntity.EnrichDetails.EnrichedAt != nil && domainEntity.EnrichDetails.EnrichedAt.Before(daysAgo365)) {
-
-		if !utils.Contains(nonRetryableErrors, domainEntity.EnrichDetails.EnrichError) {
-			err = h.enrichDomain(ctx, tenant, domain)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("Error enriching domain: %v", err)
-				return nil
-			}
-			justEnriched = true
-		}
-	}
-
-	// re-fetch latest domain node
-	if justEnriched {
-		domainNode, err = h.services.CommonServices.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error getting domain node: %v", err)
-			return nil
-		}
-		domainEntity = neo4jmapper.MapDbNodeToDomainEntity(domainNode)
-	}
+	// TODO Call enrichment API
 
 	// Convert enrich data to struct
-	var brandfetchResponse BrandfetchResponse
+	var brandfetchResponse postgresEntity.BrandfetchResponseBody
 	if domainEntity.EnrichDetails.EnrichSource == neo4jenum.Brandfetch && domainEntity.EnrichDetails.EnrichData != "" {
 		err = json.Unmarshal([]byte(domainEntity.EnrichDetails.EnrichData), &brandfetchResponse)
 		if err != nil {
@@ -268,110 +165,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	return nil
 }
 
-func (h *organizationEventHandler) enrichDomain(ctx context.Context, tenant, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.enrichDomain")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("domain", domain))
-
-	brandfetchUrl := h.cfg.Services.BrandfetchApi
-
-	if brandfetchUrl == "" {
-		err := errors.New("Brandfetch URL not set")
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Brandfetch URL not set")
-		return err
-	}
-
-	// get current month in format yyyy-mm
-	currentMonth := utils.Now().Format("2006-01")
-
-	queryResult := h.services.CommonServices.PostgresRepositories.ExternalAppKeysRepository.GetAppKeys(ctx, constants.AppBrandfetch, currentMonth, h.cfg.Services.BrandfetchLimit)
-	if queryResult.Error != nil {
-		tracing.TraceErr(span, queryResult.Error)
-		h.log.Errorf("Error getting brandfetch app keys: %v", queryResult.Error)
-		return queryResult.Error
-	}
-	branfetchAppKeys := queryResult.Result.([]postgresEntity.ExternalAppKeys)
-	if len(branfetchAppKeys) == 0 {
-		err := errors.New(fmt.Sprintf("no brandfetch app keys available for %s", currentMonth))
-		tracing.TraceErr(span, err)
-		h.log.Errorf("No brandfetch app keys available for %s", currentMonth)
-		return err
-	}
-	// pick random app key from list
-	appKey := branfetchAppKeys[rand.Intn(len(branfetchAppKeys))]
-
-	body, err := makeBrandfetchHTTPRequest(brandfetchUrl, appKey.AppKey, domain)
-
-	enrichFailed := false
-	errMsg := ""
-	if err != nil {
-		enrichFailed = true
-		errMsg = err.Error()
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error making Brandfetch HTTP request: %v", err)
-	}
-
-	// Increment usage count of the app key
-	queryResult = h.services.CommonServices.PostgresRepositories.ExternalAppKeysRepository.IncrementUsageCount(ctx, appKey.ID)
-	if queryResult.Error != nil {
-		tracing.TraceErr(span, queryResult.Error)
-		h.log.Errorf("Error incrementing app key usage count: %v", queryResult.Error)
-	}
-
-	var brandfetchResponse BrandfetchResponse
-	err = json.Unmarshal(body, &brandfetchResponse)
-	if err != nil {
-		enrichFailed = true
-		errMsg = err.Error()
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error unmarshalling brandfetch response: %v", err)
-	}
-
-	if utils.Contains(knownBrandfetchErrors, brandfetchResponse.Message) {
-		enrichFailed = true
-		errMsg = brandfetchResponse.Message
-	}
-
-	if enrichFailed {
-		innerErr := h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.EnrichFailed(ctx, domain, errMsg, neo4jenum.Brandfetch, utils.Now())
-		if innerErr != nil {
-			tracing.TraceErr(span, innerErr)
-			h.log.Errorf("Error saving enriching domain results: %v", innerErr.Error())
-		}
-		return nil
-	}
-
-	bodyAsString := string(body)
-	err = h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.EnrichSuccess(ctx, domain, bodyAsString, neo4jenum.Brandfetch, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error saving enriching domain results: %v", err.Error())
-		return err
-	}
-	return nil
-}
-
-func makeBrandfetchHTTPRequest(baseUrl, apiKey, domain string) ([]byte, error) {
-	url := baseUrl + "/" + domain
-
-	req, _ := http.NewRequest("GET", url, nil)
-
-	req.Header.Add("accept", "application/json")
-	req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", apiKey))
-
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
-
-	body, err := io.ReadAll(res.Body)
-	return body, err
-}
-
-func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.Context, tenant, domain string, organizationEntity neo4jEntity.OrganizationEntity, brandfetch BrandfetchResponse) {
+func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.Context, tenant, domain string, organizationEntity neo4jEntity.OrganizationEntity, brandfetch postgresEntity.BrandfetchResponseBody) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromBrandfetch")
 	defer span.Finish()
 

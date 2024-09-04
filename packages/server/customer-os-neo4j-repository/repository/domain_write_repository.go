@@ -14,7 +14,9 @@ import (
 
 type DomainWriteRepository interface {
 	MergeDomain(ctx context.Context, domain, source, appSource string, now time.Time) error
+	// Deprecated
 	EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.EnrichSource, requestedAt time.Time) error
+	// Deprecated
 	EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.EnrichSource, enrichedAt time.Time) error
 }
 

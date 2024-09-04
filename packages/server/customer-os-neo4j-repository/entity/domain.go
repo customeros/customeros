@@ -17,6 +17,7 @@ type DomainEntity struct {
 	EnrichDetails DomainEnrichDetails
 }
 
+// Deprecated
 type DomainEnrichDetails struct {
 	EnrichRequestedAt *time.Time
 	EnrichError       string
