@@ -54,20 +54,27 @@ export const AddNewOrganization = observer(() => {
   });
 
   const handleConfirm = () => {
+    if (!allowSubmit) return;
+    setAllowSubmit(false);
+
     setValidation(false);
 
     if (website && !isValidURL(website)) {
       setValidation(true);
+      setAllowSubmit(true);
 
       return;
     }
     const payload = defaultValuesNewOrganization(tableViewName ?? '');
 
-    organizations.create({
-      ...payload,
-      website,
-      name,
-    });
+    organizations.create(
+      {
+        ...payload,
+        website,
+        name,
+      },
+      {},
+    );
 
     store.ui.commandMenu.toggle('AddNewOrganization');
   };
@@ -84,7 +91,7 @@ export const AddNewOrganization = observer(() => {
       <div className='p-6 pb-4 flex flex-col gap-1 '>
         <p className='text-lg font-semibold'>Create new organization</p>
         <p className='text-sm'>
-          We’ll auto-enrich this organization using its werbsite
+          We’ll auto-enrich this organization using its website
         </p>
       </div>
 
