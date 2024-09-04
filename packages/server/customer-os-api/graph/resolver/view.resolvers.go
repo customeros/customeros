@@ -275,6 +275,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	organizationFound, customersFound := false, false
 	contactsFound, contactsForTargetOrganizationsFound := false, false
 	opportunitiesFound, opportunitiesRecordsFound, contractsFound := false, false, false
+	flowSequencesFound := false
 
 	for _, def := range tableViewDefinitions {
 		if def.TableType == model.TableViewTypeOrganizations.String() && def.TableId == model.TableIDTypeCustomers.String() {
@@ -297,6 +298,9 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		}
 		if def.TableType == model.TableViewTypeContracts.String() && def.TableId == model.TableIDTypeContracts.String() {
 			contractsFound = true
+		}
+		if def.TableType == model.TableViewTypeFlow.String() && def.TableId == model.TableIDTypeFlowSequences.String() {
+			flowSequencesFound = true
 		}
 	}
 	viewsUpdated := false
@@ -355,6 +359,15 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 	}
 	if !contractsFound {
 		tvDef, err := DefaultTableViewDefinitionContracts(span)
+		if err == nil {
+			viewsUpdated = true
+			tvDef.Tenant = tenant
+			tvDef.UserId = userId
+			r.Services.Repositories.PostgresRepositories.TableViewDefinitionRepository.CreateTableViewDefinition(ctx, tvDef)
+		}
+	}
+	if !flowSequencesFound {
+		tvDef, err := DefaultTableViewDefinitionFlows(span)
 		if err == nil {
 			viewsUpdated = true
 			tvDef.Tenant = tenant
