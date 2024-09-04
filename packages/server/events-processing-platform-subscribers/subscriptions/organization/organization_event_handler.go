@@ -1,17 +1,20 @@
 package organization
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
-	"strconv"
+	"net/http"
 	"strings"
 	"time"
 
@@ -28,7 +31,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -140,78 +142,86 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		h.log.Errorf("Error creating domain node: %v", err)
 		return nil
 	}
-	domainNode, err := h.services.CommonServices.Neo4jRepositories.DomainReadRepository.GetDomain(ctx, domain)
+
+	enrichOrganizationResponse, err := h.callApiEnrichOrganization(ctx, tenant, domain)
 	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error getting domain node: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to call enrich organization API"))
+		h.log.Errorf("Error calling enrich organization API: %s", err.Error())
 		return nil
 	}
-	domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainNode)
-
-	// TODO Call enrichment API
-
-	// Convert enrich data to struct
-	var brandfetchResponse postgresEntity.BrandfetchResponseBody
-	if domainEntity.EnrichDetails.EnrichSource == neo4jenum.Brandfetch && domainEntity.EnrichDetails.EnrichData != "" {
-		err = json.Unmarshal([]byte(domainEntity.EnrichDetails.EnrichData), &brandfetchResponse)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error unmarshalling brandfetch enrich data: %v", err)
-			return nil
-		}
-		h.updateOrganizationFromBrandfetch(ctx, tenant, domain, *organizationEntity, brandfetchResponse)
+	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
+		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, enrichOrganizationResponse)
 	}
 
 	return nil
 }
 
-func (h *organizationEventHandler) updateOrganizationFromBrandfetch(ctx context.Context, tenant, domain string, organizationEntity neo4jEntity.OrganizationEntity, brandfetch postgresEntity.BrandfetchResponseBody) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromBrandfetch")
+func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context, tenant, domain string) (*enrichmentmodel.EnrichOrganizationResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.callApiEnrichOrganization")
 	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogKV("domain", domain)
+
+	requestJSON, err := json.Marshal(enrichmentmodel.EnrichOrganizationRequest{
+		Domain: domain,
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+		return nil, err
+	}
+	requestBody := []byte(string(requestJSON))
+	req, err := http.NewRequest("GET", h.cfg.Services.EnrichmentApi.Url+"/enrichOrganization", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		return nil, err
+	}
+	// Inject span context into the HTTP request
+	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
+
+	// Set the request headers
+	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.EnrichmentApi.ApiKey)
+	req.Header.Set(security.TenantHeader, tenant)
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		return nil, err
+	}
+	defer response.Body.Close()
+	span.LogFields(log.Int("response.status.enrichPerson", response.StatusCode))
+
+	var enrichOrganizationApiResponse enrichmentmodel.EnrichOrganizationResponse
+	err = json.NewDecoder(response.Body).Decode(&enrichOrganizationApiResponse)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode enrich organization response"))
+		return nil, err
+	}
+	return &enrichOrganizationApiResponse, nil
+}
+
+func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx context.Context, tenant, domain, enrichSource string, organizationEntity neo4jEntity.OrganizationEntity, data *enrichmentmodel.EnrichOrganizationResponseData) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromEnrichmentResponse")
+	defer span.Finish()
+	tracing.LogObjectAsJson(span, "data", data)
 
 	organizationFieldsMask := make([]organizationpb.OrganizationMaskField, 0)
 	updateGrpcRequest := organizationpb.UpdateOrganizationGrpcRequest{
 		Tenant:         tenant,
 		OrganizationId: organizationEntity.ID,
+		Employees:      data.Employees,
 		SourceFields: &commonpb.SourceFields{
 			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
 			Source:    constants.SourceOpenline,
 		},
 		EnrichDomain: domain,
-		EnrichSource: neo4jenum.Brandfetch.String(),
+		EnrichSource: enrichSource,
 	}
-	sEmployees, ok := brandfetch.Company.Employees.(string)
-	if ok {
-		if brandfetch.Company.Employees != "" {
-			employees := int64(0)
-			if strings.Contains(sEmployees, "-") {
-				// Handle range case
-				parts := strings.Split(sEmployees, "-")
-				employees, _ = strconv.ParseInt(parts[0], 10, 64)
-			} else {
-				employees, _ = strconv.ParseInt(sEmployees, 10, 64)
-			}
-			if employees > 0 {
-				organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-				updateGrpcRequest.Employees = employees
-			}
-		}
+	if data.Employees > 0 {
+		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
+		updateGrpcRequest.Employees = data.Employees
 	}
-	iEmployees, ok := brandfetch.Company.Employees.(int64)
-	if ok {
-		if iEmployees > 0 {
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-			updateGrpcRequest.Employees = iEmployees
-		}
-	}
-	fEmployees, ok := brandfetch.Company.Employees.(float64)
-	if ok {
-		if fEmployees > 0 {
-			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
-			updateGrpcRequest.Employees = int64(fEmployees)
-		}
-	}
-
 	if brandfetch.Company.FoundedYear > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
 		updateGrpcRequest.YearFounded = &brandfetch.Company.FoundedYear

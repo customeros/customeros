@@ -37,7 +37,7 @@ type scrapinService struct {
 	log      logger.Logger
 }
 
-func NewPersonScrapeInService(config *config.Config, services *Services, log logger.Logger) ScrapinService {
+func NewScrapeInService(config *config.Config, services *Services, log logger.Logger) ScrapinService {
 	return &scrapinService{
 		config:   config,
 		services: services,

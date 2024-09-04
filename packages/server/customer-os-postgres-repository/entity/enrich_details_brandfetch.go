@@ -1,6 +1,10 @@
 package entity
 
-import "time"
+import (
+	"strconv"
+	"strings"
+	"time"
+)
 
 type EnrichDetailsBrandfetch struct {
 	ID        uint64    `gorm:"primary_key;autoIncrement:true" json:"id"`
@@ -79,4 +83,36 @@ type BrandfetchIndustry struct {
 		Name  string `json:"name,omitempty"`
 		Slug  string `json:"slug,omitempty"`
 	} `json:"parent,omitempty"`
+}
+
+func (bc BrandfetchCompany) GetEmployees() int64 {
+	sEmployees, ok := bc.Employees.(string)
+	if ok {
+		if bc.Employees != "" {
+			employees := int64(0)
+			if strings.Contains(sEmployees, "-") {
+				// Handle range case
+				parts := strings.Split(sEmployees, "-")
+				employees, _ = strconv.ParseInt(parts[0], 10, 64)
+			} else {
+				employees, _ = strconv.ParseInt(sEmployees, 10, 64)
+			}
+			if employees > 0 {
+				return employees
+			}
+		}
+	}
+	iEmployees, ok := bc.Employees.(int64)
+	if ok {
+		if iEmployees > 0 {
+			return iEmployees
+		}
+	}
+	fEmployees, ok := bc.Employees.(float64)
+	if ok {
+		if fEmployees > 0 {
+			return int64(fEmployees)
+		}
+	}
+	return 0
 }
