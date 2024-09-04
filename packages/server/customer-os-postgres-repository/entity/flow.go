@@ -22,6 +22,7 @@ type Flow struct {
 
 type FlowSequence struct {
 	BaseEntity
+	Tenant string `gorm:"not null" json:"-"`
 
 	FlowId string `gorm:"type:uuid;not null" json:"-"`
 
@@ -66,55 +67,53 @@ type FlowSequence struct {
 //	})
 //}
 
-func (Flow) TableName() string {
-	return "flow"
-}
-
-func (FlowSequence) TableName() string {
-	return "flow_sequence"
-}
-
 type FlowSequenceStep struct {
 	BaseEntity
+	Tenant string `gorm:"not null" json:"-"`
 
 	SequenceId string `gorm:"type:uuid;not null" json:"-"`
 
-	Active bool `gorm:"not null;default:false" json:"active"`
+	Name *string `gorm:"type:varchar(255);" json:"name"`
 
-	Order int    `gorm:"not null" json:"order"`
-	Type  string `gorm:"type:varchar(255);not null" json:"type"`
-	Name  string `gorm:"type:varchar(255);not null" json:"name"`
+	Status FlowSequenceStepStatus `gorm:"type:varchar(100);not null;" json:"status"`
 
-	Text     *string `gorm:"type:varchar(255)" json:"text"`
-	Template *string `gorm:"type:varchar(255)" json:"template"`
-}
-
-func (FlowSequenceStep) TableName() string {
-	return "flow_sequence_step"
+	Type    FlowSequenceStepType     `gorm:"type:varchar(100);not null" json:"type"`
+	Subtype *FlowSequenceStepSubtype `gorm:"type:varchar(100);" json:"subtype"`
+	Body    string                   `gorm:"type:text;not null" json:"body"`
 }
 
 type FlowSequenceContact struct {
 	BaseEntity
+	Tenant string `gorm:"not null" json:"-"`
 
 	SequenceId string `gorm:"type:uuid;not null" json:"-"`
 
-	ContactId   string  `gorm:"not null" json:"email"`
-	EmailId     string  `gorm:"not null" json:"email"`
+	ContactId   string  `gorm:"not null" json:"contactId"`
+	EmailId     string  `gorm:"not null" json:"emailId"`
 	LinkedinUrl *string `json:"linkedinUrl"`
-}
-
-func (FlowSequenceContact) TableName() string {
-	return "flow_sequence_contact"
 }
 
 type FlowSequenceSender struct {
 	BaseEntity
+	Tenant string `gorm:"not null" json:"-"`
 
 	SequenceId string `gorm:"type:uuid;not null" json:"-"`
 
 	MailboxId string `gorm:"not null"`
 }
 
+func (Flow) TableName() string {
+	return "flow"
+}
+func (FlowSequence) TableName() string {
+	return "flow_sequence"
+}
+func (FlowSequenceStep) TableName() string {
+	return "flow_sequence_step"
+}
+func (FlowSequenceContact) TableName() string {
+	return "flow_sequence_contact"
+}
 func (FlowSequenceSender) TableName() string {
 	return "flow_sequence_sender"
 }
@@ -135,4 +134,27 @@ const (
 	FlowSequenceStatusActive   FlowSequenceStatus = "ACTIVE"
 	FlowSequenceStatusPaused   FlowSequenceStatus = "PAUSED"
 	FlowSequenceStatusArchived FlowSequenceStatus = "ARCHIVED"
+)
+
+type FlowSequenceStepStatus string
+
+const (
+	FlowSequenceStepStatusInactive FlowSequenceStepStatus = "INACTIVE"
+	FlowSequenceStepStatusActive   FlowSequenceStepStatus = "ACTIVE"
+	FlowSequenceStepStatusPaused   FlowSequenceStepStatus = "PAUSED"
+	FlowSequenceStepStatusArchived FlowSequenceStepStatus = "ARCHIVED"
+)
+
+type FlowSequenceStepType string
+
+const (
+	FlowSequenceStepTypeEmail    FlowSequenceStepType = "EMAIL"
+	FlowSequenceStepTypeLinkedin FlowSequenceStepType = "LINKEDIN"
+)
+
+type FlowSequenceStepSubtype string
+
+const (
+	FlowSequenceStepSubtypeLinkedinConnectionRequest FlowSequenceStepSubtype = "LINKEDIN_CONNECTION_REQUEST"
+	FlowSequenceStepSubtypeLinkedinMessage           FlowSequenceStepSubtype = "LINKEDIN_MESSAGE"
 )

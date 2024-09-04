@@ -2,37 +2,30 @@ package service
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 type FlowService interface {
-	GetFlows(ctx context.Context, tenant string, page, limit int) (*utils.Pagination, error)
-	GetFlowById(ctx context.Context, tenant, id string) (*postgresEntity.Flow, error)
-	GetFlowBySequenceId(ctx context.Context, sequenceId string) (*postgresEntity.Flow, error)
-	StoreFlow(ctx context.Context, entity *postgresEntity.Flow) (*postgresEntity.Flow, error)
-	ActivateFlow(ctx context.Context, tenant, id string) error
-	DeactivateFlow(ctx context.Context, tenant, id string) error
-	DeleteFlow(ctx context.Context, tenant, id string) error
+	FlowGetList(ctx context.Context) ([]*postgresEntity.Flow, error)
+	FlowGetById(ctx context.Context, id string) (*postgresEntity.Flow, error)
+	FlowGetBySequenceId(ctx context.Context, sequenceId string) (*postgresEntity.Flow, error)
+	FlowStore(ctx context.Context, entity *postgresEntity.Flow) (*postgresEntity.Flow, error)
+	FlowChangeStatus(ctx context.Context, id string, status postgresEntity.FlowStatus) (*postgresEntity.Flow, error)
 
-	GetFlowSequences(ctx context.Context, tenant, flowId string, page, limit int) (*utils.Pagination, error)
-	GetFlowSequencesList(ctx context.Context) ([]*postgresEntity.FlowSequence, error)
-	GetFlowSequenceById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequence, error)
-	StoreFlowSequence(ctx context.Context, tenant string, entity *postgresEntity.FlowSequence) (*postgresEntity.FlowSequence, error)
-	ActivateFlowSequence(ctx context.Context, tenant, id string) error
-	DeactivateFlowSequence(ctx context.Context, tenant, id string) error
-	DeleteFlowSequence(ctx context.Context, tenant, id string) error
+	FlowSequenceGetList(ctx context.Context, flowId *string) ([]*postgresEntity.FlowSequence, error)
+	FlowSequenceGetById(ctx context.Context, id string) (*postgresEntity.FlowSequence, error)
+	FlowSequenceStore(ctx context.Context, entity *postgresEntity.FlowSequence) (*postgresEntity.FlowSequence, error)
+	FlowSequenceChangeStatus(ctx context.Context, id string, status postgresEntity.FlowSequenceStatus) (*postgresEntity.FlowSequence, error)
 
-	GetFlowSequenceSteps(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error)
-	GetFlowSequenceStepById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceStep, error)
-	StoreFlowSequenceStep(ctx context.Context, tenant string, entity *postgresEntity.FlowSequenceStep) (*postgresEntity.FlowSequenceStep, error)
-	ActivateFlowSequenceStep(ctx context.Context, tenant, id string) error
-	DeactivateFlowSequenceStep(ctx context.Context, tenant, id string) error
-	DeleteFlowSequenceStep(ctx context.Context, tenant, id string) error
+	FlowSequenceStepGetList(ctx context.Context, sequenceId string) ([]*postgresEntity.FlowSequenceStep, error)
+	FlowSequenceStepGetById(ctx context.Context, id string) (*postgresEntity.FlowSequenceStep, error)
+	FlowSequenceStepStore(ctx context.Context, entity *postgresEntity.FlowSequenceStep) (*postgresEntity.FlowSequenceStep, error)
+	FlowSequenceStepChangeStatus(ctx context.Context, id string, status postgresEntity.FlowSequenceStepStatus) (*postgresEntity.FlowSequenceStep, error)
 
 	GetFlowSequenceContacts(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error)
 	GetFlowSequenceContactById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceContact, error)
@@ -55,44 +48,27 @@ func NewFlowService(services *Services) FlowService {
 	}
 }
 
-func (s *flowService) GetFlows(ctx context.Context, tenant string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlows")
+func (s *flowService) FlowGetList(ctx context.Context) ([]*postgresEntity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetList")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	span.LogFields(log.Int("page", page), log.Int("limit", limit))
-
-	pageResult := utils.Pagination{
-		Page:  page,
-		Limit: limit,
-	}
-
-	count, err := s.services.PostgresRepositories.FlowRepository.Count(ctx, tenant)
+	entities, err := s.services.PostgresRepositories.FlowRepository.GetList(ctx)
 	if err != nil {
 		return nil, err
 	}
 
-	entities, err := s.services.PostgresRepositories.FlowRepository.Get(ctx, tenant, page, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	pageResult.SetTotalRows(count)
-	pageResult.SetRows(entities)
-
-	return &pageResult, nil
+	return entities, nil
 }
 
-func (s *flowService) GetFlowById(ctx context.Context, tenant, id string) (*postgresEntity.Flow, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowById")
+func (s *flowService) FlowGetById(ctx context.Context, id string) (*postgresEntity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetById")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
-	entity, err := s.services.PostgresRepositories.FlowRepository.GetById(ctx, tenant, id)
+	entity, err := s.services.PostgresRepositories.FlowRepository.GetById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -100,8 +76,8 @@ func (s *flowService) GetFlowById(ctx context.Context, tenant, id string) (*post
 	return entity, nil
 }
 
-func (s *flowService) GetFlowBySequenceId(ctx context.Context, sequenceId string) (*postgresEntity.Flow, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowBySequenceId")
+func (s *flowService) FlowGetBySequenceId(ctx context.Context, sequenceId string) (*postgresEntity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetBySequenceId")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -115,11 +91,10 @@ func (s *flowService) GetFlowBySequenceId(ctx context.Context, sequenceId string
 	return entity, nil
 }
 
-func (s *flowService) StoreFlow(ctx context.Context, entity *postgresEntity.Flow) (*postgresEntity.Flow, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.StoreFlow")
+func (s *flowService) FlowStore(ctx context.Context, entity *postgresEntity.Flow) (*postgresEntity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowStore")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, entity.Tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	entity, err := s.services.PostgresRepositories.FlowRepository.Store(ctx, entity)
 	if err != nil {
@@ -129,106 +104,46 @@ func (s *flowService) StoreFlow(ctx context.Context, entity *postgresEntity.Flow
 	return entity, nil
 }
 
-func (s *flowService) ActivateFlow(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.ActivateFlow")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-
-	entity, err := s.services.PostgresRepositories.FlowRepository.GetById(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	if entity == nil {
-		return nil
-	}
-
-	//TODO
-	//entity.Active = true
-
-	_, err = s.services.PostgresRepositories.FlowRepository.Store(ctx, entity)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *flowService) DeactivateFlow(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeactivateFlow")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-
-	entity, err := s.services.PostgresRepositories.FlowRepository.GetById(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	if entity == nil {
-		return nil
-	}
-
-	//TODO
-	//entity.Active = false
-
-	_, err = s.services.PostgresRepositories.FlowRepository.Store(ctx, entity)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *flowService) DeleteFlow(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeleteFlow")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-	span.LogFields(log.String("id", id))
-
-	err := s.services.PostgresRepositories.FlowRepository.Delete(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *flowService) GetFlowSequences(ctx context.Context, tenant, flowId string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequences")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-
-	pageResult := utils.Pagination{
-		Page:  page,
-		Limit: limit,
-	}
-
-	count, err := s.services.PostgresRepositories.FlowSequenceRepository.Count(ctx, tenant, flowId)
-	if err != nil {
-		return nil, err
-	}
-
-	entities, err := s.services.PostgresRepositories.FlowSequenceRepository.Get(ctx, tenant, flowId, page, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	pageResult.SetTotalRows(count)
-	pageResult.SetRows(entities)
-
-	return &pageResult, nil
-}
-
-func (s *flowService) GetFlowSequencesList(ctx context.Context) ([]*postgresEntity.FlowSequence, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequencesList")
+func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status postgresEntity.FlowStatus) (*postgresEntity.Flow, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowChangeStatus")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	entities, err := s.services.PostgresRepositories.FlowSequenceRepository.GetList(ctx, nil)
+	entity, err := s.services.PostgresRepositories.FlowRepository.GetById(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	if entity == nil {
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return nil, errors.New("flow not found")
+	}
+
+	if entity.Status == status {
+		return entity, nil
+	}
+
+	entity.Status = status
+
+	entity, err = s.services.PostgresRepositories.FlowRepository.Store(ctx, entity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return entity, nil
+}
+
+func (s *flowService) FlowSequenceGetList(ctx context.Context, flowId *string) ([]*postgresEntity.FlowSequence, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceGetList")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	if flowId != nil {
+		span.LogFields(log.String("flowId", *flowId))
+	}
+
+	entities, err := s.services.PostgresRepositories.FlowSequenceRepository.GetList(ctx, flowId)
 	if err != nil {
 		return nil, err
 	}
@@ -236,15 +151,14 @@ func (s *flowService) GetFlowSequencesList(ctx context.Context) ([]*postgresEnti
 	return entities, nil
 }
 
-func (s *flowService) GetFlowSequenceById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequence, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceById")
+func (s *flowService) FlowSequenceGetById(ctx context.Context, id string) (*postgresEntity.FlowSequence, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceGetById")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.GetById(ctx, tenant, id)
+	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.GetById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -252,13 +166,12 @@ func (s *flowService) GetFlowSequenceById(ctx context.Context, tenant, id string
 	return entity, nil
 }
 
-func (s *flowService) StoreFlowSequence(ctx context.Context, tenant string, entity *postgresEntity.FlowSequence) (*postgresEntity.FlowSequence, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.StoreFlowSequence")
+func (s *flowService) FlowSequenceStore(ctx context.Context, entity *postgresEntity.FlowSequence) (*postgresEntity.FlowSequence, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStore")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.Store(ctx, tenant, entity)
+	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.Store(ctx, entity)
 	if err != nil {
 		return nil, err
 	}
@@ -266,111 +179,59 @@ func (s *flowService) StoreFlowSequence(ctx context.Context, tenant string, enti
 	return entity, nil
 }
 
-func (s *flowService) ActivateFlowSequence(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.ActivateFlowSequence")
+func (s *flowService) FlowSequenceChangeStatus(ctx context.Context, id string, status postgresEntity.FlowSequenceStatus) (*postgresEntity.FlowSequence, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceChangeStatus")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.GetById(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	if entity == nil {
-		return nil
-	}
-
-	//TODO
-	//entity.Status =
-
-	_, err = s.services.PostgresRepositories.FlowSequenceRepository.Store(ctx, tenant, entity)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *flowService) DeactivateFlowSequence(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeactivateFlowSequence")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-
-	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.GetById(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	if entity == nil {
-		return nil
-	}
-
-	//TODO
-	//entity.Active = false
-
-	_, err = s.services.PostgresRepositories.FlowSequenceRepository.Store(ctx, tenant, entity)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *flowService) DeleteFlowSequence(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeleteFlowSequence")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-	span.LogFields(log.String("id", id))
-
-	err := s.services.PostgresRepositories.FlowSequenceRepository.Delete(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *flowService) GetFlowSequenceSteps(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceSteps")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-
-	span.LogFields(log.String("sequenceId", sequenceId), log.Int("page", page), log.Int("limit", limit))
-
-	pageResult := utils.Pagination{
-		Page:  page,
-		Limit: limit,
-	}
-
-	count, err := s.services.PostgresRepositories.FlowSequenceStepRepository.Count(ctx, tenant, sequenceId)
+	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.GetById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
 
-	entities, err := s.services.PostgresRepositories.FlowSequenceStepRepository.Get(ctx, tenant, sequenceId, page, limit)
+	if entity == nil {
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return nil, errors.New("flow not found")
+	}
+
+	if entity.Status == status {
+		return entity, nil
+	}
+
+	entity.Status = status
+
+	entity, err = s.services.PostgresRepositories.FlowSequenceRepository.Store(ctx, entity)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return entity, nil
+}
+
+func (s *flowService) FlowSequenceStepGetList(ctx context.Context, sequenceId string) ([]*postgresEntity.FlowSequenceStep, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepGetList")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("sequenceId", sequenceId))
+
+	entities, err := s.services.PostgresRepositories.FlowSequenceStepRepository.GetList(ctx, sequenceId)
 	if err != nil {
 		return nil, err
 	}
 
-	pageResult.SetTotalRows(count)
-	pageResult.SetRows(entities)
-
-	return &pageResult, nil
+	return entities, nil
 }
 
-func (s *flowService) GetFlowSequenceStepById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceStep, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceStepById")
+func (s *flowService) FlowSequenceStepGetById(ctx context.Context, id string) (*postgresEntity.FlowSequenceStep, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepGetById")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceStepRepository.GetById(ctx, tenant, id)
+	entity, err := s.services.PostgresRepositories.FlowSequenceStepRepository.GetById(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -378,13 +239,12 @@ func (s *flowService) GetFlowSequenceStepById(ctx context.Context, tenant, id st
 	return entity, nil
 }
 
-func (s *flowService) StoreFlowSequenceStep(ctx context.Context, tenant string, entity *postgresEntity.FlowSequenceStep) (*postgresEntity.FlowSequenceStep, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.StoreFlowSequenceStep")
+func (s *flowService) FlowSequenceStepStore(ctx context.Context, entity *postgresEntity.FlowSequenceStep) (*postgresEntity.FlowSequenceStep, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepStore")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceStepRepository.Store(ctx, tenant, entity)
+	entity, err := s.services.PostgresRepositories.FlowSequenceStepRepository.Store(ctx, entity)
 	if err != nil {
 		return nil, err
 	}
@@ -392,76 +252,41 @@ func (s *flowService) StoreFlowSequenceStep(ctx context.Context, tenant string, 
 	return entity, nil
 }
 
-func (s *flowService) ActivateFlowSequenceStep(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.ActivateFlowSequenceStep")
+func (s *flowService) FlowSequenceStepChangeStatus(ctx context.Context, id string, status postgresEntity.FlowSequenceStepStatus) (*postgresEntity.FlowSequenceStep, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepChangeStatus")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceStepRepository.GetById(ctx, tenant, id)
+	entity, err := s.services.PostgresRepositories.FlowSequenceStepRepository.GetById(ctx, id)
 	if err != nil {
-		return err
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	if entity == nil {
-		return nil
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return nil, errors.New("flow not found")
 	}
 
-	entity.Active = true
+	if entity.Status == status {
+		return entity, nil
+	}
 
-	_, err = s.services.PostgresRepositories.FlowSequenceStepRepository.Store(ctx, tenant, entity)
+	entity.Status = status
+
+	entity, err = s.services.PostgresRepositories.FlowSequenceStepRepository.Store(ctx, entity)
 	if err != nil {
-		return err
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
-	return nil
-}
-
-func (s *flowService) DeactivateFlowSequenceStep(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeactivateFlowSequenceStep")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-
-	entity, err := s.services.PostgresRepositories.FlowSequenceStepRepository.GetById(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	if entity == nil {
-		return nil
-	}
-
-	entity.Active = false
-
-	_, err = s.services.PostgresRepositories.FlowSequenceStepRepository.Store(ctx, tenant, entity)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (s *flowService) DeleteFlowSequenceStep(ctx context.Context, tenant, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeleteFlowSequenceStep")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
-	span.LogFields(log.String("id", id))
-
-	err := s.services.PostgresRepositories.FlowSequenceStepRepository.Delete(ctx, tenant, id)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return entity, nil
 }
 
 func (s *flowService) GetFlowSequenceContacts(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceContacts")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	pageResult := utils.Pagination{
 		Page:  page,
@@ -487,8 +312,7 @@ func (s *flowService) GetFlowSequenceContacts(ctx context.Context, tenant, seque
 func (s *flowService) GetFlowSequenceContactById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceContactById")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
@@ -503,8 +327,7 @@ func (s *flowService) GetFlowSequenceContactById(ctx context.Context, tenant, id
 func (s *flowService) StoreFlowSequenceContact(ctx context.Context, tenant string, entity *postgresEntity.FlowSequenceContact) (*postgresEntity.FlowSequenceContact, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.StoreFlowSequenceContact")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	entity, err := s.services.PostgresRepositories.FlowSequenceContactRepository.Store(ctx, tenant, entity)
 	if err != nil {
@@ -517,8 +340,8 @@ func (s *flowService) StoreFlowSequenceContact(ctx context.Context, tenant strin
 func (s *flowService) DeleteFlowSequenceContact(ctx context.Context, tenant, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeleteFlowSequenceContact")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	span.LogFields(log.String("id", id))
 
 	err := s.services.PostgresRepositories.FlowSequenceContactRepository.Delete(ctx, tenant, id)
@@ -532,8 +355,7 @@ func (s *flowService) DeleteFlowSequenceContact(ctx context.Context, tenant, id 
 func (s *flowService) GetFlowSequenceSenders(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceSenders")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	pageResult := utils.Pagination{
 		Page:  page,
@@ -559,8 +381,7 @@ func (s *flowService) GetFlowSequenceSenders(ctx context.Context, tenant, sequen
 func (s *flowService) GetFlowSequenceSenderById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceSender, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceSenderById")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
@@ -575,8 +396,7 @@ func (s *flowService) GetFlowSequenceSenderById(ctx context.Context, tenant, id 
 func (s *flowService) StoreFlowSequenceSender(ctx context.Context, tenant string, entity *postgresEntity.FlowSequenceSender) (*postgresEntity.FlowSequenceSender, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.StoreFlowSequenceSender")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	entity, err := s.services.PostgresRepositories.FlowSequenceSenderRepository.Store(ctx, tenant, entity)
 	if err != nil {
@@ -589,8 +409,8 @@ func (s *flowService) StoreFlowSequenceSender(ctx context.Context, tenant string
 func (s *flowService) DeleteFlowSequenceSender(ctx context.Context, tenant, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeleteFlowSequenceSender")
 	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagComponent, constants.ComponentService)
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	span.LogFields(log.String("id", id))
 
 	err := s.services.PostgresRepositories.FlowSequenceSenderRepository.Delete(ctx, tenant, id)

@@ -1156,12 +1156,12 @@ func (FlowSequenceContact) IsMetadataInterface()        {}
 func (this FlowSequenceContact) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequenceStep struct {
-	Metadata *Metadata              `json:"metadata"`
-	Status   FlowSequenceStepStatus `json:"status"`
-	Email    *Email                 `json:"email"`
-	Type     *string                `json:"Type,omitempty"`
-	Text     *string                `json:"Text,omitempty"`
-	Template *string                `json:"Template,omitempty"`
+	Metadata *Metadata                `json:"metadata"`
+	Name     *string                  `json:"name,omitempty"`
+	Status   FlowSequenceStepStatus   `json:"status"`
+	Type     FlowSequenceStepType     `json:"type"`
+	Subtype  *FlowSequenceStepSubtype `json:"subtype,omitempty"`
+	Body     string                   `json:"body"`
 }
 
 func (FlowSequenceStep) IsMetadataInterface()        {}
@@ -4361,6 +4361,88 @@ func (e *FlowSequenceStepStatus) UnmarshalGQL(v interface{}) error {
 }
 
 func (e FlowSequenceStepStatus) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FlowSequenceStepSubtype string
+
+const (
+	FlowSequenceStepSubtypeLinkedinConnectionRequest FlowSequenceStepSubtype = "LINKEDIN_CONNECTION_REQUEST"
+	FlowSequenceStepSubtypeLinkedinMessage           FlowSequenceStepSubtype = "LINKEDIN_MESSAGE"
+)
+
+var AllFlowSequenceStepSubtype = []FlowSequenceStepSubtype{
+	FlowSequenceStepSubtypeLinkedinConnectionRequest,
+	FlowSequenceStepSubtypeLinkedinMessage,
+}
+
+func (e FlowSequenceStepSubtype) IsValid() bool {
+	switch e {
+	case FlowSequenceStepSubtypeLinkedinConnectionRequest, FlowSequenceStepSubtypeLinkedinMessage:
+		return true
+	}
+	return false
+}
+
+func (e FlowSequenceStepSubtype) String() string {
+	return string(e)
+}
+
+func (e *FlowSequenceStepSubtype) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlowSequenceStepSubtype(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlowSequenceStepSubtype", str)
+	}
+	return nil
+}
+
+func (e FlowSequenceStepSubtype) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type FlowSequenceStepType string
+
+const (
+	FlowSequenceStepTypeEmail    FlowSequenceStepType = "EMAIL"
+	FlowSequenceStepTypeLinkedin FlowSequenceStepType = "LINKEDIN"
+)
+
+var AllFlowSequenceStepType = []FlowSequenceStepType{
+	FlowSequenceStepTypeEmail,
+	FlowSequenceStepTypeLinkedin,
+}
+
+func (e FlowSequenceStepType) IsValid() bool {
+	switch e {
+	case FlowSequenceStepTypeEmail, FlowSequenceStepTypeLinkedin:
+		return true
+	}
+	return false
+}
+
+func (e FlowSequenceStepType) String() string {
+	return string(e)
+}
+
+func (e *FlowSequenceStepType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = FlowSequenceStepType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid FlowSequenceStepType", str)
+	}
+	return nil
+}
+
+func (e FlowSequenceStepType) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
