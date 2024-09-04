@@ -34,7 +34,6 @@ type Services struct {
 	CustomFieldTemplateService CustomFieldTemplateService
 	TimelineEventService       TimelineEventService
 	NoteService                NoteService
-	JobRoleService             JobRoleService
 	CalendarService            CalendarService
 	LocationService            LocationService
 	TagService                 TagService
@@ -42,11 +41,7 @@ type Services struct {
 	QueryService               DashboardService
 	DomainService              DomainService
 	IssueService               IssueService
-	InteractionSessionService  InteractionSessionService
-	InteractionEventService    InteractionEventService
 	PageViewService            PageViewService
-	AnalysisService            AnalysisService
-	AttachmentService          AttachmentService
 	MeetingService             MeetingService
 	TenantService              TenantService
 	ExternalSystemService      ExternalSystemService
@@ -65,7 +60,6 @@ type Services struct {
 	OrganizationPlanService    OrganizationPlanService
 	SlackService               SlackService
 	ReminderService            ReminderService
-	OrderService               OrderService
 	OfferingService            OfferingService
 }
 
@@ -87,7 +81,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		TagService:                 NewTagService(log, repositories),
 		DomainService:              NewDomainService(log, repositories),
 		PageViewService:            NewPageViewService(log, repositories),
-		AttachmentService:          NewAttachmentService(log, repositories),
 		TenantService:              NewTenantService(log, repositories, grpcClients),
 		ExternalSystemService:      NewExternalSystemService(log, repositories),
 		ActionService:              NewActionService(log, repositories),
@@ -99,13 +92,11 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		MasterPlanService:          NewMasterPlanService(log, repositories, grpcClients),
 		OrganizationPlanService:    NewOrganizationPlanService(log, repositories, grpcClients),
 		ReminderService:            NewReminderService(log, repositories, grpcClients),
-		OrderService:               NewOrderService(log, repositories),
 		OfferingService:            NewOfferingService(log, repositories, grpcClients),
 	}
 	services.Repositories = repositories
 	services.IssueService = NewIssueService(log, repositories, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories, grpcClients, &services)
-	services.JobRoleService = NewJobRoleService(log, repositories, &services)
 	services.CalendarService = NewCalendarService(log, repositories, &services)
 	services.EmailService = NewEmailService(log, repositories, &services, grpcClients)
 	services.ContactService = NewContactService(log, repositories, grpcClients, &services)
@@ -113,9 +104,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.TimelineEventService = NewTimelineEventService(log, repositories, &services)
 	services.SearchService = NewSearchService(log, repositories, &services)
 	services.QueryService = NewDashboardService(log, repositories, &services)
-	services.InteractionEventService = NewInteractionEventService(log, repositories, &services)
-	services.InteractionSessionService = NewInteractionSessionService(log, repositories, &services)
-	services.AnalysisService = NewAnalysisService(log, repositories, &services)
 	services.MeetingService = NewMeetingService(log, repositories, &services)
 	services.ContractService = NewContractService(log, repositories, grpcClients, &services)
 	services.ServiceLineItemService = NewServiceLineItemService(log, repositories, grpcClients, &services)

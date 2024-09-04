@@ -34,11 +34,6 @@ query getTimelineEvents($ids: [ID!]!) {
         externalUrl
         externalSource
       }
-      summary {
-        id
-        content
-        contentType
-      }
       actionItems {
         id
         content

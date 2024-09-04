@@ -20,12 +20,23 @@ type JobRoleEntity struct {
 	Description   *string
 	Company       *string
 
-	InteractionEventParticipantDetails InteractionEventParticipantDetails
+	InteractionEventParticipantDetails   InteractionEventParticipantDetails
+	InteractionSessionParticipantDetails InteractionSessionParticipantDetails
 }
 
 type JobRoleEntities []JobRoleEntity
 
+func (e JobRoleEntity) GetDataloaderKey() string {
+	return e.DataloaderKey
+}
+
 func (JobRoleEntity) IsInteractionEventParticipant() {}
+
+func (JobRoleEntity) IsInteractionSessionParticipant() {}
+
+func (JobRoleEntity) EntityLabel() string {
+	return model.NodeLabelJobRole
+}
 
 func (JobRoleEntity) ParticipantLabel() string {
 	return model.NodeLabelJobRole

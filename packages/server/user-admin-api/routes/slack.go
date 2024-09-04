@@ -16,88 +16,90 @@ import (
 )
 
 func addSlackRoutes(rg *gin.RouterGroup, config *config.Config, services *service.Services) {
-	rg.GET("/slack/requestAccess", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
-		slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientId + "&scope=chat:write,chat:write.public,channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
+	rg.GET("/slack/requestAccess",
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
+			slackRequestAccessUrl := "https://slack.com/oauth/v2/authorize?client_id=" + config.Slack.ClientId + "&scope=chat:write,chat:write.public,channels:history,channels:join,channels:read,files:read,groups:history,groups:read,im:history,links:read,reactions:read,team:read,usergroups:read,users.profile:read,users:read,users:read.email&user_scope="
 
-		ctx.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
-	})
-	rg.POST("/slack/oauth/callback", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
-		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
+			ctx.JSON(http.StatusOK, gin.H{"url": slackRequestAccessUrl})
+		})
+	rg.POST("/slack/oauth/callback",
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
+			tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 
-		slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant.(string))
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-			return
-		}
-
-		if slackSettingsEntity != nil {
-			ctx.JSON(http.StatusBadRequest, gin.H{"error": "Slack settings already exists"})
-			return
-		}
-
-		code := ctx.Request.URL.Query().Get("code")
-
-		requestData := url.Values{}
-		requestData.Set("code", code)
-		requestData.Set("client_id", config.Slack.ClientId)
-		requestData.Set("client_secret", config.Slack.ClientSecret)
-
-		// Encode the form data
-		requestBody := requestData.Encode()
-
-		request, err := http.NewRequest("POST", "https://slack.com/api/oauth.v2.access", nil)
-		if err != nil {
-			fmt.Println("Error creating request:", err)
-			return
-		}
-		request.Body = ioutil.NopCloser(strings.NewReader(requestBody))
-
-		request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
-		request.Header.Set("Content-Length", fmt.Sprint(len(requestBody)))
-
-		// Perform the HTTP request
-		client := &http.Client{}
-		resp, err := client.Do(request)
-		if err != nil {
-			fmt.Println("Error making request:", err)
-			return
-		}
-		defer resp.Body.Close()
-
-		// Read and print the response
-		body, err := ioutil.ReadAll(resp.Body)
-		if err != nil {
-			fmt.Println("Error reading response:", err)
-			return
-		}
-
-		//convert body to OauthSlackResponse
-		var slackResponse OauthSlackResponse
-		err = json.Unmarshal(body, &slackResponse)
-		if err != nil {
-			fmt.Println("Error unmarshalling response:", err)
-			return
-		}
-
-		if slackResponse.Ok {
-			_, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Save(ctx, postgresEntity.SlackSettingsEntity{
-				TenantName:   tenant.(string),
-				AppId:        slackResponse.AppId,
-				AuthedUserId: slackResponse.AuthedUser.Id,
-				Scope:        slackResponse.Scope,
-				TokenType:    slackResponse.TokenType,
-				AccessToken:  slackResponse.AccessToken,
-				BotUserId:    slackResponse.BotUserId,
-				TeamId:       slackResponse.Team.Id,
-			})
+			slackSettingsEntity, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Get(ctx, tenant.(string))
 			if err != nil {
-				fmt.Println("Error saving slack settings:", err)
+				ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
-		}
 
-		ctx.JSON(http.StatusOK, gin.H{})
-	})
+			if slackSettingsEntity != nil {
+				ctx.JSON(http.StatusBadRequest, gin.H{"error": "Slack settings already exists"})
+				return
+			}
+
+			code := ctx.Request.URL.Query().Get("code")
+
+			requestData := url.Values{}
+			requestData.Set("code", code)
+			requestData.Set("client_id", config.Slack.ClientId)
+			requestData.Set("client_secret", config.Slack.ClientSecret)
+
+			// Encode the form data
+			requestBody := requestData.Encode()
+
+			request, err := http.NewRequest("POST", "https://slack.com/api/oauth.v2.access", nil)
+			if err != nil {
+				fmt.Println("Error creating request:", err)
+				return
+			}
+			request.Body = ioutil.NopCloser(strings.NewReader(requestBody))
+
+			request.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+			request.Header.Set("Content-Length", fmt.Sprint(len(requestBody)))
+
+			// Perform the HTTP request
+			client := &http.Client{}
+			resp, err := client.Do(request)
+			if err != nil {
+				fmt.Println("Error making request:", err)
+				return
+			}
+			defer resp.Body.Close()
+
+			// Read and print the response
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				fmt.Println("Error reading response:", err)
+				return
+			}
+
+			//convert body to OauthSlackResponse
+			var slackResponse OauthSlackResponse
+			err = json.Unmarshal(body, &slackResponse)
+			if err != nil {
+				fmt.Println("Error unmarshalling response:", err)
+				return
+			}
+
+			if slackResponse.Ok {
+				_, err := services.CommonServices.PostgresRepositories.SlackSettingsRepository.Save(ctx, postgresEntity.SlackSettingsEntity{
+					TenantName:   tenant.(string),
+					AppId:        slackResponse.AppId,
+					AuthedUserId: slackResponse.AuthedUser.Id,
+					Scope:        slackResponse.Scope,
+					TokenType:    slackResponse.TokenType,
+					AccessToken:  slackResponse.AccessToken,
+					BotUserId:    slackResponse.BotUserId,
+					TeamId:       slackResponse.Team.Id,
+				})
+				if err != nil {
+					fmt.Println("Error saving slack settings:", err)
+					return
+				}
+			}
+
+			ctx.JSON(http.StatusOK, gin.H{})
+		})
 	rg.POST("/slack/revoke", security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, services.CommonServices.Neo4jRepositories), func(ctx *gin.Context) {
 		tenant, _ := ctx.Get(security.KEY_TENANT_NAME)
 

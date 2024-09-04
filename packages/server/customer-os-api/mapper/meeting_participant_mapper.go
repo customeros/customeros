@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -12,7 +11,7 @@ import (
 func MapEntityToMeetingParticipant(meetingParticipantEntity *neo4jentity.MeetingParticipant) any {
 	switch (*meetingParticipantEntity).EntityLabel() {
 	case model2.NodeLabelUser:
-		userEntity := (*meetingParticipantEntity).(*entity.UserEntity)
+		userEntity := (*meetingParticipantEntity).(*neo4jentity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 		}

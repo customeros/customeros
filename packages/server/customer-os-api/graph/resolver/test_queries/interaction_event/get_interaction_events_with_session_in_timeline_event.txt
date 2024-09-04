@@ -14,8 +14,8 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                 appSource
                 interactionSession {
                   id
-                  startedAt
-                  endedAt
+                  createdAt
+                  updatedAt
                   name
                   type
                   channel
@@ -27,11 +27,6 @@ query GetContactById($contactId: ID!, $from: Time!, $size: Int!){
                 actionItems {
                     id
                     content
-                }
-                summary {
-                    id
-                    content
-                    contentType
                 }
             }
           }

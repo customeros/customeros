@@ -79,7 +79,7 @@ func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext
 	})
 }
 
-func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, attachment entity.AttachmentEntity) string {
+func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, attachment neo4jentity.AttachmentEntity) string {
 	if len(attachment.Id) == 0 {
 		attachmentUuid, _ := uuid.NewRandom()
 		attachment.Id = attachmentUuid.String()
@@ -931,123 +931,6 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 		"jobId":          jobId.String(),
 	})
 	return jobId.String()
-}
-
-func CreateAnalysis(ctx context.Context, driver *neo4j.DriverWithContext, tenant, content, contentType, analysisType string, createdAt time.Time) string {
-	var analysisId, _ = uuid.NewRandom()
-
-	query := "MERGE (a:Analysis {id:$id})" +
-		" ON CREATE SET " +
-		"	a.content=$content, " +
-		"	a.createdAt=$createdAt, " +
-		"	a.analysisType=$analysisType, " +
-		"	a.contentType=$contentType, " +
-		"	a.source=$source, " +
-		"	a.sourceOfTruth=$sourceOfTruth, " +
-		"	a.appSource=$appSource," +
-		"	a:Analysis_%s"
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant), map[string]any{
-		"id":            analysisId.String(),
-		"content":       content,
-		"contentType":   contentType,
-		"analysisType":  analysisType,
-		"createdAt":     createdAt,
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
-	})
-	return analysisId.String()
-}
-
-func AnalysisDescribes(ctx context.Context, driver *neo4j.DriverWithContext, tenant, actionId, nodeId string, describesType string) {
-	query := "MATCH (a:Analysis_%s {id:$actionId}), " +
-		"(n:%s_%s {id:$nodeId}) " +
-		" MERGE (a)-[:DESCRIBES]->(n) "
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, describesType, tenant), map[string]any{
-		"actionId": actionId,
-		"nodeId":   nodeId,
-	})
-}
-
-func CreateInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, content, contentType string, channel *string, createdAt time.Time) string {
-	return CreateInteractionEventFromEntity(ctx, driver, tenant, entity.InteractionEventEntity{
-		EventIdentifier: identifier,
-		Content:         content,
-		ContentType:     contentType,
-		Channel:         channel,
-		CreatedAt:       &createdAt,
-	})
-}
-
-func CreateInteractionEventFromEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, ie entity.InteractionEventEntity) string {
-	var interactionEventId, _ = uuid.NewRandom()
-
-	query := "MERGE (ie:InteractionEvent {id:$id})" +
-		" ON CREATE SET " +
-		"	ie.content=$content, " +
-		"	ie.createdAt=$createdAt, " +
-		"	ie.channel=$channel, " +
-		"	ie.contentType=$contentType, " +
-		"	ie.source=$source, " +
-		"   ie.hide=$hide, " +
-		"	ie.sourceOfTruth=$sourceOfTruth, " +
-		"	ie.appSource=$appSource," +
-		"	ie:InteractionEvent_%s, ie:TimelineEvent, ie:TimelineEvent_%s," +
-		"   ie.identifier=$identifier"
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query, tenant, tenant), map[string]any{
-		"id":            interactionEventId.String(),
-		"content":       ie.Content,
-		"contentType":   ie.ContentType,
-		"channel":       ie.Channel,
-		"createdAt":     *ie.CreatedAt,
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
-		"identifier":    ie.EventIdentifier,
-		"hide":          ie.Hide,
-	})
-	return interactionEventId.String()
-}
-
-func CreateInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, tenant, identifier, name, sessionType, status, channel string, createdAt time.Time, inTimeline bool) string {
-	var interactionSessionId, _ = uuid.NewRandom()
-
-	query := "MERGE (is:InteractionSession {id:$id})" +
-		" ON CREATE SET " +
-		"	is.createdAt=$createdAt, " +
-		"	is.updatedAt=$updatedAt, " +
-		"	is.name=$name, " +
-		"	is.type=$type, " +
-		"	is.channel=$channel, " +
-		"	is.status=$status, " +
-		"	is.source=$source, " +
-		"	is.sourceOfTruth=$sourceOfTruth, " +
-		"	is.appSource=$appSource," +
-		"   is.identifier=$identifier, " +
-		"	is:InteractionSession_%s"
-
-	resolvedQuery := ""
-	if inTimeline {
-		query += ", is:TimelineEvent, is:TimelineEvent_%s"
-
-		resolvedQuery = fmt.Sprintf(query, tenant, tenant)
-	} else {
-		resolvedQuery = fmt.Sprintf(query, tenant)
-	}
-	neo4jtest.ExecuteWriteQuery(ctx, driver, resolvedQuery, map[string]any{
-		"id":            interactionSessionId.String(),
-		"name":          name,
-		"type":          sessionType,
-		"channel":       channel,
-		"status":        status,
-		"createdAt":     createdAt,
-		"updatedAt":     createdAt.Add(time.Duration(10) * time.Minute),
-		"source":        "openline",
-		"sourceOfTruth": "openline",
-		"appSource":     "test",
-		"identifier":    identifier,
-	})
-	return interactionSessionId.String()
 }
 
 func CreateActionItemLinkedWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant, linkedWith string, linkedWithId, content string, createdAt time.Time) string {

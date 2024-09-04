@@ -16,26 +16,31 @@ type Services struct {
 
 	GrpcClients *grpc_client.Clients
 
-	ContractService        ContractService
-	CommonService          CommonService
-	CurrencyService        CurrencyService
-	EmailService           EmailService
-	EmailingService        EmailingService
-	ExternalSystemService  ExternalSystemService
-	FlowService            FlowService
-	InvoiceService         InvoiceService
-	SlackChannelService    SlackChannelService
-	ServiceLineItemService ServiceLineItemService
-	TenantService          TenantService
-	UserService            UserService
-	WorkflowService        WorkflowService
-	WorkspaceService       WorkspaceService
-	SocialService          SocialService
-	DomainService          DomainService
+	AttachmentService         AttachmentService
+	ContractService           ContractService
+	CommonService             CommonService
+	CurrencyService           CurrencyService
+	EmailService              EmailService
+	EmailingService           EmailingService
+	ExternalSystemService     ExternalSystemService
+	FlowService               FlowService
+	JobRoleService            JobRoleService
+	InvoiceService            InvoiceService
+	InteractionSessionService InteractionSessionService
+	InteractionEventService   InteractionEventService
+	SlackChannelService       SlackChannelService
+	ServiceLineItemService    ServiceLineItemService
+	TenantService             TenantService
+	UserService               UserService
+	WorkflowService           WorkflowService
+	WorkspaceService          WorkspaceService
+	SocialService             SocialService
+	DomainService             DomainService
 
 	GoogleService  GoogleService
 	AzureService   AzureService
 	OpenSrsService OpenSrsService
+	MailService    MailService
 
 	ApiCacheService ApiCacheService
 }
@@ -50,25 +55,31 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	cache := caches.NewCommonCache()
 
 	services.CommonService = NewCommonService(services)
-	services.EmailService = NewEmailService(services)
-	services.TenantService = NewTenantService(nil, services)
-	services.ExternalSystemService = NewExternalSystemService(nil, services)
+	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
+
+	services.AttachmentService = NewAttachmentService(services)
+	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
 	services.ContractService = NewContractService(nil, services)
-	services.ServiceLineItemService = NewServiceLineItemService(nil, services)
-	services.FlowService = NewFlowService(services)
-	services.InvoiceService = NewInvoiceService(services)
-	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
+	services.DomainService = NewDomainService(nil, services, cache)
+	services.EmailService = NewEmailService(services)
+	services.EmailingService = NewEmailingService(nil, services)
+	services.ExternalSystemService = NewExternalSystemService(nil, services)
+	services.FlowService = NewFlowService(services)
+	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
+	services.InvoiceService = NewInvoiceService(services)
+	services.JobRoleService = NewJobRoleService(services)
+	services.InteractionSessionService = NewInteractionSessionService(services)
+	services.InteractionEventService = NewInteractionEventService(services)
+	services.SocialService = NewSocialService(nil, services)
+	services.MailService = NewMailService(services)
+	services.OpenSrsService = NewOpenSRSService(services)
+	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
+	services.ServiceLineItemService = NewServiceLineItemService(nil, services)
+	services.TenantService = NewTenantService(nil, services)
+	services.UserService = NewUserService(services)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
-	services.SocialService = NewSocialService(nil, services)
-	services.EmailingService = NewEmailingService(nil, services)
-	services.DomainService = NewDomainService(nil, services, cache)
-	services.UserService = NewUserService(services)
-	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
-	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
-	services.OpenSrsService = NewOpenSRSService(services.PostgresRepositories, services)
-	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
 
 	return services
 }

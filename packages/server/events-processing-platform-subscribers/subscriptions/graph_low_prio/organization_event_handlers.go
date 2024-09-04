@@ -129,8 +129,6 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 		} else if timelineEventInteractionEvent.EventType == "meeting" {
 			timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
 		}
-	case model.NodeLabelAnalysis:
-		timelineEventType = neo4jenum.TouchpointTypeAnalysis.String()
 	case model.NodeLabelMeeting:
 		timelineEventType = neo4jenum.TouchpointTypeMeeting.String()
 	case model.NodeLabelAction:

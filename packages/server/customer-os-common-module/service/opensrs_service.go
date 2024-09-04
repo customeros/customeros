@@ -10,9 +10,9 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	mimemail "github.com/emersion/go-message/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"net/smtp"
 	"strings"
@@ -21,8 +21,7 @@ import (
 )
 
 type openSRSService struct {
-	repositories *postgresRepository.Repositories
-	services     *Services
+	services *Services
 }
 
 type OpenSrsService interface {
@@ -37,7 +36,7 @@ func (s *openSRSService) Reply(ctx context.Context, tenant string, request dto.M
 	smtpHost := "mail.hostedemail.com"
 	smtpPort := "587"
 
-	mailbox, err := s.repositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, request.From)
+	mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, request.From)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -78,7 +77,7 @@ func (s *openSRSService) Reply(ctx context.Context, tenant string, request dto.M
 		}
 	}
 
-	interactionEventNode, err := s.services.Neo4jRepositories.InteractionEventReadRepository.GetInteractionEvent(ctx, tenant, *request.ReplyTo)
+	interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -238,9 +237,8 @@ func generateMessageID(fromEmail string) string {
 	return messageID
 }
 
-func NewOpenSRSService(repositories *postgresRepository.Repositories, services *Services) OpenSrsService {
+func NewOpenSRSService(services *Services) OpenSrsService {
 	return &openSRSService{
-		repositories: repositories,
-		services:     services,
+		services: services,
 	}
 }

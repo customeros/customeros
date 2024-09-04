@@ -11,8 +11,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -57,11 +57,19 @@ func (r *mutationResolver) NoteLinkAttachment(ctx context.Context, noteID string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
 
-	note, err := r.Services.NoteService.NoteLinkAttachment(ctx, noteID, attachmentID)
+	err := r.Services.NoteService.NoteLinkAttachment(ctx, noteID, attachmentID)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	return mapper.MapEntityToNote(note), nil
+
+	byId, err := r.Services.NoteService.GetById(ctx, noteID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapEntityToNote(byId), nil
 }
 
 // NoteUnlinkAttachment is the resolver for the note_UnlinkAttachment field.
@@ -71,11 +79,18 @@ func (r *mutationResolver) NoteUnlinkAttachment(ctx context.Context, noteID stri
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", noteID), log.String("request.attachmentID", attachmentID))
 
-	meeting, err := r.Services.NoteService.NoteUnlinkAttachment(ctx, noteID, attachmentID)
+	err := r.Services.NoteService.NoteUnlinkAttachment(ctx, noteID, attachmentID)
 	if err != nil {
 		return nil, err
 	}
-	return mapper.MapEntityToNote(meeting), nil
+
+	byId, err := r.Services.NoteService.GetById(ctx, noteID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapEntityToNote(byId), nil
 }
 
 // CreatedBy is the resolver for the createdBy field.
@@ -104,7 +119,8 @@ func (r *noteResolver) Includes(ctx context.Context, obj *model.Note) ([]*model.
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.noteID", obj.ID))
 
-	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_NOTE, nil, []string{obj.ID})
+	includes := commonModel.INCLUDES
+	entities, err := r.Services.CommonServices.AttachmentService.GetFor(ctx, commonModel.NOTE, &includes, []string{obj.ID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get attachment entities for note %s", obj.ID)

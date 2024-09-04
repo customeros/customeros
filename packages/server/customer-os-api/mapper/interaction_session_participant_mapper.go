@@ -2,7 +2,6 @@ package mapper
 
 import (
 	"fmt"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -25,7 +24,7 @@ func MapEntityToInteractionSessionParticipant(interactionSessionParticipantEntit
 			Type:                   utils.StringPtrNillable(phoneNumberEntity.InteractionEventParticipantDetails.Type),
 		}
 	case model2.NodeLabelUser:
-		userEntity := (*interactionSessionParticipantEntity).(*entity.UserEntity)
+		userEntity := (*interactionSessionParticipantEntity).(*neo4jentity.UserEntity)
 		return model.UserParticipant{
 			UserParticipant: MapEntityToUser(userEntity),
 			Type:            utils.StringPtrNillable(userEntity.InteractionEventParticipantDetails.Type),

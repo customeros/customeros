@@ -79,33 +79,6 @@ export enum ActionType {
   ServiceLineItemRemoved = 'SERVICE_LINE_ITEM_REMOVED',
 }
 
-export type Analysis = Node & {
-  __typename?: 'Analysis';
-  analysisType?: Maybe<Scalars['String']['output']>;
-  appSource: Scalars['String']['output'];
-  content?: Maybe<Scalars['String']['output']>;
-  contentType?: Maybe<Scalars['String']['output']>;
-  createdAt: Scalars['Time']['output'];
-  describes: Array<DescriptionNode>;
-  id: Scalars['ID']['output'];
-  source: DataSource;
-  sourceOfTruth: DataSource;
-};
-
-export type AnalysisDescriptionInput = {
-  interactionEventId?: InputMaybe<Scalars['ID']['input']>;
-  interactionSessionId?: InputMaybe<Scalars['ID']['input']>;
-  meetingId?: InputMaybe<Scalars['ID']['input']>;
-};
-
-export type AnalysisInput = {
-  analysisType?: InputMaybe<Scalars['String']['input']>;
-  appSource: Scalars['String']['input'];
-  content?: InputMaybe<Scalars['String']['input']>;
-  contentType?: InputMaybe<Scalars['String']['input']>;
-  describes: Array<AnalysisDescriptionInput>;
-};
-
 export type Attachment = Node & {
   __typename?: 'Attachment';
   appSource: Scalars['String']['output'];
@@ -1304,8 +1277,6 @@ export type DeleteResponse = {
   completed: Scalars['Boolean']['output'];
 };
 
-export type DescriptionNode = InteractionEvent | InteractionSession | Meeting;
-
 /**
  * Describes an email address associated with a `Contact` in customerOS.
  * **A `return` object.**
@@ -1637,7 +1608,7 @@ export type InteractionEvent = Node & {
   actionItems?: Maybe<Array<ActionItem>>;
   actions?: Maybe<Array<Action>>;
   appSource: Scalars['String']['output'];
-  channel?: Maybe<Scalars['String']['output']>;
+  channel: Scalars['String']['output'];
   channelData?: Maybe<Scalars['String']['output']>;
   content?: Maybe<Scalars['String']['output']>;
   contentType?: Maybe<Scalars['String']['output']>;
@@ -1656,26 +1627,6 @@ export type InteractionEvent = Node & {
   sentTo: Array<InteractionEventParticipant>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  summary?: Maybe<Analysis>;
-};
-
-export type InteractionEventInput = {
-  appSource: Scalars['String']['input'];
-  channel?: InputMaybe<Scalars['String']['input']>;
-  channelData?: InputMaybe<Scalars['String']['input']>;
-  content?: InputMaybe<Scalars['String']['input']>;
-  contentType?: InputMaybe<Scalars['String']['input']>;
-  createdAt?: InputMaybe<Scalars['Time']['input']>;
-  customerOSInternalIdentifier?: InputMaybe<Scalars['String']['input']>;
-  eventIdentifier?: InputMaybe<Scalars['String']['input']>;
-  eventType?: InputMaybe<Scalars['String']['input']>;
-  externalId?: InputMaybe<Scalars['String']['input']>;
-  externalSystemId?: InputMaybe<Scalars['String']['input']>;
-  interactionSession?: InputMaybe<Scalars['ID']['input']>;
-  meetingId?: InputMaybe<Scalars['ID']['input']>;
-  repliesTo?: InputMaybe<Scalars['ID']['input']>;
-  sentBy: Array<InteractionEventParticipantInput>;
-  sentTo: Array<InteractionEventParticipantInput>;
 };
 
 export type InteractionEventParticipant =
@@ -1686,14 +1637,6 @@ export type InteractionEventParticipant =
   | PhoneNumberParticipant
   | UserParticipant;
 
-export type InteractionEventParticipantInput = {
-  contactID?: InputMaybe<Scalars['ID']['input']>;
-  email?: InputMaybe<Scalars['String']['input']>;
-  phoneNumber?: InputMaybe<Scalars['String']['input']>;
-  type?: InputMaybe<Scalars['String']['input']>;
-  userID?: InputMaybe<Scalars['ID']['input']>;
-};
-
 export type InteractionSession = Node & {
   __typename?: 'InteractionSession';
   appSource: Scalars['String']['output'];
@@ -1701,38 +1644,15 @@ export type InteractionSession = Node & {
   channel?: Maybe<Scalars['String']['output']>;
   channelData?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
-  describedBy: Array<Analysis>;
-  /**
-   * Deprecated
-   * @deprecated Use updatedAt instead
-   */
-  endedAt?: Maybe<Scalars['Time']['output']>;
   events: Array<InteractionEvent>;
   id: Scalars['ID']['output'];
-  includes: Array<Attachment>;
+  identifier: Scalars['String']['output'];
   name: Scalars['String']['output'];
-  sessionIdentifier?: Maybe<Scalars['String']['output']>;
   source: DataSource;
   sourceOfTruth: DataSource;
-  /**
-   * Deprecated
-   * @deprecated Use createdAt instead
-   */
-  startedAt: Scalars['Time']['output'];
   status: Scalars['String']['output'];
   type?: Maybe<Scalars['String']['output']>;
   updatedAt: Scalars['Time']['output'];
-};
-
-export type InteractionSessionInput = {
-  appSource: Scalars['String']['input'];
-  attendedBy?: InputMaybe<Array<InteractionSessionParticipantInput>>;
-  channel?: InputMaybe<Scalars['String']['input']>;
-  channelData?: InputMaybe<Scalars['String']['input']>;
-  name: Scalars['String']['input'];
-  sessionIdentifier?: InputMaybe<Scalars['String']['input']>;
-  status: Scalars['String']['input'];
-  type?: InputMaybe<Scalars['String']['input']>;
 };
 
 export type InteractionSessionParticipant =
@@ -1740,14 +1660,6 @@ export type InteractionSessionParticipant =
   | EmailParticipant
   | PhoneNumberParticipant
   | UserParticipant;
-
-export type InteractionSessionParticipantInput = {
-  contactID?: InputMaybe<Scalars['ID']['input']>;
-  email?: InputMaybe<Scalars['String']['input']>;
-  phoneNumber?: InputMaybe<Scalars['String']['input']>;
-  type?: InputMaybe<Scalars['String']['input']>;
-  userID?: InputMaybe<Scalars['ID']['input']>;
-};
 
 export enum InternalStage {
   ClosedLost = 'CLOSED_LOST',
@@ -1767,6 +1679,7 @@ export type Invoice = MetadataInterface & {
   amountDue: Scalars['Float']['output'];
   amountPaid: Scalars['Float']['output'];
   amountRemaining: Scalars['Float']['output'];
+  billingCycleInMonths: Scalars['Int64']['output'];
   contract: Contract;
   currency: Scalars['String']['output'];
   customer: InvoiceCustomer;
@@ -2032,7 +1945,6 @@ export type LastTouchpoint = {
 export enum LastTouchpointType {
   Action = 'ACTION',
   ActionCreated = 'ACTION_CREATED',
-  Analysis = 'ANALYSIS',
   InteractionEventChat = 'INTERACTION_EVENT_CHAT',
   InteractionEventEmailReceived = 'INTERACTION_EVENT_EMAIL_RECEIVED',
   InteractionEventEmailSent = 'INTERACTION_EVENT_EMAIL_SENT',
@@ -2227,7 +2139,6 @@ export type Meeting = Node & {
   conferenceUrl?: Maybe<Scalars['String']['output']>;
   createdAt: Scalars['Time']['output'];
   createdBy: Array<MeetingParticipant>;
-  describedBy: Array<Analysis>;
   endedAt?: Maybe<Scalars['Time']['output']>;
   events: Array<InteractionEvent>;
   externalSystem: Array<ExternalSystem>;
@@ -2335,7 +2246,6 @@ export type MetadataInterface = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  analysis_Create: Analysis;
   attachment_Create: Attachment;
   bankAccount_Create: BankAccount;
   bankAccount_Delete: DeleteResponse;
@@ -2404,10 +2314,7 @@ export type Mutation = {
   fieldSetDeleteFromContact: Result;
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
-  interactionEvent_Create: InteractionEvent;
-  interactionEvent_LinkAttachment: InteractionEvent;
-  interactionSession_Create: InteractionSession;
-  interactionSession_LinkAttachment: InteractionSession;
+  interactionEvent_LinkAttachment: Result;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
   invoice_Simulate: Array<InvoiceSimulate>;
@@ -2434,7 +2341,7 @@ export type Mutation = {
   masterPlan_CreateDefault: MasterPlan;
   masterPlan_Duplicate: MasterPlan;
   masterPlan_Update: MasterPlan;
-  meeting_AddNewLocation: Location;
+  meeting_AddNewLocation: Meeting;
   meeting_AddNote: Meeting;
   meeting_Create: Meeting;
   meeting_LinkAttachment: Meeting;
@@ -2528,10 +2435,6 @@ export type Mutation = {
   user_Update: User;
   workflow_Create: Workflow;
   workflow_Update: ActionResponse;
-};
-
-export type MutationAnalysis_CreateArgs = {
-  analysis: AnalysisInput;
 };
 
 export type MutationAttachment_CreateArgs = {
@@ -2838,22 +2741,9 @@ export type MutationFieldSetUpdateInContactArgs = {
   input: FieldSetUpdateInput;
 };
 
-export type MutationInteractionEvent_CreateArgs = {
-  event: InteractionEventInput;
-};
-
 export type MutationInteractionEvent_LinkAttachmentArgs = {
   attachmentId: Scalars['ID']['input'];
   eventId: Scalars['ID']['input'];
-};
-
-export type MutationInteractionSession_CreateArgs = {
-  session: InteractionSessionInput;
-};
-
-export type MutationInteractionSession_LinkAttachmentArgs = {
-  attachmentId: Scalars['ID']['input'];
-  sessionId: Scalars['ID']['input'];
 };
 
 export type MutationInvoice_NextDryRunForContractArgs = {
@@ -3635,19 +3525,6 @@ export type OpportunityUpdateInput = {
   opportunityId: Scalars['ID']['input'];
 };
 
-export type Order = {
-  __typename?: 'Order';
-  appSource: Scalars['String']['output'];
-  cancelledAt?: Maybe<Scalars['Time']['output']>;
-  confirmedAt?: Maybe<Scalars['Time']['output']>;
-  createdAt: Scalars['Time']['output'];
-  fulfilledAt?: Maybe<Scalars['Time']['output']>;
-  id: Scalars['ID']['output'];
-  paidAt?: Maybe<Scalars['Time']['output']>;
-  source: DataSource;
-  sourceOfTruth: DataSource;
-};
-
 export type OrgAccountDetails = {
   __typename?: 'OrgAccountDetails';
   churned?: Maybe<Scalars['Time']['output']>;
@@ -3746,7 +3623,6 @@ export type Organization = MetadataInterface & {
   note?: Maybe<Scalars['String']['output']>;
   notes?: Maybe<Scalars['String']['output']>;
   opportunities?: Maybe<Array<Opportunity>>;
-  orders: Array<Order>;
   outboundCommsCount: Scalars['Int64']['output'];
   owner?: Maybe<User>;
   parentCompanies: Array<LinkedOrganization>;
@@ -4247,7 +4123,6 @@ export enum PricingModel {
 
 export type Query = {
   __typename?: 'Query';
-  analysis: Analysis;
   attachment: Attachment;
   bankAccounts: Array<BankAccount>;
   billableInfo: TenantBillableInfo;
@@ -4287,10 +4162,6 @@ export type Query = {
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
   interactionEvent: InteractionEvent;
-  interactionEvent_ByEventIdentifier: InteractionEvent;
-  interactionSession: InteractionSession;
-  interactionSession_ByEventIdentifier: InteractionSession;
-  interactionSession_BySessionIdentifier: InteractionSession;
   invoice: Invoice;
   invoice_ByNumber: Invoice;
   invoices: InvoicesPage;
@@ -4327,10 +4198,6 @@ export type Query = {
   users: UserPage;
   workflow_ByType: Workflow;
   workflows: Array<Workflow>;
-};
-
-export type QueryAnalysisArgs = {
-  id: Scalars['ID']['input'];
 };
 
 export type QueryAttachmentArgs = {
@@ -4430,22 +4297,6 @@ export type QueryGcli_SearchArgs = {
 
 export type QueryInteractionEventArgs = {
   id: Scalars['ID']['input'];
-};
-
-export type QueryInteractionEvent_ByEventIdentifierArgs = {
-  eventIdentifier: Scalars['String']['input'];
-};
-
-export type QueryInteractionSessionArgs = {
-  id: Scalars['ID']['input'];
-};
-
-export type QueryInteractionSession_ByEventIdentifierArgs = {
-  eventIdentifier: Scalars['String']['input'];
-};
-
-export type QueryInteractionSession_BySessionIdentifierArgs = {
-  sessionIdentifier: Scalars['String']['input'];
 };
 
 export type QueryInvoiceArgs = {
@@ -5093,14 +4944,12 @@ export type TimeRange = {
 
 export type TimelineEvent =
   | Action
-  | Analysis
   | InteractionEvent
   | InteractionSession
   | Issue
   | LogEntry
   | Meeting
   | Note
-  | Order
   | PageView;
 
 export enum TimelineEventType {

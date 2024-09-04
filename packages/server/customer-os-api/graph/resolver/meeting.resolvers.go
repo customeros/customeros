@@ -14,9 +14,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -65,20 +65,6 @@ func (r *meetingResolver) Includes(ctx context.Context, obj *model.Meeting) ([]*
 	return mapper.MapEntitiesToAttachment(entities), nil
 }
 
-// DescribedBy is the resolver for the describedBy field.
-func (r *meetingResolver) DescribedBy(ctx context.Context, obj *model.Meeting) ([]*model.Analysis, error) {
-	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
-
-	analysisEntities, err := dataloader.For(ctx).GetDescribedByFor(ctx, repository.LINKED_WITH_MEETING, obj.ID)
-	if err != nil {
-		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get analysis for meeting %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get analysis for meeting %s", obj.ID)
-		return nil, nil
-	}
-	return mapper.MapEntitiesToAnalysis(analysisEntities), nil
-}
-
 // Note is the resolver for the note field.
 func (r *meetingResolver) Note(ctx context.Context, obj *model.Meeting) ([]*model.Note, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
@@ -114,8 +100,8 @@ func (r *meetingResolver) Recording(ctx context.Context, obj *model.Meeting) (*m
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", obj.ID))
 
-	recording := repository.LINKED_NATURE_RECORDING
-	entities, err := r.Services.AttachmentService.GetAttachmentsForNode(ctx, repository.LINKED_WITH_MEETING, &recording, []string{obj.ID})
+	recording := commonModel.RECORDING
+	entities, err := r.Services.CommonServices.AttachmentService.GetFor(ctx, commonModel.MEETING, &recording, []string{obj.ID})
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		tracing.TraceErr(span, err)
@@ -242,10 +228,21 @@ func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
 
-	meeting, err := r.Services.MeetingService.LinkAttachment(ctx, meetingID, attachmentID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.INCLUDES, nil, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
+
+	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	return mapper.MapEntityToMeeting(meeting), nil
 }
 
@@ -256,10 +253,21 @@ func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingI
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
 
-	meeting, err := r.Services.MeetingService.UnlinkAttachment(ctx, meetingID, attachmentID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.INCLUDES, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
+
+	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	return mapper.MapEntityToMeeting(meeting), nil
 }
 
@@ -270,10 +278,21 @@ func (r *mutationResolver) MeetingLinkRecording(ctx context.Context, meetingID s
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
 
-	meeting, err := r.Services.MeetingService.LinkRecordingAttachment(ctx, meetingID, attachmentID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.RECORDING, nil, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
+
+	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	return mapper.MapEntityToMeeting(meeting), nil
 }
 
@@ -284,21 +303,32 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID), log.String("request.attachmentID", attachmentID))
 
-	meeting, err := r.Services.MeetingService.UnlinkRecordingAttachment(ctx, meetingID, attachmentID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.RECORDING, attachmentID, commonModel.ATTACHMENT)
 	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
 		return nil, err
 	}
+
+	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	return mapper.MapEntityToMeeting(meeting), nil
 }
 
 // MeetingAddNewLocation is the resolver for the meeting_AddNewLocation field.
-func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Location, error) {
+func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID string) (*model.Meeting, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.MeetingAddNewLocation", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.meetingID", meetingID))
 
-	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.MEETING, meetingID, entity.SourceFields{
+	_, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.MEETING, meetingID, entity.SourceFields{
 		Source:        neo4jentity.DataSourceOpenline,
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
@@ -308,7 +338,14 @@ func (r *mutationResolver) MeetingAddNewLocation(ctx context.Context, meetingID 
 		graphql.AddErrorf(ctx, "Error creating location for meeting %s", meetingID)
 		return nil, err
 	}
-	return mapper.MapEntityToLocation(locationEntity), nil
+
+	meeting, err := r.Services.MeetingService.GetMeetingById(ctx, meetingID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapEntityToMeeting(meeting), nil
 }
 
 // MeetingAddNote is the resolver for the meeting_AddNote field.

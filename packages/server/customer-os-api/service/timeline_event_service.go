@@ -170,26 +170,16 @@ func (s *timelineEventService) convertDbNodesToTimelineEvents(dbNodes []*dbtype.
 }
 
 func (s *timelineEventService) convertDbNodeToTimelineEvent(dbNode *dbtype.Node) entity.TimelineEvent {
-	if slices.Contains(dbNode.Labels, model2.NodeLabelPageView) {
-		return s.services.PageViewService.mapDbNodeToPageView(*dbNode)
-	} else if slices.Contains(dbNode.Labels, model2.NodeLabelInteractionSession) {
-		return s.services.InteractionSessionService.mapDbNodeToInteractionSessionEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, model2.NodeLabelIssue) {
+	if slices.Contains(dbNode.Labels, model2.NodeLabelIssue) {
 		return s.services.IssueService.mapDbNodeToIssue(*dbNode)
-	} else if slices.Contains(dbNode.Labels, model2.NodeLabelNote) {
-		return s.services.NoteService.mapDbNodeToNoteEntity(*dbNode)
 	} else if slices.Contains(dbNode.Labels, model2.NodeLabelInteractionEvent) {
-		return s.services.InteractionEventService.mapDbNodeToInteractionEventEntity(*dbNode)
-	} else if slices.Contains(dbNode.Labels, model2.NodeLabelAnalysis) {
-		return s.services.AnalysisService.mapDbNodeToAnalysisEntity(*dbNode)
+		return neo4jmapper.MapDbNodeToInteractionEventEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, model2.NodeLabelMeeting) {
 		return s.services.MeetingService.mapDbNodeToMeetingEntity(*dbNode)
 	} else if slices.Contains(dbNode.Labels, model2.NodeLabelAction) {
 		return neo4jmapper.MapDbNodeToActionEntity(dbNode)
 	} else if slices.Contains(dbNode.Labels, model2.NodeLabelLogEntry) {
 		return neo4jmapper.MapDbNodeToLogEntryEntity(dbNode)
-	} else if slices.Contains(dbNode.Labels, model2.NodeLabelOrder) {
-		return s.services.OrderService.mapDbNodeToOrderEntity(dbNode)
 	}
 	return nil
 }

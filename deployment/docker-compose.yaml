@@ -312,16 +312,3 @@ services:
       - POSTGRES_HOST=postgres
       - NEO4J_TARGET=neo4j://neo4j:7687
 
-  comms-api:
-    image: ghcr.io/customeros/customeros/comms-api:latest
-    networks:
-      - openline
-    ports:
-      - "9013:9013" #GRPC
-    depends_on:
-      - customer-os-platform-admin-api
-    environment:
-      - POSTGRES_HOST=postgres
-      - NEO4J_TARGET=neo4j://neo4j:7687
-      - CUSTOMER_OS_API=http://host.docker.internal:10000/query
-      - FILE_STORE_API=http://host.docker.internal:10001

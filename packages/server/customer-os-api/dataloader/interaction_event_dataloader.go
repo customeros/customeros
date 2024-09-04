@@ -3,52 +3,52 @@ package dataloader
 import (
 	"context"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
 
-func (i *Loaders) GetInteractionEventsForInteractionSession(ctx context.Context, interactionSessionId string) (*entity.InteractionEventEntities, error) {
+func (i *Loaders) GetInteractionEventsForInteractionSession(ctx context.Context, interactionSessionId string) (*neo4jentity.InteractionEventEntities, error) {
 	thunk := i.InteractionEventsForInteractionSession.Load(ctx, dataloader.StringKey(interactionSessionId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.InteractionEventEntities)
+	resultObj := result.(neo4jentity.InteractionEventEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetInteractionEventsForMeeting(ctx context.Context, meetingId string) (*entity.InteractionEventEntities, error) {
+func (i *Loaders) GetInteractionEventsForMeeting(ctx context.Context, meetingId string) (*neo4jentity.InteractionEventEntities, error) {
 	thunk := i.InteractionEventsForMeeting.Load(ctx, dataloader.StringKey(meetingId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.InteractionEventEntities)
+	resultObj := result.(neo4jentity.InteractionEventEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetInteractionEventsForIssue(ctx context.Context, issueId string) (*entity.InteractionEventEntities, error) {
+func (i *Loaders) GetInteractionEventsForIssue(ctx context.Context, issueId string) (*neo4jentity.InteractionEventEntities, error) {
 	thunk := i.InteractionEventsForIssue.Load(ctx, dataloader.StringKey(issueId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.InteractionEventEntities)
+	resultObj := result.(neo4jentity.InteractionEventEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetInteractionEventsForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.InteractionEventEntities, error) {
+func (i *Loaders) GetInteractionEventsForInteractionEvent(ctx context.Context, interactionEventId string) (*neo4jentity.InteractionEventEntities, error) {
 	thunk := i.ReplyToInteractionEventForInteractionEvent.Load(ctx, dataloader.StringKey(interactionEventId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.InteractionEventEntities)
+	resultObj := result.(neo4jentity.InteractionEventEntities)
 	return &resultObj, nil
 }
 
@@ -63,7 +63,7 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForInteractionSessions(ctx, ids)
+	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForInteractionSessions(ctx, ids, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -73,12 +73,12 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	interactionEventEntitiesByInteractionSessionId := make(map[string]entity.InteractionEventEntities)
+	interactionEventEntitiesByInteractionSessionId := make(map[string]neo4jentity.InteractionEventEntities)
 	for _, val := range *interactionEventEntitiesPtr {
 		if list, ok := interactionEventEntitiesByInteractionSessionId[val.DataloaderKey]; ok {
 			interactionEventEntitiesByInteractionSessionId[val.DataloaderKey] = append(list, val)
 		} else {
-			interactionEventEntitiesByInteractionSessionId[val.DataloaderKey] = entity.InteractionEventEntities{val}
+			interactionEventEntitiesByInteractionSessionId[val.DataloaderKey] = neo4jentity.InteractionEventEntities{val}
 		}
 	}
 
@@ -91,10 +91,10 @@ func (b *interactionEventBatcher) getInteractionEventsForInteractionSessions(ctx
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -112,7 +112,7 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 
 	ids, keyOrder := sortKeys(keys)
 
-	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForMeetings(ctx, ids)
+	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForMeetings(ctx, ids, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -122,12 +122,12 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	interactionEventEntitiesByMeetingId := make(map[string]entity.InteractionEventEntities)
+	interactionEventEntitiesByMeetingId := make(map[string]neo4jentity.InteractionEventEntities)
 	for _, val := range *interactionEventEntitiesPtr {
 		if list, ok := interactionEventEntitiesByMeetingId[val.DataloaderKey]; ok {
 			interactionEventEntitiesByMeetingId[val.DataloaderKey] = append(list, val)
 		} else {
-			interactionEventEntitiesByMeetingId[val.DataloaderKey] = entity.InteractionEventEntities{val}
+			interactionEventEntitiesByMeetingId[val.DataloaderKey] = neo4jentity.InteractionEventEntities{val}
 		}
 	}
 
@@ -140,10 +140,10 @@ func (b *interactionEventBatcher) getInteractionEventsForMeetings(ctx context.Co
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -164,7 +164,7 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForIssues(ctx, ids)
+	interactionEventEntitiesPtr, err := b.interactionEventService.GetInteractionEventsForIssues(ctx, ids, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -174,12 +174,12 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	interactionEventEntitiesByMeetingId := make(map[string]entity.InteractionEventEntities)
+	interactionEventEntitiesByMeetingId := make(map[string]neo4jentity.InteractionEventEntities)
 	for _, val := range *interactionEventEntitiesPtr {
 		if list, ok := interactionEventEntitiesByMeetingId[val.DataloaderKey]; ok {
 			interactionEventEntitiesByMeetingId[val.DataloaderKey] = append(list, val)
 		} else {
-			interactionEventEntitiesByMeetingId[val.DataloaderKey] = entity.InteractionEventEntities{val}
+			interactionEventEntitiesByMeetingId[val.DataloaderKey] = neo4jentity.InteractionEventEntities{val}
 		}
 	}
 
@@ -192,10 +192,10 @@ func (b *interactionEventBatcher) getInteractionEventsForIssues(ctx context.Cont
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -213,7 +213,7 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 
 	ids, keyOrder := sortKeys(keys)
 
-	interactionEventEntitiesPtr, err := b.interactionEventService.GetReplyToInteractionsEventForInteractionEvents(ctx, ids)
+	interactionEventEntitiesPtr, err := b.interactionEventService.GetReplyToInteractionsEventForInteractionEvents(ctx, ids, true)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -223,12 +223,12 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	interactionEventEntitiesGrouped := make(map[string]entity.InteractionEventEntities)
+	interactionEventEntitiesGrouped := make(map[string]neo4jentity.InteractionEventEntities)
 	for _, val := range *interactionEventEntitiesPtr {
 		if list, ok := interactionEventEntitiesGrouped[val.DataloaderKey]; ok {
 			interactionEventEntitiesGrouped[val.DataloaderKey] = append(list, val)
 		} else {
-			interactionEventEntitiesGrouped[val.DataloaderKey] = entity.InteractionEventEntities{val}
+			interactionEventEntitiesGrouped[val.DataloaderKey] = neo4jentity.InteractionEventEntities{val}
 		}
 	}
 
@@ -242,10 +242,10 @@ func (b *interactionEventBatcher) getReplyToInteractionEventsForInteractionEvent
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.InteractionEventEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.InteractionEventEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.InteractionEventEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.InteractionEventEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

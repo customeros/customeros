@@ -14,9 +14,9 @@ query GetInteractionEvent($eventId: ID!){
     }
     interactionSession {
        id
-       startedAt
-       endedAt
-       sessionIdentifier
+       createdAt
+       updatedAt
+       identifier
        name
        status
        type

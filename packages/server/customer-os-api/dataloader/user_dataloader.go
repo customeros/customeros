@@ -3,56 +3,56 @@ package dataloader
 import (
 	"context"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"reflect"
 )
 
-func (i *Loaders) GetUsersForEmail(ctx context.Context, emailID string) (*entity.UserEntities, error) {
+func (i *Loaders) GetUsersForEmail(ctx context.Context, emailID string) (*neo4jentity.UserEntities, error) {
 	thunk := i.UsersForEmail.Load(ctx, dataloader.StringKey(emailID))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.UserEntities)
+	resultObj := result.(neo4jentity.UserEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUsersConnectedForContact(ctx context.Context, contactId string) (*entity.UserEntities, error) {
+func (i *Loaders) GetUsersConnectedForContact(ctx context.Context, contactId string) (*neo4jentity.UserEntities, error) {
 	thunk := i.UsersConnectedForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.UserEntities)
+	resultObj := result.(neo4jentity.UserEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUsersForPhoneNumber(ctx context.Context, phoneNumberID string) (*entity.UserEntities, error) {
+func (i *Loaders) GetUsersForPhoneNumber(ctx context.Context, phoneNumberID string) (*neo4jentity.UserEntities, error) {
 	thunk := i.UsersForPhoneNumber.Load(ctx, dataloader.StringKey(phoneNumberID))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.UserEntities)
+	resultObj := result.(neo4jentity.UserEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerID string) (*entity.UserEntities, error) {
+func (i *Loaders) GetUsersForPlayer(ctx context.Context, playerID string) (*neo4jentity.UserEntities, error) {
 	thunk := i.UsersForPlayer.Load(ctx, dataloader.StringKey(playerID))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.UserEntities)
+	resultObj := result.(neo4jentity.UserEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationID string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationID string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserOwnerForOrganization.Load(ctx, dataloader.StringKey(organizationID))
 	result, err := thunk()
 	if err != nil {
@@ -61,10 +61,10 @@ func (i *Loaders) GetUserOwnerForOrganization(ctx context.Context, organizationI
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
-func (i *Loaders) GetUserOwnerForOpportunity(ctx context.Context, opportunityId string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUserOwnerForOpportunity(ctx context.Context, opportunityId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserOwnerForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
 	result, err := thunk()
 	if err != nil {
@@ -73,10 +73,10 @@ func (i *Loaders) GetUserOwnerForOpportunity(ctx context.Context, opportunityId 
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
-func (i *Loaders) GetUserCreatorForOpportunity(ctx context.Context, opportunityId string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUserCreatorForOpportunity(ctx context.Context, opportunityId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserCreatorForOpportunity.Load(ctx, dataloader.StringKey(opportunityId))
 	result, err := thunk()
 	if err != nil {
@@ -85,10 +85,10 @@ func (i *Loaders) GetUserCreatorForOpportunity(ctx context.Context, opportunityI
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
-func (i *Loaders) GetUserCreatorForServiceLineItem(ctx context.Context, serviceLineItemId string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUserCreatorForServiceLineItem(ctx context.Context, serviceLineItemId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserCreatorForServiceLineItem.Load(ctx, dataloader.StringKey(serviceLineItemId))
 	result, err := thunk()
 	if err != nil {
@@ -97,10 +97,10 @@ func (i *Loaders) GetUserCreatorForServiceLineItem(ctx context.Context, serviceL
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
-func (i *Loaders) GetUserCreatorForContract(ctx context.Context, contractId string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUserCreatorForContract(ctx context.Context, contractId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserCreatorForContract.Load(ctx, dataloader.StringKey(contractId))
 	result, err := thunk()
 	if err != nil {
@@ -109,10 +109,10 @@ func (i *Loaders) GetUserCreatorForContract(ctx context.Context, contractId stri
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
-func (i *Loaders) GetUser(ctx context.Context, userId string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUser(ctx context.Context, userId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.User.Load(ctx, dataloader.StringKey(userId))
 	result, err := thunk()
 	if err != nil {
@@ -121,10 +121,10 @@ func (i *Loaders) GetUser(ctx context.Context, userId string) (*entity.UserEntit
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
-func (i *Loaders) GetUserAuthorForLogEntry(ctx context.Context, logEntryId string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUserAuthorForLogEntry(ctx context.Context, logEntryId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserAuthorForLogEntry.Load(ctx, dataloader.StringKey(logEntryId))
 	result, err := thunk()
 	if err != nil {
@@ -133,10 +133,10 @@ func (i *Loaders) GetUserAuthorForLogEntry(ctx context.Context, logEntryId strin
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
-func (i *Loaders) GetUserAuthorForComment(ctx context.Context, logEntryId string) (*entity.UserEntity, error) {
+func (i *Loaders) GetUserAuthorForComment(ctx context.Context, logEntryId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserAuthorForComment.Load(ctx, dataloader.StringKey(logEntryId))
 	result, err := thunk()
 	if err != nil {
@@ -145,7 +145,7 @@ func (i *Loaders) GetUserAuthorForComment(ctx context.Context, logEntryId string
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*entity.UserEntity), nil
+	return result.(*neo4jentity.UserEntity), nil
 }
 
 func (b *userBatcher) getUsersConnectedForContact(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -166,12 +166,12 @@ func (b *userBatcher) getUsersConnectedForContact(ctx context.Context, keys data
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntitiesByEmailId := make(map[string]entity.UserEntities)
+	userEntitiesByEmailId := make(map[string]neo4jentity.UserEntities)
 	for _, val := range *userEntitiesPtr {
 		if list, ok := userEntitiesByEmailId[val.DataloaderKey]; ok {
 			userEntitiesByEmailId[val.DataloaderKey] = append(list, val)
 		} else {
-			userEntitiesByEmailId[val.DataloaderKey] = entity.UserEntities{val}
+			userEntitiesByEmailId[val.DataloaderKey] = neo4jentity.UserEntities{val}
 		}
 	}
 
@@ -184,10 +184,10 @@ func (b *userBatcher) getUsersConnectedForContact(ctx context.Context, keys data
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.UserEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.UserEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -215,12 +215,12 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntitiesByEmailId := make(map[string]entity.UserEntities)
+	userEntitiesByEmailId := make(map[string]neo4jentity.UserEntities)
 	for _, val := range *userEntitiesPtr {
 		if list, ok := userEntitiesByEmailId[val.DataloaderKey]; ok {
 			userEntitiesByEmailId[val.DataloaderKey] = append(list, val)
 		} else {
-			userEntitiesByEmailId[val.DataloaderKey] = entity.UserEntities{val}
+			userEntitiesByEmailId[val.DataloaderKey] = neo4jentity.UserEntities{val}
 		}
 	}
 
@@ -233,10 +233,10 @@ func (b *userBatcher) getUsersForEmails(ctx context.Context, keys dataloader.Key
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.UserEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.UserEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -263,12 +263,12 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntitiesByPhoneNumberId := make(map[string]entity.UserEntities)
+	userEntitiesByPhoneNumberId := make(map[string]neo4jentity.UserEntities)
 	for _, val := range *userEntitiesPtr {
 		if list, ok := userEntitiesByPhoneNumberId[val.DataloaderKey]; ok {
 			userEntitiesByPhoneNumberId[val.DataloaderKey] = append(list, val)
 		} else {
-			userEntitiesByPhoneNumberId[val.DataloaderKey] = entity.UserEntities{val}
+			userEntitiesByPhoneNumberId[val.DataloaderKey] = neo4jentity.UserEntities{val}
 		}
 	}
 
@@ -281,10 +281,10 @@ func (b *userBatcher) getUsersForPhoneNumbers(ctx context.Context, keys dataload
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.UserEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.UserEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -312,12 +312,12 @@ func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Ke
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntitiesByPlayerId := make(map[string]entity.UserEntities)
+	userEntitiesByPlayerId := make(map[string]neo4jentity.UserEntities)
 	for _, val := range *userEntitiesPtr {
 		if list, ok := userEntitiesByPlayerId[val.DataloaderKey]; ok {
 			userEntitiesByPlayerId[val.DataloaderKey] = append(list, val)
 		} else {
-			userEntitiesByPlayerId[val.DataloaderKey] = entity.UserEntities{val}
+			userEntitiesByPlayerId[val.DataloaderKey] = neo4jentity.UserEntities{val}
 		}
 	}
 
@@ -330,10 +330,10 @@ func (b *userBatcher) getUsersForPlayers(ctx context.Context, keys dataloader.Ke
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.UserEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.UserEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.UserEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.UserEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -361,7 +361,7 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByOrganizationId := make(map[string]entity.UserEntity)
+	userEntityByOrganizationId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityByOrganizationId[val.DataloaderKey] = val
 	}
@@ -379,7 +379,7 @@ func (b *userBatcher) getUserOwnersForOrganizations(ctx context.Context, keys da
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -410,7 +410,7 @@ func (b *userBatcher) getUserOwnersForOpportunities(ctx context.Context, keys da
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByOpportunityId := make(map[string]entity.UserEntity)
+	userEntityByOpportunityId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityByOpportunityId[val.DataloaderKey] = val
 	}
@@ -428,7 +428,7 @@ func (b *userBatcher) getUserOwnersForOpportunities(ctx context.Context, keys da
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -459,7 +459,7 @@ func (b *userBatcher) getUserCreatorsForOpportunities(ctx context.Context, keys 
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByOpportunityId := make(map[string]entity.UserEntity)
+	userEntityByOpportunityId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityByOpportunityId[val.DataloaderKey] = val
 	}
@@ -477,7 +477,7 @@ func (b *userBatcher) getUserCreatorsForOpportunities(ctx context.Context, keys 
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -508,7 +508,7 @@ func (b *userBatcher) getUserCreatorsForServiceLineItems(ctx context.Context, ke
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByServiceLineItemId := make(map[string]entity.UserEntity)
+	userEntityByServiceLineItemId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityByServiceLineItemId[val.DataloaderKey] = val
 	}
@@ -526,7 +526,7 @@ func (b *userBatcher) getUserCreatorsForServiceLineItems(ctx context.Context, ke
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -557,7 +557,7 @@ func (b *userBatcher) getUserCreatorsForContracts(ctx context.Context, keys data
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByOpportunityId := make(map[string]entity.UserEntity)
+	userEntityByOpportunityId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityByOpportunityId[val.DataloaderKey] = val
 	}
@@ -575,7 +575,7 @@ func (b *userBatcher) getUserCreatorsForContracts(ctx context.Context, keys data
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -603,7 +603,7 @@ func (b *userBatcher) getUsers(ctx context.Context, keys dataloader.Keys) []*dat
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityById := make(map[string]entity.UserEntity)
+	userEntityById := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityById[val.Id] = val
 	}
@@ -621,7 +621,7 @@ func (b *userBatcher) getUsers(ctx context.Context, keys dataloader.Keys) []*dat
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -652,7 +652,7 @@ func (b *userBatcher) getUserAuthorsForLogEntries(ctx context.Context, keys data
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByLogEntryId := make(map[string]entity.UserEntity)
+	userEntityByLogEntryId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityByLogEntryId[val.DataloaderKey] = val
 	}
@@ -670,7 +670,7 @@ func (b *userBatcher) getUserAuthorsForLogEntries(ctx context.Context, keys data
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -701,7 +701,7 @@ func (b *userBatcher) getUserAuthorsForComments(ctx context.Context, keys datalo
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	userEntityByLogEntryId := make(map[string]entity.UserEntity)
+	userEntityByLogEntryId := make(map[string]neo4jentity.UserEntity)
 	for _, val := range *userEntities {
 		userEntityByLogEntryId[val.DataloaderKey] = val
 	}
@@ -719,7 +719,7 @@ func (b *userBatcher) getUserAuthorsForComments(ctx context.Context, keys datalo
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(entity.UserEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

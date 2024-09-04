@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -19,7 +20,7 @@ type emailService struct {
 }
 
 type EmailService interface {
-	Merge(c context.Context, input neo4jentity.EmailEntity, linkWith *LinkWith) error
+	Merge(c context.Context, input neo4jentity.EmailEntity, linkWith *LinkWith) (*string, error)
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -28,7 +29,7 @@ func NewEmailService(services *Services) EmailService {
 	}
 }
 
-func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, linkWith *LinkWith) error {
+func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, linkWith *LinkWith) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(c, "EmailService.Merge")
 	defer span.Finish()
 
@@ -38,9 +39,10 @@ func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, l
 
 	tenant := common.GetTenantFromContext(ctx)
 	emailId := ""
+	var err error
 
 	if input.Id == "" && input.Email == "" {
-		return errors.New("email id or email is required")
+		return nil, errors.New("email id or email is required")
 	}
 
 	if input.Id != "" {
@@ -49,18 +51,23 @@ func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, l
 		emailById, err := h.services.Neo4jRepositories.EmailReadRepository.GetById(ctx, tenant, input.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 		if emailById == nil {
 			span.LogFields(log.Bool("email.found", false))
-			return errors.New("email not found")
+			return nil, errors.New("email not found")
 		}
 		emailId = input.Id
 		span.LogFields(log.Bool("email.found", true))
 	} else {
 
-		emailId = utils.NewUUIDIfEmpty("")
-		err := h.services.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailId, neo4jrepository.EmailCreateFields{
+		emailId, err = h.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelEmail)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		err = h.services.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailId, neo4jrepository.EmailCreateFields{
 			RawEmail:  input.Email,
 			CreatedAt: utils.Now(),
 			SourceFields: neo4jmodel.Source{
@@ -69,7 +76,7 @@ func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, l
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return err
+			return nil, err
 		}
 
 		span.LogFields(log.Bool("email.created", true))
@@ -81,17 +88,17 @@ func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, l
 			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, tenant, linkWith.Id, emailId, "Work", true)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return err
+				return nil, err
 			}
 		} else if linkWith.Type.String() == neo4jenum.USER.String() {
 			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, linkWith.Id, emailId, "Work", true)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				return err
+				return nil, err
 			}
 		}
 		//TODO continue and generify
 	}
 
-	return nil
+	return &emailId, nil
 }

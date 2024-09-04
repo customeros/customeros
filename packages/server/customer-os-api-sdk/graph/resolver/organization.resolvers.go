@@ -223,11 +223,6 @@ func (r *organizationResolver) IssueSummaryByStatus(ctx context.Context, obj *mo
 	panic(fmt.Errorf("not implemented: IssueSummaryByStatus - issueSummaryByStatus"))
 }
 
-// Orders is the resolver for the orders field.
-func (r *organizationResolver) Orders(ctx context.Context, obj *model.Organization) ([]*model.Order, error) {
-	panic(fmt.Errorf("not implemented: Orders - orders"))
-}
-
 // ContactCount is the resolver for the contactCount field.
 func (r *organizationResolver) ContactCount(ctx context.Context, obj *model.Organization) (int64, error) {
 	panic(fmt.Errorf("not implemented: ContactCount - contactCount"))
@@ -293,16 +288,3 @@ func (r *Resolver) Organization() generated.OrganizationResolver { return &organ
 
 type lastTouchpointResolver struct{ *Resolver }
 type organizationResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *mutationResolver) OrganizationAddTagByID(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: OrganizationAddTagByID - organization_AddTagById"))
-}
-func (r *mutationResolver) OrganizationRemoveTagByID(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: OrganizationRemoveTagByID - organization_RemoveTagById"))
-}

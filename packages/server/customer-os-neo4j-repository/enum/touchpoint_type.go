@@ -11,7 +11,6 @@ const (
 	TouchpointTypeInteractionEventPhoneCall     TouchpointType = "INTERACTION_EVENT_PHONE_CALL"
 	TouchpointTypeInteractionEventChat          TouchpointType = "INTERACTION_EVENT_CHAT"
 	TouchpointTypeMeeting                       TouchpointType = "MEETING"
-	TouchpointTypeAnalysis                      TouchpointType = "ANALYSIS"
 	TouchpointTypeActionCreated                 TouchpointType = "ACTION_CREATED"
 	TouchpointTypeAction                        TouchpointType = "ACTION"
 	TouchpointTypeLogEntry                      TouchpointType = "LOG_ENTRY"
@@ -41,8 +40,6 @@ func DecodeTouchpointType(str string) TouchpointType {
 		return TouchpointTypeInteractionEventChat
 	case TouchpointTypeMeeting.String():
 		return TouchpointTypeMeeting
-	case TouchpointTypeAnalysis.String():
-		return TouchpointTypeAnalysis
 	case TouchpointTypeActionCreated.String():
 		return TouchpointTypeActionCreated
 	case TouchpointTypeAction.String():

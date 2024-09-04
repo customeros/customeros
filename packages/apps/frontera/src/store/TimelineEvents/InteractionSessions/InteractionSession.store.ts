@@ -50,17 +50,13 @@ const defaultValue: InteractionSession = {
   source: DataSource.Openline,
   __typename: 'InteractionSession',
   attendedBy: [],
-  describedBy: [],
   events: [],
-  includes: [],
   name: '',
   sourceOfTruth: DataSource.Openline,
   status: '',
   updatedAt: new Date().toISOString(),
   channel: '',
   channelData: '',
-  sessionIdentifier: '',
+  identifier: '',
   type: '',
-  // deprecated fields
-  startedAt: new Date().toISOString(),
 };

@@ -13,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/intercom"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/pipedrive"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/salesforce"
-	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/shopify"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/source/slack"
 	localutils "github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -150,9 +149,6 @@ func (s *syncService) sourceDataService(tenantToSync entity.TenantSyncSettings) 
 		string(entity.OpenlineSourceSlack): func() source.SourceDataService {
 			return slack.NewSlackDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
 		},
-		string(entity.AirbyteSourceShopify): func() source.SourceDataService {
-			return shopify.NewShopifyDataService(s.repositories.Dbs.RawDataStoreDB, tenantToSync.Tenant, s.log)
-		},
 		// Add additional implementations here.
 	}
 
@@ -242,13 +238,4 @@ func (s *syncService) interactionEventSyncService(tenantSyncSettings entity.Tena
 		}
 	}
 	return s.services.InteractionEventDefaultSyncService
-}
-
-func (s *syncService) orderSyncService(tenantSyncSettings entity.TenantSyncSettings) SyncService {
-	if v, ok := s.syncServiceMap[tenantSyncSettings.Source]; ok {
-		if u, ok := v[common.ORDERS]; ok {
-			return u
-		}
-	}
-	return s.services.OrderDefaultSyncService
 }

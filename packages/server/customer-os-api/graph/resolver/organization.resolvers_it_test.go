@@ -13,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
@@ -480,7 +479,6 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	secAgo60 := now.Add(time.Duration(-60) * time.Second)
 	secAgo70 := now.Add(time.Duration(-70) * time.Second)
 	secAgo80 := now.Add(time.Duration(-80) * time.Second)
-	secAgo90 := now.Add(time.Duration(-90) * time.Second)
 	secAgo100 := now.Add(time.Duration(-100) * time.Second)
 	secAgo110 := now.Add(time.Duration(-110) * time.Second)
 	secAgo120 := now.Add(time.Duration(-120) * time.Second)
@@ -488,16 +486,11 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 
 	actionId1 := neo4jt.CreateActionForOrganization(ctx, driver, tenantName, organizationId, neo4jenum.ActionCreated, secAgo5)
 
-	voiceSession := neo4jt.CreateInteractionSession(ctx, driver, tenantName, "mySessionIdentifier", "session1", "CALL", "ACTIVE", "VOICE", now, false)
-
-	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", secAgo90)
-	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, voiceSession, string(repository.LINKED_WITH_INTERACTION_SESSION))
-
 	// prepare contact and org interaction events
 	channel := "EMAIL"
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, secAgo50)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, secAgo60)
-	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", &channel, secAgo70)
+	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel, secAgo50)
+	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel, secAgo60)
+	interactionEventId3 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", channel, secAgo70)
 	emailIdContact := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId1, "email1", false, "WORK")
 	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
 	phoneNumberId := neo4jt.AddPhoneNumberTo(ctx, driver, tenantName, contactId2, "+1234", false, "WORK")
@@ -505,14 +498,13 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId2, phoneNumberId, "")
 	neo4jt.InteractionEventSentBy(ctx, driver, interactionEventId3, emailIdOrg, "")
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId3, phoneNumberId, "")
-	neo4jt.InteractionSessionAttendedBy(ctx, driver, tenantName, voiceSession, phoneNumberId, "")
 
 	// prepare direct interaction events
-	interactionEventId4 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 4", "application/json", nil, secAgo100)
+	interactionEventId4 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 4", "application/json", "EMAIL", secAgo100)
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId4, organizationId, "TO")
 
 	// prepare direct interaction events linked to job role
-	interactionEventId5 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 5", "application/json", nil, secAgo110)
+	interactionEventId5 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 5", "application/json", "EMAIL", secAgo110)
 	neo4jt.InteractionEventSentTo(ctx, driver, interactionEventId5, jobRoleId1, "")
 
 	// prepare log entry for organization
@@ -555,7 +547,6 @@ func TestQueryResolver_Organization_WithTimelineEvents_DirectAndFromMultipleCont
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "PhoneNumber"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Action"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Analysis"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "LogEntry"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
 	require.Equal(t, 10, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
@@ -658,16 +649,16 @@ func TestQueryResolver_Organization_WithTimelineEventsTotalCount(t *testing.T) {
 
 	// prepare contact and org interaction events
 	channel := "EMAIL"
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", &channel, now)
-	interactionEventId2 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", &channel, now)
-	interactionEventId3 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", &channel, now)
-	interactionEventId4Hidden := neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName, entity.InteractionEventEntity{
-		EventIdentifier: "myExternalId",
-		Content:         "IE text 4",
-		ContentType:     "application/json",
-		Channel:         &channel,
-		CreatedAt:       &now,
-		Hide:            true,
+	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 1", "application/json", channel, now)
+	interactionEventId2 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 2", "application/json", channel, now)
+	interactionEventId3 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId", "IE text 3", "application/json", channel, now)
+	interactionEventId4Hidden := neo4jtest.CreateInteractionEventFromEntity(ctx, driver, tenantName, neo4jentity.InteractionEventEntity{
+		Identifier:  "myExternalId",
+		Content:     "IE text 4",
+		ContentType: "application/json",
+		Channel:     channel,
+		CreatedAt:   now,
+		Hide:        true,
 	})
 	emailIdContact := neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId1, "email1", false, "WORK")
 	emailIdOrg := neo4jt.AddEmailTo(ctx, driver, commonModel.ORGANIZATION, tenantName, organizationId, "email2", false, "WORK")
@@ -988,57 +979,6 @@ func TestQueryResolver_Organization_WithSocials(t *testing.T) {
 	require.NotNil(t, organization.Socials[1].CreatedAt)
 	require.NotNil(t, organization.Socials[1].UpdatedAt)
 	require.Equal(t, "test", organization.Socials[1].AppSource)
-}
-
-func TestQueryResolver_Organization_WithOrders(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{
-		Name: "org name",
-	})
-
-	orderId1 := neo4jtest.CreateOrder(ctx, driver, tenantName, orgId, neo4jentity.OrderEntity{
-		ConfirmedAt: utils.TimePtr(utils.Now().Add(-time.Hour * 24)),
-	})
-
-	orderId2 := neo4jtest.CreateOrder(ctx, driver, tenantName, orgId, neo4jentity.OrderEntity{
-		ConfirmedAt: utils.TimePtr(utils.Now().Add(-time.Hour * 24)),
-		PaidAt:      utils.TimePtr(utils.Now().Add(-time.Hour * 24)),
-	})
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Order"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-
-	rawResponse := callGraphQL(t, "organization/get_organization_with_orders",
-		map[string]interface{}{"organizationId": orgId})
-
-	var orgStruct struct {
-		Organization model.Organization
-	}
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &orgStruct)
-	require.Nil(t, err)
-
-	organization := orgStruct.Organization
-	require.NotNil(t, organization)
-	require.Equal(t, 2, len(organization.Orders))
-
-	require.ElementsMatch(t, []string{orderId1, orderId2}, []string{organization.Orders[0].ID, organization.Orders[1].ID})
-
-	require.NotNil(t, organization.Orders[0].ConfirmedAt)
-	require.Nil(t, organization.Orders[0].PaidAt)
-	require.Nil(t, organization.Orders[0].FulfilledAt)
-	require.Nil(t, organization.Orders[0].CancelledAt)
-
-	require.NotNil(t, organization.Orders[1].ConfirmedAt)
-	require.NotNil(t, organization.Orders[1].PaidAt)
-	require.Nil(t, organization.Orders[1].FulfilledAt)
-	require.Nil(t, organization.Orders[1].CancelledAt)
-
 }
 
 func TestQueryResolver_Organization_WithOwner(t *testing.T) {

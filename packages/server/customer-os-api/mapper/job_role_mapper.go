@@ -2,17 +2,16 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapJobRoleInputToEntity(input *model.JobRoleInput) *entity.JobRoleEntity {
+func MapJobRoleInputToEntity(input *model.JobRoleInput) *neo4jentity.JobRoleEntity {
 	if input == nil {
 		return nil
 	}
-	jobRoleEntity := entity.JobRoleEntity{
+	jobRoleEntity := neo4jentity.JobRoleEntity{
 		JobTitle:      utils.IfNotNilString(input.JobTitle),
 		Primary:       utils.IfNotNilBool(input.Primary),
 		Description:   input.Description,
@@ -29,11 +28,11 @@ func MapJobRoleInputToEntity(input *model.JobRoleInput) *entity.JobRoleEntity {
 	return &jobRoleEntity
 }
 
-func MapJobRoleUpdateInputToEntity(input *model.JobRoleUpdateInput) *entity.JobRoleEntity {
+func MapJobRoleUpdateInputToEntity(input *model.JobRoleUpdateInput) *neo4jentity.JobRoleEntity {
 	if input == nil {
 		return nil
 	}
-	jobRoleEntity := entity.JobRoleEntity{
+	jobRoleEntity := neo4jentity.JobRoleEntity{
 		Id:            input.ID,
 		StartedAt:     input.StartedAt,
 		EndedAt:       input.EndedAt,
@@ -46,7 +45,7 @@ func MapJobRoleUpdateInputToEntity(input *model.JobRoleUpdateInput) *entity.JobR
 	return &jobRoleEntity
 }
 
-func MapEntityToJobRole(entity *entity.JobRoleEntity) *model.JobRole {
+func MapEntityToJobRole(entity *neo4jentity.JobRoleEntity) *model.JobRole {
 	jobRole := model.JobRole{
 		ID:            entity.Id,
 		Primary:       entity.Primary,
@@ -66,7 +65,7 @@ func MapEntityToJobRole(entity *entity.JobRoleEntity) *model.JobRole {
 	return &jobRole
 }
 
-func MapEntitiesToJobRoles(entities *entity.JobRoleEntities) []*model.JobRole {
+func MapEntitiesToJobRoles(entities *neo4jentity.JobRoleEntities) []*model.JobRole {
 	var jobRoles []*model.JobRole
 	for _, jobRoleEntity := range *entities {
 		jobRoles = append(jobRoles, MapEntityToJobRole(&jobRoleEntity))

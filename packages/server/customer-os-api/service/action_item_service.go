@@ -35,9 +35,9 @@ func (s *actionItemService) GetActionItemsForNodes(ctx context.Context, linkedWi
 		return nil, err
 	}
 
-	analysisDescribes := s.convertDbNodesToActionItems(records)
+	converted := s.convertDbNodesToActionItems(records)
 
-	return &analysisDescribes, nil
+	return &converted, nil
 }
 
 func (s *actionItemService) convertDbNodesToActionItems(records []*utils.DbNodeAndId) entity.ActionItemEntities {

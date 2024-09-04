@@ -60,7 +60,6 @@ type Loaders struct {
 	SubsidiariesForOrganization                   *dataloader.Loader
 	SubsidiariesOfForOrganization                 *dataloader.Loader
 	SuggestedMergeToForOrganization               *dataloader.Loader
-	DescribesForAnalysis                          *dataloader.Loader
 	DescribedByFor                                *dataloader.Loader
 	CreatedByParticipantsForMeeting               *dataloader.Loader
 	AttendedByParticipantsForMeeting              *dataloader.Loader
@@ -69,7 +68,6 @@ type Loaders struct {
 	CommentsForIssue                              *dataloader.Loader
 	NotesForMeeting                               *dataloader.Loader
 	AttachmentsForInteractionEvent                *dataloader.Loader
-	AttachmentsForInteractionSession              *dataloader.Loader
 	AttachmentsForMeeting                         *dataloader.Loader
 	AttachmentsForContract                        *dataloader.Loader
 	SocialsForContact                             *dataloader.Loader
@@ -126,7 +124,7 @@ type socialBatcher struct {
 	socialService commonservice.SocialService
 }
 type jobRoleBatcher struct {
-	jobRoleService service.JobRoleService
+	jobRoleService commonservice.JobRoleService
 }
 type calendarBatcher struct {
 	calendarService service.CalendarService
@@ -135,16 +133,16 @@ type domainBatcher struct {
 	domainService service.DomainService
 }
 type interactionEventBatcher struct {
-	interactionEventService service.InteractionEventService
+	interactionEventService commonservice.InteractionEventService
 }
 type interactionSessionBatcher struct {
-	interactionSessionService service.InteractionSessionService
+	interactionSessionService commonservice.InteractionSessionService
 }
 type interactionEventParticipantBatcher struct {
-	interactionEventService service.InteractionEventService
+	interactionEventService commonservice.InteractionEventService
 }
 type interactionSessionParticipantBatcher struct {
-	interactionSessionService service.InteractionSessionService
+	interactionSessionService commonservice.InteractionSessionService
 }
 type meetingParticipantBatcher struct {
 	meetingService service.MeetingService
@@ -164,14 +162,11 @@ type contactBatcher struct {
 type organizationBatcher struct {
 	organizationService service.OrganizationService
 }
-type analysisBatcher struct {
-	analysisService service.AnalysisService
-}
 type noteBatcher struct {
 	noteService service.NoteService
 }
 type attachmentBatcher struct {
-	attachmentService service.AttachmentService
+	attachmentService commonservice.AttachmentService
 }
 type externalSystemBatcher struct {
 	externalSystemService service.ExternalSystemService
@@ -215,13 +210,8 @@ type masterPlanBatcher struct {
 type invoiceBatcher struct {
 	invoiceService commonservice.InvoiceService
 }
-
 type organizationPlanBatcher struct {
 	organizationPlanService service.OrganizationPlanService
-}
-
-type orderBatcher struct {
-	orderService service.OrderService
 }
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
@@ -239,7 +229,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		socialService: services.CommonServices.SocialService,
 	}
 	jobRoleBatcher := &jobRoleBatcher{
-		jobRoleService: services.JobRoleService,
+		jobRoleService: services.CommonServices.JobRoleService,
 	}
 	calendarBatcher := &calendarBatcher{
 		calendarService: services.CalendarService,
@@ -248,22 +238,22 @@ func NewDataLoader(services *service.Services) *Loaders {
 		domainService: services.DomainService,
 	}
 	interactionEventBatcher := &interactionEventBatcher{
-		interactionEventService: services.InteractionEventService,
+		interactionEventService: services.CommonServices.InteractionEventService,
 	}
 	commentBatcher := &commentBatcher{
 		commentService: services.CommentService,
 	}
 	interactionSessionBatcher := &interactionSessionBatcher{
-		interactionSessionService: services.InteractionSessionService,
+		interactionSessionService: services.CommonServices.InteractionSessionService,
 	}
 	interactionEventParticipantBatcher := &interactionEventParticipantBatcher{
-		interactionEventService: services.InteractionEventService,
+		interactionEventService: services.CommonServices.InteractionEventService,
 	}
 	issueParticipantBatcher := &issueParticipantBatcher{
 		issueService: services.IssueService,
 	}
 	interactionSessionParticipantBatcher := &interactionSessionParticipantBatcher{
-		interactionSessionService: services.InteractionSessionService,
+		interactionSessionService: services.CommonServices.InteractionSessionService,
 	}
 	meetingParticipantBatcher := &meetingParticipantBatcher{
 		meetingService: services.MeetingService,
@@ -280,14 +270,11 @@ func NewDataLoader(services *service.Services) *Loaders {
 	organizationBatcher := &organizationBatcher{
 		organizationService: services.OrganizationService,
 	}
-	analysisBatcher := &analysisBatcher{
-		analysisService: services.AnalysisService,
-	}
 	noteBatcher := &noteBatcher{
 		noteService: services.NoteService,
 	}
 	attachmentBatcher := attachmentBatcher{
-		attachmentService: services.AttachmentService,
+		attachmentService: services.CommonServices.AttachmentService,
 	}
 	externalSystemBatcher := externalSystemBatcher{
 		externalSystemService: services.ExternalSystemService,
@@ -327,9 +314,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 	}
 	organizationPlanBatcher := &organizationPlanBatcher{
 		organizationPlanService: services.OrganizationPlanService,
-	}
-	orderBatcher := &orderBatcher{
-		orderService: services.OrderService,
 	}
 	return &Loaders{
 		TagsForOrganization:                           dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -379,11 +363,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		SubsidiariesForOrganization:                   dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesForOrganization, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SubsidiariesOfForOrganization:                 dataloader.NewBatchedLoader(organizationBatcher.getSubsidiariesOfForOrganization, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(20*time.Millisecond), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SuggestedMergeToForOrganization:               dataloader.NewBatchedLoader(organizationBatcher.getSuggestedMergeToForOrganization, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		DescribesForAnalysis:                          dataloader.NewBatchedLoader(analysisBatcher.getDescribesForAnalysis, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		DescribedByFor:                                dataloader.NewBatchedLoader(analysisBatcher.getDescribedByFor, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		NotesForMeeting:                               dataloader.NewBatchedLoader(noteBatcher.getNotesForMeetings, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		AttachmentsForInteractionEvent:                dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		AttachmentsForInteractionSession:              dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForInteractionSessions, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		AttachmentsForMeeting:                         dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForMeetings, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		AttachmentsForContract:                        dataloader.NewBatchedLoader(attachmentBatcher.getAttachmentsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		SocialsForContact:                             dataloader.NewBatchedLoader(socialBatcher.getSocialsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -424,7 +405,6 @@ func NewDataLoader(services *service.Services) *Loaders {
 		MasterPlanMilestonesForMasterPlan:             dataloader.NewBatchedLoader(masterPlanBatcher.getMasterPlanMilestonesForMasterPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoiceLinesForInvoice:                        dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationPlanMilestonesForOrganizationPlan: dataloader.NewBatchedLoader(organizationPlanBatcher.getOrganizationPlanMilestonesForOrganizationPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		OrdersForOrganization:                         dataloader.NewBatchedLoader(orderBatcher.getOrdersForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoicesForContract:                           dataloader.NewBatchedLoader(invoiceBatcher.getInvoicesForContract, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }

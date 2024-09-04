@@ -4,9 +4,7 @@ import (
 	"context"
 	"github.com/99designs/gqlgen/client"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -101,12 +99,8 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	secAgo10 := now.Add(time.Duration(-10) * time.Second)
 
 	channel := "EMAIL"
-	interactionEventId1 := neo4jt.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", &channel, secAgo10)
-
+	interactionEventId1 := neo4jtest.CreateInteractionEvent(ctx, driver, tenantName, "myExternalId1", "IE 1", "application/json", channel, secAgo10)
 	neo4jt.InteractionEventPartOfMeeting(ctx, driver, interactionEventId1, meetingCreate.Meeting_Create.ID)
-
-	analysis1 := neo4jt.CreateAnalysis(ctx, driver, tenantName, "This is a summary of the conversation", "text/plain", "SUMMARY", now)
-	neo4jt.AnalysisDescribes(ctx, driver, tenantName, analysis1, meetingCreate.Meeting_Create.ID, string(repository.LINKED_WITH_MEETING))
 
 	// get meeting
 	getRawResponse, err := c.RawPost(getQuery("meeting/get_meeting"), client.Var("meetingId", meetingCreate.Meeting_Create.ID))
@@ -121,14 +115,7 @@ func TestMutationResolver_Meeting(t *testing.T) {
 			Recoding      string `json:"recording"`
 			Source        string `json:"source"`
 			SourceOfTruth string `json:"sourceOfTruth"`
-			DescribedBy   []struct {
-				ID           string `json:"id"`
-				ContentType  string `json:"contentType"`
-				Content      string `json:"content"`
-				CreatedAt    string `json:"createdAt"`
-				AnalysisType string `json:"analysisType"`
-			}
-			Events []struct {
+			Events        []struct {
 				ID          string `json:"id"`
 				ContentType string `json:"contentType"`
 				Content     string `json:"content"`
@@ -148,11 +135,6 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, meetingGet.Meeting.EndedAt, meetingGet.Meeting.EndedAt)
 	require.Equal(t, meetingGet.Meeting.Source, meetingGet.Meeting.Source)
 	require.Equal(t, meetingGet.Meeting.SourceOfTruth, meetingGet.Meeting.SourceOfTruth)
-	require.Equal(t, 1, len(meetingGet.Meeting.DescribedBy))
-	require.Equal(t, analysis1, meetingGet.Meeting.DescribedBy[0].ID)
-	require.Equal(t, "text/plain", meetingGet.Meeting.DescribedBy[0].ContentType)
-	require.Equal(t, "This is a summary of the conversation", meetingGet.Meeting.DescribedBy[0].Content)
-	require.Equal(t, "SUMMARY", meetingGet.Meeting.DescribedBy[0].AnalysisType)
 	require.Equal(t, 1, len(meetingGet.Meeting.Events))
 	require.Equal(t, interactionEventId1, meetingGet.Meeting.Events[0].ID)
 	require.Equal(t, "application/json", meetingGet.Meeting.Events[0].ContentType)
@@ -195,14 +177,13 @@ func TestMutationResolver_Meeting(t *testing.T) {
 	require.Equal(t, "OPENLINE", meeting.Meeting_Update.SourceOfTruth)
 	require.Equal(t, "CANCELED", meeting.Meeting_Update.Status)
 
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Analysis"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Note_"+tenantName))
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent"))
 	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, "TimelineEvent_"+tenantName))
 
 	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Meeting", "Meeting_" + tenantName,
-		"Note", "Note_" + tenantName, "Analysis", "Analysis_" + tenantName,
+		"Note", "Note_" + tenantName,
 		"Contact", "Contact_" + tenantName, "ExternalSystem", "ExternalSystem_" + tenantName, "TimelineEvent", "TimelineEvent_" + tenantName,
 		"User", "User_" + tenantName, "Organization", "Organization_" + tenantName,
 		"InteractionEvent", "InteractionEvent_" + tenantName})
@@ -293,7 +274,7 @@ func TestMutationResolver_AddAttachmentToMeeting(t *testing.T) {
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
-	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme.txt",
 	})
@@ -327,12 +308,12 @@ func TestMutationResolver_RemoveAttachmentFromMeeting(t *testing.T) {
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
-	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme1.txt",
 	})
 
-	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme2.txt",
 	})
@@ -380,7 +361,7 @@ func TestMutationResolver_AddRecordingToMeeting(t *testing.T) {
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
-	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme.txt",
 	})
@@ -392,7 +373,7 @@ func TestMutationResolver_AddRecordingToMeeting(t *testing.T) {
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "RECORDING"))
 
 	var meeting struct {
 		Meeting_LinkRecording model.Meeting
@@ -414,12 +395,12 @@ func TestMutationResolver_RemoveRecordingFromMeeting(t *testing.T) {
 
 	meetingId := neo4jt.CreateMeeting(ctx, driver, tenantName, "Meeting", time.Now().UTC())
 
-	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId1 := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme1.txt",
 	})
 
-	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	attachmentId2 := neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		MimeType: "text/plain",
 		FileName: "readme2.txt",
 	})
@@ -430,7 +411,7 @@ func TestMutationResolver_RemoveRecordingFromMeeting(t *testing.T) {
 	assertRawResponseSuccess(t, addAttachment1Response, err)
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES {nature: \"Recording\"}"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "RECORDING"))
 
 	addAttachment2Response, err := c.RawPost(getQuery("meeting/add_attachment_to_meeting"),
 		client.Var("meetingId", meetingId),
@@ -439,7 +420,8 @@ func TestMutationResolver_RemoveRecordingFromMeeting(t *testing.T) {
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Meeting"))
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Attachment"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "INCLUDES"))
+	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "RECORDING"))
 
 	removeAttachmentResponse, err := c.RawPost(getQuery("meeting/remove_recording_from_meeting"),
 		client.Var("meetingId", meetingId),

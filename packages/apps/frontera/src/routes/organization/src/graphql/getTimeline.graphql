@@ -28,13 +28,6 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         }
         content
       }
-     ...on Order {
-       id
-       confirmedAt
-       fulfilledAt
-       createdAt
-       cancelledAt
-     }
       ... on InteractionEvent {
         id
         date: createdAt
@@ -60,11 +53,6 @@ query GetTimeline($organizationId: ID!, $from: Time!, $size: Int!) {
         }
         repliesTo {
           id
-        }
-        summary {
-          id
-          content
-          contentType
         }
         actionItems {
           id

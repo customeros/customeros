@@ -88,7 +88,6 @@ type Organization implements MetadataInterface {
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
-    orders: [Order!]! @goField(forceResolver: true)
     contactCount: Int64! @goField(forceResolver: true)
     inboundCommsCount: Int64! @goField(forceResolver: true)
     outboundCommsCount: Int64! @goField(forceResolver: true)
@@ -378,7 +377,6 @@ enum LastTouchpointType {
     INTERACTION_EVENT_PHONE_CALL
     INTERACTION_EVENT_CHAT
     MEETING
-    ANALYSIS
     ACTION_CREATED
     ACTION
     LOG_ENTRY

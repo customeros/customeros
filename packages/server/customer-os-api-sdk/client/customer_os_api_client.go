@@ -27,8 +27,6 @@ type CustomerOSApiClient interface {
 	RemoveEmailFromUser(tenant, userId string, email string) (string, error)
 
 	LinkContactToOrganization(tenant, contactId, organizationId string) (string, error)
-
-	GetInteractionSessionForInteractionEvent(tenant, user *string, interactionEventId string) (*model.InteractionSession, error)
 }
 
 func NewCustomerOsClient(customerOSApiPath, customerOSApiKey string) *customerOSApiClient {
@@ -275,39 +273,6 @@ func (s *customerOSApiClient) RemoveEmailFromUser(tenant, userId string, email s
 		return "", fmt.Errorf("emailRemoveFromUser: %w", err)
 	}
 	return "", nil
-}
-
-func (s *customerOSApiClient) GetInteractionSessionForInteractionEvent(tenant, user *string, interactionEventId string) (*model.InteractionSession, error) {
-	graphqlRequest := graphql.NewRequest(
-		`query GetInteractionSession($eventIdentifier: String!) {
-  					interactionSession_ByEventIdentifier(eventIdentifier: $eventIdentifier) {
-       					id
-						sessionIdentifier
-				}
-			}`)
-
-	graphqlRequest.Var("eventIdentifier", interactionEventId)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, tenant, user)
-	if err != nil {
-		return nil, err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return nil, err
-	}
-	defer cancel()
-
-	var graphqlResponse map[string]model.InteractionSession
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		if err.Error() != "graphql: InteractionSession with EventIdentifier "+interactionEventId+" not found" {
-			return nil, fmt.Errorf("GetInteractionSession: %w", err)
-		} else {
-			return nil, nil
-		}
-	}
-	session := graphqlResponse["interactionSession_ByEventIdentifier"]
-	return &session, nil
 }
 
 func (s *customerOSApiClient) addHeadersToGraphRequest(req *graphql.Request, tenant, username *string) error {

@@ -28,7 +28,6 @@ import (
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
 	masterplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
-	orderevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/order"
 	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
@@ -65,7 +64,6 @@ type GraphSubscriber struct {
 	organizationPlanEventHandler *OrganizationPlanEventHandler
 	bankAccountEventHandler      *BankAccountEventHandler
 	reminderEventHandler         *ReminderEventHandler
-	orderEventHandler            *OrderEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
@@ -93,7 +91,6 @@ func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Se
 		organizationPlanEventHandler: NewOrganizationPlanEventHandler(log, services),
 		bankAccountEventHandler:      NewBankAccountEventHandler(log, services),
 		reminderEventHandler:         NewReminderEventHandler(log, services),
-		orderEventHandler:            NewOrderEventHandler(log, services, grpcClients),
 	}
 }
 
@@ -477,9 +474,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.reminderEventHandler.OnUpdate(ctx, evt)
 	case reminderevents.ReminderNotificationV1:
 		return nil
-
-	case orderevents.OrderUpsertV1:
-		return s.orderEventHandler.OnUpsertOrderV1(ctx, evt)
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)

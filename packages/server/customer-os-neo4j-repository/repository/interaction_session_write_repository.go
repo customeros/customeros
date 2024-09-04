@@ -6,25 +6,13 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
-type InteractionSessionCreateFields struct {
-	CreatedAt    time.Time    `json:"createdAt"`
-	SourceFields model.Source `json:"sourceFields"`
-	Channel      string       `json:"channel"`
-	ChannelData  string       `json:"channelData"`
-	Identifier   string       `json:"identifier"`
-	Type         string       `json:"type"`
-	Status       string       `json:"status"`
-	Name         string       `json:"name"`
-}
-
 type InteractionSessionWriteRepository interface {
-	Create(ctx context.Context, tenant, interactionSessionId string, data InteractionSessionCreateFields) error
+	CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data entity.InteractionSessionEntity) error
 }
 
 type interactionSessionWriteRepository struct {
@@ -39,8 +27,8 @@ func NewInteractionSessionWriteRepository(driver *neo4j.DriverWithContext, datab
 	}
 }
 
-func (r *interactionSessionWriteRepository) Create(ctx context.Context, tenant, interactionSessionId string, data InteractionSessionCreateFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionWriteRepository.Create")
+func (r *interactionSessionWriteRepository) CreateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, interactionSessionId string, data entity.InteractionSessionEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionSessionWriteRepository.CreateInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -64,10 +52,10 @@ func (r *interactionSessionWriteRepository) Create(ctx context.Context, tenant, 
 	params := map[string]any{
 		"tenant":               tenant,
 		"interactionSessionId": interactionSessionId,
-		"createdAt":            data.CreatedAt,
-		"source":               data.SourceFields.Source,
-		"sourceOfTruth":        data.SourceFields.Source,
-		"appSource":            data.SourceFields.AppSource,
+		"createdAt":            utils.TimeOrNow(data.CreatedAt),
+		"source":               data.Source,
+		"sourceOfTruth":        data.Source,
+		"appSource":            data.AppSource,
 		"channel":              data.Channel,
 		"channelData":          data.ChannelData,
 		"identifier":           data.Identifier,
@@ -78,11 +66,13 @@ func (r *interactionSessionWriteRepository) Create(ctx context.Context, tenant, 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := tx.Run(ctx, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (r *interactionSessionWriteRepository) executeWriteQuery(ctx context.Context, query string, params map[string]any) error {

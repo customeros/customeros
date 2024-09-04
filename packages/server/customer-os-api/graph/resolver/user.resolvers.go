@@ -12,7 +12,6 @@ import (
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
@@ -22,6 +21,7 @@ import (
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -211,7 +211,7 @@ func (r *queryResolver) Users(ctx context.Context, pagination *model.Pagination,
 	span.LogFields(log.Int("request.page", pagination.Page), log.Int("request.limit", pagination.Limit))
 	paginatedResult, err := r.Services.UserService.GetAll(ctx, pagination.Page, pagination.Limit, where, sort)
 	return &model.UserPage{
-		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*entity.UserEntities)),
+		Content:       mapper.MapEntitiesToUsers(paginatedResult.Rows.(*neo4jentity.UserEntities)),
 		TotalPages:    paginatedResult.TotalPages,
 		TotalElements: paginatedResult.TotalRows,
 	}, err

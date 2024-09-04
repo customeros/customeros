@@ -39,7 +39,7 @@ func (h *GenericEventHandler) OnLinkEntityWithEntityV1(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, eventData.EntityId)
 
-	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, eventData.Tenant, eventData.EntityId, eventData.EntityType, eventData.RelationshipName, eventData.WithEntityId, eventData.WithEntityType)
+	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, eventData.Tenant, eventData.EntityId, eventData.EntityType, eventData.Relationship, nil, eventData.WithEntityId, eventData.WithEntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

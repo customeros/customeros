@@ -9,6 +9,8 @@ type Repositories struct {
 
 	ActionReadRepository                  ActionReadRepository
 	ActionWriteRepository                 ActionWriteRepository
+	AttachmentReadRepository              AttachmentReadRepository
+	AttachmentWriteRepository             AttachmentWriteRepository
 	BankAccountReadRepository             BankAccountReadRepository
 	BankAccountWriteRepository            BankAccountWriteRepository
 	BillingProfileWriteRepository         BillingProfileWriteRepository
@@ -40,6 +42,7 @@ type Repositories struct {
 	InvoiceLineWriteRepository            InvoiceLineWriteRepository
 	IssueReadRepository                   IssueReadRepository
 	IssueWriteRepository                  IssueWriteRepository
+	JobRoleReadRepository                 JobRoleReadRepository
 	JobRoleWriteRepository                JobRoleWriteRepository
 	LocationWriteRepository               LocationWriteRepository
 	LogEntryReadRepository                LogEntryReadRepository
@@ -55,8 +58,6 @@ type Repositories struct {
 	OrganizationWriteRepository           OrganizationWriteRepository
 	OrganizationPlanReadRepository        OrganizationPlanReadRepository
 	OrganizationPlanWriteRepository       OrganizationPlanWriteRepository
-	OrderReadRepository                   OrderReadRepository
-	OrderWriteRepository                  OrderWriteRepository
 	PhoneNumberReadRepository             PhoneNumberReadRepository
 	PhoneNumberWriteRepository            PhoneNumberWriteRepository
 	PlayerReadRepository                  PlayerReadRepository
@@ -84,6 +85,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		Neo4jDriver:                           driver,
 		ActionReadRepository:                  NewActionReadRepository(driver, neo4jDatabase),
 		ActionWriteRepository:                 NewActionWriteRepository(driver, neo4jDatabase),
+		AttachmentReadRepository:              NewAttachmentReadRepository(driver, neo4jDatabase),
+		AttachmentWriteRepository:             NewAttachmentWriteRepository(driver, neo4jDatabase),
 		BankAccountReadRepository:             NewBankAccountReadRepository(driver, neo4jDatabase),
 		BankAccountWriteRepository:            NewBankAccountWriteRepository(driver, neo4jDatabase),
 		BillingProfileWriteRepository:         NewBillingProfileWriteRepository(driver, neo4jDatabase),
@@ -115,6 +118,7 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		InvoiceLineWriteRepository:            NewInvoiceLineWriteRepository(driver, neo4jDatabase),
 		IssueReadRepository:                   NewIssueReadRepository(driver, neo4jDatabase),
 		IssueWriteRepository:                  NewIssueWriteRepository(driver, neo4jDatabase),
+		JobRoleReadRepository:                 NewJobRoleReadRepository(driver, neo4jDatabase),
 		JobRoleWriteRepository:                NewJobRoleWriteRepository(driver, neo4jDatabase),
 		LocationWriteRepository:               NewLocationWriteRepository(driver, neo4jDatabase),
 		LogEntryReadRepository:                NewLogEntryReadRepository(driver, neo4jDatabase),
@@ -130,8 +134,6 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		OrganizationWriteRepository:           NewOrganizationWriteRepository(driver, neo4jDatabase),
 		OrganizationPlanReadRepository:        NewOrganizationPlanReadRepository(driver, neo4jDatabase),
 		OrganizationPlanWriteRepository:       NewOrganizationPlanWriteRepository(driver, neo4jDatabase),
-		OrderReadRepository:                   NewOrderReadRepository(driver, neo4jDatabase),
-		OrderWriteRepository:                  NewOrderWriteRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository:             NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PhoneNumberWriteRepository:            NewPhoneNumberWriteRepository(driver, neo4jDatabase),
 		PlayerReadRepository:                  NewPlayerReadRepository(driver, neo4jDatabase),

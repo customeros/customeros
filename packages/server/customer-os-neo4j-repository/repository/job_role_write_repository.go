@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -24,9 +26,16 @@ type JobRoleCreateFields struct {
 }
 
 type JobRoleWriteRepository interface {
+	//Rework this. pass neo4j entity
 	CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleCreateFields) error
+	CreateJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error)
 	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error
 	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleCreateFields) error
+
+	DeleteJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string) error
+	SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error
+	UpdateJobRoleDetails(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string, input entity.JobRoleEntity) (*dbtype.Node, error)
+	LinkWithOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, roleId, organizationId string) error
 }
 
 type jobRoleWriteRepository struct {
@@ -163,5 +172,141 @@ func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *jobRoleWriteRepository) CreateJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.CreateJobRole")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := "MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) " +
+		" MERGE (c)-[:WORKS_AS]->(r:JobRole {id:randomUUID()}) " +
+		" ON CREATE SET r.jobTitle=$jobTitle, " +
+		"				r.primary=$primary, " +
+		"				r.description=$description, " +
+		"				r.company=$company, " +
+		"				r.source=$source, " +
+		"				r.sourceOfTruth=$sourceOfTruth, " +
+		"				r.appSource=$appSource, " +
+		"				r.createdAt=$now, " +
+		"				r.updatedAt=datetime(), " +
+		"				r.startedAt=$startedAt, " +
+		"				r.endedAt=$endedAt, " +
+		"				r:%s " +
+		" RETURN r"
+
+	if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, "JobRole_"+tenant),
+		map[string]interface{}{
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"jobTitle":      input.JobTitle,
+			"description":   input.Description,
+			"company":       input.Company,
+			"primary":       input.Primary,
+			"source":        input.Source,
+			"sourceOfTruth": input.SourceOfTruth,
+			"appSource":     input.AppSource,
+			"startedAt":     utils.TimePtrAsAny(input.StartedAt, utils.TimePtr(utils.Now())),
+			"endedAt":       utils.TimePtrAsAny(input.EndedAt),
+			"now":           utils.Now(),
+		}); err != nil {
+		return nil, err
+	} else {
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}
+}
+
+func (r *jobRoleWriteRepository) UpdateJobRoleDetails(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string, input entity.JobRoleEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.UpdateJobRoleDetails")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	if queryResult, err := tx.Run(ctx, `
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+					(c)-[:WORKS_AS]->(r:JobRole {id:$roleId})
+			SET r.jobTitle=$jobTitle, 
+				r.primary=$primary,
+				r.description=$description,
+				r.company=$company,
+				r.sourceOfTruth=$sourceOfTruth,
+				r.startedAt=$startedAt,
+				r.endedAt=$endedAt,
+				r.updatedAt=datetime()
+			RETURN r`,
+		map[string]interface{}{
+			"tenant":        tenant,
+			"contactId":     contactId,
+			"roleId":        roleId,
+			"jobTitle":      input.JobTitle,
+			"description":   input.Description,
+			"company":       input.Company,
+			"primary":       input.Primary,
+			"sourceOfTruth": input.SourceOfTruth,
+			"now":           utils.Now(),
+			"startedAt":     utils.TimePtrAsAny(input.StartedAt),
+			"endedAt":       utils.TimePtrAsAny(input.EndedAt),
+		}); err != nil {
+		return nil, err
+	} else {
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}
+}
+
+func (r *jobRoleWriteRepository) DeleteJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.DeleteJobRoleInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	_, err := tx.Run(ctx, `
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant}),
+					(c)-[:WORKS_AS]->(r:JobRole {id:$roleId})
+			DETACH DELETE r`,
+		map[string]any{
+			"tenant":    tenant,
+			"contactId": contactId,
+			"roleId":    roleId,
+		})
+	return err
+}
+
+func (r *jobRoleWriteRepository) SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.SetOtherJobRolesForContactNonPrimaryInTx")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	_, err := tx.Run(ctx, `
+			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+				 (c)-[:WORKS_AS]->(r:JobRole)
+			WHERE r.id <> $skipRoleId
+            SET r.primary=false,
+				r.updatedAt=datetime({timezone: 'UTC'})`,
+		map[string]interface{}{
+			"tenant":     tenant,
+			"contactId":  contactId,
+			"skipRoleId": skipRoleId,
+		})
+	return err
+}
+
+func (r *jobRoleWriteRepository) LinkWithOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, roleId string, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.LinkWithOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	_, err := tx.Run(ctx, `
+			MATCH (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+					(r:JobRole {id:$roleId})<-[:WORKS_AS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
+			OPTIONAL MATCH (r)-[rel:ROLE_IN]->(org2:Organization)
+				WHERE org2.id <> org.id
+			DELETE rel
+			WITH r, org
+			MERGE (r)-[:ROLE_IN]->(org)
+			`,
+		map[string]interface{}{
+			"tenant":         tenant,
+			"roleId":         roleId,
+			"organizationId": organizationId,
+		})
 	return err
 }

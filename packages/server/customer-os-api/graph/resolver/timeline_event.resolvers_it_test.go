@@ -16,45 +16,39 @@ func TestQueryResolver_TimelineEvents(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	organizationId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-
 	channel := "EMAIL"
-	interactionEventId1 := neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName, entity.InteractionEventEntity{
-		EventIdentifier: "myExternalId",
-		Content:         "IE text 1",
-		ContentType:     "application/json",
-		Channel:         &channel,
-		CreatedAt:       utils.TimePtr(utils.Now()),
-		Hide:            false,
+	interactionEventId1 := neo4jtest.CreateInteractionEventFromEntity(ctx, driver, tenantName, neo4jentity.InteractionEventEntity{
+		Identifier:  "myExternalId",
+		Content:     "IE text 1",
+		ContentType: "application/json",
+		Channel:     channel,
+		CreatedAt:   utils.Now(),
+		Hide:        false,
 	})
-	interactionEventId2 := neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName, entity.InteractionEventEntity{
-		EventIdentifier: "myExternalId",
-		Content:         "IE text 3",
-		ContentType:     "application/json",
-		Channel:         &channel,
-		CreatedAt:       utils.TimePtr(utils.Now()),
-		Hide:            true,
+	interactionEventId2 := neo4jtest.CreateInteractionEventFromEntity(ctx, driver, tenantName, neo4jentity.InteractionEventEntity{
+		Identifier:  "myExternalId",
+		Content:     "IE text 3",
+		ContentType: "application/json",
+		Channel:     channel,
+		CreatedAt:   utils.Now(),
+		Hide:        true,
 	})
-	neo4jt.CreateInteractionEventFromEntity(ctx, driver, tenantName,
-		entity.InteractionEventEntity{
-			EventIdentifier: "myExternalId",
-			Content:         "IE text 2",
-			ContentType:     "application/json",
-			Channel:         &channel,
-			CreatedAt:       utils.TimePtr(utils.Now()),
-			Hide:            false,
+	neo4jtest.CreateInteractionEventFromEntity(ctx, driver, tenantName,
+		neo4jentity.InteractionEventEntity{
+			Identifier:  "myExternalId",
+			Content:     "IE text 2",
+			ContentType: "application/json",
+			Channel:     channel,
+			CreatedAt:   utils.Now(),
+			Hide:        false,
 		})
 	issueId1 := neo4jt.CreateIssue(ctx, driver, tenantName, entity.IssueEntity{})
 
-	orderId := neo4jtest.CreateOrder(ctx, driver, tenantName, organizationId, neo4jentity.OrderEntity{
-		ConfirmedAt: utils.TimePtr(utils.Now()),
-	})
-
-	rawResponse := callGraphQL(t, "timeline/get_timeline_events_with_ids", map[string]interface{}{"ids": []string{interactionEventId1, interactionEventId2, issueId1, orderId}})
+	rawResponse := callGraphQL(t, "timeline/get_timeline_events_with_ids", map[string]interface{}{"ids": []string{interactionEventId1, interactionEventId2, issueId1}})
 
 	timelineEvents := rawResponse.Data.(map[string]interface{})["timelineEvents"].([]interface{})
 
-	require.Equal(t, 4, len(timelineEvents))
+	require.Equal(t, 3, len(timelineEvents))
 
 	var interactionTimelineEventIds, issueTimelineEventIds []string
 	for _, timelineEvent := range timelineEvents {

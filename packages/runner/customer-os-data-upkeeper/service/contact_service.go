@@ -469,9 +469,9 @@ func (s *contactService) syncWeConnectContacts(c context.Context) {
 										EntityId:   cid,
 										EntityType: model.CONTACT,
 									},
-									WithEntityId:     userId,
-									WithEntityType:   model.USER,
-									RelationshipName: "CONNECTED_WITH",
+									WithEntityId:   userId,
+									WithEntityType: model.USER,
+									Relationship:   "CONNECTED_WITH",
 								}
 
 								err = s.eventBufferService.ParkBaseEvent(ctx, &evt, tenant, utils.Now().Add(time.Minute*1))

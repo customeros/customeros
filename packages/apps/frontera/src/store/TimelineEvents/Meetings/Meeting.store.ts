@@ -51,7 +51,6 @@ const defaultValue: Meeting = {
   __typename: 'Meeting',
   attendedBy: [],
   createdBy: [],
-  describedBy: [],
   events: [],
   externalSystem: [],
   includes: [],

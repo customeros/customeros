@@ -31,7 +31,6 @@ type Services struct {
 	InteractionSessionService InteractionSessionService
 	CommentService            CommentService
 	InvoiceService            InvoiceService
-	OrderService              OrderService
 }
 
 func InitServices(log logger.Logger,
@@ -62,6 +61,5 @@ func InitServices(log logger.Logger,
 	services.FinderService = NewFinderService(log, repositories, &services)
 	services.CommentService = NewCommentService(log, repositories, grpcClients, &services)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
-	services.OrderService = NewOrderService(log, repositories, grpcClients, &services)
 	return &services
 }

@@ -14,9 +14,6 @@ import (
 
 // InteractionSession is the resolver for the interactionSession field.
 func (r *interactionEventResolver) InteractionSession(ctx context.Context, obj *model.InteractionEvent) (*model.InteractionSession, error) {
-	if r.InteractionSessionResolver != nil {
-		return r.InteractionSessionResolver(ctx, obj)
-	}
 	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
 }
 
@@ -59,11 +56,6 @@ func (r *interactionEventResolver) Includes(ctx context.Context, obj *model.Inte
 	panic(fmt.Errorf("not implemented: Includes - includes"))
 }
 
-// Summary is the resolver for the summary field.
-func (r *interactionEventResolver) Summary(ctx context.Context, obj *model.InteractionEvent) (*model.Analysis, error) {
-	panic(fmt.Errorf("not implemented: Summary - summary"))
-}
-
 // Actions is the resolver for the actions field.
 func (r *interactionEventResolver) Actions(ctx context.Context, obj *model.InteractionEvent) ([]*model.Action, error) {
 	panic(fmt.Errorf("not implemented: Actions - actions"))
@@ -95,68 +87,14 @@ func (r *interactionSessionResolver) AttendedBy(ctx context.Context, obj *model.
 	panic(fmt.Errorf("not implemented: AttendedBy - attendedBy"))
 }
 
-// Includes is the resolver for the includes field.
-func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error) {
-	panic(fmt.Errorf("not implemented: Includes - includes"))
-}
-
-// DescribedBy is the resolver for the describedBy field.
-func (r *interactionSessionResolver) DescribedBy(ctx context.Context, obj *model.InteractionSession) ([]*model.Analysis, error) {
-	panic(fmt.Errorf("not implemented: DescribedBy - describedBy"))
-}
-
-// InteractionSessionCreate is the resolver for the interactionSession_Create field.
-func (r *mutationResolver) InteractionSessionCreate(ctx context.Context, session model.InteractionSessionInput) (*model.InteractionSession, error) {
-	if r.Resolver.InteractionSessionCreate != nil {
-		return r.Resolver.InteractionSessionCreate(ctx, session)
-	}
-	panic(fmt.Errorf("not implemented: InteractionSessionCreate - interactionSession_Create"))
-}
-
-// InteractionSessionLinkAttachment is the resolver for the interactionSession_LinkAttachment field.
-func (r *mutationResolver) InteractionSessionLinkAttachment(ctx context.Context, sessionID string, attachmentID string) (*model.InteractionSession, error) {
-	panic(fmt.Errorf("not implemented: InteractionSessionLinkAttachment - interactionSession_LinkAttachment"))
-}
-
-// InteractionEventCreate is the resolver for the interactionEvent_Create field.
-func (r *mutationResolver) InteractionEventCreate(ctx context.Context, event model.InteractionEventInput) (*model.InteractionEvent, error) {
-	if r.Resolver.InteractionEventCreate != nil {
-		return r.Resolver.InteractionEventCreate(ctx, event)
-	}
-	panic(fmt.Errorf("not implemented: InteractionEventCreate - interactionEvent_Create"))
-}
-
 // InteractionEventLinkAttachment is the resolver for the interactionEvent_LinkAttachment field.
-func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.InteractionEvent, error) {
+func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, eventID string, attachmentID string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: InteractionEventLinkAttachment - interactionEvent_LinkAttachment"))
-}
-
-// InteractionSession is the resolver for the interactionSession field.
-func (r *queryResolver) InteractionSession(ctx context.Context, id string) (*model.InteractionSession, error) {
-	panic(fmt.Errorf("not implemented: InteractionSession - interactionSession"))
-}
-
-// InteractionSessionBySessionIdentifier is the resolver for the interactionSession_BySessionIdentifier field.
-func (r *queryResolver) InteractionSessionBySessionIdentifier(ctx context.Context, sessionIdentifier string) (*model.InteractionSession, error) {
-	if r.Resolver.InteractionSessionBySessionIdentifier != nil {
-		return r.Resolver.InteractionSessionBySessionIdentifier(ctx, sessionIdentifier)
-	}
-	panic(fmt.Errorf("not implemented: InteractionSessionBySessionIdentifier - interactionSession_BySessionIdentifier"))
-}
-
-// InteractionSessionByEventIdentifier is the resolver for the interactionSession_ByEventIdentifier field.
-func (r *queryResolver) InteractionSessionByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionSession, error) {
-	panic(fmt.Errorf("not implemented: InteractionSessionByEventIdentifier - interactionSession_ByEventIdentifier"))
 }
 
 // InteractionEvent is the resolver for the interactionEvent field.
 func (r *queryResolver) InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error) {
 	panic(fmt.Errorf("not implemented: InteractionEvent - interactionEvent"))
-}
-
-// InteractionEventByEventIdentifier is the resolver for the interactionEvent_ByEventIdentifier field.
-func (r *queryResolver) InteractionEventByEventIdentifier(ctx context.Context, eventIdentifier string) (*model.InteractionEvent, error) {
-	panic(fmt.Errorf("not implemented: InteractionEventByEventIdentifier - interactionEvent_ByEventIdentifier"))
 }
 
 // InteractionEvent returns generated.InteractionEventResolver implementation.
@@ -171,3 +109,13 @@ func (r *Resolver) InteractionSession() generated.InteractionSessionResolver {
 
 type interactionEventResolver struct{ *Resolver }
 type interactionSessionResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *interactionSessionResolver) Includes(ctx context.Context, obj *model.InteractionSession) ([]*model.Attachment, error) {
+	panic(fmt.Errorf("not implemented: Includes - includes"))
+}

@@ -32,12 +32,6 @@ type MeetingService interface {
 	LinkAttendedBy(ctx context.Context, meetingID string, participant MeetingParticipant) error
 	UnlinkAttendedBy(ctx context.Context, meetingID string, participant MeetingParticipant) error
 
-	LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
-	UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
-
-	LinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
-	UnlinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error)
-
 	GetMeetingById(ctx context.Context, meetingId string) (*entity.MeetingEntity, error)
 	GetMeetingForInteractionEvent(ctx context.Context, interactionEventId string) (*entity.MeetingEntity, error)
 	GetMeetingsForInteractionEvents(ctx context.Context, ids []string) (*entity.MeetingEntities, error)
@@ -82,6 +76,10 @@ func NewMeetingService(log logger.Logger, repositories *repository.Repositories,
 }
 
 func (s *meetingService) Create(ctx context.Context, newMeeting *MeetingCreateData) (*entity.MeetingEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.Create")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -111,6 +109,10 @@ func (s *meetingService) Create(ctx context.Context, newMeeting *MeetingCreateDa
 }
 
 func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (*entity.MeetingEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "MeetingService.Update")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
 	session := utils.NewNeo4jWriteSession(ctx, s.getNeo4jDriver())
 	defer session.Close(ctx)
 
@@ -140,40 +142,6 @@ func (s *meetingService) Update(ctx context.Context, input *MeetingUpdateData) (
 	}
 
 	return s.mapDbNodeToMeetingEntity(*queryResult.(*dbtype.Node)), nil
-}
-
-func (s *meetingService) LinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, nil, attachmentID, meetingID)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToMeetingEntity(*node), nil
-}
-
-func (s *meetingService) UnlinkAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, nil, attachmentID, meetingID)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToMeetingEntity(*node), nil
-}
-
-func (s *meetingService) LinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	recording := repository.LINKED_NATURE_RECORDING
-	node, err := s.services.AttachmentService.LinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, &recording, attachmentID, meetingID)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToMeetingEntity(*node), nil
-}
-
-func (s *meetingService) UnlinkRecordingAttachment(ctx context.Context, meetingID string, attachmentID string) (*entity.MeetingEntity, error) {
-	recording := repository.LINKED_NATURE_RECORDING
-	node, err := s.services.AttachmentService.UnlinkNodeWithAttachment(ctx, repository.LINKED_WITH_MEETING, &recording, attachmentID, meetingID)
-	if err != nil {
-		return nil, err
-	}
-	return s.mapDbNodeToMeetingEntity(*node), nil
 }
 
 func (s *meetingService) LinkAttendedBy(ctx context.Context, meetingID string, participant MeetingParticipant) error {
@@ -450,7 +418,7 @@ func (s *meetingService) convertDbNodesToMeetingParticipants(records []*utils.Db
 	meetingParticipants := neo4jentity.MeetingParticipants{}
 	for _, v := range records {
 		if slices.Contains(v.Node.Labels, commonModel.NodeLabelUser) {
-			participant := s.services.UserService.mapDbNodeToUserEntity(*v.Node)
+			participant := neo4jmapper.MapDbNodeToUserEntity(v.Node)
 			participant.DataloaderKey = v.LinkedNodeId
 			meetingParticipants = append(meetingParticipants, participant)
 		} else if slices.Contains(v.Node.Labels, commonModel.NodeLabelContact) {

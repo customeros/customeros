@@ -4,7 +4,6 @@ import { Operation } from '@store/types';
 import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
 import { Store, makeAutoSyncable } from '@store/store';
-import { AnalysisStore } from '@store/TimelineEvents/Analyses/Analysis.store';
 
 import { DataSource, InteractionEvent } from '@graphql/types';
 
@@ -68,5 +67,4 @@ const defaultValue: InteractionEvent = {
   issue: undefined,
   meeting: undefined,
   repliesTo: undefined,
-  summary: AnalysisStore.getDefaultValue(),
 };

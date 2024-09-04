@@ -254,6 +254,7 @@ const getDefaultValue = (): Invoice => ({
   } as Contract,
   issued: new Date().toISOString(),
   invoiceNumber: '',
+  billingCycleInMonths: 1,
   invoicePeriodStart: new Date().toISOString(),
   invoicePeriodEnd: new Date().toISOString(),
   due: new Date().toISOString(),

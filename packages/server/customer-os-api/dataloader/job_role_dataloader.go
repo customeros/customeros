@@ -4,40 +4,40 @@ import (
 	"context"
 	"errors"
 	"github.com/graph-gophers/dataloader"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"reflect"
 )
 
-func (i *Loaders) GetJobRolesForContact(ctx context.Context, contactId string) (*entity.JobRoleEntities, error) {
+func (i *Loaders) GetJobRolesForContact(ctx context.Context, contactId string) (*neo4jentity.JobRoleEntities, error) {
 	thunk := i.JobRolesForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.JobRoleEntities)
+	resultObj := result.(neo4jentity.JobRoleEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetJobRolesForOrganization(ctx context.Context, organizationId string) (*entity.JobRoleEntities, error) {
+func (i *Loaders) GetJobRolesForOrganization(ctx context.Context, organizationId string) (*neo4jentity.JobRoleEntities, error) {
 	thunk := i.JobRolesForOrganization.Load(ctx, dataloader.StringKey(organizationId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.JobRoleEntities)
+	resultObj := result.(neo4jentity.JobRoleEntities)
 	return &resultObj, nil
 }
 
-func (i *Loaders) GetJobRolesForUser(ctx context.Context, userId string) (*entity.JobRoleEntities, error) {
+func (i *Loaders) GetJobRolesForUser(ctx context.Context, userId string) (*neo4jentity.JobRoleEntities, error) {
 	thunk := i.JobRolesForUser.Load(ctx, dataloader.StringKey(userId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(entity.JobRoleEntities)
+	resultObj := result.(neo4jentity.JobRoleEntities)
 	return &resultObj, nil
 }
 
@@ -59,12 +59,12 @@ func (b *jobRoleBatcher) getJobRolesForContacts(ctx context.Context, keys datalo
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	jobRoleEntitiesGroupedByContactId := make(map[string]entity.JobRoleEntities)
+	jobRoleEntitiesGroupedByContactId := make(map[string]neo4jentity.JobRoleEntities)
 	for _, val := range *jobRoleEntitiesPtr {
 		if list, ok := jobRoleEntitiesGroupedByContactId[val.DataloaderKey]; ok {
 			jobRoleEntitiesGroupedByContactId[val.DataloaderKey] = append(list, val)
 		} else {
-			jobRoleEntitiesGroupedByContactId[val.DataloaderKey] = entity.JobRoleEntities{val}
+			jobRoleEntitiesGroupedByContactId[val.DataloaderKey] = neo4jentity.JobRoleEntities{val}
 		}
 	}
 
@@ -78,10 +78,10 @@ func (b *jobRoleBatcher) getJobRolesForContacts(ctx context.Context, keys datalo
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.JobRoleEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.JobRoleEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.JobRoleEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.JobRoleEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -109,12 +109,12 @@ func (b *jobRoleBatcher) getJobRolesForOrganizations(ctx context.Context, keys d
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	jobRoleEntitiesGroupedByOrganizationId := make(map[string]entity.JobRoleEntities)
+	jobRoleEntitiesGroupedByOrganizationId := make(map[string]neo4jentity.JobRoleEntities)
 	for _, val := range *jobRoleEntitiesPtr {
 		if list, ok := jobRoleEntitiesGroupedByOrganizationId[val.DataloaderKey]; ok {
 			jobRoleEntitiesGroupedByOrganizationId[val.DataloaderKey] = append(list, val)
 		} else {
-			jobRoleEntitiesGroupedByOrganizationId[val.DataloaderKey] = entity.JobRoleEntities{val}
+			jobRoleEntitiesGroupedByOrganizationId[val.DataloaderKey] = neo4jentity.JobRoleEntities{val}
 		}
 	}
 
@@ -128,10 +128,10 @@ func (b *jobRoleBatcher) getJobRolesForOrganizations(ctx context.Context, keys d
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.JobRoleEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.JobRoleEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.JobRoleEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.JobRoleEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
@@ -159,12 +159,12 @@ func (b *jobRoleBatcher) getJobRolesForUsers(ctx context.Context, keys dataloade
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	jobRoleEntitiesGroupedByUserId := make(map[string]entity.JobRoleEntities)
+	jobRoleEntitiesGroupedByUserId := make(map[string]neo4jentity.JobRoleEntities)
 	for _, val := range *jobRoleEntitiesPtr {
 		if list, ok := jobRoleEntitiesGroupedByUserId[val.DataloaderKey]; ok {
 			jobRoleEntitiesGroupedByUserId[val.DataloaderKey] = append(list, val)
 		} else {
-			jobRoleEntitiesGroupedByUserId[val.DataloaderKey] = entity.JobRoleEntities{val}
+			jobRoleEntitiesGroupedByUserId[val.DataloaderKey] = neo4jentity.JobRoleEntities{val}
 		}
 	}
 
@@ -178,10 +178,10 @@ func (b *jobRoleBatcher) getJobRolesForUsers(ctx context.Context, keys dataloade
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: entity.JobRoleEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.JobRoleEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(entity.JobRoleEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.JobRoleEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

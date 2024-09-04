@@ -6,10 +6,8 @@ import { runInAction, makeAutoObservable } from 'mobx';
 import {
   Note,
   Issue,
-  Order,
   Action,
   Meeting,
-  Analysis,
   PageView,
   LogEntry,
   TimelineEvent,
@@ -20,15 +18,11 @@ import {
 import mock from './mock.json';
 import { NoteStore } from './Note/Note.store';
 import { NotesStore } from './Note/Notes.store';
-import { OrderStore } from './Order/Order.store';
 import { IssueStore } from './Issues/Issue.store';
-import { OrdersStore } from './Order/Orders.store';
 import { IssuesStore } from './Issues/Issues.store';
 import { ActionStore } from './Actions/Action.store';
 import { ActionsStore } from './Actions/Actions.store';
 import { MeetingStore } from './Meetings/Meeting.store';
-import { AnalysisStore } from './Analyses/Analysis.store';
-import { AnalysesStore } from './Analyses/Analyses.store';
 import { MeetingsStore } from './Meetings/Meetings.store';
 import { LogEntryStore } from './LogEntry/LogEntry.store';
 import { PageViewStore } from './PageViews/PageView.store';
@@ -42,10 +36,8 @@ import { InteractionSessionsStore } from './InteractionSessions/InteractionsSess
 
 type TimelineEventStore =
   | NoteStore
-  | OrderStore
   | IssueStore
   | ActionStore
-  | AnalysisStore
   | MeetingStore
   | PageViewStore
   | LogEntryStore
@@ -54,10 +46,8 @@ type TimelineEventStore =
 
 export class TimelineEventsStore {
   notes: NotesStore;
-  orders: OrdersStore;
   issues: IssuesStore;
   actions: ActionsStore;
-  analyses: AnalysesStore;
   meetings: MeetingsStore;
   pageViews: PageViewsStore;
   logEntries: LogEntriesStore;
@@ -70,10 +60,8 @@ export class TimelineEventsStore {
 
   constructor(public root: RootStore, public transport: Transport) {
     this.notes = new NotesStore(this.root, this.transport);
-    this.orders = new OrdersStore(this.root, this.transport);
     this.issues = new IssuesStore(this.root, this.transport);
     this.actions = new ActionsStore(this.root, this.transport);
-    this.analyses = new AnalysesStore(this.root, this.transport);
     this.meetings = new MeetingsStore(this.root, this.transport);
     this.pageViews = new PageViewsStore(this.root, this.transport);
     this.logEntries = new LogEntriesStore(this.root, this.transport);
@@ -150,11 +138,6 @@ export class TimelineEventsStore {
 
           return this.notes.value.get((note as Note).id);
         })
-        .with({ __typename: 'Order' }, (order) => {
-          this.orders.load([order as Order]);
-
-          return this.orders.value.get((order as Order).id);
-        })
         .with({ __typename: 'Issue' }, (issue) => {
           this.issues.load([issue as unknown as Issue]);
 
@@ -164,11 +147,6 @@ export class TimelineEventsStore {
           this.actions.load([action as Action]);
 
           return this.actions.value.get((action as Action).id);
-        })
-        .with({ __typename: 'Analysis' }, (analysis) => {
-          this.analyses.load([analysis as Analysis]);
-
-          return this.analyses.value.get((analysis as Analysis).id);
         })
         .with({ __typename: 'Meeting' }, (meeting) => {
           this.meetings.load([meeting as Meeting]);

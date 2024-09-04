@@ -2,7 +2,6 @@ package resolver
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
@@ -266,7 +265,7 @@ func TestQueryGlobalCache_Has_Logo(t *testing.T) {
 	neo4jtest.CreateTenantSettings(ctx, driver, tenantName, neo4jentity.TenantSettingsEntity{
 		LogoRepositoryFileId: "1",
 	})
-	neo4jt.CreateAttachment(ctx, driver, tenantName, entity.AttachmentEntity{
+	neo4jt.CreateAttachment(ctx, driver, tenantName, neo4jentity.AttachmentEntity{
 		Id:     "1",
 		CdnUrl: "https://cdn.openline.com/1",
 	})

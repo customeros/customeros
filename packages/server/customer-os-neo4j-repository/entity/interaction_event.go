@@ -23,6 +23,8 @@ type InteractionEventEntity struct {
 	AppSource                    string
 }
 
+type InteractionEventEntities []InteractionEventEntity
+
 func (InteractionEventEntity) IsTimelineEvent() {
 }
 

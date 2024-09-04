@@ -15,7 +15,6 @@ FROM alpine:3.14@sha256:0f2d5c38dd7a4f4f733e688e3a6733cb5ab1ac6e3cb4603a5dd564e5
 
 COPY --chown=65534:65534 --from=builder /go/bin/app .
 COPY --chown=65534:65534 --from=builder /app/user-admin-api/.env .env
-COPY --chown=65534:65534 --from=builder /app/user-admin-api/routes/generate/generate.json /routes/generate/generate.json
 USER 65534
 
 ENTRYPOINT [ "./app" ]

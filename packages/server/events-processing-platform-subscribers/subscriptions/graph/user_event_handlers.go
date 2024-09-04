@@ -62,8 +62,8 @@ func (h *UserEventHandler) OnUserCreate(ctx context.Context, evt eventstore.Even
 			Bot:             eventData.Bot,
 			ProfilePhotoUrl: eventData.ProfilePhotoUrl,
 			Timezone:        eventData.Timezone,
-			Source:          helper.GetSource(eventData.SourceFields.Source),
-			SourceOfTruth:   helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
+			Source:          neo4jentity.GetDataSource(eventData.SourceFields.Source),
+			SourceOfTruth:   neo4jentity.GetDataSource(eventData.SourceFields.SourceOfTruth),
 			AppSource:       helper.GetAppSource(eventData.SourceFields.AppSource),
 		})
 		if err != nil {

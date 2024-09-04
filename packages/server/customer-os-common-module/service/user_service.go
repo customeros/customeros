@@ -58,7 +58,7 @@ func (s *userService) Create(ctx context.Context, input UserCreateData) (*string
 		return nil, err
 	}
 
-	err = s.services.EmailService.Merge(ctx, neo4jentity.EmailEntity{
+	_, err = s.services.EmailService.Merge(ctx, neo4jentity.EmailEntity{
 		Email:     input.EmailInput.Email,
 		AppSource: input.EmailInput.AppSource,
 	}, &LinkWith{

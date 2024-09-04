@@ -7,9 +7,9 @@ import (
 
 type LinkEntityWithEntity struct {
 	event.BaseEvent
-	WithEntityId     string           `json:"withEntityId"`
-	WithEntityType   model.EntityType `json:"withEntityType"`
-	RelationshipName string           `json:"relationshipName"`
+	WithEntityId   string               `json:"withEntityId"`
+	WithEntityType model.EntityType     `json:"withEntityType"`
+	Relationship   model.EntityRelation `json:"relationshipName"`
 	//TODO enhance with relationship properties
 }
 

@@ -1,4 +1,4 @@
-union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Analysis | Issue | Meeting | Action | LogEntry | Order
+union TimelineEvent = PageView | InteractionSession | Note | InteractionEvent | Issue | Meeting | Action | LogEntry
 
 extend type Query {
     timelineEvents(ids: [ID!]!): [TimelineEvent!]!

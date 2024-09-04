@@ -93,7 +93,6 @@ export const LastTouchpointCell = ({
       'Meeting',
       Calendar,
     ])
-    .with({ __typename: 'Analysis' }, () => ['Analysis', () => <></>])
     .with({ __typename: 'Meeting' }, (event) => [
       `Meeting with ${event.attendedBy.length} participant${
         event.attendedBy.length === 1 ? '' : 's'
