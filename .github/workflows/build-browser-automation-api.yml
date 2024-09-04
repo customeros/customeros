@@ -22,7 +22,7 @@ permissions:
   packages: write
 
 jobs:
-  build-browser-automation-service:
+  build-publish:
     runs-on: ubuntu-latest
     steps:
       - name: Delete huge unnecessary tools folder
