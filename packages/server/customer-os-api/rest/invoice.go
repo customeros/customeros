@@ -71,7 +71,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		}
 
 		// If all good, redirect to payment link
-		c.Redirect(http.StatusFound, invoice.PaymentDetails.PaymentLink)
+		c.Redirect(http.StatusFound, paymentLink)
 	}
 }
 
