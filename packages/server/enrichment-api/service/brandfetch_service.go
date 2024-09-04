@@ -143,7 +143,7 @@ func (s *brandfetchService) callBrandfetch(ctx context.Context, domain string) (
 	// get current month in format yyyy-mm
 	currentMonth := utils.Now().Format("2006-01")
 
-	queryResult := s.services.CommonServices.PostgresRepositories.ExternalAppKeysRepository.GetAppKeys(ctx, constants.AppBrandfetch, currentMonth, h.cfg.Services.BrandfetchLimit)
+	queryResult := s.services.CommonServices.PostgresRepositories.ExternalAppKeysRepository.GetAppKeys(ctx, constants.AppBrandfetch, currentMonth, s.config.BrandfetchConfig.Limit)
 	if queryResult.Error != nil {
 		tracing.TraceErr(span, queryResult.Error)
 		s.log.Errorf("Error getting brandfetch app keys: %s", queryResult.Error)
