@@ -20,6 +20,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type ScrubbyIoRequest struct {
@@ -34,10 +35,24 @@ type ScrubbyIoResponse struct {
 	Identifier string `json:"identifier"`
 }
 
+type EnrowRequest struct {
+	Email    string `json:"email"`
+	Settings struct {
+		Webhook string `json:"webhook"`
+	}
+}
+
+type EnrowResponse struct {
+	Id          string  `json:"id"`
+	CreditsUsed float64 `json:"credits_used"`
+	Message     string  `json:"message"`
+}
+
 type EmailValidationService interface {
 	ValidateEmailWithMailSherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error)
 	ValidateEmailScrubby(ctx context.Context, email string) (string, error)
-	ValidateEmailTrueInbox(ctx context.Context, email string) (*postgresentity.TrueInboxResponseBody, error)
+	ValidateEmailWithTrueinbox(ctx context.Context, email string) (*postgresentity.TrueInboxResponseBody, error)
+	ValidateEmailWithEnrow(ctx context.Context, email string) (string, error)
 }
 
 type emailValidationService struct {
@@ -370,8 +385,8 @@ func (s *emailValidationService) callScrubbyIo(ctx context.Context, identifier, 
 	return scrubbyIoResponse, nil
 }
 
-func (s *emailValidationService) ValidateEmailTrueInbox(ctx context.Context, email string) (*postgresentity.TrueInboxResponseBody, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailTrueInbox")
+func (s *emailValidationService) ValidateEmailWithTrueinbox(ctx context.Context, email string) (*postgresentity.TrueInboxResponseBody, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailWithTrueinbox")
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
 
@@ -466,4 +481,119 @@ func (s *emailValidationService) callTrueinboxToValidateEmail(ctx context.Contex
 	tracing.LogObjectAsJson(span, "response.trueinbox", trueInboxResponse)
 
 	return trueInboxResponse, nil
+}
+
+func (s *emailValidationService) ValidateEmailWithEnrow(ctx context.Context, email string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailEnrow")
+	defer span.Finish()
+	span.LogFields(log.String("email", email))
+
+	cachedEnrowRecord, err := s.Services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.GetLatestByEmail(ctx, email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
+		return "", err
+	}
+
+	if cachedEnrowRecord == nil || cachedEnrowRecord.CreatedAt.AddDate(0, 0, s.config.EnrowConfig.CacheTtlDays).Before(utils.Now()) {
+		enrowRequestId, err := s.callEnrowToValidateEmail(ctx, email)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to call enrow"))
+			s.log.Errorf("failed to call enrow: %s", err.Error())
+			return "", err
+		}
+		if enrowRequestId == "" {
+			err = errors.New("enrow request id is empty")
+			tracing.TraceErr(span, err)
+			s.log.Errorf("enrow request id is empty")
+			return "", err
+		}
+		_, err = s.Services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.RegisterRequest(ctx, postgresentity.CacheEmailEnrow{
+			Email:     email,
+			RequestID: enrowRequestId,
+		})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to register enrow request"))
+			s.log.Errorf("failed to register enrow request: %s", err.Error())
+			return "", err
+		}
+	}
+
+	result := ""
+	for i := 0; i < s.config.EnrowConfig.MaxWaitResultsSeconds; i++ {
+		cachedEnrowRecord, err = s.Services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.GetLatestByEmail(ctx, email)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
+			return "", err
+		}
+		if cachedEnrowRecord.Qualification != "" {
+			result = cachedEnrowRecord.Qualification
+			break
+		}
+		time.Sleep(time.Second)
+	}
+
+	return result, nil
+}
+
+func (s *emailValidationService) callEnrowToValidateEmail(ctx context.Context, email string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.callEnrowToValidateEmail")
+	defer span.Finish()
+	span.LogFields(log.String("email", email))
+
+	// Construct the URL with the email as a query parameter
+	requestUrl := fmt.Sprintf("%s/email/verify/single", s.config.EnrowConfig.ApiUrl)
+
+	request := EnrowRequest{
+		Email: email,
+		Settings: struct {
+			Webhook string `json:"webhook"`
+		}{
+			Webhook: s.config.EnrowConfig.CallbackUrl,
+		},
+	}
+	payload, err := json.Marshal(request)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+		return "", err
+	}
+
+	// Create a new request
+	req, err := http.NewRequestWithContext(ctx, "POST", requestUrl, bytes.NewBuffer(payload))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		return "", err
+	}
+
+	// Set the request headers
+	req.Header.Set("x-api-key", s.config.EnrowConfig.ApiKey)
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Accept", "application/json")
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		return "", err
+	}
+	defer response.Body.Close()
+	span.LogFields(log.Int("response.enrow.status", response.StatusCode))
+	body, err := io.ReadAll(response.Body)
+	span.LogFields(log.String("response.enrow.body", string(body)))
+
+	if response.StatusCode != http.StatusOK {
+		err = fmt.Errorf("Enrow returned %d status code", response.StatusCode)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get response from Enrow"))
+		return "", err
+	}
+
+	var enrowResponse EnrowResponse
+	err = json.Unmarshal(body, &enrowResponse)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode Enrow response"))
+		s.log.Errorf("failed to decode Enrow response: %s", err.Error())
+		return "", err
+	}
+
+	return enrowResponse.Id, nil
 }
