@@ -93,7 +93,7 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 	result.DomainData.IsPrimaryDomain = *domainValidation.IsPrimaryDomain
 	result.DomainData.PrimaryDomain = domainValidation.PrimaryDomain
 
-	if domainValidation.HealthIsGreylisted || domainValidation.HealthIsBlacklisted {
+	if domainValidation.HealthIsGreylisted || domainValidation.HealthIsBlacklisted || domainValidation.IsCatchAll {
 		result.EmailData.Deliverable = string(model.EmailDeliverableStatusUnknown)
 		return result, nil
 	}

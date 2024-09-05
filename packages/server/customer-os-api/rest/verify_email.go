@@ -16,6 +16,7 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"net/http"
+	"strings"
 )
 
 type EmailVerificationResponse struct {
@@ -69,7 +70,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		span.LogKV("request.verifyCatchAll", c.Query("verifyCatchAll"))
 		// check if verifyCatchAll param exists, defaulted to true
 		verifyCatchAll := true
-		if c.Query("verifyCatchAll") == "false" {
+		if strings.ToLower(c.Query("verifyCatchAll")) == "false" {
 			verifyCatchAll = false
 		}
 
