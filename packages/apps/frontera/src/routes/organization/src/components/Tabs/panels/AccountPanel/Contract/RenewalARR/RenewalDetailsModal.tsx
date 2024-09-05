@@ -171,7 +171,7 @@ const RenewalDetailsForm = ({
       >
         <ModalCloseButton />
         <ModalHeader>
-          <span className='text-lg mt-3 font-semibold'>Renewal details</span>
+          <span className='mt-3 font-semibold'>Renewal details</span>
         </ModalHeader>
         <form onSubmit={(v) => handleSubmit(v)}>
           <ModalBody className='pb-0 gap-4 flex flex-col'>
@@ -348,7 +348,7 @@ const FormRangeSlider = ({
   return (
     <div>
       <div className='flex items-center justify-between mb-3'>
-        <p className='font-medium text-base'>
+        <p className='font-medium text-sm'>
           Renewal ARR{' '}
           {formattedRenewedAt && (
             <span className='text-gray-400 font-normal text-sm'>
@@ -357,7 +357,7 @@ const FormRangeSlider = ({
           )}
         </p>
 
-        <p className='text-base font-medium'>
+        <p className='text-sm font-medium'>
           {formattedNewAmount !== defaultFormattedAmount && (
             <span className='text-sm text-gray-400 font-normal'>
               <s>{defaultFormattedAmount}</s>

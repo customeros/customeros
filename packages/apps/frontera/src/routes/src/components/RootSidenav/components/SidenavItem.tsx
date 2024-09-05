@@ -28,7 +28,7 @@ export const SidenavItem = ({
 
   const dynamicClasses = cn(
     isActive
-      ? ['font-semibold', 'bg-grayModern-100']
+      ? ['font-medium', 'bg-grayModern-100']
       : ['font-normal', 'bg-transparent'],
   );
 
@@ -40,7 +40,7 @@ export const SidenavItem = ({
       onClick={handleClick}
       colorScheme='grayModern'
       leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
-      className={`w-full justify-start px-3 text-gray-700 focus:shadow-sidenavItemFocus  mb-[2px] ${dynamicClasses}`}
+      className={`w-full justify-start px-3 text-gray-700 hover:bg-grayModern-100 *:hover:text-gray-700 focus:shadow-sidenavItemFocus  mb-[2px] ${dynamicClasses}`}
     >
       <div className='w-full flex justify-between '>
         <div>{label}</div>

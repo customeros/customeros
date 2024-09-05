@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
@@ -47,6 +48,7 @@ export const KanbanColumn = observer(
   }: CardColumnProps) => {
     const store = useStore();
     const [searchParams] = useSearchParams();
+    const [isHover, setIsHover] = useState<boolean>();
     const { open, onOpen, onToggle } = useDisclosure();
     const viewDef = store.tableViewDefs.getById(
       store.tableViewDefs.opportunitiesPreset ?? '',
@@ -138,56 +140,67 @@ export const KanbanColumn = observer(
     };
 
     return (
-      <div className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'>
-        <div className=' sticky rounded-t-[4px] top-[114px] bg-white z-50'>
-          <div className='flex items-center justify-between p-3 pb-0 bg-gray-100 rounded-t-[4px]'>
-            <div className='flex flex-col items-center mb-2 w-full '>
-              <div className='flex justify-between w-full'>
-                <Tooltip
-                  asChild
-                  align='start'
-                  label={!canEdit ? 'This stage can’t be edited' : undefined}
-                >
-                  <Input
-                    size='sm'
-                    variant='unstyled'
-                    disabled={!canEdit}
-                    value={column?.name}
-                    onBlur={handleNameBlur}
-                    onChange={handleNameChange}
-                    onClick={(e) => (e.target as HTMLInputElement).select()}
-                    className={cn(
-                      'h-auto font-semibold min-h-[unset]',
-                      !canEdit && 'cursor-not-allowed',
-                    )}
+      <div
+        onMouseEnter={() => setIsHover(true)}
+        onMouseLeave={() => setIsHover(false)}
+        className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'
+      >
+        <div className='flex items-center justify-between p-3 pb-0 bg-gray-100 rounded-t-[4px]'>
+          <div className='flex flex-col items-center mb-2 w-full'>
+            <div className='flex justify-between w-full'>
+              <Tooltip
+                asChild
+                align='start'
+                label={!canEdit ? 'This stage can’t be edited' : undefined}
+              >
+                <Input
+                  size='sm'
+                  variant='unstyled'
+                  disabled={!canEdit}
+                  value={column?.name}
+                  onBlur={handleNameBlur}
+                  onChange={handleNameChange}
+                  onClick={(e) => (e.target as HTMLInputElement).select()}
+                  className={cn(
+                    'h-auto font-semibold min-h-[unset]',
+                    !canEdit && 'cursor-not-allowed',
+                  )}
+                />
+              </Tooltip>
+              <Tooltip asChild label='Create new opportunity'>
+                <IconButton
+                  size='xxs'
+                  icon={<Plus />}
+                  onClick={handleCreateDraft}
+                  aria-label='Add new opportunity'
+                  className={cn(isHover ? 'opacity-100' : 'opacity-0', 'mr-2')}
+                />
+              </Tooltip>
+              <Menu>
+                <MenuButton asChild>
+                  <IconButton
+                    size='xxs'
+                    variant='ghost'
+                    isDisabled={!canEdit}
+                    icon={<DotsVertical />}
+                    aria-label='Column options'
                   />
-                </Tooltip>
-                <Menu>
-                  <MenuButton asChild>
-                    <IconButton
-                      size='xxs'
-                      variant='ghost'
-                      isDisabled={!canEdit}
-                      icon={<DotsVertical />}
-                      aria-label='Column options'
-                    />
-                  </MenuButton>
-                  <MenuList>
-                    <MenuItem onClick={handleCreateDraft}>
-                      <Plus />
-                      Add new opportunity
-                    </MenuItem>
-                    <MenuItem onClick={onOpen}>
-                      <Percent03 />
-                      <span>Set win probability</span>
-                    </MenuItem>
-                  </MenuList>
-                </Menu>
-              </div>
-              <span className={cn('w-full text-sm font-medium text-gray-500')}>
-                {`${totalSum} • ${cards.length}`}
-              </span>
+                </MenuButton>
+                <MenuList>
+                  <MenuItem onClick={handleCreateDraft}>
+                    <Plus />
+                    Add new opportunity
+                  </MenuItem>
+                  <MenuItem onClick={onOpen}>
+                    <Percent03 />
+                    <span>Set win probability</span>
+                  </MenuItem>
+                </MenuList>
+              </Menu>
             </div>
+            <span className={cn('w-full text-sm font-medium text-gray-500')}>
+              {`${totalSum} • ${cards.length}`}
+            </span>
           </div>
         </div>
 
@@ -214,7 +227,7 @@ export const KanbanColumn = observer(
           ) => (
             <div
               ref={dropProvided.innerRef}
-              className={cn('flex flex-col pb-2 p-3 h-[100vh - 40px] ', {
+              className={cn('flex flex-col pb-2 p-3 overflow-auto', {
                 'bg-gray-100': dropSnapshot?.isDraggingOver,
               })}
               {...dropProvided.droppableProps}

@@ -78,10 +78,6 @@ export const UpdateHealthStatus = observer(() => {
         label={label}
         placeholder='Change health status...'
         onKeyDownCapture={(e) => {
-          if (e.key === 'Enter') {
-            e.stopPropagation();
-          }
-
           if (e.metaKey && e.key === 'Enter') {
             store.ui.commandMenu.setOpen(false);
           }

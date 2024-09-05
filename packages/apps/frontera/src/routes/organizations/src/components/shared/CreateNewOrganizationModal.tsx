@@ -109,9 +109,7 @@ export const CreateNewOrganizationModal = observer(
           <ModalOverlay />
           <ModalFeaturedContent>
             <ModalFeaturedHeader featuredIcon={<Building07 />}>
-              <p className='text-lg font-semibold mb-1'>
-                Create new organization
-              </p>
+              <p className='font-semibold mb-1'>Create new organization</p>
               <p className='text-sm'>
                 We’ll auto-enrich this organization using its website
               </p>

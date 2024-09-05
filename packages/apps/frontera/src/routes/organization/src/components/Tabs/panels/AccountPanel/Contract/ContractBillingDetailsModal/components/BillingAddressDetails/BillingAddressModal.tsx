@@ -170,7 +170,7 @@ export const BillingAddressModal = observer(
                     organizationName ||
                     "Unnamed's "}{' '}
                 </div>
-                <span className='text-base font-normal'>
+                <span className='text-sm font-normal'>
                   These details are required to issue invoices
                 </span>
               </ModalHeader>

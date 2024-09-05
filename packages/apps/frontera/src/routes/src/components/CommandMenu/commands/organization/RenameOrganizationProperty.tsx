@@ -35,7 +35,7 @@ export const RenameOrganizationProperty = observer(() => {
 
   const placeholder = match({ property })
     .with({ property: 'name' }, () => 'Rename organization...')
-    .with({ property: 'website' }, () => 'Edit website...')
+    .with({ property: 'website' }, () => 'Edit website')
     .otherwise(() => '');
 
   const [name, setName] = useState(() => defaultValue ?? '');

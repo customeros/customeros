@@ -45,7 +45,7 @@ export const EditableSideNavItem = observer(
 
     const dynamicClasses = cn(
       isActive
-        ? ['font-semibold', 'bg-grayModern-100']
+        ? ['font-medium', 'bg-grayModern-100']
         : ['font-normal', 'bg-transparent'],
     );
 
@@ -56,9 +56,9 @@ export const EditableSideNavItem = observer(
         data-test={dataTest}
         onClick={handleClick}
         colorScheme='grayModern'
-        className={`w-full justify-start px-3 text-gray-700 group  focus:shadow-EditableSideNavItemFocus ${dynamicClasses}`}
+        leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
+        className={`w-full justify-start px-3 text-gray-700 group hover:bg-grayModern-100 *:hover:text-gray-700 focus:shadow-EditableSideNavItemFocus ${dynamicClasses}`}
       >
-        <div>{typeof icon === 'function' ? icon(!!isActive) : icon}</div>
         <div
           className={cn(
             'w-full text-justify overflow-hidden overflow-ellipsis',
