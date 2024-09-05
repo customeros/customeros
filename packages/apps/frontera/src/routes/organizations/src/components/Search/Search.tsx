@@ -127,7 +127,9 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   };
 
   const allowCreation =
-    tableViewDef?.value.tableId !== TableIdType.Contracts &&
+    ![TableIdType.Contracts, TableIdType.FlowSequences].includes(
+      tableViewDef?.value?.tableId as TableIdType,
+    ) &&
     totalResults === 0 &&
     !!searchParams.get('search');
 

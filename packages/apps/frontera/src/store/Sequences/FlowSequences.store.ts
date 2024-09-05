@@ -96,12 +96,12 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
     this.value.set(tempId, newSequence);
 
     try {
-      const { flow_sequence_store } = await this.service.createSequence({
+      const { flow_sequence_Store } = await this.service.createSequence({
         input: payload,
       });
 
       runInAction(() => {
-        serverId = flow_sequence_store?.metadata.id;
+        serverId = flow_sequence_Store?.metadata.id;
         newSequence.setId(serverId);
 
         this.value.set(serverId, newSequence);
@@ -129,13 +129,13 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
     const flow = this.value.get(id);
 
     try {
-      const { flow_sequence_changeStatus } =
+      const { flow_sequence_ChangeStatus } =
         await this.service.updateSequenceStatus({
           id,
           stage: FlowSequenceStatus.Archived,
         });
 
-      if (flow_sequence_changeStatus.metadata.id) {
+      if (flow_sequence_ChangeStatus.metadata.id) {
         runInAction(() => {
           flow?.update(
             (seq) => {
@@ -184,8 +184,8 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
       );
 
       const successfulIds = results.map(
-        ({ flow_sequence_changeStatus }) =>
-          flow_sequence_changeStatus?.metadata?.id,
+        ({ flow_sequence_ChangeStatus }) =>
+          flow_sequence_ChangeStatus?.metadata?.id,
       );
 
       runInAction(() => {
