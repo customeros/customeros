@@ -1104,13 +1104,6 @@ func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Domain:        utils.GetStringPropOrEmpty(props, "domain"),
-		EnrichDetails: entity.DomainEnrichDetails{
-			EnrichedAt:        utils.GetTimePropOrNil(props, "enrichedAt"),
-			EnrichSource:      enum.DecodeDomainEnrichSource(utils.GetStringPropOrEmpty(props, "enrichSource")),
-			EnrichData:        utils.GetStringPropOrEmpty(props, "enrichData"),
-			EnrichRequestedAt: utils.GetTimePropOrNil(props, "enrichRequestedAt"),
-			EnrichError:       utils.GetStringPropOrEmpty(props, "enrichError"),
-		},
 	}
 	return &domain
 }
