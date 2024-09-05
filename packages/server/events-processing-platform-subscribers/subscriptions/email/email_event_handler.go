@@ -142,7 +142,7 @@ func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, em
 	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
 		Email: emailAddress,
 		Options: validationmodel.ValidateEmailRequestOptions{
-			CallTrueInbox: false,
+			VerifyCatchAll: true,
 		},
 	})
 	if err != nil {

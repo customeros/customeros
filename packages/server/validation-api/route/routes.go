@@ -75,8 +75,10 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				return
 			}
 
-			if emailValidationData != nil && emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown) {
-				if request.Options.CallTrueInbox {
+			if emailValidationData != nil &&
+				(emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown) ||
+					emailValidationData.EmailData.RetryValidation == true) {
+				if request.Options.VerifyCatchAll || emailValidationData.EmailData.RetryValidation == true {
 					// call TrueInbox
 					trueInboxResponse, err := services.EmailValidationService.ValidateEmailTrueInbox(ctx, request.Email)
 					if err != nil {
