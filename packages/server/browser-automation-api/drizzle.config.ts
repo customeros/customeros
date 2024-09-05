@@ -10,6 +10,8 @@ export default defineConfig({
     port: parseInt(process.env.POSTGRES_PORT ?? "5432"),
     password: process.env.POSTGRES_PASS ?? "",
     database: process.env.POSTGRES_NAME ?? "",
-    ssl: process.env.NODE_ENV !== "development",
+    ssl: {
+      rejectUnauthorized: false,
+    },
   },
 });

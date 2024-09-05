@@ -711,14 +711,6 @@ CREATE TABLE IF NOT EXISTS "cache_email_validation_domain" (
 	"firewall" varchar(255)
 );
 --> statement-breakpoint
-CREATE TABLE IF NOT EXISTS "scraper_configs" (
-	"id" serial PRIMARY KEY NOT NULL,
-	"user_id" varchar(36) NOT NULL,
-	"tenant" text NOT NULL,
-	"created_at" timestamp,
-	"updated_at" timestamp
-);
---> statement-breakpoint
 CREATE TABLE IF NOT EXISTS "customer_os_ids" (
 	"tenant" varchar(50) NOT NULL,
 	"customer_os_id" varchar(30) NOT NULL,
