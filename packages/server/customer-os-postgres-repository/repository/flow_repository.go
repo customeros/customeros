@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
@@ -10,12 +11,10 @@ import (
 )
 
 type FlowRepository interface {
-	Count(ctx context.Context, tenant string) (int64, error)
-	Get(ctx context.Context, tenant string, page, limit int) ([]*entity.Flow, error)
-	GetById(ctx context.Context, tenant, id string) (*entity.Flow, error)
+	GetList(ctx context.Context) ([]*entity.Flow, error)
+	GetById(ctx context.Context, id string) (*entity.Flow, error)
 
 	Store(ctx context.Context, entity *entity.Flow) (*entity.Flow, error)
-	Delete(ctx context.Context, tenant, id string) error
 }
 
 type flowRepositoryImpl struct {
@@ -26,40 +25,14 @@ func NewFlowRepository(gormDb *gorm.DB) FlowRepository {
 	return &flowRepositoryImpl{gormDb: gormDb}
 }
 
-func (r flowRepositoryImpl) Count(ctx context.Context, tenant string) (int64, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Count")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	var result int64
-	err := r.gormDb.
-		Model(entity.Flow{}).
-		Count(&result).
-		Error
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return 0, err
-	}
-
-	span.LogFields(tracingLog.Int64("result.count", result))
-
-	return result, nil
-}
-
-func (r flowRepositoryImpl) Get(ctx context.Context, tenant string, page, limit int) ([]*entity.Flow, error) {
+func (r flowRepositoryImpl) GetList(ctx context.Context) ([]*entity.Flow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Get")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	span.LogFields(tracingLog.Int("page", page), tracingLog.Int("limit", limit))
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	var result []*entity.Flow
 	err := r.gormDb.
-		Offset((page - 1) * limit).
-		Limit(limit).
+		Where("tenant = ?", common.GetTenantFromContext(ctx)).
 		Find(&result).
 		Error
 
@@ -73,17 +46,16 @@ func (r flowRepositoryImpl) Get(ctx context.Context, tenant string, page, limit 
 	return result, nil
 }
 
-func (r flowRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*entity.Flow, error) {
+func (r flowRepositoryImpl) GetById(ctx context.Context, id string) (*entity.Flow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(tracingLog.String("id", id))
 
 	var result entity.Flow
 	err := r.gormDb.
-		Where("id = ?", id).
+		Where("tenant = ? and id = ?", common.GetTenantFromContext(ctx), id).
 		First(&result).
 		Error
 
@@ -104,8 +76,8 @@ func (r flowRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*en
 func (repo *flowRepositoryImpl) Store(ctx context.Context, entity *entity.Flow) (*entity.Flow, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Store")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, entity.Tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
 	span.LogFields(tracingLog.Object("entity", entity))
 
 	err := repo.gormDb.Save(entity).Error
@@ -118,24 +90,4 @@ func (repo *flowRepositoryImpl) Store(ctx context.Context, entity *entity.Flow) 
 	span.LogFields(tracingLog.String("entity.id", entity.ID))
 
 	return entity, nil
-}
-
-func (repo *flowRepositoryImpl) Delete(ctx context.Context, tenant, id string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "FlowRepository.Delete")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(tracingLog.String("id", id))
-
-	err := repo.gormDb.Delete(&entity.Flow{}, "id = ?", id).Error
-
-	if err != nil {
-		span.LogFields(tracingLog.Bool("entity.deleted", false))
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	span.LogFields(tracingLog.Bool("entity.deleted", true))
-
-	return nil
 }

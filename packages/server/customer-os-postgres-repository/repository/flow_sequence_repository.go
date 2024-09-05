@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -11,14 +12,11 @@ import (
 )
 
 type FlowSequenceRepository interface {
-	Count(ctx context.Context, tenant, flowId string) (int64, error)
-	Get(ctx context.Context, tenant, flowId string, page, limit int) ([]*entity.FlowSequence, error)
 	GetList(ctx context.Context, flowId *string) ([]*entity.FlowSequence, error)
-	GetById(ctx context.Context, tenant, id string) (*entity.FlowSequence, error)
+	GetById(ctx context.Context, id string) (*entity.FlowSequence, error)
 	GetFlowBySequenceId(ctx context.Context, id string) (*entity.Flow, error)
 
-	Store(ctx context.Context, tenant string, entity *entity.FlowSequence) (*entity.FlowSequence, error)
-	Delete(ctx context.Context, tenant, id string) error
+	Store(ctx context.Context, entity *entity.FlowSequence) (*entity.FlowSequence, error)
 }
 
 type flowSequenceRepositoryImpl struct {
@@ -27,55 +25,6 @@ type flowSequenceRepositoryImpl struct {
 
 func NewFlowSequenceRepository(gormDb *gorm.DB) FlowSequenceRepository {
 	return &flowSequenceRepositoryImpl{gormDb: gormDb}
-}
-
-func (r flowSequenceRepositoryImpl) Count(ctx context.Context, tenant, flowId string) (int64, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Count")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(tracingLog.String("flowId", flowId))
-
-	var result int64
-	err := r.gormDb.
-		Model(entity.FlowSequence{}).
-		Where("flow_id = ?", flowId).
-		Count(&result).
-		Error
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return 0, err
-	}
-
-	span.LogFields(tracingLog.Int64("result.count", result))
-
-	return result, nil
-}
-
-func (r flowSequenceRepositoryImpl) Get(ctx context.Context, tenant, flowId string, page, limit int) ([]*entity.FlowSequence, error) {
-	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Get")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(tracingLog.String("flowId", flowId), tracingLog.Int("page", page), tracingLog.Int("limit", limit))
-
-	var result []*entity.FlowSequence
-	err := r.gormDb.
-		Where("flow_id = ?", flowId).
-		Offset((page - 1) * limit).
-		Limit(limit).
-		Find(&result).
-		Error
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	span.LogFields(tracingLog.Int("result.count", len(result)))
-
-	return result, nil
 }
 
 func (r flowSequenceRepositoryImpl) GetList(ctx context.Context, flowId *string) ([]*entity.FlowSequence, error) {
@@ -90,7 +39,7 @@ func (r flowSequenceRepositoryImpl) GetList(ctx context.Context, flowId *string)
 	db := r.gormDb
 
 	if flowId != nil {
-		db = db.Where("flow_id = ?", flowId)
+		db = db.Where("tenant = ? and flow_id = ?", common.GetTenantFromContext(ctx), flowId)
 	}
 
 	err :=
@@ -108,16 +57,16 @@ func (r flowSequenceRepositoryImpl) GetList(ctx context.Context, flowId *string)
 	return result, nil
 }
 
-func (r flowSequenceRepositoryImpl) GetById(ctx context.Context, tenant, id string) (*entity.FlowSequence, error) {
+func (r flowSequenceRepositoryImpl) GetById(ctx context.Context, id string) (*entity.FlowSequence, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.GetById")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
 	span.LogFields(tracingLog.String("id", id))
 
 	var result entity.FlowSequence
 	err := r.gormDb.
-		Where("id = ?", id).
+		Where("tenant = ? and id = ?", common.GetTenantFromContext(ctx), id).
 		First(&result).
 		Error
 
@@ -145,9 +94,9 @@ func (r flowSequenceRepositoryImpl) GetFlowBySequenceId(ctx context.Context, id 
 	var result entity.Flow
 	err := r.gormDb.
 		Table("flow_sequence").
-		Select("flows.*").
-		Joins("join flows on flows.id = flow_sequence.flow_id").
-		Where("flow_sequence.id = ?", id).
+		Select("flow.*").
+		Joins("join flow on flow.id = flow_sequence.flow_id").
+		Where("flow_sequence.tenant = ? and flow_sequence.id = ?", common.GetTenantFromContext(ctx), id).
 		First(&result).
 		Error
 	if err != nil {
@@ -164,11 +113,11 @@ func (r flowSequenceRepositoryImpl) GetFlowBySequenceId(ctx context.Context, id 
 	return &result, nil
 }
 
-func (repo *flowSequenceRepositoryImpl) Store(ctx context.Context, tenant string, entity *entity.FlowSequence) (*entity.FlowSequence, error) {
+func (repo *flowSequenceRepositoryImpl) Store(ctx context.Context, entity *entity.FlowSequence) (*entity.FlowSequence, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Store")
 	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
+
 	span.LogFields(tracingLog.Object("entity", entity))
 
 	err := repo.gormDb.Save(entity).Error
@@ -181,24 +130,4 @@ func (repo *flowSequenceRepositoryImpl) Store(ctx context.Context, tenant string
 	span.LogFields(tracingLog.String("entity.id", entity.ID))
 
 	return entity, nil
-}
-
-func (repo flowSequenceRepositoryImpl) Delete(ctx context.Context, tenant, id string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceRepository.Delete")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogFields(tracingLog.String("id", id))
-
-	err := repo.gormDb.Delete(&entity.FlowSequence{}, "id = ?", id).Error
-
-	if err != nil {
-		span.LogFields(tracingLog.Bool("entity.deleted", false))
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	span.LogFields(tracingLog.Bool("entity.deleted", true))
-
-	return nil
 }

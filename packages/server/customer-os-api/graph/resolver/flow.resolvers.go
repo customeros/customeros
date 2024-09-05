@@ -29,7 +29,7 @@ func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.GetFlowBySequenceId(ctx, obj.Metadata.ID)
+	entity, err := r.Services.CommonServices.FlowService.FlowGetBySequenceId(ctx, obj.Metadata.ID)
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get flow")
@@ -40,7 +40,17 @@ func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence
 
 // Steps is the resolver for the steps field.
 func (r *flowSequenceResolver) Steps(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceStep, error) {
-	return make([]*model.FlowSequenceStep, 0), nil
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Steps", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepGetList(ctx, obj.Metadata.ID)
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow sequence steps")
+		return nil, err
+	}
+	return mapper.MapEntitiesToFlowSequenceSteps(entity), nil
 }
 
 // Contacts is the resolver for the contacts field.
@@ -63,14 +73,64 @@ func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.Flow
 	return &model.Email{}, nil
 }
 
-// Email is the resolver for the email field.
-func (r *flowSequenceStepResolver) Email(ctx context.Context, obj *model.FlowSequenceStep) (*model.Email, error) {
-	return &model.Email{}, nil
+// FlowChangeStatus is the resolver for the flow_changeStatus field.
+func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowChangeStatus", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, id, mapper.MapFlowStatusToEntity(status))
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlow(entity), nil
+}
+
+// FlowSequenceChangeStatus is the resolver for the flow_sequence_changeStatus field.
+func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status model.FlowSequenceStatus) (*model.FlowSequence, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceChangeStatus", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceChangeStatus(ctx, id, mapper.MapFlowSequenceStatusToEntity(status))
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowSequence(entity), nil
+}
+
+// FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
+func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepChangeStatus", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepChangeStatus(ctx, id, mapper.MapFlowSequenceStepStatusToEntity(status))
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowSequenceStep(entity), nil
 }
 
 // Flows is the resolver for the flows field.
 func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
-	return make([]*model.Flow, 0), nil
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Flows", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := r.Services.CommonServices.FlowService.FlowGetList(ctx)
+	if err != nil || entities == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow sequences")
+		return nil, err
+	}
+	return mapper.MapEntitiesToFlows(entities), nil
 }
 
 // Sequences is the resolver for the sequences field.
@@ -79,7 +139,7 @@ func (r *queryResolver) Sequences(ctx context.Context) ([]*model.FlowSequence, e
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entities, err := r.Services.CommonServices.FlowService.GetFlowSequencesList(ctx)
+	entities, err := r.Services.CommonServices.FlowService.FlowSequenceGetList(ctx, nil)
 	if err != nil || entities == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get flow sequences")
@@ -99,12 +159,6 @@ func (r *Resolver) FlowSequenceContact() generated.FlowSequenceContactResolver {
 	return &flowSequenceContactResolver{r}
 }
 
-// FlowSequenceStep returns generated.FlowSequenceStepResolver implementation.
-func (r *Resolver) FlowSequenceStep() generated.FlowSequenceStepResolver {
-	return &flowSequenceStepResolver{r}
-}
-
 type flowResolver struct{ *Resolver }
 type flowSequenceResolver struct{ *Resolver }
 type flowSequenceContactResolver struct{ *Resolver }
-type flowSequenceStepResolver struct{ *Resolver }

@@ -47,9 +47,19 @@ func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.Flow
 	panic(fmt.Errorf("not implemented: Email - email"))
 }
 
-// Email is the resolver for the email field.
-func (r *flowSequenceStepResolver) Email(ctx context.Context, obj *model.FlowSequenceStep) (*model.Email, error) {
-	panic(fmt.Errorf("not implemented: Email - email"))
+// FlowChangeStatus is the resolver for the flow_changeStatus field.
+func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: FlowChangeStatus - flow_changeStatus"))
+}
+
+// FlowSequenceChangeStatus is the resolver for the flow_sequence_changeStatus field.
+func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status model.FlowSequenceStatus) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceChangeStatus - flow_sequence_changeStatus"))
+}
+
+// FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
+func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceStepChangeStatus - flow_sequence_step_changeStatus"))
 }
 
 // Flows is the resolver for the flows field.
@@ -73,12 +83,6 @@ func (r *Resolver) FlowSequenceContact() generated.FlowSequenceContactResolver {
 	return &flowSequenceContactResolver{r}
 }
 
-// FlowSequenceStep returns generated.FlowSequenceStepResolver implementation.
-func (r *Resolver) FlowSequenceStep() generated.FlowSequenceStepResolver {
-	return &flowSequenceStepResolver{r}
-}
-
 type flowResolver struct{ *Resolver }
 type flowSequenceResolver struct{ *Resolver }
 type flowSequenceContactResolver struct{ *Resolver }
-type flowSequenceStepResolver struct{ *Resolver }

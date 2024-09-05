@@ -3,6 +3,12 @@ extend type Query {
     sequences: [FlowSequence!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
+extend type Mutation {
+    flow_changeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_changeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_step_changeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
 type Flow implements MetadataInterface {
     metadata:           Metadata!
     name:               String
@@ -25,12 +31,13 @@ type FlowSequence implements MetadataInterface {
 type FlowSequenceStep implements MetadataInterface {
     metadata: Metadata!
 
+    name: String
     status: FlowSequenceStepStatus!
-    email:  Email! @goField(forceResolver: true)
 
-    Type: String
-    Text: String
-    Template: String
+    type: FlowSequenceStepType!
+    subtype: FlowSequenceStepSubtype
+
+    body: String!
 }
 
 type FlowSequenceContact implements MetadataInterface {
@@ -57,6 +64,16 @@ enum FlowSequenceStatus {
     ACTIVE
     PAUSED
     ARCHIVED
+}
+
+enum FlowSequenceStepType {
+    EMAIL
+    LINKEDIN
+}
+
+enum FlowSequenceStepSubtype {
+    LINKEDIN_CONNECTION_REQUEST
+    LINKEDIN_MESSAGE
 }
 
 enum FlowSequenceStepStatus {
