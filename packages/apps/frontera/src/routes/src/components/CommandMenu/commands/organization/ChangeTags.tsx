@@ -186,7 +186,13 @@ export const ChangeTags = observer(() => {
   );
 
   return (
-    <Command shouldFilter={false} label='Change or add tags...'>
+    <Command
+      shouldFilter={false}
+      label='Change or add tags...'
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <CommandInput
         label={label}
         value={search}

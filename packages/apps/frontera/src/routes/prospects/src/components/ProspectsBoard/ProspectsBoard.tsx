@@ -108,7 +108,7 @@ export const ProspectsBoard = observer(() => {
       store.ui.commandMenu.setType('ChangeStage');
       store.ui.commandMenu.setOpen(true);
     },
-    { when: !!focused },
+    { when: !!focused && !store.ui.commandMenu.isOpen },
   );
 
   useKeys(
@@ -119,7 +119,7 @@ export const ProspectsBoard = observer(() => {
       store.ui.commandMenu.setType('RenameOpportunityName');
       store.ui.commandMenu.setOpen(true);
     },
-    { when: !!focused },
+    { when: !!focused && !store.ui.commandMenu.isOpen },
   );
   useKeys(
     ['Shift', 'O'],
@@ -129,7 +129,7 @@ export const ProspectsBoard = observer(() => {
       store.ui.commandMenu.setType('AssignOwner');
       store.ui.commandMenu.setOpen(true);
     },
-    { when: !!focused },
+    { when: !!focused && !store.ui.commandMenu.isOpen },
   );
 
   useModKey(
@@ -138,7 +138,7 @@ export const ProspectsBoard = observer(() => {
       store.ui.commandMenu.setType('DeleteConfirmationModal');
       store.ui.commandMenu.setOpen(true);
     },
-    { when: !!focused },
+    { when: !!focused && !store.ui.commandMenu.isOpen },
   );
 
   return (

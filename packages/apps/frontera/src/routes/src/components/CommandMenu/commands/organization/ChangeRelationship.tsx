@@ -92,7 +92,12 @@ export const ChangeRelationship = observer(() => {
     .otherwise(() => []);
 
   return (
-    <Command label='Change Relationship'>
+    <Command
+      label='Change Relationship'
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <CommandInput
         label={label}
         placeholder='Change relationship...'

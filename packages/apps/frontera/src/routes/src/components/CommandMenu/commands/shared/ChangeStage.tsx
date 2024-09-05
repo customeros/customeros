@@ -150,7 +150,12 @@ export const ChangeStage = observer(() => {
   };
 
   return (
-    <Command label='Change Stage'>
+    <Command
+      label='Change Stage'
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <CommandInput label={label} placeholder='Change stage...' />
 
       <Command.List>

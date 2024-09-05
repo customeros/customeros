@@ -33,6 +33,7 @@ export const ChangeBulkArrEstimate = observer(() => {
 
   const handleEnterKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.stopPropagation();
       context.ids?.forEach((id) => {
         const opportunity = store.opportunities.value.get(id);
 

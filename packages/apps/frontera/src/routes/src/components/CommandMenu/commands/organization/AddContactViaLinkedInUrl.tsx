@@ -45,7 +45,12 @@ export const AddContactViaLinkedInUrl = observer(() => {
   };
 
   return (
-    <Command label={`Add contact via LinkedIn`}>
+    <Command
+      label={`Add contact via LinkedIn`}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <CommandInput
         value={url}
         label={label}
