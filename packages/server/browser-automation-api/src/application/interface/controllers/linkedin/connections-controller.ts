@@ -3,9 +3,11 @@ import { validationResult } from "express-validator";
 
 import { logger } from "@/infrastructure";
 import { ErrorParser } from "@/util/error";
-import { LinkedinService } from "@/application/services/linkedin/linkedin-service";
+import { ScheduleService } from "@/application/services/schedule-service";
 
 export class ConnectionsController {
+  private scheduleService = ScheduleService.getInstance();
+
   constructor() {
     this.scrapeConnections = this.scrapeConnections.bind(this);
   }
@@ -21,11 +23,23 @@ export class ConnectionsController {
       });
     }
 
-    const linkedinService = new LinkedinService(res.locals.browserConfig);
+    if (!res.locals.browserConfig) {
+      return res.status(400).send({
+        success: false,
+        message: "Browser config not found",
+      });
+    }
 
     try {
-      const connectionUrls = await linkedinService.scrapeConnections();
-      res.send({ success: true, connectionUrls });
+      const automationRun = await this.scheduleService.createAutomationRun(
+        res.locals.browserConfig,
+        "FIND_CONNECTIONS",
+      );
+      res.send({
+        success: true,
+        message: "Browser automation scheduled successfully",
+        data: automationRun,
+      });
     } catch (err) {
       const error = ErrorParser.parse(err);
       logger.error("Error in ConnectController", {

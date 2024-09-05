@@ -1,5 +1,4 @@
 import { Server } from "@/infrastructure";
-import { Browser } from "@/infrastructure/scraper/browser";
 import { AuthMiddleware } from "@/infrastructure/middleware";
 import { UserRepository } from "@/infrastructure/persistance/neo4j/repositories";
 import {
@@ -29,7 +28,6 @@ export class App {
     server.instance.use("/linkedin", new LinkedinRouter().router);
     server.instance.use("/proxy", new ProxyRouter().router);
 
-    Browser.getInstance();
     ScheduleService.getInstance().pollBrowserAutomationRuns();
   }
 }

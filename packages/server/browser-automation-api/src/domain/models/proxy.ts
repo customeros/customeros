@@ -11,7 +11,7 @@ export type ProxyPoolPayload = Pick<
   "url" | "username" | "password" | "enabled"
 >;
 
-export class ProxyPool {
+export class Proxy {
   id: number;
   url: string;
   username: string;
@@ -35,7 +35,7 @@ export class ProxyPool {
     try {
       return await proxyPoolRepository.insert(values);
     } catch (err) {
-      ProxyPool.handleError(err);
+      Proxy.handleError(err);
     }
   }
 
@@ -46,8 +46,18 @@ export class ProxyPool {
     try {
       return await proxyPoolRepository.updateById(values);
     } catch (err) {
-      ProxyPool.handleError(err);
+      Proxy.handleError(err);
     }
+  }
+
+  static toBrowserHeader(values: ProxyPoolTable) {
+    return JSON.stringify({
+      proxy: {
+        server: values.url,
+        username: values.username,
+        password: values.password,
+      },
+    });
   }
 
   static handleError(err: any) {

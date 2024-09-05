@@ -1,4 +1,4 @@
-import { type ProxyPool } from "@/domain/models/proxy-pool";
+import { type Proxy } from "@/domain/models/proxy";
 
 export class ProxyResponseDTO {
   id: number;
@@ -6,7 +6,7 @@ export class ProxyResponseDTO {
   createdAt: string | null;
   updatedAt: string | null;
 
-  constructor(values: ProxyPool) {
+  constructor(values: Proxy) {
     this.id = values.id;
     this.url = values.url;
     this.createdAt = values.createdAt;
