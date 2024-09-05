@@ -15,6 +15,7 @@ type Config struct {
 	EmailConfig     EmailConfig
 	ScrubbyIoConfig ScrubbyIoConfig
 	TrueinboxConfig TrueinboxConfig
+	EnrowConfig     EnrowConfig
 
 	Postgres config.PostgresConfig
 	Neo4j    config.Neo4jConfig
@@ -54,4 +55,11 @@ type TrueinboxConfig struct {
 	ApiUrl       string `env:"TRUEINBOX_API_URL" envDefault:"https://api.trueinbox.io" validate:"required"`
 	ApiKey       string `env:"TRUEINBOX_API_KEY" validate:"required"`
 	CacheTtlDays int    `env:"TRUEINBOX_CACHE_TTL_DAYS" envDefault:"30" validate:"required"`
+}
+
+type EnrowConfig struct {
+	ApiUrl                string `env:"ENROW_API_URL" envDefault:"https://api.enrow.io" validate:"required"`
+	ApiKey                string `env:"ENROW_API_KEY" validate:"required"`
+	CacheTtlDays          int    `env:"ENROW_CACHE_TTL_DAYS" envDefault:"14" validate:"required"`
+	MaxWaitResultsSeconds int    `env:"ENROW_MAX_WAIT_RESULTS_SECONDS" envDefault:"5" validate:"required"`
 }
