@@ -62,6 +62,20 @@ export class BrowserService {
     }
   }
 
+  async getBrowserAutomationRun(
+    id: number,
+  ): Promise<BrowserAutomationRun | undefined> {
+    try {
+      const value = await this.browserAutomationRunRepository.selectById(id);
+      if (!value) {
+        return undefined;
+      }
+      return new BrowserAutomationRun(value);
+    } catch (err) {
+      BrowserService.handleError(err);
+    }
+  }
+
   private static handleError(err: unknown) {
     const error = ErrorParser.parse(err);
     logger.error("Error in BrowserService", {

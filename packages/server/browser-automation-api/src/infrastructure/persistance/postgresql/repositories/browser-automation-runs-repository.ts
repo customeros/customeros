@@ -31,6 +31,19 @@ export class BrowserAutomationRunsRepository {
     }
   }
 
+  async selectById(id: number) {
+    try {
+      const results = await db
+        .select()
+        .from(browserAutomationRuns)
+        .where(eq(browserAutomationRuns.id, id));
+
+      return results?.[0];
+    } catch (err) {
+      BrowserAutomationRunsRepository.handleError(err);
+    }
+  }
+
   async selectAllScheduled() {
     try {
       const results = await db

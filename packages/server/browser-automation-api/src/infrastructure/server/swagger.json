@@ -2,7 +2,7 @@
   "swagger": "2.0",
   "info": {
     "title": "Browser Automation Service (B.A.S)",
-    "description": "A sample API that uses a petstore as an example to demonstrate features in the swagger-2.0 specification",
+    "description": "The **Browser Automation Service (B.A.S)** provides browser automation functionalities, allowing **CustomerOS** users to manage browser settings and schedule automation tasks for increased productivity.\n\n## **Key Features:**\n\n- **Browser Configuration Management:**\n  - Configure and manage browser settings (cookies, user agents, etc.).\n  - Create, update, and retrieve browser configurations associated with each user.\n\n- **Automation Tasks:**\n  - Schedule automated tasks, such as:\n    - Sending LinkedIn messages.\n    - Sending LinkedIn connection requests.\n  - Automation runs can be scheduled and tracked, with support for various statuses (e.g., *Scheduled*, *Running*, *Completed*).\n\n## **Use Case:**\nB.A.S is designed to automate repetitive browser-based tasks, improving workflow efficiency and enhancing user engagement on platforms like LinkedIn, while reducing manual efforts.",
     "version": "1.0.0"
   },
   "host": "bas.customeros.ai",
@@ -181,6 +181,56 @@
                     "logLocation": null
                   }
                 ]
+              }
+            }
+          }
+        }
+      }
+    },
+    "/browser/run/:id": {
+      "get": {
+        "summary": "Get a browser automation run by id",
+        "description": "Returns a browser automation run by id",
+        "produces": ["application/json"],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "description": "The id of the browser automation run",
+            "required": true,
+            "type": "integer",
+            "format": "int64"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A BrowserAutomationRun object",
+            "schema": {
+              "$ref": "#/definitions/BrowserAutomationRun"
+            },
+            "examples": {
+              "application/json": {
+                "success": true,
+                "message": "Browser automation run retrieved successfully",
+                "data": {
+                  "id": 1,
+                  "browserConfigId": 1,
+                  "userId": "c15dfe44-de8b-46d7-94c0-4fea9e407540",
+                  "tenant": "customeros",
+                  "type": "SEND_MESSAGE",
+                  "payload": "{\"profileUrl\":\"https://www.linkedin.com/in/johndoe/\",\"message\":\"Hi John, how are you?.\"}",
+                  "status": "SCHEDULED",
+                  "scheduledAt": null,
+                  "createdAt": "2024-09-03 16:11:55.544341",
+                  "updatedAt": "2024-09-03 16:11:55.544341",
+                  "startedAt": null,
+                  "finishedAt": null,
+                  "runDuration": null,
+                  "retryCount": 0,
+                  "triggeredBy": null,
+                  "priority": 0,
+                  "logLocation": null
+                }
               }
             }
           }
