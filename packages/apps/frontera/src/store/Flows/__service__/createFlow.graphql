@@ -1,0 +1,18 @@
+mutation createSequence($input: FlowSequenceStoreInput!) {
+  flow_sequence_store(input: $input) {
+    name
+    description
+    flow {
+      metadata {
+        id
+      }
+      name
+      description
+      status
+    }
+    status
+    metadata {
+      id
+    }
+  }
+}

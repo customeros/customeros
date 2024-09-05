@@ -203,3 +203,22 @@ export const opportunitiesHelperTextMap: Record<string, string> = {
   [ColumnViewType.OpportunitiesNextStep]: 'E.g. Qualified',
   [ColumnViewType.OpportunitiesOwner]: 'E.g. Howard Hu',
 };
+
+export const flowsMap: Record<string, string> = {
+  [ColumnViewType.FlowName]: 'Flow',
+  [ColumnViewType.FlowSequenceName]: 'Sequence',
+  [ColumnViewType.FlowSequenceStatus]: 'Status',
+  [ColumnViewType.FlowSequenceStatusUnsuccessfulCount]: 'Ended Early',
+  [ColumnViewType.FlowSequenceStatusSuccessfulCount]: 'Completed',
+  [ColumnViewType.FlowSequenceStatusInProgressCount]: 'In Progress',
+  [ColumnViewType.FlowSequenceStatusPendingCount]: 'Not Started',
+};
+export const flowsHelperTextMap: Record<string, string> = {
+  [ColumnViewType.FlowName]: 'E.g. Aerospace CTO',
+  [ColumnViewType.FlowSequenceName]: 'E.g. Education',
+  [ColumnViewType.FlowSequenceStatus]: 'E.g. Active',
+  [ColumnViewType.FlowSequenceStatusUnsuccessfulCount]: 'Eg. 12/14%',
+  [ColumnViewType.FlowSequenceStatusSuccessfulCount]: 'Eg. 12/14%',
+  [ColumnViewType.FlowSequenceStatusInProgressCount]: 'Eg. 12/14%',
+  [ColumnViewType.FlowSequenceStatusPendingCount]: 'Eg. 12/14%',
+};

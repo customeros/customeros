@@ -38,6 +38,7 @@ import {
   EditPhoneNumber,
   ContactCommands,
   ChangeArrEstimate,
+  CreateNewSequence,
   ChangeRelationship,
   UpdateHealthStatus,
   AddNewOrganization,
@@ -97,6 +98,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   DuplicateView: <DuplicateView />,
   OpportunityBulkCommands: <OpportunityBulkCommands />,
   ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
+  CreateNewSequence: <CreateNewSequence />,
 };
 
 export const CommandMenu = observer(() => {

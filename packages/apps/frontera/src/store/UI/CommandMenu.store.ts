@@ -37,6 +37,7 @@ export type CommandMenuType =
   | 'DuplicateView'
   | 'OpportunityBulkCommands'
   | 'ChangeBulkArrEstimate'
+  | 'CreateNewSequence'
   | 'ContactBulkCommands';
 
 export type Context = {

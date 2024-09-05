@@ -1,5 +1,6 @@
 import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
+import { FlowsStore } from '@store/Flows/Flows.store.ts';
 import { configurePersistable } from 'mobx-persist-store';
 import { FlowSequencesStore } from '@store/Sequences/FlowSequences.store.ts';
 
@@ -51,6 +52,7 @@ export class RootStore {
   invoices: InvoicesStore;
   contacts: ContactsStore;
   flowSequences: FlowSequencesStore;
+  flows: FlowsStore;
   contracts: ContractsStore;
   reminders: RemindersStore;
   globalCache: GlobalCacheStore;
@@ -85,6 +87,7 @@ export class RootStore {
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.flowSequences = new FlowSequencesStore(this, this.transport);
+    this.flows = new FlowsStore(this, this.transport);
 
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,
@@ -121,6 +124,8 @@ export class RootStore {
       this.users.bootstrap(),
       this.contacts.bootstrap(),
       this.workFlows.bootstrap(),
+      this.flows.bootstrap(),
+      this.flowSequences.bootstrap(),
     ]);
   }
 

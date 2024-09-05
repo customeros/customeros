@@ -12,3 +12,4 @@ export * from './ContactHub';
 export * from './ContactCommands';
 export * from './ContactBulkCommands';
 export * from './tableViewDef';
+export * from './sequences';

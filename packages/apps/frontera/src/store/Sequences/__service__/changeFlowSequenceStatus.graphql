@@ -1,0 +1,10 @@
+mutation changeFlowSequenceStatus($id: ID!, $stage: FlowSequenceStatus!) {
+  flow_sequence_changeStatus(
+    id: $id
+    status: $stage
+  ) {
+    metadata {
+      id
+    }
+  }
+}

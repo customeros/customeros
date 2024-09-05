@@ -43,11 +43,19 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '0');
 
   const columns =
-    tableViewDef?.value?.columns.map((c) => ({
-      ...c,
-      label: optionsMap[c.columnType],
-      helperText: helperTextMap[c.columnType],
-    })) ?? [];
+    tableViewDef?.value?.columns
+      .filter(
+        (c) =>
+          ![
+            ColumnViewType.FlowSequenceContactCount,
+            ColumnViewType.FlowName,
+          ].includes(c.columnType),
+      )
+      .map((c) => ({
+        ...c,
+        label: optionsMap[c.columnType],
+        helperText: helperTextMap[c.columnType],
+      })) ?? [];
 
   const leadingPinnedColumns = match(tableViewDef?.value?.tableId)
     .with(TableIdType.Organizations, () =>

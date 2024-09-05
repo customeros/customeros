@@ -1550,22 +1550,22 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
-  description?: Maybe<Scalars['String']['output']>;
+  description: Scalars['String']['output'];
   metadata: Metadata;
-  name?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
   sequences: Array<FlowSequence>;
-  status?: Maybe<FlowStatus>;
+  status: FlowStatus;
 };
 
 export type FlowSequence = MetadataInterface & {
   __typename?: 'FlowSequence';
   contacts: Array<FlowSequenceContact>;
-  description?: Maybe<Scalars['String']['output']>;
-  flow: Array<Flow>;
+  description: Scalars['String']['output'];
+  flow: Flow;
   mailboxes: Array<Mailbox>;
   metadata: Metadata;
-  name?: Maybe<Scalars['String']['output']>;
-  status?: Maybe<FlowSequenceStatus>;
+  name: Scalars['String']['output'];
+  status: FlowSequenceStatus;
   steps: Array<FlowSequenceStep>;
 };
 
@@ -1585,12 +1585,12 @@ export enum FlowSequenceStatus {
 
 export type FlowSequenceStep = MetadataInterface & {
   __typename?: 'FlowSequenceStep';
-  Template?: Maybe<Scalars['String']['output']>;
-  Text?: Maybe<Scalars['String']['output']>;
-  Type?: Maybe<Scalars['String']['output']>;
-  email: Email;
+  body: Scalars['String']['output'];
   metadata: Metadata;
+  name: Scalars['String']['output'];
   status: FlowSequenceStepStatus;
+  subtype?: Maybe<FlowSequenceStepSubtype>;
+  type: FlowSequenceStepType;
 };
 
 export enum FlowSequenceStepStatus {
@@ -1599,6 +1599,23 @@ export enum FlowSequenceStepStatus {
   Inactive = 'INACTIVE',
   Paused = 'PAUSED',
 }
+
+export enum FlowSequenceStepSubtype {
+  LinkedinConnectionRequest = 'LINKEDIN_CONNECTION_REQUEST',
+  LinkedinMessage = 'LINKEDIN_MESSAGE',
+}
+
+export enum FlowSequenceStepType {
+  Email = 'EMAIL',
+  Linkedin = 'LINKEDIN',
+}
+
+export type FlowSequenceStoreInput = {
+  description: Scalars['String']['input'];
+  flowId?: InputMaybe<Scalars['ID']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  name: Scalars['String']['input'];
+};
 
 export enum FlowStatus {
   Active = 'ACTIVE',
@@ -2388,6 +2405,10 @@ export type Mutation = {
   fieldSetDeleteFromContact: Result;
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
+  flow_changeStatus: Flow;
+  flow_sequence_changeStatus: FlowSequence;
+  flow_sequence_step_changeStatus: FlowSequenceStep;
+  flow_sequence_store: FlowSequence;
   interactionEvent_LinkAttachment: Result;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
@@ -2813,6 +2834,25 @@ export type MutationFieldSetMergeToContactArgs = {
 export type MutationFieldSetUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   input: FieldSetUpdateInput;
+};
+
+export type MutationFlow_ChangeStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: FlowStatus;
+};
+
+export type MutationFlow_Sequence_ChangeStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: FlowSequenceStatus;
+};
+
+export type MutationFlow_Sequence_Step_ChangeStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: FlowSequenceStepStatus;
+};
+
+export type MutationFlow_Sequence_StoreArgs = {
+  input: FlowSequenceStoreInput;
 };
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {
