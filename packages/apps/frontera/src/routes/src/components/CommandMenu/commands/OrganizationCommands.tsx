@@ -131,7 +131,7 @@ export const OrganizationCommands = observer(() => {
             });
           }}
         >
-          Edit website...
+          Edit website
         </CommandItem>
         <CommandItem
           leftAccessory={<AlignHorizontalCentre02 />}

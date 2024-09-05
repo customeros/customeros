@@ -199,7 +199,6 @@ export const ChangeTags = observer(() => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleSelect(search as any);
           }
-          e.stopPropagation();
         }}
       />
       <CommandGroup>

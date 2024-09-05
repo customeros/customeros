@@ -14,6 +14,7 @@ const variants = ['solid', 'outline', 'link', 'ghost'];
 
 const solidButton = (color: string) => `
     ${color}: [
+    
     'text-white',
     'border',
     'border-solid',

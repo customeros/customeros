@@ -1,8 +1,8 @@
 import { observer } from 'mobx-react-lite';
 
 import { User01 } from '@ui/media/icons/User01';
+import { Delete } from '@ui/media/icons/Delete';
 import { IconButton } from '@ui/form/IconButton';
-import { Trash01 } from '@ui/media/icons/Trash01';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
@@ -32,7 +32,7 @@ export const MoreMenu = observer(
 
         <MenuList>
           <MenuItem onClick={onNextStepsClick}>
-            {hasNextSteps ? <Trash01 /> : <ArrowsRight />}
+            {hasNextSteps ? <Delete /> : <ArrowsRight />}
             {hasNextSteps ? 'Remove next step' : 'Add next step'}
           </MenuItem>
           <MenuItem onClick={() => store.ui.commandMenu.toggle('AssignOwner')}>

@@ -101,10 +101,6 @@ export const ChangeRelationship = observer(() => {
             e.stopPropagation();
           }
 
-          if (e.key === 'Enter') {
-            e.stopPropagation();
-          }
-
           if (e.metaKey && e.key === 'Enter') {
             store.ui.commandMenu.setOpen(false);
           }

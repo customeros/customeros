@@ -32,8 +32,8 @@ export const InfoDialog = ({
     <AlertDialog isOpen={isOpen} onClose={onClose}>
       <AlertDialogOverlay>
         <AlertDialogContent className='top-[25%] rounded-xl '>
-          <AlertDialogHeader className='text-lg font-bold'>
-            {label && <p className='font-semibold text-lg'>{label}</p>}
+          <AlertDialogHeader className='font-bold'>
+            {label && <p className='font-semibold '>{label}</p>}
             {children ??
               (description && (
                 <p className='mt-4 text-base text-gray-600 font-normal'>

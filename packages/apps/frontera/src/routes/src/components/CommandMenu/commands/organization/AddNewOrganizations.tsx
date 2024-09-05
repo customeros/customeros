@@ -89,7 +89,7 @@ export const AddNewOrganization = observer(() => {
   return (
     <Command label={`Rename `}>
       <div className='p-6 pb-4 flex flex-col gap-1 '>
-        <p className='text-lg font-semibold'>Create new organization</p>
+        <p className='font-semibold'>Create new organization</p>
         <p className='text-sm'>
           We’ll auto-enrich this organization using its website
         </p>
