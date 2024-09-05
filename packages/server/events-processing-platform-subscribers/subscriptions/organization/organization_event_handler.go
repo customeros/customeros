@@ -150,7 +150,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
-		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, enrichOrganizationResponse)
+		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
 	}
 
 	return nil
@@ -222,82 +222,57 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
 		updateGrpcRequest.Employees = data.Employees
 	}
-	if brandfetch.Company.FoundedYear > 0 {
+	if data.FoundedYear > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
-		updateGrpcRequest.YearFounded = &brandfetch.Company.FoundedYear
+		updateGrpcRequest.YearFounded = &data.FoundedYear
 	}
-	if brandfetch.Description != "" {
+	if data.ShortDescription != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
-		updateGrpcRequest.ValueProposition = brandfetch.Description
+		updateGrpcRequest.ValueProposition = data.ShortDescription
 	}
-	if brandfetch.LongDescription != "" {
+	if data.LongDescription != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
-		updateGrpcRequest.Description = brandfetch.LongDescription
+		updateGrpcRequest.Description = data.LongDescription
 	}
-
-	// Set public indicator
-	if brandfetch.Company.Kind != "" {
+	if data.Public != nil {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_IS_PUBLIC)
-		if brandfetch.Company.Kind == "PUBLIC_COMPANY" {
-			updateGrpcRequest.IsPublic = true
-		} else {
-			updateGrpcRequest.IsPublic = false
-		}
+		updateGrpcRequest.IsPublic = *data.Public
 	}
 
 	// Set company name
-	if brandfetch.Name != "" {
+	if data.Name != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-		updateGrpcRequest.Name = brandfetch.Name
-	} else if brandfetch.Domain != "" {
+		updateGrpcRequest.Name = data.Name
+	} else if data.Domain != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-		updateGrpcRequest.Name = brandfetch.Domain
+		updateGrpcRequest.Name = data.Domain
 	}
 
-	if brandfetch.Domain != "" && organizationEntity.Website == "" {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
-		updateGrpcRequest.Website = brandfetch.Domain
+	// Set company website
+	if organizationEntity.Website == "" {
+		if data.Website != "" {
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+			updateGrpcRequest.Website = data.Website
+		} else if data.Domain != "" {
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_WEBSITE)
+			updateGrpcRequest.Website = data.Domain
+		}
 	}
 
 	// Set company logo and icon urls
-	logoUrl := ""
-	iconUrl := ""
-	if len(brandfetch.Logos) > 0 {
-		for _, logo := range brandfetch.Logos {
-			if logo.Type == "icon" {
-				iconUrl = logo.Formats[0].Src
-			} else if logo.Type == "symbol" && iconUrl == "" {
-				iconUrl = logo.Formats[0].Src
-			} else if logo.Type == "logo" {
-				logoUrl = logo.Formats[0].Src
-			} else if logo.Type == "other" && logoUrl == "" {
-				logoUrl = logo.Formats[0].Src
-			}
-		}
-	}
-	if logoUrl != "" {
+	if len(data.Logos) > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
-		updateGrpcRequest.LogoUrl = logoUrl
+		updateGrpcRequest.LogoUrl = data.Logos[0]
 	}
-	if iconUrl != "" {
+	if len(data.Icons) > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICON_URL)
-		updateGrpcRequest.IconUrl = iconUrl
+		updateGrpcRequest.IconUrl = data.Icons[0]
 	}
 
 	// set industry
-	industryName := ""
-	industryMaxScore := float64(0)
-	if len(brandfetch.Company.Industries) > 0 {
-		for _, industry := range brandfetch.Company.Industries {
-			if industry.Name != "" && industry.Score > industryMaxScore {
-				industryName = industry.Name
-				industryMaxScore = industry.Score
-			}
-		}
-	}
-	if industryName != "" {
+	if data.Industry != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
-		updateGrpcRequest.Industry = industryName
+		updateGrpcRequest.Industry = data.Industry
 	}
 
 	updateGrpcRequest.FieldsMask = organizationFieldsMask
@@ -311,19 +286,22 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 	}
 
 	//add location
-	if !brandfetch.Company.LocationIsEmpty() {
+	if !data.Location.IsEmpty() {
 		_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
 			return h.grpcClients.OrganizationClient.AddLocation(ctx, &organizationpb.OrganizationAddLocationGrpcRequest{
 				Tenant:         tenant,
 				OrganizationId: organizationEntity.ID,
 				LocationDetails: &locationpb.LocationDetails{
-					Country:       brandfetch.Company.Location.Country,
-					CountryCodeA2: brandfetch.Company.Location.CountryCodeA2,
-					Locality:      brandfetch.Company.Location.City,
-					Region:        brandfetch.Company.Location.State,
+					Country:       data.Location.Country,
+					CountryCodeA2: data.Location.CountryCodeA2,
+					Locality:      data.Location.Locality,
+					Region:        data.Location.Region,
+					PostalCode:    data.Location.PostalCode,
+					AddressLine1:  data.Location.AddressLine1,
+					AddressLine2:  data.Location.AddressLine2,
 				},
 				SourceFields: &commonpb.SourceFields{
-					AppSource: constants.AppBrandfetch,
+					AppSource: constants.AppEnrichment,
 					Source:    constants.SourceOpenline,
 				},
 			})
@@ -334,8 +312,8 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 	}
 
 	//add socials
-	for _, link := range brandfetch.Links {
-		h.addSocial(ctx, organizationEntity.ID, tenant, link.Url, constants.AppBrandfetch)
+	for _, link := range data.Socials {
+		h.addSocial(ctx, organizationEntity.ID, tenant, link, constants.AppEnrichment)
 	}
 }
 

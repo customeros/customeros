@@ -12,6 +12,7 @@ const (
 
 	AppBrandfetch = "brandfetch"
 	AppScrapin    = "scrapin"
+	AppEnrichment = "enrichment-api"
 
 	PromptType_EmailSummary         = "EmailSummary"
 	PromptType_EmailActionItems     = "EmailActionItems"

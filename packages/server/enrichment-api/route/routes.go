@@ -266,6 +266,7 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		var scrapinResponseBody *postgresEntity.ScrapInResponseBody
 		var brandfetchResponseBody *postgresEntity.BrandfetchResponseBody
+		domain := request.Domain
 
 		// Step 1 - Scrapin by linked in url
 		if request.LinkedinUrl != "" {
@@ -285,8 +286,8 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 		foundByLinkedInUrl := scrapinResponseBody != nil && scrapinResponseBody.Company != nil
 
 		// Step 2 - Scrapin by email
-		if !foundByLinkedInUrl && request.Domain != "" {
-			_, response, err := services.ScrapeInService.ScrapInSearchCompany(ctx, request.Domain)
+		if !foundByLinkedInUrl && domain != "" {
+			_, response, err := services.ScrapeInService.ScrapInSearchCompany(ctx, domain)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchCompany"))
 				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
@@ -300,12 +301,11 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 		}
 
 		// Step3 - Brandfetch
-		domainForBrandfetch := request.Domain
-		if domainForBrandfetch == "" {
-			domainForBrandfetch = utils.ExtractDomain(scrapinResponseBody.Company.WebsiteUrl)
+		if domain == "" {
+			domain = utils.ExtractDomain(scrapinResponseBody.Company.WebsiteUrl)
 		}
-		if domainForBrandfetch != "" {
-			response, err := services.BrandfetchService.GetByDomain(ctx, request.Domain)
+		if domain != "" {
+			response, err := services.BrandfetchService.GetByDomain(ctx, domain)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Brandfetch by domain"))
 				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
@@ -332,7 +332,7 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 		}
 
 		// combine data
-		combinedData := combineData(scrapinResponseBody, brandfetchResponseBody)
+		combinedData := combineData(scrapinResponseBody, brandfetchResponseBody, domain)
 
 		c.JSON(http.StatusOK, model.EnrichOrganizationResponse{
 			Status:              "success",
@@ -343,6 +343,160 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func combineData(scrapin *postgresEntity.ScrapInResponseBody, brandfetch *postgresEntity.BrandfetchResponseBody) model.EnrichOrganizationResponseData {
+func combineData(scrapin *postgresEntity.ScrapInResponseBody, brandfetch *postgresEntity.BrandfetchResponseBody, domain string) model.EnrichOrganizationResponseData {
+	data := model.EnrichOrganizationResponseData{}
 
+	updateResponseWithScrapinData(&data, scrapin, domain)
+	updateResponseWithBrandfetchData(&data, brandfetch)
+
+	return data
+}
+
+func updateResponseWithScrapinData(d *model.EnrichOrganizationResponseData, scrapin *postgresEntity.ScrapInResponseBody, domain string) {
+	if scrapin == nil {
+		return
+	}
+	if d.Employees == 0 {
+		d.Employees = scrapin.Company.GetEmployeeCount()
+	}
+	if d.FoundedYear == 0 {
+		d.FoundedYear = int64(scrapin.Company.FoundedOn.Year)
+	}
+	if d.Name == "" {
+		d.Name = scrapin.Company.Name
+	}
+	if d.ShortDescription == "" {
+		if scrapin.Company.Tagline != nil {
+			if tagline, ok := scrapin.Company.Tagline.(string); ok {
+				d.ShortDescription = tagline
+			}
+		}
+	}
+	if d.LongDescription == "" {
+		d.LongDescription = scrapin.Company.Description
+	}
+	if d.Domain == "" {
+		if domain != "" {
+			d.Domain = domain
+		} else {
+			d.Domain = utils.ExtractDomain(scrapin.Company.WebsiteUrl)
+		}
+	}
+	if d.Website == "" {
+		d.Website = scrapin.Company.WebsiteUrl
+	}
+	if scrapin.Company.Logo != "" {
+		d.Logos = append(d.Logos, scrapin.Company.Logo)
+	}
+	if d.Industry == "" {
+		d.Industry = scrapin.Company.Industry
+	}
+	d.Socials = append(d.Socials, scrapin.Company.LinkedInUrl)
+	d.Socials = utils.RemoveDuplicates(d.Socials)
+	d.Socials = utils.RemoveEmpties(d.Socials)
+	if !scrapin.Company.HeadquarterIsEmpty() {
+		d.Location.IsHeadquarter = utils.BoolPtr(true)
+		if d.Location.Country == "" {
+			d.Location.Country = scrapin.Company.Headquarter.Country
+		}
+		if d.Location.Locality == "" {
+			d.Location.Locality = scrapin.Company.Headquarter.City
+		}
+		if d.Location.Region == "" {
+			d.Location.Region = scrapin.Company.Headquarter.GeographicArea
+		}
+		if d.Location.PostalCode == "" {
+			d.Location.PostalCode = scrapin.Company.Headquarter.PostalCode
+		}
+		if d.Location.AddressLine1 == "" {
+			d.Location.AddressLine1 = scrapin.Company.Headquarter.Street1
+		}
+		if d.Location.AddressLine2 == "" {
+			if scrapin.Company.Headquarter.Street2 != nil {
+				if street2, ok := scrapin.Company.Headquarter.Street2.(string); ok {
+					d.Location.AddressLine2 = street2
+				}
+			}
+		}
+	}
+}
+
+func updateResponseWithBrandfetchData(d *model.EnrichOrganizationResponseData, brandfetch *postgresEntity.BrandfetchResponseBody) {
+	if brandfetch == nil {
+		return
+	}
+
+	if d.Employees == 0 {
+		d.Employees = brandfetch.Company.GetEmployees()
+	}
+	if d.FoundedYear == 0 {
+		d.FoundedYear = brandfetch.Company.FoundedYear
+	}
+	if d.Name == "" {
+		d.Name = brandfetch.Name
+	}
+	if d.ShortDescription == "" {
+		d.ShortDescription = brandfetch.Description
+	}
+	if d.LongDescription == "" {
+		d.LongDescription = brandfetch.LongDescription
+	}
+	if d.Domain == "" {
+		d.Domain = brandfetch.Domain
+	}
+	if d.Website == "" {
+		d.Website = brandfetch.Domain
+	}
+	if brandfetch.Company.Kind != "" {
+		if brandfetch.Company.Kind == "PUBLIC_COMPANY" {
+			d.Public = utils.BoolPtr(true)
+		} else {
+			d.Public = utils.BoolPtr(false)
+		}
+	}
+	if len(brandfetch.Logos) > 0 {
+		for _, logo := range brandfetch.Logos {
+			if logo.Type == "icon" {
+				d.Icons = append(d.Icons, logo.Formats[0].Src)
+			} else if logo.Type == "symbol" {
+				d.Icons = append(d.Icons, logo.Formats[0].Src)
+			} else if logo.Type == "logo" {
+				d.Logos = append(d.Logos, logo.Formats[0].Src)
+			} else if logo.Type == "other" {
+				d.Logos = append(d.Logos, logo.Formats[0].Src)
+			}
+		}
+	}
+	if d.Industry == "" {
+		industryMaxScore := float64(0)
+		if len(brandfetch.Company.Industries) > 0 {
+			for _, industry := range brandfetch.Company.Industries {
+				if industry.Name != "" && industry.Score > industryMaxScore {
+					d.Industry = industry.Name
+					industryMaxScore = industry.Score
+				}
+			}
+		}
+	}
+
+	for _, link := range brandfetch.Links {
+		d.Socials = append(d.Socials, link.Url)
+	}
+	d.Socials = utils.RemoveDuplicates(d.Socials)
+	d.Socials = utils.RemoveEmpties(d.Socials)
+
+	if !brandfetch.Company.LocationIsEmpty() {
+		if d.Location.CountryCodeA2 == "" && d.Location.Country == "" {
+			d.Location.CountryCodeA2 = brandfetch.Company.Location.CountryCodeA2
+			d.Location.Country = brandfetch.Company.Location.Country
+		} else if d.Location.Country == brandfetch.Company.Location.Country && d.Location.CountryCodeA2 == "" {
+			d.Location.CountryCodeA2 = brandfetch.Company.Location.CountryCodeA2
+		}
+		if d.Location.Locality == "" {
+			d.Location.Locality = brandfetch.Company.Location.City
+		}
+		if d.Location.Region == "" {
+			d.Location.Region = brandfetch.Company.Location.Region
+		}
+	}
 }
