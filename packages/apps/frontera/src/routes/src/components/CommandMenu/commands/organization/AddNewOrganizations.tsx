@@ -87,7 +87,12 @@ export const AddNewOrganization = observer(() => {
   );
 
   return (
-    <Command label={`Rename `}>
+    <Command
+      label={`Rename `}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <div className='p-6 pb-4 flex flex-col gap-1 '>
         <p className='text-lg font-semibold'>Create new organization</p>
         <p className='text-sm'>

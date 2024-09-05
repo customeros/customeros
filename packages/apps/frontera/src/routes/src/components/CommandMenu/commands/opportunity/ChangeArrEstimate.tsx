@@ -38,6 +38,7 @@ export const ChangeArrEstimate = observer(() => {
 
   const handleEnterKey = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter') {
+      e.stopPropagation();
       opportunity?.update((value) => {
         value.maxAmount = parseFloat(unmaskedValue);
 

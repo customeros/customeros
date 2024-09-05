@@ -41,7 +41,12 @@ export const RenameOrganizationProperty = observer(() => {
   const [name, setName] = useState(() => defaultValue ?? '');
 
   return (
-    <Command label={`Rename ${context.property}`}>
+    <Command
+      label={`Rename ${context.property}`}
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <CommandInput
         value={name}
         label={label}

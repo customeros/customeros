@@ -186,7 +186,13 @@ export const ChangeTags = observer(() => {
   );
 
   return (
-    <Command shouldFilter={false} label='Change or add tags...'>
+    <Command
+      shouldFilter={false}
+      label='Change or add tags...'
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <CommandInput
         label={label}
         value={search}
@@ -199,7 +205,6 @@ export const ChangeTags = observer(() => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             handleSelect(search as any);
           }
-          e.stopPropagation();
         }}
       />
       <CommandGroup>

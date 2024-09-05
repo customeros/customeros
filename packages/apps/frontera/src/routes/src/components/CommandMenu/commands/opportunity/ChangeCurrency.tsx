@@ -47,7 +47,12 @@ export const ChangeCurrency = observer(() => {
   };
 
   return (
-    <Command label='Change currency'>
+    <Command
+      label='Change currency'
+      onKeyDown={(e) => {
+        e.stopPropagation();
+      }}
+    >
       <CommandInput label={label} placeholder='Change ARR currency...' />
 
       <Command.List>
