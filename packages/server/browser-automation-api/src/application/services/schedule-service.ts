@@ -1,4 +1,5 @@
 import { ErrorParser } from "@/util/error";
+import { Proxy } from "@/domain/models/proxy";
 import { logger } from "@/infrastructure/logger";
 import { Scheduler } from "@/infrastructure/scheduler";
 import { BrowserAutomationRun } from "@/domain/models/browser-automation-run";
@@ -7,11 +8,12 @@ import {
   type BrowserAutomationRunType,
   BrowserAutomationRunsRepository,
 } from "@/infrastructure/persistance/postgresql/repositories";
+import { LinkedinService } from "./linkedin/linkedin-service";
 import { BrowserConfig } from "@/domain/models/browser-config";
+import { ProxyPoolRepository } from "@/infrastructure/persistance/postgresql/repositories/proxy-pool-repository";
+import { AssignedProxiesRepository } from "@/infrastructure/persistance/postgresql/repositories/assigned-proxies-repository";
 import { BrowserAutomationRunErrorsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-errors-repository";
 import { BrowserAutomationRunResultsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-results-repository";
-
-import { LinkedinService } from "./linkedin/linkedin-service";
 
 export class ScheduleService {
   private static instance: ScheduleService;
@@ -23,6 +25,8 @@ export class ScheduleService {
     new BrowserAutomationRunResultsRepository();
   private browserAutomationRunErrorsRepository =
     new BrowserAutomationRunErrorsRepository();
+  private assignedProxiesRepository = new AssignedProxiesRepository();
+  private ProxyPoolRepository = new ProxyPoolRepository();
 
   constructor() {
     this.getUnscheduledRuns = this.getUnscheduledRuns.bind(this);
@@ -41,7 +45,7 @@ export class ScheduleService {
   public async createAutomationRun(
     browserConfig: BrowserConfig,
     type: BrowserAutomationRunType,
-    payload: Record<string, unknown>,
+    payload?: Record<string, unknown>,
   ) {
     try {
       return await BrowserAutomationRun.create(
@@ -50,7 +54,7 @@ export class ScheduleService {
           tenant: browserConfig.tenant,
           userId: browserConfig.userId,
           type,
-          payload: JSON.stringify(payload),
+          payload: payload ? JSON.stringify(payload) : undefined,
         },
         this.browserAutomationRunsRepository,
       );
@@ -73,8 +77,29 @@ export class ScheduleService {
       return;
     }
 
+    const assignedProxy = await this.assignedProxiesRepository.selectByUserId(
+      browserConfig?.userId,
+    );
+
+    if (!assignedProxy) {
+      logger.warn(
+        `Failed to find assigned proxy for user with id: ${browserConfig.userId}`,
+      );
+      return;
+    }
+
+    const proxy = await this.ProxyPoolRepository.selectById(
+      assignedProxy?.proxyPoolId,
+    );
+
+    if (!proxy) {
+      logger.warn(`Failed to find proxy with id: ${assignedProxy.proxyPoolId}`);
+      return;
+    }
+
     const linkedinService = new LinkedinService(
       new BrowserConfig(browserConfig),
+      Proxy.toBrowserHeader(proxy),
     );
 
     const jobParams = browserAutomationRun.toJobParams(

@@ -1,4 +1,5 @@
 import { logger } from "@/infrastructure";
+import { Proxy } from "@/domain/models/proxy";
 import { ErrorParser, StandardError } from "@/util/error";
 import { BrowserConfig } from "@/domain/models/browser-config";
 import { LinkedinAutomationService } from "@/infrastructure/scraper/services/linkedin-automation-service";
@@ -13,10 +14,14 @@ type LinkedinServiceMethodOptions = {
 export class LinkedinService {
   private linkedinAutomationService: LinkedinAutomationService;
 
-  constructor(private browserConfig: BrowserConfig) {
+  constructor(
+    private browserConfig: BrowserConfig,
+    private proxyHeader: string,
+  ) {
     this.linkedinAutomationService = new LinkedinAutomationService(
       JSON.parse(this.browserConfig.cookies ?? "{}"),
       this.browserConfig.userAgent as string,
+      this.proxyHeader,
     );
   }
 

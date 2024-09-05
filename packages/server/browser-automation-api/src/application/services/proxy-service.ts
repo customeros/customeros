@@ -1,9 +1,9 @@
 import sample from "lodash/sample";
 
 import { logger } from "@/infrastructure/logger";
-import { ProxyPool, ProxyPoolPayload } from "@/domain/models/proxy-pool";
 import { ErrorParser, StandardError } from "@/util/error";
 import { AssignedProxy } from "@/domain/models/assigned-proxy";
+import { Proxy, ProxyPoolPayload } from "@/domain/models/proxy";
 import { ProxyPoolRepository } from "@/infrastructure/persistance/postgresql/repositories/proxy-pool-repository";
 import { AssignedProxiesRepository } from "@/infrastructure/persistance/postgresql/repositories/assigned-proxies-repository";
 
@@ -16,10 +16,10 @@ export class ProxyService {
     this.assignedProxiesRepository = new AssignedProxiesRepository();
   }
 
-  async getProxyPool(): Promise<ProxyPool[] | undefined> {
+  async getProxyPool(): Promise<Proxy[] | undefined> {
     try {
       const values = await this.proxyPoolRepository.selectAll();
-      return (values ?? []).map((value) => new ProxyPool(value));
+      return (values ?? []).map((value) => new Proxy(value));
     } catch (err) {
       ProxyService.handleError(err);
     }
@@ -31,7 +31,7 @@ export class ProxyService {
       if (!values) {
         return null;
       }
-      return new ProxyPool(values);
+      return new Proxy(values);
     } catch (err) {
       ProxyService.handleError(err);
     }
@@ -39,7 +39,7 @@ export class ProxyService {
 
   async createProxy(payload: ProxyPoolPayload) {
     try {
-      return await ProxyPool.create(payload, this.proxyPoolRepository);
+      return await Proxy.create(payload, this.proxyPoolRepository);
     } catch (err) {
       ProxyService.handleError(err);
     }

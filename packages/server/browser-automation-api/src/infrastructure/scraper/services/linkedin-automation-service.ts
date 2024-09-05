@@ -20,6 +20,7 @@ export class LinkedinAutomationService {
   constructor(
     private cookies: Cookies,
     private useAgent: string,
+    private proxyConfig: string,
   ) {}
 
   async sendConenctionInvite(
@@ -27,9 +28,12 @@ export class LinkedinAutomationService {
     message: string,
     options?: { dryRun?: boolean },
   ) {
-    const browser = await Browser.getInstance();
+    const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.useAgent,
+    });
+    context.setExtraHTTPHeaders({
+      "browsercat-opts": this.proxyConfig,
     });
     context.addCookies(this.cookies);
 
@@ -76,7 +80,7 @@ export class LinkedinAutomationService {
   }
 
   async getConnections() {
-    const browser = await Browser.getInstance();
+    const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.useAgent,
     });
@@ -171,7 +175,7 @@ export class LinkedinAutomationService {
     message: string,
     options?: { dryRun?: boolean },
   ) {
-    const browser = await Browser.getInstance();
+    const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.useAgent,
     });
