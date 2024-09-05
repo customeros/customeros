@@ -128,5 +128,23 @@ type ScrapinCompanyDetails struct {
 		Street1        string      `json:"street1"`
 		Street2        interface{} `json:"street2"` // Can be null, so use interface{}
 	} `json:"headquarter"`
-	Logo string `json:"logo"`
+	Logo      string `json:"logo"`
+	FoundedOn struct {
+		Year int `json:"year"`
+	}
+}
+
+func (c ScrapinCompanyDetails) HeadquarterIsEmpty() bool {
+	return c.Headquarter.City == "" && c.Headquarter.Country == "" && c.Headquarter.PostalCode == "" && c.Headquarter.GeographicArea == "" && c.Headquarter.Street1 == ""
+}
+
+func (c ScrapinCompanyDetails) GetEmployeeCount() int64 {
+	if c.EmployeeCount > 0 {
+		return int64(c.EmployeeCount)
+	} else if c.EmployeeCountRange.Start > 0 {
+		return int64(c.EmployeeCountRange.Start)
+	} else if c.EmployeeCountRange.End > 0 {
+		return int64(c.EmployeeCountRange.End)
+	}
+	return 0
 }

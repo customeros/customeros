@@ -10,10 +10,11 @@ import (
 )
 
 type Services struct {
-	Logger                logger.Logger
-	CommonServices        *commonservice.Services
-	PersonScrapeInService ScrapinService
-	BettercontactService  BettercontactService
+	Logger               logger.Logger
+	CommonServices       *commonservice.Services
+	ScrapeInService      ScrapinService
+	BettercontactService BettercontactService
+	BrandfetchService    BrandfetchService
 }
 
 func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
@@ -21,8 +22,9 @@ func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWi
 		CommonServices: commonservice.InitServices(&commonconfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil),
 	}
 	services.Logger = logger
-	services.PersonScrapeInService = NewPersonScrapeInService(config, services, logger)
+	services.ScrapeInService = NewScrapeInService(config, services, logger)
 	services.BettercontactService = NewBettercontactService(config, services, logger)
+	services.BrandfetchService = NewBrandfetchService(config, services, logger)
 
 	return services
 }

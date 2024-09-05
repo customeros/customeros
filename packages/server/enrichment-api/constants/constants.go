@@ -1,5 +1,6 @@
 package constants
 
 const (
-	ServiceName = "ENRICHMENT-API"
+	ServiceName   = "ENRICHMENT-API"
+	AppBrandfetch = "brandfetch"
 )

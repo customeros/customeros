@@ -99,6 +99,7 @@ func generateAndGetNewStripeCheckoutSession(ctx context.Context, services *servi
 		if latestInvoice.PaymentDetails.PaymentLink != "" &&
 			latestInvoice.PaymentDetails.PaymentLink != invoice.PaymentDetails.PaymentLink &&
 			linkValid {
+			span.LogKV("result.paymentLink", latestInvoice.PaymentDetails.PaymentLink)
 			return latestInvoice.PaymentDetails.PaymentLink, nil
 		}
 		// sleep for 1 second

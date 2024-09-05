@@ -27,6 +27,9 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 }
 
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
+
+	_ = s.permanentlyDeletePersistentSubscription(ctx, "interactionEvent-v2")
+
 	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	graphSubscriptionSettings.ExtraStatistics = true
 	if err := s.subscribeToAll(ctx,

@@ -5,6 +5,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/service"
@@ -26,6 +27,10 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 		tracing.TracingEnhancer(ctx, "GET /enrichOrganizationWithScrapin"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.ENRICHMENT_API),
 		enrichOrganizationWithScrapin(services))
+	r.GET("/enrichOrganization",
+		tracing.TracingEnhancer(ctx, "GET /enrichOrganization"),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.ENRICHMENT_API),
+		enrichOrganization(services))
 }
 
 func enrichPerson(services *service.Services) gin.HandlerFunc {
@@ -66,7 +71,7 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 
 		// Step 1 - Scrapin by linked in url
 		if request.LinkedinUrl != "" {
-			recordId, response, err := services.PersonScrapeInService.ScrapInPersonProfile(ctx, request.LinkedinUrl)
+			recordId, response, err := services.ScrapeInService.ScrapInPersonProfile(ctx, request.LinkedinUrl)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "ScrapInPersonProfile"))
 				c.JSON(http.StatusInternalServerError, model.EnrichPersonScrapinResponse{
@@ -86,7 +91,7 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 
 		// Step 2 - Scrapin by email
 		if !foundByLinkedInUrl && request.Email != "" {
-			recordId, response, err := services.PersonScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName, request.Domain)
+			recordId, response, err := services.ScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName, request.Domain)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchPerson"))
 				c.JSON(http.StatusInternalServerError, model.EnrichPersonScrapinResponse{
@@ -185,7 +190,7 @@ func enrichOrganizationWithScrapin(services *service.Services) gin.HandlerFunc {
 
 		// Step 1 - Scrapin by linked in url
 		if request.LinkedinUrl != "" {
-			recordId, response, err := services.PersonScrapeInService.ScrapInPersonProfile(ctx, request.LinkedinUrl)
+			recordId, response, err := services.ScrapeInService.ScrapInPersonProfile(ctx, request.LinkedinUrl)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "ScrapInCompanyProfile"))
 				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationScrapinResponse{
@@ -203,7 +208,7 @@ func enrichOrganizationWithScrapin(services *service.Services) gin.HandlerFunc {
 
 		// Step 2 - Scrapin by email
 		if !foundByLinkedInUrl && request.Domain != "" {
-			recordId, response, err := services.PersonScrapeInService.ScrapInSearchCompany(ctx, request.Domain)
+			recordId, response, err := services.ScrapeInService.ScrapInSearchCompany(ctx, request.Domain)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchCompany"))
 				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationScrapinResponse{
@@ -223,5 +228,275 @@ func enrichOrganizationWithScrapin(services *service.Services) gin.HandlerFunc {
 			OrganizationFound: scrapinResponseBody != nil && scrapinResponseBody.Company != nil,
 			Data:              scrapinResponseBody,
 		})
+	}
+}
+
+func enrichOrganization(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		span, ctx := opentracing.StartSpanFromContext(c.Request.Context(), "enrichOrganization")
+		defer span.Finish()
+
+		var request model.EnrichOrganizationRequest
+
+		if err := c.BindJSON(&request); err != nil {
+			tracing.TraceErr(span, err)
+			services.Logger.Errorf("Fail reading request: %v", err.Error())
+			c.JSON(http.StatusBadRequest, model.EnrichOrganizationResponse{
+				Status:  "error",
+				Message: "Invalid request body",
+				Success: false,
+			})
+			return
+		}
+		request.Normalize()
+
+		tracing.LogObjectAsJson(span, "request", request)
+
+		// validate mandatory parameters
+		if request.LinkedinUrl == "" && request.Domain == "" {
+			tracing.TraceErr(span, errors.New("Missing linkedin and domain parameters"))
+			services.Logger.Errorf("Missing linkedin and domain parameters")
+			c.JSON(http.StatusBadRequest, model.EnrichOrganizationResponse{
+				Status:  "error",
+				Message: "Missing linkedin and domain parameters",
+				Success: false,
+			})
+			return
+		}
+
+		var scrapinResponseBody *postgresEntity.ScrapInResponseBody
+		var brandfetchResponseBody *postgresEntity.BrandfetchResponseBody
+		domain := request.Domain
+
+		// Step 1 - Scrapin by linked in url
+		if request.LinkedinUrl != "" {
+			_, response, err := services.ScrapeInService.ScrapInPersonProfile(ctx, request.LinkedinUrl)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ScrapInCompanyProfile"))
+				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
+					Status:  "error",
+					Message: "Internal server error",
+					Success: false,
+				})
+				return
+			}
+			scrapinResponseBody = response
+		}
+
+		foundByLinkedInUrl := scrapinResponseBody != nil && scrapinResponseBody.Company != nil
+
+		// Step 2 - Scrapin by email
+		if !foundByLinkedInUrl && domain != "" {
+			_, response, err := services.ScrapeInService.ScrapInSearchCompany(ctx, domain)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchCompany"))
+				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
+					Status:  "error",
+					Message: "Internal server error",
+					Success: false,
+				})
+				return
+			}
+			scrapinResponseBody = response
+		}
+
+		// Step3 - Brandfetch
+		if domain == "" {
+			domain = utils.ExtractDomain(scrapinResponseBody.Company.WebsiteUrl)
+		}
+		if domain != "" {
+			response, err := services.BrandfetchService.GetByDomain(ctx, domain)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Brandfetch by domain"))
+				c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
+					Status:  "error",
+					Message: "Internal server error",
+					Success: false,
+				})
+				return
+			}
+			brandfetchResponseBody = response
+		}
+
+		if scrapinResponseBody == nil && brandfetchResponseBody == nil {
+			c.JSON(http.StatusOK, model.EnrichOrganizationResponse{
+				Status:  "success",
+				Message: "No data found",
+				Success: false,
+			})
+			return
+		}
+		primaryEnrichSource := "SCRAPIN"
+		if scrapinResponseBody == nil {
+			primaryEnrichSource = "BRANDFETCH"
+		}
+
+		// combine data
+		combinedData := combineData(scrapinResponseBody, brandfetchResponseBody, domain)
+
+		c.JSON(http.StatusOK, model.EnrichOrganizationResponse{
+			Status:              "success",
+			Data:                combinedData,
+			Success:             true,
+			PrimaryEnrichSource: primaryEnrichSource,
+		})
+	}
+}
+
+func combineData(scrapin *postgresEntity.ScrapInResponseBody, brandfetch *postgresEntity.BrandfetchResponseBody, domain string) model.EnrichOrganizationResponseData {
+	data := model.EnrichOrganizationResponseData{}
+
+	updateResponseWithScrapinData(&data, scrapin, domain)
+	updateResponseWithBrandfetchData(&data, brandfetch)
+
+	return data
+}
+
+func updateResponseWithScrapinData(d *model.EnrichOrganizationResponseData, scrapin *postgresEntity.ScrapInResponseBody, domain string) {
+	if scrapin == nil {
+		return
+	}
+	if d.Employees == 0 {
+		d.Employees = scrapin.Company.GetEmployeeCount()
+	}
+	if d.FoundedYear == 0 {
+		d.FoundedYear = int64(scrapin.Company.FoundedOn.Year)
+	}
+	if d.Name == "" {
+		d.Name = scrapin.Company.Name
+	}
+	if d.ShortDescription == "" {
+		if scrapin.Company.Tagline != nil {
+			if tagline, ok := scrapin.Company.Tagline.(string); ok {
+				d.ShortDescription = tagline
+			}
+		}
+	}
+	if d.LongDescription == "" {
+		d.LongDescription = scrapin.Company.Description
+	}
+	if d.Domain == "" {
+		if domain != "" {
+			d.Domain = domain
+		} else {
+			d.Domain = utils.ExtractDomain(scrapin.Company.WebsiteUrl)
+		}
+	}
+	if d.Website == "" {
+		d.Website = scrapin.Company.WebsiteUrl
+	}
+	if scrapin.Company.Logo != "" {
+		d.Logos = append(d.Logos, scrapin.Company.Logo)
+	}
+	if d.Industry == "" {
+		d.Industry = scrapin.Company.Industry
+	}
+	d.Socials = append(d.Socials, scrapin.Company.LinkedInUrl)
+	d.Socials = utils.RemoveDuplicates(d.Socials)
+	d.Socials = utils.RemoveEmpties(d.Socials)
+	if !scrapin.Company.HeadquarterIsEmpty() {
+		d.Location.IsHeadquarter = utils.BoolPtr(true)
+		if d.Location.Country == "" {
+			d.Location.Country = scrapin.Company.Headquarter.Country
+		}
+		if d.Location.Locality == "" {
+			d.Location.Locality = scrapin.Company.Headquarter.City
+		}
+		if d.Location.Region == "" {
+			d.Location.Region = scrapin.Company.Headquarter.GeographicArea
+		}
+		if d.Location.PostalCode == "" {
+			d.Location.PostalCode = scrapin.Company.Headquarter.PostalCode
+		}
+		if d.Location.AddressLine1 == "" {
+			d.Location.AddressLine1 = scrapin.Company.Headquarter.Street1
+		}
+		if d.Location.AddressLine2 == "" {
+			if scrapin.Company.Headquarter.Street2 != nil {
+				if street2, ok := scrapin.Company.Headquarter.Street2.(string); ok {
+					d.Location.AddressLine2 = street2
+				}
+			}
+		}
+	}
+}
+
+func updateResponseWithBrandfetchData(d *model.EnrichOrganizationResponseData, brandfetch *postgresEntity.BrandfetchResponseBody) {
+	if brandfetch == nil {
+		return
+	}
+
+	if d.Employees == 0 {
+		d.Employees = brandfetch.Company.GetEmployees()
+	}
+	if d.FoundedYear == 0 {
+		d.FoundedYear = brandfetch.Company.FoundedYear
+	}
+	if d.Name == "" {
+		d.Name = brandfetch.Name
+	}
+	if d.ShortDescription == "" {
+		d.ShortDescription = brandfetch.Description
+	}
+	if d.LongDescription == "" {
+		d.LongDescription = brandfetch.LongDescription
+	}
+	if d.Domain == "" {
+		d.Domain = brandfetch.Domain
+	}
+	if d.Website == "" {
+		d.Website = brandfetch.Domain
+	}
+	if brandfetch.Company.Kind != "" {
+		if brandfetch.Company.Kind == "PUBLIC_COMPANY" {
+			d.Public = utils.BoolPtr(true)
+		} else {
+			d.Public = utils.BoolPtr(false)
+		}
+	}
+	if len(brandfetch.Logos) > 0 {
+		for _, logo := range brandfetch.Logos {
+			if logo.Type == "icon" {
+				d.Icons = append(d.Icons, logo.Formats[0].Src)
+			} else if logo.Type == "symbol" {
+				d.Icons = append(d.Icons, logo.Formats[0].Src)
+			} else if logo.Type == "logo" {
+				d.Logos = append(d.Logos, logo.Formats[0].Src)
+			} else if logo.Type == "other" {
+				d.Logos = append(d.Logos, logo.Formats[0].Src)
+			}
+		}
+	}
+	if d.Industry == "" {
+		industryMaxScore := float64(0)
+		if len(brandfetch.Company.Industries) > 0 {
+			for _, industry := range brandfetch.Company.Industries {
+				if industry.Name != "" && industry.Score > industryMaxScore {
+					d.Industry = industry.Name
+					industryMaxScore = industry.Score
+				}
+			}
+		}
+	}
+
+	for _, link := range brandfetch.Links {
+		d.Socials = append(d.Socials, link.Url)
+	}
+	d.Socials = utils.RemoveDuplicates(d.Socials)
+	d.Socials = utils.RemoveEmpties(d.Socials)
+
+	if !brandfetch.Company.LocationIsEmpty() {
+		if d.Location.CountryCodeA2 == "" && d.Location.Country == "" {
+			d.Location.CountryCodeA2 = brandfetch.Company.Location.CountryCodeA2
+			d.Location.Country = brandfetch.Company.Location.Country
+		} else if d.Location.Country == brandfetch.Company.Location.Country && d.Location.CountryCodeA2 == "" {
+			d.Location.CountryCodeA2 = brandfetch.Company.Location.CountryCodeA2
+		}
+		if d.Location.Locality == "" {
+			d.Location.Locality = brandfetch.Company.Location.City
+		}
+		if d.Location.Region == "" {
+			d.Location.Region = brandfetch.Company.Location.Region
+		}
 	}
 }

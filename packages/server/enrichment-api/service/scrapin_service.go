@@ -37,7 +37,7 @@ type scrapinService struct {
 	log      logger.Logger
 }
 
-func NewPersonScrapeInService(config *config.Config, services *Services, log logger.Logger) ScrapinService {
+func NewScrapeInService(config *config.Config, services *Services, log logger.Logger) ScrapinService {
 	return &scrapinService{
 		config:   config,
 		services: services,
@@ -65,11 +65,13 @@ func (s *scrapinService) ScrapInPersonProfile(ctx context.Context, linkedInUrl s
 		callScrapin = true
 	} else if latestEnrichDetailsScrapInRecord.PersonFound == false {
 		// if latest record has not found person response, check root cause
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 		}
+		data = &unmarshalledData
 		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
-		if data.CreditsLeft == 0 {
+		if unmarshalledData.CreditsLeft == 0 {
 			callScrapin = true
 		} else if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
 			callScrapin = true
@@ -114,24 +116,28 @@ func (s *scrapinService) ScrapInPersonProfile(ctx context.Context, linkedInUrl s
 	} else {
 		recordId = latestEnrichDetailsScrapInRecord.ID
 		// unmarshal cached data
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
+		data = &unmarshalledData
 	}
 
 	// if fresh data not found, check most recent cached data with person found
-	if data == nil || (data != nil && data.Person == nil) {
+	if data == nil || data.Person == nil {
 		latestEnrichDetailsScrapInRecordWithPersonFound, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithPersonFound(ctx, linkedInUrl, postgresentity.ScrapInFlowPersonProfile)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithPersonFound != nil {
-			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithPersonFound.Data), &data); err != nil {
+			unmarshalledData := postgresentity.ScrapInResponseBody{}
+			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithPersonFound.Data), &unmarshalledData); err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
+			data = &unmarshalledData
 			return latestEnrichDetailsScrapInRecordWithPersonFound.ID, data, nil
 		}
 	}
@@ -203,9 +209,11 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 		callScrapin = true
 	} else if latestEnrichDetailsScrapInRecord.PersonFound == false {
 		// if latest record has not found person response, check root cause
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 		}
+		data = &unmarshalledData
 		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
 		if data.CreditsLeft == 0 {
 			callScrapin = true
@@ -258,24 +266,28 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 	} else {
 		recordId = latestEnrichDetailsScrapInRecord.ID
 		// unmarshal cached data
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
+		data = &unmarshalledData
 	}
 
 	// if fresh data not found, check most recent cached data with person found
-	if data == nil || (data != nil && data.Person == nil) {
+	if data == nil || data.Person == nil {
 		latestEnrichDetailsScrapInRecordWithPersonFound, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByAllParamsAndFlowWithPersonFound(ctx, email, firstName, lastName, domain, postgresentity.ScrapInFlowPersonSearch)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithPersonFound != nil {
-			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithPersonFound.Data), &data); err != nil {
+			unmarshalledData := postgresentity.ScrapInResponseBody{}
+			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithPersonFound.Data), &unmarshalledData); err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
+			data = &unmarshalledData
 			return latestEnrichDetailsScrapInRecordWithPersonFound.ID, data, nil
 		}
 	}
@@ -356,9 +368,11 @@ func (s *scrapinService) ScrapInCompanyProfile(ctx context.Context, linkedInUrl 
 		callScrapin = true
 	} else if latestEnrichDetailsScrapInRecord.CompanyFound == false {
 		// if latest record has not found company response, check root cause
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 		}
+		data = &unmarshalledData
 		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
 		if data.CreditsLeft == 0 {
 			callScrapin = true
@@ -405,24 +419,28 @@ func (s *scrapinService) ScrapInCompanyProfile(ctx context.Context, linkedInUrl 
 	} else {
 		recordId = latestEnrichDetailsScrapInRecord.ID
 		// unmarshal cached data
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
+		data = &unmarshalledData
 	}
 
 	// if fresh data not found, check most recent cached data with company found
-	if data == nil || (data != nil && data.Company == nil) {
+	if data == nil || data.Company == nil {
 		latestEnrichDetailsScrapInRecordWithCompanyFound, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithCompanyFound(ctx, linkedInUrl, postgresentity.ScrapInFlowCompanyProfile)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithCompanyFound != nil {
-			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithCompanyFound.Data), &data); err != nil {
+			unmarshalledData := postgresentity.ScrapInResponseBody{}
+			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithCompanyFound.Data), &unmarshalledData); err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
+			data = &unmarshalledData
 			return latestEnrichDetailsScrapInRecordWithCompanyFound.ID, data, nil
 		}
 	}
@@ -494,9 +512,11 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 		callScrapin = true
 	} else if latestEnrichDetailsScrapInRecord.CompanyFound == false {
 		// if latest record has not found company response, check root cause
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 		}
+		data = &unmarshalledData
 		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
 		if data.CreditsLeft == 0 {
 			callScrapin = true
@@ -543,24 +563,28 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 	} else {
 		recordId = latestEnrichDetailsScrapInRecord.ID
 		// unmarshal cached data
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &data); err != nil {
+		unmarshalledData := postgresentity.ScrapInResponseBody{}
+		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 			return 0, nil, err
 		}
+		data = &unmarshalledData
 	}
 
 	// if fresh data not found, check most recent cached data with company found
-	if data == nil || (data != nil && data.Company == nil) {
+	if data == nil || data.Company == nil {
 		latestEnrichDetailsScrapInRecordWithCompanyFound, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithCompanyFound(ctx, domain, postgresentity.ScrapInFlowCompanySearch)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithCompanyFound != nil {
-			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithCompanyFound.Data), &data); err != nil {
+			unmarshalledData := postgresentity.ScrapInResponseBody{}
+			if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecordWithCompanyFound.Data), &unmarshalledData); err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
 				return 0, nil, err
 			}
+			data = &unmarshalledData
 			return latestEnrichDetailsScrapInRecordWithCompanyFound.ID, data, nil
 		}
 	}

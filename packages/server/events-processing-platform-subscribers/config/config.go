@@ -140,10 +140,7 @@ type ReminderSubscription struct {
 }
 
 type Services struct {
-	BrandfetchApi    string `env:"BRANDFETCH_API"`
-	BrandfetchApiKey string `env:"BRANDFETCH_API_KEY"`
-	BrandfetchLimit  int    `env:"BRANDFETCH_LIMIT" envDefault:"250"`
-	EnrichmentApi    struct {
+	EnrichmentApi struct {
 		Url    string `env:"ENRICHMENT_API_URL" validate:"required"`
 		ApiKey string `env:"ENRICHMENT_API_KEY" validate:"required"`
 	}

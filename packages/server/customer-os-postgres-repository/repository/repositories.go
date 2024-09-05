@@ -29,6 +29,7 @@ type Repositories struct {
 	ExternalAppKeysRepository                   ExternalAppKeysRepository
 	EnrichDetailsBetterContactRepository        EnrichDetailsBetterContactRepository
 	EnrichDetailsScrapInRepository              EnrichDetailsScrapInRepository
+	EnrichDetailsBrandfetchRepository           EnrichDetailsBrandfetchRepository
 	EnrichDetailsPrefilterTrackingRepository    EnrichDetailsPrefilterTrackingRepository
 	EnrichDetailsTrackingRepository             EnrichDetailsTrackingRepository
 	UserEmailImportPageTokenRepository          UserEmailImportStateRepository
@@ -84,6 +85,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
 		EnrichDetailsBetterContactRepository:        NewEnrichDetailsBetterContactRepository(db),
 		EnrichDetailsScrapInRepository:              NewEnrichDetailsScrapInRepository(db),
+		EnrichDetailsBrandfetchRepository:           NewEnrichDetailsBrandfetchRepository(db),
 		EnrichDetailsPrefilterTrackingRepository:    NewEnrichDetailsPrefilterTrackingRepository(db),
 		EnrichDetailsTrackingRepository:             NewEnrichDetailsTrackingRepository(db),
 		UserEmailImportPageTokenRepository:          NewUserEmailImportStateRepository(db),
@@ -144,6 +146,7 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.ExternalAppKeys{},
 		&entity.EnrichDetailsBetterContact{},
 		&entity.EnrichDetailsScrapIn{},
+		&entity.EnrichDetailsBrandfetch{},
 		&entity.UserEmailImportState{},
 		&entity.UserEmailImportStateHistory{},
 		&entity.RawEmail{},
