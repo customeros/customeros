@@ -8,7 +8,8 @@ import { ErrorParser, StandardError } from "@/util/error";
 
 import { logger } from "../logger";
 
-const bcatUrl = "wss://api.browsercat.com/connect";
+const bcatUrl = process.env.BROWSERCAT_API_URL;
+const apiKey = process.env.BROWSERCAT_API_KEY;
 
 export class Browser {
   private static instances: Map<string, Browser>;
@@ -54,12 +55,10 @@ export class Browser {
             headless: false,
           });
         } else {
-          const apiKey = process.env.BROWSERCAT_API_KEY;
-
-          if (!apiKey) {
+          if (!apiKey || !bcatUrl) {
             throw new StandardError({
               code: "INTERNAL_ERROR",
-              message: "Browsercat API key is not provided",
+              message: "Browsercat API key or url is not provided",
               severity: "critical",
             });
           }
