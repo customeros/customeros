@@ -1,6 +1,6 @@
 import type { Transport } from '@store/transport.ts';
 
-import { GetFlowsQuery } from '@store/Flows/__service__/getFlows.generated.ts';
+import { Flow } from '@graphql/types';
 
 import GetFlowsDocument from './getFlows.graphql';
 
@@ -21,7 +21,7 @@ class FlowService {
   }
 
   async getFlows() {
-    return this.transport.graphql.request<GetFlowsQuery>(GetFlowsDocument);
+    return this.transport.graphql.request<{ flows: Flow[] }>(GetFlowsDocument);
   }
 }
 
