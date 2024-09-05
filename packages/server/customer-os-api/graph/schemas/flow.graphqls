@@ -9,6 +9,9 @@ extend type Mutation {
     flow_sequence_LinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): FlowSequenceContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_UnlinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
+#    flow_sequence_LinkMailbox(sequenceId: ID!, contactId: ID!, emailId: ID!): Mailbox! @hasRole(roles: [ADMIN, USER]) @hasTenant
+#    flow_sequence_UnlinkMailbox(sequenceId: ID!, contactId: ID!, emailId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_ChangeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_step_ChangeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
