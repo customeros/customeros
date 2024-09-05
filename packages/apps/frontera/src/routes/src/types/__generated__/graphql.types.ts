@@ -2405,10 +2405,12 @@ export type Mutation = {
   fieldSetDeleteFromContact: Result;
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
-  flow_changeStatus: Flow;
-  flow_sequence_changeStatus: FlowSequence;
-  flow_sequence_step_changeStatus: FlowSequenceStep;
-  flow_sequence_store: FlowSequence;
+  flow_ChangeStatus: Flow;
+  flow_sequence_ChangeStatus: FlowSequence;
+  flow_sequence_LinkContact: FlowSequenceContact;
+  flow_sequence_Store: FlowSequence;
+  flow_sequence_UnlinkContact: Result;
+  flow_sequence_step_ChangeStatus: FlowSequenceStep;
   interactionEvent_LinkAttachment: Result;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
@@ -2846,13 +2848,25 @@ export type MutationFlow_Sequence_ChangeStatusArgs = {
   status: FlowSequenceStatus;
 };
 
-export type MutationFlow_Sequence_Step_ChangeStatusArgs = {
-  id: Scalars['ID']['input'];
-  status: FlowSequenceStepStatus;
+export type MutationFlow_Sequence_LinkContactArgs = {
+  contactId: Scalars['ID']['input'];
+  emailId: Scalars['ID']['input'];
+  sequenceId: Scalars['ID']['input'];
 };
 
 export type MutationFlow_Sequence_StoreArgs = {
   input: FlowSequenceStoreInput;
+};
+
+export type MutationFlow_Sequence_UnlinkContactArgs = {
+  contactId: Scalars['ID']['input'];
+  emailId: Scalars['ID']['input'];
+  sequenceId: Scalars['ID']['input'];
+};
+
+export type MutationFlow_Sequence_Step_ChangeStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: FlowSequenceStepStatus;
 };
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {

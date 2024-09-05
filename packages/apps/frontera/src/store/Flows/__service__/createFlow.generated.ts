@@ -1,12 +1,12 @@
 import * as Types from '../../../routes/src/types/__generated__/graphql.types';
 
-export type CreateSequenceMutationVariables = Types.Exact<{
+export type CreateFlowMutationVariables = Types.Exact<{
   input: Types.FlowSequenceStoreInput;
 }>;
 
-export type CreateSequenceMutation = {
+export type CreateFlowMutation = {
   __typename?: 'Mutation';
-  flow_sequence_store: {
+  flow_sequence_Store: {
     __typename?: 'FlowSequence';
     name: string;
     description: string;

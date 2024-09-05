@@ -7,7 +7,7 @@ export type ChangeFlowStatusMutationVariables = Types.Exact<{
 
 export type ChangeFlowStatusMutation = {
   __typename?: 'Mutation';
-  flow_changeStatus: {
+  flow_ChangeStatus: {
     __typename?: 'Flow';
     metadata: { __typename?: 'Metadata'; id: string };
   };

@@ -1,5 +1,5 @@
 mutation createFlow($input: FlowSequenceStoreInput!) {
-  flow_sequence_store(input: $input) {
+  flow_sequence_Store(input: $input) {
     name
     description
     flow {

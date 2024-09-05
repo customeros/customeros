@@ -6,7 +6,7 @@ export type CreateSequenceMutationVariables = Types.Exact<{
 
 export type CreateSequenceMutation = {
   __typename?: 'Mutation';
-  flow_sequence_store: {
+  flow_sequence_Store: {
     __typename?: 'FlowSequence';
     name: string;
     description: string;

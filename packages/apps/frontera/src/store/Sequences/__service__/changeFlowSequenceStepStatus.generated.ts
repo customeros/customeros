@@ -7,7 +7,7 @@ export type ChangeFlowSequenceStepStatusMutationVariables = Types.Exact<{
 
 export type ChangeFlowSequenceStepStatusMutation = {
   __typename?: 'Mutation';
-  flow_sequence_step_changeStatus: {
+  flow_sequence_step_ChangeStatus: {
     __typename?: 'FlowSequenceStep';
     metadata: { __typename?: 'Metadata'; id: string };
   };

@@ -1,5 +1,5 @@
 mutation updateSequence($input: FlowSequenceStoreInput!) {
-    flow_sequence_store(input: $input) {
+    flow_sequence_Store(input: $input) {
       metadata {
         id
       }

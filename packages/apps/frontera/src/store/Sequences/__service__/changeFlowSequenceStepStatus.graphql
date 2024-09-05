@@ -1,5 +1,5 @@
 mutation ChangeFlowSequenceStepStatus($id: ID!, $status: FlowSequenceStepStatus!) {
-  flow_sequence_step_changeStatus(id: $id, status: $status) {
+  flow_sequence_step_ChangeStatus(id: $id, status: $status) {
     metadata {
       id
     }

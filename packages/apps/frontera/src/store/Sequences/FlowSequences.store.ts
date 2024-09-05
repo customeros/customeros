@@ -88,6 +88,7 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
 
     newSequence.value = {
       ...newSequence.value,
+      ...payload,
     };
 
     let serverId: string | undefined;
@@ -102,10 +103,6 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
       runInAction(() => {
         serverId = flow_sequence_store?.metadata.id;
         newSequence.setId(serverId);
-        newSequence.value = {
-          ...newSequence.value,
-          ...flow_sequence_store,
-        };
 
         this.value.set(serverId, newSequence);
         this.value.delete(tempId);
