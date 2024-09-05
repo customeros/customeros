@@ -62,6 +62,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				})
 				return
 			}
+			span.SetTag("email", request.Email)
 
 			emailValidationData, err := services.EmailValidationService.ValidateEmailWithMailSherpa(ctx, request.Email)
 			if err != nil {
