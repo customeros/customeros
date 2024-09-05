@@ -62,4 +62,5 @@ type EnrowConfig struct {
 	ApiKey                string `env:"ENROW_API_KEY" validate:"required"`
 	CacheTtlDays          int    `env:"ENROW_CACHE_TTL_DAYS" envDefault:"14" validate:"required"`
 	MaxWaitResultsSeconds int    `env:"ENROW_MAX_WAIT_RESULTS_SECONDS" envDefault:"5" validate:"required"`
+	CallbackUrl           string `env:"ENROW_CALLBACK_URL"`
 }

@@ -58,6 +58,7 @@ type Repositories struct {
 	CustomerOsIdsRepository                     CustomerOsIdsRepository
 	CacheEmailScrubbyRepository                 CacheEmailScrubbyRepository
 	CacheEmailTrueinboxRepository               CacheEmailTrueinboxRepository
+	CacheEmailEnrowRepository                   CacheEmailEnrowRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -114,6 +115,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		CustomerOsIdsRepository:                     NewCustomerOsIdsRepository(db),
 		CacheEmailScrubbyRepository:                 NewCacheEmailScrubbyRepository(db),
 		CacheEmailTrueinboxRepository:               NewCacheEmailTrueinboxRepository(db),
+		CacheEmailEnrowRepository:                   NewCacheEmailEnrowRepository(db),
 	}
 
 	return repositories
@@ -179,7 +181,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.CosApiEnrichPersonTempResult{},
 		&entity.OrganizationWebsiteHostingPlatform{},
 		&entity.CustomerOsIds{},
-		&entity.CacheEmailTrueinbox{})
+		&entity.CacheEmailTrueinbox{},
+		&entity.CacheEmailEnrow{})
 	if err != nil {
 		panic(err)
 	}
