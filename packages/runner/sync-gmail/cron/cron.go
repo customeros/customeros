@@ -126,11 +126,11 @@ func syncCalendarEvents(services *service.Services) {
 		go func(tenant neo4jentity.TenantEntity) {
 			defer wg.Done()
 
-			logrus.Infof("syncing calendar events for tenant: %s", tenant)
+			logrus.Infof("syncing calendar events for tenant: %s", tenant.Name)
 
 			services.MeetingService.SyncCalendarEvents("gcal", tenant.Name)
 
-			logrus.Infof("syncing calendar events for tenant: %s completed", tenant)
+			logrus.Infof("syncing calendar events for tenant: %s completed", tenant.Name)
 		}(*tenant)
 	}
 
