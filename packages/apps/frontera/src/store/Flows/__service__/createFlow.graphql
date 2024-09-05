@@ -1,4 +1,4 @@
-mutation createSequence($input: FlowSequenceStoreInput!) {
+mutation createFlow($input: FlowSequenceStoreInput!) {
   flow_sequence_store(input: $input) {
     name
     description

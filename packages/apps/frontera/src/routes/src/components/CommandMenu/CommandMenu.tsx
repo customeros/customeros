@@ -10,7 +10,11 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
+import { SequenceHub } from '@shared/components/CommandMenu/commands/SequenceHub.tsx';
+import { SequenceCommands } from '@shared/components/CommandMenu/commands/SequencesCommands.tsx';
 import { DuplicateView } from '@shared/components/CommandMenu/commands/tableViewDef/DuplicateView';
+import { RenameSequence } from '@shared/components/CommandMenu/commands/sequences/RenameSequence.tsx';
+import { SequencesBulkCommands } from '@shared/components/CommandMenu/commands/SequencesBulkCommands.tsx';
 import { OpportunityBulkCommands } from '@shared/components/CommandMenu/commands/OpportunityBulkCommands';
 import {
   Modal,
@@ -47,6 +51,7 @@ import {
   ChangeOrAddJobRoles,
   ContactBulkCommands,
   OrganizationCommands,
+  ChangeSequenceStatus,
   RenameOpportunityName,
   ChooseOpportunityStage,
   MergeConfirmationModal,
@@ -99,6 +104,11 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   OpportunityBulkCommands: <OpportunityBulkCommands />,
   ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
   CreateNewSequence: <CreateNewSequence />,
+  RenameSequence: <RenameSequence />,
+  SequenceCommands: <SequenceCommands />,
+  ChangeSequenceStatus: <ChangeSequenceStatus />,
+  SequencesBulkCommands: <SequencesBulkCommands />,
+  SequenceHub: <SequenceHub />,
 };
 
 export const CommandMenu = observer(() => {

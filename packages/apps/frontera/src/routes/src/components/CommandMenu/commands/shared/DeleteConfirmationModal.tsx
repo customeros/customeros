@@ -74,6 +74,14 @@ export const DeleteConfirmationModal = observer(() => {
         store.opportunities.archiveMany(context.ids);
         context.callback?.();
       })
+      .with('Sequence', () => {
+        store.flowSequences.archive(context.ids?.[0]);
+        context.callback?.();
+      })
+      .with('Sequences', () => {
+        store.flowSequences.archiveMany(context.ids);
+        context.callback?.();
+      })
       .with('TableViewDef', () => {
         store.tableViewDefs.archive(context.ids?.[0], {
           onSuccess: () => {
@@ -109,6 +117,14 @@ export const DeleteConfirmationModal = observer(() => {
       'Opportunity',
       () => `Archive ${(entity as OpportunityStore)?.value.name}?`,
     )
+    .with('Sequences', () => `Archive ${context.ids.length} sequences?`)
+    .with(
+      'Sequence',
+      () =>
+        `Archive ${
+          store.flowSequences.value.get(context.ids?.[0])?.value.name
+        }?`,
+    )
 
     .with('Contact', () =>
       context.ids?.length > 1
@@ -120,6 +136,19 @@ export const DeleteConfirmationModal = observer(() => {
       () => `Archive ${(entity as TableViewDefStore)?.value.name}?`,
     )
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
+  const description = match(context.entity)
+    .with(
+      'Sequences',
+      () =>
+        `Archiving these sequences will remove all contacts currently enrolled to it`,
+    )
+    .with(
+      'Sequence',
+      () =>
+        `Archiving this sequence will remove all contacts currently enrolled to it`,
+    )
+
+    .otherwise(() => null);
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -138,6 +167,7 @@ export const DeleteConfirmationModal = observer(() => {
             onClick={handleClose}
           />
         </div>
+        {description && <p className='mt-1 text-sm'>{description}</p>}
 
         <div className='flex justify-between gap-3 mt-6'>
           <Button

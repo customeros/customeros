@@ -52,12 +52,22 @@ export class FlowSequenceStore implements Store<FlowSequence> {
     const diff = operation.diff?.[0];
     const path = diff?.path;
 
-    match(path).with(['status', ...P.array()], () => {
-      this.service.updateSequenceStatus({
-        id: this.id,
-        stage: this.value.status as FlowSequenceStatus,
+    match(path)
+      .with(['status', ...P.array()], () => {
+        this.service.updateSequenceStatus({
+          id: this.id,
+          stage: this.value.status as FlowSequenceStatus,
+        });
+      })
+      .with(['name', ...P.array()], () => {
+        this.service.updateSequence({
+          input: {
+            id: this.id,
+            name: this.value.name,
+            description: this.value.description,
+          },
+        });
       });
-    });
   }
 
   invalidate() {

@@ -13,7 +13,7 @@ export const getPredefinedFilterFn = (
 
   return match(serverFilter)
     .with(
-      { property: ColumnViewType.FlowStatus },
+      { property: ColumnViewType.FlowSequenceStatus },
       (filter) => (row: FlowSequenceStore) => {
         const filterValues = filter?.value;
 

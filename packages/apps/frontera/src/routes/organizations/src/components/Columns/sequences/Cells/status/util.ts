@@ -8,10 +8,7 @@ export const statusOptions: {
     label: 'Active',
     value: FlowSequenceStatus.Active,
   },
-  {
-    value: FlowSequenceStatus.Archived,
-    label: 'Archived',
-  },
+
   {
     label: 'Inactive',
     value: FlowSequenceStatus.Inactive,
@@ -19,5 +16,9 @@ export const statusOptions: {
   {
     label: 'Paused',
     value: FlowSequenceStatus.Paused,
+  },
+  {
+    value: FlowSequenceStatus.Archived,
+    label: 'Archived',
   },
 ];

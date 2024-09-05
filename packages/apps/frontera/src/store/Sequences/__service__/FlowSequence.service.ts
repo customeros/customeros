@@ -1,15 +1,21 @@
 import type { Transport } from '@store/transport.ts';
 
-import { GetFlowSequencesQuery } from '@store/Sequences/__service__/getFlowSequences.generated.ts';
 import {
   CreateSequenceMutation,
   CreateSequenceMutationVariables,
 } from '@store/Sequences/__service__/createSequence.generated.ts';
 import {
+  UpdateSequenceMutation,
+  UpdateSequenceMutationVariables,
+} from '@store/Sequences/__service__/updateSequence.generated.ts';
+import {
   ChangeFlowSequenceStatusMutation,
   ChangeFlowSequenceStatusMutationVariables,
 } from '@store/Sequences/__service__/changeFlowSequenceStatus.generated.ts';
 
+import { FlowSequence } from '@graphql/types';
+
+import UpdateSequencesDocument from './updateSequence.graphql';
 import GetFlowSequencesDocument from './getFlowSequences.graphql';
 import CreateSequenceMutationDocument from './createSequence.graphql';
 import ChangeFlowSequenceStatusDocument from './changeFlowSequenceStatus.graphql';
@@ -31,7 +37,7 @@ class FlowSequenceService {
   }
 
   async getSequences() {
-    return this.transport.graphql.request<GetFlowSequencesQuery>(
+    return this.transport.graphql.request<{ sequences: FlowSequence[] }>(
       GetFlowSequencesDocument,
     );
   }
@@ -50,6 +56,13 @@ class FlowSequenceService {
       ChangeFlowSequenceStatusMutation,
       ChangeFlowSequenceStatusMutationVariables
     >(ChangeFlowSequenceStatusDocument, payload);
+  }
+
+  async updateSequence(payload: UpdateSequenceMutationVariables) {
+    return this.transport.graphql.request<
+      UpdateSequenceMutation,
+      UpdateSequenceMutationVariables
+    >(UpdateSequencesDocument, payload);
   }
 }
 

@@ -64,15 +64,17 @@ export const FlowStatusCell = observer(({ id }: FlowStatusCellProps) => {
           />
         </MenuButton>
         <MenuList>
-          {statusOptions.map((option) => (
-            <MenuItem
-              key={option.value.toString()}
-              onClick={() => handleSelect(option)}
-              data-test={`relationship-${option.value}`}
-            >
-              {option.label}
-            </MenuItem>
-          ))}
+          {statusOptions
+            .filter((e) => e.value !== FlowSequenceStatus.Archived)
+            .map((option) => (
+              <MenuItem
+                key={option.value.toString()}
+                onClick={() => handleSelect(option)}
+                data-test={`relationship-${option.value}`}
+              >
+                {option.label}
+              </MenuItem>
+            ))}
         </MenuList>
       </Menu>
     </div>

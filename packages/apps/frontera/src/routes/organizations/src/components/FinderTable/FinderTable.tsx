@@ -49,8 +49,12 @@ import { getColumnSortFn } from '../Columns/invoices/sortFns';
 import { getInvoiceFilterFns } from '../Columns/invoices/filterFns';
 import { getInvoiceColumnsConfig } from '../Columns/invoices/columns';
 import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
-import { ContactTableActions, OrganizationTableActions } from '../Actions';
 import { ContactPreviewCard } from '../ContactPreviewCard/ContactPreviewCard';
+import {
+  ContactTableActions,
+  SequencesTableActions,
+  OrganizationTableActions,
+} from '../Actions';
 import {
   getContactSortFn,
   getContactFilterFns,
@@ -447,6 +451,26 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             ids: selectedIds,
           });
         }
+      } else if (tableType === TableViewType.Flow) {
+        if (selectedIds.length === 1) {
+          reset();
+
+          store.ui.commandMenu.setType('SequenceCommands');
+          store.ui.commandMenu.setContext({
+            entity: 'Sequence',
+            ids: selectedIds,
+          });
+        }
+
+        if (selectedIds.length > 1) {
+          reset();
+
+          store.ui.commandMenu.setType('SequencesBulkCommands');
+          store.ui.commandMenu.setContext({
+            entity: 'Sequences',
+            ids: selectedIds,
+          });
+        }
       } else {
         if (selectedIds.length === 1) {
           store.ui.commandMenu.setType('ContactCommands');
@@ -474,6 +498,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       store.ui.commandMenu.setType('OrganizationHub');
     } else if (tableType === TableViewType.Opportunities) {
       store.ui.commandMenu.setType('OpportunityHub');
+    } else if (tableType === TableViewType.Flow) {
+      store.ui.commandMenu.setType('SequenceHub');
     } else {
       store.ui.commandMenu.setType('ContactHub');
     }
@@ -555,6 +581,22 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       }
     }
 
+    if (tableType === TableViewType.Flow) {
+      if (typeof index !== 'number') {
+        store.ui.commandMenu.setType('SequenceHub');
+
+        return;
+      }
+
+      if (index > -1 && Object.keys(selection).length === 0) {
+        store.ui.commandMenu.setType('SequenceCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Sequence',
+          ids: [data?.[index]?.id],
+        });
+      }
+    }
+
     if (tableType === TableViewType.Opportunities) {
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('OpportunityHub');
@@ -619,6 +661,26 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         store.ui.commandMenu.setType('OpportunityBulkCommands');
         store.ui.commandMenu.setContext({
           entity: 'Opportunities',
+          ids: selectedIds,
+        });
+      }
+    } else if (tableType === TableViewType.Flow) {
+      if (selectedIds.length === 1) {
+        reset();
+
+        store.ui.commandMenu.setType('SequenceCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Sequence',
+          ids: selectedIds,
+        });
+      }
+
+      if (selectedIds.length > 1) {
+        reset();
+
+        store.ui.commandMenu.setType('SequencesBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Sequences',
           ids: selectedIds,
         });
       }
@@ -791,6 +853,26 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Opportunities) {
             return (
               <OpportunitiesTableActions
+                focusedId={focusedId}
+                onOpenCommandK={handleOpenCommandKMenu}
+                table={table as TableInstance<ContactStore>}
+                handleOpen={(type: CommandMenuType) => {
+                  handleOpenCommandKMenu();
+                  store.ui.commandMenu.setType(type);
+                }}
+                enableKeyboardShortcuts={
+                  !isSearching &&
+                  !isFiltering &&
+                  !isEditing &&
+                  !isCommandMenuPrompted
+                }
+              />
+            );
+          }
+
+          if (tableType === TableViewType.Flow) {
+            return (
+              <SequencesTableActions
                 focusedId={focusedId}
                 onOpenCommandK={handleOpenCommandKMenu}
                 table={table as TableInstance<ContactStore>}

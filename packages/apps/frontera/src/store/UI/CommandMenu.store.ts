@@ -38,6 +38,11 @@ export type CommandMenuType =
   | 'OpportunityBulkCommands'
   | 'ChangeBulkArrEstimate'
   | 'CreateNewSequence'
+  | 'RenameSequence'
+  | 'SequenceCommands'
+  | 'ChangeSequenceStatus'
+  | 'SequencesBulkCommands'
+  | 'SequenceHub'
   | 'ContactBulkCommands';
 
 export type Context = {
@@ -53,6 +58,8 @@ export type Context = {
     | 'Opportunities'
     | 'Contact'
     | 'TableViewDef'
+    | 'Sequence'
+    | 'Sequences'
     | null;
 };
 

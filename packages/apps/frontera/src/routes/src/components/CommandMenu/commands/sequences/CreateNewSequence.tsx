@@ -27,13 +27,10 @@ export const CreateNewSequence = observer(() => {
     if (!allowSubmit) return;
     setAllowSubmit(false);
 
-    flowSequences.create(
-      {
-        name: sequenceName,
-        description: '',
-      },
-      {},
-    );
+    flowSequences.create({
+      name: sequenceName,
+      description: '',
+    });
 
     store.ui.commandMenu.toggle('CreateNewSequence');
   };

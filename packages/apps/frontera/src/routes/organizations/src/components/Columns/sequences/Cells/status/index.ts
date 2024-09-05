@@ -1,1 +1,1 @@
-export * from './FlowStatus';
+export * from './FlowStatusCell';

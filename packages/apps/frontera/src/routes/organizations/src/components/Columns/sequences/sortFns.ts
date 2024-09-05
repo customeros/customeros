@@ -17,7 +17,7 @@ export const getSequenceColumnSortFn = (columnId: string) =>
     )
 
     .with(ColumnViewType.FlowName, () => (row: FlowSequenceStore) => {
-      const value = row.value?.flow?.[0]?.name;
+      const value = row.value?.flow?.name;
 
       return value || null;
     })

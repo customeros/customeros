@@ -9,7 +9,7 @@ import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store';
 import { FlowSequenceService } from '@store/Sequences/__service__/FlowSequence.service';
 import { CreateSequenceMutationVariables } from '@store/Sequences/__service__/createSequence.generated';
 
-import { FlowSequence } from '@graphql/types';
+import { FlowSequence, FlowSequenceStatus } from '@graphql/types';
 
 export class FlowSequencesStore implements GroupStore<FlowSequence> {
   version = 0;
@@ -125,6 +125,101 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
       }, 1000);
     }
   }
+
+  archive = async (id: string, options?: { onSuccess?: () => void }) => {
+    this.isLoading = true;
+
+    const flow = this.value.get(id);
+
+    try {
+      const { flow_sequence_changeStatus } =
+        await this.service.updateSequenceStatus({
+          id,
+          stage: FlowSequenceStatus.Archived,
+        });
+
+      if (flow_sequence_changeStatus.metadata.id) {
+        runInAction(() => {
+          flow?.update(
+            (seq) => {
+              seq.status = FlowSequenceStatus.Archived;
+
+              return seq;
+            },
+            { mutate: false },
+          );
+
+          this.sync({
+            action: 'INVALIDATE',
+            ids: [id],
+          });
+        });
+        this.root.ui.toastSuccess(
+          `Sequence archived`,
+          'archive-sequence-success',
+        );
+      }
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+        this.root.ui.toastError(
+          `We couldn't archive this sequence`,
+          'archive-view-error',
+        );
+      });
+    } finally {
+      this.isLoading = false;
+      options?.onSuccess?.();
+    }
+  };
+
+  archiveMany = async (ids: string[], options?: { onSuccess?: () => void }) => {
+    this.isLoading = true;
+
+    try {
+      const results = await Promise.all(
+        ids.map((id) =>
+          this.service.updateSequenceStatus({
+            id,
+            stage: FlowSequenceStatus.Archived,
+          }),
+        ),
+      );
+
+      const successfulIds = results.map(
+        ({ flow_sequence_changeStatus }) =>
+          flow_sequence_changeStatus?.metadata?.id,
+      );
+
+      runInAction(() => {
+        successfulIds.forEach((id) => {
+          this.value
+            .get(id)
+            ?.update(
+              (seq) => ({ ...seq, status: FlowSequenceStatus.Archived }),
+              { mutate: false },
+            );
+        });
+
+        if (successfulIds.length > 0) {
+          this.sync({ action: 'INVALIDATE', ids: successfulIds });
+          this.root.ui.toastSuccess(
+            `${successfulIds.length} sequences archived`,
+            'archive-sequences-success',
+          );
+        }
+      });
+    } catch (err) {
+      this.error = (err as Error).message;
+      this.root.ui.toastError(
+        "We couldn't archive these sequences",
+        'archive-sequences-error',
+      );
+    } finally {
+      this.isLoading = false;
+      options?.onSuccess?.();
+    }
+  };
 
   async remove() {
     // todo
