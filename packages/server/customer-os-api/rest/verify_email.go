@@ -15,6 +15,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"io"
 	"net/http"
 	"strings"
 )
@@ -156,17 +157,18 @@ func callApiValidateEmail(ctx context.Context, services *service.Services, span 
 		return nil, err
 	}
 	defer response.Body.Close()
+	span.LogFields(log.Int("response.status", response.StatusCode))
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		return nil, err
+	}
 
 	var validationResponse validationmodel.ValidateEmailResponse
-	err = json.NewDecoder(response.Body).Decode(&validationResponse)
+	err = json.Unmarshal(responseBody, &validationResponse)
 	if err != nil {
+		span.LogFields(log.String("response.body", string(responseBody)))
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
-		responseBody := new(bytes.Buffer)
-		_, readErr := responseBody.ReadFrom(response.Body)
-		if readErr != nil {
-			tracing.TraceErr(span, errors.Wrap(readErr, "failed to read response body"))
-		}
-		span.LogFields(log.String("response.body", responseBody.String()))
 		return nil, err
 	}
 	if validationResponse.Data == nil {

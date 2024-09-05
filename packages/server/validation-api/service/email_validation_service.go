@@ -16,6 +16,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"io"
 	"net/http"
 	"net/url"
 	"strings"
@@ -444,16 +445,20 @@ func (s *emailValidationService) callTrueinboxToValidateEmail(ctx context.Contex
 		return postgresentity.TrueInboxResponseBody{}, err
 	}
 	defer response.Body.Close()
+	span.LogFields(log.Int("response.status", response.StatusCode))
+	body, err := io.ReadAll(response.Body)
 
 	if response.StatusCode != http.StatusOK {
+		span.LogFields(log.String("response.body", string(body)))
 		err = fmt.Errorf("TrueInbox returned %d status code", response.StatusCode)
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get response from TrueInbox"))
 		return postgresentity.TrueInboxResponseBody{}, err
 	}
 
 	var trueInboxResponse postgresentity.TrueInboxResponseBody
-	err = json.NewDecoder(response.Body).Decode(&trueInboxResponse)
+	err = json.Unmarshal(body, &trueInboxResponse)
 	if err != nil {
+		span.LogFields(log.String("response.body", string(body)))
 		tracing.TraceErr(span, errors.Wrap(err, "failed to decode TrueInbox response"))
 		s.log.Errorf("failed to decode TrueInbox response: %s", err.Error())
 		return trueInboxResponse, err

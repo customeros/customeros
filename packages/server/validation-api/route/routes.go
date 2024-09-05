@@ -96,6 +96,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				}
 			}
 
+			tracing.LogObjectAsJson(span, "output", emailValidationData)
 			c.JSON(http.StatusOK, model.ValidateEmailResponse{
 				Status: "success",
 				Data:   emailValidationData,
