@@ -113,6 +113,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	route.AddCommentRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddInvoiceRoutes(ctx, r, serviceContainer, server.log, commonCache)
 	route.AddSlackRoutes(ctx, r, serviceContainer, server.log, commonCache)
+	route.AddEmailRoutes(ctx, r, server.cfg, serviceContainer)
 
 	r.GET("/health", HealthCheckHandler)
 	r.GET("/readiness", ReadinessHandler)

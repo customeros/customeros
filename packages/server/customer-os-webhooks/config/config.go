@@ -23,6 +23,7 @@ type Config struct {
 	Metrics           metrics.Config
 
 	BetterContactCallbackApiKey string `env:"BETTER_CONTACT_CALLBACK_API_KEY" validate:"required"`
+	EnrowCallbackApiKey         string `env:"ENROW_CALLBACK_API_KEY" validate:"required"`
 
 	Slack struct {
 		NotifyPostmarkEmail string `env:"SLACK_NOTIFY_POSTMARK_EMAIL"`
