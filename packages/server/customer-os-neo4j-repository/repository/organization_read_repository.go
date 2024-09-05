@@ -869,7 +869,6 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain)
 				WHERE org.enrichedAt IS NULL AND
 						org.hide = false AND
-						(NOT d.enrichedAt IS NULL OR d.enrichRequestedAt IS NULL) AND
 						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
 				WITH t.name as tenant, org.id as orgId, d.domain as domain
 				ORDER BY CASE WHEN org.techDomainCheckedAt IS NULL THEN 0 ELSE 1 END, org.techDomainCheckedAt ASC

@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -14,10 +13,6 @@ import (
 
 type DomainWriteRepository interface {
 	MergeDomain(ctx context.Context, domain, source, appSource string, now time.Time) error
-	// Deprecated
-	EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.EnrichSource, requestedAt time.Time) error
-	// Deprecated
-	EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.EnrichSource, enrichedAt time.Time) error
 }
 
 type domainWriteRepository struct {
@@ -55,72 +50,6 @@ func (d domainWriteRepository) MergeDomain(ctx context.Context, domain, source, 
 		"source":    source,
 		"appSource": appSource,
 	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *d.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
-func (d domainWriteRepository) EnrichFailed(ctx context.Context, domain, enrichError string, enrichSource enum.EnrichSource, requestedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.EnrichFailed")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.SetTag(tracing.SpanTagEntityId, domain)
-	span.LogFields(log.String("enrichError", enrichError), log.String("requestedAt", requestedAt.String()))
-
-	cypher := fmt.Sprintf(`
-	MATCH (d:Domain {domain:$domain})
-	SET
-		d.updatedAt=datetime(),
-		d.enrichError=$enrichError,
-		d.enrichSource=$enrichSource,
-		d.enrichRequestedAt=$enrichRequestedAt`)
-
-	params := map[string]interface{}{
-		"domain":            domain,
-		"enrichError":       enrichError,
-		"enrichRequestedAt": requestedAt,
-		"enrichSource":      enrichSource.String(),
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *d.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-
-}
-
-func (d domainWriteRepository) EnrichSuccess(ctx context.Context, domain, enrichData string, enrichSource enum.EnrichSource, enrichedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainWriteRepository.EnrichSuccess")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	span.SetTag(tracing.SpanTagEntityId, domain)
-	span.LogFields(log.String("enrichData", enrichData), log.String("enrichedAt", enrichedAt.String()))
-
-	cypher := `MATCH (d:Domain {domain:$domain})
-	SET
-		d.updatedAt=datetime(),
-		d.enrichData=$enrichData,
-		d.enrichSource=$enrichSource,
-		d.enrichRequestedAt=$enrichRequestedAt,
-		d.enrichedAt=$enrichedAt
-	REMOVE d.enrichError`
-
-	params := map[string]interface{}{
-		"domain":            domain,
-		"enrichRequestedAt": enrichedAt,
-		"enrichedAt":        enrichedAt,
-		"enrichData":        enrichData,
-		"enrichSource":      enrichSource.String(),
-	}
-
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
