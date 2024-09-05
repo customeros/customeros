@@ -60,6 +60,30 @@ func MapEntitiesToFlowSequence(entities []*postgresEntity.FlowSequence) []*model
 	return mapped
 }
 
+func MapEntityToFlowSequenceContact(entity *postgresEntity.FlowSequenceContact) *model.FlowSequenceContact {
+	if entity == nil {
+		return nil
+	}
+	return &model.FlowSequenceContact{
+		Metadata: &model.Metadata{
+			ID:            entity.ID,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        model.DataSourceOpenline,
+			SourceOfTruth: model.DataSourceOpenline,
+			AppSource:     "",
+		},
+	}
+}
+
+func MapEntitiesToFlowSequenceContacts(entities []*postgresEntity.FlowSequenceContact) []*model.FlowSequenceContact {
+	var mapped []*model.FlowSequenceContact
+	for _, entity := range entities {
+		mapped = append(mapped, MapEntityToFlowSequenceContact(entity))
+	}
+	return mapped
+}
+
 func MapEntityToFlowSequenceStep(entity *postgresEntity.FlowSequenceStep) *model.FlowSequenceStep {
 	if entity == nil {
 		return nil

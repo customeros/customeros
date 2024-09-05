@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -40,6 +41,8 @@ func (r flowSequenceRepositoryImpl) GetList(ctx context.Context, flowId *string)
 
 	if flowId != nil {
 		db = db.Where("tenant = ? and flow_id = ?", common.GetTenantFromContext(ctx), flowId)
+	} else {
+		db = db.Where("tenant = ?", common.GetTenantFromContext(ctx))
 	}
 
 	err :=
@@ -119,6 +122,11 @@ func (repo *flowSequenceRepositoryImpl) Store(ctx context.Context, entity *entit
 	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
 
 	span.LogFields(tracingLog.Object("entity", entity))
+
+	if entity.Tenant == "" {
+		tracing.TraceErr(span, errors.New("tenant is required"))
+		return nil, errors.New("tenant is required")
+	}
 
 	err := repo.gormDb.Save(entity).Error
 

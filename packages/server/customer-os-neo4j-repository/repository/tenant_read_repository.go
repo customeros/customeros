@@ -55,6 +55,7 @@ func (r *tenantReadRepository) GetAll(ctx context.Context) ([]*dbtype.Node, erro
 		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
 	})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 

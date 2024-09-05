@@ -28,10 +28,10 @@ type FlowService interface {
 	FlowSequenceStepStore(ctx context.Context, entity *postgresEntity.FlowSequenceStep) (*postgresEntity.FlowSequenceStep, error)
 	FlowSequenceStepChangeStatus(ctx context.Context, id string, status postgresEntity.FlowSequenceStepStatus) (*postgresEntity.FlowSequenceStep, error)
 
-	GetFlowSequenceContacts(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error)
-	GetFlowSequenceContactById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceContact, error)
-	StoreFlowSequenceContact(ctx context.Context, tenant string, entity *postgresEntity.FlowSequenceContact) (*postgresEntity.FlowSequenceContact, error)
-	DeleteFlowSequenceContact(ctx context.Context, tenant, id string) error
+	FlowSequenceContactGetList(ctx context.Context, sequenceId *string) ([]*postgresEntity.FlowSequenceContact, error)
+	FlowSequenceContactGetById(ctx context.Context, id string) (*postgresEntity.FlowSequenceContact, error)
+	FlowSequenceContactLink(ctx context.Context, sequenceId, contactId, emailId string) (*postgresEntity.FlowSequenceContact, error)
+	FlowSequenceContactUnlink(ctx context.Context, sequenceId, contactId, emailId string) error
 
 	GetFlowSequenceSenders(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error)
 	GetFlowSequenceSenderById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceSender, error)
@@ -328,68 +328,96 @@ func (s *flowService) FlowSequenceStepChangeStatus(ctx context.Context, id strin
 	return entity, nil
 }
 
-func (s *flowService) GetFlowSequenceContacts(ctx context.Context, tenant, sequenceId string, page, limit int) (*utils.Pagination, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceContacts")
+func (s *flowService) FlowSequenceContactGetList(ctx context.Context, sequenceId *string) ([]*postgresEntity.FlowSequenceContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceContactGetList")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	pageResult := utils.Pagination{
-		Page:  page,
-		Limit: limit,
-	}
-
-	count, err := s.services.PostgresRepositories.FlowSequenceContactRepository.Count(ctx, tenant, sequenceId)
+	entities, err := s.services.PostgresRepositories.FlowSequenceContactRepository.GetList(ctx, sequenceId)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	entities, err := s.services.PostgresRepositories.FlowSequenceContactRepository.Get(ctx, tenant, sequenceId, page, limit)
-	if err != nil {
-		return nil, err
-	}
-
-	pageResult.SetTotalRows(count)
-	pageResult.SetRows(entities)
-
-	return &pageResult, nil
+	return entities, nil
 }
 
-func (s *flowService) GetFlowSequenceContactById(ctx context.Context, tenant, id string) (*postgresEntity.FlowSequenceContact, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.GetFlowSequenceContactById")
+func (s *flowService) FlowSequenceContactGetById(ctx context.Context, id string) (*postgresEntity.FlowSequenceContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceContactGetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceContactRepository.GetById(ctx, tenant, id)
+	entity, err := s.services.PostgresRepositories.FlowSequenceContactRepository.GetById(ctx, id)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
 	return entity, nil
 }
 
-func (s *flowService) StoreFlowSequenceContact(ctx context.Context, tenant string, entity *postgresEntity.FlowSequenceContact) (*postgresEntity.FlowSequenceContact, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.StoreFlowSequenceContact")
+func (s *flowService) FlowSequenceContactLink(ctx context.Context, sequenceId, contactId, emailId string) (*postgresEntity.FlowSequenceContact, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceContactLink")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceContactRepository.Store(ctx, tenant, entity)
+	identified, err := s.services.PostgresRepositories.FlowSequenceContactRepository.Identify(ctx, sequenceId, contactId, emailId)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	return entity, nil
+	if identified == nil {
+
+		contactNode, err := s.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, common.GetTenantFromContext(ctx), contactId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if contactNode == nil {
+			tracing.TraceErr(span, errors.New("contact not found"))
+			return nil, errors.New("contact not found")
+		}
+
+		emailNode, err := s.services.Neo4jRepositories.EmailReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), emailId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		if emailNode == nil {
+			tracing.TraceErr(span, errors.New("email not found"))
+			return nil, errors.New("email not found")
+		}
+
+		identified, err = s.services.PostgresRepositories.FlowSequenceContactRepository.Store(ctx, &postgresEntity.FlowSequenceContact{
+			Tenant:     common.GetTenantFromContext(ctx),
+			SequenceId: sequenceId,
+			ContactId:  contactId,
+			EmailId:    emailId,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
+	return identified, nil
 }
 
-func (s *flowService) DeleteFlowSequenceContact(ctx context.Context, tenant, id string) error {
+func (s *flowService) FlowSequenceContactUnlink(ctx context.Context, sequenceId, contactId, emailId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.DeleteFlowSequenceContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	span.LogFields(log.String("id", id))
+	identified, err := s.services.PostgresRepositories.FlowSequenceContactRepository.Identify(ctx, sequenceId, contactId, emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
 
-	err := s.services.PostgresRepositories.FlowSequenceContactRepository.Delete(ctx, tenant, id)
+	err = s.services.PostgresRepositories.FlowSequenceContactRepository.Delete(ctx, identified.ID)
 	if err != nil {
 		return err
 	}

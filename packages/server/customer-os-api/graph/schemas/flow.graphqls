@@ -4,11 +4,17 @@ extend type Query {
 }
 
 extend type Mutation {
-    flow_sequence_store(input: FlowSequenceStoreInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_Store(input: FlowSequenceStoreInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    flow_changeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flow_sequence_changeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flow_sequence_step_changeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_LinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): FlowSequenceContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_UnlinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+#    flow_sequence_LinkMailbox(sequenceId: ID!, contactId: ID!, emailId: ID!): Mailbox! @hasRole(roles: [ADMIN, USER]) @hasTenant
+#    flow_sequence_UnlinkMailbox(sequenceId: ID!, contactId: ID!, emailId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_ChangeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_step_ChangeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Flow implements MetadataInterface {

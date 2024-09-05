@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/logger"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/service"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/robfig/cron"
 	"github.com/sirupsen/logrus"
@@ -111,7 +112,7 @@ func syncCalendarEvents(services *service.Services) {
 
 	ctx := context.Background()
 
-	tenants, err := services.TenantService.GetAllTenants(ctx)
+	tenants, err := services.CommonServices.TenantService.GetAllTenants(ctx)
 	if err != nil {
 		logrus.Errorf("failed to get tenants: %v", err)
 		return
@@ -122,21 +123,14 @@ func syncCalendarEvents(services *service.Services) {
 
 	for _, tenant := range tenants {
 
-		go func(tenant entity.TenantEntity) {
+		go func(tenant neo4jentity.TenantEntity) {
 			defer wg.Done()
 
-			logrus.Infof("syncing calendar events for tenant: %s", tenant)
+			logrus.Infof("syncing calendar events for tenant: %s", tenant.Name)
 
-			gcalExternalSystemId := neo4jenum.GCal.String()
-			err = services.Repositories.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(context.Background(), tenant.Name, gcalExternalSystemId, gcalExternalSystemId)
-			if err != nil {
-				logrus.Errorf("failed to merge external system: %v", err)
-				return
-			}
+			services.MeetingService.SyncCalendarEvents("gcal", tenant.Name)
 
-			services.MeetingService.SyncCalendarEvents(gcalExternalSystemId, tenant.Name)
-
-			logrus.Infof("syncing calendar events for tenant: %s completed", tenant)
+			logrus.Infof("syncing calendar events for tenant: %s completed", tenant.Name)
 		}(*tenant)
 	}
 

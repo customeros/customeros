@@ -17,6 +17,7 @@ import (
 )
 
 type TenantService interface {
+	GetAllTenants(ctx context.Context) ([]*neo4jentity.TenantEntity, error)
 	GetTenantForWorkspace(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity) (*neo4jentity.TenantEntity, error)
 	GetTenantForUserEmail(ctx context.Context, email string) (*neo4jentity.TenantEntity, error)
 	GetTenantSettings(ctx context.Context) (*neo4jentity.TenantSettingsEntity, error)
@@ -39,6 +40,26 @@ func NewTenantService(log logger.Logger, services *Services) TenantService {
 		log:      log,
 		services: services,
 	}
+}
+
+func (s *tenantService) GetAllTenants(ctx context.Context) ([]*neo4jentity.TenantEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TenantService.GetAllTenants")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	nodes, err := s.services.Neo4jRepositories.TenantReadRepository.GetAll(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	tenants := make([]*neo4jentity.TenantEntity, len(nodes))
+
+	for i, node := range nodes {
+		tenants[i] = neo4jmapper.MapDbNodeToTenantEntity(node)
+	}
+
+	return tenants, nil
 }
 
 func (s *tenantService) GetTenantForWorkspace(ctx context.Context, workspaceEntity neo4jentity.WorkspaceEntity) (*neo4jentity.TenantEntity, error) {
@@ -194,6 +215,12 @@ func (s *tenantService) Merge(ctx context.Context, tenantEntity neo4jentity.Tena
 	}
 
 	err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "intercom", "intercom")
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("merge: %w", err)
+	}
+
+	err = s.services.Neo4jRepositories.ExternalSystemWriteRepository.CreateIfNotExists(ctx, tenantEntity.Name, "gcal", "gcal")
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, fmt.Errorf("merge: %w", err)

@@ -52,6 +52,16 @@ func (r *mutationResolver) FlowSequenceStore(ctx context.Context, input model.Fl
 	panic(fmt.Errorf("not implemented: FlowSequenceStore - flow_sequence_store"))
 }
 
+// FlowSequenceLinkContact is the resolver for the flow_sequence_LinkContact field.
+func (r *mutationResolver) FlowSequenceLinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.FlowSequenceContact, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceLinkContact - flow_sequence_LinkContact"))
+}
+
+// FlowSequenceUnlinkContact is the resolver for the flow_sequence_UnlinkContact field.
+func (r *mutationResolver) FlowSequenceUnlinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkContact - flow_sequence_UnlinkContact"))
+}
+
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
 func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: FlowChangeStatus - flow_changeStatus"))
