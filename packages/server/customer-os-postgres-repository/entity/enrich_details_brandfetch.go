@@ -69,7 +69,11 @@ type BrandfetchCompany struct {
 	} `json:"location,omitempty"`
 }
 
-func (b *BrandfetchCompany) LocationIsEmpty() bool {
+func (b BrandfetchResponseBody) IsEmpty() bool {
+	return b.Name == "" && b.Domain == "" && b.Description == "" && b.LongDescription == ""
+}
+
+func (b BrandfetchCompany) LocationIsEmpty() bool {
 	return b.Location.City == "" && b.Location.Country == "" && b.Location.State == "" && b.Location.CountryCodeA2 == ""
 }
 

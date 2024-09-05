@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -190,12 +191,20 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 		return nil, err
 	}
 	defer response.Body.Close()
-	span.LogFields(log.Int("response.status.enrichPerson", response.StatusCode))
+	span.LogFields(log.Int("response.status", response.StatusCode))
+	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		span.LogFields(log.String("response.body", string(body)))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		return nil, err
+	}
 
 	var enrichOrganizationApiResponse enrichmentmodel.EnrichOrganizationResponse
-	err = json.NewDecoder(response.Body).Decode(&enrichOrganizationApiResponse)
+	// read the response body
+	err = json.Unmarshal(body, &enrichOrganizationApiResponse)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode enrich organization response"))
+		span.LogFields(log.String("response.body", string(body)))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal enrich organization response"))
 		return nil, err
 	}
 	return &enrichOrganizationApiResponse, nil
