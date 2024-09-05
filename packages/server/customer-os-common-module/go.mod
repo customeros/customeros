@@ -29,6 +29,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	go.uber.org/zap v1.27.0
+	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	golang.org/x/net v0.28.0
 	golang.org/x/oauth2 v0.22.0
 	google.golang.org/api v0.195.0
@@ -73,7 +74,6 @@ require (
 	go.opentelemetry.io/otel/metric v1.24.0 // indirect
 	go.opentelemetry.io/otel/trace v1.24.0 // indirect
 	go.temporal.io/api v1.24.0 // indirect
-	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3 // indirect
 	golang.org/x/sync v0.8.0 // indirect
 	golang.org/x/time v0.6.0 // indirect
 	google.golang.org/genproto v0.0.0-20240823204242-4ba0660f739c // indirect
@@ -118,7 +118,7 @@ require (
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.26.0 // indirect
 	golang.org/x/sys v0.24.0 // indirect
-	golang.org/x/text v0.17.0
+	golang.org/x/text v0.18.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240823204242-4ba0660f739c // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
