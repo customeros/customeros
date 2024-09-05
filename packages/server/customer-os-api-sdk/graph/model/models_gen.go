@@ -1123,8 +1123,8 @@ type FilterItem struct {
 
 type Flow struct {
 	Metadata    *Metadata       `json:"metadata"`
-	Name        *string         `json:"name,omitempty"`
-	Description *string         `json:"description,omitempty"`
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
 	Status      FlowStatus      `json:"status"`
 	Sequences   []*FlowSequence `json:"sequences"`
 }
@@ -1134,8 +1134,8 @@ func (this Flow) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequence struct {
 	Metadata    *Metadata              `json:"metadata"`
-	Name        *string                `json:"name,omitempty"`
-	Description *string                `json:"description,omitempty"`
+	Name        string                 `json:"name"`
+	Description string                 `json:"description"`
 	Status      FlowSequenceStatus     `json:"status"`
 	Flow        *Flow                  `json:"flow"`
 	Steps       []*FlowSequenceStep    `json:"steps"`
@@ -1157,7 +1157,7 @@ func (this FlowSequenceContact) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequenceStep struct {
 	Metadata *Metadata                `json:"metadata"`
-	Name     *string                  `json:"name,omitempty"`
+	Name     string                   `json:"name"`
 	Status   FlowSequenceStepStatus   `json:"status"`
 	Type     FlowSequenceStepType     `json:"type"`
 	Subtype  *FlowSequenceStepSubtype `json:"subtype,omitempty"`
@@ -1166,6 +1166,13 @@ type FlowSequenceStep struct {
 
 func (FlowSequenceStep) IsMetadataInterface()        {}
 func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowSequenceStoreInput struct {
+	ID          *string `json:"id,omitempty"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	FlowID      *string `json:"flowId,omitempty"`
+}
 
 type GCliAttributeKeyValuePair struct {
 	Key     string  `json:"key"`

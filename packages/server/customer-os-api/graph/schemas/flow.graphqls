@@ -4,6 +4,8 @@ extend type Query {
 }
 
 extend type Mutation {
+    flow_sequence_store(input: FlowSequenceStoreInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     flow_changeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_changeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_step_changeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -11,16 +13,16 @@ extend type Mutation {
 
 type Flow implements MetadataInterface {
     metadata:           Metadata!
-    name:               String
-    description:        String
+    name:               String!
+    description:        String!
     status: FlowStatus!
     sequences: [FlowSequence!]! @goField(forceResolver: true)
 }
 
 type FlowSequence implements MetadataInterface {
     metadata:           Metadata!
-    name:               String
-    description:        String
+    name:               String!
+    description:        String!
     status: FlowSequenceStatus!
     flow: Flow! @goField(forceResolver: true)
     steps: [FlowSequenceStep!]! @goField(forceResolver: true)
@@ -31,7 +33,7 @@ type FlowSequence implements MetadataInterface {
 type FlowSequenceStep implements MetadataInterface {
     metadata: Metadata!
 
-    name: String
+    name: String!
     status: FlowSequenceStepStatus!
 
     type: FlowSequenceStepType!
@@ -50,6 +52,13 @@ type FlowSequenceContact implements MetadataInterface {
 type Mailbox implements MetadataInterface {
     metadata: Metadata!
     email:    String!
+}
+
+input FlowSequenceStoreInput {
+    id: ID
+    name: String!
+    description: String!
+    flowId: ID
 }
 
 enum FlowStatus {

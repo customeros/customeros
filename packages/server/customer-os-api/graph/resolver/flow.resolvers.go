@@ -73,6 +73,21 @@ func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.Flow
 	return &model.Email{}, nil
 }
 
+// FlowSequenceStore is the resolver for the flow_sequence_store field.
+func (r *mutationResolver) FlowSequenceStore(ctx context.Context, input model.FlowSequenceStoreInput) (*model.FlowSequence, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStore", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStore(ctx, mapper.MapFlowSequenceStoreInputToEntity(input))
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowSequence(entity), nil
+}
+
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
 func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowChangeStatus", graphql.GetOperationContext(ctx))

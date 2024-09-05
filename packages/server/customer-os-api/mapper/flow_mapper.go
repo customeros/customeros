@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 )
 
@@ -204,4 +205,15 @@ func MapFlowSequenceStepSubtypeToModel(enum *postgresEntity.FlowSequenceStepSubt
 	}
 
 	return &v
+}
+
+func MapFlowSequenceStoreInputToEntity(input model.FlowSequenceStoreInput) *postgresEntity.FlowSequence {
+	return &postgresEntity.FlowSequence{
+		BaseEntity: postgresEntity.BaseEntity{
+			ID: utils.StringOrEmpty(input.ID),
+		},
+		Name:        input.Name,
+		Description: input.Description,
+		FlowId:      utils.StringOrEmpty(input.FlowID),
+	}
 }
