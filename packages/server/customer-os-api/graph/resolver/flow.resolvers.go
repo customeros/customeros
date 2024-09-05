@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
@@ -55,7 +54,18 @@ func (r *flowSequenceResolver) Steps(ctx context.Context, obj *model.FlowSequenc
 
 // Contacts is the resolver for the contacts field.
 func (r *flowSequenceResolver) Contacts(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceContact, error) {
-	return make([]*model.FlowSequenceContact, 0), nil
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Contacts", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := r.Services.CommonServices.FlowService.FlowSequenceContactGetList(ctx, &obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow sequence contacts")
+		return nil, err
+	}
+
+	return mapper.MapEntitiesToFlowSequenceContacts(entities), nil
 }
 
 // Mailboxes is the resolver for the mailboxes field.
@@ -86,6 +96,36 @@ func (r *mutationResolver) FlowSequenceStore(ctx context.Context, input model.Fl
 		return nil, err
 	}
 	return mapper.MapEntityToFlowSequence(entity), nil
+}
+
+// FlowSequenceLinkContact is the resolver for the flow_sequence_LinkContact field.
+func (r *mutationResolver) FlowSequenceLinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.FlowSequenceContact, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceLinkContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceContactLink(ctx, sequenceID, contactID, emailID)
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowSequenceContact(entity), nil
+}
+
+// FlowSequenceUnlinkContact is the resolver for the flow_sequence_UnlinkContact field.
+func (r *mutationResolver) FlowSequenceUnlinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceLinkContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	err := r.Services.CommonServices.FlowService.FlowSequenceContactUnlink(ctx, sequenceID, contactID, emailID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return &model.Result{Result: false}, err
+	}
+	return &model.Result{Result: true}, nil
 }
 
 // FlowChangeStatus is the resolver for the flow_changeStatus field.

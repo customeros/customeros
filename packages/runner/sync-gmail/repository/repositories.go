@@ -9,7 +9,8 @@ import (
 )
 
 type Repositories struct {
-	Neo4jDriver *neo4j.DriverWithContext
+	Neo4jDriver    *neo4j.DriverWithContext
+	PostgresDriver *gorm.DB
 
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
@@ -19,20 +20,19 @@ type Repositories struct {
 	RawCalendarEventRepository RawCalendarEventRepository
 
 	//neo4j repositories
-	TenantRepository           TenantRepository
 	UserRepository             UserRepository
 	EmailRepository            EmailRepository
 	InteractionEventRepository InteractionEventRepository
 	OrganizationRepository     OrganizationRepository
 	ActionRepository           ActionRepository
-	ActionPointRepository      ActionPointRepository
 	DomainRepository           DomainRepository
 	MeetingRepository          MeetingRepository
 }
 
 func InitRepos(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm.DB) *Repositories {
 	repositories := Repositories{
-		Neo4jDriver: driver,
+		Neo4jDriver:    driver,
+		PostgresDriver: gormDb,
 
 		PostgresRepositories: postgresRepository.InitRepositories(gormDb),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, cfg.Neo4jDb.Database),
@@ -40,13 +40,11 @@ func InitRepos(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm
 		RawEmailRepository:         NewRawEmailRepository(gormDb),
 		RawCalendarEventRepository: NewRawCalendarEventRepository(gormDb),
 
-		TenantRepository:           NewTenantRepository(driver),
 		UserRepository:             NewUserRepository(driver),
 		EmailRepository:            NewEmailRepository(driver),
 		InteractionEventRepository: NewInteractionEventRepository(driver),
 		OrganizationRepository:     NewOrganizationRepository(driver),
 		ActionRepository:           NewActionRepository(driver),
-		ActionPointRepository:      NewActionPointRepository(driver),
 		DomainRepository:           NewDomainRepository(driver),
 		MeetingRepository:          NewMeetingRepository(driver),
 	}
