@@ -4298,46 +4298,6 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
     },
-    "public.scraper_configs": {
-      "name": "scraper_configs",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "user_id": {
-          "name": "user_id",
-          "type": "varchar(36)",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "tenant": {
-          "name": "tenant",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {}
-    },
     "public.customer_os_ids": {
       "name": "customer_os_ids",
       "schema": "",
@@ -4385,10 +4345,7 @@
       "compositePrimaryKeys": {
         "customer_os_ids_pkey": {
           "name": "customer_os_ids_pkey",
-          "columns": [
-            "tenant",
-            "customer_os_id"
-          ]
+          "columns": ["tenant", "customer_os_id"]
         }
       },
       "uniqueConstraints": {}
@@ -4515,11 +4472,7 @@
       "compositePrimaryKeys": {
         "oauth_token_pkey": {
           "name": "oauth_token_pkey",
-          "columns": [
-            "provider",
-            "tenant_name",
-            "email_address"
-          ]
+          "columns": ["provider", "tenant_name", "email_address"]
         }
       },
       "uniqueConstraints": {}
