@@ -1,6 +1,6 @@
 import { defineConfig } from "drizzle-kit";
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = process.env.NODE_ENV === "development";
 
 export default defineConfig({
   schema: "./src/infrastructure/persistance/postgresql/drizzle/schema.ts",

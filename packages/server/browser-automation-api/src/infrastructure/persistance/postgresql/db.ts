@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/postgres-js";
 
 import { connectionUrl } from "./config";
 
-const isDev = process.env.NODE_ENV !== "production";
+const isDev = process.env.NODE_ENV === "development";
 
 const pg = postgres(connectionUrl, {
   ssl: !isDev
