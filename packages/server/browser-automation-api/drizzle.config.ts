@@ -1,5 +1,7 @@
 import { defineConfig } from "drizzle-kit";
 
+const isDev = process.env.NODE_ENV !== "production";
+
 export default defineConfig({
   schema: "./src/infrastructure/persistance/postgresql/drizzle/schema.ts",
   out: "./src/infrastructure/persistance/postgresql/drizzle",
@@ -10,8 +12,10 @@ export default defineConfig({
     port: parseInt(process.env.POSTGRES_PORT ?? "5432"),
     password: process.env.POSTGRES_PASS ?? "",
     database: process.env.POSTGRES_NAME ?? "",
-    ssl: {
-      rejectUnauthorized: false,
-    },
+    ssl: !isDev
+      ? {
+          rejectUnauthorized: false,
+        }
+      : undefined,
   },
 });
