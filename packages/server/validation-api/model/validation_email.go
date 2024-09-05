@@ -20,7 +20,7 @@ type ValidateEmailRequestWithOptions struct {
 }
 
 type ValidateEmailRequestOptions struct {
-	CallTrueInbox bool `json:"callTrueInbox"`
+	VerifyCatchAll bool `json:"verifyCatchAll"`
 }
 
 type ValidateEmailResponse struct {

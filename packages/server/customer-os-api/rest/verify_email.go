@@ -65,7 +65,13 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing address parameter"})
 			return
 		}
-		span.LogFields(log.String("address", emailAddress))
+		span.LogKV("request.address", emailAddress)
+		span.LogKV("request.verifyCatchAll", c.Query("verifyCatchAll"))
+		// check if verifyCatchAll param exists, defaulted to true
+		verifyCatchAll := true
+		if c.Query("verifyCatchAll") == "false" {
+			verifyCatchAll = false
+		}
 
 		syntaxValidation := mailsherpa.ValidateEmailSyntax(emailAddress)
 		if !syntaxValidation.IsValid {
@@ -75,7 +81,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		}
 
 		// call validation api
-		result, err := callApiValidateEmail(ctx, services, span, emailAddress)
+		result, err := callApiValidateEmail(ctx, services, span, emailAddress, verifyCatchAll)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
 			return
@@ -116,12 +122,12 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func callApiValidateEmail(ctx context.Context, services *service.Services, span opentracing.Span, emailAddress string) (*validationmodel.ValidateEmailResponse, error) {
+func callApiValidateEmail(ctx context.Context, services *service.Services, span opentracing.Span, emailAddress string, verifyCatchAll bool) (*validationmodel.ValidateEmailResponse, error) {
 	// prepare validation api request
 	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
 		Email: emailAddress,
 		Options: validationmodel.ValidateEmailRequestOptions{
-			CallTrueInbox: true,
+			VerifyCatchAll: verifyCatchAll,
 		},
 	})
 	if err != nil {

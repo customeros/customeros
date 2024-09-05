@@ -225,7 +225,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		for i := range response.Data.Emails {
 			emailRecord := &response.Data.Emails[i]
 			if emailRecord.Address != "" {
-				emailValidationResult, err := callApiValidateEmail(ctx, services, span, emailRecord.Address)
+				emailValidationResult, err := callApiValidateEmail(ctx, services, span, emailRecord.Address, true)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 					continue
@@ -366,7 +366,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		for i := range response.Data.Emails {
 			email := &response.Data.Emails[i] // Get a pointer to the email in the slice
 			if email.Address != "" {
-				emailValidationResult, err := callApiValidateEmail(ctx, services, span, email.Address)
+				emailValidationResult, err := callApiValidateEmail(ctx, services, span, email.Address, true)
 				if err != nil {
 					tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 					continue
