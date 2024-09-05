@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -166,17 +167,61 @@ func (s *flowService) FlowSequenceGetById(ctx context.Context, id string) (*post
 	return entity, nil
 }
 
-func (s *flowService) FlowSequenceStore(ctx context.Context, entity *postgresEntity.FlowSequence) (*postgresEntity.FlowSequence, error) {
+func (s *flowService) FlowSequenceStore(ctx context.Context, input *postgresEntity.FlowSequence) (*postgresEntity.FlowSequence, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStore")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	entity, err := s.services.PostgresRepositories.FlowSequenceRepository.Store(ctx, entity)
+	var toStore *postgresEntity.FlowSequence
+	var err error
+
+	if input.ID == "" {
+		toStore = &postgresEntity.FlowSequence{}
+		toStore.Tenant = common.GetTenantFromContext(ctx)
+		toStore.Status = postgresEntity.FlowSequenceStatusInactive
+	} else {
+		toStore, err = s.FlowSequenceGetById(ctx, input.ID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+	}
+
+	toStore.Name = input.Name
+	toStore.Description = input.Description
+
+	if input.FlowId != "" {
+		flow, err := s.services.PostgresRepositories.FlowRepository.GetById(ctx, input.FlowId)
+		if err != nil {
+			return nil, err
+		}
+
+		if flow == nil {
+			return nil, errors.New("flow not found")
+		}
+
+		if toStore.ID == "" {
+			toStore.FlowId = input.FlowId
+		}
+	} else {
+		flow, err := s.FlowStore(ctx, &postgresEntity.Flow{
+			Tenant: common.GetTenantFromContext(ctx),
+			Name:   input.Name,
+			Status: postgresEntity.FlowStatusInactive,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		toStore.FlowId = flow.ID
+	}
+
+	stored, err := s.services.PostgresRepositories.FlowSequenceRepository.Store(ctx, toStore)
 	if err != nil {
 		return nil, err
 	}
 
-	return entity, nil
+	return stored, nil
 }
 
 func (s *flowService) FlowSequenceChangeStatus(ctx context.Context, id string, status postgresEntity.FlowSequenceStatus) (*postgresEntity.FlowSequence, error) {

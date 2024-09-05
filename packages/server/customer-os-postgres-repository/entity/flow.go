@@ -15,8 +15,8 @@ type Flow struct {
 	BaseEntity
 	Tenant string `gorm:"not null" json:"-"`
 
-	Name        *string    `gorm:"type:varchar(255);" json:"name"`
-	Description *string    `gorm:"type:text;" json:"description"`
+	Name        string     `gorm:"type:varchar(255);" json:"name"`
+	Description string     `gorm:"type:text;" json:"description"`
 	Status      FlowStatus `gorm:"type:varchar(100);not null;" json:"active"`
 }
 
@@ -26,8 +26,8 @@ type FlowSequence struct {
 
 	FlowId string `gorm:"type:uuid;not null" json:"-"`
 
-	Name        *string            `gorm:"type:varchar(255);" json:"name"`
-	Description *string            `gorm:"type:text;" json:"description"`
+	Name        string             `gorm:"type:varchar(255);" json:"name"`
+	Description string             `gorm:"type:text;" json:"description"`
 	Status      FlowSequenceStatus `gorm:"type:varchar(100);not null;" json:"status"`
 
 	////Schedule
@@ -73,7 +73,7 @@ type FlowSequenceStep struct {
 
 	SequenceId string `gorm:"type:uuid;not null" json:"-"`
 
-	Name *string `gorm:"type:varchar(255);" json:"name"`
+	Name string `gorm:"type:varchar(255);" json:"name"`
 
 	Status FlowSequenceStepStatus `gorm:"type:varchar(100);not null;" json:"status"`
 

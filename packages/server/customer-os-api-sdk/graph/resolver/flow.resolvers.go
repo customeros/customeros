@@ -47,6 +47,11 @@ func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.Flow
 	panic(fmt.Errorf("not implemented: Email - email"))
 }
 
+// FlowSequenceStore is the resolver for the flow_sequence_store field.
+func (r *mutationResolver) FlowSequenceStore(ctx context.Context, input model.FlowSequenceStoreInput) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceStore - flow_sequence_store"))
+}
+
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
 func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: FlowChangeStatus - flow_changeStatus"))
