@@ -1,3 +1,4 @@
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { Check } from '@ui/media/icons/Check';
@@ -11,18 +12,37 @@ export const ChangeSequenceStatus = observer(() => {
 
   const entity = store.flowSequences.value.get(context.ids?.[0] as string);
 
-  const label = `Sequence - ${entity?.value?.name}`;
-
   const handleSelect = (flowSequenceStatus: FlowSequenceStatus) => () => {
     if (!context.ids?.[0]) return;
 
-    if (!entity) return;
-    entity?.update((value) => {
-      value.status = flowSequenceStatus;
+    match(context.entity)
+      .with('Sequence', () => {
+        entity?.update((value) => {
+          value.status = flowSequenceStatus;
 
-      return value;
-    });
+          return value;
+        });
+      })
+      .with('Sequences', () => {
+        context.ids?.forEach((id) => {
+          const sequence = store.flowSequences.value.get(id);
+
+          sequence?.update((value) => {
+            value.status = flowSequenceStatus;
+
+            return value;
+          });
+        });
+      })
+      .otherwise(() => '');
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.setType('SequenceCommands');
   };
+
+  const label = match(context.entity)
+    .with('Sequence', () => `Sequence - ${entity?.value?.name}`)
+    .with('Sequences', () => `${context.ids?.length} sequences`)
+    .otherwise(() => '');
 
   const status = entity?.value.status;
 
