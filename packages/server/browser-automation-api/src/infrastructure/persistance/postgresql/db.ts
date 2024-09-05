@@ -4,6 +4,8 @@ import { drizzle } from "drizzle-orm/postgres-js";
 import { connectionUrl } from "./config";
 
 const pg = postgres(connectionUrl, {
-  ssl: process.env.NODE_ENV !== "development",
+  ssl: {
+    rejectUnauthorized: false,
+  },
 });
 export const db = drizzle(pg);
