@@ -379,6 +379,10 @@ func updateResponseWithScrapinData(d *model.EnrichOrganizationResponseData, scra
 	if scrapin == nil {
 		return
 	}
+	if scrapin.Company == nil {
+		return
+	}
+
 	if d.Employees == 0 {
 		d.Employees = scrapin.Company.GetEmployeeCount()
 	}
