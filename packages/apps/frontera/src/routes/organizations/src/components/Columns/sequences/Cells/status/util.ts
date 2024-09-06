@@ -5,12 +5,12 @@ export const statusOptions: {
   value: FlowSequenceStatus;
 }[] = [
   {
-    label: 'Active',
+    label: 'Live',
     value: FlowSequenceStatus.Active,
   },
 
   {
-    label: 'Inactive',
+    label: 'Not Started',
     value: FlowSequenceStatus.Inactive,
   },
   {

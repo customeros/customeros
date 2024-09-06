@@ -71,7 +71,7 @@ export const ChangeSequenceStatus = observer(() => {
             status === FlowSequenceStatus.Active ? <Check /> : null
           }
         >
-          Active
+          Live
         </CommandItem>
         <CommandItem
           key={FlowSequenceStatus.Paused}
@@ -89,7 +89,7 @@ export const ChangeSequenceStatus = observer(() => {
             status === FlowSequenceStatus.Inactive ? <Check /> : null
           }
         >
-          Inactive
+          Not Started
         </CommandItem>
       </Command.List>
     </Command>
