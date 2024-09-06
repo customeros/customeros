@@ -39,7 +39,7 @@ type EnrowRequest struct {
 	Email    string `json:"email"`
 	Settings struct {
 		Webhook string `json:"webhook"`
-	}
+	} `json:"settings"`
 }
 
 type EnrowResponse struct {
