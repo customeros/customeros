@@ -48,6 +48,8 @@ type EnrowResponse struct {
 	Message     string  `json:"message"`
 }
 
+const MaxDurationCallMailSherpa = 10 * time.Second
+
 type EmailValidationService interface {
 	ValidateEmailWithMailSherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error)
 	ValidateEmailScrubby(ctx context.Context, email string) (string, error)
@@ -89,10 +91,15 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 		return result, nil
 	}
 
-	domainValidation, err := s.getDomainValidation(ctx, syntaxValidation.Domain, email)
+	domainValidation, domainCheckTimeoutOccurred, err := s.getDomainValidationWithTimeout(ctx, syntaxValidation.Domain, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to validate email domain"))
 		return nil, err
+	}
+	if domainCheckTimeoutOccurred {
+		s.log.Warnf("Timeout occurred while validating domain %s", syntaxValidation.Domain)
+		result.EmailData.Deliverable = string(model.EmailDeliverableStatusUnknown)
+		return result, nil
 	}
 
 	result.DomainData.IsFirewalled = domainValidation.IsFirewalled
@@ -125,14 +132,19 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 
 	// Check for providers that are marked for skip
 	if len(providersToSkip) == 0 || !utils.Contains(providersToSkip, domainValidation.Provider) {
-		emailValidation, err := s.getEmailValidation(ctx, email, syntaxValidation, utils.BoolDefaultIfNil(domainValidation.IsPrimaryDomain, true), domainValidation.PrimaryDomain)
+		emailValidation, emailCheckTimeoutOccurred, err := s.getEmailValidationWithTimeout(ctx, email, syntaxValidation, utils.BoolDefaultIfNil(domainValidation.IsPrimaryDomain, true), domainValidation.PrimaryDomain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to validate email"))
 			return nil, err
 		}
+		if emailCheckTimeoutOccurred {
+			s.log.Warnf("Timeout occurred while validating email %s", email)
+			result.EmailData.Deliverable = string(model.EmailDeliverableStatusUnknown)
+			return result, nil
+		}
 		alternateEmailValidation := postgresentity.CacheEmailValidation{}
 		if emailValidation.AlternateEmail != "" {
-			alternateEmailValidation, err = s.getEmailValidation(ctx, emailValidation.AlternateEmail, syntaxValidation, true, "")
+			alternateEmailValidation, _, err = s.getEmailValidationWithTimeout(ctx, emailValidation.AlternateEmail, syntaxValidation, true, "")
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to validate alternate email"))
 			}
@@ -156,6 +168,34 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 	}
 
 	return result, nil
+}
+
+func (s *emailValidationService) getDomainValidationWithTimeout(ctx context.Context, domain, email string) (postgresentity.CacheEmailValidationDomain, bool, error) {
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, MaxDurationCallMailSherpa)
+	defer cancel()
+
+	domainValidation := postgresentity.CacheEmailValidationDomain{}
+	errChan := make(chan error, 1)
+	timeout := false
+
+	// Run getEmailValidation in a goroutine to handle timeout
+	go func() {
+		var err error
+		domainValidation, err = s.getDomainValidation(ctxWithTimeout, domain, email)
+		errChan <- err
+	}()
+
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return domainValidation, timeout, err
+		}
+	case <-ctxWithTimeout.Done():
+		// Timeout occurred, set default values
+		timeout = true
+		domainValidation = postgresentity.CacheEmailValidationDomain{}
+	}
+	return domainValidation, timeout, nil
 }
 
 func (s *emailValidationService) getDomainValidation(ctx context.Context, domain, email string) (postgresentity.CacheEmailValidationDomain, error) {
@@ -209,6 +249,36 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 	return *cacheDomain, nil
 }
 
+func (s *emailValidationService) getEmailValidationWithTimeout(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation, isPrimaryDomain bool, primaryDomain string) (postgresentity.CacheEmailValidation, bool, error) {
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, MaxDurationCallMailSherpa)
+	defer cancel()
+
+	emailValidation := postgresentity.CacheEmailValidation{}
+	errChan := make(chan error, 1)
+	timeout := false
+
+	// Run getEmailValidation in a goroutine to handle timeout
+	go func() {
+		var err error
+		emailValidation, err = s.getEmailValidation(ctxWithTimeout, email, syntaxValidation, isPrimaryDomain, primaryDomain)
+		errChan <- err
+	}()
+
+	select {
+	case err := <-errChan:
+		if err != nil {
+			return emailValidation, timeout, err
+		}
+	case <-ctxWithTimeout.Done():
+		// Timeout occurred, set default values
+		timeout = true
+		emailValidation = postgresentity.CacheEmailValidation{
+			Deliverable: string(model.EmailDeliverableStatusUndeliverable),
+		}
+	}
+	return emailValidation, timeout, nil
+}
+
 func (s *emailValidationService) getEmailValidation(ctx context.Context, email string, syntaxValidation mailsherpa.SyntaxValidation, isPrimaryDomain bool, primaryDomain string) (postgresentity.CacheEmailValidation, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getEmailValidation")
 	defer span.Finish()
@@ -235,6 +305,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 				PrimaryDomain:   primaryDomain,
 			},
 		}
+
 		emailValidation := mailsherpa.ValidateEmail(emailValidationRequest)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get email data with mailsherpa"))
