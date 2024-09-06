@@ -15,7 +15,6 @@ type customerOSApiClient struct {
 }
 
 type CustomerOSApiClient interface {
-	CreateExternalSystem(tenant, username *string, input model.ExternalSystemInput) (string, error)
 	CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error)
 	CreateContact(tenant, username string, contactInput model.ContactInput) (string, error)
 
@@ -34,30 +33,6 @@ func NewCustomerOsClient(customerOSApiPath, customerOSApiKey string) *customerOS
 		customerOSApiKey: customerOSApiKey,
 		graphqlClient:    graphql.NewClient(customerOSApiPath),
 	}
-}
-
-func (s *customerOSApiClient) CreateExternalSystem(tenant, username *string, input model.ExternalSystemInput) (string, error) {
-	graphqlRequest := graphql.NewRequest(
-		`mutation ExternalSystemCreate($input: ExternalSystemInput!) {
-				externalSystem_Create(input: $input)
-				}`)
-	graphqlRequest.Var("input", input)
-
-	err := s.addHeadersToGraphRequest(graphqlRequest, tenant, username)
-	if err != nil {
-		return "", err
-	}
-	ctx, cancel, err := s.contextWithTimeout()
-	if err != nil {
-		return "", err
-	}
-	defer cancel()
-
-	var graphqlResponse map[string]string
-	if err := s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		return "", fmt.Errorf("externalSystem_Create: %w", err)
-	}
-	return graphqlResponse["externalSystem_Create"], nil
 }
 
 func (s *customerOSApiClient) CreateOrganization(tenant, username string, input model.OrganizationInput) (string, error) {

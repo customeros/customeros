@@ -567,7 +567,13 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			return err
 		}
 
-		err := services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, userId, commonModel.USER, commonModel.HAS, nil, emailId, commonModel.EMAIL)
+		err := services.CommonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
+			FromEntityId:   userId,
+			FromEntityType: commonModel.USER,
+			Relationship:   commonModel.HAS,
+			ToEntityId:     emailId,
+			ToEntityType:   commonModel.EMAIL,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
