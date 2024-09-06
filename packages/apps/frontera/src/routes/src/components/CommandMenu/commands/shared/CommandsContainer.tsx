@@ -14,9 +14,6 @@ export const CommandsContainer = ({
 }) => {
   return (
     <Command
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
       filter={(value, search, keywords) => {
         const extendValue = value.replace(/\s/g, '') + keywords;
         const searchWithoutSpaces = search.replace(/\s/g, '');

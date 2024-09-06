@@ -108,7 +108,7 @@ export const ColumnItem = ({
       {...provided?.dragHandleProps}
     >
       <Checkbox
-        className='mr-2'
+        size='sm'
         disabled={isPinned}
         isChecked={visible}
         onChange={() => {

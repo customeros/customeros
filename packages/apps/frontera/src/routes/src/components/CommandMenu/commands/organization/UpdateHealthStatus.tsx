@@ -73,12 +73,7 @@ export const UpdateHealthStatus = observer(() => {
       ?.renewalLikelihood;
 
   return (
-    <Command
-      label='Change health status...'
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command label='Change health status...'>
       <CommandInput
         label={label}
         placeholder='Change health status...'

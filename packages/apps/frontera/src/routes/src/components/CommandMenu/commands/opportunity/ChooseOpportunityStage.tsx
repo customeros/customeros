@@ -34,11 +34,7 @@ export const ChooseOpportunityStage = observer(() => {
   };
 
   return (
-    <Command
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command>
       <CommandInput label={label} placeholder='Choose stage...' />
 
       <Command.List>

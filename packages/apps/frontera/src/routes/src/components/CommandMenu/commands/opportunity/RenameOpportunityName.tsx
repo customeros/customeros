@@ -25,12 +25,7 @@ export const RenameOpportunityName = observer(() => {
   };
 
   return (
-    <Command
-      shouldFilter={false}
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command shouldFilter={false}>
       <CommandInput
         value={value}
         label={label}

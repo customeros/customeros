@@ -173,30 +173,34 @@ export const KanbanColumn = observer(
                   icon={<Plus />}
                   onClick={handleCreateDraft}
                   aria-label='Add new opportunity'
-                  className={cn(isHover ? 'opacity-100' : 'opacity-0', 'mr-2')}
+                  className={cn(
+                    isHover ? 'opacity-100' : 'opacity-0',
+                    canEdit && 'mr-2',
+                  )}
                 />
               </Tooltip>
-              <Menu>
-                <MenuButton asChild>
-                  <IconButton
-                    size='xxs'
-                    variant='ghost'
-                    isDisabled={!canEdit}
-                    icon={<DotsVertical />}
-                    aria-label='Column options'
-                  />
-                </MenuButton>
-                <MenuList>
-                  <MenuItem onClick={handleCreateDraft}>
-                    <Plus />
-                    Add new opportunity
-                  </MenuItem>
-                  <MenuItem onClick={onOpen}>
-                    <Percent03 />
-                    <span>Set win probability</span>
-                  </MenuItem>
-                </MenuList>
-              </Menu>
+              {canEdit && (
+                <Menu>
+                  <MenuButton asChild>
+                    <IconButton
+                      size='xxs'
+                      variant='ghost'
+                      icon={<DotsVertical />}
+                      aria-label='Column options'
+                    />
+                  </MenuButton>
+                  <MenuList>
+                    <MenuItem onClick={handleCreateDraft}>
+                      <Plus />
+                      Add new opportunity
+                    </MenuItem>
+                    <MenuItem onClick={onOpen}>
+                      <Percent03 />
+                      <span>Set win probability</span>
+                    </MenuItem>
+                  </MenuList>
+                </Menu>
+              )}
             </div>
             <span className={cn('w-full text-sm font-medium text-gray-500')}>
               {`${totalSum} • ${cards.length}`}
