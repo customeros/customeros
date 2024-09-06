@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/constants"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"io"
@@ -122,6 +123,7 @@ func (s *brandfetchService) GetByDomain(ctx context.Context, domain string) (*po
 			data = &unmarshalledData
 		}
 	}
+	span.LogFields(log.Bool("result.success", success))
 
 	return data, nil
 }
