@@ -113,7 +113,7 @@ func (r cacheEmailEnrowRepository) GetWithoutResponses(ctx context.Context) ([]*
 
 	var entity []*entity.CacheEmailEnrow
 	err := r.db.
-		Where("response = ?", "").
+		Where("data = ?", "").
 		Where("created_at < ?", utils.Now().Add(-10*time.Minute)).
 		Limit(50).
 		Find(&entity).Error

@@ -45,7 +45,7 @@ type emailService struct {
 func (s *emailService) CheckEnrowRequestsWithoutResponse() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.checkBetterContactRequestsWithoutResponse")
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.CheckEnrowRequestsWithoutResponse")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
