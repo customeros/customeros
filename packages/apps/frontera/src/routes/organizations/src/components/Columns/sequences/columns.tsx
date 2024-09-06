@@ -5,10 +5,13 @@ import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { TableViewDef, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { FlowStatusCell } from '@organizations/components/Columns/sequences/Cells';
 import { StatusFilter } from '@organizations/components/Columns/sequences/Filters';
 import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
 import { getColumnConfig } from '@organizations/components/Columns/shared/util/getColumnConfig';
+import {
+  FlowStatusCell,
+  SequenceNameCell,
+} from '@organizations/components/Columns/sequences/Cells';
 
 type ColumnDatum = FlowSequenceStore;
 
@@ -57,7 +60,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <TextCell
+      <SequenceNameCell
         unknownText='Unnamed'
         text={props.row?.original?.value?.name ?? ''}
       />
