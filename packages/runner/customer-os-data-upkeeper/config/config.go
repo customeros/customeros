@@ -37,6 +37,10 @@ type Config struct {
 		ApiUrl string `env:"SCRUBBY_IO_API_URL" envDefault:"https://api.scrubby.io" validate:"required"`
 		ApiKey string `env:"SCRUBBY_IO_API_KEY" validate:"required"`
 	}
+	EnrowConfig struct {
+		ApiUrl string `env:"ENROW_API_URL" envDefault:"https://api.enrow.io" validate:"required"`
+		ApiKey string `env:"ENROW_API_KEY" validate:"required"`
+	}
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
 	Limits             Limits
