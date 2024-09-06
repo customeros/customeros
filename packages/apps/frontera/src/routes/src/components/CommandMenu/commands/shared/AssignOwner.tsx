@@ -129,12 +129,7 @@ export const AssignOwner = observer(() => {
   };
 
   return (
-    <Command
-      label='Pick Owner'
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command label='Pick Owner'>
       <CommandInput label={label} placeholder='Assign owner...' />
 
       <Command.List>

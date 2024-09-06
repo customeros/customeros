@@ -51,7 +51,7 @@ export const DuplicateView = observer(() => {
     <Command>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-base font-semibold'>Duplicate {title}</h1>
+          <h1 className='text-base font-semibold'>Duplicate '{title}'</h1>
           <IconButton
             size='xs'
             variant='ghost'
@@ -68,6 +68,11 @@ export const DuplicateView = observer(() => {
           variant='unstyled'
           placeholder='View name'
           onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              handleClose();
+            }
+          }}
         />
 
         <div>

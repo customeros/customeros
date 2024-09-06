@@ -43,11 +43,7 @@ export const ChooseOpportunityOrganization = observer(() => {
   };
 
   return (
-    <Command
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command>
       <CommandInput
         value={search}
         label='Organization'

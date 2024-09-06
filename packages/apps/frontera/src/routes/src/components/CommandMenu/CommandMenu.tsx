@@ -135,7 +135,16 @@ export const CommandMenu = observer(() => {
         {/* z-[5001] is needed to ensure tooltips are not overlapping  - tooltips have zIndex of 5000 - this should be revisited */}
         <ModalOverlay className='z-[5001]'>
           <ModalBody>
-            <ModalContent ref={commandRef}>
+            <ModalContent
+              ref={commandRef}
+              //We added this onKeyDown here to not refactor the command componenet and is more easy to extend in the future if needed to add more keybindings
+              //the escape command ( is a default keybinding to close the modal) is not needed in the command component
+              onKeyDown={(e) => {
+                if (e.key !== 'Escape' && e.key !== 'Enter') {
+                  e.stopPropagation();
+                }
+              }}
+            >
               {Commands[store.ui.commandMenu.type ?? 'GlobalHub']}
             </ModalContent>
           </ModalBody>

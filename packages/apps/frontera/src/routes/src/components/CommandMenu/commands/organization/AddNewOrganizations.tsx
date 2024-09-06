@@ -82,17 +82,13 @@ export const AddNewOrganization = observer(() => {
   useKeyBindings(
     {
       Enter: handleConfirm,
+      Escape: () => (store.ui.commandMenu.isOpen = false),
     },
     { when: allowSubmit },
   );
 
   return (
-    <Command
-      label={`Rename `}
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command label={`Rename `}>
       <div className='p-6 pb-4 flex flex-col gap-1 '>
         <p className='font-semibold'>Create new organization</p>
         <p className='text-sm'>
@@ -113,6 +109,11 @@ export const AddNewOrganization = observer(() => {
             placeholder='Website link'
             onChange={(e) => {
               setWebsite(e.target.value);
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') {
+                store.ui.commandMenu.setOpen(false);
+              }
             }}
             onKeyUp={(e) => {
               if (e.key === 'Backspace' && website.length === 0) {
@@ -143,6 +144,10 @@ export const AddNewOrganization = observer(() => {
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();
+              }
+
+              if (e.key === 'Escape') {
+                store.ui.commandMenu.setOpen(false);
               }
             }}
           />

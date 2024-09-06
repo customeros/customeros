@@ -150,6 +150,11 @@ export const ContactAvatarHeader = observer(() => {
                 onChange={(e) => {
                   setLinkedin(e.target.value);
                 }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setIsOpen(false);
+                  }
+                }}
               />
               {validation.linkedin && (
                 <p className='text-sm text-error-500 mt-1'>
@@ -171,6 +176,11 @@ export const ContactAvatarHeader = observer(() => {
                 placeholder='Contact’s organization'
                 onChange={(value) => {
                   setOrganizationId(value?.value);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setIsOpen(false);
+                  }
                 }}
                 noOptionsMessage={({ inputValue }) => {
                   if (!inputValue) return 'Type to search orgs';
