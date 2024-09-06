@@ -56,12 +56,13 @@ export const TableViewMenu = observer(() => {
           <LayersTwo01 className='text-gray-500' />
           Duplicate view...
         </MenuItem>
-        {tableType !== TableViewType.Invoices && (
-          <MenuItem className='py-1.5' onClick={downloadCSV}>
-            <Download02 className='text-gray-500' />
-            Export view as CSV
-          </MenuItem>
-        )}
+        {tableType &&
+          ![TableViewType.Invoices, TableViewType.Flow].includes(tableType) && (
+            <MenuItem className='py-1.5' onClick={downloadCSV}>
+              <Download02 className='text-gray-500' />
+              Export view as CSV
+            </MenuItem>
+          )}
 
         {!isPreset && (
           <MenuItem
