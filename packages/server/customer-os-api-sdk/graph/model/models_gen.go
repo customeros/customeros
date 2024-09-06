@@ -1140,7 +1140,7 @@ type FlowSequence struct {
 	Flow        *Flow                  `json:"flow"`
 	Steps       []*FlowSequenceStep    `json:"steps"`
 	Contacts    []*FlowSequenceContact `json:"contacts"`
-	Mailboxes   []*Mailbox             `json:"mailboxes"`
+	Senders     []*FlowSequenceSender  `json:"senders"`
 }
 
 func (FlowSequence) IsMetadataInterface()        {}
@@ -1161,6 +1161,14 @@ type FlowSequenceCreateInput struct {
 	FlowID      *string `json:"flowId,omitempty"`
 	FlowName    *string `json:"flowName,omitempty"`
 }
+
+type FlowSequenceSender struct {
+	Metadata *Metadata `json:"metadata"`
+	Mailbox  string    `json:"mailbox"`
+}
+
+func (FlowSequenceSender) IsMetadataInterface()        {}
+func (this FlowSequenceSender) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequenceStep struct {
 	Metadata *Metadata                `json:"metadata"`
@@ -1612,14 +1620,6 @@ type LogEntryUpdateInput struct {
 	ContentType *string    `json:"contentType,omitempty"`
 	StartedAt   *time.Time `json:"startedAt,omitempty"`
 }
-
-type Mailbox struct {
-	Metadata *Metadata `json:"metadata"`
-	Email    string    `json:"email"`
-}
-
-func (Mailbox) IsMetadataInterface()        {}
-func (this Mailbox) GetMetadata() *Metadata { return this.Metadata }
 
 type MasterPlan struct {
 	ID                string                 `json:"id"`

@@ -32,9 +32,9 @@ func (r *flowSequenceResolver) Contacts(ctx context.Context, obj *model.FlowSequ
 	panic(fmt.Errorf("not implemented: Contacts - contacts"))
 }
 
-// Mailboxes is the resolver for the mailboxes field.
-func (r *flowSequenceResolver) Mailboxes(ctx context.Context, obj *model.FlowSequence) ([]*model.Mailbox, error) {
-	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
+// Senders is the resolver for the senders field.
+func (r *flowSequenceResolver) Senders(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceSender, error) {
+	panic(fmt.Errorf("not implemented: Senders - senders"))
 }
 
 // Contact is the resolver for the contact field.
@@ -65,6 +65,16 @@ func (r *mutationResolver) FlowSequenceLinkContact(ctx context.Context, sequence
 // FlowSequenceUnlinkContact is the resolver for the flow_sequence_UnlinkContact field.
 func (r *mutationResolver) FlowSequenceUnlinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkContact - flow_sequence_UnlinkContact"))
+}
+
+// FlowSequenceLinkSender is the resolver for the flow_sequence_LinkSender field.
+func (r *mutationResolver) FlowSequenceLinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.FlowSequenceSender, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceLinkSender - flow_sequence_LinkSender"))
+}
+
+// FlowSequenceUnlinkSender is the resolver for the flow_sequence_UnlinkSender field.
+func (r *mutationResolver) FlowSequenceUnlinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkSender - flow_sequence_UnlinkSender"))
 }
 
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
