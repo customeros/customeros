@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -199,7 +200,13 @@ func (r *mutationResolver) InteractionEventLinkAttachment(ctx context.Context, e
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, eventID, commonModel.INTERACTION_EVENT, commonModel.INCLUDES, nil, attachmentID, commonModel.ATTACHMENT)
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   eventID,
+		FromEntityType: commonModel.INTERACTION_EVENT,
+		Relationship:   commonModel.INCLUDES,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		return &model.Result{Result: false}, err
 	}

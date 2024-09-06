@@ -7,10 +7,14 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	opentracing "github.com/opentracing/opentracing-go"
 )
 
 // Sequences is the resolver for the sequences field.
@@ -39,17 +43,18 @@ func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence
 
 // Steps is the resolver for the steps field.
 func (r *flowSequenceResolver) Steps(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceStep, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Steps", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepGetList(ctx, obj.Metadata.ID)
-	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get flow sequence steps")
-		return nil, err
-	}
-	return mapper.MapEntitiesToFlowSequenceSteps(entity), nil
+	//ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Steps", graphql.GetOperationContext(ctx))
+	//defer span.Finish()
+	//tracing.SetDefaultResolverSpanTags(ctx, span)
+	//
+	//entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepGetList(ctx, obj.Metadata.ID)
+	//if err != nil || entity == nil {
+	//	tracing.TraceErr(span, err)
+	//	graphql.AddErrorf(ctx, "Failed to get flow sequence steps")
+	//	return nil, err
+	//}
+	//return mapper.MapEntitiesToFlowSequenceSteps(entity), nil
+	return make([]*model.FlowSequenceStep, 0), nil
 }
 
 // Contacts is the resolver for the contacts field.
@@ -58,38 +63,90 @@ func (r *flowSequenceResolver) Contacts(ctx context.Context, obj *model.FlowSequ
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entities, err := r.Services.CommonServices.FlowService.FlowSequenceContactGetList(ctx, &obj.Metadata.ID)
+	entities, err := dataloader.For(ctx).GetFlowSequenceContactsForFlowSequence(ctx, obj.Metadata.ID)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		graphql.AddErrorf(ctx, "Failed to get flow sequence contacts")
-		return nil, err
+		return nil, nil
 	}
-
 	return mapper.MapEntitiesToFlowSequenceContacts(entities), nil
 }
 
-// Mailboxes is the resolver for the mailboxes field.
-func (r *flowSequenceResolver) Mailboxes(ctx context.Context, obj *model.FlowSequence) ([]*model.Mailbox, error) {
-	return make([]*model.Mailbox, 0), nil
+// Senders is the resolver for the senders field.
+func (r *flowSequenceResolver) Senders(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceSender, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Senders", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := dataloader.For(ctx).GetFlowSequenceSendersForFlowSequence(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		graphql.AddErrorf(ctx, "Failed to get flow sequence contacts")
+		return nil, nil
+	}
+	return mapper.MapEntitiesToFlowSequenceSenders(entities), nil
 }
 
 // Contact is the resolver for the contact field.
 func (r *flowSequenceContactResolver) Contact(ctx context.Context, obj *model.FlowSequenceContact) (*model.Contact, error) {
-	return &model.Contact{}, nil
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Contacts", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	//entities, err := r.Services.CommonServices.FlowService.FlowSequenceContactGetList(ctx, &obj.Metadata.ID)
+	//if err != nil {
+	//	tracing.TraceErr(span, err)
+	//	graphql.AddErrorf(ctx, "Failed to get flow sequence contacts")
+	//	return nil, err
+	//}
+
+	//return mapper.MapEntitiesToFlowSequenceContacts(entities), nil
+	name := "Dummy"
+	return &model.Contact{
+		Metadata: &model.Metadata{
+			ID: "dummy",
+		},
+		ID:        "dummy",
+		Name:      &name,
+		FirstName: &name,
+		LastName:  &name,
+	}, nil
 }
 
 // Email is the resolver for the email field.
 func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.FlowSequenceContact) (*model.Email, error) {
-	return &model.Email{}, nil
+	return &model.Email{
+		ID:       "dummy",
+		Email:    utils.StringPtr("dummy"),
+		RawEmail: utils.StringPtr("dummy"),
+	}, nil
 }
 
-// FlowSequenceStore is the resolver for the flow_sequence_store field.
-func (r *mutationResolver) FlowSequenceStore(ctx context.Context, input model.FlowSequenceStoreInput) (*model.FlowSequence, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStore", graphql.GetOperationContext(ctx))
+// FlowSequenceCreate is the resolver for the flow_sequence_Create field.
+func (r *mutationResolver) FlowSequenceCreate(ctx context.Context, input model.FlowSequenceCreateInput) (*model.FlowSequence, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStore(ctx, mapper.MapFlowSequenceStoreInputToEntity(input))
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceCreate(ctx, &neo4jentity.FlowEntity{
+		Id:   utils.StringOrEmpty(input.FlowID),
+		Name: utils.StringOrEmpty(input.FlowName),
+	}, mapper.MapFlowSequenceCreateInputToEntity(input))
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowSequence(entity), nil
+}
+
+// FlowSequenceUpdate is the resolver for the flow_sequence_Update field.
+func (r *mutationResolver) FlowSequenceUpdate(ctx context.Context, input model.FlowSequenceUpdateInput) (*model.FlowSequence, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceUpdate(ctx, mapper.MapFlowSequenceUpdateInputToEntity(input))
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -120,6 +177,36 @@ func (r *mutationResolver) FlowSequenceUnlinkContact(ctx context.Context, sequen
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	err := r.Services.CommonServices.FlowService.FlowSequenceContactUnlink(ctx, sequenceID, contactID, emailID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return &model.Result{Result: false}, err
+	}
+	return &model.Result{Result: true}, nil
+}
+
+// FlowSequenceLinkSender is the resolver for the flow_sequence_LinkSender field.
+func (r *mutationResolver) FlowSequenceLinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.FlowSequenceSender, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceLinkSender", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceSenderLink(ctx, sequenceID, mailbox)
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowSequenceSender(entity), nil
+}
+
+// FlowSequenceUnlinkSender is the resolver for the flow_sequence_UnlinkSender field.
+func (r *mutationResolver) FlowSequenceUnlinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceUnlinkSender", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	err := r.Services.CommonServices.FlowService.FlowSequenceSenderUnlink(ctx, sequenceID, mailbox)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -160,17 +247,18 @@ func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id stri
 
 // FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
 func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepChangeStatus", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepChangeStatus(ctx, id, mapper.MapFlowSequenceStepStatusToEntity(status))
-	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "")
-		return nil, err
-	}
-	return mapper.MapEntityToFlowSequenceStep(entity), nil
+	//ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepChangeStatus", graphql.GetOperationContext(ctx))
+	//defer span.Finish()
+	//tracing.SetDefaultResolverSpanTags(ctx, span)
+	//
+	//entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepChangeStatus(ctx, id, mapper.MapFlowSequenceStepStatusToEntity(status))
+	//if err != nil || entity == nil {
+	//	tracing.TraceErr(span, err)
+	//	graphql.AddErrorf(ctx, "")
+	//	return nil, err
+	//}
+	//return mapper.MapEntityToFlowSequenceStep(entity), nil
+	return &model.FlowSequenceStep{}, nil
 }
 
 // Flows is the resolver for the flows field.

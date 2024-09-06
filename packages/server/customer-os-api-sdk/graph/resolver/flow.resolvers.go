@@ -47,9 +47,14 @@ func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.Flow
 	panic(fmt.Errorf("not implemented: Email - email"))
 }
 
-// FlowSequenceStore is the resolver for the flow_sequence_store field.
-func (r *mutationResolver) FlowSequenceStore(ctx context.Context, input model.FlowSequenceStoreInput) (*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceStore - flow_sequence_store"))
+// FlowSequenceCreate is the resolver for the flow_sequence_Create field.
+func (r *mutationResolver) FlowSequenceCreate(ctx context.Context, input model.FlowSequenceCreateInput) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceCreate - flow_sequence_Create"))
+}
+
+// FlowSequenceUpdate is the resolver for the flow_sequence_Update field.
+func (r *mutationResolver) FlowSequenceUpdate(ctx context.Context, input model.FlowSequenceUpdateInput) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceUpdate - flow_sequence_Update"))
 }
 
 // FlowSequenceLinkContact is the resolver for the flow_sequence_LinkContact field.
@@ -101,3 +106,13 @@ func (r *Resolver) FlowSequenceContact() generated.FlowSequenceContactResolver {
 type flowResolver struct{ *Resolver }
 type flowSequenceResolver struct{ *Resolver }
 type flowSequenceContactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) FlowSequenceStore(ctx context.Context, input model.FlowSequenceStoreInput) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceStore - flow_sequence_store"))
+}

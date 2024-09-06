@@ -1145,3 +1145,62 @@ func MapDbNodeToLocationEntity(node *dbtype.Node) *entity.LocationEntity {
 	}
 	return &location
 }
+
+func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
+	if node == nil {
+		return &entity.FlowEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	domain := entity.FlowEntity{
+		Id:          utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Name:        utils.GetStringPropOrEmpty(props, "name"),
+		Description: utils.GetStringPropOrEmpty(props, "description"),
+		Status:      entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
+	}
+	return &domain
+}
+
+func MapDbNodeToFlowSequenceEntity(node *dbtype.Node) *entity.FlowSequenceEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	e := entity.FlowSequenceEntity{
+		Id:          utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Name:        utils.GetStringPropOrEmpty(props, "name"),
+		Description: utils.GetStringPropOrEmpty(props, "description"),
+		Status:      entity.GetFlowSequenceStatus(utils.GetStringPropOrEmpty(props, "status")),
+	}
+	return &e
+}
+
+func MapDbNodeToFlowSequenceContactEntity(node *dbtype.Node) *entity.FlowSequenceContactEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	e := entity.FlowSequenceContactEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+	}
+	return &e
+}
+
+func MapDbNodeToFlowSequenceSenderEntity(node *dbtype.Node) *entity.FlowSequenceSenderEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	e := entity.FlowSequenceSenderEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Mailbox:   utils.GetStringPropOrEmpty(props, "mailbox"),
+	}
+	return &e
+}

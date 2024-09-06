@@ -19,6 +19,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -230,7 +231,13 @@ func (r *mutationResolver) MeetingLinkAttachment(ctx context.Context, meetingID 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.INCLUDES, nil, attachmentID, commonModel.ATTACHMENT)
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   meetingID,
+		FromEntityType: commonModel.MEETING,
+		Relationship:   commonModel.INCLUDES,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
@@ -255,7 +262,13 @@ func (r *mutationResolver) MeetingUnlinkAttachment(ctx context.Context, meetingI
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.INCLUDES, attachmentID, commonModel.ATTACHMENT)
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   meetingID,
+		FromEntityType: commonModel.MEETING,
+		Relationship:   commonModel.INCLUDES,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
@@ -280,7 +293,13 @@ func (r *mutationResolver) MeetingLinkRecording(ctx context.Context, meetingID s
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.RECORDING, nil, attachmentID, commonModel.ATTACHMENT)
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   meetingID,
+		FromEntityType: commonModel.MEETING,
+		Relationship:   commonModel.RECORDING,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)
@@ -305,7 +324,13 @@ func (r *mutationResolver) MeetingUnlinkRecording(ctx context.Context, meetingID
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, meetingID, commonModel.MEETING, commonModel.RECORDING, attachmentID, commonModel.ATTACHMENT)
+	err := r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   meetingID,
+		FromEntityType: commonModel.MEETING,
+		Relationship:   commonModel.RECORDING,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error linking attachment %s to meeting %s", attachmentID, meetingID)

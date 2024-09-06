@@ -1155,6 +1155,13 @@ type FlowSequenceContact struct {
 func (FlowSequenceContact) IsMetadataInterface()        {}
 func (this FlowSequenceContact) GetMetadata() *Metadata { return this.Metadata }
 
+type FlowSequenceCreateInput struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	FlowID      *string `json:"flowId,omitempty"`
+	FlowName    *string `json:"flowName,omitempty"`
+}
+
 type FlowSequenceStep struct {
 	Metadata *Metadata                `json:"metadata"`
 	Name     string                   `json:"name"`
@@ -1167,11 +1174,10 @@ type FlowSequenceStep struct {
 func (FlowSequenceStep) IsMetadataInterface()        {}
 func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
 
-type FlowSequenceStoreInput struct {
-	ID          *string `json:"id,omitempty"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	FlowID      *string `json:"flowId,omitempty"`
+type FlowSequenceUpdateInput struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type GCliAttributeKeyValuePair struct {

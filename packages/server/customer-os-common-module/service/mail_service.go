@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"net/mail"
@@ -131,7 +132,14 @@ func (s *mailService) SaveMail(ctx context.Context, request dto.MailRequest, ema
 			return nil, fmt.Errorf("failed to create interaction event: %v", err)
 		}
 
-		err = s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, *interactionEventId, commonModel.INTERACTION_EVENT, commonModel.PART_OF, nil, interactionSessionId, commonModel.INTERACTION_SESSION)
+		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+			FromEntityId:           *interactionEventId,
+			FromEntityType:         commonModel.INTERACTION_EVENT,
+			Relationship:           commonModel.PART_OF,
+			RelationshipProperties: nil,
+			ToEntityId:             interactionSessionId,
+			ToEntityType:           commonModel.INTERACTION_SESSION,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, fmt.Errorf("failed to link interaction event with interaction session: %v", err)

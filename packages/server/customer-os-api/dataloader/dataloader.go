@@ -109,6 +109,8 @@ type Loaders struct {
 	OrganizationPlanMilestonesForOrganizationPlan *dataloader.Loader
 	OrdersForOrganization                         *dataloader.Loader
 	InvoicesForContract                           *dataloader.Loader
+	FlowSequenceContactsForFlowSequence           *dataloader.Loader
+	FlowSequenceSendersForFlowSequence            *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -213,6 +215,9 @@ type invoiceBatcher struct {
 type organizationPlanBatcher struct {
 	organizationPlanService service.OrganizationPlanService
 }
+type flowBatcher struct {
+	flowService commonservice.FlowService
+}
 
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
@@ -315,6 +320,9 @@ func NewDataLoader(services *service.Services) *Loaders {
 	organizationPlanBatcher := &organizationPlanBatcher{
 		organizationPlanService: services.OrganizationPlanService,
 	}
+	flowBatcher := &flowBatcher{
+		flowService: services.CommonServices.FlowService,
+	}
 	return &Loaders{
 		TagsForOrganization:                           dataloader.NewBatchedLoader(tagBatcher.getTagsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		TagsForContact:                                dataloader.NewBatchedLoader(tagBatcher.getTagsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -406,6 +414,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		InvoiceLinesForInvoice:                        dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationPlanMilestonesForOrganizationPlan: dataloader.NewBatchedLoader(organizationPlanBatcher.getOrganizationPlanMilestonesForOrganizationPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoicesForContract:                           dataloader.NewBatchedLoader(invoiceBatcher.getInvoicesForContract, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowSequenceContactsForFlowSequence:           dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceContactsForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowSequenceSendersForFlowSequence:            dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceSendersForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

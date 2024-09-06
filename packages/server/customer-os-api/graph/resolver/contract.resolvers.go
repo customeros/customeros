@@ -22,6 +22,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -296,7 +297,13 @@ func (r *mutationResolver) ContractAddAttachment(ctx context.Context, contractID
 		return &model.Contract{ID: contractID}, nil
 	}
 
-	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, contractID, commonModel.CONTRACT, commonModel.INCLUDES, nil, attachmentID, commonModel.ATTACHMENT)
+	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   contractID,
+		FromEntityType: commonModel.CONTRACT,
+		Relationship:   commonModel.INCLUDES,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to link attachment %s with contract %s", attachmentID, contractID)
@@ -329,7 +336,13 @@ func (r *mutationResolver) ContractRemoveAttachment(ctx context.Context, contrac
 		return &model.Contract{ID: contractID}, nil
 	}
 
-	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, contractID, commonModel.CONTRACT, commonModel.INCLUDES, attachmentID, commonModel.ATTACHMENT)
+	err = r.Services.CommonServices.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   contractID,
+		FromEntityType: commonModel.CONTRACT,
+		Relationship:   commonModel.INCLUDES,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to remove attachment %s from contract %s", attachmentID, contractID)

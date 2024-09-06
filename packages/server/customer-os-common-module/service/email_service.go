@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
-	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -84,13 +83,13 @@ func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, l
 	}
 
 	if linkWith != nil && linkWith.Id != "" && linkWith.Type != "" && linkWith.Relationship != "" {
-		if linkWith.Type.String() == neo4jenum.CONTACT.String() {
+		if linkWith.Type.String() == commonModel.CONTACT.String() {
 			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, tenant, linkWith.Id, emailId, "Work", true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
-		} else if linkWith.Type.String() == neo4jenum.USER.String() {
+		} else if linkWith.Type.String() == commonModel.USER.String() {
 			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, linkWith.Id, emailId, "Work", true)
 			if err != nil {
 				tracing.TraceErr(span, err)

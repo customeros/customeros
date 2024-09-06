@@ -32,6 +32,14 @@ type Repositories struct {
 	EmailWriteRepository                  EmailWriteRepository
 	ExternalSystemReadRepository          ExternalSystemReadRepository
 	ExternalSystemWriteRepository         ExternalSystemWriteRepository
+	FlowReadRepository                    FlowReadRepository
+	FlowWriteRepository                   FlowWriteRepository
+	FlowSequenceReadRepository            FlowSequenceReadRepository
+	FlowSequenceWriteRepository           FlowSequenceWriteRepository
+	FlowSequenceContactReadRepository     FlowSequenceContactReadRepository
+	FlowSequenceContactWriteRepository    FlowSequenceContactWriteRepository
+	FlowSequenceSenderReadRepository      FlowSequenceSenderReadRepository
+	FlowSequenceSenderWriteRepository     FlowSequenceSenderWriteRepository
 	InteractionEventReadRepository        InteractionEventReadRepository
 	InteractionEventWriteRepository       InteractionEventWriteRepository
 	InteractionSessionReadRepository      InteractionSessionReadRepository
@@ -108,6 +116,14 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		EmailWriteRepository:                  NewEmailWriteRepository(driver, neo4jDatabase),
 		ExternalSystemReadRepository:          NewExternalSystemReadRepository(driver, neo4jDatabase),
 		ExternalSystemWriteRepository:         NewExternalSystemWriteRepository(driver, neo4jDatabase),
+		FlowReadRepository:                    NewFlowReadRepository(driver, neo4jDatabase),
+		FlowWriteRepository:                   NewFlowWriteRepository(driver, neo4jDatabase),
+		FlowSequenceReadRepository:            NewFlowSequenceReadRepository(driver, neo4jDatabase),
+		FlowSequenceWriteRepository:           NewFlowSequenceWriteRepository(driver, neo4jDatabase),
+		FlowSequenceContactReadRepository:     NewFlowSequenceContactReadRepository(driver, neo4jDatabase),
+		FlowSequenceContactWriteRepository:    NewFlowSequenceContactWriteRepository(driver, neo4jDatabase),
+		FlowSequenceSenderReadRepository:      NewFlowSequenceSenderReadRepository(driver, neo4jDatabase),
+		FlowSequenceSenderWriteRepository:     NewFlowSequenceSenderWriteRepository(driver, neo4jDatabase),
 		InteractionEventReadRepository:        NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionEventWriteRepository:       NewInteractionEventWriteRepository(driver, neo4jDatabase),
 		InteractionSessionReadRepository:      NewInteractionSessionReadRepository(driver, neo4jDatabase),
