@@ -102,6 +102,11 @@ func (r *queryResolver) Sequences(ctx context.Context) ([]*model.FlowSequence, e
 	panic(fmt.Errorf("not implemented: Sequences - sequences"))
 }
 
+// Mailboxes is the resolver for the mailboxes field.
+func (r *queryResolver) Mailboxes(ctx context.Context) ([]*model.Mailbox, error) {
+	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
+}
+
 // Flow returns generated.FlowResolver implementation.
 func (r *Resolver) Flow() generated.FlowResolver { return &flowResolver{r} }
 

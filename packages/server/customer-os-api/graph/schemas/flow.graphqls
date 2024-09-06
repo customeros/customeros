@@ -1,6 +1,7 @@
 extend type Query {
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     sequences: [FlowSequence!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    mailboxes: [Mailbox!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -58,6 +59,10 @@ type FlowSequenceContact implements MetadataInterface {
 
 type FlowSequenceSender implements MetadataInterface {
     metadata: Metadata!
+    mailbox:    String!
+}
+
+type Mailbox {
     mailbox:    String!
 }
 
