@@ -8,7 +8,7 @@ type CacheEmailEnrow struct {
 	CreatedAt     time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`
 	UpdatedAt     time.Time `gorm:"column:updated_at;type:timestamp;" json:"updatedAt"`
 	Email         string    `gorm:"column:email;type:varchar(255);NOT NULL" json:"email"`
-	Qualification string    `gorm:"column:qualification;type:varchar(255)" json:"result"`
+	Qualification string    `gorm:"column:qualification;type:varchar(255)" json:"qualification"`
 	Data          string    `gorm:"column:data;type:text" json:"data"`
 }
 

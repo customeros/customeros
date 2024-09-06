@@ -49,6 +49,8 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	span.LogKV("requestId", requestId)
+	span.LogKV("qualification", qualification)
+	span.LogKV("response", response)
 
 	// Add response to the request with the given requestId, empty response and latest by created_at
 	err := r.db.
@@ -57,10 +59,11 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 		Where("data = ?", "").
 		Order("created_at desc").
 		Limit(1).
-		UpdateColumn("data", response).
-		UpdateColumn("qualification", qualification).
-		UpdateColumn("updated_at", utils.Now()).
-		Error
+		Updates(map[string]interface{}{
+			"data":          response,
+			"qualification": qualification,
+			"updated_at":    utils.Now(),
+		}).Error
 	if err != nil {
 		return err
 	}

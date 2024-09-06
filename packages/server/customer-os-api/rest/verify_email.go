@@ -172,6 +172,7 @@ func callApiValidateEmail(ctx context.Context, services *service.Services, span 
 		return nil, err
 	}
 	if validationResponse.Data == nil {
+		tracing.LogObjectAsJson(span, "response", validationResponse)
 		err = errors.New("email validation response data is empty: " + validationResponse.InternalMessage)
 		tracing.TraceErr(span, err)
 		return nil, err
