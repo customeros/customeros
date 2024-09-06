@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"strings"
 	"time"
@@ -16,7 +17,7 @@ type MeetingRepository interface {
 	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant, externalSystemId, externalId string, entity *entity.MeetingEntity, syncDate time.Time) (*dbtype.Node, error)
 	Update(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entity *entity.MeetingEntity) (*dbtype.Node, error)
 	LinkWithEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, emailId string, relation entity.MeetingRelation) error
-	UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error
+	UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType commonModel.EntityType, relation entity.MeetingRelation) error
 }
 
 type meetingRepository struct {
@@ -121,14 +122,14 @@ func (r *meetingRepository) LinkWithEmailInTx(ctx context.Context, tx neo4j.Mana
 	return err
 }
 
-func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType entity.EntityType, relation entity.MeetingRelation) error {
+func (r *meetingRepository) UnlinkParticipantInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, meetingId, participantId string, entityType commonModel.EntityType, relation entity.MeetingRelation) error {
 	query := ""
 	switch entityType {
-	case entity.CONTACT:
+	case commonModel.CONTACT:
 		query = fmt.Sprintf(`MATCH (p:Contact_%s {id:$participantId}) `, tenant)
-	case entity.USER:
+	case commonModel.USER:
 		query = fmt.Sprintf(`MATCH (p:User_%s {id:$participantId}) `, tenant)
-	case entity.ORGANIZATION:
+	case commonModel.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH (p:Organization_%s {id:$participantId}) `, tenant)
 	}
 	query += fmt.Sprintf(`MATCH (m:Meeting_%s {id:$meetingId}) `, tenant)

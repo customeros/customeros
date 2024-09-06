@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/sirupsen/logrus"
 	"regexp"
@@ -26,7 +27,7 @@ type emailService struct {
 }
 
 type EmailService interface {
-	FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error)
+	FindEmailsForUser(tenant, userId string) ([]*neo4jentity.EmailEntity, error)
 
 	SyncEmailsForUser(tenant, userSource string)
 
@@ -34,7 +35,7 @@ type EmailService interface {
 	SyncEmailByMessageId(tenant, usernameSource, messageId string) (entity.RawState, *string, error)
 }
 
-func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.EmailEntity, error) {
+func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*neo4jentity.EmailEntity, error) {
 	ctx := context.Background()
 
 	emailNodes, err := s.repositories.EmailRepository.FindEmailsByUserId(ctx, tenant, userId)
@@ -43,7 +44,7 @@ func (s *emailService) FindEmailsForUser(tenant, userId string) ([]*entity.Email
 		return nil, err
 	}
 
-	emails := make([]*entity.EmailEntity, len(emailNodes))
+	emails := make([]*neo4jentity.EmailEntity, len(emailNodes))
 	for i, node := range emailNodes {
 		emails[i] = s.mapDbNodeToEmailEntity(*node)
 	}
@@ -482,13 +483,12 @@ type EmailRawData struct {
 	Headers           map[string]string `json:"Headers"`
 }
 
-func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *entity.EmailEntity {
+func (s *emailService) mapDbNodeToEmailEntity(node dbtype.Node) *neo4jentity.EmailEntity {
 	props := utils.GetPropsFromNode(node)
-	result := entity.EmailEntity{
-		Id:          utils.GetStringPropOrEmpty(props, "id"),
-		Email:       utils.GetStringPropOrEmpty(props, "email"),
-		RawEmail:    utils.GetStringPropOrEmpty(props, "rawEmail"),
-		IsReachable: utils.GetStringPropOrNil(props, "isReachable"),
+	result := neo4jentity.EmailEntity{
+		Id:       utils.GetStringPropOrEmpty(props, "id"),
+		Email:    utils.GetStringPropOrEmpty(props, "email"),
+		RawEmail: utils.GetStringPropOrEmpty(props, "rawEmail"),
 	}
 	return &result
 }

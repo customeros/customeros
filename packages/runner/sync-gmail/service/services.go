@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/caches"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
+	config2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"gorm.io/gorm"
@@ -18,8 +19,6 @@ type Services struct {
 
 	grpcClients *grpc_client.Clients
 	Cache       *caches.Cache
-
-	UserService UserService
 
 	SyncService    SyncService
 	EmailService   EmailService
@@ -35,12 +34,11 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 	services.grpcClients = grpcClients
 	services.Repositories = repositories
 
-	services.UserService = NewUserService(repositories)
 	services.SyncService = NewSyncService(cfg, repositories, services)
 	services.EmailService = NewEmailService(cfg, repositories, services)
 	services.MeetingService = NewMeetingService(cfg, repositories, services)
 
-	services.CommonServices = commonService.InitServices(nil, repositories.PostgresDriver, repositories.Neo4jDriver, "neo4j", grpcClients)
+	services.CommonServices = commonService.InitServices(&config2.GlobalConfig{}, repositories.PostgresDriver, repositories.Neo4jDriver, "neo4j", grpcClients)
 
 	return services
 }

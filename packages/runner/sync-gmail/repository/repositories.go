@@ -20,7 +20,6 @@ type Repositories struct {
 	RawCalendarEventRepository RawCalendarEventRepository
 
 	//neo4j repositories
-	UserRepository             UserRepository
 	EmailRepository            EmailRepository
 	InteractionEventRepository InteractionEventRepository
 	OrganizationRepository     OrganizationRepository
@@ -40,7 +39,6 @@ func InitRepos(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *gorm
 		RawEmailRepository:         NewRawEmailRepository(gormDb),
 		RawCalendarEventRepository: NewRawCalendarEventRepository(gormDb),
 
-		UserRepository:             NewUserRepository(driver),
 		EmailRepository:            NewEmailRepository(driver),
 		InteractionEventRepository: NewInteractionEventRepository(driver),
 		OrganizationRepository:     NewOrganizationRepository(driver),

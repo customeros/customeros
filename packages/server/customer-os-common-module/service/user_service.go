@@ -2,16 +2,20 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type UserService interface {
+	GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error)
+
 	Create(ctx context.Context, input UserCreateData) (*string, error)
 }
 
@@ -29,6 +33,21 @@ type UserCreateData struct {
 	UserInput   neo4jentity.UserEntity
 	EmailInput  neo4jentity.EmailEntity
 	PlayerInput neo4jentity.PlayerEntity
+}
+
+func (s *userService) GetAllUsersForTenant(ctx context.Context, tenant string) ([]*neo4jentity.UserEntity, error) {
+	nodes, err := s.services.Neo4jRepositories.UserReadRepository.GetAllForTenant(ctx, tenant)
+	if err != nil {
+		return nil, fmt.Errorf("GetAllUsersForTenant: %w", err)
+	}
+
+	users := make([]*neo4jentity.UserEntity, len(nodes))
+
+	for i, node := range nodes {
+		users[i] = mapper.MapDbNodeToUserEntity(node)
+	}
+
+	return users, nil
 }
 
 func (s *userService) Create(ctx context.Context, input UserCreateData) (*string, error) {
