@@ -54,7 +54,7 @@ func (r cacheEmailEnrowRepository) AddResponse(ctx context.Context, requestId, q
 	err := r.db.
 		Model(&entity.CacheEmailEnrow{}).
 		Where("request_id = ?", requestId).
-		Where("response = ?", "").
+		Where("data = ?", "").
 		Order("created_at desc").
 		Limit(1).
 		UpdateColumn("data", response).
