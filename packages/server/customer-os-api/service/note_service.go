@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -76,7 +77,13 @@ func (s *noteService) NoteLinkAttachment(ctx context.Context, noteID string, att
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := s.services.CommonServices.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntity(ctx, tenant, noteID, commonModel.NOTE, commonModel.INCLUDES, nil, attachmentID, commonModel.ATTACHMENT)
+	err := s.services.CommonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   noteID,
+		FromEntityType: commonModel.NOTE,
+		Relationship:   commonModel.INCLUDES,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -93,7 +100,13 @@ func (s *noteService) NoteUnlinkAttachment(ctx context.Context, noteID string, a
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := s.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UnlinkEntityWithEntity(ctx, tenant, noteID, commonModel.NOTE, commonModel.INCLUDES, attachmentID, commonModel.ATTACHMENT)
+	err := s.services.CommonServices.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, neo4jrepository.LinkDetails{
+		FromEntityId:   noteID,
+		FromEntityType: commonModel.NOTE,
+		Relationship:   commonModel.INCLUDES,
+		ToEntityId:     attachmentID,
+		ToEntityType:   commonModel.ATTACHMENT,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

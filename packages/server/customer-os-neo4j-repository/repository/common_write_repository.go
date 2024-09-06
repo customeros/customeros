@@ -13,11 +13,21 @@ import (
 	"time"
 )
 
+type LinkDetails struct {
+	FromEntityId   string
+	FromEntityType model.EntityType
+
+	Relationship           model.EntityRelation
+	RelationshipProperties *map[string]interface{}
+
+	ToEntityId   string
+	ToEntityType model.EntityType
+}
+
 type CommonWriteRepository interface {
-	LinkEntityWithEntity(ctx context.Context, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, relationshipProperties *map[string]interface{}, withEntityId string, withEntityType model.EntityType) error
-	LinkEntityWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, relationshipProperties *map[string]interface{}, withEntityId string, withEntityType model.EntityType) error
-	UnlinkEntityWithEntity(ctx context.Context, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, withEntityId string, withEntityType model.EntityType) error
-	UnlinkEntityWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, withEntityId string, withEntityType model.EntityType) error
+	Link(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, details LinkDetails) error
+	Unlink(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, details LinkDetails) error
+	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, id, label string) error
 	UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error
 }
 
@@ -33,47 +43,26 @@ func NewCommonWriteRepository(driver *neo4j.DriverWithContext, database string) 
 	}
 }
 
-func (r *commonWriteRepository) LinkEntityWithEntity(ctx context.Context, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, relationshipProperties *map[string]interface{}, withEntityId string, withEntityType model.EntityType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.LinkEntityWithEntity")
+func (r *commonWriteRepository) Link(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, details LinkDetails) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.Link")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		err := r.LinkEntityWithEntityInTx(ctx, tx, tenant, entityId, entityType, relationship, relationshipProperties, withEntityId, withEntityType)
-		return nil, err
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	return nil
-}
-
-func (r *commonWriteRepository) LinkEntityWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, relationshipProperties *map[string]interface{}, withEntityId string, withEntityType model.EntityType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.LinkEntityWithEntityInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	params := map[string]any{
 		"tenant":       tenant,
-		"entityId":     entityId,
-		"withEntityId": withEntityId,
+		"entityId":     details.FromEntityId,
+		"withEntityId": details.ToEntityId,
 	}
 
-	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
-	cypher += fmt.Sprintf(`MATCH (child:%s_%s {id:$withEntityId}) `, withEntityType.Neo4jLabel(), tenant)
-	cypher += fmt.Sprintf(`MERGE (parent)-[rel:%s]->(child)`, relationship.String())
+	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId}) `, details.FromEntityType.Neo4jLabel(), tenant)
+	cypher += fmt.Sprintf(`MATCH (child:%s_%s {id:$withEntityId}) `, details.ToEntityType.Neo4jLabel(), tenant)
+	cypher += fmt.Sprintf(`MERGE (parent)-[rel:%s]->(child)`, details.Relationship.String())
 
 	// If there are relationship properties, add a SET clause to the Cypher query
-	if relationshipProperties != nil && len(*relationshipProperties) > 0 {
+	if details.RelationshipProperties != nil && len(*details.RelationshipProperties) > 0 {
 		cypher += " SET "
 		props := []string{}
-		for k, v := range *relationshipProperties {
+		for k, v := range *details.RelationshipProperties {
 			props = append(props, fmt.Sprintf("rel.%s = $rel_%s", k, k))
 			params["rel_"+k] = v
 		}
@@ -83,66 +72,125 @@ func (r *commonWriteRepository) LinkEntityWithEntityInTx(ctx context.Context, tx
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	_, err := tx.Run(ctx, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	if tx == nil {
+		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+		defer session.Close(ctx)
+
+		_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			_, err := tx.Run(ctx, cypher, params)
+			if err != nil {
+				return nil, err
+			}
+			return nil, nil
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	} else {
+		_, err := (*tx).Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
+
 	return nil
 }
 
-func (r *commonWriteRepository) UnlinkEntityWithEntity(ctx context.Context, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, withEntityId string, withEntityType model.EntityType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.UnlinkEntityWithEntity")
+func (r *commonWriteRepository) Unlink(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, details LinkDetails) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.Unlink")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		err := r.UnlinkEntityWithEntityInTx(ctx, tx, tenant, entityId, entityType, relationship, withEntityId, withEntityType)
-		return nil, err
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	return nil
-}
-
-func (r *commonWriteRepository) UnlinkEntityWithEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, relationship model.EntityRelation, withEntityId string, withEntityType model.EntityType) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.UnlinkEntityWithEntityInTx")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-
-	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId})-[r:%s]-(child:%s_%s {id:$withEntityId}) `, entityType.Neo4jLabel(), tenant, relationship.String(), withEntityType.Neo4jLabel(), tenant)
+	cypher := fmt.Sprintf(`MATCH (parent:%s_%s {id:$entityId})-[r:%s]-(child:%s_%s {id:$withEntityId}) `, details.FromEntityType.Neo4jLabel(), tenant, details.Relationship.String(), details.ToEntityType.Neo4jLabel(), tenant)
 	cypher += fmt.Sprintf(`DELETE r`)
 
 	params := map[string]any{
 		"tenant":       tenant,
-		"entityId":     entityId,
-		"withEntityId": withEntityId,
+		"entityId":     details.FromEntityId,
+		"withEntityId": details.ToEntityId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	_, err := tx.Run(ctx, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
+	if tx == nil {
+		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+		defer session.Close(ctx)
+
+		_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			_, err := tx.Run(ctx, cypher, params)
+			if err != nil {
+				return nil, err
+			}
+			return nil, nil
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	} else {
+		_, err := (*tx).Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
+
+	return nil
+}
+
+func (r *commonWriteRepository) Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, id, label string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.Delete")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("id", id))
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:BELONGS_TO_TENANT]-(n:%s_%s {id:$id}) delete n`, label, tenant)
+
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     id,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	if tx == nil {
+		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+		defer session.Close(ctx)
+
+		_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			_, err := tx.Run(ctx, cypher, params)
+			if err != nil {
+				return nil, err
+			}
+			return nil, nil
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	} else {
+		_, err := (*tx).Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
 	return nil
 }
 
 func (r *commonWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateTimeProperty")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	span.SetTag(tracing.SpanTagEntityId, entityId)
+
 	span.LogFields(log.String("property", string(property)), log.String("nodeLabel", nodeLabel), log.Object("value", value))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id: $entityId}) SET n.%s = $value`, nodeLabel, nodeLabel, tenant, property)

@@ -2,17 +2,16 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapEntityToFlow(entity *postgresEntity.Flow) *model.Flow {
+func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 	if entity == nil {
 		return nil
 	}
 	return &model.Flow{
 		Metadata: &model.Metadata{
-			ID:            entity.ID,
+			ID:            entity.Id,
 			Created:       entity.CreatedAt,
 			LastUpdated:   entity.UpdatedAt,
 			Source:        model.DataSourceOpenline,
@@ -25,7 +24,7 @@ func MapEntityToFlow(entity *postgresEntity.Flow) *model.Flow {
 	}
 }
 
-func MapEntitiesToFlows(entities []*postgresEntity.Flow) []*model.Flow {
+func MapEntitiesToFlows(entities []*neo4jentity.FlowEntity) []*model.Flow {
 	var mapped []*model.Flow
 	for _, entity := range entities {
 		mapped = append(mapped, MapEntityToFlow(entity))
@@ -33,13 +32,13 @@ func MapEntitiesToFlows(entities []*postgresEntity.Flow) []*model.Flow {
 	return mapped
 }
 
-func MapEntityToFlowSequence(entity *postgresEntity.FlowSequence) *model.FlowSequence {
+func MapEntityToFlowSequence(entity *neo4jentity.FlowSequenceEntity) *model.FlowSequence {
 	if entity == nil {
 		return nil
 	}
 	return &model.FlowSequence{
 		Metadata: &model.Metadata{
-			ID:            entity.ID,
+			ID:            entity.Id,
 			Created:       entity.CreatedAt,
 			LastUpdated:   entity.UpdatedAt,
 			Source:        model.DataSourceOpenline,
@@ -52,21 +51,21 @@ func MapEntityToFlowSequence(entity *postgresEntity.FlowSequence) *model.FlowSeq
 	}
 }
 
-func MapEntitiesToFlowSequence(entities []*postgresEntity.FlowSequence) []*model.FlowSequence {
+func MapEntitiesToFlowSequence(entities *neo4jentity.FlowSequenceEntities) []*model.FlowSequence {
 	var mapped []*model.FlowSequence
-	for _, entity := range entities {
-		mapped = append(mapped, MapEntityToFlowSequence(entity))
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowSequence(&entity))
 	}
 	return mapped
 }
 
-func MapEntityToFlowSequenceContact(entity *postgresEntity.FlowSequenceContact) *model.FlowSequenceContact {
+func MapEntityToFlowSequenceContact(entity *neo4jentity.FlowSequenceContactEntity) *model.FlowSequenceContact {
 	if entity == nil {
 		return nil
 	}
 	return &model.FlowSequenceContact{
 		Metadata: &model.Metadata{
-			ID:            entity.ID,
+			ID:            entity.Id,
 			Created:       entity.CreatedAt,
 			LastUpdated:   entity.UpdatedAt,
 			Source:        model.DataSourceOpenline,
@@ -76,21 +75,46 @@ func MapEntityToFlowSequenceContact(entity *postgresEntity.FlowSequenceContact) 
 	}
 }
 
-func MapEntitiesToFlowSequenceContacts(entities []*postgresEntity.FlowSequenceContact) []*model.FlowSequenceContact {
+func MapEntitiesToFlowSequenceContacts(entities *neo4jentity.FlowSequenceContactEntities) []*model.FlowSequenceContact {
 	var mapped []*model.FlowSequenceContact
-	for _, entity := range entities {
-		mapped = append(mapped, MapEntityToFlowSequenceContact(entity))
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowSequenceContact(&entity))
 	}
 	return mapped
 }
 
-func MapEntityToFlowSequenceStep(entity *postgresEntity.FlowSequenceStep) *model.FlowSequenceStep {
+func MapEntityToFlowSequenceSender(entity *neo4jentity.FlowSequenceSenderEntity) *model.FlowSequenceSender {
+	if entity == nil {
+		return nil
+	}
+	return &model.FlowSequenceSender{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        model.DataSourceOpenline,
+			SourceOfTruth: model.DataSourceOpenline,
+			AppSource:     "",
+		},
+		Mailbox: entity.Mailbox,
+	}
+}
+
+func MapEntitiesToFlowSequenceSenders(entities *neo4jentity.FlowSequenceSenderEntities) []*model.FlowSequenceSender {
+	var mapped []*model.FlowSequenceSender
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowSequenceSender(&entity))
+	}
+	return mapped
+}
+
+func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *model.FlowSequenceStep {
 	if entity == nil {
 		return nil
 	}
 	return &model.FlowSequenceStep{
 		Metadata: &model.Metadata{
-			ID:            entity.ID,
+			ID:            entity.Id,
 			Created:       entity.CreatedAt,
 			LastUpdated:   entity.UpdatedAt,
 			Source:        model.DataSourceOpenline,
@@ -105,7 +129,7 @@ func MapEntityToFlowSequenceStep(entity *postgresEntity.FlowSequenceStep) *model
 	}
 }
 
-func MapEntitiesToFlowSequenceSteps(entities []*postgresEntity.FlowSequenceStep) []*model.FlowSequenceStep {
+func MapEntitiesToFlowSequenceSteps(entities []*neo4jentity.FlowSequenceStepEntity) []*model.FlowSequenceStep {
 	var mapped []*model.FlowSequenceStep
 	for _, entity := range entities {
 		mapped = append(mapped, MapEntityToFlowSequenceStep(entity))
@@ -113,116 +137,116 @@ func MapEntitiesToFlowSequenceSteps(entities []*postgresEntity.FlowSequenceStep)
 	return mapped
 }
 
-func MapFlowStatusToModel(flowSequenceStatus postgresEntity.FlowStatus) model.FlowStatus {
+func MapFlowStatusToModel(flowSequenceStatus neo4jentity.FlowStatus) model.FlowStatus {
 	switch flowSequenceStatus {
-	case postgresEntity.FlowStatusActive:
+	case neo4jentity.FlowStatusActive:
 		return model.FlowStatusActive
-	case postgresEntity.FlowStatusInactive:
+	case neo4jentity.FlowStatusInactive:
 		return model.FlowStatusInactive
-	case postgresEntity.FlowStatusPaused:
+	case neo4jentity.FlowStatusPaused:
 		return model.FlowStatusPaused
-	case postgresEntity.FlowStatusArchived:
+	case neo4jentity.FlowStatusArchived:
 		return model.FlowStatusArchived
 	default:
 		return ""
 	}
 }
 
-func MapFlowStatusToEntity(flowSequenceStatus model.FlowStatus) postgresEntity.FlowStatus {
+func MapFlowStatusToEntity(flowSequenceStatus model.FlowStatus) neo4jentity.FlowStatus {
 	switch flowSequenceStatus {
 	case model.FlowStatusActive:
-		return postgresEntity.FlowStatusActive
+		return neo4jentity.FlowStatusActive
 	case model.FlowStatusInactive:
-		return postgresEntity.FlowStatusInactive
+		return neo4jentity.FlowStatusInactive
 	case model.FlowStatusPaused:
-		return postgresEntity.FlowStatusPaused
+		return neo4jentity.FlowStatusPaused
 	case model.FlowStatusArchived:
-		return postgresEntity.FlowStatusArchived
+		return neo4jentity.FlowStatusArchived
 	default:
 		return ""
 	}
 }
 
-func MapFlowSequenceStatusToModel(flowSequenceStatus postgresEntity.FlowSequenceStatus) model.FlowSequenceStatus {
+func MapFlowSequenceStatusToModel(flowSequenceStatus neo4jentity.FlowSequenceStatus) model.FlowSequenceStatus {
 	switch flowSequenceStatus {
-	case postgresEntity.FlowSequenceStatusActive:
+	case neo4jentity.FlowSequenceStatusActive:
 		return model.FlowSequenceStatusActive
-	case postgresEntity.FlowSequenceStatusInactive:
+	case neo4jentity.FlowSequenceStatusInactive:
 		return model.FlowSequenceStatusInactive
-	case postgresEntity.FlowSequenceStatusPaused:
+	case neo4jentity.FlowSequenceStatusPaused:
 		return model.FlowSequenceStatusPaused
-	case postgresEntity.FlowSequenceStatusArchived:
+	case neo4jentity.FlowSequenceStatusArchived:
 		return model.FlowSequenceStatusArchived
 	default:
 		return ""
 	}
 }
 
-func MapFlowSequenceStatusToEntity(flowSequenceStatus model.FlowSequenceStatus) postgresEntity.FlowSequenceStatus {
+func MapFlowSequenceStatusToEntity(flowSequenceStatus model.FlowSequenceStatus) neo4jentity.FlowSequenceStatus {
 	switch flowSequenceStatus {
 	case model.FlowSequenceStatusActive:
-		return postgresEntity.FlowSequenceStatusActive
+		return neo4jentity.FlowSequenceStatusActive
 	case model.FlowSequenceStatusInactive:
-		return postgresEntity.FlowSequenceStatusInactive
+		return neo4jentity.FlowSequenceStatusInactive
 	case model.FlowSequenceStatusPaused:
-		return postgresEntity.FlowSequenceStatusPaused
+		return neo4jentity.FlowSequenceStatusPaused
 	case model.FlowSequenceStatusArchived:
-		return postgresEntity.FlowSequenceStatusArchived
+		return neo4jentity.FlowSequenceStatusArchived
 	default:
 		return ""
 	}
 }
 
-func MapFlowSequenceStepStatusToModel(flowSequenceStepStatus postgresEntity.FlowSequenceStepStatus) model.FlowSequenceStepStatus {
+func MapFlowSequenceStepStatusToModel(flowSequenceStepStatus neo4jentity.FlowSequenceStepStatus) model.FlowSequenceStepStatus {
 	switch flowSequenceStepStatus {
-	case postgresEntity.FlowSequenceStepStatusActive:
+	case neo4jentity.FlowSequenceStepStatusActive:
 		return model.FlowSequenceStepStatusActive
-	case postgresEntity.FlowSequenceStepStatusInactive:
+	case neo4jentity.FlowSequenceStepStatusInactive:
 		return model.FlowSequenceStepStatusInactive
-	case postgresEntity.FlowSequenceStepStatusPaused:
+	case neo4jentity.FlowSequenceStepStatusPaused:
 		return model.FlowSequenceStepStatusPaused
-	case postgresEntity.FlowSequenceStepStatusArchived:
+	case neo4jentity.FlowSequenceStepStatusArchived:
 		return model.FlowSequenceStepStatusArchived
 	default:
 		return ""
 	}
 }
 
-func MapFlowSequenceStepStatusToEntity(enum model.FlowSequenceStepStatus) postgresEntity.FlowSequenceStepStatus {
+func MapFlowSequenceStepStatusToEntity(enum model.FlowSequenceStepStatus) neo4jentity.FlowSequenceStepStatus {
 	switch enum {
 	case model.FlowSequenceStepStatusActive:
-		return postgresEntity.FlowSequenceStepStatusActive
+		return neo4jentity.FlowSequenceStepStatusActive
 	case model.FlowSequenceStepStatusInactive:
-		return postgresEntity.FlowSequenceStepStatusInactive
+		return neo4jentity.FlowSequenceStepStatusInactive
 	case model.FlowSequenceStepStatusPaused:
-		return postgresEntity.FlowSequenceStepStatusPaused
+		return neo4jentity.FlowSequenceStepStatusPaused
 	case model.FlowSequenceStepStatusArchived:
-		return postgresEntity.FlowSequenceStepStatusArchived
+		return neo4jentity.FlowSequenceStepStatusArchived
 	default:
 		return ""
 	}
 }
 
-func MapFlowSequenceStepTypeToModel(enum postgresEntity.FlowSequenceStepType) model.FlowSequenceStepType {
+func MapFlowSequenceStepTypeToModel(enum neo4jentity.FlowSequenceStepType) model.FlowSequenceStepType {
 	switch enum {
-	case postgresEntity.FlowSequenceStepTypeEmail:
+	case neo4jentity.FlowSequenceStepTypeEmail:
 		return model.FlowSequenceStepTypeEmail
-	case postgresEntity.FlowSequenceStepTypeLinkedin:
+	case neo4jentity.FlowSequenceStepTypeLinkedin:
 		return model.FlowSequenceStepTypeLinkedin
 	default:
 		return ""
 	}
 }
 
-func MapFlowSequenceStepSubtypeToModel(enum *postgresEntity.FlowSequenceStepSubtype) *model.FlowSequenceStepSubtype {
+func MapFlowSequenceStepSubtypeToModel(enum *neo4jentity.FlowSequenceStepSubtype) *model.FlowSequenceStepSubtype {
 	if enum == nil {
 		return nil
 	}
 	var v model.FlowSequenceStepSubtype
 	switch *enum {
-	case postgresEntity.FlowSequenceStepSubtypeLinkedinConnectionRequest:
+	case neo4jentity.FlowSequenceStepSubtypeLinkedinConnectionRequest:
 		v = model.FlowSequenceStepSubtypeLinkedinConnectionRequest
-	case postgresEntity.FlowSequenceStepSubtypeLinkedinMessage:
+	case neo4jentity.FlowSequenceStepSubtypeLinkedinMessage:
 		v = model.FlowSequenceStepSubtypeLinkedinMessage
 	default:
 		v = ""
@@ -231,13 +255,17 @@ func MapFlowSequenceStepSubtypeToModel(enum *postgresEntity.FlowSequenceStepSubt
 	return &v
 }
 
-func MapFlowSequenceStoreInputToEntity(input model.FlowSequenceStoreInput) *postgresEntity.FlowSequence {
-	return &postgresEntity.FlowSequence{
-		BaseEntity: postgresEntity.BaseEntity{
-			ID: utils.StringOrEmpty(input.ID),
-		},
+func MapFlowSequenceCreateInputToEntity(input model.FlowSequenceCreateInput) *neo4jentity.FlowSequenceEntity {
+	return &neo4jentity.FlowSequenceEntity{
 		Name:        input.Name,
 		Description: input.Description,
-		FlowId:      utils.StringOrEmpty(input.FlowID),
+	}
+}
+
+func MapFlowSequenceUpdateInputToEntity(input model.FlowSequenceUpdateInput) *neo4jentity.FlowSequenceEntity {
+	return &neo4jentity.FlowSequenceEntity{
+		Id:          input.ID,
+		Name:        input.Name,
+		Description: input.Description,
 	}
 }

@@ -12,6 +12,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/exp/slices"
@@ -273,7 +274,14 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			return nil, errors.New("session not found")
 		}
 
-		err = s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.NodeLabelInteractionEvent, commonModel.PART_OF, nil, *newInteractionEvent.SessionIdentifier, commonModel.NodeLabelInteractionSession)
+		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+			FromEntityId:           interactionEventId,
+			FromEntityType:         commonModel.INTERACTION_EVENT,
+			Relationship:           commonModel.PART_OF,
+			RelationshipProperties: nil,
+			ToEntityId:             *newInteractionEvent.SessionIdentifier,
+			ToEntityType:           commonModel.INTERACTION_SESSION,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -300,7 +308,14 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			return nil, errors.New("meeting not found")
 		}
 
-		err = s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.NodeLabelInteractionEvent, commonModel.PART_OF, nil, *newInteractionEvent.MeetingIdentifier, commonModel.NodeLabelMeeting)
+		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+			FromEntityId:           interactionEventId,
+			FromEntityType:         commonModel.INTERACTION_EVENT,
+			Relationship:           commonModel.PART_OF,
+			RelationshipProperties: nil,
+			ToEntityId:             *newInteractionEvent.MeetingIdentifier,
+			ToEntityType:           commonModel.MEETING,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -317,7 +332,14 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			return nil, errors.New("parent not found")
 		}
 
-		err = s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.NodeLabelInteractionEvent, commonModel.REPLIES_TO, nil, *newInteractionEvent.RepliesTo, commonModel.NodeLabelInteractionEvent)
+		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+			FromEntityId:           interactionEventId,
+			FromEntityType:         commonModel.INTERACTION_EVENT,
+			Relationship:           commonModel.REPLIES_TO,
+			RelationshipProperties: nil,
+			ToEntityId:             *newInteractionEvent.MeetingIdentifier,
+			ToEntityType:           commonModel.INTERACTION_EVENT,
+		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -433,7 +455,14 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 		}
 	}
 
-	err := s.services.Neo4jRepositories.CommonWriteRepository.LinkEntityWithEntityInTx(ctx, tx, tenant, interactionEventId, commonModel.INTERACTION_EVENT, relationship, relationshipProperties, linkWithId, linkWithLabel)
+	err := s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+		FromEntityId:           interactionEventId,
+		FromEntityType:         commonModel.INTERACTION_EVENT,
+		Relationship:           relationship,
+		RelationshipProperties: relationshipProperties,
+		ToEntityId:             linkWithId,
+		ToEntityType:           linkWithLabel,
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

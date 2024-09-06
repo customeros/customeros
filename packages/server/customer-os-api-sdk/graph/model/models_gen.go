@@ -1140,7 +1140,7 @@ type FlowSequence struct {
 	Flow        *Flow                  `json:"flow"`
 	Steps       []*FlowSequenceStep    `json:"steps"`
 	Contacts    []*FlowSequenceContact `json:"contacts"`
-	Mailboxes   []*Mailbox             `json:"mailboxes"`
+	Senders     []*FlowSequenceSender  `json:"senders"`
 }
 
 func (FlowSequence) IsMetadataInterface()        {}
@@ -1155,6 +1155,21 @@ type FlowSequenceContact struct {
 func (FlowSequenceContact) IsMetadataInterface()        {}
 func (this FlowSequenceContact) GetMetadata() *Metadata { return this.Metadata }
 
+type FlowSequenceCreateInput struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	FlowID      *string `json:"flowId,omitempty"`
+	FlowName    *string `json:"flowName,omitempty"`
+}
+
+type FlowSequenceSender struct {
+	Metadata *Metadata `json:"metadata"`
+	Mailbox  string    `json:"mailbox"`
+}
+
+func (FlowSequenceSender) IsMetadataInterface()        {}
+func (this FlowSequenceSender) GetMetadata() *Metadata { return this.Metadata }
+
 type FlowSequenceStep struct {
 	Metadata *Metadata                `json:"metadata"`
 	Name     string                   `json:"name"`
@@ -1167,11 +1182,10 @@ type FlowSequenceStep struct {
 func (FlowSequenceStep) IsMetadataInterface()        {}
 func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
 
-type FlowSequenceStoreInput struct {
-	ID          *string `json:"id,omitempty"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	FlowID      *string `json:"flowId,omitempty"`
+type FlowSequenceUpdateInput struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
 }
 
 type GCliAttributeKeyValuePair struct {
@@ -1606,14 +1620,6 @@ type LogEntryUpdateInput struct {
 	ContentType *string    `json:"contentType,omitempty"`
 	StartedAt   *time.Time `json:"startedAt,omitempty"`
 }
-
-type Mailbox struct {
-	Metadata *Metadata `json:"metadata"`
-	Email    string    `json:"email"`
-}
-
-func (Mailbox) IsMetadataInterface()        {}
-func (this Mailbox) GetMetadata() *Metadata { return this.Metadata }
 
 type MasterPlan struct {
 	ID                string                 `json:"id"`

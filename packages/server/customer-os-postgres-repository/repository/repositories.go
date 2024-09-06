@@ -9,11 +9,6 @@ type Repositories struct {
 	AiLocationMappingRepository                 AiLocationMappingRepository
 	AiPromptLogRepository                       AiPromptLogRepository
 	AppKeyRepository                            AppKeyRepository
-	FlowRepository                              FlowRepository
-	FlowSequenceRepository                      FlowSequenceRepository
-	FlowSequenceStepRepository                  FlowSequenceStepRepository
-	FlowSequenceContactRepository               FlowSequenceContactRepository
-	FlowSequenceSenderRepository                FlowSequenceSenderRepository
 	PersonalIntegrationRepository               PersonalIntegrationRepository
 	PersonalEmailProviderRepository             PersonalEmailProviderRepository
 	TenantWebhookApiKeyRepository               TenantWebhookApiKeyRepository
@@ -66,11 +61,6 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		AiLocationMappingRepository:                 NewAiLocationMappingRepository(db),
 		AiPromptLogRepository:                       NewAiPromptLogRepository(db),
 		AppKeyRepository:                            NewAppKeyRepo(db),
-		FlowRepository:                              NewFlowRepository(db),
-		FlowSequenceRepository:                      NewFlowSequenceRepository(db),
-		FlowSequenceStepRepository:                  NewFlowSequenceStepRepository(db),
-		FlowSequenceContactRepository:               NewFlowSequenceContactRepository(db),
-		FlowSequenceSenderRepository:                NewFlowSequenceSenderRepository(db),
 		PersonalIntegrationRepository:               NewPersonalIntegrationsRepo(db),
 		PersonalEmailProviderRepository:             NewPersonalEmailProviderRepository(db),
 		TenantWebhookApiKeyRepository:               NewTenantWebhookApiKeyRepository(db),
@@ -164,12 +154,6 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.TenantSettings{},
 		&entity.TenantSettingsOpportunityStage{},
 		&entity.TenantSettingsMailbox{},
-		&entity.FlowSequenceStepTemplateVariable{},
-		&entity.Flow{},
-		&entity.FlowSequence{},
-		&entity.FlowSequenceStep{},
-		&entity.FlowSequenceContact{},
-		&entity.FlowSequenceSender{},
 		&entity.EmailLookup{},
 		&entity.EmailTracking{},
 		&entity.CacheIpData{},

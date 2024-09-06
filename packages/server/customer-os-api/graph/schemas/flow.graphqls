@@ -4,13 +4,14 @@ extend type Query {
 }
 
 extend type Mutation {
-    flow_sequence_Store(input: FlowSequenceStoreInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_Create(input: FlowSequenceCreateInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_Update(input: FlowSequenceUpdateInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flow_sequence_LinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): FlowSequenceContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_UnlinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-#    flow_sequence_LinkMailbox(sequenceId: ID!, contactId: ID!, emailId: ID!): Mailbox! @hasRole(roles: [ADMIN, USER]) @hasTenant
-#    flow_sequence_UnlinkMailbox(sequenceId: ID!, contactId: ID!, emailId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_LinkSender(sequenceId: ID!, mailbox: String!): FlowSequenceSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_UnlinkSender(sequenceId: ID!, mailbox: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_ChangeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -33,7 +34,7 @@ type FlowSequence implements MetadataInterface {
     flow: Flow! @goField(forceResolver: true)
     steps: [FlowSequenceStep!]! @goField(forceResolver: true)
     contacts: [FlowSequenceContact!]! @goField(forceResolver: true)
-    mailboxes: [Mailbox!]! @goField(forceResolver: true)
+    senders: [FlowSequenceSender!]! @goField(forceResolver: true)
 }
 
 type FlowSequenceStep implements MetadataInterface {
@@ -55,16 +56,22 @@ type FlowSequenceContact implements MetadataInterface {
     email: Email! @goField(forceResolver: true)
 }
 
-type Mailbox implements MetadataInterface {
+type FlowSequenceSender implements MetadataInterface {
     metadata: Metadata!
-    email:    String!
+    mailbox:    String!
 }
 
-input FlowSequenceStoreInput {
-    id: ID
+input FlowSequenceCreateInput {
     name: String!
     description: String!
     flowId: ID
+    flowName: String
+}
+
+input FlowSequenceUpdateInput {
+    id: ID!
+    name: String!
+    description: String!
 }
 
 enum FlowStatus {
