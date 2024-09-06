@@ -5,6 +5,7 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
+import { flowSequencesOptions } from '@organizations/components/Columns/sequences/utils.ts';
 import {
   ColumnViewType,
   ComparisonOperator,
@@ -13,12 +14,6 @@ import {
 
 import { FilterHeader } from '../../../shared/Filters/abstract';
 
-const flowSequencesOptions = [
-  { label: 'Active', value: FlowSequenceStatus.Active },
-  { label: 'Archived', value: FlowSequenceStatus.Archived },
-  { label: 'Inactive', value: FlowSequenceStatus.Inactive },
-  { label: 'Paused', value: FlowSequenceStatus.Paused },
-];
 const defaultFilter: FilterItem = {
   property: ColumnViewType.FlowSequenceStatus,
   value: [],

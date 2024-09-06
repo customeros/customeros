@@ -17,7 +17,7 @@ export const getPredefinedFilterFn = (
       (filter) => (row: FlowSequenceStore) => {
         const filterValues = filter?.value;
 
-        if (!filter.active) return true;
+        if (!filter.active || !filterValues.length) return true;
 
         return filterValues?.includes(row.value?.status);
       },

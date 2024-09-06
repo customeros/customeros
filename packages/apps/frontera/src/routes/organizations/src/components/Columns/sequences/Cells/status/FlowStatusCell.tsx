@@ -9,8 +9,7 @@ import { FlowSequenceStatus } from '@graphql/types';
 import { SelectOption } from '@shared/types/SelectOptions';
 import { IconButton } from '@ui/form/IconButton/IconButton';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-
-import { statusOptions } from './util';
+import { flowSequencesOptions } from '@organizations/components/Columns/sequences/utils.ts';
 
 interface FlowStatusCellProps {
   id: string;
@@ -22,7 +21,7 @@ export const FlowStatusCell = observer(({ id }: FlowStatusCellProps) => {
 
   const flowSequence = store.flowSequences.value.get(id);
 
-  const value = statusOptions.find(
+  const value = flowSequencesOptions.find(
     (option) => option.value === flowSequence?.value.status,
   );
 
@@ -64,7 +63,7 @@ export const FlowStatusCell = observer(({ id }: FlowStatusCellProps) => {
           />
         </MenuButton>
         <MenuList>
-          {statusOptions
+          {flowSequencesOptions
             .filter((e) => e.value !== FlowSequenceStatus.Archived)
             .map((option) => (
               <MenuItem

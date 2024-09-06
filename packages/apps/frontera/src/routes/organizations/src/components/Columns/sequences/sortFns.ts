@@ -6,12 +6,12 @@ import { ColumnViewType, FlowSequenceStatus } from '@graphql/types';
 export const getSequenceColumnSortFn = (columnId: string) =>
   match(columnId)
     .with(
-      ColumnViewType.InvoicesInvoiceStatus,
+      ColumnViewType.FlowSequenceStatus,
       () => (row: FlowSequenceStore) =>
         match(row.value?.status)
-          .with(FlowSequenceStatus.Active, () => 4)
-          .with(FlowSequenceStatus.Paused, () => 3)
-          .with(FlowSequenceStatus.Inactive, () => 2)
+          .with(FlowSequenceStatus.Inactive, () => 4)
+          .with(FlowSequenceStatus.Active, () => 3)
+          .with(FlowSequenceStatus.Paused, () => 2)
           .with(FlowSequenceStatus.Archived, () => 1)
           .otherwise(() => null),
     )
