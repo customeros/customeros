@@ -190,7 +190,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 			TLSRequired:         domainValidation.SmtpResponse.TLSRequired,
 			ResponseCode:        domainValidation.SmtpResponse.ResponseCode,
 			ErrorCode:           domainValidation.SmtpResponse.ErrorCode,
-			Description:         domainValidation.SmtpResponse.Description,
+			Description:         utils.SanitizeUTF8(domainValidation.SmtpResponse.Description),
 			HealthFromEmail:     domainValidation.MailServerHealth.FromEmail,
 			HealthServerIP:      domainValidation.MailServerHealth.ServerIP,
 			HealthIsGreylisted:  domainValidation.MailServerHealth.IsGreylisted,
@@ -198,7 +198,7 @@ func (s *emailValidationService) getDomainValidation(ctx context.Context, domain
 			HealthRetryAfter:    domainValidation.MailServerHealth.RetryAfter,
 			IsPrimaryDomain:     &domainValidation.IsPrimaryDomain,
 			PrimaryDomain:       domainValidation.PrimaryDomain,
-			Data:                string(jsonData),
+			Data:                utils.SanitizeUTF8(string(jsonData)),
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save domain data"))
@@ -252,7 +252,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			IsFreeAccount:       emailValidation.IsFreeAccount,
 			RetryValidation:     emailValidation.RetryValidation,
 			Error:               emailValidation.Error,
-			Data:                string(jsonData),
+			Data:                utils.SanitizeUTF8(string(jsonData)),
 			HealthIsGreylisted:  emailValidation.MailServerHealth.IsGreylisted,
 			HealthIsBlacklisted: emailValidation.MailServerHealth.IsBlacklisted,
 			HealthServerIP:      emailValidation.MailServerHealth.ServerIP,
@@ -261,7 +261,7 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			SmtpSuccess:         emailValidation.SmtpResponse.CanConnectSMTP,
 			ResponseCode:        emailValidation.SmtpResponse.ResponseCode,
 			ErrorCode:           emailValidation.SmtpResponse.ErrorCode,
-			Description:         emailValidation.SmtpResponse.Description,
+			Description:         utils.SanitizeUTF8(emailValidation.SmtpResponse.Description),
 			TLSRequired:         emailValidation.SmtpResponse.TLSRequired,
 			Username:            syntaxValidation.User,
 			NormalizedEmail:     syntaxValidation.CleanEmail,
