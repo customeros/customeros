@@ -1621,6 +1621,10 @@ type LogEntryUpdateInput struct {
 	StartedAt   *time.Time `json:"startedAt,omitempty"`
 }
 
+type Mailbox struct {
+	Mailbox string `json:"mailbox"`
+}
+
 type MasterPlan struct {
 	ID                string                 `json:"id"`
 	CreatedAt         time.Time              `json:"createdAt"`

@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -290,6 +291,29 @@ func (r *queryResolver) Sequences(ctx context.Context) ([]*model.FlowSequence, e
 		return nil, err
 	}
 	return mapper.MapEntitiesToFlowSequence(entities), nil
+}
+
+// Mailboxes is the resolver for the mailboxes field.
+func (r *queryResolver) Mailboxes(ctx context.Context) ([]*model.Mailbox, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Mailboxes", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Get(ctx, common.GetTenantFromContext(ctx))
+	if err != nil || entities == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get flow sequences")
+		return nil, err
+	}
+
+	mailboxes := make([]*model.Mailbox, 0)
+	for _, entity := range entities {
+		mailboxes = append(mailboxes, &model.Mailbox{
+			Mailbox: entity.MailboxUsername,
+		})
+	}
+
+	return mailboxes, nil
 }
 
 // Flow returns generated.FlowResolver implementation.
