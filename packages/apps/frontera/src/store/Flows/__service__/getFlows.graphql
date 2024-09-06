@@ -11,10 +11,5 @@ query getFlows {
     name
     description
     status
-    sequences {
-      metadata {
-        id
-      }
-    }
   }
 }

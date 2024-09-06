@@ -18,9 +18,5 @@ export type GetFlowsQuery = {
       sourceOfTruth: Types.DataSource;
       appSource: string;
     };
-    sequences: Array<{
-      __typename?: 'FlowSequence';
-      metadata: { __typename?: 'Metadata'; id: string };
-    }>;
   }>;
 };

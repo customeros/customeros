@@ -13,7 +13,7 @@ import { XClose } from '@ui/media/icons/XClose.tsx';
 export const CreateNewSequence = observer(() => {
   const store = useStore();
   const [allowSubmit, setAllowSubmit] = useState(false);
-  const { flowSequences } = useStore();
+  const { flowSequences, flows } = useStore();
 
   const [sequenceName, setSequenceName] = useState('');
 
@@ -27,10 +27,19 @@ export const CreateNewSequence = observer(() => {
     if (!allowSubmit) return;
     setAllowSubmit(false);
 
-    flowSequences.create({
-      name: sequenceName,
-      description: '',
-    });
+    if (flows.educationFlow) {
+      flowSequences.create({
+        name: sequenceName,
+        description: '',
+        flowId: flows.educationFlow.id,
+      });
+    } else {
+      flowSequences.create({
+        name: sequenceName,
+        description: '',
+        flowName: 'Education',
+      });
+    }
 
     store.ui.commandMenu.toggle('CreateNewSequence');
   };

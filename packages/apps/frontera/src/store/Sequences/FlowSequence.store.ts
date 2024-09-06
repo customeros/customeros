@@ -97,7 +97,7 @@ const getDefaultValue = (): FlowSequence => ({
     status: FlowStatus.Inactive,
     sequences: [],
   },
-  mailboxes: [],
+  senders: [],
   name: '',
   status: FlowSequenceStatus.Inactive,
   steps: [],
