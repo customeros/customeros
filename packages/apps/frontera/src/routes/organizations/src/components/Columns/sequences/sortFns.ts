@@ -17,12 +17,12 @@ export const getSequenceColumnSortFn = (columnId: string) =>
     )
 
     .with(ColumnViewType.FlowName, () => (row: FlowSequenceStore) => {
-      const value = row.value?.flow?.name;
+      const value = row.value?.flow?.name?.toLowerCase();
 
       return value || null;
     })
     .with(ColumnViewType.FlowSequenceName, () => (row: FlowSequenceStore) => {
-      const value = row.value?.name;
+      const value = row.value?.name?.toLowerCase();
 
       return value || null;
     })

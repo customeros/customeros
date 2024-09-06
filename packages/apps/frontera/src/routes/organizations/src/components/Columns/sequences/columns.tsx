@@ -195,7 +195,7 @@ const columns: Record<string, Column> = {
       header: (props) => (
         <THead
           filterWidth={250}
-          title='Ended early'
+          title='Ended Early'
           id={ColumnViewType.FlowSequenceStatusUnsuccessfulCount}
           {...getTHeadProps(props)}
         />

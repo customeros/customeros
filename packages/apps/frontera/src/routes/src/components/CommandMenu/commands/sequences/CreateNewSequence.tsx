@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
+import { useDidMount } from 'rooks';
 import { observer } from 'mobx-react-lite';
-import { useDidMount, useKeyBindings } from 'rooks';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -35,13 +35,6 @@ export const CreateNewSequence = observer(() => {
     store.ui.commandMenu.toggle('CreateNewSequence');
   };
 
-  useKeyBindings(
-    {
-      Enter: handleConfirm,
-    },
-    { when: allowSubmit },
-  );
-
   return (
     <Command
       label={`Rename `}
@@ -57,7 +50,9 @@ export const CreateNewSequence = observer(() => {
             variant='ghost'
             icon={<XClose />}
             aria-label='cancel'
-            onClick={() => null}
+            onClick={() => {
+              store.ui.commandMenu.setOpen(false);
+            }}
           />
         </div>
       </div>
@@ -71,6 +66,11 @@ export const CreateNewSequence = observer(() => {
           placeholder='Sequence name'
           onChange={(e) => {
             setSequenceName(e.target.value);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter') {
+              handleConfirm();
+            }
           }}
         />
       </div>
