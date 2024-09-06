@@ -6,11 +6,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
 type ActionRepository interface {
-	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType entity.EntityType, actionType entity.ActionType, source, appSource string) (*dbtype.Node, error)
+	Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType commonModel.EntityType, actionType entity.ActionType, source, appSource string) (*dbtype.Node, error)
 }
 
 type actionRepository struct {
@@ -23,10 +24,10 @@ func NewActionRepository(driver *neo4j.DriverWithContext) ActionRepository {
 	}
 }
 
-func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType entity.EntityType, actionType entity.ActionType, source, appSource string) (*dbtype.Node, error) {
+func (r *actionRepository) Create(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, entityId string, entityType commonModel.EntityType, actionType entity.ActionType, source, appSource string) (*dbtype.Node, error) {
 	query := ""
 	switch entityType {
-	case entity.ORGANIZATION:
+	case commonModel.ORGANIZATION:
 		query = fmt.Sprintf(`MATCH (p:Organization_%s {id:$entityId}) `, tenant)
 	}
 

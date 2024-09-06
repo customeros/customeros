@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -181,7 +182,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 			return "", fmt.Errorf("unable to link domain to organization: %v", err)
 		}
 
-		_, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, entity.ORGANIZATION, entity.ActionCreated, source, AppSource)
+		_, err := s.repositories.ActionRepository.Create(ctx, tx, tenant, organizationId, commonModel.ORGANIZATION, entity.ActionCreated, source, AppSource)
 		if err != nil {
 			return "", fmt.Errorf("unable to create action: %v", err)
 		}

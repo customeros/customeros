@@ -19,8 +19,6 @@ type EmailMessageData struct {
 	CcEmail   []string
 	BccEmail  []string
 
-	Direction Direction
-
 	Channel     string
 	ChannelData *string
 

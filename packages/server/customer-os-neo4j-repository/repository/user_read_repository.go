@@ -1,6 +1,7 @@
 package repository
 
 import (
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -11,6 +12,7 @@ import (
 )
 
 type UserReadRepository interface {
+	GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error)
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error)
 	GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
@@ -34,12 +36,44 @@ func (r *userReadRepository) prepareReadSession(ctx context.Context) neo4j.Sessi
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
+func (r *userReadRepository) GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllForTenant")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbNodes := make([]*dbtype.Node, 0)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		params := map[string]any{
+			"tenant": tenant,
+		}
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN u `),
+			params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodes, nil
+}
+
 func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetUserById")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, userId)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("userId", userId))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$id}) RETURN u`
 	params := map[string]any{
@@ -67,6 +101,8 @@ func (r *userReadRepository) GetUserById(ctx context.Context, tenant, userId str
 func (u *userReadRepository) FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.FindFirstUserWithRolesByEmail")
 	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
 	span.LogFields(log.String("email", email))
 
 	session := utils.NewNeo4jReadSession(ctx, *u.driver)
@@ -115,8 +151,7 @@ func (u *userReadRepository) toStringList(values []interface{}) []string {
 func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserRepository.GetFirstUserByEmail")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User)-[:HAS]->(e:Email) 
 			WHERE e.email=$email OR e.rawEmail=$email
@@ -155,8 +190,7 @@ func (r *userReadRepository) GetFirstUserByEmail(ctx context.Context, tenant, em
 func (r *userReadRepository) GetAllOwnersForOrganizations(ctx context.Context, tenant string, organizationIDs []string) ([]*utils.DbNodeAndId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetAllOwnersForOrganizations")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)<-[:OWNS]-(u:User)-[:USER_BELONGS_TO_TENANT]->(t)
 			WHERE o.id IN $organizationIds
@@ -187,8 +221,7 @@ func (r *userReadRepository) GetAllOwnersForOrganizations(ctx context.Context, t
 func (r *userReadRepository) GetOwnerForOrganization(ctx context.Context, tenant, organizationId string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetOwnerForOrganization")
 	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})<-[:OWNS]-(u:User) RETURN u`
 	params := map[string]any{
