@@ -77,13 +77,19 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 
 		syntaxValidation := mailsherpa.ValidateEmailSyntax(emailAddress)
 		if !syntaxValidation.IsValid {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid email address syntax"})
+			c.JSON(http.StatusOK, EmailVerificationResponse{
+				Status: "success",
+				Email:  emailAddress,
+				Syntax: EmailVerificationSyntax{
+					IsValid: false,
+				},
+			})
 			logger.Warnf("Invalid email address format: %s", emailAddress)
 			return
 		}
 
 		// call validation api
-		result, err := callApiValidateEmail(ctx, services, span, emailAddress, verifyCatchAll)
+		result, err := callApiValidateEmail(ctx, services, emailAddress, verifyCatchAll)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
 			return
@@ -124,7 +130,10 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func callApiValidateEmail(ctx context.Context, services *service.Services, span opentracing.Span, emailAddress string, verifyCatchAll bool) (*validationmodel.ValidateEmailResponse, error) {
+func callApiValidateEmail(ctx context.Context, services *service.Services, emailAddress string, verifyCatchAll bool) (*validationmodel.ValidateEmailResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "callApiValidateEmail")
+	defer span.Finish()
+
 	// prepare validation api request
 	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
 		Email: emailAddress,
@@ -157,10 +166,33 @@ func callApiValidateEmail(ctx context.Context, services *service.Services, span 
 		return nil, err
 	}
 	defer response.Body.Close()
-	span.LogFields(log.Int("response.status", response.StatusCode))
 	responseBody, err := io.ReadAll(response.Body)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		return nil, err
+	}
+
+	// if response status is 504 retry once
+	if response.StatusCode == http.StatusGatewayTimeout {
+		span.LogFields(log.Int("response.status.firstAttempt", response.StatusCode))
+		response, err = client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+			return nil, err
+		}
+		defer response.Body.Close()
+		responseBody, err = io.ReadAll(response.Body)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+			return nil, err
+		}
+	}
+
+	span.LogFields(log.Int("response.status", response.StatusCode))
+
+	if response.StatusCode == http.StatusGatewayTimeout {
+		err = errors.New("validation api returned 504 status code")
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
