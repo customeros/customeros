@@ -146,7 +146,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                 visible={col?.visible}
                 columnId={col?.columnId}
                 columnType={col?.columnType}
-                label={col?.name || col?.label}
+                label={col?.label || col?.name}
                 key={`${col?.columnType}-${col?.columnId}`}
               />
             ))}
@@ -168,8 +168,8 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                       draggableColumns?.[rubric.source.index]?.columnType
                     }
                     label={
-                      draggableColumns[rubric.source.index]?.name ||
-                      draggableColumns[rubric.source.index]?.label
+                      draggableColumns[rubric.source.index]?.label ||
+                      draggableColumns[rubric.source.index]?.name
                     }
                     onCheck={(columnId) => {
                       tableViewDef?.update((value) => {
@@ -201,7 +201,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                         columnId={col?.columnId}
                         helperText={col?.helperText}
                         columnType={col?.columnType}
-                        label={col?.name || col?.label}
+                        label={col?.label || col?.name}
                         noPointerEvents={isDraggingOver}
                         onCheck={(columnId) => {
                           tableViewDef?.update((value) => {
@@ -230,7 +230,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                 visible={col?.visible}
                 columnId={col?.columnId}
                 columnType={col?.columnType}
-                label={col?.name || col?.label}
+                label={col?.label || col?.name}
                 key={`${col?.columnType}-${col?.columnId}`}
               />
             ))}

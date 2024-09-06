@@ -741,7 +741,13 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       !store.contacts.isLoading) ||
     (tableViewDef?.value.tableType === TableViewType.Invoices &&
       store.invoices?.toArray().length === 0 &&
-      !store.invoices.isLoading)
+      !store.invoices.isLoading) ||
+    (tableViewDef?.value.tableType === TableViewType.Flow &&
+      store.flowSequences?.toArray().length === 0 &&
+      !store.flowSequences.isLoading) ||
+    (tableViewDef?.value.tableType === TableViewType.Contracts &&
+      store.contracts?.toArray().length === 0 &&
+      !store.contracts.isLoading)
   ) {
     return <EmptyState />;
   }
@@ -760,6 +766,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         onSortingChange={setSorting}
         onResizeColumn={handleColumnSizing}
         onFocusedRowChange={handleSetFocused}
+        tableId={tableViewDef?.value?.tableId}
         dataTest={`finder-table-${tableType}`}
         onSelectedIndexChange={setSelectedIndex}
         isLoading={store.organizations.isLoading}
