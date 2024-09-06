@@ -219,6 +219,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckEnrowResults, func() {
+		lockAndRunJob(cont, emailGroup, checkEnrowResult)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -332,4 +339,8 @@ func validateEmails(cont *container.Container) {
 
 func checkScrubbyResult(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CheckScrubbyResult()
+}
+
+func checkEnrowResult(cont *container.Container) {
+	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CheckEnrowRequestsWithoutResponse()
 }

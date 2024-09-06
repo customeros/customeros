@@ -78,19 +78,36 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 
 			if emailValidationData != nil && (emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown)) {
 				if request.Options.VerifyCatchAll || emailValidationData.EmailData.RetryValidation == true {
-					// call TrueInbox
-					trueInboxResponse, err := services.EmailValidationService.ValidateEmailTrueInbox(ctx, request.Email)
+					// Step 1 - try Enrow
+					enrowResponseStr, err := services.EmailValidationService.ValidateEmailWithEnrow(ctx, request.Email)
 					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "failed to call TrueInbox"))
-						l.Errorf("Error on calling Trueinbox : %s", err.Error())
-					} else if trueInboxResponse != nil {
-						if trueInboxResponse.Result == "valid" {
+						tracing.TraceErr(span, errors.Wrap(err, "failed to call Enrow"))
+						l.Errorf("Error on calling Enrow : %s", err.Error())
+					}
+					if enrowResponseStr != "" {
+						if enrowResponseStr == "valid" {
 							emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
-							if emailValidationData.DomainData.Provider == "" {
-								emailValidationData.DomainData.Provider = mapProvider(trueInboxResponse.SmtpProvider)
-							}
-						} else if trueInboxResponse.Result == "invalid" {
+						} else if enrowResponseStr == "invalid" {
 							emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+						} else {
+							err = errors.New("Unexpected: Enrow response: " + enrowResponseStr)
+						}
+					}
+					// Step 2 - try TrueInbox
+					if enrowResponseStr == "" {
+						trueInboxResponse, err := services.EmailValidationService.ValidateEmailWithTrueinbox(ctx, request.Email)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "failed to call TrueInbox"))
+							l.Errorf("Error on calling Trueinbox : %s", err.Error())
+						} else if trueInboxResponse != nil {
+							if trueInboxResponse.Result == "valid" {
+								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
+								if emailValidationData.DomainData.Provider == "" {
+									emailValidationData.DomainData.Provider = mapProvider(trueInboxResponse.SmtpProvider)
+								}
+							} else if trueInboxResponse.Result == "invalid" {
+								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+							}
 						}
 					}
 				}
@@ -197,7 +214,7 @@ func validateEmailWithTrueInbox(ctx context.Context, r *gin.Engine, services *se
 				return
 			}
 
-			validationResult, err := services.EmailValidationService.ValidateEmailTrueInbox(ctx, request.Email)
+			validationResult, err := services.EmailValidationService.ValidateEmailWithTrueinbox(ctx, request.Email)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				l.Errorf("Error on : %v", err.Error())
