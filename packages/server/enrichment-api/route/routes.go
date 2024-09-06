@@ -2,6 +2,7 @@ package route
 
 import (
 	"context"
+	"encoding/json"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -343,12 +344,25 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 		// combine data
 		combinedData := combineData(scrapinResponseBody, brandfetchResponseBody, domain)
 
-		c.JSON(http.StatusOK, model.EnrichOrganizationResponse{
+		output := model.EnrichOrganizationResponse{
 			Status:              "success",
 			Data:                combinedData,
 			Success:             true,
 			PrimaryEnrichSource: primaryEnrichSource,
-		})
+		}
+		outputStr, err := json.Marshal(output)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal response"))
+			c.JSON(http.StatusInternalServerError, model.EnrichOrganizationResponse{
+				Status:  "error",
+				Message: "Internal server error",
+				Success: false,
+			})
+			return
+		}
+		tracing.LogObjectAsJson(span, "response.body", outputStr)
+
+		c.JSON(http.StatusOK, output)
 	}
 }
 

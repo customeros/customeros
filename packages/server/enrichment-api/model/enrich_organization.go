@@ -31,7 +31,7 @@ type EnrichOrganizationResponseData struct {
 	Website          string                                 `json:"website"`
 	Employees        int64                                  `json:"employees"`
 	FoundedYear      int64                                  `json:"foundedYear"`
-	Public           *bool                                  `json:"Public,omitempty"`
+	Public           *bool                                  `json:"public,omitempty"`
 	Logos            []string                               `json:"logos"`
 	Icons            []string                               `json:"icons"`
 	Industry         string                                 `json:"industry"`

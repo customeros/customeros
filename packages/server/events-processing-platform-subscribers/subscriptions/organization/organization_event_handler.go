@@ -158,7 +158,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 }
 
 func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context, tenant, domain string) (*enrichmentmodel.EnrichOrganizationResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.callApiEnrichOrganization")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.callApiEnrichOrganization")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogKV("domain", domain)
