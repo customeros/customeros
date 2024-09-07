@@ -619,7 +619,6 @@ func (s *scrapinService) callScrapinCompanySearch(ctx context.Context, domain st
 	params.Add("domain", domain)
 	scrapinUrl := baseUrl + "/enrichment/company/domain" + "?" + params.Encode()
 
-	// try few times to get data from scrapin
 	scrapinStatusCode, body, err := makeScrapInHTTPRequest(scrapinUrl)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
