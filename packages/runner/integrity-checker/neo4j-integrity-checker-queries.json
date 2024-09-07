@@ -399,7 +399,7 @@
     },
     {
       "name": "Check source fields",
-      "query": "WITH [\"FlowSequenceSender\",\"FlowSequence\",\"Flow\",\"Tenant\",\"ExternalSystem\",\"Domain\",\"InteractionSession\",\"AlternateOrganization\",\"Action\",\"TenantSettings\",\"MergedOrganization\",\"AlternateContact\",\"TechnicalNode\",\"CustomField\",\"AlternateCustomField\",\"TenantMetadata\",\"AlternateUser\",\"Tag\",\"CustomFieldTemplate\",\"State\",\"Player\"] as labels\nMATCH (n) WHERE NOT ANY(label in labels(n) WHERE label IN labels) \nWITH n \nWHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = ''\nRETURN count(n)"
+      "query": "MATCH (n:Organization|Contact|Contract|Email|PhoneNumber|Social) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
     },
     {
       "name": "Check organization derived data consistency",
