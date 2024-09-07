@@ -14,6 +14,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
+	"time"
 )
 
 type ScrapinService interface {
@@ -595,7 +597,7 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 func (s *scrapinService) callScrapinCompanySearch(ctx context.Context, domain string) (*postgresentity.ScrapInResponseBody, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ScrapInService.callScrapinCompanySearch")
 	defer span.Finish()
-	span.LogFields(log.String("domain", domain))
+	span.LogKV("domain", domain)
 
 	baseUrl := s.config.ScrapinConfig.Url
 	if baseUrl == "" {
@@ -604,6 +606,7 @@ func (s *scrapinService) callScrapinCompanySearch(ctx context.Context, domain st
 		s.log.Errorf("ScrapIn URL not set")
 		return &postgresentity.ScrapInResponseBody{}, err
 	}
+
 	scrapInApiKey := s.config.ScrapinConfig.ApiKey
 	if scrapInApiKey == "" {
 		err := errors.New("Scrapin Api key not set")
@@ -615,9 +618,10 @@ func (s *scrapinService) callScrapinCompanySearch(ctx context.Context, domain st
 	params := url.Values{}
 	params.Add("apikey", scrapInApiKey)
 	params.Add("domain", domain)
+	scrapinUrl := baseUrl + "/enrichment/company/domain" + "?" + params.Encode()
 
-	body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/company/domain" + "?" + params.Encode())
-
+	// try few times to get data from scrapin
+	body, err := makeScrapInHTTPRequest(scrapinUrl)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
@@ -641,12 +645,27 @@ func makeScrapInHTTPRequest(url string) ([]byte, error) {
 
 	req.Header.Add("accept", "application/json")
 
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
+	// try few times to get data from scrapin
+	var body []byte
+	var err error
+	var res *http.Response
 
-	body, err := io.ReadAll(res.Body)
+	for i := 0; i < 2; i++ {
+		res, err = http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		defer res.Body.Close()
+
+		body, err = io.ReadAll(res.Body)
+
+		if strings.Contains(string(body), "Too many requests from this API key") {
+			// sleep 1 second and try again
+			time.Sleep(1 * time.Second)
+			continue
+		} else {
+			return body, err
+		}
+	}
 	return body, err
 }
