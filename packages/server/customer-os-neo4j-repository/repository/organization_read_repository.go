@@ -826,7 +826,10 @@ func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomain
 						org.website IS NOT NULL AND 
 						org.website <> "" AND 
 						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
-				RETURN t.name, org.id ORDER BY org.createdAt DESC LIMIT $limit`
+				WITH t.name as tenant, org.id as orgId
+				ORDER BY CASE WHEN org.techDomainCheckedAt IS NULL THEN 0 ELSE 1 END, org.techDomainCheckedAt ASC
+				LIMIT $limit 
+				RETURN tenant, orgId`
 	params := map[string]any{
 		"limit":          limit,
 		"delayInMinutes": delayInMinutes,
@@ -867,11 +870,11 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
 
 	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain)
-				WHERE org.enrichedAt IS NULL AND
+				WHERE 	org.enrichedAt IS NULL AND
 						org.hide = false AND
-						(org.techDomainCheckedAt IS NULL OR org.techDomainCheckedAt < datetime() - duration({minutes: $delayInMinutes}))
+						(org.techEnrichRequestedAt IS NULL OR org.techEnrichRequestedAt < datetime() - duration({minutes: $delayInMinutes}))
 				WITH t.name as tenant, org.id as orgId, d.domain as domain
-				ORDER BY CASE WHEN org.techDomainCheckedAt IS NULL THEN 0 ELSE 1 END, org.techDomainCheckedAt ASC
+				ORDER BY CASE WHEN org.techEnrichRequestedAt IS NULL THEN 0 ELSE 1 END, org.techEnrichRequestedAt ASC
 				LIMIT $limit
 				RETURN tenant, orgId, domain`
 
