@@ -14,7 +14,6 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 )
 
@@ -171,13 +170,13 @@ func (s *scrapinService) callScrapinPersonProfile(ctx context.Context, linkedInU
 	params.Add("apikey", scrapInApiKey)
 	params.Add("linkedInUrl", linkedInUrl)
 
-	body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/profile" + "?" + params.Encode())
-
+	scrapinStatusCode, body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/profile" + "?" + params.Encode())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgresentity.ScrapInResponseBody{}, err
 	}
+	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
 
 	var scrapinResponse postgresentity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
@@ -330,13 +329,13 @@ func (s *scrapinService) callScrapinPersonSearch(ctx context.Context, email, fir
 		params.Add("companyDomain", domain)
 	}
 
-	body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment" + "?" + params.Encode())
-
+	scrapinStatusCode, body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment" + "?" + params.Encode())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgresentity.ScrapInResponseBody{}, err
 	}
+	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
 
 	var scrapinResponse postgresentity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
@@ -474,13 +473,13 @@ func (s *scrapinService) callScrapinCompanyProfile(ctx context.Context, linkedIn
 	params.Add("apikey", scrapInApiKey)
 	params.Add("linkedInUrl", linkedInUrl)
 
-	body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/company" + "?" + params.Encode())
-
+	scrapinStatusCode, body, err := makeScrapInHTTPRequest(baseUrl + "/enrichment/company" + "?" + params.Encode())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgresentity.ScrapInResponseBody{}, err
 	}
+	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
 
 	var scrapinResponse postgresentity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
@@ -621,12 +620,13 @@ func (s *scrapinService) callScrapinCompanySearch(ctx context.Context, domain st
 	scrapinUrl := baseUrl + "/enrichment/company/domain" + "?" + params.Encode()
 
 	// try few times to get data from scrapin
-	body, err := makeScrapInHTTPRequest(scrapinUrl)
+	scrapinStatusCode, body, err := makeScrapInHTTPRequest(scrapinUrl)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "makeScrapInHTTPRequest"))
 		s.log.Errorf("Error making scrapin HTTP request: %s", err.Error())
 		return &postgresentity.ScrapInResponseBody{}, err
 	}
+	span.LogFields(log.Int("scrapin.statusCode", scrapinStatusCode))
 
 	var scrapinResponse postgresentity.ScrapInResponseBody
 	err = json.Unmarshal(body, &scrapinResponse)
@@ -640,32 +640,34 @@ func (s *scrapinService) callScrapinCompanySearch(ctx context.Context, domain st
 	return &scrapinResponse, nil
 }
 
-func makeScrapInHTTPRequest(url string) ([]byte, error) {
+func makeScrapInHTTPRequest(url string) (int, []byte, error) {
 	req, _ := http.NewRequest("GET", url, nil)
 
 	req.Header.Add("accept", "application/json")
 
-	// try few times to get data from scrapin
 	var body []byte
 	var err error
 	var res *http.Response
+	var statusCode int
 
+	// try few times to get data from scrapin
 	for i := 0; i < 2; i++ {
 		res, err = http.DefaultClient.Do(req)
 		if err != nil {
-			return nil, err
+			return -1, nil, err
 		}
 		defer res.Body.Close()
 
 		body, err = io.ReadAll(res.Body)
+		statusCode = res.StatusCode
 
-		if strings.Contains(string(body), "Too many requests from this API key") {
+		if statusCode == http.StatusTooManyRequests {
 			// sleep 1 second and try again
 			time.Sleep(1 * time.Second)
 			continue
 		} else {
-			return body, err
+			return statusCode, body, err
 		}
 	}
-	return body, err
+	return statusCode, body, err
 }
