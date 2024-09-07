@@ -260,6 +260,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 	tracing.TagComponentCronJob(span)
 
 	limit := 250
+	delayFromPreviousAttemptInMinutes := 60 * 24 * 10 // 10 days
 
 	for {
 		select {
@@ -270,7 +271,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrich(ctx, limit, 360)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrich(ctx, limit, delayFromPreviousAttemptInMinutes)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
@@ -296,7 +297,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error enriching organization {%s}: %s", record.OrganizationId, err.Error())
 			}
-			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyDomainCheckedAt), utils.NowPtr())
+			err = s.commonServices.Neo4jRepositories.OrganizationWriteRepository.UpdateTimeProperty(ctx, record.Tenant, record.OrganizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())
