@@ -189,7 +189,17 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			return entity.ERROR, nil, err
 		}
 
-		from := s.extractEmailAddresses(rawEmailData.From)[0]
+		froms := s.extractEmailAddresses(rawEmailData.From)
+		froms = utils.RemoveEmpties(froms)
+		from := ""
+		if len(froms) > 0 {
+			from = froms[0]
+		}
+		if from == "" {
+			logrus.Errorf("from email is empty for email with id %v", emailIdString)
+			return entity.ERROR, nil, fmt.Errorf("from email not identified from raw input: %s", rawEmailData.From)
+		}
+
 		to := s.extractEmailAddresses(rawEmailData.To)
 		cc := s.extractEmailAddresses(rawEmailData.Cc)
 		bcc := s.extractEmailAddresses(rawEmailData.Bcc)
@@ -203,6 +213,8 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			return entity.ERROR, nil, err
 		}
 
+		allEmailsString = utils.RemoveDuplicates(allEmailsString)
+		allEmailsString = utils.RemoveEmpties(allEmailsString)
 		if len(allEmailsString) == 0 {
 			reason := "no emails address belongs to a workspace domain"
 			return entity.SKIPPED, &reason, nil
