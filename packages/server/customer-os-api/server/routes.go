@@ -43,6 +43,8 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, services *service.
 
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email", verifyV1Path), services, cache, rest.VerifyEmailAddress(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/email/bulk", verifyV1Path), services, cache, rest.BulkUploadEmailsForVerification(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email/bulk/results/:requestId", verifyV1Path), services, cache, rest.GetBulkEmailVerificationResults(services))
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/ip", verifyV1Path), services, cache, rest.IpIntelligence(services))
 }
 

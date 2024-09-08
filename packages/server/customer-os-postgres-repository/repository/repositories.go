@@ -54,6 +54,8 @@ type Repositories struct {
 	CacheEmailScrubbyRepository                 CacheEmailScrubbyRepository
 	CacheEmailTrueinboxRepository               CacheEmailTrueinboxRepository
 	CacheEmailEnrowRepository                   CacheEmailEnrowRepository
+	EmailValidationRecordRepository             EmailValidationRecordRepository
+	EmailValidationRequestBulkRepository        EmailValidationRequestBulkRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -106,6 +108,8 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		CacheEmailScrubbyRepository:                 NewCacheEmailScrubbyRepository(db),
 		CacheEmailTrueinboxRepository:               NewCacheEmailTrueinboxRepository(db),
 		CacheEmailEnrowRepository:                   NewCacheEmailEnrowRepository(db),
+		EmailValidationRecordRepository:             NewEmailValidationRecordRepository(db),
+		EmailValidationRequestBulkRepository:        NewEmailValidationRequestBulkRepository(db),
 	}
 
 	return repositories
@@ -166,7 +170,9 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.OrganizationWebsiteHostingPlatform{},
 		&entity.CustomerOsIds{},
 		&entity.CacheEmailTrueinbox{},
-		&entity.CacheEmailEnrow{})
+		&entity.CacheEmailEnrow{},
+		&entity.EmailValidationRecord{},
+		&entity.EmailValidationRequestBulk{})
 	if err != nil {
 		panic(err)
 	}
