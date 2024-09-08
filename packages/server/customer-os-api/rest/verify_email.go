@@ -188,7 +188,7 @@ func callApiValidateEmail(ctx context.Context, services *service.Services, email
 		}
 	}
 
-	span.LogFields(log.Int("response.status", response.StatusCode))
+	span.LogFields(log.Int("response.statusCode", response.StatusCode))
 
 	if response.StatusCode == http.StatusGatewayTimeout {
 		err = errors.New("validation api returned 504 status code")

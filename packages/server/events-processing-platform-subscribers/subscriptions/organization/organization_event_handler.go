@@ -171,7 +171,7 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("GET", h.cfg.Services.EnrichmentApi.Url+"/enrichOrganization", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequestWithContext(ctx, "GET", h.cfg.Services.EnrichmentApi.Url+"/enrichOrganization", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -183,15 +183,38 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 	req.Header.Set(security.ApiKeyHeader, h.cfg.Services.EnrichmentApi.ApiKey)
 	req.Header.Set(security.TenantHeader, tenant)
 
-	// Make the HTTP request
+	// Make the HTTP request, retry once if response status is 502
+	var response *http.Response
 	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-		return nil, err
+
+	for attempt := 1; attempt <= 2; attempt++ {
+		// Make the HTTP request
+		response, err = client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+			return nil, err
+		}
+		defer response.Body.Close() // Ensures the body is closed only once
+
+		// Retry on 502 Bad Gateway
+		if response.StatusCode == http.StatusBadGateway {
+			time.Sleep(500 * time.Millisecond)
+			continue
+		}
+		break
 	}
-	defer response.Body.Close()
-	span.LogFields(log.Int("response.status", response.StatusCode))
+
+	if response == nil {
+		tracing.TraceErr(span, errors.New("response is nil"))
+		return nil, errors.New("response is nil")
+	}
+	span.LogFields(log.Int("response.statusCode", response.StatusCode))
+
+	if response.StatusCode == http.StatusBadGateway {
+		tracing.TraceErr(span, errors.New("response status is 502"))
+		return nil, errors.New("response status is 502")
+	}
+
 	body, err := io.ReadAll(response.Body)
 	if err != nil {
 		span.LogFields(log.String("response.body", string(body)))

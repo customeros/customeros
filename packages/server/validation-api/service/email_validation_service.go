@@ -531,7 +531,7 @@ func (s *emailValidationService) callTrueinboxToValidateEmail(ctx context.Contex
 		return postgresentity.TrueInboxResponseBody{}, err
 	}
 	defer response.Body.Close()
-	span.LogFields(log.Int("response.status", response.StatusCode))
+	span.LogFields(log.Int("response.statusCode", response.StatusCode))
 	body, err := io.ReadAll(response.Body)
 
 	if response.StatusCode != http.StatusOK {
