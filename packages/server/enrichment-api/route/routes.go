@@ -321,7 +321,7 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 
 		if scrapinResponseBody == nil && brandfetchResponseBody == nil {
 			span.LogKV("result", "No data found")
-			c.JSON(http.StatusOK, model.EnrichOrganizationResponse{
+			c.JSON(http.StatusNotFound, model.EnrichOrganizationResponse{
 				Status:  "success",
 				Message: "No data found",
 				Success: false,
@@ -329,7 +329,7 @@ func enrichOrganization(services *service.Services) gin.HandlerFunc {
 			return
 		} else if scrapinResponseBody.Success == false && brandfetchResponseBody.IsEmpty() {
 			span.LogKV("result", "No data found")
-			c.JSON(http.StatusOK, model.EnrichOrganizationResponse{
+			c.JSON(http.StatusNotFound, model.EnrichOrganizationResponse{
 				Status:  "success",
 				Message: "No data found",
 				Success: false,
