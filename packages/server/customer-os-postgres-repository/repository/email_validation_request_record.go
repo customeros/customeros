@@ -19,6 +19,7 @@ type EmailValidationRecordRepository interface {
 	CountPendingRequests(ctx context.Context, priority int, createdBefore time.Time) (int64, error)
 	CountPendingRequestsByRequestID(ctx context.Context, requestID string) (int64, error)
 	GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]entity.EmailValidationRecord, error)
+	GetEmailRecordsInChunks(ctx context.Context, chunkSize int, offset int) ([]entity.EmailValidationRecord, error)
 }
 
 type emailValidationRecordRepository struct {
@@ -169,4 +170,23 @@ func (r emailValidationRecordRepository) CountPendingRequestsByRequestID(ctx con
 	}
 
 	return count, nil
+}
+
+func (r emailValidationRecordRepository) GetEmailRecordsInChunks(ctx context.Context, chunkSize int, offset int) ([]entity.EmailValidationRecord, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.GetEmailRecordsInChunks")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var records []entity.EmailValidationRecord
+
+	// Retrieve records in chunks
+	if err := r.db.WithContext(ctx).
+		Order("created_at ASC, id ASC"). // Ensure consistent ordering by created_at and id
+		Limit(chunkSize).
+		Offset(offset).
+		Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }

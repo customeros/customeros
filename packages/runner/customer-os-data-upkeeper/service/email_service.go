@@ -3,11 +3,13 @@ package service
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"encoding/json"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -16,6 +18,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	validationcsv "github.com/openline-ai/openline-customer-os/packages/server/validation-api/csv"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -262,19 +265,28 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 	wg.Wait()
 
 	// After processing, check if all records for each request are processed
-	s.checkAndUpdateBulkRequests(ctx, records)
-}
-
-// Check if all records for each request are processed and update bulk request status
-func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, records []postgresentity.EmailValidationRecord) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.checkAndUpdateBulkRequests")
-	defer span.Finish()
 	requestsToCheck := make(map[string]struct{}) // Track unique Request IDs
-
 	// Gather all unique Request IDs from the processed records
 	for _, record := range records {
 		requestsToCheck[record.RequestID] = struct{}{}
 	}
+
+	// additionally include oldest 5 uncompleted requests for check
+	oldestUncompletedRequests, err := s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.GetOldestUncompletedRequests(ctx, 5)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting oldest uncompleted requests"))
+	}
+	for _, request := range oldestUncompletedRequests {
+		requestsToCheck[request.RequestID] = struct{}{}
+	}
+
+	s.checkAndUpdateBulkRequests(ctx, requestsToCheck)
+}
+
+// Check if all records for each request are processed and update bulk request status
+func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsToCheck map[string]struct{}) {
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.checkAndUpdateBulkRequests")
+	defer span.Finish()
 
 	// For each unique Request ID, check if all records are processed
 	for requestID := range requestsToCheck {
@@ -295,14 +307,35 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, records [
 
 		// If there are no unprocessed records, mark the request as completed
 		if unprocessedCount == 0 && request.Status != postgresentity.EmailValidationRequestBulkStatusCompleted {
-			err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.MarkRequestAsCompleted(ctx, requestID)
+			// generate csv result file
+			csvContent, err := s.GenerateBulkEmailValidationResponseCSVFileContent(ctx, requestID)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error generating CSV content"))
+				s.log.Errorf("Failed to generate CSV content for request %s: %v", requestID, err.Error())
+				continue
+			}
+
+			// Upload result file to S3
+			basePath := fmt.Sprintf("/EMAIL_VALIDATION/BULK/%d", utils.Now().Year())
+			filesStoreService := fsc.NewFileStoreApiService(&s.cfg.FileStoreApiConfig)
+
+			fileDTO, err := filesStoreService.UploadSingleFileBytes(request.Tenant, basePath, requestID, requestID+".csv", csvContent, span)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "UploadSingleFileBytes"))
+				continue
+			}
+
+			if fileDTO.Id == "" {
+				tracing.TraceErr(span, errors.New("fileDTO.Id is empty"))
+				continue
+			}
+
+			err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.MarkRequestAsCompleted(ctx, requestID, fileDTO.Id)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error marking request as completed"))
 				s.log.Errorf("Failed to mark request %s as completed: %v", requestID, err)
 			}
 		}
-
-		// TODO implement file generation and upload, store file store id in request
 	}
 }
 
@@ -499,4 +532,65 @@ func (s *emailService) callEmailValidation(ctx context.Context, tenant, email st
 		return emptyResponse, err
 	}
 	return validationResponse, nil
+}
+
+func (s *emailService) GenerateBulkEmailValidationResponseCSVFileContent(ctx context.Context, requestId string) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GenerateBulkEmailValidationResponseCSVFileContent")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("requestId", requestId)
+
+	// Create an in-memory buffer to write the CSV content
+	var buffer bytes.Buffer
+	writer := csv.NewWriter(&buffer)
+
+	// Write the CSV header
+	_, header := validationcsv.GenerateCSVRow(validationmodel.ValidateEmailMailSherpaData{})
+	if err := writer.Write(header); err != nil {
+		return nil, fmt.Errorf("failed to write header: %v", err)
+	}
+
+	chunkSize := 1000
+	offset := 0
+
+	for {
+		// Fetch a chunk of records
+		records, err := s.commonServices.PostgresRepositories.EmailValidationRecordRepository.GetEmailRecordsInChunks(ctx, chunkSize, offset)
+		if err != nil {
+			return nil, fmt.Errorf("failed to fetch email records: %v", err)
+		}
+
+		// Break the loop if no more records are returned
+		if len(records) == 0 {
+			break
+		}
+
+		// Process each record and generate the CSV row
+		for _, record := range records {
+			// Parse the record data (assuming it's in JSON format) into ValidateEmailMailSherpaData
+			var validationData validationmodel.ValidateEmailMailSherpaData
+			if record.Data == "" {
+				tracing.TraceErr(span, fmt.Errorf("validation data is empty for email %s and requestId %s", record.Email, record.RequestID))
+				continue
+			}
+			if err := json.Unmarshal([]byte(record.Data), &validationData); err != nil {
+				return nil, fmt.Errorf("failed to unmarshal validation data for email %s: %v", record.Email, err)
+			}
+
+			// Generate CSV row
+			_, row := validationcsv.GenerateCSVRow(validationData)
+			if err := writer.Write(row); err != nil {
+				return nil, fmt.Errorf("failed to write row for email %s: %v", record.Email, err)
+			}
+		}
+
+		// Flush the data to the buffer after processing each chunk
+		writer.Flush()
+
+		// Move to the next chunk
+		offset += chunkSize
+	}
+
+	// Return the CSV content as a byte slice
+	return buffer.Bytes(), nil
 }

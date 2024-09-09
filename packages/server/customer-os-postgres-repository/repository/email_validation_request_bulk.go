@@ -15,7 +15,8 @@ type EmailValidationRequestBulkRepository interface {
 	GetByRequestID(ctx context.Context, requestId string) (*entity.EmailValidationRequestBulk, error)
 	IncrementDeliverableEmails(ctx context.Context, requestID string) error
 	IncrementUndeliverableEmails(ctx context.Context, requestID string) error
-	MarkRequestAsCompleted(ctx context.Context, requestID string) error
+	MarkRequestAsCompleted(ctx context.Context, requestID, fileStoreId string) error
+	GetOldestUncompletedRequests(ctx context.Context, limit int) ([]entity.EmailValidationRequestBulk, error)
 }
 
 type emailValidationRequestBulkRepository struct {
@@ -116,22 +117,44 @@ func (r emailValidationRequestBulkRepository) IncrementUndeliverableEmails(ctx c
 	return nil
 }
 
-func (r emailValidationRequestBulkRepository) MarkRequestAsCompleted(ctx context.Context, requestID string) error {
+func (r emailValidationRequestBulkRepository) MarkRequestAsCompleted(ctx context.Context, requestId, fileStoreId string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.MarkRequestAsCompleted")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	span.LogKV("requestID", requestID)
+	span.LogKV("requestId", requestId)
+	span.LogKV("fileStoreId", fileStoreId)
 
 	// Update the status to "completed" and set the updated_at field to the current time
 	if err := r.db.WithContext(ctx).
 		Model(&entity.EmailValidationRequestBulk{}).
-		Where("request_id = ?", requestID).
+		Where("request_id = ?", requestId).
 		Updates(map[string]interface{}{
-			"status":     entity.EmailValidationRequestBulkStatusCompleted,
-			"updated_at": utils.Now(),
+			"file_store_id": fileStoreId,
+			"status":        entity.EmailValidationRequestBulkStatusCompleted,
+			"updated_at":    utils.Now(),
 		}).Error; err != nil {
 		return err
 	}
 
 	return nil
+}
+
+func (r emailValidationRequestBulkRepository) GetOldestUncompletedRequests(ctx context.Context, limit int) ([]entity.EmailValidationRequestBulk, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRequestBulkRepository.GetOldestUncompletedRequests")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.Int("limit", limit))
+
+	var records []entity.EmailValidationRequestBulk
+
+	// Query the database for the oldest uncompleted requests
+	if err := r.db.WithContext(ctx).
+		Where("status = ?", entity.EmailValidationRequestBulkStatusProcessing).
+		Order("created_at ASC").
+		Limit(limit).
+		Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	return records, nil
 }

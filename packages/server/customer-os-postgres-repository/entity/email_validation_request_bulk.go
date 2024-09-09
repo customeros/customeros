@@ -21,6 +21,7 @@ type EmailValidationRequestBulk struct {
 	FileName            string                           `gorm:"column:file_name;type:varchar(255);NOT NULL" json:"fileName"`
 	Priority            int                              `gorm:"column:priority;type:int;DEFAULT:0" json:"priority"`
 	VerifyCatchAll      bool                             `gorm:"column:verify_catch_all;type:boolean;DEFAULT:false" json:"verifyCatchAll"`
+	FileStoreId         string                           `gorm:"column:file_store_id;type:varchar(255)" json:"fileStoreId"`
 }
 
 func (EmailValidationRequestBulk) TableName() string {

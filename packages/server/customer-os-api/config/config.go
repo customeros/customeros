@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/metrics"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
@@ -28,11 +29,12 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Metrics          metrics.Config
 	Services         struct {
-		CustomerOsApiUrl string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
-		ValidationApi    string `env:"VALIDATION_API" validate:"required"`
-		ValidationApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
-		EnrichmentApiUrl string `env:"ENRICHMENT_API_URL" validate:"required"`
-		EnrichmentApiKey string `env:"ENRICHMENT_API_KEY" validate:"required"`
+		CustomerOsApiUrl   string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
+		ValidationApi      string `env:"VALIDATION_API" validate:"required"`
+		ValidationApiKey   string `env:"VALIDATION_API_KEY" validate:"required"`
+		EnrichmentApiUrl   string `env:"ENRICHMENT_API_URL" validate:"required"`
+		EnrichmentApiKey   string `env:"ENRICHMENT_API_KEY" validate:"required"`
+		FileStoreApiConfig fsc.FileStoreApiConfig
 	}
 	AppConfig struct {
 		TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`

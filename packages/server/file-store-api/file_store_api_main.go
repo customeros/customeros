@@ -123,7 +123,7 @@ func main() {
 				return
 			}
 
-			ctx.JSON(200, MapFileEntityToDTO(cfg, fileEntity))
+			ctx.JSON(http.StatusOK, MapFileEntityToDTO(cfg, fileEntity))
 		})
 	r.GET("/file/:id",
 		tracing.TracingEnhancer(ctx, "GET /file/:id"),
