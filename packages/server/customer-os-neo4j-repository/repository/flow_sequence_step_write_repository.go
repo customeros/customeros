@@ -33,7 +33,7 @@ func (r *flowSequenceStepWriteRepositoryImpl) Merge(ctx context.Context, entity 
 
 	cypher := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:BELONGS_TO_TENANT]->(fss:FlowSequenceStep:FlowSequenceStep_%s {id: $id})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(fss:FlowSequenceStep:FlowSequenceStep_%s {id: $id})
 			ON CREATE SET
 				fss.createdAt = $createdAt,
 				fss.updatedAt = $updatedAt,

@@ -65,7 +65,7 @@ func (s *flowService) FlowGetList(ctx context.Context) ([]*neo4jentity.FlowEntit
 		return nil, err
 	}
 
-	entities := make([]*neo4jentity.FlowEntity, len(nodes))
+	entities := make([]*neo4jentity.FlowEntity, 0)
 	for _, node := range nodes {
 		entities = append(entities, mapper.MapDbNodeToFlowEntity(node))
 	}

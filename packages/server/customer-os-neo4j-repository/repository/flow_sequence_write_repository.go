@@ -33,7 +33,7 @@ func (r *flowSequenceWriteRepositoryImpl) Merge(ctx context.Context, entity *ent
 
 	cypher := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:BELONGS_TO_TENANT]->(fs:FlowSequence:FlowSequence_%s {id: $id})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(fs:FlowSequence:FlowSequence_%s {id: $id})
 			ON MATCH SET
 				fs.name = $name,
 				fs.description = $description,
