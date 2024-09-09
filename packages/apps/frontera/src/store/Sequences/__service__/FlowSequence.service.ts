@@ -9,6 +9,10 @@ import {
   UpdateSequenceMutationVariables,
 } from '@store/Sequences/__service__/updateSequence.generated.ts';
 import {
+  FlowSequenceLinkContactMutation,
+  FlowSequenceLinkContactMutationVariables,
+} from '@store/Sequences/__service__/flowSequenceLinkContact.generated.ts';
+import {
   ChangeFlowSequenceStatusMutation,
   ChangeFlowSequenceStatusMutationVariables,
 } from '@store/Sequences/__service__/changeFlowSequenceStatus.generated.ts';
@@ -17,6 +21,7 @@ import { FlowSequence } from '@graphql/types';
 
 import UpdateSequencesDocument from './updateSequence.graphql';
 import GetFlowSequencesDocument from './getFlowSequences.graphql';
+import LinkContactDocument from './flowSequenceLinkContact.graphql';
 import CreateSequenceMutationDocument from './createSequence.graphql';
 import ChangeFlowSequenceStatusDocument from './changeFlowSequenceStatus.graphql';
 
@@ -63,6 +68,13 @@ class FlowSequenceService {
       UpdateSequenceMutation,
       UpdateSequenceMutationVariables
     >(UpdateSequencesDocument, payload);
+  }
+
+  async linkContact(payload: FlowSequenceLinkContactMutationVariables) {
+    return this.transport.graphql.request<
+      FlowSequenceLinkContactMutation,
+      FlowSequenceLinkContactMutationVariables
+    >(LinkContactDocument, payload);
   }
 }
 

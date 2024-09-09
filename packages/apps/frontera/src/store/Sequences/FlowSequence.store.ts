@@ -70,6 +70,14 @@ export class FlowSequenceStore implements Store<FlowSequence> {
       });
   }
 
+  linkContact(contactId: string, emailId: string) {
+    return this.service.linkContact({
+      sequenceId: this.id,
+      contactId,
+      emailId,
+    });
+  }
+
   invalidate() {
     // todo
     return Promise.resolve();

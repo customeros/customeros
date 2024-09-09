@@ -1,19 +1,18 @@
 import { match } from 'ts-pattern';
 import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store';
 
-import { ColumnViewType, FlowSequenceStatus } from '@graphql/types';
+import { ColumnViewType } from '@graphql/types';
+import { flowSequencesOptions } from '@organizations/components/Columns/sequences/utils.ts';
 
 export const getSequenceColumnSortFn = (columnId: string) =>
   match(columnId)
     .with(
       ColumnViewType.FlowSequenceStatus,
       () => (row: FlowSequenceStore) =>
-        match(row.value?.status)
-          .with(FlowSequenceStatus.Inactive, () => 4)
-          .with(FlowSequenceStatus.Active, () => 3)
-          .with(FlowSequenceStatus.Paused, () => 2)
-          .with(FlowSequenceStatus.Archived, () => 1)
-          .otherwise(() => null),
+        row?.value?.status
+          ? flowSequencesOptions.find((e) => e.value === row.value.status)
+              ?.label
+          : null,
     )
 
     .with(ColumnViewType.FlowName, () => (row: FlowSequenceStore) => {

@@ -1606,6 +1606,10 @@ export type FlowSequenceStep = MetadataInterface & {
   type: FlowSequenceStepType;
 };
 
+export type FlowSequenceStepCreateInput = {
+  name: Scalars['String']['input'];
+};
+
 export enum FlowSequenceStepStatus {
   Active = 'ACTIVE',
   Archived = 'ARCHIVED',
@@ -1622,6 +1626,11 @@ export enum FlowSequenceStepType {
   Email = 'EMAIL',
   Linkedin = 'LINKEDIN',
 }
+
+export type FlowSequenceStepUpdateInput = {
+  id: Scalars['ID']['input'];
+  name: Scalars['String']['input'];
+};
 
 export type FlowSequenceUpdateInput = {
   description: Scalars['String']['input'];
@@ -2425,6 +2434,8 @@ export type Mutation = {
   flow_sequence_UnlinkSender: Result;
   flow_sequence_Update: FlowSequence;
   flow_sequence_step_ChangeStatus: FlowSequenceStep;
+  flow_sequence_step_Create: FlowSequenceStep;
+  flow_sequence_step_Update: FlowSequenceStep;
   interactionEvent_LinkAttachment: Result;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
@@ -2895,6 +2906,16 @@ export type MutationFlow_Sequence_UpdateArgs = {
 export type MutationFlow_Sequence_Step_ChangeStatusArgs = {
   id: Scalars['ID']['input'];
   status: FlowSequenceStepStatus;
+};
+
+export type MutationFlow_Sequence_Step_CreateArgs = {
+  input: FlowSequenceStepCreateInput;
+  sequenceId: Scalars['ID']['input'];
+};
+
+export type MutationFlow_Sequence_Step_UpdateArgs = {
+  input: FlowSequenceStepUpdateInput;
+  sequenceId: Scalars['ID']['input'];
 };
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {
