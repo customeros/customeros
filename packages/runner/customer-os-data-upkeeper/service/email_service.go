@@ -201,68 +201,66 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 		return
 	}
 
-	// no record
-	if len(records) == 0 {
-		return
+	// if records found, process them
+	if len(records) > 0 {
+		// Create a worker pool
+		recordChan := make(chan postgresentity.EmailValidationRecord, workers)
+		wg := sync.WaitGroup{}
+
+		// Start workers
+		for i := 0; i < workers; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				for record := range recordChan {
+					// Call the email validation method (Placeholder)
+					validationResult, err := s.callEmailValidation(ctx, record.Tenant, record.Email, record.VerifyCatchAll)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "Error calling email validation"))
+						s.log.Errorf("Error validating email: %v", err)
+						continue
+					}
+
+					dataObj := validationResult.Data
+					if dataObj == nil {
+						dataObj = &validationmodel.ValidateEmailMailSherpaData{}
+					}
+					data, err := json.Marshal(dataObj)
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "Error marshalling data"))
+						s.log.Errorf("Error marshalling data: %v", err)
+						continue
+					}
+
+					// Update the record with the validation result
+					err = s.commonServices.PostgresRepositories.EmailValidationRecordRepository.UpdateEmailRecord(ctx, record.ID, string(data))
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "Error updating email record"))
+						s.log.Errorf("Failed to update email record: %s", err.Error())
+						continue
+					}
+
+					// Update bulk request based on deliverable or undeliverable result
+					if strings.ToLower(dataObj.EmailData.Deliverable) == "true" {
+						err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.IncrementDeliverableEmails(ctx, record.RequestID)
+					} else {
+						err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.IncrementUndeliverableEmails(ctx, record.RequestID)
+					}
+					if err != nil {
+						s.log.Errorf("Failed to increment email count for bulk request: %v", err)
+					}
+				}
+			}()
+		}
+
+		// Feed the records to the workers
+		for _, record := range records {
+			recordChan <- record
+		}
+
+		close(recordChan)
+		wg.Wait()
 	}
-
-	// Create a worker pool
-	recordChan := make(chan postgresentity.EmailValidationRecord, workers)
-	wg := sync.WaitGroup{}
-
-	// Start workers
-	for i := 0; i < workers; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			for record := range recordChan {
-				// Call the email validation method (Placeholder)
-				validationResult, err := s.callEmailValidation(ctx, record.Tenant, record.Email, record.VerifyCatchAll)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "Error calling email validation"))
-					s.log.Errorf("Error validating email: %v", err)
-					continue
-				}
-
-				dataObj := validationResult.Data
-				if dataObj == nil {
-					dataObj = &validationmodel.ValidateEmailMailSherpaData{}
-				}
-				data, err := json.Marshal(dataObj)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "Error marshalling data"))
-					s.log.Errorf("Error marshalling data: %v", err)
-					continue
-				}
-
-				// Update the record with the validation result
-				err = s.commonServices.PostgresRepositories.EmailValidationRecordRepository.UpdateEmailRecord(ctx, record.ID, string(data))
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "Error updating email record"))
-					s.log.Errorf("Failed to update email record: %s", err.Error())
-					continue
-				}
-
-				// Update bulk request based on deliverable or undeliverable result
-				if strings.ToLower(dataObj.EmailData.Deliverable) == "true" {
-					err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.IncrementDeliverableEmails(ctx, record.RequestID)
-				} else {
-					err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.IncrementUndeliverableEmails(ctx, record.RequestID)
-				}
-				if err != nil {
-					s.log.Errorf("Failed to increment email count for bulk request: %v", err)
-				}
-			}
-		}()
-	}
-
-	// Feed the records to the workers
-	for _, record := range records {
-		recordChan <- record
-	}
-
-	close(recordChan)
-	wg.Wait()
 
 	// After processing, check if all records for each request are processed
 	requestsToCheck := make(map[string]struct{}) // Track unique Request IDs
@@ -280,7 +278,9 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 		requestsToCheck[request.RequestID] = struct{}{}
 	}
 
-	s.checkAndUpdateBulkRequests(ctx, requestsToCheck)
+	if len(requestsToCheck) > 0 {
+		s.checkAndUpdateBulkRequests(ctx, requestsToCheck)
+	}
 }
 
 // Check if all records for each request are processed and update bulk request status

@@ -151,6 +151,7 @@ func (r emailValidationRecordRepository) GetUnprocessedEmailRecords(ctx context.
 		return nil, err
 	}
 
+	span.LogFields(log.Int("result.count", len(records)))
 	return records, nil
 }
 
