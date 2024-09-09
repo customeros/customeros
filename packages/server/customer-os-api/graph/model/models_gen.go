@@ -371,6 +371,7 @@ type Contact struct {
 	Template *EntityTemplate `json:"template,omitempty"`
 	// Contact owner (user)
 	Owner                    *User           `json:"owner,omitempty"`
+	Sequences                []*FlowSequence `json:"sequences"`
 	TimelineEvents           []TimelineEvent `json:"timelineEvents"`
 	TimelineEventsTotalCount int64           `json:"timelineEventsTotalCount"`
 }

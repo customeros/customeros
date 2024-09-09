@@ -14,6 +14,7 @@ import (
 
 type FlowSequenceReadRepository interface {
 	GetList(ctx context.Context, flowId *string) ([]*utils.DbNodeAndId, error)
+	GetListWithContact(ctx context.Context, contactIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, id string) (*neo4j.Node, error)
 	GetFlowBySequenceId(ctx context.Context, id string) (*neo4j.Node, error)
 }
@@ -48,6 +49,47 @@ func (r flowSequenceReadRepositoryImpl) GetList(ctx context.Context, flowId *str
 		params["flowId"] = *flowId
 	}
 	cypher += "RETURN fs, f.id"
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	if len(result.([]*utils.DbNodeAndId)) == 0 {
+		return nil, nil
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r flowSequenceReadRepositoryImpl) GetListWithContact(ctx context.Context, contactIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSequenceReadRepository.GetListWithContact")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.Object("contactIds", contactIds))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	params := map[string]any{
+		"tenant":     tenant,
+		"contactIds": contactIds,
+	}
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSequence_%s)-[:HAS]->(fsc:FlowSequenceContact_%s)-[:HAS]->(c:Contact_%s) `, tenant, tenant, tenant, tenant)
+	cypher += "where c.id in $contactIds RETURN fs, c.id"
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
