@@ -8,12 +8,15 @@ import { GlobalSearchResultNavigationCommands } from './GlobalSearchResultNaviga
 export const CommandsContainer = ({
   children,
   label,
+  dataTest,
 }: {
   label: string;
+  dataTest?: string;
   children: ReactNode;
 }) => {
   return (
     <Command
+      data-test={dataTest}
       filter={(value, search, keywords) => {
         const extendValue = value.replace(/\s/g, '') + keywords;
         const searchWithoutSpaces = search.replace(/\s/g, '');
@@ -28,6 +31,7 @@ export const CommandsContainer = ({
     >
       <CommandInput
         label={label}
+        data-test={`${dataTest}-input`}
         placeholder='Type a command or search'
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
@@ -38,8 +42,8 @@ export const CommandsContainer = ({
       <Command.List>
         <Command.Group>{children}</Command.Group>
         <GlobalSearchResultNavigationCommands />
-        <Command.Group heading='Navigate'>
-          <GlobalSharedCommands />
+        <Command.Group heading='Navigate' data-test={`${dataTest}-navigate`}>
+          <GlobalSharedCommands dataTest={dataTest} />
         </Command.Group>
       </Command.List>
     </Command>

@@ -35,119 +35,128 @@ export const GlobalHub = () => {
   );
 };
 
-export const GlobalSharedCommands = observer(() => {
-  const store = useStore();
-  const navigate = useNavigate();
+interface GlobalSharedCommandsProps {
+  dataTest?: string;
+}
 
-  const targetsPreset = store.tableViewDefs.targetsPreset;
-  const customersPreset = store.tableViewDefs.defaultPreset;
-  const organizationsPreset = store.tableViewDefs.organizationsPreset;
-  const contactsPreset = store.tableViewDefs.contactsPreset;
-  const upcomingInvoicesPreset = store.tableViewDefs.upcomingInvoicesPreset;
-  const contractsPreset = store.tableViewDefs.contractsPreset;
+export const GlobalSharedCommands = observer(
+  ({ dataTest }: GlobalSharedCommandsProps) => {
+    const store = useStore();
+    const navigate = useNavigate();
 
-  const handleGoTo = (path: string, preset?: string) => {
-    navigate(path + (preset ? `?preset=${preset}` : ''));
-    store.ui.commandMenu.setOpen(false);
-  };
+    const targetsPreset = store.tableViewDefs.targetsPreset;
+    const customersPreset = store.tableViewDefs.defaultPreset;
+    const organizationsPreset = store.tableViewDefs.organizationsPreset;
+    const contactsPreset = store.tableViewDefs.contactsPreset;
+    const upcomingInvoicesPreset = store.tableViewDefs.upcomingInvoicesPreset;
+    const contractsPreset = store.tableViewDefs.contractsPreset;
 
-  useEffect(() => {
-    document.addEventListener('keydown', (e: KeyboardEvent) => {
-      if (e.metaKey && e.key === 'k' && e.shiftKey) {
-        store.ui.commandMenu.setType('GlobalHub');
-        store.ui.commandMenu.setOpen(true);
-      }
-    });
+    const handleGoTo = (path: string, preset?: string) => {
+      navigate(path + (preset ? `?preset=${preset}` : ''));
+      store.ui.commandMenu.setOpen(false);
+    };
 
-    return () => {
-      document.removeEventListener('keydown', (e: KeyboardEvent) => {
+    useEffect(() => {
+      document.addEventListener('keydown', (e: KeyboardEvent) => {
         if (e.metaKey && e.key === 'k' && e.shiftKey) {
           store.ui.commandMenu.setType('GlobalHub');
           store.ui.commandMenu.setOpen(true);
         }
       });
-    };
-  }, []);
 
-  return (
-    <>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        keywords={navigationKeywords.go_to_targets}
-        rightAccessory={<KeyboardShortcut shortcut='T' />}
-        onSelect={() => handleGoTo('/finder', targetsPreset)}
-      >
-        Go to Targets
-      </CommandItem>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        onSelect={() => handleGoTo('/prospects')}
-        keywords={navigationKeywords.go_to_customers}
-        rightAccessory={<KeyboardShortcut shortcut='O' />}
-      >
-        Go to Opportunities
-      </CommandItem>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        keywords={navigationKeywords.go_to_customers}
-        rightAccessory={<KeyboardShortcut shortcut='C' />}
-        onSelect={() => handleGoTo('/finder', customersPreset)}
-      >
-        Go to Customers
-      </CommandItem>
+      return () => {
+        document.removeEventListener('keydown', (e: KeyboardEvent) => {
+          if (e.metaKey && e.key === 'k' && e.shiftKey) {
+            store.ui.commandMenu.setType('GlobalHub');
+            store.ui.commandMenu.setOpen(true);
+          }
+        });
+      };
+    }, []);
 
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        keywords={navigationKeywords.go_to_address_book}
-        rightAccessory={<KeyboardShortcut shortcut='Z' />}
-        onSelect={() => handleGoTo('/finder', organizationsPreset)}
-      >
-        Go to Organizations
-      </CommandItem>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        keywords={navigationKeywords.go_to_address_book}
-        rightAccessory={<KeyboardShortcut shortcut='N' />}
-        onSelect={() => handleGoTo('/finder', contactsPreset)}
-      >
-        Go to Contacts
-      </CommandItem>
+    return (
+      <>
+        <CommandItem
+          dataTest={`${dataTest}-gt`}
+          leftAccessory={<ArrowNarrowRight />}
+          keywords={navigationKeywords.go_to_targets}
+          rightAccessory={<KeyboardShortcut shortcut='T' />}
+          onSelect={() => handleGoTo('/finder', targetsPreset)}
+        >
+          Go to Targets
+        </CommandItem>
+        <CommandItem
+          dataTest={`${dataTest}-go`}
+          leftAccessory={<ArrowNarrowRight />}
+          onSelect={() => handleGoTo('/prospects')}
+          keywords={navigationKeywords.go_to_customers}
+          rightAccessory={<KeyboardShortcut shortcut='O' />}
+        >
+          Go to Opportunities
+        </CommandItem>
+        <CommandItem
+          dataTest={`${dataTest}-gc`}
+          leftAccessory={<ArrowNarrowRight />}
+          keywords={navigationKeywords.go_to_customers}
+          rightAccessory={<KeyboardShortcut shortcut='C' />}
+          onSelect={() => handleGoTo('/finder', customersPreset)}
+        >
+          Go to Customers
+        </CommandItem>
 
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        rightAccessory={<KeyboardShortcut shortcut='I' />}
-        keywords={navigationKeywords.go_to_scheduled_invoices}
-        onSelect={() => handleGoTo('/finder', upcomingInvoicesPreset)}
-      >
-        Go to Invoices
-      </CommandItem>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        keywords={navigationKeywords.go_to_contracts}
-        rightAccessory={<KeyboardShortcut shortcut='R' />}
-        onSelect={() => handleGoTo('/finder', contractsPreset)}
-      >
-        Go to Contracts
-      </CommandItem>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        onSelect={() => handleGoTo('/settings')}
-        keywords={navigationKeywords.go_to_opportunities}
-        rightAccessory={<KeyboardShortcut shortcut='S' />}
-      >
-        Go to Settings
-      </CommandItem>
-      <CommandItem
-        leftAccessory={<ArrowNarrowRight />}
-        onSelect={() => handleGoTo('/customer-map')}
-        keywords={navigationKeywords.go_to_customer_map}
-        rightAccessory={<KeyboardShortcut shortcut='D' />}
-      >
-        Go to Customer map
-      </CommandItem>
-    </>
-  );
-});
+        <CommandItem
+          leftAccessory={<ArrowNarrowRight />}
+          keywords={navigationKeywords.go_to_address_book}
+          rightAccessory={<KeyboardShortcut shortcut='Z' />}
+          onSelect={() => handleGoTo('/finder', organizationsPreset)}
+        >
+          Go to Organizations
+        </CommandItem>
+        <CommandItem
+          leftAccessory={<ArrowNarrowRight />}
+          keywords={navigationKeywords.go_to_address_book}
+          rightAccessory={<KeyboardShortcut shortcut='N' />}
+          onSelect={() => handleGoTo('/finder', contactsPreset)}
+        >
+          Go to Contacts
+        </CommandItem>
+
+        <CommandItem
+          leftAccessory={<ArrowNarrowRight />}
+          rightAccessory={<KeyboardShortcut shortcut='I' />}
+          keywords={navigationKeywords.go_to_scheduled_invoices}
+          onSelect={() => handleGoTo('/finder', upcomingInvoicesPreset)}
+        >
+          Go to Invoices
+        </CommandItem>
+        <CommandItem
+          leftAccessory={<ArrowNarrowRight />}
+          keywords={navigationKeywords.go_to_contracts}
+          rightAccessory={<KeyboardShortcut shortcut='R' />}
+          onSelect={() => handleGoTo('/finder', contractsPreset)}
+        >
+          Go to Contracts
+        </CommandItem>
+        <CommandItem
+          leftAccessory={<ArrowNarrowRight />}
+          onSelect={() => handleGoTo('/settings')}
+          keywords={navigationKeywords.go_to_opportunities}
+          rightAccessory={<KeyboardShortcut shortcut='S' />}
+        >
+          Go to Settings
+        </CommandItem>
+        <CommandItem
+          leftAccessory={<ArrowNarrowRight />}
+          onSelect={() => handleGoTo('/customer-map')}
+          keywords={navigationKeywords.go_to_customer_map}
+          rightAccessory={<KeyboardShortcut shortcut='D' />}
+        >
+          Go to Customer map
+        </CommandItem>
+      </>
+    );
+  },
+);
 
 const KeyboardShortcut = ({ shortcut }: { shortcut: string }) => {
   return (
