@@ -1,5 +1,5 @@
-import { useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import React, { useRef, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
@@ -9,11 +9,13 @@ import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 
 import { TableIdType } from '@graphql/types';
-import { XClose } from '@ui/media/icons/XClose';
 import { Button } from '@ui/form/Button/Button';
-import { IconButton } from '@ui/form/IconButton';
-import { Command } from '@ui/overlay/CommandMenu';
 import { useStore } from '@shared/hooks/useStore';
+import {
+  Command,
+  CommandCancelButton,
+  CommandCancelIconButton,
+} from '@ui/overlay/CommandMenu';
 
 export const DeleteConfirmationModal = observer(() => {
   const store = useStore();
@@ -159,26 +161,13 @@ export const DeleteConfirmationModal = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
           <h1 className='text-base font-semibold'>{title}</h1>
-          <IconButton
-            size='xs'
-            variant='ghost'
-            icon={<XClose />}
-            aria-label='cancel'
-            onClick={handleClose}
-          />
+          <CommandCancelIconButton onClose={handleClose} />
         </div>
         {description && <p className='mt-1 text-sm'>{description}</p>}
 
         <div className='flex justify-between gap-3 mt-6'>
-          <Button
-            size='sm'
-            variant='outline'
-            className='w-full'
-            ref={closeButtonRef}
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
+          <CommandCancelButton ref={closeButtonRef} onClose={handleClose} />
+
           <Button
             size='sm'
             variant='outline'
