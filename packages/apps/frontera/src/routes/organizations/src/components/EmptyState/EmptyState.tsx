@@ -68,6 +68,41 @@ export const EmptyState = observer(() => {
             navigate(`/finder?preset=${allOrgsView}`);
           },
         };
+      case TableIdType.Contracts:
+        return {
+          title: 'No signatures yet',
+          description:
+            'No contracts here yet. Once you create a contract for an organization, they will show up here.',
+          buttonLabel: 'Go to Organizations',
+          dataTest: 'contracts-go-to-all-orgs',
+          onClick: () => {
+            navigate(`/finder?preset=${allOrgsView}`);
+          },
+        };
+      case TableIdType.PastInvoices:
+      case TableIdType.UpcomingInvoices:
+        return {
+          title: 'No paper trails yet',
+          description:
+            'Once you generate an invoice from a customer’s contract, they will show up here.',
+          buttonLabel: 'Go to Organizations',
+          dataTest: 'invoices-go-to-all-orgs',
+          onClick: () => {
+            navigate(`/finder?preset=${allOrgsView}`);
+          },
+        };
+      case TableIdType.FlowSequences:
+        return {
+          title: 'No sequences yet',
+          description:
+            'Your sequences are waiting to take their first steps. Go ahead and create your first sequence.',
+          buttonLabel: 'Create sequence',
+          dataTest: 'sequence-create-new-sequence',
+          onClick: () => {
+            store.ui.commandMenu.setType('CreateNewSequence');
+            store.ui.commandMenu.setOpen(true);
+          },
+        };
       default:
         return {
           title: "We couldn't find any organizations",

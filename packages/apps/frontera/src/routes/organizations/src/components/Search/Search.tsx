@@ -21,6 +21,7 @@ import {
   RightElement,
 } from '@ui/form/InputGroup/InputGroup';
 import { useSearchPersistence } from '@organizations/components/Search/useSearchPersistance.ts';
+import { CreateSequenceButton } from '@organizations/components/Search/CreateSequenceButton.tsx';
 import { TableViewsToggleNavigation } from '@organizations/components/TableViewsToggleNavigation';
 import { SearchBarFilterData } from '@organizations/components/SearchBarFilterData/SearchBarFilterData';
 
@@ -106,6 +107,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   );
 
   const placeholder = match(tableType)
+    .with(TableViewType.Flow, () => 'by name...')
     .with(TableViewType.Contacts, () => 'by name, organization or email...')
     .with(TableViewType.Contracts, () => 'by contract name...')
     .with(TableViewType.Organizations, () => 'by organization name...')
@@ -125,7 +127,9 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   };
 
   const allowCreation =
-    tableViewDef?.value.tableId !== TableIdType.Contracts &&
+    ![TableIdType.Contracts, TableIdType.FlowSequences].includes(
+      tableViewDef?.value?.tableId as TableIdType,
+    ) &&
     totalResults === 0 &&
     !!searchParams.get('search');
 
@@ -210,6 +214,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
       <UserPresence channelName={`finder:${store.session.value.tenant}`} />
 
       <TableViewsToggleNavigation />
+
+      {tableViewDef?.value.tableId === TableIdType.FlowSequences && (
+        <CreateSequenceButton />
+      )}
 
       {tableViewType && <ViewSettings tableId={tableId} type={tableViewType} />}
 

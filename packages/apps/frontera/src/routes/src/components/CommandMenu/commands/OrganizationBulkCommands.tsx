@@ -23,7 +23,6 @@ import {
   UpdateHealthStatusSubItemGroup,
 } from '@shared/components/CommandMenu/commands/organization';
 
-// TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationBulkCommands = observer(() => {
   const store = useStore();
   const selectedIds = store.ui.commandMenu.context.ids;

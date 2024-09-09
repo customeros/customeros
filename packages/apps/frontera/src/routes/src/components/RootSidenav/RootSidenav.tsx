@@ -31,6 +31,7 @@ export const RootSidenav = observer(() => {
     upcomingInvoicesPreset: store.tableViewDefs.upcomingInvoicesPreset,
     contactsPreset: store.tableViewDefs.contactsPreset,
     contractsPreset: store.tableViewDefs.contractsPreset,
+    flowSequencesPreset: store.tableViewDefs.flowSequencesPreset,
   };
 
   useKeyboardNavigation(presets, {

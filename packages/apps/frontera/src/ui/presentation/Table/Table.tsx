@@ -32,6 +32,7 @@ import {
 } from '@tanstack/react-table';
 
 import { cn } from '@ui/utils/cn';
+import { TableIdType } from '@graphql/types';
 import { useModKey } from '@shared/hooks/useModKey';
 import { Tumbleweed } from '@ui/media/icons/Tumbleweed';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
@@ -54,6 +55,7 @@ interface TableProps<T extends object> {
   isLoading?: boolean;
   totalItems?: number;
   borderColor?: string;
+  tableId?: TableIdType;
   sorting?: SortingState;
   canFetchMore?: boolean;
   onFetchMore?: () => void;
@@ -107,6 +109,7 @@ export const Table = <T extends object>({
   enableKeyboardShortcuts,
   enableColumnResizing = false,
   onResizeColumn,
+  tableId,
 }: TableProps<T>) => {
   const scrollElementRef = useRef<HTMLDivElement>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -383,6 +386,7 @@ export const Table = <T extends object>({
 
         <TableBody
           table={table}
+          tableId={tableId}
           dataTest={dataTest}
           isLoading={isLoading}
           totalItems={totalItems}
@@ -407,6 +411,7 @@ interface TableBodyProps<T extends object> {
   dataTest?: string;
   totalItems: number;
   isLoading?: boolean;
+  tableId?: TableIdType;
   table: TableInstance<T>;
   includesAvatar?: boolean;
   fullRowSelection?: boolean;
@@ -432,6 +437,7 @@ const TableBody = <T extends object>({
   setFocusedRowIndex,
   enableRowSelection,
   includesAvatar,
+  tableId,
 }: TableBodyProps<T>) => {
   const { rows } = table.getRowModel();
   const virtualRows = rowVirtualizer.getVirtualItems();
@@ -442,7 +448,7 @@ const TableBody = <T extends object>({
 
   return (
     <TBody className='w-full' data-test={dataTest}>
-      {!virtualRows.length && !isLoading && <NoResults />}
+      {!virtualRows.length && !isLoading && <NoResults tableId={tableId} />}
       {virtualRows.map((virtualRow) => {
         const row = rows[virtualRow.index];
 
@@ -775,7 +781,7 @@ const TActions = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
   },
 );
 
-const NoResults = () => {
+const NoResults = ({ tableId }: { tableId?: TableIdType }) => {
   return (
     <div className='pt-12 mx-auto text-gray-700 text-center'>
       <Tumbleweed className='w-12 h-12 text-gray-500' />
@@ -784,8 +790,14 @@ const NoResults = () => {
         Try using different keywords, checking for typos, or adjusting your
         filters.
         <br />
-        <br /> Alternatively, you can add more organizations here by changing
-        their relationship.
+        <br />
+        {tableId &&
+          [TableIdType.Customers, TableIdType.Targets].includes(tableId) && (
+            <>
+              Alternatively, you can add more organizations here by changing
+              their relationship.
+            </>
+          )}
       </p>
     </div>
   );

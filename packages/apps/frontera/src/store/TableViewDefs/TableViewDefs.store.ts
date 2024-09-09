@@ -179,6 +179,12 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     )?.value.id;
   }
 
+  get flowSequencesPreset() {
+    return this?.toArray().find(
+      (t) => t.value.tableId === TableIdType.FlowSequences && t.value.isPreset,
+    )?.value.id;
+  }
+
   createFavorite = async (
     {
       id,

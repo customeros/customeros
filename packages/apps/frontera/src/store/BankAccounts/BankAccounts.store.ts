@@ -111,7 +111,6 @@ export class BankAccountsStore implements GroupStore<BankAccount> {
 
     newBankAccount.value = {
       ...newBankAccount.value,
-      ...newBankAccount.value,
       bankName: payload?.bankName ?? newBankAccount.value.bankName,
       currency: payload?.currency ?? newBankAccount.value.currency,
     };

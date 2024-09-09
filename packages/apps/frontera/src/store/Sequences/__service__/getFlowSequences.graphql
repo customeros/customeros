@@ -1,0 +1,27 @@
+query getFlowSequences {
+  sequences {
+    metadata {
+      id
+    }
+    name
+    description
+    status
+    flow {
+      metadata {
+        id
+      }
+      name
+      description
+      status
+    }
+    steps {
+      metadata {
+        id
+      }
+      name
+      status
+      type
+      subtype
+    }
+  }
+}

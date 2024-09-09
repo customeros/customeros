@@ -1,0 +1,18 @@
+mutation createSequence($input: FlowSequenceCreateInput!) {
+  flow_sequence_Create(input: $input) {
+    name
+    description
+    flow {
+      metadata {
+        id
+      }
+      name
+      description
+      status
+    }
+    status
+    metadata {
+      id
+    }
+  }
+}

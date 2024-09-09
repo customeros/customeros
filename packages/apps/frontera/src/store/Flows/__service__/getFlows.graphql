@@ -1,0 +1,15 @@
+query getFlows {
+  flows {
+    metadata {
+      id
+      created
+      lastUpdated
+      source
+      sourceOfTruth
+      appSource
+    }
+    name
+    description
+    status
+  }
+}

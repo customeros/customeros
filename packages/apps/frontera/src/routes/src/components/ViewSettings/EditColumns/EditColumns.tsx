@@ -43,11 +43,19 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
   const tableViewDef = store.tableViewDefs.getById(preset ?? '0');
 
   const columns =
-    tableViewDef?.value?.columns.map((c) => ({
-      ...c,
-      label: optionsMap[c.columnType],
-      helperText: helperTextMap[c.columnType],
-    })) ?? [];
+    tableViewDef?.value?.columns
+      .filter(
+        (c) =>
+          ![
+            ColumnViewType.FlowSequenceContactCount,
+            ColumnViewType.FlowName,
+          ].includes(c.columnType),
+      )
+      .map((c) => ({
+        ...c,
+        label: optionsMap[c.columnType],
+        helperText: helperTextMap[c.columnType],
+      })) ?? [];
 
   const leadingPinnedColumns = match(tableViewDef?.value?.tableId)
     .with(TableIdType.Organizations, () =>
@@ -138,7 +146,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                 visible={col?.visible}
                 columnId={col?.columnId}
                 columnType={col?.columnType}
-                label={col?.name || col?.label}
+                label={col?.label || col?.name}
                 key={`${col?.columnType}-${col?.columnId}`}
               />
             ))}
@@ -160,8 +168,8 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                       draggableColumns?.[rubric.source.index]?.columnType
                     }
                     label={
-                      draggableColumns[rubric.source.index]?.name ||
-                      draggableColumns[rubric.source.index]?.label
+                      draggableColumns[rubric.source.index]?.label ||
+                      draggableColumns[rubric.source.index]?.name
                     }
                     onCheck={(columnId) => {
                       tableViewDef?.update((value) => {
@@ -193,7 +201,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                         columnId={col?.columnId}
                         helperText={col?.helperText}
                         columnType={col?.columnType}
-                        label={col?.name || col?.label}
+                        label={col?.label || col?.name}
                         noPointerEvents={isDraggingOver}
                         onCheck={(columnId) => {
                           tableViewDef?.update((value) => {
@@ -222,7 +230,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
                 visible={col?.visible}
                 columnId={col?.columnId}
                 columnType={col?.columnType}
-                label={col?.name || col?.label}
+                label={col?.label || col?.name}
                 key={`${col?.columnType}-${col?.columnId}`}
               />
             ))}

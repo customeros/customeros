@@ -4,10 +4,12 @@ import { match } from 'ts-pattern';
 
 import { TableViewType } from '@graphql/types';
 import {
+  flowsMap,
   contractsMap,
   opportunitiesMap,
   contactsOptionsMap,
   invoicesOptionsMap,
+  flowsHelperTextMap,
   contactsHelperTextMap,
   invoicesHelperTextMap,
   contractsHelperTextMap,
@@ -36,6 +38,7 @@ export const useTableColumnOptionsMap = (type?: TableViewType) => {
           opportunitiesMap,
           opportunitiesHelperTextMap,
         ])
+        .with(TableViewType.Flow, () => [flowsMap, flowsHelperTextMap])
         .otherwise(() => [organizationsOptionsMap, organizationsHelperTextMap]),
     [type],
   );

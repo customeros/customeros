@@ -1,0 +1,7 @@
+mutation updateSequence($input: FlowSequenceUpdateInput!) {
+    flow_sequence_Update(input: $input) {
+      metadata {
+        id
+      }
+    }
+}

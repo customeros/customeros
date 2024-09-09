@@ -10,7 +10,11 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
+import { SequenceHub } from '@shared/components/CommandMenu/commands/SequenceHub.tsx';
+import { SequenceCommands } from '@shared/components/CommandMenu/commands/SequencesCommands.tsx';
 import { DuplicateView } from '@shared/components/CommandMenu/commands/tableViewDef/DuplicateView';
+import { RenameSequence } from '@shared/components/CommandMenu/commands/sequences/RenameSequence.tsx';
+import { SequencesBulkCommands } from '@shared/components/CommandMenu/commands/SequencesBulkCommands.tsx';
 import { OpportunityBulkCommands } from '@shared/components/CommandMenu/commands/OpportunityBulkCommands';
 import {
   Modal,
@@ -38,6 +42,7 @@ import {
   EditPhoneNumber,
   ContactCommands,
   ChangeArrEstimate,
+  CreateNewSequence,
   ChangeRelationship,
   UpdateHealthStatus,
   AddNewOrganization,
@@ -46,6 +51,7 @@ import {
   ChangeOrAddJobRoles,
   ContactBulkCommands,
   OrganizationCommands,
+  ChangeSequenceStatus,
   RenameOpportunityName,
   ChooseOpportunityStage,
   MergeConfirmationModal,
@@ -60,43 +66,60 @@ import {
 
 //can we keep this in a nice order ? Thanks
 const Commands: Record<CommandMenuType, ReactElement> = {
+  // Shared
   EditName: <EditName />,
   GlobalHub: <GlobalHub />,
-  EditEmail: <EditEmail />,
   ChangeTags: <ChangeTags />,
-  ContactHub: <ContactHub />,
-  AssignOwner: <AssignOwner />,
+  DuplicateView: <DuplicateView />,
   ChangeStage: <ChangeStage />,
-  EditTimeZone: <EditTimeZone />,
-  EditJobTitle: <EditJobTitle />,
+  AssignOwner: <AssignOwner />,
   ChangeCurrency: <ChangeCurrency />,
-  OpportunityHub: <OpportunityHub />,
-  EditPersonaTag: <EditPersonaTag />,
-  OrganizationHub: <OrganizationHub />,
-  ContactCommands: <ContactCommands />,
-  EditPhoneNumber: <EditPhoneNumber />,
   ChangeArrEstimate: <ChangeArrEstimate />,
-  RenameTableViewDef: <RenameTableViewDef />,
-  AddNewOrganization: <AddNewOrganization />,
   ChangeRelationship: <ChangeRelationship />,
   UpdateHealthStatus: <UpdateHealthStatus />,
-  ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
+  DeleteConfirmationModal: <DeleteConfirmationModal />,
+
+  // Contact
+  ContactHub: <ContactHub />,
   ContactBulkCommands: <ContactBulkCommands />,
+  ContactCommands: <ContactCommands />,
+  EditEmail: <EditEmail />,
+  EditTimeZone: <EditTimeZone />,
+  EditJobTitle: <EditJobTitle />,
+  EditPersonaTag: <EditPersonaTag />,
+  EditPhoneNumber: <EditPhoneNumber />,
+  ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
+  ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
+
+  // Opportunity
+  OpportunityHub: <OpportunityHub />,
+  OpportunityBulkCommands: <OpportunityBulkCommands />,
   OpportunityCommands: <OpportunityCommands />,
-  OrganizationCommands: <OrganizationCommands />,
   RenameOpportunityName: <RenameOpportunityName />,
-  MergeConfirmationModal: <MergeConfirmationModal />,
   ChooseOpportunityStage: <ChooseOpportunityStage />,
   SetOpportunityNextSteps: <SetOpportunityNextSteps />,
-  DeleteConfirmationModal: <DeleteConfirmationModal />,
+  ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
+
+  // Organization
+  OrganizationHub: <OrganizationHub />,
   OrganizationBulkCommands: <OrganizationBulkCommands />,
+  OrganizationCommands: <OrganizationCommands />,
+  ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
+  MergeConfirmationModal: <MergeConfirmationModal />,
+  AddNewOrganization: <AddNewOrganization />,
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
-  ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
-  ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
-  DuplicateView: <DuplicateView />,
-  OpportunityBulkCommands: <OpportunityBulkCommands />,
-  ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
+
+  // Sequence
+  SequenceHub: <SequenceHub />,
+  SequencesBulkCommands: <SequencesBulkCommands />,
+  SequenceCommands: <SequenceCommands />,
+  CreateNewSequence: <CreateNewSequence />,
+  RenameSequence: <RenameSequence />,
+  ChangeSequenceStatus: <ChangeSequenceStatus />,
+
+  //TableViewDef
+  RenameTableViewDef: <RenameTableViewDef />,
 };
 
 export const CommandMenu = observer(() => {

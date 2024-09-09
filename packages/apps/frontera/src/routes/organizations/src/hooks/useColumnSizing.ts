@@ -1,21 +1,12 @@
 import { useMemo, useCallback } from 'react';
 
-import { ContactStore } from '@store/Contacts/Contact.store.ts';
-import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
-import { ContractStore } from '@store/Contracts/Contract.store.ts';
 import { ColumnDef, ColumnSizingState } from '@tanstack/react-table';
-import { OpportunityStore } from '@store/Opportunities/Opportunity.store.ts';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
 
+import { FinderTableEntityTypes } from '@organizations/components/FinderTable';
+
 export const useColumnSizing = (
-  tableColumns: ColumnDef<
-    | OrganizationStore
-    | ContactStore
-    | InvoiceStore
-    | ContractStore
-    | OpportunityStore
-  >[],
+  tableColumns: ColumnDef<FinderTableEntityTypes>[],
   tableViewDef?: TableViewDefStore,
 ) => {
   const columnCache = useMemo(
