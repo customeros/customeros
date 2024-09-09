@@ -405,9 +405,6 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 			return
 		}
 
-		// TODO Placeholder: Generate download URL from S3 (to be implemented later)
-		downloadURL := fmt.Sprintf("/path/to/s3/bucket/%s.csv", requestID)
-
 		// Return the results if the processing is completed
 		c.JSON(http.StatusOK, gin.H{
 			"jobId":    requestID,
@@ -417,7 +414,7 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 				"totalEmails":   bulkRequest.TotalEmails,
 				"deliverable":   bulkRequest.DeliverableEmails,
 				"undeliverable": bulkRequest.UndeliverableEmails,
-				"downloadUrl":   downloadURL,
+				"downloadUrl":   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.Services.CustomerOsApiUrl, requestID),
 			},
 		})
 	}
@@ -435,4 +432,61 @@ func calculateEstimatedCompletionTs(pendingRequests int64) int64 {
 
 	// Return the epoch timestamp (in seconds)
 	return estimatedCompletionTime.Unix()
+}
+
+func DownloadBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
+		defer span.Finish()
+
+		// Extract requestID from the path parameter
+		requestID := c.Param("requestId")
+		if requestID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing request ID"})
+			return
+		}
+
+		// Fetch the bulk request to ensure it exists and is completed
+		// Fetch the bulk request from the database
+		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve request"})
+			return
+		}
+		if bulkRequest == nil {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Request not found"})
+			return
+		}
+
+		// Check if the bulk request is completed before proceeding
+		if bulkRequest.Status != entity.EmailValidationRequestBulkStatusCompleted {
+			c.JSON(http.StatusAccepted, gin.H{
+				"status":  "processing",
+				"message": "The bulk request is still being processed. Please try again later.",
+			})
+			return
+		}
+
+		if bulkRequest.FileStoreId == "" {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "File not found"})
+			return
+		}
+
+		fileDTO, fileContent, err := services.FileStoreApiService.GetFile(bulkRequest.Tenant, bulkRequest.FileStoreId, span)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get file using file store api"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to fetch the file"})
+			return
+		}
+
+		// Set the response headers for file download
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileDTO.FileName))
+		c.Header("Content-Type", "text/csv")
+
+		// Return the CSV content as a response
+		c.Writer.Write(*fileContent)
+	}
 }
