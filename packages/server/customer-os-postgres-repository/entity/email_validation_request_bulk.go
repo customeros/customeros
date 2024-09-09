@@ -13,7 +13,7 @@ type EmailValidationRequestBulk struct {
 	RequestID           string                           `gorm:"primary_key;type:uuid;default:gen_random_uuid()" json:"requestId"`
 	Tenant              string                           `gorm:"column:tenant;type:varchar(255);NOT NULL" json:"tenantId"`
 	TotalEmails         int                              `gorm:"column:total_emails;type:int;NOT NULL" json:"totalEmails"`
-	DeliverableEmails   int                              `gorm:"column:undeliverable_emails;type:int;DEFAULT:0" json:"deliverableEmails"`
+	DeliverableEmails   int                              `gorm:"column:deliverable_emails;type:int;DEFAULT:0" json:"deliverableEmails"`
 	UndeliverableEmails int                              `gorm:"column:undeliverable_emails;type:int;DEFAULT:0" json:"undeliverableEmails"`
 	Status              EmailValidationRequestBulkStatus `gorm:"column:status;type:varchar(50);NOT NULL" json:"status"`
 	CreatedAt           time.Time                        `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp" json:"createdAt"`

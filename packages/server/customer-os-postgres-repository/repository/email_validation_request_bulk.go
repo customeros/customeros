@@ -108,8 +108,8 @@ func (r emailValidationRequestBulkRepository) IncrementUndeliverableEmails(ctx c
 		Model(&entity.EmailValidationRequestBulk{}).
 		Where("request_id = ?", requestID).
 		UpdateColumns(map[string]interface{}{
-			"deliverable_emails": gorm.Expr("undeliverable_emails + ?", 1),
-			"updated_at":         utils.Now(),
+			"undeliverable_emails": gorm.Expr("undeliverable_emails + ?", 1),
+			"updated_at":           utils.Now(),
 		}).Error; err != nil {
 		return err
 	}

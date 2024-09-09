@@ -284,7 +284,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		if emailColumn != "" {
 			emailIndex = -1
 			for i, h := range headers {
-				if h == emailColumn {
+				if strings.ToLower(h) == strings.ToLower(emailColumn) {
 					emailIndex = i
 					break
 				}
@@ -397,7 +397,7 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 			c.JSON(http.StatusOK, gin.H{
 				"jobId":                 requestID,
 				"status":                "processing",
-				"message":               fmt.Sprintf("Completed %s of %s emails", bulkRequest.DeliverableEmails+bulkRequest.UndeliverableEmails, bulkRequest.TotalEmails),
+				"message":               fmt.Sprintf("Completed %d of %d emails", bulkRequest.DeliverableEmails+bulkRequest.UndeliverableEmails, bulkRequest.TotalEmails),
 				"estimatedCompletionTs": calculateEstimatedCompletionTs(countPendingRequests),
 				"fileName":              bulkRequest.FileName,
 				"results":               nil,
