@@ -344,7 +344,7 @@ func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgresEntity.Tabl
 		Name:        "Sequences",
 		ColumnsJson: string(jsonData),
 		Order:       9,
-		Icon:        "Signature",
+		Icon:        "Shuffle01",
 		Filters:     ``,
 		Sorting:     ``,
 		IsPreset:    true,
