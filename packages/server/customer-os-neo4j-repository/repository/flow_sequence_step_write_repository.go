@@ -1,96 +1,75 @@
 package repository
 
-//
-//import (
-//	"context"
-//	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-//	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-//	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-//	"github.com/opentracing/opentracing-go"
-//	tracingLog "github.com/opentracing/opentracing-go/log"
-//	"gorm.io/gorm"
-//)
-//
-//type FlowSequenceStepRepository interface {
-//	GetList(ctx context.Context, sequenceId string) ([]*entity.FlowSequenceStep, error)
-//	GetById(ctx context.Context, id string) (*entity.FlowSequenceStep, error)
-//
-//	Store(ctx context.Context, entity *entity.FlowSequenceStep) (*entity.FlowSequenceStep, error)
-//}
-//
-//type flowSequenceStepRepositoryImpl struct {
-//	gormDb *gorm.DB
-//}
-//
-//func NewFlowSequenceStepRepository(gormDb *gorm.DB) FlowSequenceStepRepository {
-//	return &flowSequenceStepRepositoryImpl{gormDb: gormDb}
-//}
-//
-//func (r flowSequenceStepRepositoryImpl) GetList(ctx context.Context, sequenceId string) ([]*entity.FlowSequenceStep, error) {
-//	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceStepRepository.GetList")
-//	defer span.Finish()
-//	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-//
-//	span.LogFields(tracingLog.String("sequenceId", sequenceId))
-//
-//	var result []*entity.FlowSequenceStep
-//	err := r.gormDb.
-//		Where("tenant = ? and sequence_id = ?", common.GetTenantFromContext(ctx), sequenceId).
-//		Find(&result).
-//		Error
-//
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		return nil, err
-//	}
-//
-//	span.LogFields(tracingLog.Int("result.count", len(result)))
-//
-//	return result, nil
-//}
-//
-//func (r flowSequenceStepRepositoryImpl) GetById(ctx context.Context, id string) (*entity.FlowSequenceStep, error) {
-//	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceStepRepository.GetById")
-//	defer span.Finish()
-//	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-//
-//	span.LogFields(tracingLog.String("id", id))
-//
-//	var result entity.FlowSequenceStep
-//	err := r.gormDb.
-//		Where("tenant = ? and id = ?", common.GetTenantFromContext(ctx), id).
-//		First(&result).
-//		Error
-//
-//	if err != nil {
-//		if err == gorm.ErrRecordNotFound {
-//			span.LogFields(tracingLog.Bool("result.found", false))
-//			return nil, nil
-//		}
-//		tracing.TraceErr(span, err)
-//		return nil, err
-//	}
-//
-//	span.LogFields(tracingLog.Bool("result.found", true))
-//
-//	return &result, nil
-//}
-//
-//func (repo *flowSequenceStepRepositoryImpl) Store(ctx context.Context, entity *entity.FlowSequenceStep) (*entity.FlowSequenceStep, error) {
-//	span, _ := opentracing.StartSpanFromContext(ctx, "FlowSequenceStepRepository.Store")
-//	defer span.Finish()
-//	tracing.SetDefaultPostgresRepositorySpanTags(ctx, span)
-//
-//	span.LogFields(tracingLog.Object("entity", entity))
-//
-//	err := repo.gormDb.Save(entity).Error
-//
-//	if err != nil {
-//		tracing.TraceErr(span, err)
-//		return nil, err
-//	}
-//
-//	span.LogFields(tracingLog.String("entity.id", entity.ID))
-//
-//	return entity, nil
-//}
+import (
+	"context"
+	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+)
+
+type FlowSequenceStepWriteRepository interface {
+	Merge(ctx context.Context, entity *entity.FlowSequenceStepEntity) (*dbtype.Node, error)
+}
+
+type flowSequenceStepWriteRepositoryImpl struct {
+	driver   *neo4j.DriverWithContext
+	database string
+}
+
+func NewFlowSequenceStepWriteRepository(driver *neo4j.DriverWithContext, database string) FlowSequenceStepWriteRepository {
+	return &flowSequenceStepWriteRepositoryImpl{driver: driver, database: database}
+}
+
+func (r *flowSequenceStepWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.FlowSequenceStepEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSequenceStepWriteRepository.Merge")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := fmt.Sprintf(`
+			MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:BELONGS_TO_TENANT]->(fss:FlowSequenceStep:FlowSequenceStep_%s {id: $id})
+			ON CREATE SET
+				fss.createdAt = $createdAt,
+				fss.updatedAt = $updatedAt,
+				fss.name = $name,
+				fss.status = $status
+			ON MATCH SET
+				fss.updatedAt = $updatedAt,
+				fss.name = $name,
+				fss.status = $status
+			RETURN fss`, common.GetTenantFromContext(ctx))
+
+	params := map[string]any{
+		"tenant":    common.GetTenantFromContext(ctx),
+		"id":        entity.Id,
+		"createdAt": utils.TimeOrNow(entity.CreatedAt),
+		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
+		"name":      entity.Name,
+		"status":    entity.Status,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return result.(*dbtype.Node), nil
+}

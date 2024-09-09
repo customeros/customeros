@@ -40,6 +40,8 @@ type Repositories struct {
 	FlowSequenceContactWriteRepository    FlowSequenceContactWriteRepository
 	FlowSequenceSenderReadRepository      FlowSequenceSenderReadRepository
 	FlowSequenceSenderWriteRepository     FlowSequenceSenderWriteRepository
+	FlowSequenceStepReadRepository        FlowSequenceStepReadRepository
+	FlowSequenceStepWriteRepository       FlowSequenceStepWriteRepository
 	InteractionEventReadRepository        InteractionEventReadRepository
 	InteractionEventWriteRepository       InteractionEventWriteRepository
 	InteractionSessionReadRepository      InteractionSessionReadRepository
@@ -124,6 +126,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		FlowSequenceContactWriteRepository:    NewFlowSequenceContactWriteRepository(driver, neo4jDatabase),
 		FlowSequenceSenderReadRepository:      NewFlowSequenceSenderReadRepository(driver, neo4jDatabase),
 		FlowSequenceSenderWriteRepository:     NewFlowSequenceSenderWriteRepository(driver, neo4jDatabase),
+		FlowSequenceStepReadRepository:        NewFlowSequenceStepReadRepository(driver, neo4jDatabase),
+		FlowSequenceStepWriteRepository:       NewFlowSequenceStepWriteRepository(driver, neo4jDatabase),
 		InteractionEventReadRepository:        NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionEventWriteRepository:       NewInteractionEventWriteRepository(driver, neo4jDatabase),
 		InteractionSessionReadRepository:      NewInteractionSessionReadRepository(driver, neo4jDatabase),

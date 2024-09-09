@@ -1180,6 +1180,15 @@ type FlowSequenceStep struct {
 func (FlowSequenceStep) IsMetadataInterface()        {}
 func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
 
+type FlowSequenceStepCreateInput struct {
+	Name string `json:"name"`
+}
+
+type FlowSequenceStepUpdateInput struct {
+	ID   string `json:"id"`
+	Name string `json:"name"`
+}
+
 type FlowSequenceUpdateInput struct {
 	ID          string `json:"id"`
 	Name        string `json:"name"`

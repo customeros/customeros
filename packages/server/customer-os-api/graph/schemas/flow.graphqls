@@ -5,18 +5,21 @@ extend type Query {
 }
 
 extend type Mutation {
+    flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     flow_sequence_Create(input: FlowSequenceCreateInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_Update(input: FlowSequenceUpdateInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_ChangeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    flow_sequence_step_Create(sequenceId: ID!, input: FlowSequenceStepCreateInput!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_step_Update(sequenceId: ID!, input: FlowSequenceStepUpdateInput!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_step_ChangeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flow_sequence_LinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): FlowSequenceContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_UnlinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flow_sequence_LinkSender(sequenceId: ID!, mailbox: String!): FlowSequenceSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_UnlinkSender(sequenceId: ID!, mailbox: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flow_sequence_ChangeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flow_sequence_step_ChangeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type Flow implements MetadataInterface {
@@ -77,6 +80,15 @@ input FlowSequenceUpdateInput {
     id: ID!
     name: String!
     description: String!
+}
+
+input FlowSequenceStepCreateInput {
+    name: String!
+}
+
+input FlowSequenceStepUpdateInput {
+    id: ID!
+    name: String!
 }
 
 enum FlowStatus {

@@ -51,6 +51,7 @@ const (
 	NodeLabelFlowSequence              = "FlowSequence"
 	NodeLabelFlowSequenceContact       = "FlowSequenceContact"
 	NodeLabelFlowSequenceSender        = "FlowSequenceSender"
+	NodeLabelFlowSequenceStep          = "FlowSequenceStep"
 )
 
 func NodeLabelWithTenant(label string, tenant string) string {
