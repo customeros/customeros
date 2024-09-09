@@ -45,12 +45,7 @@ export const CreateNewSequence = observer(() => {
   };
 
   return (
-    <Command
-      label={`Rename `}
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command label={`Rename `}>
       <div className='p-6 pb-4 flex flex-col gap-1 '>
         <div className='flex items-center justify-between'>
           <h1 className='text-base font-semibold'>Create new sequence</h1>

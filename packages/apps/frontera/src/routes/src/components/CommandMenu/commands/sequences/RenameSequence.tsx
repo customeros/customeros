@@ -31,12 +31,7 @@ export const RenameSequence = observer(() => {
   const [name, setName] = useState(() => defaultValue ?? '');
 
   return (
-    <Command
-      label={`Rename sequence`}
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command label={`Rename sequence`}>
       <CommandInput
         value={name}
         label={label}

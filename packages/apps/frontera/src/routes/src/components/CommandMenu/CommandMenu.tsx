@@ -66,49 +66,60 @@ import {
 
 //can we keep this in a nice order ? Thanks
 const Commands: Record<CommandMenuType, ReactElement> = {
+  // Shared
   EditName: <EditName />,
   GlobalHub: <GlobalHub />,
-  EditEmail: <EditEmail />,
   ChangeTags: <ChangeTags />,
-  ContactHub: <ContactHub />,
-  AssignOwner: <AssignOwner />,
+  DuplicateView: <DuplicateView />,
   ChangeStage: <ChangeStage />,
-  EditTimeZone: <EditTimeZone />,
-  EditJobTitle: <EditJobTitle />,
+  AssignOwner: <AssignOwner />,
   ChangeCurrency: <ChangeCurrency />,
-  OpportunityHub: <OpportunityHub />,
-  EditPersonaTag: <EditPersonaTag />,
-  OrganizationHub: <OrganizationHub />,
-  ContactCommands: <ContactCommands />,
-  EditPhoneNumber: <EditPhoneNumber />,
   ChangeArrEstimate: <ChangeArrEstimate />,
-  RenameTableViewDef: <RenameTableViewDef />,
-  AddNewOrganization: <AddNewOrganization />,
   ChangeRelationship: <ChangeRelationship />,
   UpdateHealthStatus: <UpdateHealthStatus />,
-  ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
+  DeleteConfirmationModal: <DeleteConfirmationModal />,
+
+  // Contact
+  ContactHub: <ContactHub />,
   ContactBulkCommands: <ContactBulkCommands />,
+  ContactCommands: <ContactCommands />,
+  EditEmail: <EditEmail />,
+  EditTimeZone: <EditTimeZone />,
+  EditJobTitle: <EditJobTitle />,
+  EditPersonaTag: <EditPersonaTag />,
+  EditPhoneNumber: <EditPhoneNumber />,
+  ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
+  ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
+
+  // Opportunity
+  OpportunityHub: <OpportunityHub />,
+  OpportunityBulkCommands: <OpportunityBulkCommands />,
   OpportunityCommands: <OpportunityCommands />,
-  OrganizationCommands: <OrganizationCommands />,
   RenameOpportunityName: <RenameOpportunityName />,
-  MergeConfirmationModal: <MergeConfirmationModal />,
   ChooseOpportunityStage: <ChooseOpportunityStage />,
   SetOpportunityNextSteps: <SetOpportunityNextSteps />,
-  DeleteConfirmationModal: <DeleteConfirmationModal />,
+  ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
+
+  // Organization
+  OrganizationHub: <OrganizationHub />,
   OrganizationBulkCommands: <OrganizationBulkCommands />,
+  OrganizationCommands: <OrganizationCommands />,
+  ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
+  MergeConfirmationModal: <MergeConfirmationModal />,
+  AddNewOrganization: <AddNewOrganization />,
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
-  ChooseOpportunityOrganization: <ChooseOpportunityOrganization />,
-  ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
-  DuplicateView: <DuplicateView />,
-  OpportunityBulkCommands: <OpportunityBulkCommands />,
-  ChangeBulkArrEstimate: <ChangeBulkArrEstimate />,
+
+  // Sequence
+  SequenceHub: <SequenceHub />,
+  SequencesBulkCommands: <SequencesBulkCommands />,
+  SequenceCommands: <SequenceCommands />,
   CreateNewSequence: <CreateNewSequence />,
   RenameSequence: <RenameSequence />,
-  SequenceCommands: <SequenceCommands />,
   ChangeSequenceStatus: <ChangeSequenceStatus />,
-  SequencesBulkCommands: <SequencesBulkCommands />,
-  SequenceHub: <SequenceHub />,
+
+  //TableViewDef
+  RenameTableViewDef: <RenameTableViewDef />,
 };
 
 export const CommandMenu = observer(() => {
