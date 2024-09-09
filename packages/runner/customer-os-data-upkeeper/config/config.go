@@ -29,6 +29,10 @@ type Config struct {
 		Url    string `env:"ENRICHMENT_API_URL" validate:"required"`
 		ApiKey string `env:"ENRICHMENT_API_KEY" validate:"required"`
 	}
+	ValidationApi struct {
+		Url    string `env:"VALIDATION_API_URL" validate:"required"`
+		ApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
+	}
 	BetterContactApi struct {
 		Url    string `env:"BETTER_CONTACT_API_URL" validate:"required"`
 		ApiKey string `env:"BETTER_CONTACT_API_KEY" validate:"required"`
@@ -59,7 +63,8 @@ type ProcessConfig struct {
 }
 
 type Limits struct {
-	EmailsValidationLimit int `env:"EMAILS_VALIDATION_LIMIT" envDefault:"50" required:"true"`
+	EmailsValidationLimit       int `env:"EMAILS_VALIDATION_LIMIT" envDefault:"50" required:"true"`
+	BulkEmailsValidationThreads int `env:"BULK_EMAILS_VALIDATION_THREADS" envDefault:"6" required:"true"`
 }
 
 type EventNotifications struct {

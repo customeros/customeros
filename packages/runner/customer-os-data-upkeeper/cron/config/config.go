@@ -57,7 +57,8 @@ type Config struct {
 
 	// Email
 	// Defaults to each 2 minutes
-	CronScheduleValidateEmails     string `env:"CRON_SCHEDULE_VALIDATE_EMAILS" envDefault:"0 */2 * * * *"`
-	CronScheduleCheckScrubbyResult string `env:"CRON_SCHEDULE_CHECK_SCRUBBY_RESULT" envDefault:"0 45 * * * *"`
-	CronScheduleCheckEnrowResults  string `env:"CRON_SCHEDULE_CHECK_ENROW_RESULTS" envDefault:"0 */5 * * * *"`
+	CronScheduleValidateCustomerOSEmails       string `env:"CRON_SCHEDULE_VALIDATE_EMAILS" envDefault:"0 */2 * * * *"`
+	CronScheduleValidateEmailsFromBulkRequests string `env:"CRON_SCHEDULE_VALIDATE_EMAILS_BULK_REQUEST" envDefault:"*/10 * * * * *"`
+	CronScheduleCheckScrubbyResult             string `env:"CRON_SCHEDULE_CHECK_SCRUBBY_RESULT" envDefault:"0 45 * * * *"`
+	CronScheduleCheckEnrowResults              string `env:"CRON_SCHEDULE_CHECK_ENROW_RESULTS" envDefault:"0 */5 * * * *"`
 }

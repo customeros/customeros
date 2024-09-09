@@ -236,6 +236,14 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 
 		// Get email column param (optional)
 		emailColumn := c.DefaultPostForm("emailColumn", "")
+		verifyCatchAllParam := c.DefaultPostForm("verifyCatchAll", "true")
+		// check if verifyCatchAll param exists, defaulted to true
+		verifyCatchAll := true
+		if strings.ToLower(verifyCatchAllParam) == "false" {
+			verifyCatchAll = false
+		}
+		span.LogKV("emailColumn", emailColumn)
+		span.LogKV("verifyCatchAll", verifyCatchAllParam)
 
 		// Parse the uploaded CSV file
 		file, header, err := c.Request.FormFile("file")
@@ -321,7 +329,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 			return
 		}
 
-		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.RegisterRequest(ctx, tenant, requestID, header.Filename, totalEmails)
+		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.RegisterRequest(ctx, tenant, requestID, header.Filename, verifyCatchAll, totalEmails)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
 			logger.Errorf("Failed to register request: %v", err)
@@ -330,7 +338,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		}
 
 		// Bulk insert email records into the database
-		err = services.Repositories.PostgresRepositories.EmailValidationRecordRepository.BulkInsertRecords(ctx, tenant, requestID, emails)
+		err = services.Repositories.PostgresRepositories.EmailValidationRecordRepository.BulkInsertRecords(ctx, tenant, requestID, verifyCatchAll, emails)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
 			logger.Errorf("Failed to insert records: %v", err)
@@ -343,6 +351,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 			tracing.TraceErr(span, errors.Wrap(err, "failed to count pending requests"))
 			countPendingRequests = 100 // default to 100 records
 		}
+		countPendingRequests = countPendingRequests + int64(totalEmails)
 
 		// Respond with success message
 		c.JSON(http.StatusOK, gin.H{

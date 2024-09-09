@@ -14,9 +14,11 @@ import (
 const chunkSize = 1000
 
 type EmailValidationRecordRepository interface {
-	BulkInsertRecords(ctx context.Context, tenant, requestId string, emails []string) error
-	UpdateEmailRecord(ctx context.Context, requestId, email, newData string) error
+	BulkInsertRecords(ctx context.Context, tenant, requestId string, verifyCatchAll bool, emails []string) error
+	UpdateEmailRecord(ctx context.Context, id uint64, newData string) error
 	CountPendingRequests(ctx context.Context, priority int, createdBefore time.Time) (int64, error)
+	CountPendingRequestsByRequestID(ctx context.Context, requestID string) (int64, error)
+	GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]entity.EmailValidationRecord, error)
 }
 
 type emailValidationRecordRepository struct {
@@ -27,12 +29,15 @@ func NewEmailValidationRecordRepository(gormDb *gorm.DB) EmailValidationRecordRe
 	return &emailValidationRecordRepository{db: gormDb}
 }
 
-func (r emailValidationRecordRepository) BulkInsertRecords(ctx context.Context, tenant, requestId string, emails []string) error {
+func (r emailValidationRecordRepository) BulkInsertRecords(ctx context.Context, tenant, requestId string, verifyCatchAll bool, emails []string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.BulkInsertRecords")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("requestId", requestId), log.Int("emailsCount", len(emails)))
+	span.LogFields(
+		log.String("requestId", requestId),
+		log.Int("emailsCount", len(emails)),
+		log.Bool("verifyCatchAll", verifyCatchAll))
 
 	priority := assignPriority(len(emails))
 
@@ -47,11 +52,13 @@ func (r emailValidationRecordRepository) BulkInsertRecords(ctx context.Context, 
 		var records []entity.EmailValidationRecord
 		for j := i; j < end; j++ {
 			records = append(records, entity.EmailValidationRecord{
-				RequestID: requestId,
-				Tenant:    tenant,
-				Email:     emails[j],
-				CreatedAt: utils.Now(),
-				Priority:  priority,
+				RequestID:      requestId,
+				Tenant:         tenant,
+				Email:          emails[j],
+				CreatedAt:      utils.Now(),
+				Priority:       priority,
+				Data:           "",
+				VerifyCatchAll: verifyCatchAll,
 			})
 		}
 
@@ -86,17 +93,16 @@ func assignPriority(recordCount int) int {
 	}
 }
 
-func (r emailValidationRecordRepository) UpdateEmailRecord(ctx context.Context, requestId, email, newData string) error {
+func (r emailValidationRecordRepository) UpdateEmailRecord(ctx context.Context, id uint64, newData string) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.UpdateEmailRecord")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	span.LogKV("requestId", requestId)
-	span.LogKV("email", email)
+	span.LogFields(log.Uint64("id", id), log.String("newData", newData))
 
 	// Find the record by email and request_id and update the data field
 	if err := r.db.WithContext(ctx).
 		Model(&entity.EmailValidationRecord{}).
-		Where("request_id = ? AND email = ?", requestId, email).
+		Where("id = ?", id).
 		Updates(map[string]interface{}{
 			"data":       newData,
 			"updated_at": utils.Now(),
@@ -119,6 +125,45 @@ func (r emailValidationRecordRepository) CountPendingRequests(ctx context.Contex
 	if err := r.db.WithContext(ctx).
 		Model(&entity.EmailValidationRecord{}).
 		Where("priority <= ? AND created_at <= ? AND data = ''", priority, createdBefore).
+		Count(&count).Error; err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
+func (r emailValidationRecordRepository) GetUnprocessedEmailRecords(ctx context.Context, limit int) ([]entity.EmailValidationRecord, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.GetUnprocessedEmailRecords")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	span.LogFields(log.Int("limit", limit))
+
+	var records []entity.EmailValidationRecord
+
+	// Query to return unprocessed email records ordered by priority and creation date
+	if err := r.db.WithContext(ctx).
+		Where("data = ''").      // Unprocessed records where data is empty
+		Order("priority ASC").   // Order by priority (lowest first)
+		Order("created_at ASC"). // Order by created date (oldest first)
+		Limit(limit).            // Limit the number of records returned
+		Find(&records).Error; err != nil {
+		return nil, err
+	}
+
+	return records, nil
+}
+
+func (r emailValidationRecordRepository) CountPendingRequestsByRequestID(ctx context.Context, requestID string) (int64, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailValidationRecordRepository.CountPendingRequestsByRequestID")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var count int64
+
+	// Count records where data is empty (unprocessed) for the specific requestID
+	if err := r.db.WithContext(ctx).
+		Model(&entity.EmailValidationRecord{}).
+		Where("request_id = ? AND data = ''", requestID). // Filter for unprocessed records with the given requestID
 		Count(&count).Error; err != nil {
 		return 0, err
 	}
