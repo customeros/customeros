@@ -1,13 +1,11 @@
-import { useRef, MouseEvent } from 'react';
+import React, { useRef, MouseEvent, KeyboardEvent } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
-import { XClose } from '@ui/media/icons/XClose';
 import { Button } from '@ui/form/Button/Button';
-import { IconButton } from '@ui/form/IconButton';
-import { Command } from '@ui/overlay/CommandMenu';
 import { useStore } from '@shared/hooks/useStore';
+import { Command, CommandCancelIconButton } from '@ui/overlay/CommandMenu';
 import { EmailVerificationStatus } from '@organizations/components/Columns/contacts/Filters/Email/utils.ts';
 
 export const ContactEmailVerificationInfoModal = observer(() => {
@@ -16,7 +14,9 @@ export const ContactEmailVerificationInfoModal = observer(() => {
 
   const closeButtonRef = useRef<HTMLButtonElement>(null);
 
-  const handleClose = (e: MouseEvent<HTMLButtonElement>) => {
+  const handleClose = (
+    e: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>,
+  ) => {
     e.stopPropagation();
     e.preventDefault();
     store.ui.commandMenu.toggle('ContactEmailVerificationInfoModal');
@@ -160,13 +160,7 @@ export const ContactEmailVerificationInfoModal = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between mb-0.5'>
           <h1 className='text-base font-semibold'>{data.title}</h1>
-          <IconButton
-            size='xs'
-            variant='ghost'
-            icon={<XClose />}
-            aria-label='cancel'
-            onClick={handleClose}
-          />
+          <CommandCancelIconButton onClose={handleClose} />
         </div>
 
         <div className='text-sm flex flex-col gap-4'>{data.description}</div>

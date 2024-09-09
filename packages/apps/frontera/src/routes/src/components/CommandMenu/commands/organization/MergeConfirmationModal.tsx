@@ -1,10 +1,14 @@
+import React from 'react';
+
 import { observer } from 'mobx-react-lite';
 
-import { XClose } from '@ui/media/icons/XClose';
 import { Button } from '@ui/form/Button/Button';
-import { IconButton } from '@ui/form/IconButton';
-import { Command } from '@ui/overlay/CommandMenu';
 import { useStore } from '@shared/hooks/useStore';
+import {
+  Command,
+  CommandCancelButton,
+  CommandCancelIconButton,
+} from '@ui/overlay/CommandMenu';
 
 export const MergeConfirmationModal = observer(() => {
   const store = useStore();
@@ -33,24 +37,12 @@ export const MergeConfirmationModal = observer(() => {
           <h1 className='text-base font-semibold'>
             Merge {context.ids?.length} organizations?
           </h1>
-          <IconButton
-            size='xs'
-            variant='ghost'
-            icon={<XClose />}
-            aria-label='cancel'
-            onClick={handleClose}
-          />
+          <CommandCancelIconButton onClose={handleClose} />
         </div>
 
         <div className='flex justify-between gap-3 mt-6'>
-          <Button
-            size='sm'
-            variant='outline'
-            className='w-full'
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
+          <CommandCancelButton onClose={handleClose} />
+
           <Button
             size='sm'
             variant='outline'

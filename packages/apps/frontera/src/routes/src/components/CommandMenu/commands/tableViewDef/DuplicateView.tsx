@@ -1,16 +1,18 @@
-import { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
 import { TableViewType } from '@graphql/types';
-import { IconButton } from '@ui/form/IconButton';
-import { Command } from '@ui/overlay/CommandMenu';
 import { useStore } from '@shared/hooks/useStore';
 import { Radio, RadioGroup } from '@ui/form/Radio';
 import { Button } from '@ui/form/Button/Button.tsx';
-import { XClose } from '@ui/media/icons/XClose.tsx';
+import {
+  Command,
+  CommandCancelButton,
+  CommandCancelIconButton,
+} from '@ui/overlay/CommandMenu';
 
 export const DuplicateView = observer(() => {
   const store = useStore();
@@ -52,13 +54,7 @@ export const DuplicateView = observer(() => {
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
           <h1 className='text-base font-semibold'>Duplicate '{title}'</h1>
-          <IconButton
-            size='xs'
-            variant='ghost'
-            icon={<XClose />}
-            aria-label='cancel'
-            onClick={handleClose}
-          />
+          <CommandCancelIconButton onClose={handleClose} />
         </div>
 
         <Input
@@ -93,14 +89,8 @@ export const DuplicateView = observer(() => {
           </label>
         </div>
         <div className='flex justify-between gap-3 mt-6'>
-          <Button
-            size='sm'
-            variant='outline'
-            className='w-full'
-            onClick={handleClose}
-          >
-            Cancel
-          </Button>
+          <CommandCancelButton onClose={handleClose} />
+
           <Button
             size='sm'
             variant='outline'

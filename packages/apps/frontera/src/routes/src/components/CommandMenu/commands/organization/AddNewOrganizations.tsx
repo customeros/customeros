@@ -7,7 +7,7 @@ import { useDidMount, useKeyBindings } from 'rooks';
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Command } from '@ui/overlay/CommandMenu';
+import { Command, CommandCancelButton } from '@ui/overlay/CommandMenu';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 
 function isValidURL(url: string) {
@@ -155,15 +155,13 @@ export const AddNewOrganization = observer(() => {
       </div>
 
       <div className='flex w-full gap-2 pl-6 pr-6 pb-6'>
-        <Button
-          className='w-full'
-          onClick={() => {
+        <CommandCancelButton
+          onClose={() => {
             store.ui.commandMenu.setOpen(false);
             store.ui.commandMenu.setType('OrganizationCommands');
           }}
-        >
-          Cancel
-        </Button>
+        />
+
         <Button
           className='w-full'
           colorScheme='primary'

@@ -1,6 +1,11 @@
+import React, { Ref, forwardRef, MouseEvent, KeyboardEvent } from 'react';
+
 import { Command, useCommandState } from 'cmdk';
 
 import { cn } from '@ui/utils/cn';
+import { IconButton } from '@ui/form/IconButton';
+import { XClose } from '@ui/media/icons/XClose.tsx';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { Tag, TagLabel } from '@ui/presentation/Tag/Tag';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
@@ -159,5 +164,56 @@ export const CommandKbd = ({
     </kbd>
   );
 };
+
+export const CommandCancelIconButton = ({
+  onClose,
+}: {
+  onClose: (
+    e: MouseEvent<HTMLButtonElement> | KeyboardEvent<HTMLButtonElement>,
+  ) => void;
+} & React.HTMLAttributes<HTMLButtonElement>) => {
+  return (
+    <IconButton
+      size='xs'
+      variant='ghost'
+      icon={<XClose />}
+      onClick={onClose}
+      aria-label='cancel'
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') {
+          e.stopPropagation();
+          onClose(e);
+        }
+      }}
+    />
+  );
+};
+
+export const CommandCancelButton = forwardRef(
+  (
+    {
+      onClose,
+    }: { onClose: () => void } & React.HTMLAttributes<HTMLButtonElement>,
+    ref: Ref<HTMLButtonElement>,
+  ) => {
+    return (
+      <Button
+        size='sm'
+        ref={ref}
+        variant='outline'
+        onClick={onClose}
+        className='w-full'
+        onKeyDown={(e) => {
+          if (e.key === 'Enter') {
+            e.stopPropagation();
+            onClose();
+          }
+        }}
+      >
+        Cancel
+      </Button>
+    );
+  },
+);
 
 export { Command, useCommandState };
