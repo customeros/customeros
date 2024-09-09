@@ -54,10 +54,10 @@ export const ConfirmDialog = ({
           <AlertDialogContent className='rounded-xl '>
             {!hideCloseButton && <AlertDialogCloseIconButton />}
 
-            <AlertDialogHeader className='text-lg font-bold mt-4'>
+            <AlertDialogHeader className='font-bold mt-4'>
               <p className='pb-0 font-semibold'>{title}</p>
               {description && (
-                <p className='mt-1 text-base text-gray-700 font-normal'>
+                <p className='mt-1 text-sm text-gray-700 font-normal'>
                   {description}
                 </p>
               )}

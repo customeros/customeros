@@ -55,10 +55,10 @@ export const ConfirmDeleteDialog = ({
         <AlertDialogOverlay>
           <AlertDialogContent className='rounded-xl'>
             {!hideCloseButton && <AlertDialogCloseIconButton />}
-            <AlertDialogHeader className='text-lg font-bold'>
+            <AlertDialogHeader className='font-bold'>
               <p className='pb-0 font-semibold'>{label}</p>
               {description && (
-                <p className='mt-1 text-base text-gray-700 font-normal'>
+                <p className='mt-1 text-sm text-gray-700 font-normal'>
                   {description}
                 </p>
               )}

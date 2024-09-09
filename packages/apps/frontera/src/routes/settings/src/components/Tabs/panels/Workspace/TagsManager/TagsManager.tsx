@@ -218,7 +218,6 @@ export const TagsManager = observer(() => {
                       variant='unstyled'
                       className='ml-6 mb-[1px]'
                       defaultValue={tag.value.name}
-                      onChange={(e) => setNewTag(e.target.value)}
                       onFocus={(e) => {
                         e.target.select();
                       }}
@@ -229,6 +228,13 @@ export const TagsManager = observer(() => {
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') {
                           handleEditTag(tag.value.id, e.currentTarget.value);
+                        }
+                      }}
+                      onChange={(e) => {
+                        const trimmedValue = e.target.value.trim();
+
+                        if (trimmedValue.length > 0) {
+                          setNewTag(trimmedValue);
                         }
                       }}
                     />
@@ -277,7 +283,7 @@ export const TagsManager = observer(() => {
         }}
         body={
           <div className='flex flex-col gap-2'>
-            <p>This action cannot be undone.</p>
+            <p className='text-sm'>This action cannot be undone.</p>
           </div>
         }
       />
