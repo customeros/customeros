@@ -25,6 +25,7 @@ const (
 	FLOW_SEQUENCE         EntityType = "FLOW_SEQUENCE"
 	FLOW_SEQUENCE_CONTACT EntityType = "FLOW_SEQUENCE_CONTACT"
 	FLOW_SEQUENCE_SENDER  EntityType = "FLOW_SEQUENCE_SENDER"
+	FLOW_SEQUENCE_STEP    EntityType = "FLOW_SEQUENCE_STEP"
 )
 
 func (entityType EntityType) String() string {
@@ -73,6 +74,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelFlowSequenceContact
 	case FLOW_SEQUENCE_SENDER:
 		return NodeLabelFlowSequenceSender
+	case FLOW_SEQUENCE_STEP:
+		return NodeLabelFlowSequenceStep
 	}
 	return "Unknown"
 }

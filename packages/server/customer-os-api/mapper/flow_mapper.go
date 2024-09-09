@@ -129,10 +129,10 @@ func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *mo
 	}
 }
 
-func MapEntitiesToFlowSequenceSteps(entities []*neo4jentity.FlowSequenceStepEntity) []*model.FlowSequenceStep {
+func MapEntitiesToFlowSequenceSteps(entities *neo4jentity.FlowSequenceStepEntities) []*model.FlowSequenceStep {
 	var mapped []*model.FlowSequenceStep
-	for _, entity := range entities {
-		mapped = append(mapped, MapEntityToFlowSequenceStep(entity))
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowSequenceStep(&entity))
 	}
 	return mapped
 }
@@ -267,5 +267,18 @@ func MapFlowSequenceUpdateInputToEntity(input model.FlowSequenceUpdateInput) *ne
 		Id:          input.ID,
 		Name:        input.Name,
 		Description: input.Description,
+	}
+}
+
+func MapFlowSequenceStepCreateInputToEntity(input model.FlowSequenceStepCreateInput) *neo4jentity.FlowSequenceStepEntity {
+	return &neo4jentity.FlowSequenceStepEntity{
+		Name: input.Name,
+	}
+}
+
+func MapFlowSequenceStepUpdateInputToEntity(input model.FlowSequenceStepUpdateInput) *neo4jentity.FlowSequenceStepEntity {
+	return &neo4jentity.FlowSequenceStepEntity{
+		Id:   input.ID,
+		Name: input.Name,
 	}
 }

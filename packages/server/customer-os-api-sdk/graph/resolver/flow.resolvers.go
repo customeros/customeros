@@ -47,6 +47,11 @@ func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.Flow
 	panic(fmt.Errorf("not implemented: Email - email"))
 }
 
+// FlowChangeStatus is the resolver for the flow_changeStatus field.
+func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: FlowChangeStatus - flow_changeStatus"))
+}
+
 // FlowSequenceCreate is the resolver for the flow_sequence_Create field.
 func (r *mutationResolver) FlowSequenceCreate(ctx context.Context, input model.FlowSequenceCreateInput) (*model.FlowSequence, error) {
 	panic(fmt.Errorf("not implemented: FlowSequenceCreate - flow_sequence_Create"))
@@ -55,6 +60,26 @@ func (r *mutationResolver) FlowSequenceCreate(ctx context.Context, input model.F
 // FlowSequenceUpdate is the resolver for the flow_sequence_Update field.
 func (r *mutationResolver) FlowSequenceUpdate(ctx context.Context, input model.FlowSequenceUpdateInput) (*model.FlowSequence, error) {
 	panic(fmt.Errorf("not implemented: FlowSequenceUpdate - flow_sequence_Update"))
+}
+
+// FlowSequenceChangeStatus is the resolver for the flow_sequence_changeStatus field.
+func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status model.FlowSequenceStatus) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceChangeStatus - flow_sequence_changeStatus"))
+}
+
+// FlowSequenceStepCreate is the resolver for the flow_sequence_step_Create field.
+func (r *mutationResolver) FlowSequenceStepCreate(ctx context.Context, sequenceID string, input model.FlowSequenceStepCreateInput) (*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceStepCreate - flow_sequence_step_Create"))
+}
+
+// FlowSequenceStepUpdate is the resolver for the flow_sequence_step_Update field.
+func (r *mutationResolver) FlowSequenceStepUpdate(ctx context.Context, sequenceID string, input model.FlowSequenceStepUpdateInput) (*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceStepUpdate - flow_sequence_step_Update"))
+}
+
+// FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
+func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceStepChangeStatus - flow_sequence_step_changeStatus"))
 }
 
 // FlowSequenceLinkContact is the resolver for the flow_sequence_LinkContact field.
@@ -75,21 +100,6 @@ func (r *mutationResolver) FlowSequenceLinkSender(ctx context.Context, sequenceI
 // FlowSequenceUnlinkSender is the resolver for the flow_sequence_UnlinkSender field.
 func (r *mutationResolver) FlowSequenceUnlinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkSender - flow_sequence_UnlinkSender"))
-}
-
-// FlowChangeStatus is the resolver for the flow_changeStatus field.
-func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
-	panic(fmt.Errorf("not implemented: FlowChangeStatus - flow_changeStatus"))
-}
-
-// FlowSequenceChangeStatus is the resolver for the flow_sequence_changeStatus field.
-func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status model.FlowSequenceStatus) (*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceChangeStatus - flow_sequence_changeStatus"))
-}
-
-// FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
-func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceStepChangeStatus - flow_sequence_step_changeStatus"))
 }
 
 // Flows is the resolver for the flows field.

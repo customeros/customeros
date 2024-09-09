@@ -117,6 +117,10 @@ const (
 	FlowSequenceStepStatusArchived FlowSequenceStepStatus = "ARCHIVED"
 )
 
+func GetFlowSequenceStepStatus(s string) FlowSequenceStepStatus {
+	return FlowSequenceStepStatus(s)
+}
+
 type FlowSequenceStepType string
 
 const (

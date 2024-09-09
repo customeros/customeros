@@ -1205,3 +1205,18 @@ func MapDbNodeToFlowSequenceSenderEntity(node *dbtype.Node) *entity.FlowSequence
 	}
 	return &e
 }
+
+func MapDbNodeToFlowSequenceStepEntity(node *dbtype.Node) *entity.FlowSequenceStepEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	e := entity.FlowSequenceStepEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		Status:    entity.GetFlowSequenceStepStatus(utils.GetStringPropOrEmpty(props, "status")),
+	}
+	return &e
+}
