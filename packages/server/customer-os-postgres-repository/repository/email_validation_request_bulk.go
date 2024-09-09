@@ -156,5 +156,6 @@ func (r emailValidationRequestBulkRepository) GetOldestUncompletedRequests(ctx c
 		return nil, err
 	}
 
+	span.LogFields(log.Int("result.count", len(records)))
 	return records, nil
 }
