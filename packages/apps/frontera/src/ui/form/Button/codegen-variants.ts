@@ -100,7 +100,7 @@ const buttonDefaultProp = `cva([
   'whitespace-nowrap',
   'gap-2',
   'text-base',
-  'font-semibold',
+  'font-medium',
   'shadow-xs',
   'outline-none',
   'transition',
