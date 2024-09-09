@@ -1,6 +1,7 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module
 
 go 1.21
+toolchain go1.23.1
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../customer-os-postgres-repository
 
@@ -10,7 +11,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/events-proce
 
 require (
 	github.com/DusanKasan/parsemail v1.2.0
-	github.com/PuerkitoBio/goquery v1.9.2
+	github.com/PuerkitoBio/goquery v1.10.0
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/coocood/freecache v1.2.4
