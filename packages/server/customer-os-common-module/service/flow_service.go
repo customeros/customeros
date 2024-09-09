@@ -21,6 +21,7 @@ type FlowService interface {
 	FlowMerge(ctx context.Context, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
 	FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error)
 
+	FlowSequenceGetListWithContact(ctx context.Context, contactIds []string) (*neo4jentity.FlowSequenceEntities, error)
 	FlowSequenceGetList(ctx context.Context, flowId *string) (*neo4jentity.FlowSequenceEntities, error)
 	FlowSequenceGetById(ctx context.Context, id string) (*neo4jentity.FlowSequenceEntity, error)
 	FlowSequenceCreate(ctx context.Context, flow *neo4jentity.FlowEntity, entity *neo4jentity.FlowSequenceEntity) (*neo4jentity.FlowSequenceEntity, error)
@@ -164,6 +165,29 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	}
 
 	return mapper.MapDbNodeToFlowEntity(node), nil
+}
+
+func (s *flowService) FlowSequenceGetListWithContact(ctx context.Context, contactIds []string) (*neo4jentity.FlowSequenceEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceGetListWithContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.Object("contactIds", contactIds))
+
+	data, err := s.services.Neo4jRepositories.FlowSequenceReadRepository.GetListWithContact(ctx, contactIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	entities := make(neo4jentity.FlowSequenceEntities, 0, len(data))
+	for _, v := range data {
+		e := mapper.MapDbNodeToFlowSequenceEntity(v.Node)
+		e.DataloaderKey = v.LinkedNodeId
+		entities = append(entities, *e)
+	}
+
+	return &entities, nil
 }
 
 func (s *flowService) FlowSequenceGetList(ctx context.Context, flowId *string) (*neo4jentity.FlowSequenceEntities, error) {
@@ -559,7 +583,7 @@ func (s *flowService) FlowSequenceContactLink(ctx context.Context, sequenceId, c
 			return nil, err
 		}
 
-		identified, err := s.services.Neo4jRepositories.FlowSequenceContactWriteRepository.Merge(ctx, &toStore)
+		identified, err = s.services.Neo4jRepositories.FlowSequenceContactWriteRepository.Merge(ctx, &toStore)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -613,6 +637,8 @@ func (s *flowService) FlowSequenceContactUnlink(ctx context.Context, sequenceId,
 
 	span.LogFields(log.String("sequenceId", sequenceId), log.String("contactId", contactId), log.String("emailId", emailId))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	node, err := s.services.Neo4jRepositories.FlowSequenceContactReadRepository.Identify(ctx, sequenceId, contactId, emailId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -628,7 +654,7 @@ func (s *flowService) FlowSequenceContactUnlink(ctx context.Context, sequenceId,
 
 	//todo use TX
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, repository.LinkDetails{
 		FromEntityId:   sequenceId,
 		FromEntityType: model.FLOW_SEQUENCE,
 		Relationship:   model.HAS,
@@ -640,7 +666,7 @@ func (s *flowService) FlowSequenceContactUnlink(ctx context.Context, sequenceId,
 		return err
 	}
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, repository.LinkDetails{
 		FromEntityId:   entity.Id,
 		FromEntityType: model.FLOW_SEQUENCE_CONTACT,
 		Relationship:   model.HAS,
@@ -652,7 +678,7 @@ func (s *flowService) FlowSequenceContactUnlink(ctx context.Context, sequenceId,
 		return err
 	}
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, repository.LinkDetails{
 		FromEntityId:   entity.Id,
 		FromEntityType: model.FLOW_SEQUENCE_CONTACT,
 		Relationship:   model.HAS,
@@ -664,7 +690,7 @@ func (s *flowService) FlowSequenceContactUnlink(ctx context.Context, sequenceId,
 		return err
 	}
 
-	err = s.services.Neo4jRepositories.CommonWriteRepository.Delete(ctx, nil, common.GetTenantFromContext(ctx), entity.Id, model.NodeLabelFlowSequenceContact)
+	err = s.services.Neo4jRepositories.FlowSequenceContactWriteRepository.Delete(ctx, entity.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

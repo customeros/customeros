@@ -27,18 +27,17 @@ type FlowSequenceEntity struct {
 	Status      FlowSequenceStatus
 
 	////Schedule
-	//ActiveDaysString string `gorm:"type:varchar(255)" json:"-"`
-	//
-	//ActiveTimeWindowStart    string `gorm:"type:varchar(255)" json:"activeTimeWindowStart"` //09:00:00
-	//ActiveTimeWindowEnd      string `gorm:"type:varchar(255)" json:"activeTimeWindowEnd"`   //09:00:00
-	//PauseOnHolidays          bool   `json:"pauseOnHolidays"`
-	//RespectRecipientTimezone bool   `json:"respectRecipientTimezone"`
-	//
-	//MinutesDelayBetweenEmails int `json:"minutesDelayBetweenEmails"`
-	//
-	//EmailsPerMailboxPerHour int `json:"emailsPerMailboxPerHour"`
-	//EmailsPerMailboxPerDay  int `json:"emailsPerMailboxPerDay"`
+	ActiveDaysString string `gorm:"type:varchar(255)" json:"-"`
 
+	ActiveTimeWindowStart    string `gorm:"type:varchar(255)" json:"activeTimeWindowStart"` //09:00:00
+	ActiveTimeWindowEnd      string `gorm:"type:varchar(255)" json:"activeTimeWindowEnd"`   //18:00:00
+	PauseOnHolidays          bool   `json:"pauseOnHolidays"`
+	RespectRecipientTimezone bool   `json:"respectRecipientTimezone"`
+
+	MinutesDelayBetweenEmails int `json:"minutesDelayBetweenEmails"`
+
+	EmailsPerMailboxPerHour int `json:"emailsPerMailboxPerHour"`
+	EmailsPerMailboxPerDay  int `json:"emailsPerMailboxPerDay"`
 }
 
 type FlowSequenceEntities []FlowSequenceEntity

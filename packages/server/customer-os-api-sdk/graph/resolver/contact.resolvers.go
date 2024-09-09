@@ -73,6 +73,11 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	panic(fmt.Errorf("not implemented: Owner - owner"))
 }
 
+// Sequences is the resolver for the sequences field.
+func (r *contactResolver) Sequences(ctx context.Context, obj *model.Contact) ([]*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+}
+
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	panic(fmt.Errorf("not implemented: TimelineEvents - timelineEvents"))

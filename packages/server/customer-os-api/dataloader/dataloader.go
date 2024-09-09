@@ -112,6 +112,7 @@ type Loaders struct {
 	FlowSequenceContactsForFlowSequence           *dataloader.Loader
 	FlowSequenceSendersForFlowSequence            *dataloader.Loader
 	FlowSequenceStepsForFlowSequence              *dataloader.Loader
+	FlowSequencesWithContact                      *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -418,6 +419,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		FlowSequenceContactsForFlowSequence:           dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceContactsForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowSequenceSendersForFlowSequence:            dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceSendersForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowSequenceStepsForFlowSequence:              dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceStepsForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowSequencesWithContact:                      dataloader.NewBatchedLoader(flowBatcher.getFlowSequencesWithContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

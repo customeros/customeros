@@ -51,6 +51,8 @@ type FlowSequenceStep implements MetadataInterface {
     subtype: FlowSequenceStepSubtype
 
     body: String!
+
+    #opt out link ( unsubscribe link)
 }
 
 type FlowSequenceContact implements MetadataInterface {
@@ -108,9 +110,13 @@ enum FlowSequenceStatus {
 enum FlowSequenceStepType {
     EMAIL
     LINKEDIN
+    WAIT #store the value in minutes
 }
 
 enum FlowSequenceStepSubtype {
+    EMAIL_NEW
+    EMAIL_REPLY
+
     LINKEDIN_CONNECTION_REQUEST
     LINKEDIN_MESSAGE
 }

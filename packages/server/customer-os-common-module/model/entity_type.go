@@ -3,6 +3,7 @@ package model
 type EntityType string
 
 const (
+	TENANT                EntityType = "TENANT"
 	CONTACT               EntityType = "CONTACT"
 	USER                  EntityType = "USER"
 	ORGANIZATION          EntityType = "ORGANIZATION"
@@ -34,6 +35,8 @@ func (entityType EntityType) String() string {
 
 func (entityType EntityType) Neo4jLabel() string {
 	switch entityType {
+	case TENANT:
+		return NodeLabelTenant
 	case CONTACT:
 		return NodeLabelContact
 	case USER:

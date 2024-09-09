@@ -227,6 +227,20 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	return mapper.MapEntityToUser(owner), err
 }
 
+// Sequences is the resolver for the sequences field.
+func (r *contactResolver) Sequences(ctx context.Context, obj *model.Contact) ([]*model.FlowSequence, error) {
+	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
+
+	entities, err := dataloader.For(ctx).GetFlowSequencesWithContact(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("Failed to get flow sequences for contact %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get flow sequences for contact %s", obj.ID)
+		return nil, nil
+	}
+	return mapper.MapEntitiesToFlowSequence(entities), err
+}
+
 // TimelineEvents is the resolver for the timelineEvents field.
 func (r *contactResolver) TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.TimelineEvents", graphql.GetOperationContext(ctx))
