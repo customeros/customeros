@@ -2,14 +2,19 @@ package rest
 
 import (
 	"bytes"
+	"encoding/csv"
 	"encoding/json"
+	"fmt"
 	mailsherpa "github.com/customeros/mailsherpa/mailvalidate"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -18,7 +23,11 @@ import (
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
+
+const singleEmailVerificationAproxDurationInSeconds = float64(3.5)
+const threadsToVerifyBulkEmails = 6
 
 type EmailVerificationResponse struct {
 	Status                string                  `json:"status"`
@@ -55,7 +64,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Missing tenant context"})
+			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Missing tenant context"})
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
@@ -210,4 +219,274 @@ func callApiValidateEmail(ctx context.Context, services *service.Services, email
 		return nil, err
 	}
 	return &validationResponse, nil
+}
+
+func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BulkUploadEmailsForVerification", c.Request.Header)
+		defer span.Finish()
+
+		tenant := common.GetTenantFromContext(ctx)
+		if tenant == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Missing tenant context"})
+			return
+		}
+		span.SetTag(tracing.SpanTagTenant, tenant)
+		logger := services.Log
+
+		// Get email column param (optional)
+		emailColumn := c.DefaultPostForm("emailColumn", "")
+		verifyCatchAllParam := c.DefaultPostForm("verifyCatchAll", "true")
+		// check if verifyCatchAll param exists, defaulted to true
+		verifyCatchAll := true
+		if strings.ToLower(verifyCatchAllParam) == "false" {
+			verifyCatchAll = false
+		}
+		span.LogKV("emailColumn", emailColumn)
+		span.LogKV("verifyCatchAll", verifyCatchAllParam)
+
+		// Parse the uploaded CSV file
+		file, header, err := c.Request.FormFile("file")
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Failed to read file"})
+			return
+		}
+		defer file.Close()
+
+		// Validate file type
+		if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Only CSV files are accepted"})
+			return
+		}
+
+		// TODO: Store the file in S3 for logging (placeholder)
+		requestID := uuid.New().String()
+
+		// Placeholder: Store the file in S3 (actual implementation to be done later)
+		// err = services.S3.UploadFile(requestID, file)
+		// if err != nil {
+		//     logger.Errorf("Failed to upload file to S3: %v", err)
+		//     c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to store file"})
+		//     return
+		// }
+
+		// Parse the CSV file
+		reader := csv.NewReader(file)
+		headers, err := reader.Read()
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Failed to parse CSV file"})
+			return
+		}
+
+		// If emailColumn is provided, ensure it exists in the CSV headers
+		var emailIndex int
+		if emailColumn != "" {
+			emailIndex = -1
+			for i, h := range headers {
+				if strings.ToLower(h) == strings.ToLower(emailColumn) {
+					emailIndex = i
+					break
+				}
+			}
+			if emailIndex == -1 {
+				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": fmt.Sprintf("Column '%s' not found", emailColumn)})
+				return
+			}
+		} else if len(headers) == 1 {
+			emailIndex = 0 // Default to first column if only one column exists
+		} else {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Multiple columns found, please provide 'emailColumn' parameter"})
+			return
+		}
+
+		// Initialize slices for storing emails and validation data
+		var emails []string
+
+		// Read and validate each email
+		for {
+			record, err := reader.Read()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Error reading CSV file"})
+				return
+			}
+
+			email := record[emailIndex]
+			// Clean and skip empty or duplicate emails
+			if email == "" || utils.Contains(emails, email) {
+				continue
+			}
+			emails = append(emails, email)
+		}
+
+		// Register the bulk request in the database
+		totalEmails := len(emails)
+		if totalEmails == 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "No records found in the file"})
+			return
+		}
+
+		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.RegisterRequest(ctx, tenant, requestID, header.Filename, verifyCatchAll, totalEmails)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			logger.Errorf("Failed to register request: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to register bulk request"})
+			return
+		}
+
+		// Bulk insert email records into the database
+		err = services.Repositories.PostgresRepositories.EmailValidationRecordRepository.BulkInsertRecords(ctx, tenant, requestID, verifyCatchAll, emails)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			logger.Errorf("Failed to insert records: %v", err)
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to store email records"})
+			return
+		}
+
+		countPendingRequests, err := services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to count pending requests"))
+			countPendingRequests = 100 // default to 100 records
+		}
+		countPendingRequests = countPendingRequests + int64(totalEmails)
+
+		// Respond with success message
+		c.JSON(http.StatusOK, gin.H{
+			"message":               "File uploaded successfully",
+			"jobId":                 requestID,
+			"resultUrl":             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.Services.CustomerOsApiUrl, requestID), // Placeholder for results URL
+			"estimatedCompletionTs": calculateEstimatedCompletionTs(countPendingRequests),
+		})
+	}
+}
+
+func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
+		defer span.Finish()
+
+		requestID := c.Param("requestId")
+		if requestID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing request ID"})
+			return
+		}
+		span.LogKV("requestId", requestID)
+
+		// Fetch the bulk request from the database
+		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve request"})
+			return
+		}
+		if bulkRequest == nil {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Request not found"})
+			return
+		}
+
+		countPendingRequests, err := services.Repositories.PostgresRepositories.EmailValidationRecordRepository.CountPendingRequests(ctx, bulkRequest.Priority, bulkRequest.CreatedAt)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to count pending requests"))
+			countPendingRequests = 100 // default to 100 records
+		}
+		// Check if the processing is completed
+		if bulkRequest.Status == entity.EmailValidationRequestBulkStatusProcessing {
+			c.JSON(http.StatusOK, gin.H{
+				"jobId":                 requestID,
+				"status":                "processing",
+				"message":               fmt.Sprintf("Completed %d of %d emails", bulkRequest.DeliverableEmails+bulkRequest.UndeliverableEmails, bulkRequest.TotalEmails),
+				"estimatedCompletionTs": calculateEstimatedCompletionTs(countPendingRequests),
+				"fileName":              bulkRequest.FileName,
+				"results":               nil,
+			})
+			return
+		}
+
+		// Return the results if the processing is completed
+		c.JSON(http.StatusOK, gin.H{
+			"jobId":    requestID,
+			"status":   "completed",
+			"fileName": bulkRequest.FileName,
+			"results": gin.H{
+				"totalEmails":   bulkRequest.TotalEmails,
+				"deliverable":   bulkRequest.DeliverableEmails,
+				"undeliverable": bulkRequest.UndeliverableEmails,
+				"downloadUrl":   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.Services.CustomerOsApiUrl, requestID),
+			},
+		})
+	}
+}
+
+func calculateEstimatedCompletionTs(pendingRequests int64) int64 {
+	// Total estimated time in seconds for pending requests
+	totalTime := float64(pendingRequests) * singleEmailVerificationAproxDurationInSeconds / threadsToVerifyBulkEmails
+
+	// Add 10 seconds to account for delay between cron runs
+	totalTime += 10
+
+	// Get the current time and add the estimated time
+	estimatedCompletionTime := utils.Now().Add(time.Duration(totalTime) * time.Second)
+
+	// Return the epoch timestamp (in seconds)
+	return estimatedCompletionTime.Unix()
+}
+
+func DownloadBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
+		defer span.Finish()
+
+		// Extract requestID from the path parameter
+		requestID := c.Param("requestId")
+		if requestID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing request ID"})
+			return
+		}
+
+		// Fetch the bulk request to ensure it exists and is completed
+		// Fetch the bulk request from the database
+		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve request"})
+			return
+		}
+		if bulkRequest == nil {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Request not found"})
+			return
+		}
+
+		// Check if the bulk request is completed before proceeding
+		if bulkRequest.Status != entity.EmailValidationRequestBulkStatusCompleted {
+			c.JSON(http.StatusAccepted, gin.H{
+				"status":  "processing",
+				"message": "The bulk request is still being processed. Please try again later.",
+			})
+			return
+		}
+
+		if bulkRequest.FileStoreId == "" {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "File not found"})
+			return
+		}
+
+		fileDTO, fileContent, err := services.FileStoreApiService.GetFile(bulkRequest.Tenant, bulkRequest.FileStoreId, span)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get file using file store api"))
+			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to fetch the file"})
+			return
+		}
+
+		// Set the response headers for file download
+		c.Header("Content-Description", "File Transfer")
+		c.Header("Content-Transfer-Encoding", "binary")
+		c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", fileDTO.FileName))
+		c.Header("Content-Type", "text/csv")
+
+		// Return the CSV content as a response
+		c.Writer.Write(*fileContent)
+	}
 }

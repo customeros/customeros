@@ -23,6 +23,7 @@ const (
 	apiCacheGroup              = "api_cache"
 	workflowGroup              = "workflow"
 	emailGroup                 = "email"
+	emailBulkValidationGroup   = "emailBulkValidation"
 )
 
 var jobLocks = struct {
@@ -44,6 +45,7 @@ var jobLocks = struct {
 		apiCacheGroup:              {},
 		workflowGroup:              {},
 		emailGroup:                 {},
+		emailBulkValidationGroup:   {},
 	},
 }
 
@@ -205,11 +207,18 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "executeWorkflows", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmails, func() {
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateCustomerOSEmails, func() {
 		lockAndRunJob(cont, emailGroup, validateEmails)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmailsFromBulkRequests, func() {
+		lockAndRunJob(cont, emailBulkValidationGroup, validateEmailsFromBulkRequests)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmailFromBulkRequests", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckScrubbyResult, func() {
@@ -335,6 +344,10 @@ func executeWorkflows(cont *container.Container) {
 
 func validateEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ValidateEmails()
+}
+
+func validateEmailsFromBulkRequests(cont *container.Container) {
+	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ValidateEmailsFromBulkRequests()
 }
 
 func checkScrubbyResult(cont *container.Container) {

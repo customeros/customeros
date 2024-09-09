@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -19,7 +20,8 @@ type Services struct {
 
 	Caches *caches.Cache
 
-	CommonServices *commonService.Services
+	CommonServices      *commonService.Services
+	FileStoreApiService fsc.FileStoreApiService
 
 	BankAccountService         BankAccountService
 	ContactService             ContactService
@@ -111,6 +113,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.BillingProfileService = NewBillingProfileService(log, repositories, grpcClients)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
+	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)

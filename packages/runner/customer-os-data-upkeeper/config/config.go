@@ -5,6 +5,7 @@ import (
 	"github.com/joho/godotenv"
 	cronconf "github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/cron/config"
 	commconf "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"log"
@@ -29,6 +30,10 @@ type Config struct {
 		Url    string `env:"ENRICHMENT_API_URL" validate:"required"`
 		ApiKey string `env:"ENRICHMENT_API_KEY" validate:"required"`
 	}
+	ValidationApi struct {
+		Url    string `env:"VALIDATION_API_URL" validate:"required"`
+		ApiKey string `env:"VALIDATION_API_KEY" validate:"required"`
+	}
 	BetterContactApi struct {
 		Url    string `env:"BETTER_CONTACT_API_URL" validate:"required"`
 		ApiKey string `env:"BETTER_CONTACT_API_KEY" validate:"required"`
@@ -41,6 +46,7 @@ type Config struct {
 		ApiUrl string `env:"ENROW_API_URL" envDefault:"https://api.enrow.io" validate:"required"`
 		ApiKey string `env:"ENROW_API_KEY" validate:"required"`
 	}
+	FileStoreApiConfig fsc.FileStoreApiConfig
 	ProcessConfig      ProcessConfig
 	EventNotifications EventNotifications
 	Limits             Limits
@@ -59,7 +65,8 @@ type ProcessConfig struct {
 }
 
 type Limits struct {
-	EmailsValidationLimit int `env:"EMAILS_VALIDATION_LIMIT" envDefault:"50" required:"true"`
+	EmailsValidationLimit       int `env:"EMAILS_VALIDATION_LIMIT" envDefault:"50" required:"true"`
+	BulkEmailsValidationThreads int `env:"BULK_EMAILS_VALIDATION_THREADS" envDefault:"6" required:"true"`
 }
 
 type EventNotifications struct {

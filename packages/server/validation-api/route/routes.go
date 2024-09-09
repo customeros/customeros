@@ -76,7 +76,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 				return
 			}
 
-			if emailValidationData != nil && (emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown)) {
+			if emailValidationData != nil && emailValidationData.Syntax.IsValid && (emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown)) {
 				if request.Options.VerifyCatchAll || emailValidationData.EmailData.RetryValidation == true {
 					// Step 1 - try Enrow
 					enrowResponseStr, err := services.EmailValidationService.ValidateEmailWithEnrow(ctx, request.Email)
