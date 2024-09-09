@@ -221,7 +221,87 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
     }
   };
 
-  async remove() {
-    // todo
-  }
+  public linkContacts = async (sequenceId: string, contactIds: string[]) => {
+    this.isLoading = true;
+
+    try {
+      const results = await Promise.all(
+        contactIds.map((id) => {
+          const emailId = this.root.contacts.value.get(id)?.emailId ?? '';
+
+          return this.service.linkContact({
+            sequenceId,
+            contactId: id,
+            emailId,
+          });
+        }),
+      );
+
+      const successfulIds = results.map(
+        ({ flow_sequence_LinkContact }) =>
+          flow_sequence_LinkContact?.metadata?.id,
+      );
+
+      runInAction(() => {
+        if (successfulIds.length > 0) {
+          this.root.contacts.sync({ action: 'INVALIDATE', ids: successfulIds });
+          this.root.ui.toastSuccess(
+            `${successfulIds.length} contacts added to '${
+              this.value.get(sequenceId)?.value?.name
+            }'`,
+            'archive-sequences-success',
+          );
+        }
+      });
+    } catch (err) {
+      this.error = (err as Error).message;
+      this.root.ui.toastError(
+        "We couldn't add those contacts to a sequence",
+        'add-contacts-sequences-error',
+      );
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
+  public unlinkContacts = async (sequenceId: string, contactIds: string[]) => {
+    this.isLoading = true;
+
+    try {
+      const results = await Promise.all(
+        contactIds.map((id) => {
+          const emailId = this.root.contacts.value.get(id)?.emailId ?? '';
+
+          return this.service.unlinkContact({
+            sequenceId,
+            contactId: id,
+            emailId,
+          });
+        }),
+      );
+
+      const resultsData = results.map(
+        ({ flow_sequence_UnlinkContact }) =>
+          flow_sequence_UnlinkContact?.result,
+      );
+
+      runInAction(() => {
+        if (resultsData.length > 0) {
+          this.root.contacts.sync({ action: 'INVALIDATE', ids: contactIds });
+          this.root.ui.toastSuccess(
+            `${contactIds.length} contacts removed from their sequences`,
+            'remove-contacts-from-sequences-success',
+          );
+        }
+      });
+    } catch (err) {
+      this.error = (err as Error).message;
+      this.root.ui.toastError(
+        "We couldn't remove a contact from a sequence",
+        'remove-contacts-sequences-error',
+      );
+    } finally {
+      this.isLoading = false;
+    }
+  };
 }

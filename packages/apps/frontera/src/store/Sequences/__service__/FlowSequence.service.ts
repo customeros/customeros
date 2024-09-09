@@ -1,21 +1,25 @@
-import type { Transport } from '@store/transport.ts';
+import type { Transport } from '@store/transport';
 
 import {
   CreateSequenceMutation,
   CreateSequenceMutationVariables,
-} from '@store/Sequences/__service__/createSequence.generated.ts';
+} from '@store/Sequences/__service__/createSequence.generated';
 import {
   UpdateSequenceMutation,
   UpdateSequenceMutationVariables,
-} from '@store/Sequences/__service__/updateSequence.generated.ts';
+} from '@store/Sequences/__service__/updateSequence.generated';
 import {
   FlowSequenceLinkContactMutation,
   FlowSequenceLinkContactMutationVariables,
-} from '@store/Sequences/__service__/flowSequenceLinkContact.generated.ts';
+} from '@store/Sequences/__service__/flowSequenceLinkContact.generated';
 import {
   ChangeFlowSequenceStatusMutation,
   ChangeFlowSequenceStatusMutationVariables,
-} from '@store/Sequences/__service__/changeFlowSequenceStatus.generated.ts';
+} from '@store/Sequences/__service__/changeFlowSequenceStatus.generated';
+import {
+  FlowSequenceUnlinkContactMutation,
+  FlowSequenceUnlinkContactMutationVariables,
+} from '@store/Sequences/__service__/flowSequenceUnlinkContact.generated';
 
 import { FlowSequence } from '@graphql/types';
 
@@ -23,6 +27,7 @@ import UpdateSequencesDocument from './updateSequence.graphql';
 import GetFlowSequencesDocument from './getFlowSequences.graphql';
 import LinkContactDocument from './flowSequenceLinkContact.graphql';
 import CreateSequenceMutationDocument from './createSequence.graphql';
+import UnlinkContactDocument from './flowSequenceUnlinkContact.graphql';
 import ChangeFlowSequenceStatusDocument from './changeFlowSequenceStatus.graphql';
 
 class FlowSequenceService {
@@ -75,6 +80,13 @@ class FlowSequenceService {
       FlowSequenceLinkContactMutation,
       FlowSequenceLinkContactMutationVariables
     >(LinkContactDocument, payload);
+  }
+
+  async unlinkContact(payload: FlowSequenceUnlinkContactMutationVariables) {
+    return this.transport.graphql.request<
+      FlowSequenceUnlinkContactMutation,
+      FlowSequenceUnlinkContactMutationVariables
+    >(UnlinkContactDocument, payload);
   }
 }
 

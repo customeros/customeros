@@ -43,6 +43,8 @@ export type CommandMenuType =
   | 'ChangeSequenceStatus'
   | 'SequencesBulkCommands'
   | 'SequenceHub'
+  | 'EditContactSequence'
+  | 'UnlinkContactFromSequence'
   | 'ContactBulkCommands';
 
 export type Context = {
@@ -57,6 +59,7 @@ export type Context = {
     | 'Organizations'
     | 'Opportunities'
     | 'Contact'
+    | 'ContactSequences'
     | 'TableViewDef'
     | 'Sequence'
     | 'Sequences'

@@ -50,6 +50,7 @@ import {
   OpportunityCommands,
   ChangeOrAddJobRoles,
   ContactBulkCommands,
+  EditContactSequence,
   OrganizationCommands,
   ChangeSequenceStatus,
   RenameOpportunityName,
@@ -117,6 +118,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   CreateNewSequence: <CreateNewSequence />,
   RenameSequence: <RenameSequence />,
   ChangeSequenceStatus: <ChangeSequenceStatus />,
+  EditContactSequence: <EditContactSequence />,
 
   //TableViewDef
   RenameTableViewDef: <RenameTableViewDef />,

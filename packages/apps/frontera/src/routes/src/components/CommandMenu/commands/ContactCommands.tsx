@@ -8,6 +8,7 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { Delete } from '@ui/media/icons/Delete';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
+import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
@@ -38,6 +39,15 @@ export const ContactCommands = observer(() => {
           }
         >
           Edit persona tag...
+        </CommandItem>
+
+        <CommandItem
+          leftAccessory={<Shuffle01 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('EditContactSequence');
+          }}
+        >
+          Change or add to sequence
         </CommandItem>
 
         {!!contact?.value?.tags?.length && (
@@ -122,6 +132,14 @@ export const ContactCommands = observer(() => {
           }}
         >
           Edit time zone...
+        </CommandItem>
+        <CommandItem
+          leftAccessory={<Shuffle01 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('UnlinkContactFromSequence');
+          }}
+        >
+          Remove from sequence
         </CommandItem>
         <CommandItem
           leftAccessory={<Archive />}
