@@ -1,3 +1,4 @@
+import cors from "cors";
 import express from "express";
 import bodyParser from "body-parser";
 import swaggerUi from "swagger-ui-express";
@@ -14,6 +15,7 @@ export class Server {
     this.port = port;
     this.instance = express();
     this.instance.use(bodyParser.json());
+    this.instance.use(cors());
     this.instance.use(
       "/docs",
       swaggerUi.serve,
