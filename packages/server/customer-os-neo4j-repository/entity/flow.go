@@ -51,9 +51,8 @@ type FlowSequenceStepEntity struct {
 
 	Status FlowSequenceStepStatus
 
-	Type    FlowSequenceStepType
-	Subtype *FlowSequenceStepSubtype
-	Body    string
+	Action     FlowSequenceStepAction
+	ActionData string
 }
 
 type FlowSequenceStepEntities []FlowSequenceStepEntity
@@ -120,16 +119,12 @@ func GetFlowSequenceStepStatus(s string) FlowSequenceStepStatus {
 	return FlowSequenceStepStatus(s)
 }
 
-type FlowSequenceStepType string
+type FlowSequenceStepAction string
 
 const (
-	FlowSequenceStepTypeEmail    FlowSequenceStepType = "EMAIL"
-	FlowSequenceStepTypeLinkedin FlowSequenceStepType = "LINKEDIN"
-)
-
-type FlowSequenceStepSubtype string
-
-const (
-	FlowSequenceStepSubtypeLinkedinConnectionRequest FlowSequenceStepSubtype = "LINKEDIN_CONNECTION_REQUEST"
-	FlowSequenceStepSubtypeLinkedinMessage           FlowSequenceStepSubtype = "LINKEDIN_MESSAGE"
+	FlowSequenceStepActionWait                      FlowSequenceStepAction = "WAIT"
+	FlowSequenceStepActionEmailNew                  FlowSequenceStepAction = "EMAIL_NEW"
+	FlowSequenceStepActionEmailReply                FlowSequenceStepAction = "EMAIL_REPLY"
+	FlowSequenceStepActionLinkedinConnectionRequest FlowSequenceStepAction = "LINKEDIN_CONNECTION_REQUEST"
+	FlowSequenceStepActionLinkedinMessage           FlowSequenceStepAction = "LINKEDIN_MESSAGE"
 )

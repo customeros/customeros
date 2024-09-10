@@ -67,14 +67,9 @@ func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id stri
 	panic(fmt.Errorf("not implemented: FlowSequenceChangeStatus - flow_sequence_changeStatus"))
 }
 
-// FlowSequenceStepCreate is the resolver for the flow_sequence_step_Create field.
-func (r *mutationResolver) FlowSequenceStepCreate(ctx context.Context, sequenceID string, input model.FlowSequenceStepCreateInput) (*model.FlowSequenceStep, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceStepCreate - flow_sequence_step_Create"))
-}
-
-// FlowSequenceStepUpdate is the resolver for the flow_sequence_step_Update field.
-func (r *mutationResolver) FlowSequenceStepUpdate(ctx context.Context, sequenceID string, input model.FlowSequenceStepUpdateInput) (*model.FlowSequenceStep, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceStepUpdate - flow_sequence_step_Update"))
+// FlowSequenceStepMerge is the resolver for the flow_sequence_step_Merge field.
+func (r *mutationResolver) FlowSequenceStepMerge(ctx context.Context, sequenceID string, input model.FlowSequenceStepMergeInput) (*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceStepMerge - flow_sequence_step_Merge"))
 }
 
 // FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.

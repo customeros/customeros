@@ -38,11 +38,13 @@ func (r *flowSequenceStepWriteRepositoryImpl) Merge(ctx context.Context, entity 
 				fss.createdAt = $createdAt,
 				fss.updatedAt = $updatedAt,
 				fss.name = $name,
-				fss.status = $status
+				fss.status = $status,
+				fss.action = $action
 			ON MATCH SET
 				fss.updatedAt = $updatedAt,
 				fss.name = $name,
-				fss.status = $status
+				fss.status = $status,
+				fss.action = $action
 			RETURN fss`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
@@ -52,6 +54,7 @@ func (r *flowSequenceStepWriteRepositoryImpl) Merge(ctx context.Context, entity 
 		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
 		"name":      entity.Name,
 		"status":    entity.Status,
+		"action":    entity.Action,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

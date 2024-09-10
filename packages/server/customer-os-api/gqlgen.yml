@@ -68,3 +68,15 @@ models:
       - github.com/99designs/gqlgen/graphql.Int
       - github.com/99designs/gqlgen/graphql.Int64
       - github.com/99designs/gqlgen/graphql.Int32
+  FlowStatus:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowStatus
+  FlowSequenceStatus:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowSequenceStatus
+  FlowSequenceStepStatus:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowSequenceStepStatus
+  FlowSequenceStepAction:
+    model:
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowSequenceStepAction

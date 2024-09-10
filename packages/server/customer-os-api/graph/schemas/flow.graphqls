@@ -11,8 +11,7 @@ extend type Mutation {
     flow_sequence_Update(input: FlowSequenceUpdateInput!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_ChangeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    flow_sequence_step_Create(sequenceId: ID!, input: FlowSequenceStepCreateInput!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flow_sequence_step_Update(sequenceId: ID!, input: FlowSequenceStepUpdateInput!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_step_Merge(sequenceId: ID!, input: FlowSequenceStepMergeInput!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_step_ChangeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flow_sequence_LinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): FlowSequenceContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -22,6 +21,7 @@ extend type Mutation {
     flow_sequence_UnlinkSender(sequenceId: ID!, mailbox: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
+#Flow
 type Flow implements MetadataInterface {
     metadata:           Metadata!
     name:               String!
@@ -30,6 +30,14 @@ type Flow implements MetadataInterface {
     sequences: [FlowSequence!]! @goField(forceResolver: true)
 }
 
+enum FlowStatus {
+    INACTIVE
+    ACTIVE
+    PAUSED
+    ARCHIVED
+}
+
+#FlowSequence
 type FlowSequence implements MetadataInterface {
     metadata:           Metadata!
     name:               String!
@@ -41,34 +49,11 @@ type FlowSequence implements MetadataInterface {
     senders: [FlowSequenceSender!]! @goField(forceResolver: true)
 }
 
-type FlowSequenceStep implements MetadataInterface {
-    metadata: Metadata!
-
-    name: String!
-    status: FlowSequenceStepStatus!
-
-    type: FlowSequenceStepType!
-    subtype: FlowSequenceStepSubtype
-
-    body: String!
-
-    #opt out link ( unsubscribe link)
-}
-
-type FlowSequenceContact implements MetadataInterface {
-    metadata:               Metadata!
-
-    contact: Contact! @goField(forceResolver: true)
-    email: Email! @goField(forceResolver: true)
-}
-
-type FlowSequenceSender implements MetadataInterface {
-    metadata: Metadata!
-    mailbox:    String!
-}
-
-type Mailbox {
-    mailbox:    String!
+enum FlowSequenceStatus {
+    INACTIVE
+    ACTIVE
+    PAUSED
+    ARCHIVED
 }
 
 input FlowSequenceCreateInput {
@@ -84,42 +69,101 @@ input FlowSequenceUpdateInput {
     description: String!
 }
 
-input FlowSequenceStepCreateInput {
+#FlowSequenceContact
+type FlowSequenceContact implements MetadataInterface {
+    metadata:               Metadata!
+
+    contact: Contact! @goField(forceResolver: true)
+    email: Email! @goField(forceResolver: true)
+}
+
+#FlowSequenceSender
+type FlowSequenceSender implements MetadataInterface {
+    metadata: Metadata!
+    mailbox:    String!
+}
+
+type Mailbox {
+    mailbox:    String!
+}
+
+
+#FlowSequenceStep
+type FlowSequenceStep implements MetadataInterface {
+    metadata: Metadata!
+
     name: String!
+    description: String!
+    status: FlowSequenceStepStatus!
+
+    action: FlowSequenceStepAction!
+    #actionData: FlowSequenceStepActionData!
 }
 
-input FlowSequenceStepUpdateInput {
-    id: ID!
-    name: String!
-}
+enum FlowSequenceStepAction {
+    WAIT
 
-enum FlowStatus {
-    INACTIVE
-    ACTIVE
-    PAUSED
-    ARCHIVED
-}
-
-enum FlowSequenceStatus {
-    INACTIVE
-    ACTIVE
-    PAUSED
-    ARCHIVED
-}
-
-enum FlowSequenceStepType {
-    EMAIL
-    LINKEDIN
-    WAIT #store the value in minutes
-}
-
-enum FlowSequenceStepSubtype {
     EMAIL_NEW
     EMAIL_REPLY
 
     LINKEDIN_CONNECTION_REQUEST
     LINKEDIN_MESSAGE
 }
+
+union FlowSequenceStepActionData = FlowSequenceStepActionDataWait | FlowSequenceStepActionDataEmail | FlowSequenceStepActionLinkedinConnectionRequest | FlowSequenceStepActionLinkedinMessage
+
+type FlowSequenceStepActionDataWait {
+    minutes: Int!
+}
+
+type FlowSequenceStepActionDataEmail {
+    replayTo: String
+    subject: String!
+    bodyTemplate: String!
+}
+
+type FlowSequenceStepActionLinkedinConnectionRequest {
+    messageTemplate: String!
+}
+
+type FlowSequenceStepActionLinkedinMessage {
+    messageTemplate: String!
+}
+
+input FlowSequenceStepMergeInput {
+    id: ID
+    name: String!
+    action: FlowSequenceStepAction!
+    actionData: FlowSequenceStepInputActionData!
+}
+
+input FlowSequenceStepInputActionData {
+    wait: FlowSequenceStepInputActionDataWait
+
+    email_new: FlowSequenceStepInputActionDataEmail
+    email_reply: FlowSequenceStepInputActionDataEmail
+
+    linkedin_connection_request: FlowSequenceStepInputActionDataLinkedinConnectionRequest
+    linkedin_message: FlowSequenceStepInputActionDataLinkedinMessage
+}
+input FlowSequenceStepInputActionDataWait {
+    minutes: Int!
+}
+
+input FlowSequenceStepInputActionDataEmail {
+    stepId: String
+    subject: String!
+    bodyTemplate: String!
+}
+
+input FlowSequenceStepInputActionDataLinkedinConnectionRequest {
+    messageTemplate: String!
+}
+
+input FlowSequenceStepInputActionDataLinkedinMessage {
+    messageTemplate: String!
+}
+
 
 enum FlowSequenceStepStatus {
     INACTIVE
