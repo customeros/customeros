@@ -12,6 +12,12 @@ export const RenameOrganizationProperty = observer(() => {
   const entity = store.organizations.value.get(context.ids?.[0] as string);
   const label = `Organization - ${entity?.value?.name}`;
   const property = context.property as 'name' | 'website';
+  const [name, setName] = useState(() => defaultValue ?? '');
+
+  const handleClose = () => {
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.setType('OrganizationCommands');
+  };
 
   const handleSelect = () => {
     if (!context.ids?.[0]) return;
@@ -19,13 +25,18 @@ export const RenameOrganizationProperty = observer(() => {
 
     if (!entity || !property) return;
 
+    if (!name.trim()?.length) {
+      handleClose();
+
+      return;
+    }
+
     entity?.update((value) => {
       value[property] = name;
 
       return value;
     });
-    store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('OrganizationCommands');
+    handleClose();
   };
 
   const defaultValue = match({ property })
@@ -37,8 +48,6 @@ export const RenameOrganizationProperty = observer(() => {
     .with({ property: 'name' }, () => 'Rename organization...')
     .with({ property: 'website' }, () => 'Edit website')
     .otherwise(() => '');
-
-  const [name, setName] = useState(() => defaultValue ?? '');
 
   return (
     <Command label={`Rename ${context.property}`}>

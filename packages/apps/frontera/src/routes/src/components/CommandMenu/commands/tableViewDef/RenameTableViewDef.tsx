@@ -16,13 +16,23 @@ export const RenameTableViewDef = observer(() => {
 
   const label = `View - ${tableViewName}`;
 
+  const handleClose = () => {
+    store.ui.commandMenu.setOpen(false);
+  };
+
   const handleSelect = () => {
+    if (!value.trim()?.length) {
+      handleClose();
+
+      return;
+    }
+
     tableViewDef?.update((opp) => {
       opp.name = value;
 
       return opp;
     });
-    store.ui.commandMenu.setOpen(false);
+    handleClose();
   };
 
   return (

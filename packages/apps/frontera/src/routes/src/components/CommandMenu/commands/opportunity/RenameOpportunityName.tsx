@@ -14,14 +14,23 @@ export const RenameOpportunityName = observer(() => {
 
   const label = `Opportunity - ${opportunity?.value.name}`;
 
+  const handleClose = () => {
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.setType('OpportunityCommands');
+  };
+
   const handleSelect = () => {
+    if (!value.trim()?.length) {
+      handleClose();
+
+      return;
+    }
+
     opportunity?.update((opp) => {
       opp.name = value;
 
       return opp;
     });
-    store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('OpportunityCommands');
   };
 
   return (
