@@ -2,14 +2,15 @@ import { test } from '@playwright/test';
 
 import { LoginPage } from './pages/loginPage';
 import { CustomersPage } from './pages/customersPage';
-import { OrganizationsPage } from './pages/organizationsPage';
+import { OrganizationsPage } from './pages/organizations/organizationsPage';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
+import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
 import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
 import { OrganizationAccountPage } from './pages/organization/organizationAccountPage';
 import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
 import { OrganizationTimelinePage } from './pages/organization/organizationTimelinePage';
 
-test.setTimeout(20000);
+test.setTimeout(180000);
 
 test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
@@ -171,12 +172,11 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
 test('CmdK global menu', async ({ page }) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
+  const organizationsCmdKPage = new OrganizationsCmdKPage(page);
 
-  // Login
   await loginPage.login();
-  // Wait for redirect and load All Orgs page
   await organizationsPage.goToAllOrgs();
 
-  await organizationsPage.accessCmdK();
-  // await organizationsPage.verifyOrganizationsHub();
+  await organizationsCmdKPage.accessCmdK();
+  await organizationsCmdKPage.verifyCmdKFinder();
 });

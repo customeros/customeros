@@ -8,7 +8,7 @@ import {
   createResponsePromise,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
-} from '../helper';
+} from '../../helper';
 
 export class OrganizationsPage {
   private page: Page;
@@ -53,16 +53,6 @@ export class OrganizationsPage {
     'button[data-test="org-actions-confirm-archive"]';
 
   // private finder = 'div[data-test="search-org"]';
-  private organizationsHub = 'div[data-test="organization-hub"]';
-  private organizationsHubSpan = 'div[data-test="organization-hub"] span';
-  private organizationHubInput = 'input[data-test="organization-hub-input"]';
-  // private organizationHubNavigate =
-  //   'div[data-test="organization-hub-navigate"]';
-  private organizationHubAddNewOrgs =
-    'div[data-test="organization-hub-add-new-orgs"]';
-  private organizationHubGt = 'div[data-test="organization-hub-gt"]';
-  private organizationHubGo = 'div[data-test="organization-hub-go"]';
-  private organizationHubGc = 'div[data-test="organization-hub-gc"]';
 
   constructor(page: Page) {
     this.page = page;
@@ -399,107 +389,5 @@ export class OrganizationsPage {
     await clickLocatorsThatAreVisible(this.page, this.orgActionsConfirmArchive);
 
     await Promise.all([responsePromise]);
-  }
-
-  async accessCmdK() {
-    const isMac = process.platform === 'darwin';
-
-    if (isMac) {
-      await this.page.keyboard.down('Meta');
-      await this.page.keyboard.press('KeyK');
-      await this.page.keyboard.up('Meta');
-    } else {
-      await this.page.keyboard.down('Control');
-      await this.page.keyboard.press('KeyK');
-      await this.page.keyboard.up('Control');
-    }
-
-    const organizationsHub = this.page
-      .locator(this.organizationsHubSpan)
-      .first();
-
-    const organizationsHubText = await organizationsHub.textContent();
-
-    const organizationHubInput = this.page
-      .locator(this.organizationHubInput)
-      .first();
-
-    const organizationHubInputText = await organizationHubInput.getAttribute(
-      'placeholder',
-    );
-
-    const organizationHubAddNewOrgs = this.page
-      .locator(this.organizationHubAddNewOrgs)
-      .first();
-
-    const organizationHubAddNewOrgsText =
-      await organizationHubAddNewOrgs.textContent();
-
-    const navigationGroup = this.page
-      .locator(this.organizationsHub)
-      .locator('div[data-test="organization-hub-navigate"] div[role="group"]')
-      .first();
-
-    const navigationItems = await navigationGroup
-      .locator('div[cmdk-item]')
-      .all();
-
-    const organizationHubGt = this.page.locator(this.organizationHubGt);
-    const organizationHubGtText = await organizationHubGt.textContent();
-    const navigationItemTextOne = await navigationItems[0].textContent();
-
-    const organizationHubGo = this.page.locator(this.organizationHubGo);
-    const organizationHubGoText = await organizationHubGo.textContent();
-    const navigationItemTextTwo = await navigationItems[1].textContent();
-
-    const organizationHubGc = this.page.locator(this.organizationHubGc);
-    const organizationHubGcText = await organizationHubGc.textContent();
-    const navigationItemTextThree = await navigationItems[2].textContent();
-
-    // const organizationHubGo = this.page.locator(this.organizationHubGo);
-    // const organizationHubGoText = await organizationHubGo.textContent();
-    // const navigationItemTextTwo = await navigationItems[1].textContent();
-    //
-    // const organizationHubGo = this.page.locator(this.organizationHubGo);
-    // const organizationHubGoText = await organizationHubGo.textContent();
-    // const navigationItemTextTwo = await navigationItems[1].textContent();
-    //
-    // const organizationHubGo = this.page.locator(this.organizationHubGo);
-    // const organizationHubGoText = await organizationHubGo.textContent();
-    // const navigationItemTextTwo = await navigationItems[1].textContent();
-    //
-    // const organizationHubGo = this.page.locator(this.organizationHubGo);
-    // const organizationHubGoText = await organizationHubGo.textContent();
-    // const navigationItemTextTwo = await navigationItems[1].textContent();
-    //
-    // const organizationHubGo = this.page.locator(this.organizationHubGo);
-    // const organizationHubGoText = await organizationHubGo.textContent();
-    // const navigationItemTextTwo = await navigationItems[1].textContent();
-    //
-    // const organizationHubGo = this.page.locator(this.organizationHubGo);
-    // const organizationHubGoText = await organizationHubGo.textContent();
-    // const navigationItemTextTwo = await navigationItems[1].textContent();
-
-    expect(organizationsHubText.trim()).toBe('Organizations');
-    expect(organizationHubInputText.trim()).toBe('Type a command or search');
-    expect(organizationHubAddNewOrgsText.trim()).toBe(
-      'Add new organizations...',
-    );
-    expect(navigationItems).toHaveLength(9);
-    expect(organizationHubGtText.trim()).toBe(navigationItemTextOne.trim());
-    expect(organizationHubGoText.trim()).toBe(navigationItemTextTwo.trim());
-    expect(organizationHubGcText.trim()).toBe(navigationItemTextThree.trim());
-  }
-
-  async verifyOrganizationsHub() {
-    await this.page.waitForSelector(this.organizationsHubSpan, {
-      state: 'visible',
-    });
-
-    const organizationsHub = this.page.locator(this.organizationsHubSpan);
-
-    const organizationsHubText = await organizationsHub.textContent();
-
-    expect(organizationsHubText.trim()).toBe('Organizations');
   }
 }

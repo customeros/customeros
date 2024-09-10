@@ -2,7 +2,7 @@ import { chromium } from '@playwright/test';
 
 import { LoginPage } from './pages/loginPage';
 import { ContactsPage } from './pages/contactsPage';
-import { OrganizationsPage } from './pages/organizationsPage';
+import { OrganizationsPage } from './pages/organizations/organizationsPage';
 
 async function globalSetup() {
   const browser = await chromium.launch();
