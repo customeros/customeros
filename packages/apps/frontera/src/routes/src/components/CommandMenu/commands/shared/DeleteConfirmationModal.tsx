@@ -3,10 +3,10 @@ import React, { useRef, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
-import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { ContactStore } from '@store/Contacts/Contact.store';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
-import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
-import { OrganizationStore } from '@store/Organizations/Organization.store.ts';
+import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
+import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { TableIdType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
