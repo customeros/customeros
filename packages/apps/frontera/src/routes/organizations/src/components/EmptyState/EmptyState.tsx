@@ -96,7 +96,7 @@ export const EmptyState = observer(() => {
           title: 'No sequences yet',
           description:
             'Your sequences are waiting to take their first steps. Go ahead and create your first sequence.',
-          buttonLabel: 'Create sequence',
+          buttonLabel: 'New sequence',
           dataTest: 'sequence-create-new-sequence',
           onClick: () => {
             store.ui.commandMenu.setType('CreateNewSequence');

@@ -47,12 +47,7 @@ export const ChangeSequenceStatus = observer(() => {
   const status = entity?.value.status;
 
   return (
-    <Command
-      label='Change sequence status...'
-      onKeyDown={(e) => {
-        e.stopPropagation();
-      }}
-    >
+    <Command label='Change sequence status...'>
       <CommandInput
         label={label}
         placeholder='Change sequence status...'

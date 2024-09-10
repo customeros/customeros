@@ -217,8 +217,8 @@ export const flowsHelperTextMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'E.g. Aerospace CTO',
   [ColumnViewType.FlowSequenceName]: 'E.g. Education',
   [ColumnViewType.FlowSequenceStatus]: 'E.g. Active',
-  [ColumnViewType.FlowSequenceStatusUnsuccessfulCount]: 'Eg. 12/14%',
-  [ColumnViewType.FlowSequenceStatusSuccessfulCount]: 'Eg. 12/14%',
-  [ColumnViewType.FlowSequenceStatusInProgressCount]: 'Eg. 12/14%',
-  [ColumnViewType.FlowSequenceStatusPendingCount]: 'Eg. 12/14%',
+  [ColumnViewType.FlowSequenceStatusUnsuccessfulCount]: 'Eg. 12 (14%)',
+  [ColumnViewType.FlowSequenceStatusSuccessfulCount]: 'Eg. 32 (52%)',
+  [ColumnViewType.FlowSequenceStatusInProgressCount]: 'Eg. 21 (23%)',
+  [ColumnViewType.FlowSequenceStatusPendingCount]: 'Eg. 19 (19%)',
 };

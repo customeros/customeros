@@ -40,7 +40,9 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
   }
 
   toComputedArray(compute: (arr: FlowSequenceStore[]) => FlowSequenceStore[]) {
-    const arr = this.toArray();
+    const arr = this.toArray().filter(
+      (item) => item.value.status !== FlowSequenceStatus.Archived,
+    );
 
     return compute(arr as FlowSequenceStore[]);
   }

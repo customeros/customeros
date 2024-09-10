@@ -21,10 +21,6 @@ export type GetFlowSequencesQuery = {
     };
     steps: Array<{
       __typename?: 'FlowSequenceStep';
-      name: string;
-      status: Types.FlowSequenceStepStatus;
-      type: Types.FlowSequenceStepType;
-      subtype?: Types.FlowSequenceStepSubtype | null;
       metadata: { __typename?: 'Metadata'; id: string };
     }>;
   }>;
