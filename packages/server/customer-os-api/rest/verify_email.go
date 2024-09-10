@@ -29,34 +29,86 @@ import (
 const singleEmailVerificationAproxDurationInSeconds = float64(3.5)
 const threadsToVerifyBulkEmails = 6
 
+// EmailVerificationResponse represents the response returned after verifying an email address
+// @Description The response structure for email verification, providing detailed validation results.
+// @example 200 {object} EmailVerificationResponse
 type EmailVerificationResponse struct {
-	Status                string                  `json:"status"`
-	Message               string                  `json:"message,omitempty"`
-	Email                 string                  `json:"email"`
-	Deliverable           string                  `json:"deliverable"`
-	Provider              string                  `json:"provider"`
-	SecureGatewayProvider string                  `json:"secureGatewayProvider"`
-	IsRisky               bool                    `json:"isRisky"`
-	IsCatchAll            bool                    `json:"isCatchAll"`
-	Risk                  EmailVerificationRisk   `json:"risk"`
-	Syntax                EmailVerificationSyntax `json:"syntax"`
-	AlternateEmail        string                  `json:"alternateEmail"`
+	// Status indicates the status of the verification (e.g., "success" or "failure")
+	Status string `json:"status" example:"success"`
+
+	// Message contains any additional information or errors related to the verification
+	Message string `json:"message,omitempty" example:"Email verified successfully"`
+
+	// Email is the email address that was verified
+	Email string `json:"email" example:"example@example.com"`
+
+	// Deliverable indicates whether the email is deliverable (e.g., "true", "false", "unknown")
+	Deliverable string `json:"deliverable" example:"true"`
+
+	// Provider is the email service provider (e.g., Gmail, Outlook)
+	Provider string `json:"provider" example:"gmail"`
+
+	// SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint, Mimecast)
+	SecureGatewayProvider string `json:"secureGatewayProvider" example:"Proofpoint"`
+
+	// IsRisky indicates whether the email address is risky (e.g., used in spam or phishing)
+	IsRisky bool `json:"isRisky" example:"false"`
+
+	// IsCatchAll indicates if the email address is a catch-all address
+	IsCatchAll bool `json:"isCatchAll" example:"false"`
+
+	// Risk provides detailed risk factors associated with the email address
+	Risk EmailVerificationRisk `json:"risk"`
+
+	// Syntax provides details on the syntax validation of the email
+	Syntax EmailVerificationSyntax `json:"syntax"`
+
+	// AlternateEmail provides an alternate email if available
+	AlternateEmail string `json:"alternateEmail" example:"alternate@example.com"`
 }
 
+// EmailVerificationRisk provides details on potential risks associated with the email address
 type EmailVerificationRisk struct {
-	IsFirewalled    bool `json:"isFirewalled"`
-	IsRoleMailbox   bool `json:"isRoleMailbox"`
-	IsFreeProvider  bool `json:"isFreeProvider"`
-	IsMailboxFull   bool `json:"isMailboxFull"`
-	IsPrimaryDomain bool `json:"isPrimaryDomain"`
+	// IsFirewalled indicates whether the email is protected by a firewall
+	IsFirewalled bool `json:"isFirewalled" example:"false"`
+
+	// IsRoleMailbox indicates if the email belongs to a role (e.g., info@, support@)
+	IsRoleMailbox bool `json:"isRoleMailbox" example:"false"`
+
+	// IsFreeProvider indicates if the email uses a free provider like Gmail or Yahoo
+	IsFreeProvider bool `json:"isFreeProvider" example:"true"`
+
+	// IsMailboxFull indicates if the mailbox is full
+	IsMailboxFull bool `json:"isMailboxFull" example:"false"`
+
+	// IsPrimaryDomain indicates if the email belongs to a primary domain (not an alias)
+	IsPrimaryDomain bool `json:"isPrimaryDomain" example:"true"`
 }
 
+// EmailVerificationSyntax provides details on the syntax validation of the email address
 type EmailVerificationSyntax struct {
-	IsValid bool   `json:"isValid"`
-	Domain  string `json:"domain"`
-	User    string `json:"user"`
+	// IsValid indicates if the syntax of the email is valid
+	IsValid bool `json:"isValid" example:"true"`
+
+	// Domain represents the domain part of the email address
+	Domain string `json:"domain" example:"example.com"`
+
+	// User represents the local part (before the @) of the email address
+	User string `json:"user" example:"example"`
 }
 
+// @Summary Verify Email Address
+// @Description Checks the validity and various characteristics of the given email address
+// @Tags Verify API
+// @Param address query string true "Email address to verify"
+// @Param verifyCatchAll query string false "Verify catch-all domain" default(true)
+// @Success 200 {object} EmailVerificationResponse "Successful response"
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Security ApiKeyAuth
+// @Produce json
+// @Accept json
+// @Router /verify/v1/email [get]
 func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "VerifyEmailAddress", c.Request.Header)
@@ -64,7 +116,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Missing tenant context"})
+			c.JSON(http.StatusUnauthorized, ErrorResponse{Status: "error", Message: "Missing tenant context"})
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
@@ -73,7 +125,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		// Check if email address is provided
 		emailAddress := c.Query("address")
 		if emailAddress == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing address parameter"})
+			c.JSON(http.StatusBadRequest, ErrorResponse{Status: "error", Message: "Missing address parameter"})
 			return
 		}
 		span.LogKV("request.address", emailAddress)
@@ -100,11 +152,11 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		// call validation api
 		result, err := callApiValidateEmail(ctx, services, emailAddress, verifyCatchAll)
 		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: "Internal error"})
 			return
 		}
 		if result.Status != "success" {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": result.Message})
+			c.JSON(http.StatusInternalServerError, ErrorResponse{Status: "error", Message: result.Message})
 			return
 		}
 
@@ -135,6 +187,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 			AlternateEmail: result.Data.EmailData.AlternateEmail,
 		}
 
+		c.Header("Content-Type", "application/json")
 		c.JSON(http.StatusOK, emailVerificationResponse)
 	}
 }
@@ -260,16 +313,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 			return
 		}
 
-		// TODO: Store the file in S3 for logging (placeholder)
 		requestID := uuid.New().String()
-
-		// Placeholder: Store the file in S3 (actual implementation to be done later)
-		// err = services.S3.UploadFile(requestID, file)
-		// if err != nil {
-		//     logger.Errorf("Failed to upload file to S3: %v", err)
-		//     c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to store file"})
-		//     return
-		// }
 
 		// Parse the CSV file
 		reader := csv.NewReader(file)
