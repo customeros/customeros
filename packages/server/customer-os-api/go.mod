@@ -1,8 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-api
 
-go 1.21.0
+go 1.23
 
-toolchain go1.22.6
+toolchain go1.23.1
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
@@ -68,7 +68,7 @@ require (
 	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/PuerkitoBio/goquery v1.9.2 // indirect
+	github.com/PuerkitoBio/goquery v1.10.0 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect

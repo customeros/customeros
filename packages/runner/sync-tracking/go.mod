@@ -1,6 +1,8 @@
 module github.com/openline-ai/openline-customer-os/packages/runner/sync-tracking
 
-go 1.21
+go 1.23
+
+toolchain go1.23.1
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../../server/customer-os-common-module
 
@@ -34,7 +36,7 @@ require (
 	cloud.google.com/go/auth/oauth2adapt v0.2.4 // indirect
 	cloud.google.com/go/compute/metadata v0.5.0 // indirect
 	github.com/DusanKasan/parsemail v1.2.0 // indirect
-	github.com/PuerkitoBio/goquery v1.9.2 // indirect
+	github.com/PuerkitoBio/goquery v1.10.0 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/bytedance/sonic v1.11.6 // indirect

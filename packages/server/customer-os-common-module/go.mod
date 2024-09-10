@@ -1,6 +1,7 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module
 
-go 1.21
+go 1.23
+
 toolchain go1.23.1
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../customer-os-postgres-repository
