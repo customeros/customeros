@@ -25,18 +25,34 @@ export const UnlinkContactFromSequence = observer(() => {
     .otherwise(() => undefined);
 
   const handleClose = () => {
-    store.ui.commandMenu.toggle('DeleteConfirmationModal');
+    store.ui.commandMenu.toggle('UnlinkContactFromSequence');
     store.ui.commandMenu.clearCallback();
   };
 
   const handleConfirm = () => {
+    if (!context.ids?.length) return;
+
+    if (context.ids?.length > 1) {
+      store.flowSequences.unlinkContacts(context.ids);
+      handleClose();
+
+      return;
+    }
+
+    const emailId = (entity as ContactStore)?.value?.emails?.[0]?.id;
+
+    store.contacts.value
+      .get(context.ids[0])
+      ?.sequence?.unlinkContact(context.ids[0], emailId);
     handleClose();
   };
 
   const title =
     context.ids?.length > 1
-      ? `Archive ${context.ids?.length} contacts?`
-      : `Archive ${(entity as ContactStore)?.value.name}?`;
+      ? `Remove ${context.ids?.length} contacts from their sequences?`
+      : `Remove ${(entity as ContactStore)?.value.firstName} from ${
+          (entity as ContactStore)?.sequence?.value?.name
+        }?`;
 
   const description =
     context.ids?.length > 1
@@ -65,7 +81,7 @@ export const UnlinkContactFromSequence = observer(() => {
             size='sm'
             variant='outline'
             className='w-full'
-            colorScheme='error'
+            colorScheme='primary'
             ref={confirmButtonRef}
             onClick={handleConfirm}
             data-test='org-actions-confirm-archive'

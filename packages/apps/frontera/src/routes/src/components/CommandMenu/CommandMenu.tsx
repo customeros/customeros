@@ -24,6 +24,7 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
 import { ChangeBulkArrEstimate } from '@shared/components/CommandMenu/commands/opportunity/ChangeBulkArrEstimate';
+import { UnlinkContactFromSequence } from '@shared/components/CommandMenu/commands/contacts/UnlinkContactFromSequence.tsx';
 
 import {
   EditName,
@@ -91,6 +92,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   EditPhoneNumber: <EditPhoneNumber />,
   ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
   ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
+  UnlinkContactFromSequence: <UnlinkContactFromSequence />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,

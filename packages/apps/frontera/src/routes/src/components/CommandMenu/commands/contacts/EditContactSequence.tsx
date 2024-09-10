@@ -27,18 +27,13 @@ export const EditContactSequence = observer(() => {
 
     if (selectedIds?.length === 1) {
       opt.linkContact(contact.id, contact.emailId);
-
-      return;
     }
 
-    flowSequences.linkContacts(opt.id, selectedIds);
-    selectedIds.forEach((id) => {
-      const contactStore = contacts.value.get(id);
+    if (selectedIds?.length > 1) {
+      flowSequences.linkContacts(opt.id, selectedIds);
+    }
 
-      if (contactStore) {
-        opt.linkContact(contactStore.id, contactStore.emailId);
-      }
-    });
+    ui.commandMenu.setOpen(false);
   };
 
   useModKey('Enter', () => {
@@ -55,12 +50,14 @@ export const EditContactSequence = observer(() => {
       />
 
       <Command.List>
-        {flowSequences.toArray().map((flowSequence, idx) => {
-          const isSelected = false;
+        {flowSequences.toArray().map((flowSequence) => {
+          const isSelected =
+            context.ids?.length === 1 &&
+            contact?.sequence?.id === flowSequence.id;
 
           return (
             <CommandItem
-              key={idx}
+              key={flowSequence.id}
               rightAccessory={isSelected ? <Check /> : undefined}
               onSelect={() => {
                 handleSelect(flowSequence as FlowSequenceStore);

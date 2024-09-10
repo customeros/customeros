@@ -7,7 +7,6 @@ import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
 import {
-  Tag,
   Contact,
   DataSource,
   Pagination,
@@ -73,21 +72,6 @@ export class ContactsStore implements GroupStore<Contact> {
 
     return compute(arr);
   }
-
-  updateTags = (ids: string[], tags: Tag[]) => {
-    ids.forEach((id) => {
-      this.value.get(id)?.update((contact) => {
-        const contactTagIds = new Set(
-          (contact.tags ?? []).map((tag) => tag.id),
-        );
-        const filteredTags = tags.filter((tag) => !contactTagIds.has(tag.id));
-
-        contact.tags = [...(contact.tags ?? []), ...filteredTags];
-
-        return contact;
-      });
-    });
-  };
 
   archive = (ids: string[]) => {
     ids.forEach((id) => {
@@ -378,6 +362,11 @@ const CONTACTS_QUERY = gql`
         metadata {
           id
         }
+        sequences {
+          metadata {
+            id
+          }
+        }
         tags {
           metadata {
             id
@@ -457,6 +446,7 @@ const CONTACTS_QUERY = gql`
             smtpSuccess
           }
         }
+
         socials {
           id
           url

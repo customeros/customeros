@@ -226,8 +226,17 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
 
     try {
       const results = await Promise.all(
-        contactIds.map((id) => {
+        contactIds.map(async (id) => {
+          const contactStore = this.root.contacts.value.get(id);
           const emailId = this.root.contacts.value.get(id)?.emailId ?? '';
+
+          if (contactStore?.sequence) {
+            await this.service.unlinkContact({
+              sequenceId: contactStore.sequence.id,
+              contactId: id,
+              emailId,
+            });
+          }
 
           return this.service.linkContact({
             sequenceId,
@@ -244,7 +253,7 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
 
       runInAction(() => {
         if (successfulIds.length > 0) {
-          this.root.contacts.sync({ action: 'INVALIDATE', ids: successfulIds });
+          this.root.contacts.sync({ action: 'INVALIDATE', ids: contactIds });
           this.root.ui.toastSuccess(
             `${successfulIds.length} contacts added to '${
               this.value.get(sequenceId)?.value?.name
@@ -264,13 +273,17 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
     }
   };
 
-  public unlinkContacts = async (sequenceId: string, contactIds: string[]) => {
+  public unlinkContacts = async (contactIds: string[]) => {
     this.isLoading = true;
 
     try {
       const results = await Promise.all(
         contactIds.map((id) => {
-          const emailId = this.root.contacts.value.get(id)?.emailId ?? '';
+          const contactStore = this.root.contacts.value.get(id);
+          const emailId = contactStore?.emailId ?? '';
+          const sequenceId = contactStore?.sequence?.id;
+
+          if (!sequenceId) return false;
 
           return this.service.unlinkContact({
             sequenceId,
@@ -281,8 +294,7 @@ export class FlowSequencesStore implements GroupStore<FlowSequence> {
       );
 
       const resultsData = results.map(
-        ({ flow_sequence_UnlinkContact }) =>
-          flow_sequence_UnlinkContact?.result,
+        (result) => result && result?.flow_sequence_UnlinkContact?.result,
       );
 
       runInAction(() => {

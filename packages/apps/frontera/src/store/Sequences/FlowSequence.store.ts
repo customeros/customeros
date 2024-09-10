@@ -70,11 +70,20 @@ export class FlowSequenceStore implements Store<FlowSequence> {
       });
   }
 
-  public linkContact = (contactId: string, emailId: string) => {
+  public linkContact = async (contactId: string, emailId: string) => {
     this.isLoading = true;
 
     try {
-      this.service.linkContact({
+      const contactStore = this.root.contacts.value.get(contactId);
+
+      if (contactStore?.sequence) {
+        await this.service.unlinkContact({
+          sequenceId: contactStore.sequence.id,
+          contactId,
+          emailId,
+        });
+      }
+      await this.service.linkContact({
         sequenceId: this.id,
         contactId,
         emailId,
@@ -101,11 +110,11 @@ export class FlowSequenceStore implements Store<FlowSequence> {
     }
   };
 
-  public unlinkContact = (contactId: string, emailId: string) => {
+  public unlinkContact = async (contactId: string, emailId: string) => {
     this.isLoading = true;
 
     try {
-      this.service.unlinkContact({
+      await this.service.unlinkContact({
         sequenceId: this.id,
         contactId,
         emailId,

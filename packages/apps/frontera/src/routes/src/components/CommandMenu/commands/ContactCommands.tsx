@@ -133,14 +133,18 @@ export const ContactCommands = observer(() => {
         >
           Edit time zone...
         </CommandItem>
-        <CommandItem
-          leftAccessory={<Shuffle01 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('UnlinkContactFromSequence');
-          }}
-        >
-          Remove from sequence
-        </CommandItem>
+
+        {contact?.sequence?.value?.name !== undefined && (
+          <CommandItem
+            leftAccessory={<Shuffle01 />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('UnlinkContactFromSequence');
+            }}
+          >
+            Remove from sequence
+          </CommandItem>
+        )}
+
         <CommandItem
           leftAccessory={<Archive />}
           keywords={contactKeywords.archive_contact}
