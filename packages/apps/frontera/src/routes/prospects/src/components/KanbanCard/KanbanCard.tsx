@@ -132,7 +132,7 @@ export const KanbanCard = observer(
           {
             '!shadow-lg cursor-grabbing': snapshot?.isDragging,
             'pointer-events-none': noPointerEvents,
-            'bg-gray-50 border-gray-400': isFocused,
+            'border-gray-400': isFocused,
           },
         )}
       >
