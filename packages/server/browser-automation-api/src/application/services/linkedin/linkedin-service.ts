@@ -6,9 +6,9 @@ import { LinkedinAutomationService } from "@/infrastructure/scraper/services/lin
 
 type LinkedinServiceMethodOptions = {
   dryRun?: boolean;
-  onStart?: () => void;
-  onSuccess?: () => void;
-  onError?: (err: StandardError) => void;
+  onStart?: () => Promise<void>;
+  onSuccess?: () => Promise<void>;
+  onError?: (err: StandardError) => Promise<void>;
 };
 
 export class LinkedinService {
@@ -31,29 +31,30 @@ export class LinkedinService {
     options?: LinkedinServiceMethodOptions,
   ) {
     try {
-      options?.onStart?.();
+      await options?.onStart?.();
       await this.linkedinAutomationService.sendConenctionInvite(
         profileUrl,
         message,
-        options,
+        { dryRun: options?.dryRun },
       );
-      options?.onSuccess?.();
+      await options?.onSuccess?.();
     } catch (err) {
-      LinkedinService.handleError(err, (error) => {
-        options?.onError?.(error);
+      LinkedinService.handleError(err, async (error) => {
+        await options?.onError?.(error);
       });
     }
   }
 
   async scrapeConnections(options?: LinkedinServiceMethodOptions) {
     try {
-      options?.onStart?.();
+      await options?.onStart?.();
       const result = await this.linkedinAutomationService.getConnections();
-      options?.onSuccess?.();
+      await options?.onSuccess?.();
+
       return result;
     } catch (err) {
-      LinkedinService.handleError(err, (error) => {
-        options?.onError?.(error);
+      LinkedinService.handleError(err, async (error) => {
+        await options?.onError?.(error);
       });
     }
   }
@@ -64,20 +65,24 @@ export class LinkedinService {
     options?: LinkedinServiceMethodOptions,
   ) {
     try {
-      options?.onStart?.();
+      await options?.onStart?.();
       await this.linkedinAutomationService.sendMessageToConnection(
         profileUrl,
         message,
+        { dryRun: options?.dryRun },
       );
-      options?.onSuccess?.();
+      await options?.onSuccess?.();
     } catch (err) {
-      LinkedinService.handleError(err, (error) => {
-        options?.onError?.(error);
+      LinkedinService.handleError(err, async (error) => {
+        await options?.onError?.(error);
       });
     }
   }
 
-  private static handleError(arr: unknown, cb?: (err: StandardError) => void) {
+  private static async handleError(
+    arr: unknown,
+    cb?: (err: StandardError) => void,
+  ) {
     const error = ErrorParser.parse(arr);
     logger.error("Error in LinkedinService", {
       error: error.message,

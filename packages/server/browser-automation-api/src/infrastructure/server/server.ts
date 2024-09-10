@@ -21,13 +21,21 @@ export class Server {
     );
 
     this.server = this.instance.listen(this.port, () => {
-      logger.info(`Server is running on port ${this.port}`);
+      logger.info(`running on port ${this.port}.`, {
+        source: "Server",
+      });
     });
   }
 
-  public stop() {
-    this.server.close(() => {
-      console.log("Server has stopped");
+  public stop(onClose?: () => void | Promise<void>) {
+    logger.info("Gracefully stopping http router.", {
+      source: "Server",
+    });
+    this.server.close(async () => {
+      logger.info("http router stopped.", {
+        source: "Server",
+      });
+      await onClose?.();
     });
   }
 }

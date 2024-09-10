@@ -17,7 +17,7 @@ import { BrowserAutomationRunResultsRepository } from "@/infrastructure/persista
 
 export class ScheduleService {
   private static instance: ScheduleService;
-  private scheduler: Scheduler = Scheduler.getInstance();
+  public scheduler: Scheduler = Scheduler.getInstance();
   private browserConfigsRepository = new BrowserConfigsRepository();
   private browserAutomationRunsRepository =
     new BrowserAutomationRunsRepository();
@@ -72,7 +72,10 @@ export class ScheduleService {
 
     if (!browserConfig) {
       logger.warn(
-        `Failed to find browser config with id: ${browserAutomationRun.browserConfigId}`,
+        `Failed to find browser config with id: ${browserAutomationRun.browserConfigId}.`,
+        {
+          source: "ScheduleService",
+        },
       );
       return;
     }
@@ -83,7 +86,10 @@ export class ScheduleService {
 
     if (!assignedProxy) {
       logger.warn(
-        `Failed to find assigned proxy for user with id: ${browserConfig.userId}`,
+        `Failed to find assigned proxy for user with id: ${browserConfig.userId}.`,
+        {
+          source: "ScheduleService",
+        },
       );
       return;
     }
@@ -93,7 +99,12 @@ export class ScheduleService {
     );
 
     if (!proxy) {
-      logger.warn(`Failed to find proxy with id: ${assignedProxy.proxyPoolId}`);
+      logger.warn(
+        `Failed to find proxy with id: ${assignedProxy.proxyPoolId}.`,
+        {
+          source: "ScheduleService",
+        },
+      );
       return;
     }
 
@@ -110,14 +121,16 @@ export class ScheduleService {
     );
 
     if (!jobParams) {
-      logger.warn("Failed to create job params for automation run.");
+      logger.warn("Failed to create job params for automation run.", {
+        source: "ScheduleService",
+      });
       return;
     }
 
     this.scheduler.schedule(browserAutomationRun.id, jobParams);
   }
 
-  private async getUnscheduledRuns() {
+  private async getUnscheduledRuns(completeTick: () => void) {
     try {
       const browserAutomationRuns =
         await this.browserAutomationRunsRepository.selectAllScheduled();
@@ -126,7 +139,9 @@ export class ScheduleService {
         return;
       }
 
-      logger.info("Found scheduled runs. Queuing them for execution.");
+      logger.info("Found scheduled runs, queuing them for execution.", {
+        source: "ScheduleService",
+      });
 
       browserAutomationRuns?.forEach((browserAutomationRun) => {
         const run = new BrowserAutomationRun(browserAutomationRun);
@@ -134,11 +149,15 @@ export class ScheduleService {
       });
     } catch (err) {
       ScheduleService.handleError(err);
+    } finally {
+      completeTick();
     }
   }
 
   public async pollBrowserAutomationRuns() {
-    logger.info("Browser automation poll-worker started.");
+    logger.info("Browser automation poll-worker started.", {
+      source: "ScheduleService",
+    });
     this.scheduler.schedule("poll-worker", {
       cronTime: "*/20 * * * * *",
       onTick: this.getUnscheduledRuns,
@@ -153,5 +172,19 @@ export class ScheduleService {
       details: error.details,
     });
     throw error;
+  }
+
+  public async shutdown() {
+    try {
+      const isStopped = await this.scheduler.stopJobs();
+      if (isStopped) {
+        logger.info("All jobs have been stopped", {
+          source: "ScheduleService",
+        });
+        return true;
+      }
+    } catch (err) {
+      ScheduleService.handleError(err);
+    }
   }
 }
