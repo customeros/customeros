@@ -15,6 +15,7 @@ export const ContactBulkCommands = observer(() => {
   const store = useStore();
   const selectedIds = store.ui.commandMenu.context.ids;
   const label = `${selectedIds?.length} contacts`;
+  const contactStores = selectedIds.map((e) => store.contacts.value.get(e));
 
   return (
     <CommandsContainer label={label}>
@@ -63,14 +64,18 @@ export const ContactBulkCommands = observer(() => {
         >
           Edit time zone...
         </CommandItem>
-        <CommandItem
-          leftAccessory={<Shuffle01 />}
-          onSelect={() => {
-            store.ui.commandMenu.setType('UnlinkContactFromSequence');
-          }}
-        >
-          Remove from sequence
-        </CommandItem>
+
+        {contactStores.some((contact) => contact?.sequence !== undefined) && (
+          <CommandItem
+            leftAccessory={<Shuffle01 />}
+            onSelect={() => {
+              store.ui.commandMenu.setType('UnlinkContactFromSequence');
+            }}
+          >
+            Remove from sequence
+          </CommandItem>
+        )}
+
         <CommandItem
           leftAccessory={<Archive />}
           keywords={contactKeywords.archive_contact}
