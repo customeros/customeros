@@ -187,7 +187,7 @@ export class OrganizationsCmdKPage {
     ]);
   }
 
-  async openCmdK() {
+  private async openCmdK() {
     const isMac = process.platform === 'darwin';
 
     if (isMac) {

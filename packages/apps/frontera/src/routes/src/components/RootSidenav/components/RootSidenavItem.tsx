@@ -70,6 +70,7 @@ export const RootSidenavItem = observer(
         className={`w-full justify-start px-3 text-gray-700 hover:bg-grayModern-100 *:hover:text-gray-700  group focus:shadow-EditableSideNavItemFocus mb-[2px] ${dynamicClasses}`}
       >
         <div
+          aria-selected={isActive}
           className={cn(
             'w-full text-justify overflow-hidden overflow-ellipsis',
           )}
