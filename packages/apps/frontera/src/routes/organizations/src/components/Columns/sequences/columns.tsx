@@ -60,10 +60,7 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <SequenceNameCell
-        unknownText='Unnamed'
-        text={props.row?.original?.value?.name ?? ''}
-      />
+      <SequenceNameCell id={props.row?.original?.value?.metadata?.id ?? ''} />
     ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),

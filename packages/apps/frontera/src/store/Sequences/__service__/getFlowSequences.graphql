@@ -18,10 +18,6 @@ query getFlowSequences {
       metadata {
         id
       }
-      name
-      status
-      type
-      subtype
     }
   }
 }

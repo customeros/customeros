@@ -18,7 +18,7 @@ export const CreateSequenceButton = observer(() => {
       leftIcon={<Plus />}
       onClick={handleCreateSequence}
     >
-      Create sequence
+      New sequence
     </Button>
   );
 });

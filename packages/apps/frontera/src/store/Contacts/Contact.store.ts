@@ -591,6 +591,7 @@ const getDefaultValue = (): Contact => ({
     totalAvailable: 0,
   },
   socials: [],
+  sequences: [],
   timezone: '',
   source: DataSource.Openline,
   sourceOfTruth: DataSource.Openline,

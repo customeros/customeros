@@ -305,7 +305,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       return computed;
     }
 
-    return arr;
+    return arr.filter((e) => e.value.status !== 'ARCHIVED');
   });
 
   const opportunityData = store.opportunities.toComputedArray((arr) => {
