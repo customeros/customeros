@@ -9,7 +9,7 @@ import { OrganizationAccountPage } from './pages/organization/organizationAccoun
 import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
 import { OrganizationTimelinePage } from './pages/organization/organizationTimelinePage';
 
-test.setTimeout(180000);
+test.setTimeout(20000);
 
 test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
@@ -19,7 +19,7 @@ test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -52,7 +52,7 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -81,7 +81,7 @@ test('Create People entry in an Organization', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -108,7 +108,7 @@ test('Create Timeline entries in an Organization', async ({
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -136,7 +136,7 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -166,4 +166,17 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   // Delete a contract
   await organizationAccountPage.deleteContract(1);
   await organizationAccountPage.checkContractsCount(1);
+});
+
+test('CmdK global menu', async ({ page }) => {
+  const loginPage = new LoginPage(page);
+  const organizationsPage = new OrganizationsPage(page);
+
+  // Login
+  await loginPage.login();
+  // Wait for redirect and load All Orgs page
+  await organizationsPage.goToAllOrgs();
+
+  await organizationsPage.accessCmdK();
+  // await organizationsPage.verifyOrganizationsHub();
 });

@@ -15,7 +15,7 @@ async function globalSetup() {
   await loginPage.login();
 
   // Archive organizations
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   let isSelectAllOrgsClicked = false;
 
@@ -48,7 +48,7 @@ async function globalSetup() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Create initial organization
   await organizationsPage.addInitialOrganization();

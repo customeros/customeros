@@ -105,6 +105,7 @@ export const GlobalSharedCommands = observer(
         </CommandItem>
 
         <CommandItem
+          dataTest={`${dataTest}-gz`}
           leftAccessory={<ArrowNarrowRight />}
           keywords={navigationKeywords.go_to_address_book}
           rightAccessory={<KeyboardShortcut shortcut='Z' />}
@@ -113,6 +114,7 @@ export const GlobalSharedCommands = observer(
           Go to Organizations
         </CommandItem>
         <CommandItem
+          dataTest={`${dataTest}-gn`}
           leftAccessory={<ArrowNarrowRight />}
           keywords={navigationKeywords.go_to_address_book}
           rightAccessory={<KeyboardShortcut shortcut='N' />}
@@ -122,6 +124,7 @@ export const GlobalSharedCommands = observer(
         </CommandItem>
 
         <CommandItem
+          dataTest={`${dataTest}-gi`}
           leftAccessory={<ArrowNarrowRight />}
           rightAccessory={<KeyboardShortcut shortcut='I' />}
           keywords={navigationKeywords.go_to_scheduled_invoices}
@@ -130,6 +133,7 @@ export const GlobalSharedCommands = observer(
           Go to Invoices
         </CommandItem>
         <CommandItem
+          dataTest={`${dataTest}-gr`}
           leftAccessory={<ArrowNarrowRight />}
           keywords={navigationKeywords.go_to_contracts}
           rightAccessory={<KeyboardShortcut shortcut='R' />}
@@ -138,6 +142,7 @@ export const GlobalSharedCommands = observer(
           Go to Contracts
         </CommandItem>
         <CommandItem
+          dataTest={`${dataTest}-gs`}
           leftAccessory={<ArrowNarrowRight />}
           onSelect={() => handleGoTo('/settings')}
           keywords={navigationKeywords.go_to_opportunities}
@@ -146,6 +151,7 @@ export const GlobalSharedCommands = observer(
           Go to Settings
         </CommandItem>
         <CommandItem
+          dataTest={`${dataTest}-gd`}
           leftAccessory={<ArrowNarrowRight />}
           onSelect={() => handleGoTo('/customer-map')}
           keywords={navigationKeywords.go_to_customer_map}
