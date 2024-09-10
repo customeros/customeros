@@ -40,6 +40,8 @@ export const EditContactSequence = observer(() => {
     ui.commandMenu.setOpen(false);
   });
 
+  const sequenceOptions = flowSequences.toComputedArray((arr) => arr);
+
   return (
     <Command label='Change or add to sequence'>
       <CommandInput
@@ -50,7 +52,7 @@ export const EditContactSequence = observer(() => {
       />
 
       <Command.List>
-        {flowSequences.toArray().map((flowSequence) => {
+        {sequenceOptions.map((flowSequence) => {
           const isSelected =
             context.ids?.length === 1 &&
             contact?.sequence?.id === flowSequence.id;
@@ -63,7 +65,7 @@ export const EditContactSequence = observer(() => {
                 handleSelect(flowSequence as FlowSequenceStore);
               }}
             >
-              {flowSequence.value.name}
+              {flowSequence.value.name ?? 'Unnamed'}
             </CommandItem>
           );
         })}
