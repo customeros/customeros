@@ -113,7 +113,7 @@ export class BrowserAutomationRun {
           cronTime: "* * * * * *",
           start: true,
           runOnce: true,
-          onTick: async () => {
+          onTick: async (completeTick) => {
             await linkedinService.sendMessage(
               payload?.profileUrl,
               payload?.message,
@@ -150,9 +150,11 @@ export class BrowserAutomationRun {
                   logger.error("Failed to send message", {
                     profileUrl: payload?.profileUrl,
                   });
+                  completeTick();
                 },
               },
             );
+            completeTick();
           },
         };
       }
@@ -163,7 +165,7 @@ export class BrowserAutomationRun {
           cronTime: "* * * * * *",
           start: true,
           runOnce: true,
-          onTick: async () =>
+          onTick: async (completeTick) => {
             await linkedinService.sendInvite(
               payload?.profileUrl,
               payload?.message,
@@ -200,9 +202,12 @@ export class BrowserAutomationRun {
                   logger.error("Failed to send connection invite", {
                     profileUrl: payload?.profileUrl,
                   });
+                  completeTick();
                 },
               },
-            ),
+            );
+            completeTick();
+          },
         };
       }
       case "FIND_CONNECTIONS": {
@@ -212,7 +217,7 @@ export class BrowserAutomationRun {
           cronTime: "0 0 0 * * *",
           start: true,
           runOnce: true,
-          onTick: async () => {
+          onTick: async (completeTick) => {
             await linkedinService.scrapeConnections({
               dryRun: payload?.dryRun,
               onStart: async () => {
@@ -226,8 +231,10 @@ export class BrowserAutomationRun {
               onError: async () => {
                 this.updateStatus("FAILED", automationRepository);
                 logger.error("Failed to scrape connections");
+                completeTick();
               },
             });
+            completeTick();
           },
         };
       }

@@ -48,46 +48,51 @@ export class Browser {
   }
 
   private async init(proxyConfig: string) {
-    if (!this.browser) {
-      try {
-        if (this.debug) {
-          this.browser = await chromium.launch({
-            headless: false,
-          });
-        } else {
-          if (!apiKey || !bcatUrl) {
-            throw new StandardError({
-              code: "INTERNAL_ERROR",
-              message: "Browsercat API key or url is not provided",
-              severity: "critical",
+    return new Promise<void>(async (resolve, reject) => {
+      if (!this.browser) {
+        try {
+          if (this.debug) {
+            this.browser = await chromium.launch({
+              headless: false,
             });
+          } else {
+            if (!apiKey || !bcatUrl) {
+              throw new StandardError({
+                code: "INTERNAL_ERROR",
+                message: "Browsercat API key or url is not provided",
+                severity: "critical",
+              });
+            }
+
+            logger.info("Connecting to Browsercat");
+            const browser = await chromium.connect(bcatUrl, {
+              headers: {
+                "api-key": apiKey,
+                "browsercat-opts": proxyConfig,
+              },
+            });
+            this.browser = browser;
           }
-
-          logger.info("Connecting to Browsercat");
-          const browser = await chromium.connect(bcatUrl, {
-            headers: {
-              "api-key": apiKey,
-              "browsercat-opts": proxyConfig,
-            },
+          logger.info("Browser initialized successfully");
+          resolve();
+        } catch (err) {
+          const error = ErrorParser.parse(err);
+          logger.error("Error in Browser", {
+            error: error.message,
+            details: error.details,
           });
-          this.browser = browser;
-        }
-        logger.info("Browser initialized successfully");
-      } catch (err) {
-        const error = ErrorParser.parse(err);
-        logger.error("Error in Browser", {
-          error: error.message,
-          details: error.details,
-        });
 
-        throw new StandardError({
-          code: "EXTERNAL_ERROR",
-          message: `Failed to initialize the browser.`,
-          details: error.details,
-          severity: "critical",
-        });
+          reject(
+            new StandardError({
+              code: "EXTERNAL_ERROR",
+              message: `Failed to initialize the browser.`,
+              details: error.details,
+              severity: "critical",
+            }),
+          );
+        }
       }
-    }
+    });
   }
 
   public async getPage(): Promise<Page> {
