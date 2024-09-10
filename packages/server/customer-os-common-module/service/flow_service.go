@@ -30,8 +30,7 @@ type FlowService interface {
 
 	FlowSequenceStepGetList(ctx context.Context, sequenceIds []string) (*neo4jentity.FlowSequenceStepEntities, error)
 	FlowSequenceStepGetById(ctx context.Context, id string) (*neo4jentity.FlowSequenceStepEntity, error)
-	FlowSequenceStepCreate(ctx context.Context, sequenceId string, entity *neo4jentity.FlowSequenceStepEntity) (*neo4jentity.FlowSequenceStepEntity, error)
-	FlowSequenceStepUpdate(ctx context.Context, entity *neo4jentity.FlowSequenceStepEntity) (*neo4jentity.FlowSequenceStepEntity, error)
+	FlowSequenceStepMerge(ctx context.Context, sequenceId string, entity *neo4jentity.FlowSequenceStepEntity) (*neo4jentity.FlowSequenceStepEntity, error)
 	FlowSequenceStepChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStepStatus) (*neo4jentity.FlowSequenceStepEntity, error)
 
 	FlowSequenceContactGetList(ctx context.Context, sequenceIds []string) (*neo4jentity.FlowSequenceContactEntities, error)
@@ -396,24 +395,51 @@ func (s *flowService) FlowSequenceStepGetById(ctx context.Context, id string) (*
 	return mapper.MapDbNodeToFlowSequenceStepEntity(node), nil
 }
 
-func (s *flowService) FlowSequenceStepCreate(ctx context.Context, sequenceId string, input *neo4jentity.FlowSequenceStepEntity) (*neo4jentity.FlowSequenceStepEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepCreate")
+func (s *flowService) FlowSequenceStepMerge(ctx context.Context, sequenceId string, input *neo4jentity.FlowSequenceStepEntity) (*neo4jentity.FlowSequenceStepEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepMerge")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	toStore := &neo4jentity.FlowSequenceStepEntity{}
 	var err error
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	input.Status = neo4jentity.FlowSequenceStepStatusInactive
-
-	input.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowSequence)
+	sequenceNode, err := s.FlowSequenceGetById(ctx, sequenceId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	if sequenceNode == nil {
+		tracing.TraceErr(span, errors.New("flow sequence not found"))
+		return nil, errors.New("flow sequence not found")
+	}
 
-	node, err := s.services.Neo4jRepositories.FlowSequenceStepWriteRepository.Merge(ctx, input)
+	if input.Id == "" {
+		toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowSequenceStep)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		toStore.Status = neo4jentity.FlowSequenceStepStatusInactive
+	} else {
+		toStore, err = s.FlowSequenceStepGetById(ctx, input.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if toStore == nil {
+			tracing.TraceErr(span, errors.New("flow sequence step not found"))
+			return nil, errors.New("flow sequence step not found")
+		}
+	}
+
+	toStore.Name = input.Name
+	toStore.Action = input.Action
+
+	node, err := s.services.Neo4jRepositories.FlowSequenceStepWriteRepository.Merge(ctx, toStore)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -434,37 +460,6 @@ func (s *flowService) FlowSequenceStepCreate(ctx context.Context, sequenceId str
 	}
 
 	return entity, nil
-}
-
-func (s *flowService) FlowSequenceStepUpdate(ctx context.Context, input *neo4jentity.FlowSequenceStepEntity) (*neo4jentity.FlowSequenceStepEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepUpdate")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	if input.Id == "" {
-		tracing.TraceErr(span, errors.New("id is required"))
-		return nil, errors.New("id is required")
-	}
-
-	flowSequenceStep, err := s.FlowSequenceStepGetById(ctx, input.Id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	if flowSequenceStep == nil {
-		tracing.TraceErr(span, errors.New("flow sequence step not found"))
-		return nil, errors.New("flow sequence step not found")
-	}
-
-	flowSequenceStep.Name = input.Name
-
-	node, err := s.services.Neo4jRepositories.FlowSequenceStepWriteRepository.Merge(ctx, flowSequenceStep)
-	if err != nil {
-		return nil, err
-	}
-
-	return mapper.MapDbNodeToFlowSequenceStepEntity(node), nil
 }
 
 func (s *flowService) FlowSequenceStepChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStepStatus) (*neo4jentity.FlowSequenceStepEntity, error) {

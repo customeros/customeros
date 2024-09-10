@@ -124,12 +124,12 @@ func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.Flow
 }
 
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
-func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error) {
+func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*model.Flow, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowChangeStatus", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, id, mapper.MapFlowStatusToEntity(status))
+	entity, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, id, status)
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -172,12 +172,12 @@ func (r *mutationResolver) FlowSequenceUpdate(ctx context.Context, input model.F
 }
 
 // FlowSequenceChangeStatus is the resolver for the flow_sequence_changeStatus field.
-func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status model.FlowSequenceStatus) (*model.FlowSequence, error) {
+func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStatus) (*model.FlowSequence, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceChangeStatus", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowSequenceChangeStatus(ctx, id, mapper.MapFlowSequenceStatusToEntity(status))
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceChangeStatus(ctx, id, status)
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -186,28 +186,13 @@ func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id stri
 	return mapper.MapEntityToFlowSequence(entity), nil
 }
 
-// FlowSequenceStepCreate is the resolver for the flow_sequence_step_Create field.
-func (r *mutationResolver) FlowSequenceStepCreate(ctx context.Context, sequenceID string, input model.FlowSequenceStepCreateInput) (*model.FlowSequenceStep, error) {
+// FlowSequenceStepMerge is the resolver for the flow_sequence_step_Merge field.
+func (r *mutationResolver) FlowSequenceStepMerge(ctx context.Context, sequenceID string, input model.FlowSequenceStepMergeInput) (*model.FlowSequenceStep, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepCreate", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepCreate(ctx, sequenceID, mapper.MapFlowSequenceStepCreateInputToEntity(input))
-	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "")
-		return nil, err
-	}
-	return mapper.MapEntityToFlowSequenceStep(entity), nil
-}
-
-// FlowSequenceStepUpdate is the resolver for the flow_sequence_step_Update field.
-func (r *mutationResolver) FlowSequenceStepUpdate(ctx context.Context, sequenceID string, input model.FlowSequenceStepUpdateInput) (*model.FlowSequenceStep, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-
-	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepUpdate(ctx, mapper.MapFlowSequenceStepUpdateInputToEntity(input))
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepMerge(ctx, sequenceID, mapper.MapFlowSequenceStepMergeInputToEntity(input))
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -217,12 +202,12 @@ func (r *mutationResolver) FlowSequenceStepUpdate(ctx context.Context, sequenceI
 }
 
 // FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
-func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
+func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepChangeStatus", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepChangeStatus(ctx, id, mapper.MapFlowSequenceStepStatusToEntity(status))
+	entity, err := r.Services.CommonServices.FlowService.FlowSequenceStepChangeStatus(ctx, id, status)
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")

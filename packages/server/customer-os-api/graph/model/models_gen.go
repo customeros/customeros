@@ -7,6 +7,8 @@ import (
 	"io"
 	"strconv"
 	"time"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
 type ExtensibleEntity interface {
@@ -14,6 +16,10 @@ type ExtensibleEntity interface {
 	IsExtensibleEntity()
 	GetID() string
 	GetTemplate() *EntityTemplate
+}
+
+type FlowSequenceStepActionData interface {
+	IsFlowSequenceStepActionData()
 }
 
 type InteractionEventParticipant interface {
@@ -1121,25 +1127,25 @@ type FilterItem struct {
 }
 
 type Flow struct {
-	Metadata    *Metadata       `json:"metadata"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Status      FlowStatus      `json:"status"`
-	Sequences   []*FlowSequence `json:"sequences"`
+	Metadata    *Metadata         `json:"metadata"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Status      entity.FlowStatus `json:"status"`
+	Sequences   []*FlowSequence   `json:"sequences"`
 }
 
 func (Flow) IsMetadataInterface()        {}
 func (this Flow) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequence struct {
-	Metadata    *Metadata              `json:"metadata"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Status      FlowSequenceStatus     `json:"status"`
-	Flow        *Flow                  `json:"flow"`
-	Steps       []*FlowSequenceStep    `json:"steps"`
-	Contacts    []*FlowSequenceContact `json:"contacts"`
-	Senders     []*FlowSequenceSender  `json:"senders"`
+	Metadata    *Metadata                 `json:"metadata"`
+	Name        string                    `json:"name"`
+	Description string                    `json:"description"`
+	Status      entity.FlowSequenceStatus `json:"status"`
+	Flow        *Flow                     `json:"flow"`
+	Steps       []*FlowSequenceStep       `json:"steps"`
+	Contacts    []*FlowSequenceContact    `json:"contacts"`
+	Senders     []*FlowSequenceSender     `json:"senders"`
 }
 
 func (FlowSequence) IsMetadataInterface()        {}
@@ -1170,24 +1176,73 @@ func (FlowSequenceSender) IsMetadataInterface()        {}
 func (this FlowSequenceSender) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequenceStep struct {
-	Metadata *Metadata                `json:"metadata"`
-	Name     string                   `json:"name"`
-	Status   FlowSequenceStepStatus   `json:"status"`
-	Type     FlowSequenceStepType     `json:"type"`
-	Subtype  *FlowSequenceStepSubtype `json:"subtype,omitempty"`
-	Body     string                   `json:"body"`
+	Metadata    *Metadata                     `json:"metadata"`
+	Name        string                        `json:"name"`
+	Description string                        `json:"description"`
+	Status      entity.FlowSequenceStepStatus `json:"status"`
+	Action      entity.FlowSequenceStepAction `json:"action"`
 }
 
 func (FlowSequenceStep) IsMetadataInterface()        {}
 func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
 
-type FlowSequenceStepCreateInput struct {
-	Name string `json:"name"`
+type FlowSequenceStepActionDataEmail struct {
+	ReplayTo     *string `json:"replayTo,omitempty"`
+	Subject      string  `json:"subject"`
+	BodyTemplate string  `json:"bodyTemplate"`
 }
 
-type FlowSequenceStepUpdateInput struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
+func (FlowSequenceStepActionDataEmail) IsFlowSequenceStepActionData() {}
+
+type FlowSequenceStepActionDataWait struct {
+	Minutes int `json:"minutes"`
+}
+
+func (FlowSequenceStepActionDataWait) IsFlowSequenceStepActionData() {}
+
+type FlowSequenceStepActionLinkedinConnectionRequest struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+func (FlowSequenceStepActionLinkedinConnectionRequest) IsFlowSequenceStepActionData() {}
+
+type FlowSequenceStepActionLinkedinMessage struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+func (FlowSequenceStepActionLinkedinMessage) IsFlowSequenceStepActionData() {}
+
+type FlowSequenceStepInputActionData struct {
+	Wait                      *FlowSequenceStepInputActionDataWait                      `json:"wait,omitempty"`
+	EmailNew                  *FlowSequenceStepInputActionDataEmail                     `json:"email_new,omitempty"`
+	EmailReply                *FlowSequenceStepInputActionDataEmail                     `json:"email_reply,omitempty"`
+	LinkedinConnectionRequest *FlowSequenceStepInputActionDataLinkedinConnectionRequest `json:"linkedin_connection_request,omitempty"`
+	LinkedinMessage           *FlowSequenceStepInputActionDataLinkedinMessage           `json:"linkedin_message,omitempty"`
+}
+
+type FlowSequenceStepInputActionDataEmail struct {
+	StepID       *string `json:"stepId,omitempty"`
+	Subject      string  `json:"subject"`
+	BodyTemplate string  `json:"bodyTemplate"`
+}
+
+type FlowSequenceStepInputActionDataLinkedinConnectionRequest struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+type FlowSequenceStepInputActionDataLinkedinMessage struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+type FlowSequenceStepInputActionDataWait struct {
+	Minutes int `json:"minutes"`
+}
+
+type FlowSequenceStepMergeInput struct {
+	ID         *string                          `json:"id,omitempty"`
+	Name       string                           `json:"name"`
+	Action     entity.FlowSequenceStepAction    `json:"action"`
+	ActionData *FlowSequenceStepInputActionData `json:"actionData"`
 }
 
 type FlowSequenceUpdateInput struct {
@@ -4296,223 +4351,6 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type FlowSequenceStatus string
-
-const (
-	FlowSequenceStatusInactive FlowSequenceStatus = "INACTIVE"
-	FlowSequenceStatusActive   FlowSequenceStatus = "ACTIVE"
-	FlowSequenceStatusPaused   FlowSequenceStatus = "PAUSED"
-	FlowSequenceStatusArchived FlowSequenceStatus = "ARCHIVED"
-)
-
-var AllFlowSequenceStatus = []FlowSequenceStatus{
-	FlowSequenceStatusInactive,
-	FlowSequenceStatusActive,
-	FlowSequenceStatusPaused,
-	FlowSequenceStatusArchived,
-}
-
-func (e FlowSequenceStatus) IsValid() bool {
-	switch e {
-	case FlowSequenceStatusInactive, FlowSequenceStatusActive, FlowSequenceStatusPaused, FlowSequenceStatusArchived:
-		return true
-	}
-	return false
-}
-
-func (e FlowSequenceStatus) String() string {
-	return string(e)
-}
-
-func (e *FlowSequenceStatus) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = FlowSequenceStatus(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowSequenceStatus", str)
-	}
-	return nil
-}
-
-func (e FlowSequenceStatus) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type FlowSequenceStepStatus string
-
-const (
-	FlowSequenceStepStatusInactive FlowSequenceStepStatus = "INACTIVE"
-	FlowSequenceStepStatusActive   FlowSequenceStepStatus = "ACTIVE"
-	FlowSequenceStepStatusPaused   FlowSequenceStepStatus = "PAUSED"
-	FlowSequenceStepStatusArchived FlowSequenceStepStatus = "ARCHIVED"
-)
-
-var AllFlowSequenceStepStatus = []FlowSequenceStepStatus{
-	FlowSequenceStepStatusInactive,
-	FlowSequenceStepStatusActive,
-	FlowSequenceStepStatusPaused,
-	FlowSequenceStepStatusArchived,
-}
-
-func (e FlowSequenceStepStatus) IsValid() bool {
-	switch e {
-	case FlowSequenceStepStatusInactive, FlowSequenceStepStatusActive, FlowSequenceStepStatusPaused, FlowSequenceStepStatusArchived:
-		return true
-	}
-	return false
-}
-
-func (e FlowSequenceStepStatus) String() string {
-	return string(e)
-}
-
-func (e *FlowSequenceStepStatus) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = FlowSequenceStepStatus(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowSequenceStepStatus", str)
-	}
-	return nil
-}
-
-func (e FlowSequenceStepStatus) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type FlowSequenceStepSubtype string
-
-const (
-	FlowSequenceStepSubtypeLinkedinConnectionRequest FlowSequenceStepSubtype = "LINKEDIN_CONNECTION_REQUEST"
-	FlowSequenceStepSubtypeLinkedinMessage           FlowSequenceStepSubtype = "LINKEDIN_MESSAGE"
-)
-
-var AllFlowSequenceStepSubtype = []FlowSequenceStepSubtype{
-	FlowSequenceStepSubtypeLinkedinConnectionRequest,
-	FlowSequenceStepSubtypeLinkedinMessage,
-}
-
-func (e FlowSequenceStepSubtype) IsValid() bool {
-	switch e {
-	case FlowSequenceStepSubtypeLinkedinConnectionRequest, FlowSequenceStepSubtypeLinkedinMessage:
-		return true
-	}
-	return false
-}
-
-func (e FlowSequenceStepSubtype) String() string {
-	return string(e)
-}
-
-func (e *FlowSequenceStepSubtype) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = FlowSequenceStepSubtype(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowSequenceStepSubtype", str)
-	}
-	return nil
-}
-
-func (e FlowSequenceStepSubtype) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type FlowSequenceStepType string
-
-const (
-	FlowSequenceStepTypeEmail    FlowSequenceStepType = "EMAIL"
-	FlowSequenceStepTypeLinkedin FlowSequenceStepType = "LINKEDIN"
-)
-
-var AllFlowSequenceStepType = []FlowSequenceStepType{
-	FlowSequenceStepTypeEmail,
-	FlowSequenceStepTypeLinkedin,
-}
-
-func (e FlowSequenceStepType) IsValid() bool {
-	switch e {
-	case FlowSequenceStepTypeEmail, FlowSequenceStepTypeLinkedin:
-		return true
-	}
-	return false
-}
-
-func (e FlowSequenceStepType) String() string {
-	return string(e)
-}
-
-func (e *FlowSequenceStepType) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = FlowSequenceStepType(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowSequenceStepType", str)
-	}
-	return nil
-}
-
-func (e FlowSequenceStepType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type FlowStatus string
-
-const (
-	FlowStatusInactive FlowStatus = "INACTIVE"
-	FlowStatusActive   FlowStatus = "ACTIVE"
-	FlowStatusPaused   FlowStatus = "PAUSED"
-	FlowStatusArchived FlowStatus = "ARCHIVED"
-)
-
-var AllFlowStatus = []FlowStatus{
-	FlowStatusInactive,
-	FlowStatusActive,
-	FlowStatusPaused,
-	FlowStatusArchived,
-}
-
-func (e FlowStatus) IsValid() bool {
-	switch e {
-	case FlowStatusInactive, FlowStatusActive, FlowStatusPaused, FlowStatusArchived:
-		return true
-	}
-	return false
-}
-
-func (e FlowStatus) String() string {
-	return string(e)
-}
-
-func (e *FlowStatus) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = FlowStatus(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowStatus", str)
-	}
-	return nil
-}
-
-func (e FlowStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
