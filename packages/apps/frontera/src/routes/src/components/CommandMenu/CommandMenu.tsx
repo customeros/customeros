@@ -23,8 +23,6 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import { ChangeBulkArrEstimate } from '@shared/components/CommandMenu/commands/opportunity/ChangeBulkArrEstimate';
-import { UnlinkContactFromSequence } from '@shared/components/CommandMenu/commands/contacts/UnlinkContactFromSequence.tsx';
 
 import {
   EditName,
@@ -55,12 +53,14 @@ import {
   OrganizationCommands,
   ChangeSequenceStatus,
   RenameOpportunityName,
+  ChangeBulkArrEstimate,
   ChooseOpportunityStage,
   MergeConfirmationModal,
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   AddContactViaLinkedInUrl,
   OrganizationBulkCommands,
+  UnlinkContactFromSequence,
   RenameOrganizationProperty,
   ChooseOpportunityOrganization,
   ContactEmailVerificationInfoModal,
