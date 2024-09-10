@@ -1,1 +1,0 @@
-swag init -g customer_os_api_main.go
