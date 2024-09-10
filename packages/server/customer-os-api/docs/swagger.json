@@ -1,0 +1,192 @@
+{
+    "schemes": [
+        "https"
+    ],
+    "swagger": "2.0",
+    "info": {
+        "description": "CustomerOS API for multiple services (Verify, Enrich, Orgs)",
+        "title": "CustomerOS API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "api.customeros.ai",
+    "basePath": "/",
+    "paths": {
+        "/verify/v1/email": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Checks the validity and various characteristics of the given email address",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Verify API"
+                ],
+                "summary": "Verify Email Address",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Email address to verify",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "default": "true",
+                        "description": "Verify catch-all domain",
+                        "name": "verifyCatchAll",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful response",
+                        "schema": {
+                            "$ref": "#/definitions/rest.EmailVerificationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "rest.EmailVerificationResponse": {
+            "description": "The response structure for email verification, providing detailed validation results.",
+            "type": "object",
+            "properties": {
+                "alternateEmail": {
+                    "description": "AlternateEmail provides an alternate email if available",
+                    "type": "string",
+                    "example": "alternate@example.com"
+                },
+                "deliverable": {
+                    "description": "Deliverable indicates whether the email is deliverable (e.g., \"true\", \"false\", \"unknown\")",
+                    "type": "string",
+                    "example": "true"
+                },
+                "email": {
+                    "description": "Email is the email address that was verified",
+                    "type": "string",
+                    "example": "example@example.com"
+                },
+                "isCatchAll": {
+                    "description": "IsCatchAll indicates if the email address is a catch-all address",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isRisky": {
+                    "description": "IsRisky indicates whether the email address is risky (e.g., used in spam or phishing)",
+                    "type": "boolean",
+                    "example": false
+                },
+                "message": {
+                    "description": "Message contains any additional information or errors related to the verification",
+                    "type": "string",
+                    "example": "Email verified successfully"
+                },
+                "provider": {
+                    "description": "Provider is the email service provider (e.g., Gmail, Outlook)",
+                    "type": "string",
+                    "example": "gmail"
+                },
+                "risk": {
+                    "description": "Risk provides detailed risk factors associated with the email address",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/rest.EmailVerificationRisk"
+                        }
+                    ]
+                },
+                "secureGatewayProvider": {
+                    "description": "SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint, Mimecast)",
+                    "type": "string",
+                    "example": "Proofpoint"
+                },
+                "status": {
+                    "description": "Status indicates the status of the verification (e.g., \"success\" or \"failure\")",
+                    "type": "string",
+                    "example": "success"
+                },
+                "syntax": {
+                    "description": "Syntax provides details on the syntax validation of the email",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/rest.EmailVerificationSyntax"
+                        }
+                    ]
+                }
+            }
+        },
+        "rest.EmailVerificationRisk": {
+            "type": "object",
+            "properties": {
+                "isFirewalled": {
+                    "description": "IsFirewalled indicates whether the email is protected by a firewall",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isFreeProvider": {
+                    "description": "IsFreeProvider indicates if the email uses a free provider like Gmail or Yahoo",
+                    "type": "boolean",
+                    "example": true
+                },
+                "isMailboxFull": {
+                    "description": "IsMailboxFull indicates if the mailbox is full",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isPrimaryDomain": {
+                    "description": "IsPrimaryDomain indicates if the email belongs to a primary domain (not an alias)",
+                    "type": "boolean",
+                    "example": true
+                },
+                "isRoleMailbox": {
+                    "description": "IsRoleMailbox indicates if the email belongs to a role (e.g., info@, support@)",
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "rest.EmailVerificationSyntax": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "description": "Domain represents the domain part of the email address",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "isValid": {
+                    "description": "IsValid indicates if the syntax of the email is valid",
+                    "type": "boolean",
+                    "example": true
+                },
+                "user": {
+                    "description": "User represents the local part (before the @) of the email address",
+                    "type": "string",
+                    "example": "example"
+                }
+            }
+        }
+    },
+    "securityDefinitions": {
+        "ApiKeyAuth": {
+            "type": "apiKey",
+            "name": "X-CUSTOMER-OS-API-KEY",
+            "in": "header"
+        }
+    }
+}

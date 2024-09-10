@@ -1,0 +1,146 @@
+basePath: /
+definitions:
+  rest.EmailVerificationResponse:
+    description: The response structure for email verification, providing detailed
+      validation results.
+    properties:
+      alternateEmail:
+        description: AlternateEmail provides an alternate email if available
+        example: alternate@example.com
+        type: string
+      deliverable:
+        description: Deliverable indicates whether the email is deliverable (e.g.,
+          "true", "false", "unknown")
+        example: "true"
+        type: string
+      email:
+        description: Email is the email address that was verified
+        example: example@example.com
+        type: string
+      isCatchAll:
+        description: IsCatchAll indicates if the email address is a catch-all address
+        example: false
+        type: boolean
+      isRisky:
+        description: IsRisky indicates whether the email address is risky (e.g., used
+          in spam or phishing)
+        example: false
+        type: boolean
+      message:
+        description: Message contains any additional information or errors related
+          to the verification
+        example: Email verified successfully
+        type: string
+      provider:
+        description: Provider is the email service provider (e.g., Gmail, Outlook)
+        example: gmail
+        type: string
+      risk:
+        allOf:
+        - $ref: '#/definitions/rest.EmailVerificationRisk'
+        description: Risk provides detailed risk factors associated with the email
+          address
+      secureGatewayProvider:
+        description: SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint,
+          Mimecast)
+        example: Proofpoint
+        type: string
+      status:
+        description: Status indicates the status of the verification (e.g., "success"
+          or "failure")
+        example: success
+        type: string
+      syntax:
+        allOf:
+        - $ref: '#/definitions/rest.EmailVerificationSyntax'
+        description: Syntax provides details on the syntax validation of the email
+    type: object
+  rest.EmailVerificationRisk:
+    properties:
+      isFirewalled:
+        description: IsFirewalled indicates whether the email is protected by a firewall
+        example: false
+        type: boolean
+      isFreeProvider:
+        description: IsFreeProvider indicates if the email uses a free provider like
+          Gmail or Yahoo
+        example: true
+        type: boolean
+      isMailboxFull:
+        description: IsMailboxFull indicates if the mailbox is full
+        example: false
+        type: boolean
+      isPrimaryDomain:
+        description: IsPrimaryDomain indicates if the email belongs to a primary domain
+          (not an alias)
+        example: true
+        type: boolean
+      isRoleMailbox:
+        description: IsRoleMailbox indicates if the email belongs to a role (e.g.,
+          info@, support@)
+        example: false
+        type: boolean
+    type: object
+  rest.EmailVerificationSyntax:
+    properties:
+      domain:
+        description: Domain represents the domain part of the email address
+        example: example.com
+        type: string
+      isValid:
+        description: IsValid indicates if the syntax of the email is valid
+        example: true
+        type: boolean
+      user:
+        description: User represents the local part (before the @) of the email address
+        example: example
+        type: string
+    type: object
+host: api.customeros.ai
+info:
+  contact: {}
+  description: CustomerOS API for multiple services (Verify, Enrich, Orgs)
+  title: CustomerOS API
+  version: "1.0"
+paths:
+  /verify/v1/email:
+    get:
+      consumes:
+      - application/json
+      description: Checks the validity and various characteristics of the given email
+        address
+      parameters:
+      - description: Email address to verify
+        in: query
+        name: address
+        required: true
+        type: string
+      - default: "true"
+        description: Verify catch-all domain
+        in: query
+        name: verifyCatchAll
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful response
+          schema:
+            $ref: '#/definitions/rest.EmailVerificationResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+      security:
+      - ApiKeyAuth: []
+      summary: Verify Email Address
+      tags:
+      - Verify API
+schemes:
+- https
+securityDefinitions:
+  ApiKeyAuth:
+    in: header
+    name: X-CUSTOMER-OS-API-KEY
+    type: apiKey
+swagger: "2.0"
