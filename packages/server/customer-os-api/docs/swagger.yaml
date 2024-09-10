@@ -133,7 +133,7 @@ paths:
           description: Unauthorized
       security:
       - ApiKeyAuth: []
-      summary: Verify Email Address
+      summary: Verify Single Email Address
       tags:
       - Verify API
 schemes:

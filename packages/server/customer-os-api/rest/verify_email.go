@@ -97,7 +97,7 @@ type EmailVerificationSyntax struct {
 	User string `json:"user" example:"example"`
 }
 
-// @Summary Verify Email Address
+// @Summary Verify Single Email Address
 // @Description Checks the validity and various characteristics of the given email address
 // @Tags Verify API
 // @Param address query string true "Email address to verify"
@@ -190,88 +190,6 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		c.Header("Content-Type", "application/json")
 		c.JSON(http.StatusOK, emailVerificationResponse)
 	}
-}
-
-func callApiValidateEmail(ctx context.Context, services *service.Services, emailAddress string, verifyCatchAll bool) (*validationmodel.ValidateEmailResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "callApiValidateEmail")
-	defer span.Finish()
-
-	// prepare validation api request
-	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
-		Email: emailAddress,
-		Options: validationmodel.ValidateEmailRequestOptions{
-			VerifyCatchAll: verifyCatchAll,
-		},
-	})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-		return nil, err
-	}
-	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-		return nil, err
-	}
-	// Inject span context into the HTTP request
-	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
-
-	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
-	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-		return nil, err
-	}
-	defer response.Body.Close()
-	responseBody, err := io.ReadAll(response.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		return nil, err
-	}
-
-	// if response status is 504 retry once
-	if response.StatusCode == http.StatusGatewayTimeout {
-		span.LogFields(log.Int("response.status.firstAttempt", response.StatusCode))
-		response, err = client.Do(req)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-			return nil, err
-		}
-		defer response.Body.Close()
-		responseBody, err = io.ReadAll(response.Body)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-			return nil, err
-		}
-	}
-
-	span.LogFields(log.Int("response.statusCode", response.StatusCode))
-
-	if response.StatusCode == http.StatusGatewayTimeout {
-		err = errors.New("validation api returned 504 status code")
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	var validationResponse validationmodel.ValidateEmailResponse
-	err = json.Unmarshal(responseBody, &validationResponse)
-	if err != nil {
-		span.LogFields(log.String("response.body", string(responseBody)))
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
-		return nil, err
-	}
-	if validationResponse.Data == nil {
-		tracing.LogObjectAsJson(span, "response", validationResponse)
-		err = errors.New("email validation response data is empty: " + validationResponse.InternalMessage)
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return &validationResponse, nil
 }
 
 func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc {
@@ -464,20 +382,6 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 	}
 }
 
-func calculateEstimatedCompletionTs(pendingRequests int64) int64 {
-	// Total estimated time in seconds for pending requests
-	totalTime := float64(pendingRequests) * singleEmailVerificationAproxDurationInSeconds / threadsToVerifyBulkEmails
-
-	// Add 10 seconds to account for delay between cron runs
-	totalTime += 10
-
-	// Get the current time and add the estimated time
-	estimatedCompletionTime := utils.Now().Add(time.Duration(totalTime) * time.Second)
-
-	// Return the epoch timestamp (in seconds)
-	return estimatedCompletionTime.Unix()
-}
-
 func DownloadBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
@@ -533,4 +437,100 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 		// Return the CSV content as a response
 		c.Writer.Write(*fileContent)
 	}
+}
+
+func callApiValidateEmail(ctx context.Context, services *service.Services, emailAddress string, verifyCatchAll bool) (*validationmodel.ValidateEmailResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "callApiValidateEmail")
+	defer span.Finish()
+
+	// prepare validation api request
+	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
+		Email: emailAddress,
+		Options: validationmodel.ValidateEmailRequestOptions{
+			VerifyCatchAll: verifyCatchAll,
+		},
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
+		return nil, err
+	}
+	requestBody := []byte(string(requestJSON))
+	req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
+		return nil, err
+	}
+	// Inject span context into the HTTP request
+	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
+
+	// Set the request headers
+	req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
+	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
+
+	// Make the HTTP request
+	client := &http.Client{}
+	response, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+		return nil, err
+	}
+	defer response.Body.Close()
+	responseBody, err := io.ReadAll(response.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		return nil, err
+	}
+
+	// if response status is 504 retry once
+	if response.StatusCode == http.StatusGatewayTimeout {
+		span.LogFields(log.Int("response.status.firstAttempt", response.StatusCode))
+		response, err = client.Do(req)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
+			return nil, err
+		}
+		defer response.Body.Close()
+		responseBody, err = io.ReadAll(response.Body)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+			return nil, err
+		}
+	}
+
+	span.LogFields(log.Int("response.statusCode", response.StatusCode))
+
+	if response.StatusCode == http.StatusGatewayTimeout {
+		err = errors.New("validation api returned 504 status code")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	var validationResponse validationmodel.ValidateEmailResponse
+	err = json.Unmarshal(responseBody, &validationResponse)
+	if err != nil {
+		span.LogFields(log.String("response.body", string(responseBody)))
+		tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
+		return nil, err
+	}
+	if validationResponse.Data == nil {
+		tracing.LogObjectAsJson(span, "response", validationResponse)
+		err = errors.New("email validation response data is empty: " + validationResponse.InternalMessage)
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	return &validationResponse, nil
+}
+
+func calculateEstimatedCompletionTs(pendingRequests int64) int64 {
+	// Total estimated time in seconds for pending requests
+	totalTime := float64(pendingRequests) * singleEmailVerificationAproxDurationInSeconds / threadsToVerifyBulkEmails
+
+	// Add 10 seconds to account for delay between cron runs
+	totalTime += 10
+
+	// Get the current time and add the estimated time
+	estimatedCompletionTime := utils.Now().Add(time.Duration(totalTime) * time.Second)
+
+	// Return the epoch timestamp (in seconds)
+	return estimatedCompletionTime.Unix()
 }

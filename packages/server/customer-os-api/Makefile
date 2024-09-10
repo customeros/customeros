@@ -5,8 +5,11 @@ generate:
 	go run github.com/99designs/gqlgen generate
 	cd ../customer-os-api-sdk && make generate
 
-build: generate
+build: generate swag
 	go build -v
+
+swag:
+	swag init -g customer_os_api_main.go
 
 .PHONY: test
 test:

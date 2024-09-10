@@ -32,7 +32,7 @@ const docTemplate = `{
                 "tags": [
                     "Verify API"
                 ],
-                "summary": "Verify Email Address",
+                "summary": "Verify Single Email Address",
                 "parameters": [
                     {
                         "type": "string",
