@@ -1,5 +1,62 @@
 basePath: /
 definitions:
+  rest.BulkResultsDetails:
+    description: Detailed results of the bulk email verification.
+    properties:
+      deliverable:
+        example: 950
+        type: integer
+      downloadUrl:
+        example: https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download
+        type: string
+      totalEmails:
+        example: 1000
+        type: integer
+      undeliverable:
+        example: 45
+        type: integer
+    type: object
+  rest.BulkResultsResponse:
+    description: Response structure for returning bulk email verification results
+      after processing.
+    properties:
+      estimatedCompletionTs:
+        description: Epoch timestamp
+        example: 1694030400
+        type: integer
+      fileName:
+        example: emails.csv
+        type: string
+      jobId:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      message:
+        example: Completed 1000 of 1000 emails
+        type: string
+      results:
+        $ref: '#/definitions/rest.BulkResultsDetails'
+      status:
+        example: completed
+        type: string
+    type: object
+  rest.BulkUploadResponse:
+    description: Response structure for bulk email upload, containing job ID, result
+      URL, and estimated completion time.
+    properties:
+      estimatedCompletionTs:
+        description: Epoch timestamp
+        example: 1694030400
+        type: number
+      jobId:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      message:
+        example: File uploaded successfully
+        type: string
+      resultUrl:
+        example: https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000
+        type: string
+    type: object
   rest.EmailVerificationResponse:
     description: The response structure for email verification, providing detailed
       validation results.
@@ -96,6 +153,321 @@ definitions:
         example: example
         type: string
     type: object
+  rest.EnrichPersonData:
+    description: Detailed data about a person from enrichment.
+    properties:
+      emails:
+        items:
+          $ref: '#/definitions/rest.EnrichPersonEmail'
+        type: array
+      jobs:
+        items:
+          $ref: '#/definitions/rest.EnrichPersonJob'
+        type: array
+      location:
+        $ref: '#/definitions/rest.EnrichPersonLocation'
+      name:
+        $ref: '#/definitions/rest.EnrichPersonName'
+      phoneNumbers:
+        items:
+          $ref: '#/definitions/rest.EnrichPersonPhoneNumber'
+        type: array
+      profilePic:
+        example: https://example.com/profile.jpg
+        type: string
+      social:
+        $ref: '#/definitions/rest.EnrichPersonSocial'
+    type: object
+  rest.EnrichPersonDiscord:
+    description: Discord profile details of a person.
+    properties:
+      username:
+        example: johndoe#1234
+        type: string
+    type: object
+  rest.EnrichPersonEmail:
+    description: Email details of a person.
+    properties:
+      address:
+        example: john.doe@example.com
+        type: string
+      deliverable:
+        example: "true"
+        type: string
+      isRisky:
+        example: false
+        type: boolean
+      type:
+        example: professional
+        type: string
+    type: object
+  rest.EnrichPersonGithub:
+    description: Github profile details of a person.
+    properties:
+      url:
+        example: https://github.com/johndoe
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+  rest.EnrichPersonJob:
+    description: Job details of a person.
+    properties:
+      company:
+        example: Tech Corp
+        type: string
+      companyLinkedin:
+        example: https://linkedin.com/company/techcorp
+        type: string
+      companyWebsite:
+        example: https://techcorp.com
+        type: string
+      duration:
+        $ref: '#/definitions/rest.EnrichPersonJobDuration'
+      isCurrent:
+        example: true
+        type: boolean
+      seniority:
+        example: Senior
+        type: string
+      title:
+        example: Software Engineer
+        type: string
+    type: object
+  rest.EnrichPersonJobDuration:
+    description: Job duration of a person.
+    properties:
+      endMonth:
+        example: 12
+        type: integer
+      endYear:
+        example: 2023
+        type: integer
+      startMonth:
+        example: 1
+        type: integer
+      startYear:
+        example: 2020
+        type: integer
+    type: object
+  rest.EnrichPersonLinkedIn:
+    description: LinkedIn profile details of a person.
+    properties:
+      followerCount:
+        example: 500
+        type: integer
+      id:
+        example: "123456789"
+        type: string
+      publicId:
+        example: john-doe
+        type: string
+      url:
+        example: https://linkedin.com/in/john-doe
+        type: string
+    type: object
+  rest.EnrichPersonLocation:
+    description: Location details of a person.
+    properties:
+      city:
+        example: San Francisco
+        type: string
+      country:
+        example: USA
+        type: string
+      region:
+        example: California
+        type: string
+      timezone:
+        example: PST
+        type: string
+    type: object
+  rest.EnrichPersonName:
+    description: Name details of a person.
+    properties:
+      firstName:
+        example: John
+        type: string
+      fullName:
+        example: John Doe
+        type: string
+      lastName:
+        example: Doe
+        type: string
+    type: object
+  rest.EnrichPersonPhoneNumber:
+    description: Phone number details of a person.
+    properties:
+      number:
+        example: "+1234567890"
+        type: string
+      type:
+        example: mobile
+        type: string
+    type: object
+  rest.EnrichPersonResponse:
+    description: Response structure for the person enrichment API.
+    properties:
+      data:
+        $ref: '#/definitions/rest.EnrichPersonData'
+      isComplete:
+        example: true
+        type: boolean
+      message:
+        example: Enrichment completed
+        type: string
+      pendingFields:
+        example:
+        - '["email"'
+        - ' "phone number"]'
+        items:
+          type: string
+        type: array
+      resultUrl:
+        example: https://api.customeros.ai/enrich/v1/person/results/550e8400-e29b-41d4-a716-446655440000
+        type: string
+      status:
+        example: success
+        type: string
+    type: object
+  rest.EnrichPersonSocial:
+    description: Social media details of a person.
+    properties:
+      discord:
+        $ref: '#/definitions/rest.EnrichPersonDiscord'
+      github:
+        $ref: '#/definitions/rest.EnrichPersonGithub'
+      linkedin:
+        $ref: '#/definitions/rest.EnrichPersonLinkedIn'
+      x:
+        $ref: '#/definitions/rest.EnrichPersonX'
+    type: object
+  rest.EnrichPersonX:
+    description: X (formerly Twitter) profile details of a person.
+    properties:
+      handle:
+        example: '@johndoe'
+        type: string
+      url:
+        example: https://x.com/johndoe
+        type: string
+    type: object
+  rest.IpIntelligenceGeolocation:
+    description: Geolocation data related to the IP address.
+    properties:
+      city:
+        example: Berlin
+        type: string
+      country:
+        example: Germany
+        type: string
+      countryIso:
+        example: DE
+        type: string
+      isEuropeanUnion:
+        example: true
+        type: boolean
+    type: object
+  rest.IpIntelligenceNetwork:
+    description: Network-related data for the IP address.
+    properties:
+      asn:
+        example: AS12345
+        type: string
+      domain:
+        example: isp.com
+        type: string
+      name:
+        example: ISP Name
+        type: string
+      route:
+        example: 192.168.0.0/16
+        type: string
+      type:
+        example: business
+        type: string
+    type: object
+  rest.IpIntelligenceOrganization:
+    description: Organizational data for the IP address.
+    properties:
+      domain:
+        example: company.com
+        type: string
+      linkedin:
+        example: https://linkedin.com/company/company
+        type: string
+      name:
+        example: Company Name
+        type: string
+    type: object
+  rest.IpIntelligenceResponse:
+    description: Response structure for IP intelligence lookup.
+    properties:
+      geolocation:
+        $ref: '#/definitions/rest.IpIntelligenceGeolocation'
+      ip:
+        example: 192.168.1.1
+        type: string
+      message:
+        example: No threats detected
+        type: string
+      network:
+        $ref: '#/definitions/rest.IpIntelligenceNetwork'
+      organization:
+        $ref: '#/definitions/rest.IpIntelligenceOrganization'
+      status:
+        example: success
+        type: string
+      threats:
+        $ref: '#/definitions/rest.IpIntelligenceThreats'
+      time_zone:
+        $ref: '#/definitions/rest.IpIntelligenceTimeZone'
+    type: object
+  rest.IpIntelligenceThreats:
+    description: Threat intelligence data related to the IP address.
+    properties:
+      isCloudRelay:
+        example: false
+        type: boolean
+      isDatacenter:
+        example: false
+        type: boolean
+      isMobile:
+        example: true
+        type: boolean
+      isProxy:
+        example: false
+        type: boolean
+      isTor:
+        example: false
+        type: boolean
+      isUnallocated:
+        example: true
+        type: boolean
+      isVpn:
+        example: false
+        type: boolean
+    type: object
+  rest.IpIntelligenceTimeZone:
+    description: Timezone data for the IP address.
+    properties:
+      abbr:
+        example: CET
+        type: string
+      current_time:
+        example: "2024-09-10T14:00:00+01:00"
+        type: string
+      is_dst:
+        example: true
+        type: boolean
+      name:
+        example: Europe/Berlin
+        type: string
+      offset:
+        example: "+0100"
+        type: string
+    type: object
 host: api.customeros.ai
 info:
   contact: {}
@@ -103,6 +475,80 @@ info:
   title: CustomerOS API
   version: "1.0"
 paths:
+  /enrich/v1/person:
+    get:
+      description: Enriches a person's information using LinkedIn URL, email, and
+        other optional details.
+      parameters:
+      - description: LinkedIn profile URL of the person
+        in: query
+        name: linkedinUrl
+        type: string
+      - description: Email address of the person
+        in: query
+        name: email
+        type: string
+      - description: First name of the person
+        in: query
+        name: firstName
+        type: string
+      - description: Last name of the person
+        in: query
+        name: lastName
+        type: string
+      - default: "false"
+        description: Include mobile phone number in the enrichment result
+        in: query
+        name: includeMobileNumber
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enrichment results including personal, job, and social data
+          schema:
+            $ref: '#/definitions/rest.EnrichPersonResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Enrich Person Information
+      tags:
+      - Enrichment API
+  /enrich/v1/person/results/{id}:
+    get:
+      description: Retrieves enriched person data from a temporary result based on
+        the given ID.
+      parameters:
+      - description: Temporary result ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enrichment results including personal, job, and social data
+          schema:
+            $ref: '#/definitions/rest.EnrichPersonResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Enrich Person Callback
+      tags:
+      - Enrichment API
   /verify/v1/email:
     get:
       consumes:
@@ -131,9 +577,134 @@ paths:
           description: Bad Request
         "401":
           description: Unauthorized
+        "500":
+          description: Internal Server Error
       security:
       - ApiKeyAuth: []
       summary: Verify Single Email Address
+      tags:
+      - Verify API
+  /verify/v1/email/bulk:
+    post:
+      consumes:
+      - multipart/form-data
+      description: Uploads a CSV file with email addresses for bulk verification.
+      parameters:
+      - description: CSV file containing email addresses to verify
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: The column name in the CSV that contains the email addresses
+          (optional if only one column exists)
+        in: formData
+        name: emailColumn
+        type: string
+      - default: "true"
+        description: Verify catch-all domain
+        in: formData
+        name: verifyCatchAll
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: File uploaded successfully, with job ID and result URL
+          schema:
+            $ref: '#/definitions/rest.BulkUploadResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Bulk Upload Emails for Verification
+      tags:
+      - Verify API
+  /verify/v1/email/bulk/results/{requestId}:
+    get:
+      description: Retrieves the results of bulk email verification if the processing
+        is completed.
+      parameters:
+      - description: Job ID of the bulk email verification
+        in: path
+        name: requestId
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Bulk email verification results if processing is completed
+          schema:
+            $ref: '#/definitions/rest.BulkResultsResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Get Bulk Email Verification Results
+      tags:
+      - Verify API
+  /verify/v1/email/bulk/results/{requestId}/download:
+    get:
+      description: Downloads the CSV file containing the results of bulk email verification
+        if the processing is completed.
+      parameters:
+      - description: Job ID of the bulk email verification
+        in: path
+        name: requestId
+        required: true
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: CSV file containing the results of the bulk email verification
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "404":
+          description: Not Found
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Download Bulk Email Verification Results
+      tags:
+      - Verify API
+  /verify/v1/ip:
+    get:
+      description: Retrieves threat intelligence and geolocation data for the given
+        IP address.
+      parameters:
+      - description: IP address to check
+        in: query
+        name: address
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/rest.IpIntelligenceResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Get IP Intelligence
       tags:
       - Verify API
 schemes:
