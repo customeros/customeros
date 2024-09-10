@@ -47,7 +47,7 @@ export const ContactCommands = observer(() => {
             store.ui.commandMenu.setType('EditContactSequence');
           }}
         >
-          Change or add to sequence
+          Move to sequence
         </CommandItem>
 
         {!!contact?.value?.tags?.length && (

@@ -30,15 +30,14 @@ export const ContactBulkCommands = observer(() => {
           Edit persona tag...
         </CommandItem>
 
-        {/* todo design work in progress*/}
-        {/*<CommandItem*/}
-        {/*  leftAccessory={<Shuffle01 />}*/}
-        {/*  onSelect={() => {*/}
-        {/*    store.ui.commandMenu.setType('EditContactSequence');*/}
-        {/*  }}*/}
-        {/*>*/}
-        {/*  Change or add to sequence*/}
-        {/*</CommandItem>*/}
+        <CommandItem
+          leftAccessory={<Shuffle01 />}
+          onSelect={() => {
+            store.ui.commandMenu.setType('EditContactSequence');
+          }}
+        >
+          Move to sequence
+        </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}
           keywords={contactKeywords.edit_job_title}

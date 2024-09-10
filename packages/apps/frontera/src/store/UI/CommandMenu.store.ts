@@ -45,6 +45,7 @@ export type CommandMenuType =
   | 'SequenceHub'
   | 'EditContactSequence'
   | 'UnlinkContactFromSequence'
+  | 'ConfirmBulkSequenceEdit'
   | 'ContactBulkCommands';
 
 export type Context = {
