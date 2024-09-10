@@ -97,14 +97,46 @@ type EmailVerificationSyntax struct {
 	User string `json:"user" example:"example"`
 }
 
+// BulkUploadResponse represents the response for the bulk email upload API.
+// @Description Response structure for bulk email upload, containing job ID, result URL, and estimated completion time.
+// @example 200 {object} BulkUploadResponse
+type BulkUploadResponse struct {
+	Message               string  `json:"message" example:"File uploaded successfully"`
+	JobID                 string  `json:"jobId" example:"550e8400-e29b-41d4-a716-446655440000"`
+	ResultURL             string  `json:"resultUrl" example:"https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"`
+	EstimatedCompletionTs float64 `json:"estimatedCompletionTs" example:"1694030400"` // Epoch timestamp
+}
+
+// BulkResultsResponse represents the response for the bulk email results API.
+// @Description Response structure for returning bulk email verification results after processing.
+// @example 200 {object} BulkResultsResponse
+type BulkResultsResponse struct {
+	JobID                 string              `json:"jobId" example:"550e8400-e29b-41d4-a716-446655440000"`
+	Status                string              `json:"status" example:"completed"`
+	FileName              string              `json:"fileName" example:"emails.csv"`
+	Message               string              `json:"message" example:"Completed 1000 of 1000 emails"`
+	Results               *BulkResultsDetails `json:"results"`
+	EstimatedCompletionTs int64               `json:"estimatedCompletionTs" example:"1694030400"` // Epoch timestamp
+}
+
+// BulkResultsDetails contains the details of the results of the bulk verification.
+// @Description Detailed results of the bulk email verification.
+type BulkResultsDetails struct {
+	TotalEmails   int    `json:"totalEmails" example:"1000"`
+	Deliverable   int    `json:"deliverable" example:"950"`
+	Undeliverable int    `json:"undeliverable" example:"45"`
+	DownloadURL   string `json:"downloadUrl" example:"https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download"`
+}
+
 // @Summary Verify Single Email Address
 // @Description Checks the validity and various characteristics of the given email address
 // @Tags Verify API
 // @Param address query string true "Email address to verify"
-// @Param verifyCatchAll query string false "Verify catch-all domain" default(true)
+// @Param verifyCatchAll query string false "Verify catch-all domain" default(true)"
 // @Success 200 {object} EmailVerificationResponse "Successful response"
 // @Failure 400 "Bad Request"
 // @Failure 401 "Unauthorized"
+// @Failure 500 "Internal Server Error"
 // @Security ApiKeyAuth
 // @Produce json
 // @Accept json
@@ -192,6 +224,20 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	}
 }
 
+// @Summary Bulk Upload Emails for Verification
+// @Description Uploads a CSV file with email addresses for bulk verification.
+// @Tags Verify API
+// @Param file formData file true "CSV file containing email addresses to verify"
+// @Param emailColumn formData string false "The column name in the CSV that contains the email addresses (optional if only one column exists)"
+// @Param verifyCatchAll formData string false "Verify catch-all domain" default(true)"
+// @Success 200 {object} BulkUploadResponse "File uploaded successfully, with job ID and result URL"
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Failure 500 "Internal Server Error"
+// @Security ApiKeyAuth
+// @Produce json
+// @Accept multipart/form-data
+// @Router /verify/v1/email/bulk [post]
 func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BulkUploadEmailsForVerification", c.Request.Header)
@@ -199,7 +245,11 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "Missing tenant context"})
+			c.JSON(http.StatusUnauthorized,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing tenant context",
+				})
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, tenant)
@@ -220,14 +270,22 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		file, header, err := c.Request.FormFile("file")
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Failed to read file"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Failed to read file",
+				})
 			return
 		}
 		defer file.Close()
 
 		// Validate file type
 		if header.Header.Get("Content-Type") != "text/csv" && !strings.HasSuffix(header.Filename, ".csv") {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Only CSV files are accepted"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Only CSV files are accepted",
+				})
 			return
 		}
 
@@ -237,7 +295,11 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		reader := csv.NewReader(file)
 		headers, err := reader.Read()
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Failed to parse CSV file"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Failed to parse CSV file",
+				})
 			return
 		}
 
@@ -252,13 +314,21 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 				}
 			}
 			if emailIndex == -1 {
-				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": fmt.Sprintf("Column '%s' not found", emailColumn)})
+				c.JSON(http.StatusBadRequest,
+					ErrorResponse{
+						Status:  "error",
+						Message: fmt.Sprintf("Column '%s' not found", emailColumn),
+					})
 				return
 			}
 		} else if len(headers) == 1 {
 			emailIndex = 0 // Default to first column if only one column exists
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Multiple columns found, please provide 'emailColumn' parameter"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Multiple columns found, please provide 'emailColumn' parameter",
+				})
 			return
 		}
 
@@ -272,7 +342,11 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 				break
 			}
 			if err != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Error reading CSV file"})
+				c.JSON(http.StatusBadRequest,
+					ErrorResponse{
+						Status:  "error",
+						Message: "Error reading CSV file",
+					})
 				return
 			}
 
@@ -287,7 +361,11 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		// Register the bulk request in the database
 		totalEmails := len(emails)
 		if totalEmails == 0 {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "No records found in the file"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "No records found in the file",
+				})
 			return
 		}
 
@@ -295,8 +373,10 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
 			logger.Errorf("Failed to register request: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to register bulk request"})
-			return
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Status:  "error",
+				Message: "Failed to register bulk request",
+			})
 		}
 
 		// Bulk insert email records into the database
@@ -304,7 +384,10 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
 			logger.Errorf("Failed to insert records: %v", err)
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to store email records"})
+			c.JSON(http.StatusInternalServerError, ErrorResponse{
+				Status:  "error",
+				Message: "Failed to store email records",
+			})
 			return
 		}
 
@@ -316,15 +399,27 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 		countPendingRequests = countPendingRequests + int64(totalEmails)
 
 		// Respond with success message
-		c.JSON(http.StatusOK, gin.H{
-			"message":               "File uploaded successfully",
-			"jobId":                 requestID,
-			"resultUrl":             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.Services.CustomerOsApiUrl, requestID), // Placeholder for results URL
-			"estimatedCompletionTs": calculateEstimatedCompletionTs(countPendingRequests),
-		})
+		c.JSON(http.StatusOK,
+			BulkUploadResponse{
+				Message:               "File uploaded successfully",
+				JobID:                 requestID,
+				ResultURL:             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.Services.CustomerOsApiUrl, requestID), // Placeholder for results URL
+				EstimatedCompletionTs: float64(calculateEstimatedCompletionTs(countPendingRequests)),
+			})
 	}
 }
 
+// @Summary Get Bulk Email Verification Results
+// @Description Retrieves the results of bulk email verification if the processing is completed.
+// @Tags Verify API
+// @Param requestId path string true "Job ID of the bulk email verification"
+// @Success 200 {object} BulkResultsResponse "Bulk email verification results if processing is completed"
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Failure 500 "Internal Server Error"
+// @Security ApiKeyAuth
+// @Produce json
+// @Router /verify/v1/email/bulk/results/{requestId} [get]
 func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
@@ -332,7 +427,11 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 
 		requestID := c.Param("requestId")
 		if requestID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing request ID"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing request ID",
+				})
 			return
 		}
 		span.LogKV("requestId", requestID)
@@ -341,11 +440,19 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve request"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Failed to retrieve request",
+				})
 			return
 		}
 		if bulkRequest == nil {
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Request not found"})
+			c.JSON(http.StatusNotFound,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Request not found",
+				})
 			return
 		}
 
@@ -356,32 +463,45 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 		}
 		// Check if the processing is completed
 		if bulkRequest.Status == entity.EmailValidationRequestBulkStatusProcessing {
-			c.JSON(http.StatusOK, gin.H{
-				"jobId":                 requestID,
-				"status":                "processing",
-				"message":               fmt.Sprintf("Completed %d of %d emails", bulkRequest.DeliverableEmails+bulkRequest.UndeliverableEmails, bulkRequest.TotalEmails),
-				"estimatedCompletionTs": calculateEstimatedCompletionTs(countPendingRequests),
-				"fileName":              bulkRequest.FileName,
-				"results":               nil,
-			})
+			c.JSON(http.StatusOK,
+				BulkResultsResponse{
+					Status:                "processing",
+					JobID:                 requestID,
+					FileName:              bulkRequest.FileName,
+					Message:               fmt.Sprintf("Completed %d of %d emails", bulkRequest.DeliverableEmails+bulkRequest.UndeliverableEmails, bulkRequest.TotalEmails),
+					Results:               nil,
+					EstimatedCompletionTs: calculateEstimatedCompletionTs(countPendingRequests),
+				})
 			return
 		}
 
 		// Return the results if the processing is completed
-		c.JSON(http.StatusOK, gin.H{
-			"jobId":    requestID,
-			"status":   "completed",
-			"fileName": bulkRequest.FileName,
-			"results": gin.H{
-				"totalEmails":   bulkRequest.TotalEmails,
-				"deliverable":   bulkRequest.DeliverableEmails,
-				"undeliverable": bulkRequest.UndeliverableEmails,
-				"downloadUrl":   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.Services.CustomerOsApiUrl, requestID),
+		c.JSON(http.StatusOK, BulkResultsResponse{
+			JobID:    requestID,
+			Status:   "completed",
+			FileName: bulkRequest.FileName,
+			Results: &BulkResultsDetails{
+				TotalEmails:   bulkRequest.TotalEmails,
+				Deliverable:   bulkRequest.DeliverableEmails,
+				Undeliverable: bulkRequest.UndeliverableEmails,
+				DownloadURL:   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.Services.CustomerOsApiUrl, requestID),
 			},
 		})
 	}
 }
 
+// @Summary Download Bulk Email Verification Results
+// @Description Downloads the CSV file containing the results of bulk email verification if the processing is completed.
+// @Tags Verify API
+// @Param requestId path string true "Job ID of the bulk email verification"
+// @Success 200 "CSV file containing the results of the bulk email verification"
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Security ApiKeyAuth
+// @Produce text/csv
+// @Router /verify/v1/email/bulk/results/{requestId}/download [get]
 func DownloadBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
@@ -390,7 +510,11 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 		// Extract requestID from the path parameter
 		requestID := c.Param("requestId")
 		if requestID == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing request ID"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing request ID",
+				})
 			return
 		}
 
@@ -399,11 +523,19 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 		bulkRequest, err := services.Repositories.PostgresRepositories.EmailValidationRequestBulkRepository.GetByRequestID(ctx, requestID)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to insert records"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to retrieve request"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Failed to retrieve request",
+				})
 			return
 		}
 		if bulkRequest == nil {
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Request not found"})
+			c.JSON(http.StatusNotFound,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Request not found",
+				})
 			return
 		}
 
@@ -417,14 +549,20 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 		}
 
 		if bulkRequest.FileStoreId == "" {
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "File not found"})
+			c.JSON(http.StatusNotFound,
+				ErrorResponse{
+					Status:  "error",
+					Message: "File not found"})
 			return
 		}
 
 		fileDTO, fileContent, err := services.FileStoreApiService.GetFile(bulkRequest.Tenant, bulkRequest.FileStoreId, span)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get file using file store api"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to fetch the file"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Failed to fetch the file"})
 			return
 		}
 

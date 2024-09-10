@@ -5,7 +5,7 @@ generate:
 	go run github.com/99designs/gqlgen generate
 	cd ../customer-os-api-sdk && make generate
 
-build: generate swag
+build: generate
 	go build -v
 
 swag:

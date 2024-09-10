@@ -12,6 +12,119 @@
     "host": "api.customeros.ai",
     "basePath": "/",
     "paths": {
+        "/enrich/v1/person": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Enriches a person's information using LinkedIn URL, email, and other optional details.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrichment API"
+                ],
+                "summary": "Enrich Person Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "LinkedIn profile URL of the person",
+                        "name": "linkedinUrl",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Email address of the person",
+                        "name": "email",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "First name of the person",
+                        "name": "firstName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Last name of the person",
+                        "name": "lastName",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "default": "false",
+                        "description": "Include mobile phone number in the enrichment result",
+                        "name": "includeMobileNumber",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Enrichment results including personal, job, and social data",
+                        "schema": {
+                            "$ref": "#/definitions/rest.EnrichPersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/enrich/v1/person/results/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves enriched person data from a temporary result based on the given ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrichment API"
+                ],
+                "summary": "Enrich Person Callback",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Temporary result ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Enrichment results including personal, job, and social data",
+                        "schema": {
+                            "$ref": "#/definitions/rest.EnrichPersonResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/verify/v1/email": {
             "get": {
                 "security": [
@@ -58,12 +171,278 @@
                     },
                     "401": {
                         "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/verify/v1/email/bulk": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Uploads a CSV file with email addresses for bulk verification.",
+                "consumes": [
+                    "multipart/form-data"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Verify API"
+                ],
+                "summary": "Bulk Upload Emails for Verification",
+                "parameters": [
+                    {
+                        "type": "file",
+                        "description": "CSV file containing email addresses to verify",
+                        "name": "file",
+                        "in": "formData",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "The column name in the CSV that contains the email addresses (optional if only one column exists)",
+                        "name": "emailColumn",
+                        "in": "formData"
+                    },
+                    {
+                        "type": "string",
+                        "default": "true",
+                        "description": "Verify catch-all domain",
+                        "name": "verifyCatchAll",
+                        "in": "formData"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "File uploaded successfully, with job ID and result URL",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BulkUploadResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/verify/v1/email/bulk/results/{requestId}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves the results of bulk email verification if the processing is completed.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Verify API"
+                ],
+                "summary": "Get Bulk Email Verification Results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID of the bulk email verification",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Bulk email verification results if processing is completed",
+                        "schema": {
+                            "$ref": "#/definitions/rest.BulkResultsResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/verify/v1/email/bulk/results/{requestId}/download": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Downloads the CSV file containing the results of bulk email verification if the processing is completed.",
+                "produces": [
+                    "text/csv"
+                ],
+                "tags": [
+                    "Verify API"
+                ],
+                "summary": "Download Bulk Email Verification Results",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Job ID of the bulk email verification",
+                        "name": "requestId",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "CSV file containing the results of the bulk email verification"
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Not Found"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/verify/v1/ip": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves threat intelligence and geolocation data for the given IP address.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Verify API"
+                ],
+                "summary": "Get IP Intelligence",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "IP address to check",
+                        "name": "address",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/rest.IpIntelligenceResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
                     }
                 }
             }
         }
     },
     "definitions": {
+        "rest.BulkResultsDetails": {
+            "description": "Detailed results of the bulk email verification.",
+            "type": "object",
+            "properties": {
+                "deliverable": {
+                    "type": "integer",
+                    "example": 950
+                },
+                "downloadUrl": {
+                    "type": "string",
+                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download"
+                },
+                "totalEmails": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "undeliverable": {
+                    "type": "integer",
+                    "example": 45
+                }
+            }
+        },
+        "rest.BulkResultsResponse": {
+            "description": "Response structure for returning bulk email verification results after processing.",
+            "type": "object",
+            "properties": {
+                "estimatedCompletionTs": {
+                    "description": "Epoch timestamp",
+                    "type": "integer",
+                    "example": 1694030400
+                },
+                "fileName": {
+                    "type": "string",
+                    "example": "emails.csv"
+                },
+                "jobId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Completed 1000 of 1000 emails"
+                },
+                "results": {
+                    "$ref": "#/definitions/rest.BulkResultsDetails"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "completed"
+                }
+            }
+        },
+        "rest.BulkUploadResponse": {
+            "description": "Response structure for bulk email upload, containing job ID, result URL, and estimated completion time.",
+            "type": "object",
+            "properties": {
+                "estimatedCompletionTs": {
+                    "description": "Epoch timestamp",
+                    "type": "number",
+                    "example": 1694030400
+                },
+                "jobId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "File uploaded successfully"
+                },
+                "resultUrl": {
+                    "type": "string",
+                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
         "rest.EmailVerificationResponse": {
             "description": "The response structure for email verification, providing detailed validation results.",
             "type": "object",
@@ -178,6 +557,446 @@
                     "description": "User represents the local part (before the @) of the email address",
                     "type": "string",
                     "example": "example"
+                }
+            }
+        },
+        "rest.EnrichPersonData": {
+            "description": "Detailed data about a person from enrichment.",
+            "type": "object",
+            "properties": {
+                "emails": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rest.EnrichPersonEmail"
+                    }
+                },
+                "jobs": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rest.EnrichPersonJob"
+                    }
+                },
+                "location": {
+                    "$ref": "#/definitions/rest.EnrichPersonLocation"
+                },
+                "name": {
+                    "$ref": "#/definitions/rest.EnrichPersonName"
+                },
+                "phoneNumbers": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/rest.EnrichPersonPhoneNumber"
+                    }
+                },
+                "profilePic": {
+                    "type": "string",
+                    "example": "https://example.com/profile.jpg"
+                },
+                "social": {
+                    "$ref": "#/definitions/rest.EnrichPersonSocial"
+                }
+            }
+        },
+        "rest.EnrichPersonDiscord": {
+            "description": "Discord profile details of a person.",
+            "type": "object",
+            "properties": {
+                "username": {
+                    "type": "string",
+                    "example": "johndoe#1234"
+                }
+            }
+        },
+        "rest.EnrichPersonEmail": {
+            "description": "Email details of a person.",
+            "type": "object",
+            "properties": {
+                "address": {
+                    "type": "string",
+                    "example": "john.doe@example.com"
+                },
+                "deliverable": {
+                    "type": "string",
+                    "example": "true"
+                },
+                "isRisky": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "type": {
+                    "type": "string",
+                    "example": "professional"
+                }
+            }
+        },
+        "rest.EnrichPersonGithub": {
+            "description": "Github profile details of a person.",
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "example": "https://github.com/johndoe"
+                },
+                "username": {
+                    "type": "string",
+                    "example": "johndoe"
+                }
+            }
+        },
+        "rest.EnrichPersonJob": {
+            "description": "Job details of a person.",
+            "type": "object",
+            "properties": {
+                "company": {
+                    "type": "string",
+                    "example": "Tech Corp"
+                },
+                "companyLinkedin": {
+                    "type": "string",
+                    "example": "https://linkedin.com/company/techcorp"
+                },
+                "companyWebsite": {
+                    "type": "string",
+                    "example": "https://techcorp.com"
+                },
+                "duration": {
+                    "$ref": "#/definitions/rest.EnrichPersonJobDuration"
+                },
+                "isCurrent": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "seniority": {
+                    "type": "string",
+                    "example": "Senior"
+                },
+                "title": {
+                    "type": "string",
+                    "example": "Software Engineer"
+                }
+            }
+        },
+        "rest.EnrichPersonJobDuration": {
+            "description": "Job duration of a person.",
+            "type": "object",
+            "properties": {
+                "endMonth": {
+                    "type": "integer",
+                    "example": 12
+                },
+                "endYear": {
+                    "type": "integer",
+                    "example": 2023
+                },
+                "startMonth": {
+                    "type": "integer",
+                    "example": 1
+                },
+                "startYear": {
+                    "type": "integer",
+                    "example": 2020
+                }
+            }
+        },
+        "rest.EnrichPersonLinkedIn": {
+            "description": "LinkedIn profile details of a person.",
+            "type": "object",
+            "properties": {
+                "followerCount": {
+                    "type": "integer",
+                    "example": 500
+                },
+                "id": {
+                    "type": "string",
+                    "example": "123456789"
+                },
+                "publicId": {
+                    "type": "string",
+                    "example": "john-doe"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://linkedin.com/in/john-doe"
+                }
+            }
+        },
+        "rest.EnrichPersonLocation": {
+            "description": "Location details of a person.",
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "San Francisco"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "USA"
+                },
+                "region": {
+                    "type": "string",
+                    "example": "California"
+                },
+                "timezone": {
+                    "type": "string",
+                    "example": "PST"
+                }
+            }
+        },
+        "rest.EnrichPersonName": {
+            "description": "Name details of a person.",
+            "type": "object",
+            "properties": {
+                "firstName": {
+                    "type": "string",
+                    "example": "John"
+                },
+                "fullName": {
+                    "type": "string",
+                    "example": "John Doe"
+                },
+                "lastName": {
+                    "type": "string",
+                    "example": "Doe"
+                }
+            }
+        },
+        "rest.EnrichPersonPhoneNumber": {
+            "description": "Phone number details of a person.",
+            "type": "object",
+            "properties": {
+                "number": {
+                    "type": "string",
+                    "example": "+1234567890"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "mobile"
+                }
+            }
+        },
+        "rest.EnrichPersonResponse": {
+            "description": "Response structure for the person enrichment API.",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/rest.EnrichPersonData"
+                },
+                "isComplete": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Enrichment completed"
+                },
+                "pendingFields": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"email\"",
+                        " \"phone number\"]"
+                    ]
+                },
+                "resultUrl": {
+                    "type": "string",
+                    "example": "https://api.customeros.ai/enrich/v1/person/results/550e8400-e29b-41d4-a716-446655440000"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "rest.EnrichPersonSocial": {
+            "description": "Social media details of a person.",
+            "type": "object",
+            "properties": {
+                "discord": {
+                    "$ref": "#/definitions/rest.EnrichPersonDiscord"
+                },
+                "github": {
+                    "$ref": "#/definitions/rest.EnrichPersonGithub"
+                },
+                "linkedin": {
+                    "$ref": "#/definitions/rest.EnrichPersonLinkedIn"
+                },
+                "x": {
+                    "$ref": "#/definitions/rest.EnrichPersonX"
+                }
+            }
+        },
+        "rest.EnrichPersonX": {
+            "description": "X (formerly Twitter) profile details of a person.",
+            "type": "object",
+            "properties": {
+                "handle": {
+                    "type": "string",
+                    "example": "@johndoe"
+                },
+                "url": {
+                    "type": "string",
+                    "example": "https://x.com/johndoe"
+                }
+            }
+        },
+        "rest.IpIntelligenceGeolocation": {
+            "description": "Geolocation data related to the IP address.",
+            "type": "object",
+            "properties": {
+                "city": {
+                    "type": "string",
+                    "example": "Berlin"
+                },
+                "country": {
+                    "type": "string",
+                    "example": "Germany"
+                },
+                "countryIso": {
+                    "type": "string",
+                    "example": "DE"
+                },
+                "isEuropeanUnion": {
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "rest.IpIntelligenceNetwork": {
+            "description": "Network-related data for the IP address.",
+            "type": "object",
+            "properties": {
+                "asn": {
+                    "type": "string",
+                    "example": "AS12345"
+                },
+                "domain": {
+                    "type": "string",
+                    "example": "isp.com"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "ISP Name"
+                },
+                "route": {
+                    "type": "string",
+                    "example": "192.168.0.0/16"
+                },
+                "type": {
+                    "type": "string",
+                    "example": "business"
+                }
+            }
+        },
+        "rest.IpIntelligenceOrganization": {
+            "description": "Organizational data for the IP address.",
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "type": "string",
+                    "example": "company.com"
+                },
+                "linkedin": {
+                    "type": "string",
+                    "example": "https://linkedin.com/company/company"
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Company Name"
+                }
+            }
+        },
+        "rest.IpIntelligenceResponse": {
+            "description": "Response structure for IP intelligence lookup.",
+            "type": "object",
+            "properties": {
+                "geolocation": {
+                    "$ref": "#/definitions/rest.IpIntelligenceGeolocation"
+                },
+                "ip": {
+                    "type": "string",
+                    "example": "192.168.1.1"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "No threats detected"
+                },
+                "network": {
+                    "$ref": "#/definitions/rest.IpIntelligenceNetwork"
+                },
+                "organization": {
+                    "$ref": "#/definitions/rest.IpIntelligenceOrganization"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "success"
+                },
+                "threats": {
+                    "$ref": "#/definitions/rest.IpIntelligenceThreats"
+                },
+                "time_zone": {
+                    "$ref": "#/definitions/rest.IpIntelligenceTimeZone"
+                }
+            }
+        },
+        "rest.IpIntelligenceThreats": {
+            "description": "Threat intelligence data related to the IP address.",
+            "type": "object",
+            "properties": {
+                "isCloudRelay": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "isDatacenter": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "isMobile": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "isProxy": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "isTor": {
+                    "type": "boolean",
+                    "example": false
+                },
+                "isUnallocated": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "isVpn": {
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "rest.IpIntelligenceTimeZone": {
+            "description": "Timezone data for the IP address.",
+            "type": "object",
+            "properties": {
+                "abbr": {
+                    "type": "string",
+                    "example": "CET"
+                },
+                "current_time": {
+                    "type": "string",
+                    "example": "2024-09-10T14:00:00+01:00"
+                },
+                "is_dst": {
+                    "type": "boolean",
+                    "example": true
+                },
+                "name": {
+                    "type": "string",
+                    "example": "Europe/Berlin"
+                },
+                "offset": {
+                    "type": "string",
+                    "example": "+0100"
                 }
             }
         }

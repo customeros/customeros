@@ -27,69 +27,86 @@ const (
 	enrichPersonAcceptedUrl = "/enrich/v1/person/results"
 )
 
+// EnrichPersonResponse represents the response for the person enrichment API.
+// @Description Response structure for the person enrichment API.
+// @example 200 {object} EnrichPersonResponse
 type EnrichPersonResponse struct {
-	Status        string           `json:"status"`
-	Message       string           `json:"message,omitempty"`
-	IsComplete    bool             `json:"isComplete"`
-	PendingFields []string         `json:"pendingFields,omitempty"`
-	ResultURL     string           `json:"resultUrl,omitempty"`
+	Status        string           `json:"status" example:"success"`
+	Message       string           `json:"message,omitempty" example:"Enrichment completed"`
+	IsComplete    bool             `json:"isComplete" example:"true"`
+	PendingFields []string         `json:"pendingFields,omitempty" example:"[\"email\", \"phone number\"]"`
+	ResultURL     string           `json:"resultUrl,omitempty" example:"https://api.customeros.ai/enrich/v1/person/results/550e8400-e29b-41d4-a716-446655440000"`
 	Data          EnrichPersonData `json:"data"`
 }
 
+// EnrichPersonData represents detailed data about a person from enrichment.
+// @Description Detailed data about a person from enrichment.
 type EnrichPersonData struct {
 	Emails       []EnrichPersonEmail       `json:"emails"`
 	Jobs         []EnrichPersonJob         `json:"jobs"`
 	Location     EnrichPersonLocation      `json:"location"`
 	Name         EnrichPersonName          `json:"name"`
 	PhoneNumbers []EnrichPersonPhoneNumber `json:"phoneNumbers"`
-	ProfilePic   string                    `json:"profilePic"`
+	ProfilePic   string                    `json:"profilePic" example:"https://example.com/profile.jpg"`
 	Social       EnrichPersonSocial        `json:"social"`
 }
 
+// EnrichPersonEmail represents the email details of a person.
+// @Description Email details of a person.
 type EnrichPersonEmail struct {
-	Address     string  `json:"address"`
-	Deliverable *string `json:"deliverable,omitempty"`
-	IsRisky     *bool   `json:"isRisky,omitempty"`
-	Type        *string `json:"type,omitempty"`
-	// Deprecated
-	IsDeliverable *bool `json:"isDeliverable,omitempty"`
+	Address     string  `json:"address" example:"john.doe@example.com"`
+	Deliverable *string `json:"deliverable,omitempty" example:"true"`
+	IsRisky     *bool   `json:"isRisky,omitempty" example:"false"`
+	Type        *string `json:"type,omitempty" example:"professional"`
 }
 
+// EnrichPersonJob represents the job details of a person.
+// @Description Job details of a person.
 type EnrichPersonJob struct {
-	Title           string                  `json:"title"`
-	Seniority       string                  `json:"seniority"`
+	Title           string                  `json:"title" example:"Software Engineer"`
+	Seniority       string                  `json:"seniority" example:"Senior"`
 	Duration        EnrichPersonJobDuration `json:"duration"`
-	Company         string                  `json:"company"`
-	CompanyLinkedin string                  `json:"companyLinkedin"`
-	CompanyWebsite  string                  `json:"companyWebsite"`
-	IsCurrent       bool                    `json:"isCurrent"`
+	Company         string                  `json:"company" example:"Tech Corp"`
+	CompanyLinkedin string                  `json:"companyLinkedin" example:"https://linkedin.com/company/techcorp"`
+	CompanyWebsite  string                  `json:"companyWebsite" example:"https://techcorp.com"`
+	IsCurrent       bool                    `json:"isCurrent" example:"true"`
 }
 
+// EnrichPersonJobDuration represents the duration of a person's job.
+// @Description Job duration of a person.
 type EnrichPersonJobDuration struct {
-	StartMonth int  `json:"startMonth"`
-	StartYear  int  `json:"startYear"`
-	EndMonth   *int `json:"endMonth"`
-	EndYear    *int `json:"endYear"`
+	StartMonth int  `json:"startMonth" example:"1"`
+	StartYear  int  `json:"startYear" example:"2020"`
+	EndMonth   *int `json:"endMonth,omitempty" example:"12"`
+	EndYear    *int `json:"endYear,omitempty" example:"2023"`
 }
 
+// EnrichPersonLocation represents the location details of a person.
+// @Description Location details of a person.
 type EnrichPersonLocation struct {
-	City     string `json:"city"`
-	Region   string `json:"region"`
-	Country  string `json:"country"`
-	Timezone string `json:"timezone"`
+	City     string `json:"city" example:"San Francisco"`
+	Region   string `json:"region" example:"California"`
+	Country  string `json:"country" example:"USA"`
+	Timezone string `json:"timezone" example:"PST"`
 }
 
+// EnrichPersonName represents the name details of a person.
+// @Description Name details of a person.
 type EnrichPersonName struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	FullName  string `json:"fullName"`
+	FirstName string `json:"firstName" example:"John"`
+	LastName  string `json:"lastName" example:"Doe"`
+	FullName  string `json:"fullName" example:"John Doe"`
 }
 
+// EnrichPersonPhoneNumber represents the phone number details of a person.
+// @Description Phone number details of a person.
 type EnrichPersonPhoneNumber struct {
-	Number string `json:"number"`
-	Type   string `json:"type"`
+	Number string `json:"number" example:"+1234567890"`
+	Type   string `json:"type" example:"mobile"`
 }
 
+// EnrichPersonSocial represents the social media details of a person.
+// @Description Social media details of a person.
 type EnrichPersonSocial struct {
 	Linkedin EnrichPersonLinkedIn `json:"linkedin"`
 	X        EnrichPersonX        `json:"x"`
@@ -97,27 +114,50 @@ type EnrichPersonSocial struct {
 	Discord  EnrichPersonDiscord  `json:"discord"`
 }
 
+// EnrichPersonLinkedIn represents the LinkedIn profile details of a person.
+// @Description LinkedIn profile details of a person.
 type EnrichPersonLinkedIn struct {
-	ID            string `json:"id"`
-	PublicID      string `json:"publicId"`
-	URL           string `json:"url"`
-	FollowerCount int    `json:"followerCount"`
+	ID            string `json:"id" example:"123456789"`
+	PublicID      string `json:"publicId" example:"john-doe"`
+	URL           string `json:"url" example:"https://linkedin.com/in/john-doe"`
+	FollowerCount int    `json:"followerCount" example:"500"`
 }
 
+// EnrichPersonX represents the X (formerly Twitter) profile details of a person.
+// @Description X (formerly Twitter) profile details of a person.
 type EnrichPersonX struct {
-	Handle string `json:"handle"`
-	URL    string `json:"url"`
+	Handle string `json:"handle" example:"@johndoe"`
+	URL    string `json:"url" example:"https://x.com/johndoe"`
 }
 
+// EnrichPersonGithub represents the Github profile details of a person.
+// @Description Github profile details of a person.
 type EnrichPersonGithub struct {
-	Username string `json:"username"`
-	URL      string `json:"url"`
+	Username string `json:"username" example:"johndoe"`
+	URL      string `json:"url" example:"https://github.com/johndoe"`
 }
 
+// EnrichPersonDiscord represents the Discord profile details of a person.
+// @Description Discord profile details of a person.
 type EnrichPersonDiscord struct {
-	Username string `json:"username"`
+	Username string `json:"username" example:"johndoe#1234"`
 }
 
+// @Summary Enrich Person Information
+// @Description Enriches a person's information using LinkedIn URL, email, and other optional details.
+// @Tags Enrichment API
+// @Param linkedinUrl query string false "LinkedIn profile URL of the person"
+// @Param email query string false "Email address of the person"
+// @Param firstName query string false "First name of the person"
+// @Param lastName query string false "Last name of the person"
+// @Param includeMobileNumber query string false "Include mobile phone number in the enrichment result" default(false)
+// @Success 200 {object} EnrichPersonResponse "Enrichment results including personal, job, and social data"
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Failure 500 "Internal Server Error"
+// @Security ApiKeyAuth
+// @Produce json
+// @Router /enrich/v1/person [get]
 func EnrichPerson(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
@@ -125,7 +165,11 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Missing tenant context"})
+			c.JSON(http.StatusUnauthorized,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing tenant context",
+				})
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
@@ -140,7 +184,11 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 
 		// check linked in or email params are present
 		if strings.TrimSpace(linkedinUrl) == "" && strings.TrimSpace(email) == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing required parameters linkedinUrl or email"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing required parameters linkedinUrl or email",
+				})
 			return
 		}
 
@@ -154,11 +202,19 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		// Call enrichPerson API
 		enrichPersonApiResponse, err := callApiEnrichPerson(ctx, services, span, email, linkedinUrl, firstName, lastName)
 		if err != nil || enrichPersonApiResponse == nil || enrichPersonApiResponse.Status == "error" {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 		if enrichPersonApiResponse.Data == nil || enrichPersonApiResponse.PersonFound == false {
-			c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Person not found"})
+			c.JSON(http.StatusOK,
+				ErrorResponse{
+					Status:  "success",
+					Message: "Person not found",
+				})
 			return
 		}
 
@@ -172,7 +228,11 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		// Call findWorkEmail API
 		findWorkEmailApiResponse, err := callApiFindWorkEmail(ctx, services, span, *enrichPersonApiResponse, enrichPhoneNumber)
 		if err != nil || findWorkEmailApiResponse == nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 
@@ -193,7 +253,11 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to create temp result"))
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+				c.JSON(http.StatusInternalServerError,
+					ErrorResponse{
+						Status:  "error",
+						Message: "Internal error",
+					})
 				return
 			}
 			response.IsComplete = false
@@ -257,6 +321,18 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 	}
 }
 
+// @Summary Enrich Person Callback
+// @Description Retrieves enriched person data from a temporary result based on the given ID.
+// @Tags Enrichment API
+// @Param id path string true "Temporary result ID"
+// @Success 200 {object} EnrichPersonResponse "Enrichment results including personal, job, and social data"
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Failure 404 "Not Found"
+// @Failure 500 "Internal Server Error"
+// @Security ApiKeyAuth
+// @Produce json
+// @Router /enrich/v1/person/results/{id} [get]
 func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
@@ -264,7 +340,11 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Missing tenant context"})
+			c.JSON(http.StatusUnauthorized,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing tenant context",
+				})
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
@@ -275,11 +355,19 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		getTempRecord, err := services.CommonServices.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetById(ctx, tempId, tenant)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get temp record"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 		if getTempRecord == nil {
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Record not found"})
+			c.JSON(http.StatusNotFound,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Record not found",
+				})
 			return
 		}
 
@@ -287,24 +375,40 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		scrapInDbRecord, err := services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetById(ctx, getTempRecord.ScrapinRecordId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 		if scrapInDbRecord == nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin record"))
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Record not found"})
+			c.JSON(http.StatusNotFound,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Record not found",
+				})
 			return
 		}
 
 		betterContactDbRecord, err := services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, getTempRecord.BettercontactRecordId)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 		if betterContactDbRecord == nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get bettercontact record"))
-			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Record not found"})
+			c.JSON(http.StatusNotFound,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Record not found",
+				})
 			return
 		}
 
@@ -318,7 +422,11 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 		err = json.Unmarshal([]byte(scrapInDbRecord.Data), &scrapInPersonResponse)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin record"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 		enrichedPersonData := mapScrapInData(&scrapInPersonResponse)
@@ -333,7 +441,11 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 			err = json.Unmarshal([]byte(betterContactDbRecord.Response), &betterContactResponseBody)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal bettercontact record"))
-				c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+				c.JSON(http.StatusInternalServerError,
+					ErrorResponse{
+						Status:  "error",
+						Message: "Internal error",
+					})
 				return
 			}
 		}

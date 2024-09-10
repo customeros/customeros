@@ -18,10 +18,12 @@ import (
 	"time"
 )
 
+// IpIntelligenceResponse represents the response for IP intelligence lookup.
+// @Description Response structure for IP intelligence lookup.
 type IpIntelligenceResponse struct {
-	Status       string                     `json:"status"`
-	Message      string                     `json:"message,omitempty"`
-	IP           string                     `json:"ip"`
+	Status       string                     `json:"status" example:"success"`
+	Message      string                     `json:"message,omitempty" example:"No threats detected"`
+	IP           string                     `json:"ip" example:"192.168.1.1"`
 	Threats      IpIntelligenceThreats      `json:"threats"`
 	Geolocation  IpIntelligenceGeolocation  `json:"geolocation"`
 	TimeZone     IpIntelligenceTimeZone     `json:"time_zone"`
@@ -29,45 +31,66 @@ type IpIntelligenceResponse struct {
 	Organization IpIntelligenceOrganization `json:"organization"`
 }
 
+// IpIntelligenceThreats contains threat intelligence data related to the IP address.
+// @Description Threat intelligence data related to the IP address.
 type IpIntelligenceThreats struct {
-	IsProxy       bool `json:"isProxy"`
-	IsVpn         bool `json:"isVpn"`
-	IsTor         bool `json:"isTor"`
-	IsUnallocated bool `json:"isUnallocated"`
-	IsDatacenter  bool `json:"isDatacenter"`
-	IsCloudRelay  bool `json:"isCloudRelay"`
-	IsMobile      bool `json:"isMobile"`
+	IsProxy       bool `json:"isProxy" example:"false"`
+	IsVpn         bool `json:"isVpn" example:"false"`
+	IsTor         bool `json:"isTor" example:"false"`
+	IsUnallocated bool `json:"isUnallocated" example:"true"`
+	IsDatacenter  bool `json:"isDatacenter" example:"false"`
+	IsCloudRelay  bool `json:"isCloudRelay" example:"false"`
+	IsMobile      bool `json:"isMobile" example:"true"`
 }
 
+// IpIntelligenceGeolocation contains geolocation data related to the IP address.
+// @Description Geolocation data related to the IP address.
 type IpIntelligenceGeolocation struct {
-	City            string `json:"city"`
-	Country         string `json:"country"`
-	CountryIso      string `json:"countryIso"`
-	IsEuropeanUnion bool   `json:"isEuropeanUnion"`
+	City            string `json:"city" example:"Berlin"`
+	Country         string `json:"country" example:"Germany"`
+	CountryIso      string `json:"countryIso" example:"DE"`
+	IsEuropeanUnion bool   `json:"isEuropeanUnion" example:"true"`
 }
 
+// IpIntelligenceTimeZone contains timezone data for the IP address.
+// @Description Timezone data for the IP address.
 type IpIntelligenceTimeZone struct {
-	Name        string    `json:"name"`
-	Abbr        string    `json:"abbr"`
-	Offset      string    `json:"offset"`
-	IsDst       bool      `json:"is_dst"`
-	CurrentTime time.Time `json:"current_time"`
+	Name        string    `json:"name" example:"Europe/Berlin"`
+	Abbr        string    `json:"abbr" example:"CET"`
+	Offset      string    `json:"offset" example:"+0100"`
+	IsDst       bool      `json:"is_dst" example:"true"`
+	CurrentTime time.Time `json:"current_time" example:"2024-09-10T14:00:00+01:00"`
 }
 
+// IpIntelligenceNetwork contains network-related data for the IP address.
+// @Description Network-related data for the IP address.
 type IpIntelligenceNetwork struct {
-	ASN    string `json:"asn"`
-	Name   string `json:"name"`
-	Domain string `json:"domain"`
-	Route  string `json:"route"`
-	Type   string `json:"type"`
+	ASN    string `json:"asn" example:"AS12345"`
+	Name   string `json:"name" example:"ISP Name"`
+	Domain string `json:"domain" example:"isp.com"`
+	Route  string `json:"route" example:"192.168.0.0/16"`
+	Type   string `json:"type" example:"business"`
 }
 
+// IpIntelligenceOrganization contains organizational data for the IP address.
+// @Description Organizational data for the IP address.
 type IpIntelligenceOrganization struct {
-	Name     string `json:"name"`
-	Domain   string `json:"domain"`
-	LinkedIn string `json:"linkedin"`
+	Name     string `json:"name" example:"Company Name"`
+	Domain   string `json:"domain" example:"company.com"`
+	LinkedIn string `json:"linkedin" example:"https://linkedin.com/company/company"`
 }
 
+// @Tags Verify API
+// @Summary Get IP Intelligence
+// @Description Retrieves threat intelligence and geolocation data for the given IP address.
+// @Param address query string true "IP address to check"
+// @Success 200 {object} IpIntelligenceResponse
+// @Failure 400 "Bad Request"
+// @Failure 401 "Unauthorized"
+// @Failure 500 "Internal Server Error"
+// @Security ApiKeyAuth
+// @Produce json
+// @Router /verify/v1/ip [get]
 func IpIntelligence(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpIntelligence", c.Request.Header)
@@ -75,7 +98,11 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Missing tenant context"})
+			c.JSON(http.StatusUnauthorized,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing tenant context",
+				})
 			return
 		}
 		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
@@ -84,13 +111,21 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		// Check if address is provided
 		ipAddress := c.Query("address")
 		if ipAddress == "" {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Missing address parameter"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Missing address parameter",
+				})
 			return
 		}
 		span.LogFields(log.String("address", ipAddress))
 
 		if net.ParseIP(ipAddress) == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid IP address format"})
+			c.JSON(http.StatusBadRequest,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Invalid IP address format",
+				})
 			logger.Warnf("Invalid IP address format: %s", ipAddress)
 			return
 		}
@@ -100,14 +135,22 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 		requestBody := []byte(string(requestJSON))
 		req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/ipLookup", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 		// Inject span context into the HTTP request
@@ -122,7 +165,11 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		response, err := client.Do(req)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 		}
 		defer response.Body.Close()
 
@@ -130,7 +177,11 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		err = json.NewDecoder(response.Body).Decode(&result)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
-			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Internal error"})
+			c.JSON(http.StatusInternalServerError,
+				ErrorResponse{
+					Status:  "error",
+					Message: "Internal error",
+				})
 			return
 		}
 
