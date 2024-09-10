@@ -16,17 +16,29 @@ export const EditName = observer(() => {
 
   const label = `Contact - ${contact?.value.name}`;
 
+  const handleClose = () => {
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.setType('ContactCommands');
+  };
+
   const handleChangeName = () => {
     if (!context.ids?.[0]) return;
 
     if (!contact) return;
+
+    if (!name.trim()?.length) {
+      handleClose();
+
+      return;
+    }
+
     contact?.update((o) => {
       o.name = name;
 
       return o;
     });
-    store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('ContactCommands');
+
+    handleClose();
   };
 
   return (
