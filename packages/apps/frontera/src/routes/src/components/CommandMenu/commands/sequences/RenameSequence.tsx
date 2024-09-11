@@ -11,24 +11,33 @@ export const RenameSequence = observer(() => {
   const context = store.ui.commandMenu.context;
   const entity = store.flowSequences.value.get(context.ids?.[0] as string);
   const label = `Sequence - ${entity?.value?.name}`;
+  const defaultValue = entity?.value?.name ?? '';
+
+  const [name, setName] = useState(() => defaultValue ?? '');
+
+  const handleClose = () => {
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.setType('SequenceCommands');
+  };
 
   const handleSelect = () => {
     if (!context.ids?.[0]) return;
 
     if (!entity) return;
 
+    if (!name.trim()?.length) {
+      handleClose();
+
+      return;
+    }
+
     entity?.update((value) => {
       value.name = name;
 
       return value;
     });
-    store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('SequenceCommands');
+    handleClose();
   };
-
-  const defaultValue = entity?.value?.name ?? '';
-
-  const [name, setName] = useState(() => defaultValue ?? '');
 
   return (
     <Command label={`Rename sequence`}>

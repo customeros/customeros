@@ -4,8 +4,8 @@ import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
-import { makeAutoObservable } from 'mobx';
 import { Transport } from '@store/transport';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
 import { FlowSequenceService } from '@store/Sequences/__service__';
@@ -70,13 +70,76 @@ export class FlowSequenceStore implements Store<FlowSequence> {
       });
   }
 
-  linkContact(contactId: string, emailId: string) {
-    return this.service.linkContact({
-      sequenceId: this.id,
-      contactId,
-      emailId,
-    });
-  }
+  public linkContact = async (contactId: string, emailId: string) => {
+    this.isLoading = true;
+
+    try {
+      const contactStore = this.root.contacts.value.get(contactId);
+
+      if (contactStore?.sequence) {
+        await this.service.unlinkContact({
+          sequenceId: contactStore.sequence.id,
+          contactId,
+          emailId,
+        });
+      }
+      await this.service.linkContact({
+        sequenceId: this.id,
+        contactId,
+        emailId,
+      });
+
+      runInAction(() => {
+        this.root.contacts.value.get(contactId)?.invalidate();
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          "We couldn't add a contact to a sequence",
+          'link-contact-to-sequence-error',
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = true;
+        this.root.ui.toastSuccess(
+          `Contact added to '${this.value.name}'`,
+          'link-contact-to-sequence-success',
+        );
+      });
+    }
+  };
+
+  public unlinkContact = async (contactId: string, emailId: string) => {
+    this.isLoading = true;
+
+    try {
+      await this.service.unlinkContact({
+        sequenceId: this.id,
+        contactId,
+        emailId,
+      });
+
+      runInAction(() => {
+        this.root.contacts.value.get(contactId)?.invalidate();
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          `We couldn't remove a contact from a sequence`,
+          'unlink-contact-from-sequence-error',
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = true;
+        this.root.ui.toastSuccess(
+          `Contact removed from '${this.value.name}'`,
+          'unlink-contact-from-sequence-success',
+        );
+      });
+    }
+  };
 
   invalidate() {
     // todo

@@ -16,6 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/h2non/filetype"
+	"github.com/h2non/filetype/types"
 	"github.com/machinebox/graphql"
 	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -109,17 +110,33 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 		return nil, err
 	}
 
-	fileType, err := utils.GetFileType(headBytes)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	fileType := filetype.Unknown
+	// check if file type is csv from file name
+	if strings.HasSuffix(strings.ToLower(multipartFileHeader.Filename), ".csv") {
+		// Detect the MIME type using the file content
+		mimeType := http.DetectContentType(headBytes)
 
-	if fileType == filetype.Unknown {
-		err = errors.New("Unknown file type")
-		tracing.TraceErr(span, err)
-		s.log.Error("Unknown multipartFile type")
-		return nil, err
+		// Validate if the detected MIME type is "text/csv"
+		if mimeType != "text/csv" && mimeType != "application/octet-stream" {
+			err = errors.New("Invalid mime type for CSV")
+			tracing.TraceErr(span, err)
+			s.log.Error("Invalid file type")
+			return nil, err
+		}
+		fileType = types.NewType("csv", "text/csv")
+	} else {
+		fileType, err := utils.GetFileType(headBytes)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if fileType == filetype.Unknown {
+			err = errors.New("Unknown file type")
+			tracing.TraceErr(span, err)
+			s.log.Error("Unknown multipartFile type")
+			return nil, err
+		}
 	}
 
 	graphqlRequest := graphql.NewRequest(

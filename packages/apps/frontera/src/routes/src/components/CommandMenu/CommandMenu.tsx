@@ -23,7 +23,6 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import { ChangeBulkArrEstimate } from '@shared/components/CommandMenu/commands/opportunity/ChangeBulkArrEstimate';
 
 import {
   EditName,
@@ -50,15 +49,18 @@ import {
   OpportunityCommands,
   ChangeOrAddJobRoles,
   ContactBulkCommands,
+  EditContactSequence,
   OrganizationCommands,
   ChangeSequenceStatus,
   RenameOpportunityName,
+  ChangeBulkArrEstimate,
   ChooseOpportunityStage,
   MergeConfirmationModal,
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   AddContactViaLinkedInUrl,
   OrganizationBulkCommands,
+  UnlinkContactFromSequence,
   RenameOrganizationProperty,
   ChooseOpportunityOrganization,
   ContactEmailVerificationInfoModal,
@@ -90,6 +92,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   EditPhoneNumber: <EditPhoneNumber />,
   ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
   ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
+  UnlinkContactFromSequence: <UnlinkContactFromSequence />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,
@@ -117,6 +120,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   CreateNewSequence: <CreateNewSequence />,
   RenameSequence: <RenameSequence />,
   ChangeSequenceStatus: <ChangeSequenceStatus />,
+  EditContactSequence: <EditContactSequence />,
 
   //TableViewDef
   RenameTableViewDef: <RenameTableViewDef />,

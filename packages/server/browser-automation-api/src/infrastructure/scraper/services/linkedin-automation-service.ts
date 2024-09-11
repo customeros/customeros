@@ -19,7 +19,7 @@ export type Cookies = ReadonlyArray<{
 export class LinkedinAutomationService {
   constructor(
     private cookies: Cookies,
-    private useAgent: string,
+    private userAgent: string,
     private proxyConfig: string,
   ) {}
 
@@ -30,12 +30,9 @@ export class LinkedinAutomationService {
   ) {
     const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
-      userAgent: this.useAgent,
+      userAgent: this.userAgent,
     });
-    context.setExtraHTTPHeaders({
-      "browsercat-opts": this.proxyConfig,
-    });
-    context.addCookies(this.cookies);
+    await context.addCookies(this.cookies);
 
     const page = await context.newPage();
     await page.goto(profileUrl);
@@ -82,7 +79,7 @@ export class LinkedinAutomationService {
   async getConnections() {
     const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
-      userAgent: this.useAgent,
+      userAgent: this.userAgent,
     });
     context.addCookies(this.cookies);
 
@@ -177,11 +174,12 @@ export class LinkedinAutomationService {
   ) {
     const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
-      userAgent: this.useAgent,
+      userAgent: this.userAgent,
     });
-    context.addCookies(this.cookies);
+
+    await context.addCookies(this.cookies);
     const page = await context.newPage();
-    await page.goto(profileUrl);
+    await page.goto(profileUrl, { timeout: 60 * 1000 });
 
     try {
       const messageButtons = page.locator(

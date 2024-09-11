@@ -20,16 +20,73 @@ import (
 	"net/http"
 )
 
+// CreateOrganizationRequest represents the request body for creating a new organization
+// @Description Request to create an organization
 type CreateOrganizationRequest struct {
-	Name         string `json:"name"`
-	CustomId     string `json:"customId"`
-	Website      string `json:"website"`
-	LinkedinUrl  string `json:"linkedinUrl"`
-	LeadSource   string `json:"leadSource"`
+	// Organization's name
+	// Example: Openline
+	Name string `json:"name"`
+
+	// Custom ID provided by the user
+	// Example: 12345
+	CustomId string `json:"customId"`
+
+	// Organization's website URL
+	// Example: https://openline.com
+	Website string `json:"website"`
+
+	// Organization's LinkedIn profile URL
+	// Example: https://linkedin.com/company/openline
+	LinkedinUrl string `json:"linkedinUrl"`
+
+	// Lead source of the organization
+	// Example: Web Search
+	LeadSource string `json:"leadSource"`
+
+	// Relationship status of the organization
+	// Example: customer
 	Relationship string `json:"relationship"`
-	IcpFit       bool   `json:"icpFit"`
+
+	// Indicates if the organization is an ICP (Ideal Customer Profile) fit
+	// Example: true
+	IcpFit bool `json:"icpFit"`
 }
 
+// CreateOrganizationResponse represents the response returned after creating an organization
+// @Description The response structure after an organization is successfully created.
+// @example 201 {object} CreateOrganizationResponse
+type CreateOrganizationResponse struct {
+	// Status indicates the status of the creation process (e.g., "success" or "partial_success")
+	// Example: success
+	Status string `json:"status" example:"success"`
+
+	// Message provides additional information regarding the creation process
+	// Example: Organization created successfully
+	Message string `json:"message" example:"Organization created successfully"`
+
+	// ID is the unique identifier of the created organization
+	// Example: 1234567890
+	ID string `json:"id" example:"1234567890"`
+
+	// PartialSuccess indicates whether the creation process encountered partial success (e.g., when some fields failed to process)
+	// Example: false
+	PartialSuccess bool `json:"partialSuccess,omitempty" example:"false"`
+}
+
+// @Summary Create a new organization
+// @Description Creates an organization in the system if it doesn't already exist based on website, custom ID, or LinkedIn URL
+// @Tags CustomerBASE API
+// @Accept  json
+// @Produce  json
+// @Param   body   body    CreateOrganizationRequest  true  "Organization creation payload"
+// @Success 201 {object} CreateOrganizationResponse "Organization created successfully"
+// @Success 206 {object} CreateOrganizationResponse "Partial success - failed to add linkedin url"
+// @Failure 400  "Invalid request body or missing input fields"
+// @Failure 401  "Unauthorized access"
+// @Failure 409  "Conflict - organization already exists"
+// @Failure 500  "Failed to create organization"
+// @Router /customerbase/v1/organization [post]
+// @Security ApiKeyAuth
 func CreateOrganization(services *service.Services, grpcClients *grpc_client.Clients) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateOrganization", c.Request.Header)
@@ -183,12 +240,23 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 				tracing.TraceErr(span, errors.Wrap(err, "Failed to add linkedin url"))
 				services.Log.Error(ctx, "Failed to add linkedin url", err)
 				// partial saving of data
-				c.JSON(http.StatusPartialContent, gin.H{"status": "partial_success", "message": "Failed to add linkedin url", "id": newOrgId})
+				c.JSON(http.StatusPartialContent,
+					CreateOrganizationResponse{
+						Status:         "partial_success",
+						Message:        "Failed to add linkedin url",
+						ID:             newOrgId,
+						PartialSuccess: true,
+					})
 			}
 		}
 
 		// Prepare and send the response
 		span.LogFields(tracingLog.String("result", "Organization created successfully"))
-		c.JSON(http.StatusCreated, gin.H{"status": "success", "message": "Organization created successfully", "id": newOrgId})
+		c.JSON(http.StatusCreated,
+			CreateOrganizationResponse{
+				Status:  "success",
+				Message: "Organization created successfully",
+				ID:      newOrgId,
+			})
 	}
 }

@@ -26,33 +26,87 @@ func NewFlowSequenceStepWriteRepository(driver *neo4j.DriverWithContext, databas
 	return &flowSequenceStepWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowSequenceStepWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.FlowSequenceStepEntity) (*dbtype.Node, error) {
+func (r *flowSequenceStepWriteRepositoryImpl) Merge(ctx context.Context, input *entity.FlowSequenceStepEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSequenceStepWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:BELONGS_TO_TENANT]-(fss:FlowSequenceStep:FlowSequenceStep_%s {id: $id})
-			ON CREATE SET
+	onCreate := `ON CREATE SET
 				fss.createdAt = $createdAt,
 				fss.updatedAt = $updatedAt,
+				fss.index = $index,
 				fss.name = $name,
-				fss.status = $status
-			ON MATCH SET
+				fss.status = $status,
+				fss.action = $action,`
+	onMatch := `ON MATCH SET
 				fss.updatedAt = $updatedAt,
+				fss.index = $index,
 				fss.name = $name,
-				fss.status = $status
-			RETURN fss`, common.GetTenantFromContext(ctx))
+				fss.status = $status,
+				fss.action = $action,`
 
 	params := map[string]any{
 		"tenant":    common.GetTenantFromContext(ctx),
-		"id":        entity.Id,
-		"createdAt": utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
-		"name":      entity.Name,
-		"status":    entity.Status,
+		"id":        input.Id,
+		"createdAt": utils.TimeOrNow(input.CreatedAt),
+		"updatedAt": utils.TimeOrNow(input.UpdatedAt),
+		"index":     input.Index,
+		"name":      input.Name,
+		"status":    input.Status,
+		"action":    input.Action,
 	}
+
+	if input.Action == entity.FlowSequenceStepActionWait {
+		onCreate += `
+				fss.actionData_minutes = $actionData_waitTime`
+		onMatch += `
+				fss.actionData_minutes = $actionData_waitTime`
+		params["actionData_waitTime"] = input.ActionData.Wait.Minutes
+	}
+	if input.Action == entity.FlowSequenceStepActionEmailNew {
+		onCreate += `
+				fss.actionData_subject = $actionData_subject,
+				fss.actionData_bodyTemplate = $actionData_bodyTemplate`
+		onMatch += `
+				fss.actionData_subject = $actionData_subject,
+				fss.actionData_bodyTemplate = $actionData_bodyTemplate`
+		params["actionData_subject"] = input.ActionData.EmailNew.Subject
+		params["actionData_bodyTemplate"] = input.ActionData.EmailNew.BodyTemplate
+	}
+	if input.Action == entity.FlowSequenceStepActionEmailReply {
+		onCreate += `
+				fss.actionData_stepId = $actionData_stepId,
+				fss.actionData_subject = $actionData_subject,
+				fss.actionData_bodyTemplate = $actionData_bodyTemplate`
+		onMatch += `
+				fss.actionData_stepId = $actionData_stepId,
+				fss.actionData_subject = $actionData_subject,
+				fss.actionData_bodyTemplate = $actionData_bodyTemplate`
+		params["actionData_stepId"] = input.ActionData.EmailReply.StepID
+		params["actionData_subject"] = input.ActionData.EmailReply.Subject
+		params["actionData_bodyTemplate"] = input.ActionData.EmailReply.BodyTemplate
+	}
+	if input.Action == entity.FlowSequenceStepActionLinkedinConnectionRequest {
+		onCreate += `
+				fss.actionData_messageTemplate = $actionData_messageTemplate`
+		onMatch += `
+				fss.actionData_messageTemplate = $actionData_messageTemplate`
+		params["actionData_messageTemplate"] = input.ActionData.LinkedinConnectionRequest.MessageTemplate
+	}
+	if input.Action == entity.FlowSequenceStepActionLinkedinMessage {
+		onCreate += `
+				fss.actionData_messageTemplate = $actionData_messageTemplate`
+		onMatch += `
+				fss.actionData_messageTemplate = $actionData_messageTemplate`
+		params["actionData_messageTemplate"] = input.ActionData.LinkedinMessage.MessageTemplate
+	}
+
+	cypher := fmt.Sprintf(`
+			MATCH (t:Tenant {name:$tenant})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(fss:FlowSequenceStep:FlowSequenceStep_%s {id: $id})
+			%s
+			%s
+			RETURN fss`, common.GetTenantFromContext(ctx), onCreate, onMatch)
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

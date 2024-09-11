@@ -12,6 +12,19 @@ import (
 	"syscall"
 )
 
+// @title CustomerOS API
+// @version 1.0
+// @description CustomerOS API for multiple services (Verify, Enrich, Orgs)
+// @host api.customeros.ai
+// @schemes https
+// @BasePath /
+// @securityDefinitions.apikey ApiKeyAuth
+// @in header
+// @name X-CUSTOMER-OS-API-KEY
+func init() {
+	// This empty function ensures that swagger_info.go is included in the build
+}
+
 func main() {
 	// Initialize configuration
 	cfg, err := config.InitConfig()

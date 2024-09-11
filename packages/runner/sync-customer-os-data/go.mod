@@ -22,7 +22,7 @@ require (
 	github.com/uber/jaeger-client-go v2.30.0+incompatible
 	golang.org/x/oauth2 v0.23.0
 	golang.org/x/text v0.18.0
-	google.golang.org/grpc v1.65.0
+	google.golang.org/grpc v1.66.1
 	gorm.io/driver/postgres v1.5.9
 	gorm.io/gorm v1.25.11
 	zgo.at/zcache v1.2.0
@@ -39,7 +39,7 @@ require (
 	github.com/gin-gonic/gin v1.10.0 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
-	github.com/go-playground/validator/v10 v10.22.0 // indirect
+	github.com/go-playground/validator/v10 v10.22.1 // indirect
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/h2non/filetype v1.1.3 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect

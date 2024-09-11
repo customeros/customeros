@@ -11,6 +11,7 @@ import { rdiffResult } from 'recursive-diff';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
+import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store.ts';
 
 import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
@@ -77,10 +78,22 @@ export class ContactStore implements Store<Contact>, ContractStore {
     return this.value.organizations.content[0]?.metadata?.id;
   }
 
+  get sequence(): FlowSequenceStore | undefined {
+    if (!this.value.sequences?.length) return undefined;
+
+    return this.root.flowSequences?.value.get(
+      this.value.sequences[0]?.metadata.id,
+    ) as FlowSequenceStore;
+  }
+
   get name() {
     return (
       this.value.name || `${this.value.firstName} ${this.value.lastName}`.trim()
     );
+  }
+
+  get emailId() {
+    return this.value.emails?.[0]?.id;
   }
 
   get connectedUsers() {
@@ -479,6 +492,11 @@ const CONTACT_QUERY = gql`
       metadata {
         id
       }
+      sequences {
+        metadata {
+          id
+        }
+      }
       tags {
         metadata {
           id
@@ -591,6 +609,7 @@ const getDefaultValue = (): Contact => ({
     totalAvailable: 0,
   },
   socials: [],
+  sequences: [],
   timezone: '',
   source: DataSource.Openline,
   sourceOfTruth: DataSource.Openline,

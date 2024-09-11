@@ -2,6 +2,7 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
@@ -20,7 +21,7 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 		},
 		Name:        entity.Name,
 		Description: entity.Description,
-		Status:      MapFlowStatusToModel(entity.Status),
+		Status:      entity.Status,
 	}
 }
 
@@ -47,7 +48,7 @@ func MapEntityToFlowSequence(entity *neo4jentity.FlowSequenceEntity) *model.Flow
 		},
 		Name:        entity.Name,
 		Description: entity.Description,
-		Status:      MapFlowSequenceStatusToModel(entity.Status),
+		Status:      entity.Status,
 	}
 }
 
@@ -112,6 +113,37 @@ func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *mo
 	if entity == nil {
 		return nil
 	}
+	var actionData model.FlowSequenceStepActionData
+
+	if entity.Action == neo4jentity.FlowSequenceStepActionWait {
+		actionData = &model.FlowSequenceStepActionDataWait{
+			Minutes: entity.ActionData.Wait.Minutes,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionEmailNew {
+		actionData = &model.FlowSequenceStepActionDataEmail{
+			Subject:      entity.ActionData.EmailNew.Subject,
+			BodyTemplate: entity.ActionData.EmailNew.BodyTemplate,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionEmailReply {
+		actionData = &model.FlowSequenceStepActionDataEmail{
+			StepID:       entity.ActionData.EmailReply.StepID,
+			Subject:      entity.ActionData.EmailReply.Subject,
+			BodyTemplate: entity.ActionData.EmailReply.BodyTemplate,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionLinkedinConnectionRequest {
+		actionData = &model.FlowSequenceStepActionLinkedinMessage{
+			MessageTemplate: entity.ActionData.LinkedinConnectionRequest.MessageTemplate,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionLinkedinMessage {
+		actionData = &model.FlowSequenceStepActionLinkedinMessage{
+			MessageTemplate: entity.ActionData.LinkedinMessage.MessageTemplate,
+		}
+	}
+
 	return &model.FlowSequenceStep{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
@@ -121,11 +153,11 @@ func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *mo
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Name:    entity.Name,
-		Status:  MapFlowSequenceStepStatusToModel(entity.Status),
-		Type:    MapFlowSequenceStepTypeToModel(entity.Type),
-		Subtype: MapFlowSequenceStepSubtypeToModel(entity.Subtype),
-		Body:    entity.Body,
+		Index:      entity.Index,
+		Name:       entity.Name,
+		Status:     entity.Status,
+		Action:     entity.Action,
+		ActionData: actionData,
 	}
 }
 
@@ -135,124 +167,6 @@ func MapEntitiesToFlowSequenceSteps(entities *neo4jentity.FlowSequenceStepEntiti
 		mapped = append(mapped, MapEntityToFlowSequenceStep(&entity))
 	}
 	return mapped
-}
-
-func MapFlowStatusToModel(flowSequenceStatus neo4jentity.FlowStatus) model.FlowStatus {
-	switch flowSequenceStatus {
-	case neo4jentity.FlowStatusActive:
-		return model.FlowStatusActive
-	case neo4jentity.FlowStatusInactive:
-		return model.FlowStatusInactive
-	case neo4jentity.FlowStatusPaused:
-		return model.FlowStatusPaused
-	case neo4jentity.FlowStatusArchived:
-		return model.FlowStatusArchived
-	default:
-		return ""
-	}
-}
-
-func MapFlowStatusToEntity(flowSequenceStatus model.FlowStatus) neo4jentity.FlowStatus {
-	switch flowSequenceStatus {
-	case model.FlowStatusActive:
-		return neo4jentity.FlowStatusActive
-	case model.FlowStatusInactive:
-		return neo4jentity.FlowStatusInactive
-	case model.FlowStatusPaused:
-		return neo4jentity.FlowStatusPaused
-	case model.FlowStatusArchived:
-		return neo4jentity.FlowStatusArchived
-	default:
-		return ""
-	}
-}
-
-func MapFlowSequenceStatusToModel(flowSequenceStatus neo4jentity.FlowSequenceStatus) model.FlowSequenceStatus {
-	switch flowSequenceStatus {
-	case neo4jentity.FlowSequenceStatusActive:
-		return model.FlowSequenceStatusActive
-	case neo4jentity.FlowSequenceStatusInactive:
-		return model.FlowSequenceStatusInactive
-	case neo4jentity.FlowSequenceStatusPaused:
-		return model.FlowSequenceStatusPaused
-	case neo4jentity.FlowSequenceStatusArchived:
-		return model.FlowSequenceStatusArchived
-	default:
-		return ""
-	}
-}
-
-func MapFlowSequenceStatusToEntity(flowSequenceStatus model.FlowSequenceStatus) neo4jentity.FlowSequenceStatus {
-	switch flowSequenceStatus {
-	case model.FlowSequenceStatusActive:
-		return neo4jentity.FlowSequenceStatusActive
-	case model.FlowSequenceStatusInactive:
-		return neo4jentity.FlowSequenceStatusInactive
-	case model.FlowSequenceStatusPaused:
-		return neo4jentity.FlowSequenceStatusPaused
-	case model.FlowSequenceStatusArchived:
-		return neo4jentity.FlowSequenceStatusArchived
-	default:
-		return ""
-	}
-}
-
-func MapFlowSequenceStepStatusToModel(flowSequenceStepStatus neo4jentity.FlowSequenceStepStatus) model.FlowSequenceStepStatus {
-	switch flowSequenceStepStatus {
-	case neo4jentity.FlowSequenceStepStatusActive:
-		return model.FlowSequenceStepStatusActive
-	case neo4jentity.FlowSequenceStepStatusInactive:
-		return model.FlowSequenceStepStatusInactive
-	case neo4jentity.FlowSequenceStepStatusPaused:
-		return model.FlowSequenceStepStatusPaused
-	case neo4jentity.FlowSequenceStepStatusArchived:
-		return model.FlowSequenceStepStatusArchived
-	default:
-		return ""
-	}
-}
-
-func MapFlowSequenceStepStatusToEntity(enum model.FlowSequenceStepStatus) neo4jentity.FlowSequenceStepStatus {
-	switch enum {
-	case model.FlowSequenceStepStatusActive:
-		return neo4jentity.FlowSequenceStepStatusActive
-	case model.FlowSequenceStepStatusInactive:
-		return neo4jentity.FlowSequenceStepStatusInactive
-	case model.FlowSequenceStepStatusPaused:
-		return neo4jentity.FlowSequenceStepStatusPaused
-	case model.FlowSequenceStepStatusArchived:
-		return neo4jentity.FlowSequenceStepStatusArchived
-	default:
-		return ""
-	}
-}
-
-func MapFlowSequenceStepTypeToModel(enum neo4jentity.FlowSequenceStepType) model.FlowSequenceStepType {
-	switch enum {
-	case neo4jentity.FlowSequenceStepTypeEmail:
-		return model.FlowSequenceStepTypeEmail
-	case neo4jentity.FlowSequenceStepTypeLinkedin:
-		return model.FlowSequenceStepTypeLinkedin
-	default:
-		return ""
-	}
-}
-
-func MapFlowSequenceStepSubtypeToModel(enum *neo4jentity.FlowSequenceStepSubtype) *model.FlowSequenceStepSubtype {
-	if enum == nil {
-		return nil
-	}
-	var v model.FlowSequenceStepSubtype
-	switch *enum {
-	case neo4jentity.FlowSequenceStepSubtypeLinkedinConnectionRequest:
-		v = model.FlowSequenceStepSubtypeLinkedinConnectionRequest
-	case neo4jentity.FlowSequenceStepSubtypeLinkedinMessage:
-		v = model.FlowSequenceStepSubtypeLinkedinMessage
-	default:
-		v = ""
-	}
-
-	return &v
 }
 
 func MapFlowSequenceCreateInputToEntity(input model.FlowSequenceCreateInput) *neo4jentity.FlowSequenceEntity {
@@ -270,15 +184,43 @@ func MapFlowSequenceUpdateInputToEntity(input model.FlowSequenceUpdateInput) *ne
 	}
 }
 
-func MapFlowSequenceStepCreateInputToEntity(input model.FlowSequenceStepCreateInput) *neo4jentity.FlowSequenceStepEntity {
-	return &neo4jentity.FlowSequenceStepEntity{
-		Name: input.Name,
-	}
-}
+func MapFlowSequenceStepMergeInputToEntity(input model.FlowSequenceStepMergeInput) *neo4jentity.FlowSequenceStepEntity {
+	actionData := neo4jentity.FlowSequenceStepActionData{}
 
-func MapFlowSequenceStepUpdateInputToEntity(input model.FlowSequenceStepUpdateInput) *neo4jentity.FlowSequenceStepEntity {
+	if input.Action == neo4jentity.FlowSequenceStepActionWait {
+		actionData.Wait = &neo4jentity.FlowSequenceStepActionDataWait{
+			Minutes: input.ActionData.Wait.Minutes,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionEmailNew {
+		actionData.EmailNew = &neo4jentity.FlowSequenceStepActionDataEmail{
+			Subject:      input.ActionData.EmailNew.Subject,
+			BodyTemplate: input.ActionData.EmailNew.BodyTemplate,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionEmailReply {
+		actionData.EmailReply = &neo4jentity.FlowSequenceStepActionDataEmail{
+			StepID:       input.ActionData.EmailReply.StepID,
+			Subject:      input.ActionData.EmailReply.Subject,
+			BodyTemplate: input.ActionData.EmailReply.BodyTemplate,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionLinkedinConnectionRequest {
+		actionData.LinkedinConnectionRequest = &neo4jentity.FlowSequenceStepActionDataLinkedinConnectionRequest{
+			MessageTemplate: input.ActionData.LinkedinConnectionRequest.MessageTemplate,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionLinkedinMessage {
+		actionData.LinkedinMessage = &neo4jentity.FlowSequenceStepActionDataLinkedinMessage{
+			MessageTemplate: input.ActionData.LinkedinMessage.MessageTemplate,
+		}
+	}
+
 	return &neo4jentity.FlowSequenceStepEntity{
-		Id:   input.ID,
-		Name: input.Name,
+		Id:         utils.StringOrEmpty(input.ID),
+		Index:      input.Index,
+		Name:       input.Name,
+		Action:     input.Action,
+		ActionData: actionData,
 	}
 }
