@@ -41,5 +41,5 @@ jobs:
       - name: Upload dist
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.ref_name }}
-          path: packages/apps/extension/dist
+          name: browser-extension
+          path: packages/apps/extension/dist/*
