@@ -44,7 +44,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 		switch invoice.Status {
 		case neo4jenum.InvoiceStatusPaid:
 			// Handle scenario: Invoice already paid
-			c.JSON(http.StatusConflict, gin.H{"error": "Invoice already paid"})
+			c.Redirect(http.StatusSeeOther, services.Cfg.AppConfig.InvoicePaidRedirectUrl)
 			return
 		case neo4jenum.InvoiceStatusVoid:
 			// Handle scenario: Invoice voided
