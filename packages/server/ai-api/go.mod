@@ -10,7 +10,9 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ./../events-processing-proto
 
-go 1.21
+go 1.21.0
+
+toolchain go1.22.6
 
 require (
 	github.com/caarlos0/env/v6 v6.10.1
