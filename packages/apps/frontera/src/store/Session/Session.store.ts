@@ -13,6 +13,7 @@ declare global {
     intercomSettings: unknown;
     __COS_SESSION__?: {
       email: string;
+      apiKey: string | null;
       sessionToken: string | null;
     };
   }
@@ -57,6 +58,7 @@ const defaultSession: Session = {
 export class SessionStore {
   value: Session = defaultSession;
   sessionToken: string | null = null;
+  tenantApiKey: string | null = null;
   error: string | null = null;
   isBootstrapping = true;
   isLoading: 'google' | 'azure-ad' | null = null;
@@ -65,7 +67,7 @@ export class SessionStore {
     makeAutoObservable(this);
     makePersistable(this, {
       name: 'SessionStore',
-      properties: ['value', 'sessionToken'],
+      properties: ['value', 'sessionToken', 'tenantApiKey'],
     }).then(
       action(() => {
         this.loadSession();
@@ -79,6 +81,10 @@ export class SessionStore {
           'X-Openline-USERNAME': this.value.profile.email ?? '',
         });
       }
+    });
+
+    autorun(() => {
+      this.tenantApiKey = this.root.settings.tenantApiKey;
     });
 
     autorun(() => {
@@ -215,12 +221,14 @@ export class SessionStore {
       JSON.stringify({
         email: this.value.profile.email,
         sessionToken: this.sessionToken,
+        apiKey: this.root.settings.tenantApiKey,
       }),
     );
 
     window.__COS_SESSION__ = {
       email: this.value.profile.email,
       sessionToken: this.sessionToken,
+      apiKey: this.root.settings.tenantApiKey,
     };
   }
 
