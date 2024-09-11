@@ -50,8 +50,8 @@ func (c *Cache) SetApiKey(app, apiKey string) {
 	c.mu.Lock()
 	defer c.mu.Unlock()
 
-	keyBytes := []byte(string(app)) // Use app as the key
-	valueBytes := []byte(apiKey)    // Store apiKey as the value
+	keyBytes := []byte(app)      // Use app as the key
+	valueBytes := []byte(apiKey) // Store apiKey as the value
 
 	_ = c.apiKeyCache.Set(keyBytes, valueBytes, expire24Hours)
 }

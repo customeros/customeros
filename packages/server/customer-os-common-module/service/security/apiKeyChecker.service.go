@@ -7,7 +7,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -64,17 +63,15 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 				return
 			}
 			span.LogFields(log.Bool("cached", false))
-			keyResult := appKeyRepo.FindByKey(ctx, string(app), kh)
+			appKey, err := appKeyRepo.FindByKey(ctx, string(app), kh)
 
-			if keyResult.Error != nil {
+			if err != nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
-					"errors": []gin.H{{"message": fmt.Sprintf("Error while checking api key: %s", keyResult.Error.Error())}},
+					"errors": []gin.H{{"message": fmt.Sprintf("Error while checking api key: %s", err.Error())}},
 				})
 				c.Abort()
 				return
 			}
-
-			appKey := keyResult.Result.(*postgresEntity.AppKey)
 
 			if appKey == nil {
 				c.JSON(http.StatusUnauthorized, gin.H{
@@ -85,7 +82,7 @@ func ApiKeyCheckerHTTP(tenantApiKeyRepo postgresRepository.TenantWebhookApiKeyRe
 			}
 
 			// If the API key is valid after database check, cache it
-			if config.cache != nil && keyResult.Result != nil {
+			if config.cache != nil && appKey != nil {
 				config.cache.SetApiKey(string(app), kh)
 			}
 
@@ -157,11 +154,10 @@ func ApiKeyCheckerGRPC(ctx context.Context, appKeyRepo postgresRepository.AppKey
 
 	kh := md.Get(ApiKeyHeader)
 	if len(kh) == 1 {
-		keyResult := appKeyRepo.FindByKey(ctx, string(app), kh[0])
-		if keyResult.Error != nil {
+		appKey, err := appKeyRepo.FindByKey(ctx, string(app), kh[0])
+		if err != nil {
 			return false
 		}
-		appKey := keyResult.Result.(*postgresEntity.AppKey)
 		return appKey != nil
 	}
 	return false
