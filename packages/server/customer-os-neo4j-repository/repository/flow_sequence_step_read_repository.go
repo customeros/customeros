@@ -46,7 +46,7 @@ func (r flowSequenceStepReadRepositoryImpl) GetList(ctx context.Context, sequenc
 		cypher += "WHERE fs.id in $sequenceIds "
 		params["sequenceIds"] = sequenceIds
 	}
-	cypher += "RETURN fss, fs.id"
+	cypher += "RETURN fss, fs.id ORDER by fss.index"
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

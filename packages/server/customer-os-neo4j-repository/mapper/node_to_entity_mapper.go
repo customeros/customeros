@@ -1211,12 +1211,48 @@ func MapDbNodeToFlowSequenceStepEntity(node *dbtype.Node) *entity.FlowSequenceSt
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
+
+	action := entity.GetFlowSequenceStepAction(utils.GetStringPropOrEmpty(props, "action"))
+	actionData := entity.FlowSequenceStepActionData{}
+
+	if action == entity.FlowSequenceStepActionWait {
+		actionData.Wait = &entity.FlowSequenceStepActionDataWait{
+			Minutes: utils.GetInt64PropOrZero(props, "actionData_minutes"),
+		}
+	}
+	if action == entity.FlowSequenceStepActionEmailNew {
+		actionData.EmailNew = &entity.FlowSequenceStepActionDataEmail{
+			Subject:      utils.GetStringPropOrEmpty(props, "actionData_subject"),
+			BodyTemplate: utils.GetStringPropOrEmpty(props, "actionData_bodyTemplate"),
+		}
+	}
+	if action == entity.FlowSequenceStepActionEmailReply {
+		actionData.EmailReply = &entity.FlowSequenceStepActionDataEmail{
+			StepID:       utils.GetStringPropOrNil(props, "actionData_stepId"),
+			Subject:      utils.GetStringPropOrEmpty(props, "actionData_subject"),
+			BodyTemplate: utils.GetStringPropOrEmpty(props, "actionData_bodyTemplate"),
+		}
+	}
+	if action == entity.FlowSequenceStepActionLinkedinConnectionRequest {
+		actionData.LinkedinConnectionRequest = &entity.FlowSequenceStepActionDataLinkedinConnectionRequest{
+			MessageTemplate: utils.GetStringPropOrEmpty(props, "actionData_messageTemplate"),
+		}
+	}
+	if action == entity.FlowSequenceStepActionLinkedinMessage {
+		actionData.LinkedinMessage = &entity.FlowSequenceStepActionDataLinkedinMessage{
+			MessageTemplate: utils.GetStringPropOrEmpty(props, "actionData_messageTemplate"),
+		}
+	}
+
 	e := entity.FlowSequenceStepEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		Status:    entity.GetFlowSequenceStepStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Id:         utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:  utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Index:      utils.GetInt64PropOrZero(props, "index"),
+		Name:       utils.GetStringPropOrEmpty(props, "name"),
+		Status:     entity.GetFlowSequenceStepStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Action:     action,
+		ActionData: actionData,
 	}
 	return &e
 }
