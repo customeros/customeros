@@ -42,4 +42,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ github.ref_name }}
+          working-directory: ./packages/apps/extension
           path: ./dist
