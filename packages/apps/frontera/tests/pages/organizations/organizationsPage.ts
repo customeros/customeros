@@ -52,8 +52,6 @@ export class OrganizationsPage {
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
 
-  // private finder = 'div[data-test="search-org"]';
-
   constructor(page: Page) {
     this.page = page;
   }

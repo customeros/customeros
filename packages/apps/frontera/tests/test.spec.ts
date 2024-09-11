@@ -1,7 +1,7 @@
 import { test } from '@playwright/test';
 
-import { LoginPage } from './pages/loginPage';
-import { CustomersPage } from './pages/customersPage';
+import { LoginPage } from './pages/loginPage/loginPage';
+import { CustomersPage } from './pages/customers/customersPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
 import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
@@ -169,7 +169,7 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   await organizationAccountPage.checkContractsCount(1);
 });
 
-test('CmdK global menu', async ({ page }) => {
+test('CmdK global menu', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationsCmdKPage = new OrganizationsCmdKPage(page);
@@ -178,5 +178,14 @@ test('CmdK global menu', async ({ page }) => {
   await organizationsPage.goToAllOrgs();
 
   await organizationsCmdKPage.accessCmdK();
-  await organizationsCmdKPage.verifyCmdKFinder();
+  await organizationsCmdKPage.verifyFinder();
+  await organizationsCmdKPage.verifyOrganizationCreation(page, testInfo);
+  await organizationsCmdKPage.verifyNavigationToTargets(page);
+  await organizationsCmdKPage.verifyNavigationToOpportunities(page);
+  await organizationsCmdKPage.verifyNavigationToCustomers(page);
+  await organizationsCmdKPage.verifyNavigationToContacts(page);
+  await organizationsCmdKPage.verifyNavigationToInvoices(page);
+  await organizationsCmdKPage.verifyNavigationToContracts(page);
+  await organizationsCmdKPage.verifyNavigationToSettings(page);
+  await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
 });

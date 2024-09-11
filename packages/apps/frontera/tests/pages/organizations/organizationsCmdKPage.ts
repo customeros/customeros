@@ -1,4 +1,19 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect, TestInfo } from '@playwright/test';
+
+import { TargetsPage } from '../targets/targetsPage';
+import { SettingsPage } from '../settings/settingsPage';
+import { InvoicesPage } from '../invoices/invoicesPage';
+import { ContactsPage } from '../contacts/contactsPage';
+import { OrganizationsPage } from './organizationsPage';
+import { ContractsPage } from '../contracts/contractsPage';
+import { CustomersPage } from '../customers/customersPage';
+import { CustomerMapPage } from '../customer-map/customerMapPage';
+import { SettingsAccountsPage } from '../settings/settingsAccounts';
+import { OpportunitiesPage } from '../opportunities/opportunitiesPage';
+import {
+  ensureLocatorIsVisible,
+  clickLocatorThatIsVisible,
+} from '../../helper';
 
 export class OrganizationsCmdKPage {
   private page: Page;
@@ -23,6 +38,58 @@ export class OrganizationsCmdKPage {
   private organizationHubGr = 'div[data-test="organization-hub-gr"]';
   private organizationHubGs = 'div[data-test="organization-hub-gs"]';
   private organizationHubGd = 'div[data-test="organization-hub-gd"]';
+
+  private async openCmdK() {
+    const isMac = process.platform === 'darwin';
+
+    if (isMac) {
+      await this.page.keyboard.down('Meta');
+      await this.page.keyboard.press('KeyK');
+      await this.page.keyboard.up('Meta');
+    } else {
+      await this.page.keyboard.down('Control');
+      await this.page.keyboard.press('KeyK');
+      await this.page.keyboard.up('Control');
+    }
+  }
+
+  private async verifyNavigationWithClick(
+    organizationHubNavigationDestination: string,
+    sideNavItemSelected: string,
+  ) {
+    await clickLocatorThatIsVisible(
+      this.page,
+      organizationHubNavigationDestination,
+    );
+
+    const sideNavItemSelectedVisible = await ensureLocatorIsVisible(
+      this.page,
+      sideNavItemSelected,
+    );
+
+    const sideNavItemSelectedTextContent =
+      await sideNavItemSelectedVisible.getAttribute('aria-selected');
+
+    expect(sideNavItemSelectedTextContent).toBe('true');
+  }
+
+  private async verifyNavigationWithKeyboard(
+    secondKey: string,
+    sideNavItemSelected: string,
+  ) {
+    await this.page.keyboard.press('KeyG');
+    await this.page.keyboard.press(secondKey);
+
+    const sideNavItemSelectedVisible = await ensureLocatorIsVisible(
+      this.page,
+      sideNavItemSelected,
+    );
+
+    const sideNavItemSelectedTextContent =
+      await sideNavItemSelectedVisible.getAttribute('aria-selected');
+
+    expect(sideNavItemSelectedTextContent).toBe('true');
+  }
 
   async accessCmdK() {
     await this.openCmdK();
@@ -140,19 +207,7 @@ export class OrganizationsCmdKPage {
     expect(organizationsHubCount).toBe(0);
   }
 
-  async verifyOrganizationsHub() {
-    await this.page.waitForSelector(this.organizationsHubSpan, {
-      state: 'visible',
-    });
-
-    const organizationsHub = this.page.locator(this.organizationsHubSpan);
-
-    const organizationsHubText = await organizationsHub.textContent();
-
-    expect(organizationsHubText.trim()).toBe('Organizations');
-  }
-
-  async verifyCmdKFinder() {
+  async verifyFinder() {
     await this.openCmdK();
 
     await this.page
@@ -185,19 +240,178 @@ export class OrganizationsCmdKPage {
         .soft(organizationHubGdText.trim())
         .toBe(navigationItemTextTwo.trim()),
     ]);
+
+    await this.page.keyboard.press('Escape');
   }
 
-  private async openCmdK() {
-    const isMac = process.platform === 'darwin';
+  async verifyOrganizationCreation(page: Page, testInfo: TestInfo) {
+    const organizationsPage = new OrganizationsPage(page);
 
-    if (isMac) {
-      await this.page.keyboard.down('Meta');
-      await this.page.keyboard.press('KeyK');
-      await this.page.keyboard.up('Meta');
-    } else {
-      await this.page.keyboard.down('Control');
-      await this.page.keyboard.press('KeyK');
-      await this.page.keyboard.up('Control');
-    }
+    await this.openCmdK();
+    await organizationsPage.addOrganization(
+      this.organizationHubAddNewOrgs,
+      testInfo,
+    );
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToTargets(page: Page) {
+    const targetsPage = new TargetsPage(page);
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyT',
+      targetsPage.sideNavItemTargetsSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGt,
+      targetsPage.sideNavItemTargetsSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToOpportunities(page: Page) {
+    const opportunitiesPage = new OpportunitiesPage(page);
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyO',
+      opportunitiesPage.sideNavItemOpportunitiesSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGo,
+      opportunitiesPage.sideNavItemOpportunitiesSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToCustomers(page: Page) {
+    const customersPage = new CustomersPage(page);
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyC',
+      customersPage.sideNavItemCustomersSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGc,
+      customersPage.sideNavItemCustomersSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToContacts(page: Page) {
+    const contactsPage = new ContactsPage(page);
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyN',
+      contactsPage.sideNavItemAllContactsSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGn,
+      contactsPage.sideNavItemAllContactsSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToInvoices(page: Page) {
+    const invoicesPage = new InvoicesPage(page);
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyI',
+      invoicesPage.sideNavItemAllUpcomingSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGi,
+      invoicesPage.sideNavItemAllUpcomingSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToContracts(page: Page) {
+    const contractsPage = new ContractsPage(page);
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyR',
+      contractsPage.sideNavItemAllContractsSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGr,
+      contractsPage.sideNavItemAllContractsSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToSettings(page: Page) {
+    const settingsAccountsPage = new SettingsAccountsPage(page);
+    const settingsPage = new SettingsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyS',
+      settingsAccountsPage.settingsAccountsSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGs,
+      settingsAccountsPage.settingsAccountsSelected,
+    );
+
+    await clickLocatorThatIsVisible(this.page, settingsPage.settingsGoBack);
+  }
+
+  async verifyNavigationToCustomerMap(page: Page) {
+    const customerMapPage = new CustomerMapPage(page);
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyD',
+      customerMapPage.sideNavItemAllCustomerMapSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGd,
+      customerMapPage.sideNavItemAllCustomerMapSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
   }
 }

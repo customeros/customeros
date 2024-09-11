@@ -1,7 +1,7 @@
 import { chromium } from '@playwright/test';
 
-import { LoginPage } from './pages/loginPage';
-import { ContactsPage } from './pages/contactsPage';
+import { LoginPage } from './pages/loginPage/loginPage';
+import { ContactsPage } from './pages/contacts/contactsPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
 
 async function globalSetup() {

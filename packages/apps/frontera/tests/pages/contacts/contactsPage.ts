@@ -1,12 +1,14 @@
 import { Page } from '@playwright/test';
 
-import { clickLocatorsThatAreVisible } from '../helper';
+import { clickLocatorsThatAreVisible } from '../../helper';
 
 export class ContactsPage {
   private page: Page;
 
   private sideNavItemAllContacts =
     'button[data-test="side-nav-item-all-contacts"]';
+  sideNavItemAllContactsSelected =
+    'button[data-test="side-nav-item-all-contacts"] div[aria-selected="true"]';
   private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
   private contactsActionsArchive =
     'button[data-test="contacts-actions-archive"]';

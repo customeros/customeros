@@ -10,6 +10,8 @@ export class SettingsAccountsPage {
   private page: Page;
   private static settingsAccountsHeader =
     'h1[data-test="settings-accounts-header"]';
+  settingsAccountsSelected =
+    'button[data-test="settings-accounts"] div[aria-selected="true"]';
 
   static async ensureSettingsAccountsHeaderIsVisible(page: Page) {
     await ensureLocatorIsVisible(page, this.settingsAccountsHeader);

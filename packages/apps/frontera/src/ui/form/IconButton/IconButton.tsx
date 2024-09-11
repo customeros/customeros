@@ -30,6 +30,7 @@ export interface IconButtonProps
     VariantProps<typeof solidButton>,
     VariantProps<typeof buttonSize> {
   asChild?: boolean;
+  dataTest?: string;
   isLoading?: boolean;
   isDisabled?: boolean;
   'aria-label': string;
@@ -43,6 +44,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     {
       children,
       className,
+      dataTest,
       colorScheme = 'gray',
       spinner,
       variant = 'outline',
@@ -72,6 +74,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       <button
         ref={ref}
         {...props}
+        data-test={dataTest}
         aria-label={ariaLabel}
         disabled={isLoading || isDisabled}
         className={twMerge(

@@ -42,7 +42,7 @@ export const SidenavItem = ({
       leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
       className={`w-full justify-start px-3 text-gray-700 hover:bg-grayModern-100 *:hover:text-gray-700 focus:shadow-sidenavItemFocus  mb-[2px] ${dynamicClasses}`}
     >
-      <div className='w-full flex justify-between '>
+      <div aria-selected={isActive} className='w-full flex justify-between '>
         <div>{label}</div>
         {rightElement}
       </div>

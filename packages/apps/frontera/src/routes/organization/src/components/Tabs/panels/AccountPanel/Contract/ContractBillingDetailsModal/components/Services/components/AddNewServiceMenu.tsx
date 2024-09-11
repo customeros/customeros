@@ -37,7 +37,7 @@ export const AddNewServiceMenu = observer(
                 variant='outline'
                 colorScheme='gray'
                 aria-label='Add a service'
-                data-test='contract-card-add-sli'
+                dataTest='contract-card-add-sli'
               />
             )}
           </MenuButton>
