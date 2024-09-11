@@ -542,6 +542,43 @@ info:
   title: CustomerOS API
   version: "1.0"
 paths:
+  /customerbase/v1/organization:
+    post:
+      consumes:
+      - application/json
+      description: Creates an organization in the system if it doesn't already exist
+        based on website, custom ID, or LinkedIn URL
+      parameters:
+      - description: Organization creation payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/rest.CreateOrganizationRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Organization created successfully
+          schema:
+            $ref: '#/definitions/rest.CreateOrganizationResponse'
+        "206":
+          description: Partial success - failed to add linkedin url
+          schema:
+            $ref: '#/definitions/rest.CreateOrganizationResponse'
+        "400":
+          description: Invalid request body or missing input fields
+        "401":
+          description: Unauthorized access
+        "409":
+          description: Conflict - organization already exists
+        "500":
+          description: Failed to create organization
+      security:
+      - ApiKeyAuth: []
+      summary: Create a new organization
+      tags:
+      - CustomerBASE API
   /enrich/v1/person:
     get:
       description: Enriches a person's information using LinkedIn URL, email, and
@@ -616,43 +653,6 @@ paths:
       summary: Enrich Person Callback
       tags:
       - Enrichment API
-  /orgs/v1/organization:
-    post:
-      consumes:
-      - application/json
-      description: Creates an organization in the system if it doesn't already exist
-        based on website, custom ID, or LinkedIn URL
-      parameters:
-      - description: Organization creation payload
-        in: body
-        name: body
-        required: true
-        schema:
-          $ref: '#/definitions/rest.CreateOrganizationRequest'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Organization created successfully
-          schema:
-            $ref: '#/definitions/rest.CreateOrganizationResponse'
-        "206":
-          description: Partial success - failed to add linkedin url
-          schema:
-            $ref: '#/definitions/rest.CreateOrganizationResponse'
-        "400":
-          description: Invalid request body or missing input fields
-        "401":
-          description: Unauthorized access
-        "409":
-          description: Conflict - organization already exists
-        "500":
-          description: Failed to create organization
-      security:
-      - ApiKeyAuth: []
-      summary: Create a new organization
-      tags:
-      - CustomerBASE API
   /verify/v1/email:
     get:
       consumes:

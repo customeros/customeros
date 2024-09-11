@@ -54,7 +54,7 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *se
 }
 
 func registerOrganizationRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, rest.CreateOrganization(services, grpcClients))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organization", customerBaseV1Path), services, cache, rest.CreateOrganization(services, grpcClients))
 }
 
 func registerOutreachRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
