@@ -80,7 +80,7 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 			if emailValidationData != nil && emailValidationData.Syntax.IsValid && (emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown)) {
 				if request.Options.VerifyCatchAll || emailValidationData.EmailData.RetryValidation == true {
 					// Step 1 - try Enrow
-					enrowResponseStr, err := services.EmailValidationService.ValidateEmailWithEnrow(ctx, request.Email)
+					enrowResponseStr, err := services.EmailValidationService.ValidateEmailWithEnrow(ctx, request.Email, request.Options.ExtendedWaitingTime)
 					if err != nil {
 						tracing.TraceErr(span, errors.Wrap(err, "failed to call Enrow"))
 						l.Errorf("Error on calling Enrow : %s", err.Error())

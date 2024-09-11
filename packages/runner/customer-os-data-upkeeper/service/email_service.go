@@ -460,7 +460,8 @@ func (s *emailService) callEmailValidation(ctx context.Context, tenant, email st
 	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
 		Email: email,
 		Options: validationmodel.ValidateEmailRequestOptions{
-			VerifyCatchAll: verifyCatchAll,
+			VerifyCatchAll:      verifyCatchAll,
+			ExtendedWaitingTime: true,
 		},
 	})
 	if err != nil {
