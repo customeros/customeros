@@ -336,7 +336,7 @@ export class OrganizationsCmdKPage {
   }
 
   async verifyNavigationToInvoices(page: Page) {
-    const invoicesPage = new InvoicesPage(page);
+    const invoicesPage = new InvoicesPage();
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
@@ -356,7 +356,7 @@ export class OrganizationsCmdKPage {
   }
 
   async verifyNavigationToContracts(page: Page) {
-    const contractsPage = new ContractsPage(page);
+    const contractsPage = new ContractsPage();
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
@@ -396,7 +396,7 @@ export class OrganizationsCmdKPage {
   }
 
   async verifyNavigationToCustomerMap(page: Page) {
-    const customerMapPage = new CustomerMapPage(page);
+    const customerMapPage = new CustomerMapPage();
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
