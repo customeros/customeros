@@ -1,0 +1,44 @@
+name: browser-extension
+
+on:
+  push:
+    branches: ["otter", "dev"]
+    paths:
+      - "packages/apps/extension/**"
+      - ".github/workflows/build-browser-extension.yml"
+  pull_request:
+    paths:
+      - "packages/apps/extension/**"
+      - ".github/workflows/build-browser-extension.yml"
+  release:
+    types: [created, edited]
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete huge unnecessary tools folder
+        run: rm -rf /opt/hostedtoolcache
+
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Build artifact
+        run: |
+          npm install
+          npm run build
+
+      - name: Upload dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ github.ref_name }}
+          path: ./dist
