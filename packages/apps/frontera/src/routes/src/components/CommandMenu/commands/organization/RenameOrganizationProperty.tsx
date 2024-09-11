@@ -12,6 +12,11 @@ export const RenameOrganizationProperty = observer(() => {
   const entity = store.organizations.value.get(context.ids?.[0] as string);
   const label = `Organization - ${entity?.value?.name}`;
   const property = context.property as 'name' | 'website';
+  const defaultValue = match({ property })
+    .with({ property: 'name' }, () => entity?.value?.name ?? '')
+    .with({ property: 'website' }, () => entity?.value?.website ?? '')
+    .otherwise(() => '');
+
   const [name, setName] = useState(() => defaultValue ?? '');
 
   const handleClose = () => {
@@ -38,11 +43,6 @@ export const RenameOrganizationProperty = observer(() => {
     });
     handleClose();
   };
-
-  const defaultValue = match({ property })
-    .with({ property: 'name' }, () => entity?.value?.name ?? '')
-    .with({ property: 'website' }, () => entity?.value?.website ?? '')
-    .otherwise(() => '');
 
   const placeholder = match({ property })
     .with({ property: 'name' }, () => 'Rename organization...')

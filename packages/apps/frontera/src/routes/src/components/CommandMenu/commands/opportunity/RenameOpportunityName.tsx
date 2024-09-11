@@ -31,6 +31,7 @@ export const RenameOpportunityName = observer(() => {
 
       return opp;
     });
+    handleClose();
   };
 
   return (
