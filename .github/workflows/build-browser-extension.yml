@@ -42,4 +42,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: browser-extension
-          path: packages/apps/extension/dist/*
+          path: packages/apps/extension/dist
