@@ -1,0 +1,34 @@
+{
+    "manifest_version": 3,
+    "name": "Your Extension Name",
+    "version": "1.0",
+    "permissions": [
+        "notifications",
+        "cookies",
+        "tabs",
+        "storage",
+        "scripting",
+        "alarms"
+],
+    "background": {
+      "service_worker": "background.js"
+    },
+    "content_scripts": [
+      {
+        "matches": [
+          "http://localhost/*",
+          "https://localhost/*",
+          "https://app.customeros.ai/*"
+        ],
+        "js": ["contentScript.js"]
+      }
+    ],
+    "host_permissions": [
+      "https://app.customeros.ai/*",
+      "https://bas.customeros.ai/*",
+      "http://localhost:5173/*",
+      "https://localhost:5173/*",
+      "https://www.linkedin.com/*"
+    ]
+  }
+  
