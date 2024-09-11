@@ -15,6 +15,63 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/customerbase/v1/organization": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates an organization in the system if it doesn't already exist based on website, custom ID, or LinkedIn URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Create a new organization",
+                "parameters": [
+                    {
+                        "description": "Organization creation payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.CreateOrganizationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Organization created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial success - failed to add linkedin url",
+                        "schema": {
+                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or missing input fields"
+                    },
+                    "401": {
+                        "description": "Unauthorized access"
+                    },
+                    "409": {
+                        "description": "Conflict - organization already exists"
+                    },
+                    "500": {
+                        "description": "Failed to create organization"
+                    }
+                }
+            }
+        },
         "/enrich/v1/person": {
             "get": {
                 "security": [
@@ -124,63 +181,6 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error"
-                    }
-                }
-            }
-        },
-        "/orgs/v1/organization": {
-            "post": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    }
-                ],
-                "description": "Creates an organization in the system if it doesn't already exist based on website, custom ID, or LinkedIn URL",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "CustomerBASE API"
-                ],
-                "summary": "Create a new organization",
-                "parameters": [
-                    {
-                        "description": "Organization creation payload",
-                        "name": "body",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/rest.CreateOrganizationRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "Organization created successfully",
-                        "schema": {
-                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
-                        }
-                    },
-                    "206": {
-                        "description": "Partial success - failed to add linkedin url",
-                        "schema": {
-                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid request body or missing input fields"
-                    },
-                    "401": {
-                        "description": "Unauthorized access"
-                    },
-                    "409": {
-                        "description": "Conflict - organization already exists"
-                    },
-                    "500": {
-                        "description": "Failed to create organization"
                     }
                 }
             }

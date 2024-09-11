@@ -85,7 +85,7 @@ type CreateOrganizationResponse struct {
 // @Failure 401  "Unauthorized access"
 // @Failure 409  "Conflict - organization already exists"
 // @Failure 500  "Failed to create organization"
-// @Router /orgs/v1/organization [post]
+// @Router /customerbase/v1/organization [post]
 // @Security ApiKeyAuth
 func CreateOrganization(services *service.Services, grpcClients *grpc_client.Clients) gin.HandlerFunc {
 	return func(c *gin.Context) {
