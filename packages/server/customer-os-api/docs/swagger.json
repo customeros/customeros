@@ -125,6 +125,63 @@
                 }
             }
         },
+        "/orgs/v1/organization": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Creates an organization in the system if it doesn't already exist based on website, custom ID, or LinkedIn URL",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Create a new organization",
+                "parameters": [
+                    {
+                        "description": "Organization creation payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/rest.CreateOrganizationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Organization created successfully",
+                        "schema": {
+                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
+                        }
+                    },
+                    "206": {
+                        "description": "Partial success - failed to add linkedin url",
+                        "schema": {
+                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or missing input fields"
+                    },
+                    "401": {
+                        "description": "Unauthorized access"
+                    },
+                    "409": {
+                        "description": "Conflict - organization already exists"
+                    },
+                    "500": {
+                        "description": "Failed to create organization"
+                    }
+                }
+            }
+        },
         "/verify/v1/email": {
             "get": {
                 "security": [
@@ -440,6 +497,66 @@
                 "resultUrl": {
                     "type": "string",
                     "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "rest.CreateOrganizationRequest": {
+            "description": "Request to create an organization",
+            "type": "object",
+            "properties": {
+                "customId": {
+                    "description": "Custom ID provided by the user\nExample: 12345",
+                    "type": "string"
+                },
+                "icpFit": {
+                    "description": "Indicates if the organization is an ICP (Ideal Customer Profile) fit\nExample: true",
+                    "type": "boolean"
+                },
+                "leadSource": {
+                    "description": "Lead source of the organization\nExample: Web Search",
+                    "type": "string"
+                },
+                "linkedinUrl": {
+                    "description": "Organization's LinkedIn profile URL\nExample: https://linkedin.com/company/openline",
+                    "type": "string"
+                },
+                "name": {
+                    "description": "Organization's name\nExample: Openline",
+                    "type": "string"
+                },
+                "relationship": {
+                    "description": "Relationship status of the organization\nExample: customer",
+                    "type": "string"
+                },
+                "website": {
+                    "description": "Organization's website URL\nExample: https://openline.com",
+                    "type": "string"
+                }
+            }
+        },
+        "rest.CreateOrganizationResponse": {
+            "description": "The response structure after an organization is successfully created.",
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "ID is the unique identifier of the created organization\nExample: 1234567890",
+                    "type": "string",
+                    "example": "1234567890"
+                },
+                "message": {
+                    "description": "Message provides additional information regarding the creation process\nExample: Organization created successfully",
+                    "type": "string",
+                    "example": "Organization created successfully"
+                },
+                "partialSuccess": {
+                    "description": "PartialSuccess indicates whether the creation process encountered partial success (e.g., when some fields failed to process)\nExample: false",
+                    "type": "boolean",
+                    "example": false
+                },
+                "status": {
+                    "description": "Status indicates the status of the creation process (e.g., \"success\" or \"partial_success\")\nExample: success",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

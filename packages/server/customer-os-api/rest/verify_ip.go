@@ -20,6 +20,7 @@ import (
 
 // IpIntelligenceResponse represents the response for IP intelligence lookup.
 // @Description Response structure for IP intelligence lookup.
+// @example 200 {object} IpIntelligenceResponse
 type IpIntelligenceResponse struct {
 	Status       string                     `json:"status" example:"success"`
 	Message      string                     `json:"message,omitempty" example:"No threats detected"`
