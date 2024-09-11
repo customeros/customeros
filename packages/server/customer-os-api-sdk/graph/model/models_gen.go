@@ -1176,18 +1176,19 @@ func (FlowSequenceSender) IsMetadataInterface()        {}
 func (this FlowSequenceSender) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequenceStep struct {
-	Metadata    *Metadata              `json:"metadata"`
-	Name        string                 `json:"name"`
-	Description string                 `json:"description"`
-	Status      FlowSequenceStepStatus `json:"status"`
-	Action      FlowSequenceStepAction `json:"action"`
+	Metadata   *Metadata                  `json:"metadata"`
+	Index      int64                      `json:"index"`
+	Name       string                     `json:"name"`
+	Status     FlowSequenceStepStatus     `json:"status"`
+	Action     FlowSequenceStepAction     `json:"action"`
+	ActionData FlowSequenceStepActionData `json:"actionData"`
 }
 
 func (FlowSequenceStep) IsMetadataInterface()        {}
 func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowSequenceStepActionDataEmail struct {
-	ReplayTo     *string `json:"replayTo,omitempty"`
+	StepID       *string `json:"stepId,omitempty"`
 	Subject      string  `json:"subject"`
 	BodyTemplate string  `json:"bodyTemplate"`
 }
@@ -1195,7 +1196,7 @@ type FlowSequenceStepActionDataEmail struct {
 func (FlowSequenceStepActionDataEmail) IsFlowSequenceStepActionData() {}
 
 type FlowSequenceStepActionDataWait struct {
-	Minutes int `json:"minutes"`
+	Minutes int64 `json:"minutes"`
 }
 
 func (FlowSequenceStepActionDataWait) IsFlowSequenceStepActionData() {}
@@ -1235,11 +1236,12 @@ type FlowSequenceStepInputActionDataLinkedinMessage struct {
 }
 
 type FlowSequenceStepInputActionDataWait struct {
-	Minutes int `json:"minutes"`
+	Minutes int64 `json:"minutes"`
 }
 
 type FlowSequenceStepMergeInput struct {
 	ID         *string                          `json:"id,omitempty"`
+	Index      int64                            `json:"index"`
 	Name       string                           `json:"name"`
 	Action     FlowSequenceStepAction           `json:"action"`
 	ActionData *FlowSequenceStepInputActionData `json:"actionData"`

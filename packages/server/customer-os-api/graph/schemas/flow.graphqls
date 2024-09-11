@@ -92,12 +92,12 @@ type Mailbox {
 type FlowSequenceStep implements MetadataInterface {
     metadata: Metadata!
 
+    index: Int64!
     name: String!
-    description: String!
     status: FlowSequenceStepStatus!
 
     action: FlowSequenceStepAction!
-    #actionData: FlowSequenceStepActionData!
+    actionData: FlowSequenceStepActionData!
 }
 
 enum FlowSequenceStepAction {
@@ -113,11 +113,11 @@ enum FlowSequenceStepAction {
 union FlowSequenceStepActionData = FlowSequenceStepActionDataWait | FlowSequenceStepActionDataEmail | FlowSequenceStepActionLinkedinConnectionRequest | FlowSequenceStepActionLinkedinMessage
 
 type FlowSequenceStepActionDataWait {
-    minutes: Int!
+    minutes: Int64!
 }
 
 type FlowSequenceStepActionDataEmail {
-    replayTo: String
+    stepId: String
     subject: String!
     bodyTemplate: String!
 }
@@ -132,6 +132,7 @@ type FlowSequenceStepActionLinkedinMessage {
 
 input FlowSequenceStepMergeInput {
     id: ID
+    index: Int64!
     name: String!
     action: FlowSequenceStepAction!
     actionData: FlowSequenceStepInputActionData!
@@ -147,7 +148,7 @@ input FlowSequenceStepInputActionData {
     linkedin_message: FlowSequenceStepInputActionDataLinkedinMessage
 }
 input FlowSequenceStepInputActionDataWait {
-    minutes: Int!
+    minutes: Int64!
 }
 
 input FlowSequenceStepInputActionDataEmail {

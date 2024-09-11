@@ -436,8 +436,12 @@ func (s *flowService) FlowSequenceStepMerge(ctx context.Context, sequenceId stri
 		}
 	}
 
+	computeIndex := toStore.Index != input.Index
+
+	toStore.Index = input.Index
 	toStore.Name = input.Name
 	toStore.Action = input.Action
+	toStore.ActionData = input.ActionData
 
 	node, err := s.services.Neo4jRepositories.FlowSequenceStepWriteRepository.Merge(ctx, toStore)
 	if err != nil {
@@ -457,6 +461,11 @@ func (s *flowService) FlowSequenceStepMerge(ctx context.Context, sequenceId stri
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
+	}
+
+	//todo move index if it changes
+	if computeIndex {
+
 	}
 
 	return entity, nil

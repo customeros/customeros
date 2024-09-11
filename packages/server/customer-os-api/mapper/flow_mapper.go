@@ -113,6 +113,37 @@ func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *mo
 	if entity == nil {
 		return nil
 	}
+	var actionData model.FlowSequenceStepActionData
+
+	if entity.Action == neo4jentity.FlowSequenceStepActionWait {
+		actionData = &model.FlowSequenceStepActionDataWait{
+			Minutes: entity.ActionData.Wait.Minutes,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionEmailNew {
+		actionData = &model.FlowSequenceStepActionDataEmail{
+			Subject:      entity.ActionData.EmailNew.Subject,
+			BodyTemplate: entity.ActionData.EmailNew.BodyTemplate,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionEmailReply {
+		actionData = &model.FlowSequenceStepActionDataEmail{
+			StepID:       entity.ActionData.EmailReply.StepID,
+			Subject:      entity.ActionData.EmailReply.Subject,
+			BodyTemplate: entity.ActionData.EmailReply.BodyTemplate,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionLinkedinConnectionRequest {
+		actionData = &model.FlowSequenceStepActionLinkedinMessage{
+			MessageTemplate: entity.ActionData.LinkedinConnectionRequest.MessageTemplate,
+		}
+	}
+	if entity.Action == neo4jentity.FlowSequenceStepActionLinkedinMessage {
+		actionData = &model.FlowSequenceStepActionLinkedinMessage{
+			MessageTemplate: entity.ActionData.LinkedinMessage.MessageTemplate,
+		}
+	}
+
 	return &model.FlowSequenceStep{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
@@ -122,9 +153,11 @@ func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *mo
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Name:   entity.Name,
-		Status: entity.Status,
-		Action: entity.Action,
+		Index:      entity.Index,
+		Name:       entity.Name,
+		Status:     entity.Status,
+		Action:     entity.Action,
+		ActionData: actionData,
 	}
 }
 
@@ -152,9 +185,42 @@ func MapFlowSequenceUpdateInputToEntity(input model.FlowSequenceUpdateInput) *ne
 }
 
 func MapFlowSequenceStepMergeInputToEntity(input model.FlowSequenceStepMergeInput) *neo4jentity.FlowSequenceStepEntity {
+	actionData := neo4jentity.FlowSequenceStepActionData{}
+
+	if input.Action == neo4jentity.FlowSequenceStepActionWait {
+		actionData.Wait = &neo4jentity.FlowSequenceStepActionDataWait{
+			Minutes: input.ActionData.Wait.Minutes,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionEmailNew {
+		actionData.EmailNew = &neo4jentity.FlowSequenceStepActionDataEmail{
+			Subject:      input.ActionData.EmailNew.Subject,
+			BodyTemplate: input.ActionData.EmailNew.BodyTemplate,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionEmailReply {
+		actionData.EmailReply = &neo4jentity.FlowSequenceStepActionDataEmail{
+			StepID:       input.ActionData.EmailReply.StepID,
+			Subject:      input.ActionData.EmailReply.Subject,
+			BodyTemplate: input.ActionData.EmailReply.BodyTemplate,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionLinkedinConnectionRequest {
+		actionData.LinkedinConnectionRequest = &neo4jentity.FlowSequenceStepActionDataLinkedinConnectionRequest{
+			MessageTemplate: input.ActionData.LinkedinConnectionRequest.MessageTemplate,
+		}
+	}
+	if input.Action == neo4jentity.FlowSequenceStepActionLinkedinMessage {
+		actionData.LinkedinMessage = &neo4jentity.FlowSequenceStepActionDataLinkedinMessage{
+			MessageTemplate: input.ActionData.LinkedinMessage.MessageTemplate,
+		}
+	}
+
 	return &neo4jentity.FlowSequenceStepEntity{
-		Id:     utils.StringOrEmpty(input.ID),
-		Name:   input.Name,
-		Action: input.Action,
+		Id:         utils.StringOrEmpty(input.ID),
+		Index:      input.Index,
+		Name:       input.Name,
+		Action:     input.Action,
+		ActionData: actionData,
 	}
 }

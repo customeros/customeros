@@ -47,15 +47,43 @@ type FlowSequenceStepEntity struct {
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
-	Name      string
+
+	Name  string
+	Index int64
 
 	Status FlowSequenceStepStatus
 
 	Action     FlowSequenceStepAction
-	ActionData string
+	ActionData FlowSequenceStepActionData
 }
 
 type FlowSequenceStepEntities []FlowSequenceStepEntity
+
+type FlowSequenceStepActionData struct {
+	Wait                      *FlowSequenceStepActionDataWait
+	EmailNew                  *FlowSequenceStepActionDataEmail
+	EmailReply                *FlowSequenceStepActionDataEmail
+	LinkedinConnectionRequest *FlowSequenceStepActionDataLinkedinConnectionRequest
+	LinkedinMessage           *FlowSequenceStepActionDataLinkedinMessage
+}
+
+type FlowSequenceStepActionDataEmail struct {
+	StepID       *string
+	Subject      string
+	BodyTemplate string
+}
+
+type FlowSequenceStepActionDataLinkedinConnectionRequest struct {
+	MessageTemplate string
+}
+
+type FlowSequenceStepActionDataLinkedinMessage struct {
+	MessageTemplate string
+}
+
+type FlowSequenceStepActionDataWait struct {
+	Minutes int64
+}
 
 type FlowSequenceContactEntity struct {
 	DataLoaderKey
@@ -128,3 +156,7 @@ const (
 	FlowSequenceStepActionLinkedinConnectionRequest FlowSequenceStepAction = "LINKEDIN_CONNECTION_REQUEST"
 	FlowSequenceStepActionLinkedinMessage           FlowSequenceStepAction = "LINKEDIN_MESSAGE"
 )
+
+func GetFlowSequenceStepAction(s string) FlowSequenceStepAction {
+	return FlowSequenceStepAction(s)
+}
