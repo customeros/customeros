@@ -20,7 +20,8 @@ type ValidateEmailRequestWithOptions struct {
 }
 
 type ValidateEmailRequestOptions struct {
-	VerifyCatchAll bool `json:"verifyCatchAll"`
+	VerifyCatchAll      bool `json:"verifyCatchAll"`
+	ExtendedWaitingTime bool `json:"extendedWaitingTime"`
 }
 
 type ValidateEmailResponse struct {

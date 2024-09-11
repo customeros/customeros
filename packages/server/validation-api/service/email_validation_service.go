@@ -54,7 +54,7 @@ type EmailValidationService interface {
 	ValidateEmailWithMailSherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error)
 	ValidateEmailScrubby(ctx context.Context, email string) (string, error)
 	ValidateEmailWithTrueinbox(ctx context.Context, email string) (*postgresentity.TrueInboxResponseBody, error)
-	ValidateEmailWithEnrow(ctx context.Context, email string) (string, error)
+	ValidateEmailWithEnrow(ctx context.Context, email string, extendedWaitingTimeForResponse bool) (string, error)
 }
 
 type emailValidationService struct {
@@ -554,7 +554,7 @@ func (s *emailValidationService) callTrueinboxToValidateEmail(ctx context.Contex
 	return trueInboxResponse, nil
 }
 
-func (s *emailValidationService) ValidateEmailWithEnrow(ctx context.Context, email string) (string, error) {
+func (s *emailValidationService) ValidateEmailWithEnrow(ctx context.Context, email string, extendedWaitingTimeForResponse bool) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailEnrow")
 	defer span.Finish()
 	span.LogFields(log.String("email", email))
@@ -590,7 +590,12 @@ func (s *emailValidationService) ValidateEmailWithEnrow(ctx context.Context, ema
 	}
 
 	result := ""
-	for i := 0; i < s.config.EnrowConfig.MaxWaitResultsSeconds; i++ {
+	waitingTimeSec := s.config.EnrowConfig.MaxWaitResultsSeconds
+	if extendedWaitingTimeForResponse {
+		waitingTimeSec = waitingTimeSec * 3
+	}
+
+	for i := 0; i < waitingTimeSec; i++ {
 		cachedEnrowRecord, err = s.Services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.GetLatestByEmail(ctx, email)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get cache data"))
