@@ -124,7 +124,8 @@ export const EditPersonaTag = observer(() => {
     tag.value.name.toLowerCase().includes(search.toLowerCase()),
   );
 
-  useModKey('Enter', () => {
+  useModKey('Enter', (e) => {
+    e.stopPropagation();
     store.ui.commandMenu.setOpen(false);
   });
 
@@ -141,6 +142,7 @@ export const EditPersonaTag = observer(() => {
           }
 
           if (e.metaKey && e.key === 'Enter') {
+            e.stopPropagation();
             store.ui.commandMenu.setOpen(false);
           } else {
             handleSelect(search as unknown as TagType);

@@ -1600,7 +1600,8 @@ export enum FlowSequenceStatus {
 export type FlowSequenceStep = MetadataInterface & {
   __typename?: 'FlowSequenceStep';
   action: FlowSequenceStepAction;
-  description: Scalars['String']['output'];
+  actionData: FlowSequenceStepActionData;
+  index: Scalars['Int64']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
   status: FlowSequenceStepStatus;
@@ -1623,13 +1624,13 @@ export type FlowSequenceStepActionData =
 export type FlowSequenceStepActionDataEmail = {
   __typename?: 'FlowSequenceStepActionDataEmail';
   bodyTemplate: Scalars['String']['output'];
-  replayTo?: Maybe<Scalars['String']['output']>;
+  stepId?: Maybe<Scalars['String']['output']>;
   subject: Scalars['String']['output'];
 };
 
 export type FlowSequenceStepActionDataWait = {
   __typename?: 'FlowSequenceStepActionDataWait';
-  minutes: Scalars['Int']['output'];
+  minutes: Scalars['Int64']['output'];
 };
 
 export type FlowSequenceStepActionLinkedinConnectionRequest = {
@@ -1665,13 +1666,14 @@ export type FlowSequenceStepInputActionDataLinkedinMessage = {
 };
 
 export type FlowSequenceStepInputActionDataWait = {
-  minutes: Scalars['Int']['input'];
+  minutes: Scalars['Int64']['input'];
 };
 
 export type FlowSequenceStepMergeInput = {
   action: FlowSequenceStepAction;
   actionData: FlowSequenceStepInputActionData;
   id?: InputMaybe<Scalars['ID']['input']>;
+  index: Scalars['Int64']['input'];
   name: Scalars['String']['input'];
 };
 

@@ -154,6 +154,9 @@ export const CommandMenu = observer(() => {
     e.stopPropagation();
     store.ui.commandMenu.setOpen(true);
   });
+  useModKey('Enter', (e) => {
+    e.stopPropagation();
+  });
 
   return (
     <Modal
