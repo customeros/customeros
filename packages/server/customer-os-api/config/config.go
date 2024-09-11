@@ -37,7 +37,8 @@ type Config struct {
 		FileStoreApiConfig fsc.FileStoreApiConfig
 	}
 	AppConfig struct {
-		TrackingPublicUrl string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
+		TrackingPublicUrl      string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
+		InvoicePaidRedirectUrl string `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
 	}
 	IntegrationApp struct {
 		WorkspaceKey                    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
