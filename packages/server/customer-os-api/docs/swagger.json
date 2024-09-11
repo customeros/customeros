@@ -69,6 +69,54 @@
                 }
             }
         },
+        "/enrich/v1/organization": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Enriches an organization's information using the domain or other details.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Enrichment API"
+                ],
+                "summary": "Enrich Organization Information",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "LinkedIn profile URL of the organization",
+                        "name": "linkedinUrl",
+                        "in": "query"
+                    },
+                    {
+                        "type": "string",
+                        "description": "Domain of the organization",
+                        "name": "domain",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Enrichment results including organizational data",
+                        "schema": {
+                            "$ref": "#/definitions/rest.EnrichOrganizationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "500": {
+                        "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
         "/enrich/v1/person": {
             "get": {
                 "security": [
@@ -674,6 +722,173 @@
                     "description": "User represents the local part (before the @) of the email address",
                     "type": "string",
                     "example": "example"
+                }
+            }
+        },
+        "rest.EnrichOrganizationData": {
+            "description": "Detailed data about an organization from enrichment.",
+            "type": "object",
+            "properties": {
+                "description": {
+                    "description": "Short description of the organization.\nExample: A global leader in innovative solutions.",
+                    "type": "string",
+                    "example": "A global leader in innovative solutions"
+                },
+                "domain": {
+                    "description": "Domain of the organization's website.\nExample: acme.com",
+                    "type": "string",
+                    "example": "acme.com"
+                },
+                "employees": {
+                    "description": "Number of employees in the organization.\nExample: 5000",
+                    "type": "integer",
+                    "example": 5000
+                },
+                "foundedYear": {
+                    "description": "Year the organization was founded.\nExample: 1995",
+                    "type": "integer",
+                    "example": 1995
+                },
+                "icons": {
+                    "description": "List of icon URLs for the organization.\nExample: [\"https://acme.com/icon.png\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "https://acme.com/icon.png"
+                    ]
+                },
+                "industry": {
+                    "description": "Industry in which the organization operates.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/rest.EnrichOrganizationIndustry"
+                        }
+                    ]
+                },
+                "location": {
+                    "description": "Location information about the organization.",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/rest.EnrichOrganizationLocation"
+                        }
+                    ]
+                },
+                "logos": {
+                    "description": "List of logo URLs for the organization.\nExample: [\"https://acme.com/logo.png\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "https://acme.com/logo.png"
+                    ]
+                },
+                "longDescription": {
+                    "description": "Long description of the organization.\nExample: Acme Corporation provides cutting-edge technology solutions across the globe.",
+                    "type": "string",
+                    "example": "Acme Corporation provides cutting-edge technology solutions across the globe."
+                },
+                "name": {
+                    "description": "Name of the organization.\nExample: Acme Corporation",
+                    "type": "string",
+                    "example": "Acme Corporation"
+                },
+                "public": {
+                    "description": "Indicates whether the organization is publicly traded.\nExample: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "socials": {
+                    "description": "List of social media URLs for the organization.\nExample: [\"https://linkedin.com/company/acme\"]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "https://linkedin.com/company/acme"
+                    ]
+                },
+                "website": {
+                    "description": "Website URL of the organization.\nExample: https://acme.com",
+                    "type": "string",
+                    "example": "https://acme.com"
+                }
+            }
+        },
+        "rest.EnrichOrganizationIndustry": {
+            "type": "object",
+            "properties": {
+                "industry": {
+                    "description": "Industry in which the organization operates.\nExample: Technology",
+                    "type": "string",
+                    "example": "Technology"
+                }
+            }
+        },
+        "rest.EnrichOrganizationLocation": {
+            "description": "Location details of an organization.",
+            "type": "object",
+            "properties": {
+                "addressLine1": {
+                    "description": "Address line 1 of the organization.\nExample: 123 Main St",
+                    "type": "string",
+                    "example": "123 Main St"
+                },
+                "addressLine2": {
+                    "description": "Address line 2 of the organization (optional).\nExample: Suite 100",
+                    "type": "string",
+                    "example": "Suite 100"
+                },
+                "city": {
+                    "description": "City or locality of the organization.\nExample: San Francisco",
+                    "type": "string",
+                    "example": "San Francisco"
+                },
+                "country": {
+                    "description": "Country of the organization.\nExample: United States",
+                    "type": "string",
+                    "example": "United States"
+                },
+                "countryCodeA2": {
+                    "description": "ISO Alpha-2 code of the country.\nExample: US",
+                    "type": "string",
+                    "example": "US"
+                },
+                "isHeadquarter": {
+                    "description": "Indicates if the location is the headquarters.\nExample: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "postalCode": {
+                    "description": "Postal code of the organization's location.\nExample: 94105",
+                    "type": "string",
+                    "example": "94105"
+                },
+                "region": {
+                    "description": "Region or state of the organization.\nExample: California",
+                    "type": "string",
+                    "example": "California"
+                }
+            }
+        },
+        "rest.EnrichOrganizationResponse": {
+            "description": "Response structure for the organization enrichment API.",
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/rest.EnrichOrganizationData"
+                },
+                "message": {
+                    "description": "Message for the response.\nExample: Enrichment completed",
+                    "type": "string",
+                    "example": "Enrichment completed"
+                },
+                "status": {
+                    "description": "Status of the response.\nExample: success",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },
