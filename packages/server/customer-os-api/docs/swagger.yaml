@@ -220,6 +220,173 @@ definitions:
         example: example
         type: string
     type: object
+  rest.EnrichOrganizationData:
+    description: Detailed data about an organization from enrichment.
+    properties:
+      description:
+        description: |-
+          Short description of the organization.
+          Example: A global leader in innovative solutions.
+        example: A global leader in innovative solutions
+        type: string
+      domain:
+        description: |-
+          Domain of the organization's website.
+          Example: acme.com
+        example: acme.com
+        type: string
+      employees:
+        description: |-
+          Number of employees in the organization.
+          Example: 5000
+        example: 5000
+        type: integer
+      foundedYear:
+        description: |-
+          Year the organization was founded.
+          Example: 1995
+        example: 1995
+        type: integer
+      icons:
+        description: |-
+          List of icon URLs for the organization.
+          Example: ["https://acme.com/icon.png"]
+        example:
+        - https://acme.com/icon.png
+        items:
+          type: string
+        type: array
+      industry:
+        allOf:
+        - $ref: '#/definitions/rest.EnrichOrganizationIndustry'
+        description: Industry in which the organization operates.
+      location:
+        allOf:
+        - $ref: '#/definitions/rest.EnrichOrganizationLocation'
+        description: Location information about the organization.
+      logos:
+        description: |-
+          List of logo URLs for the organization.
+          Example: ["https://acme.com/logo.png"]
+        example:
+        - https://acme.com/logo.png
+        items:
+          type: string
+        type: array
+      longDescription:
+        description: |-
+          Long description of the organization.
+          Example: Acme Corporation provides cutting-edge technology solutions across the globe.
+        example: Acme Corporation provides cutting-edge technology solutions across
+          the globe.
+        type: string
+      name:
+        description: |-
+          Name of the organization.
+          Example: Acme Corporation
+        example: Acme Corporation
+        type: string
+      public:
+        description: |-
+          Indicates whether the organization is publicly traded.
+          Example: true
+        example: true
+        type: boolean
+      socials:
+        description: |-
+          List of social media URLs for the organization.
+          Example: ["https://linkedin.com/company/acme"]
+        example:
+        - https://linkedin.com/company/acme
+        items:
+          type: string
+        type: array
+      website:
+        description: |-
+          Website URL of the organization.
+          Example: https://acme.com
+        example: https://acme.com
+        type: string
+    type: object
+  rest.EnrichOrganizationIndustry:
+    properties:
+      industry:
+        description: |-
+          Industry in which the organization operates.
+          Example: Technology
+        example: Technology
+        type: string
+    type: object
+  rest.EnrichOrganizationLocation:
+    description: Location details of an organization.
+    properties:
+      addressLine1:
+        description: |-
+          Address line 1 of the organization.
+          Example: 123 Main St
+        example: 123 Main St
+        type: string
+      addressLine2:
+        description: |-
+          Address line 2 of the organization (optional).
+          Example: Suite 100
+        example: Suite 100
+        type: string
+      city:
+        description: |-
+          City or locality of the organization.
+          Example: San Francisco
+        example: San Francisco
+        type: string
+      country:
+        description: |-
+          Country of the organization.
+          Example: United States
+        example: United States
+        type: string
+      countryCodeA2:
+        description: |-
+          ISO Alpha-2 code of the country.
+          Example: US
+        example: US
+        type: string
+      isHeadquarter:
+        description: |-
+          Indicates if the location is the headquarters.
+          Example: true
+        example: true
+        type: boolean
+      postalCode:
+        description: |-
+          Postal code of the organization's location.
+          Example: 94105
+        example: "94105"
+        type: string
+      region:
+        description: |-
+          Region or state of the organization.
+          Example: California
+        example: California
+        type: string
+    type: object
+  rest.EnrichOrganizationResponse:
+    description: Response structure for the organization enrichment API.
+    properties:
+      data:
+        $ref: '#/definitions/rest.EnrichOrganizationData'
+      message:
+        description: |-
+          Message for the response.
+          Example: Enrichment completed
+        example: Enrichment completed
+        type: string
+      status:
+        description: |-
+          Status of the response.
+          Example: success
+        example: success
+        type: string
+    type: object
   rest.EnrichPersonData:
     description: Detailed data about a person from enrichment.
     properties:
@@ -579,6 +746,37 @@ paths:
       summary: Create a new organization
       tags:
       - CustomerBASE API
+  /enrich/v1/organization:
+    get:
+      description: Enriches an organization's information using the domain or other
+        details.
+      parameters:
+      - description: LinkedIn profile URL of the organization
+        in: query
+        name: linkedinUrl
+        type: string
+      - description: Domain of the organization
+        in: query
+        name: domain
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Enrichment results including organizational data
+          schema:
+            $ref: '#/definitions/rest.EnrichOrganizationResponse'
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+        "500":
+          description: Internal Server Error
+      security:
+      - ApiKeyAuth: []
+      summary: Enrich Organization Information
+      tags:
+      - Enrichment API
   /enrich/v1/person:
     get:
       description: Enriches a person's information using LinkedIn URL, email, and
