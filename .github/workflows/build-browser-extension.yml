@@ -34,9 +34,9 @@ jobs:
 
       - name: Build artifact
         run: |
-          pwd
           npm install
           npm run build
+        working-directory: ./packages/apps/extension
 
       - name: Upload dist
         uses: actions/upload-artifact@v4
