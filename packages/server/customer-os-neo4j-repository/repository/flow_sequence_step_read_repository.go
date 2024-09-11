@@ -15,6 +15,7 @@ import (
 type FlowSequenceStepReadRepository interface {
 	GetList(ctx context.Context, sequenceIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, id string) (*neo4j.Node, error)
+	GetSequenceByStepId(ctx context.Context, id string) (*neo4j.Node, error)
 }
 
 type flowSequenceStepReadRepositoryImpl struct {
@@ -81,7 +82,44 @@ func (r flowSequenceStepReadRepositoryImpl) GetById(ctx context.Context, id stri
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSequence_%s)-[:HAS]->(fss:FlowSequenceStep_%s {id: $id}) RETURN fss`, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSequence_%s)-[:HAS]->(fss:FlowSequenceStep_%s {id: $id}) RETURN fss`, tenant, tenant, tenant)
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     id,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+		}
+	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r flowSequenceStepReadRepositoryImpl) GetSequenceByStepId(ctx context.Context, id string) (*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSequenceStepReadRepository.GetSequenceByStepId")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("id", id))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSequence_%s)-[:HAS]->(fss:FlowSequenceStep_%s {id: $id}) RETURN fs`, tenant, tenant, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     id,

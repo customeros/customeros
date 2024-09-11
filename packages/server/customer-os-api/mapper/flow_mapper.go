@@ -218,7 +218,6 @@ func MapFlowSequenceStepMergeInputToEntity(input model.FlowSequenceStepMergeInpu
 
 	return &neo4jentity.FlowSequenceStepEntity{
 		Id:         utils.StringOrEmpty(input.ID),
-		Index:      input.Index,
 		Name:       input.Name,
 		Action:     input.Action,
 		ActionData: actionData,

@@ -493,6 +493,8 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 17, ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 18, ColumnType: model.ColumnViewTypeContactsJobTitle.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 19, ColumnType: model.ColumnViewTypeContactsConnections.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 20, ColumnType: model.ColumnViewTypeContactsSequences.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 21, ColumnType: model.ColumnViewTypeContactsFlows.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeOpportunities.String():

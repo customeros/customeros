@@ -201,6 +201,21 @@ func (r *mutationResolver) FlowSequenceStepMerge(ctx context.Context, sequenceID
 	return mapper.MapEntityToFlowSequenceStep(entity), nil
 }
 
+// FlowSequenceStepChangeIndex is the resolver for the flow_sequence_step_ChangeIndex field.
+func (r *mutationResolver) FlowSequenceStepChangeIndex(ctx context.Context, id string, index int64) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepChangeIndex", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	err := r.Services.CommonServices.FlowService.FlowSequenceStepChangeIndex(ctx, id, index)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return &model.Result{Result: false}, err
+	}
+	return &model.Result{Result: true}, nil
+}
+
 // FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
 func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSequenceStepChangeStatus", graphql.GetOperationContext(ctx))

@@ -12,6 +12,7 @@ extend type Mutation {
     flow_sequence_ChangeStatus(id: ID!, status: FlowSequenceStatus!): FlowSequence! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flow_sequence_step_Merge(sequenceId: ID!, input: FlowSequenceStepMergeInput!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_sequence_step_ChangeIndex(id: ID!, index: Int64!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_sequence_step_ChangeStatus(id: ID!, status: FlowSequenceStepStatus!): FlowSequenceStep! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flow_sequence_LinkContact(sequenceId: ID!, contactId: ID!, emailId: ID!): FlowSequenceContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -132,7 +133,6 @@ type FlowSequenceStepActionLinkedinMessage {
 
 input FlowSequenceStepMergeInput {
     id: ID
-    index: Int64!
     name: String!
     action: FlowSequenceStepAction!
     actionData: FlowSequenceStepInputActionData!
