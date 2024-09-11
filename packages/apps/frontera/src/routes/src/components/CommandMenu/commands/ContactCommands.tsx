@@ -1,5 +1,6 @@
 import { observer } from 'mobx-react-lite';
 
+import { Eye } from '@ui/media/icons/Eye.tsx';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Phone } from '@ui/media/icons/Phone';
 import { Clock } from '@ui/media/icons/Clock';
@@ -8,6 +9,7 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { Delete } from '@ui/media/icons/Delete';
 import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
+import { EyeOff } from '@ui/media/icons/EyeOff.tsx';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
@@ -78,6 +80,21 @@ export const ContactCommands = observer(() => {
           }
         >
           Edit email
+        </CommandItem>
+
+        <CommandItem
+          rightAccessory={<Kbd className='size-auto h-5 px-1.5'>Space</Kbd>}
+          leftAccessory={store.ui.contactPreviewCardOpen ? <EyeOff /> : <Eye />}
+          onSelect={() => {
+            store.ui.setContactPreviewCardOpen(
+              !store.ui.contactPreviewCardOpen,
+            );
+            store.ui.commandMenu.setOpen(false);
+          }}
+        >
+          {store.ui.contactPreviewCardOpen
+            ? 'Hide contact preview'
+            : 'Preview contact'}
         </CommandItem>
 
         <CommandItem
