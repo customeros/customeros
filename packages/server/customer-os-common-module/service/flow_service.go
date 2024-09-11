@@ -24,6 +24,7 @@ type FlowService interface {
 	FlowSequenceGetListWithContact(ctx context.Context, contactIds []string) (*neo4jentity.FlowSequenceEntities, error)
 	FlowSequenceGetList(ctx context.Context, flowId *string) (*neo4jentity.FlowSequenceEntities, error)
 	FlowSequenceGetById(ctx context.Context, id string) (*neo4jentity.FlowSequenceEntity, error)
+	FlowSequenceGetByStepId(ctx context.Context, stepId string) (*neo4jentity.FlowSequenceEntity, error)
 	FlowSequenceCreate(ctx context.Context, flow *neo4jentity.FlowEntity, entity *neo4jentity.FlowSequenceEntity) (*neo4jentity.FlowSequenceEntity, error)
 	FlowSequenceUpdate(ctx context.Context, entity *neo4jentity.FlowSequenceEntity) (*neo4jentity.FlowSequenceEntity, error)
 	FlowSequenceChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStatus) (*neo4jentity.FlowSequenceEntity, error)
@@ -31,6 +32,7 @@ type FlowService interface {
 	FlowSequenceStepGetList(ctx context.Context, sequenceIds []string) (*neo4jentity.FlowSequenceStepEntities, error)
 	FlowSequenceStepGetById(ctx context.Context, id string) (*neo4jentity.FlowSequenceStepEntity, error)
 	FlowSequenceStepMerge(ctx context.Context, sequenceId string, entity *neo4jentity.FlowSequenceStepEntity) (*neo4jentity.FlowSequenceStepEntity, error)
+	FlowSequenceStepChangeIndex(ctx context.Context, id string, index int64) error
 	FlowSequenceStepChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStepStatus) (*neo4jentity.FlowSequenceStepEntity, error)
 
 	FlowSequenceContactGetList(ctx context.Context, sequenceIds []string) (*neo4jentity.FlowSequenceContactEntities, error)
@@ -230,6 +232,22 @@ func (s *flowService) FlowSequenceGetById(ctx context.Context, id string) (*neo4
 	return mapper.MapDbNodeToFlowSequenceEntity(node), nil
 }
 
+func (s *flowService) FlowSequenceGetByStepId(ctx context.Context, stepId string) (*neo4jentity.FlowSequenceEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceGetByStepId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("stepId", stepId))
+
+	node, err := s.services.Neo4jRepositories.FlowSequenceStepReadRepository.GetSequenceByStepId(ctx, stepId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowSequenceEntity(node), nil
+}
+
 func (s *flowService) FlowSequenceCreate(ctx context.Context, flow *neo4jentity.FlowEntity, input *neo4jentity.FlowSequenceEntity) (*neo4jentity.FlowSequenceEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceCreate")
 	defer span.Finish()
@@ -369,7 +387,7 @@ func (s *flowService) FlowSequenceStepGetList(ctx context.Context, sequenceIds [
 		return nil, err
 	}
 
-	entities := make(neo4jentity.FlowSequenceStepEntities, 0, len(nodes))
+	entities := make(neo4jentity.FlowSequenceStepEntities, 0)
 	for _, v := range nodes {
 		e := mapper.MapDbNodeToFlowSequenceStepEntity(v.Node)
 		e.DataloaderKey = v.LinkedNodeId
@@ -436,9 +454,13 @@ func (s *flowService) FlowSequenceStepMerge(ctx context.Context, sequenceId stri
 		}
 	}
 
-	computeIndex := toStore.Index != input.Index
+	sequenceSteps, err := s.FlowSequenceStepGetList(ctx, []string{sequenceId})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
-	toStore.Index = input.Index
+	toStore.Index = int64(len(*sequenceSteps))
 	toStore.Name = input.Name
 	toStore.Action = input.Action
 	toStore.ActionData = input.ActionData
@@ -463,12 +485,62 @@ func (s *flowService) FlowSequenceStepMerge(ctx context.Context, sequenceId stri
 		return nil, err
 	}
 
-	//todo move index if it changes
-	if computeIndex {
+	return entity, nil
+}
 
+func (s *flowService) FlowSequenceStepChangeIndex(ctx context.Context, id string, index int64) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSequenceStepChangeIndex")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	step, err := s.FlowSequenceStepGetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
-	return entity, nil
+	if step == nil {
+		tracing.TraceErr(span, errors.New("flow sequence step not found"))
+		return errors.New("flow sequence step not found")
+	}
+
+	sequence, err := s.FlowSequenceGetByStepId(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if sequence == nil {
+		tracing.TraceErr(span, errors.New("flow sequence not found"))
+		return errors.New("flow sequence not found")
+	}
+
+	sequenceSteps, err := s.FlowSequenceStepGetList(ctx, []string{sequence.Id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	for _, v := range *sequenceSteps {
+		if v.Index >= index {
+			v.Index = v.Index + 1
+
+			_, err = s.services.Neo4jRepositories.FlowSequenceStepWriteRepository.Merge(ctx, &v)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
+	}
+
+	step.Index = index
+
+	_, err = s.services.Neo4jRepositories.FlowSequenceStepWriteRepository.Merge(ctx, step)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 func (s *flowService) FlowSequenceStepChangeStatus(ctx context.Context, id string, status neo4jentity.FlowSequenceStepStatus) (*neo4jentity.FlowSequenceStepEntity, error) {
