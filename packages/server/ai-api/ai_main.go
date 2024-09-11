@@ -40,7 +40,7 @@ func main() {
 	r.Use(cors.New(corsConfig))
 
 	r.POST("/ask-openai",
-		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API),
+		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.AI_API, security.WithCache(caches.NewCommonCache())),
 		func(c *gin.Context) {
 			var request dto.OpenAiApiRequest
 
