@@ -24,7 +24,7 @@ require (
 	golang.org/x/text v0.18.0
 	google.golang.org/grpc v1.66.1
 	gorm.io/driver/postgres v1.5.9
-	gorm.io/gorm v1.25.11
+	gorm.io/gorm v1.25.12
 	zgo.at/zcache v1.2.0
 )
 
