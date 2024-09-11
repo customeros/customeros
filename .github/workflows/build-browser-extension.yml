@@ -34,6 +34,7 @@ jobs:
 
       - name: Build artifact
         run: |
+          pwd
           npm install
           npm run build
 
