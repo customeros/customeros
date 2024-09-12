@@ -69,7 +69,7 @@ const THead = observer(
     }, [isOpen]);
 
     return (
-      <div className='flex w-full ml-[-22px] flex-col justify-start items-start'>
+      <div className='flex w-full ml-[-22px] flex-col justify-start items-start group'>
         <div
           style={{ paddingTop: py ?? '0', paddingBottom: py ?? '0' }}
           className={cn(
@@ -78,7 +78,7 @@ const THead = observer(
               : 'border-transparent',
             (canSort && isOpen) || isSorted ? 'ml-0' : 'ml-3',
             !canSort ? '' : 'hover:ml-0',
-            'flex items-center border rounded-[4px] transition-opacity duration-200 ease-in-out group',
+            'flex items-center border rounded-[4px] transition-opacity duration-200 ease-in-out ',
           )}
         >
           {canSort ? (
