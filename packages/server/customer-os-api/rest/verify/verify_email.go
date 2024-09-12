@@ -183,7 +183,7 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 		}
 
 		// call validation api
-		result, err := callApiValidateEmail(ctx, services, emailAddress, verifyCatchAll)
+		result, err := CallApiValidateEmail(ctx, services, emailAddress, verifyCatchAll)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, rest.ErrorResponse{Status: "error", Message: "Internal error"})
 			return
