@@ -167,22 +167,25 @@ export function createRequestPromise(
   requestsKey: string,
   requestValue: string | number,
 ) {
-  return page.waitForRequest((request) => {
-    if (
-      request.method() === 'POST' &&
-      request.url().includes('customer-os-api')
-    ) {
-      const postData = request.postData();
+  return page.waitForRequest(
+    (request) => {
+      if (
+        request.method() === 'POST' &&
+        request.url().includes('customer-os-api')
+      ) {
+        const postData = request.postData();
 
-      if (postData) {
-        const parsedData = JSON.parse(postData);
+        if (postData) {
+          const parsedData = JSON.parse(postData);
 
-        return parsedData.variables?.input?.[requestsKey] === requestValue;
+          return parsedData.variables?.input?.[requestsKey] === requestValue;
+        }
       }
-    }
 
-    return false;
-  });
+      return false;
+    },
+    { timeout: 15000 },
+  );
 }
 
 export function createResponsePromise(
