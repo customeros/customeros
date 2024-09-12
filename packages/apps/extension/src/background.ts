@@ -94,7 +94,9 @@ async function getCookiesFromLinkedInTab() {
       }
     );
 
-    const liAtCookie = cookies.find((cookie) => cookie.name === "li_at");
+    if (!cookies) return;
+
+    const liAtCookie = cookies?.find((cookie) => cookie.name === "li_at");
 
     if (!liAtCookie) return;
 
@@ -121,8 +123,8 @@ async function getCookiesFromLinkedInTab() {
       });
       const data: data = await response.json();
 
-      if (data.data.cookies && data.data.cookies.length > 0) {
-        const prevLiAtCookie = data.data.cookies;
+      if (data?.data?.cookies && data?.data?.cookies.length > 0) {
+        const prevLiAtCookie = data?.data?.cookies;
 
         if (prevLiAtCookie !== liAtCookie.value) {
           console.log("Different cookie detected");
