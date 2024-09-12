@@ -5,6 +5,7 @@ import { SettingsPage } from '../settings/settingsPage';
 import { InvoicesPage } from '../invoices/invoicesPage';
 import { ContactsPage } from '../contacts/contactsPage';
 import { OrganizationsPage } from './organizationsPage';
+import { SequencesPage } from '../sequences/sequencesPage';
 import { ContractsPage } from '../contracts/contractsPage';
 import { CustomersPage } from '../customers/customersPage';
 import { CustomerMapPage } from '../customer-map/customerMapPage';
@@ -36,10 +37,15 @@ export class OrganizationsCmdKPage {
   private organizationHubGn = 'div[data-test="organization-hub-gn"]';
   private organizationHubGi = 'div[data-test="organization-hub-gi"]';
   private organizationHubGr = 'div[data-test="organization-hub-gr"]';
+  private organizationHubGq = 'div[data-test="organization-hub-gq"]';
   private organizationHubGs = 'div[data-test="organization-hub-gs"]';
   private organizationHubGd = 'div[data-test="organization-hub-gd"]';
 
   private async openCmdK() {
+    await this.page.waitForSelector('div[data-test="search-orgs"]', {
+      state: 'visible',
+    });
+
     const isMac = process.platform === 'darwin';
 
     if (isMac) {
@@ -51,6 +57,9 @@ export class OrganizationsCmdKPage {
       await this.page.keyboard.press('KeyK');
       await this.page.keyboard.up('Control');
     }
+    await this.page.waitForSelector(this.organizationsHub, {
+      state: 'visible',
+    });
   }
 
   private async verifyNavigationWithClick(
@@ -152,13 +161,17 @@ export class OrganizationsCmdKPage {
     const organizationHubGrText = await organizationHubGr.textContent();
     const navigationItemTextSeven = await navigationItems[6].textContent();
 
+    const organizationHubGq = this.page.locator(this.organizationHubGq);
+    const organizationHubGqText = await organizationHubGq.textContent();
+    const navigationItemTextEight = await navigationItems[7].textContent();
+
     const organizationHubGs = this.page.locator(this.organizationHubGs);
     const organizationHubGsText = await organizationHubGs.textContent();
-    const navigationItemTextEight = await navigationItems[7].textContent();
+    const navigationItemTextNine = await navigationItems[8].textContent();
 
     const organizationHubGd = this.page.locator(this.organizationHubGd);
     const organizationHubGdText = await organizationHubGd.textContent();
-    const navigationItemTextNine = await navigationItems[8].textContent();
+    const navigationItemTextTen = await navigationItems[9].textContent();
 
     await Promise.all([
       expect.soft(organizationsHubText.trim()).toBe('Organizations'),
@@ -168,7 +181,7 @@ export class OrganizationsCmdKPage {
       expect
         .soft(organizationHubAddNewOrgsText.trim())
         .toBe('Add new organizations...'),
-      expect.soft(navigationItems).toHaveLength(9),
+      expect.soft(navigationItems).toHaveLength(10),
       expect
         .soft(organizationHubGtText.trim())
         .toBe(navigationItemTextOne.trim()),
@@ -191,11 +204,14 @@ export class OrganizationsCmdKPage {
         .soft(organizationHubGrText.trim())
         .toBe(navigationItemTextSeven.trim()),
       expect
-        .soft(organizationHubGsText.trim())
+        .soft(organizationHubGqText.trim())
         .toBe(navigationItemTextEight.trim()),
       expect
-        .soft(organizationHubGdText.trim())
+        .soft(organizationHubGsText.trim())
         .toBe(navigationItemTextNine.trim()),
+      expect
+        .soft(organizationHubGdText.trim())
+        .toBe(navigationItemTextTen.trim()),
     ]);
 
     await this.page.keyboard.press('Escape');
@@ -265,6 +281,7 @@ export class OrganizationsCmdKPage {
     );
 
     await this.page.goBack();
+    await this.page.waitForLoadState('load');
 
     await this.openCmdK();
     await this.verifyNavigationWithClick(
@@ -370,6 +387,26 @@ export class OrganizationsCmdKPage {
     await this.verifyNavigationWithClick(
       this.organizationHubGr,
       contractsPage.sideNavItemAllContractsSelected,
+    );
+
+    await organizationsPage.goToAllOrgs();
+  }
+
+  async verifyNavigationToSequences(page: Page) {
+    const sequencesPage = new SequencesPage();
+    const organizationsPage = new OrganizationsPage(page);
+
+    await this.verifyNavigationWithKeyboard(
+      'KeyQ',
+      sequencesPage.sideNavItemAllSequencesSelected,
+    );
+
+    await this.page.goBack();
+
+    await this.openCmdK();
+    await this.verifyNavigationWithClick(
+      this.organizationHubGq,
+      sequencesPage.sideNavItemAllSequencesSelected,
     );
 
     await organizationsPage.goToAllOrgs();

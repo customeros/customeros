@@ -150,7 +150,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     >
       <InputGroup className='relative w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2'>
-          <SearchBarFilterData />
+          <SearchBarFilterData dataTest={'search-orgs'} />
         </LeftElement>
         <Input
           size='md'
