@@ -146,7 +146,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		requestBody := []byte(string(requestJSON))
-		req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/ipLookup", bytes.NewBuffer(requestBody))
+		req, err := http.NewRequest("POST", services.Cfg.InternalServices.ValidationApi+"/ipLookup", bytes.NewBuffer(requestBody))
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 			c.JSON(http.StatusInternalServerError,
@@ -160,7 +160,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 		// Set the request headers
-		req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
+		req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.ValidationApiKey)
 		req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
 
 		// Make the HTTP request

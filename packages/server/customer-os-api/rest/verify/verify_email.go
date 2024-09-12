@@ -415,7 +415,7 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 			BulkUploadResponse{
 				Message:               "File uploaded successfully",
 				JobID:                 requestID,
-				ResultURL:             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.Services.CustomerOsApiUrl, requestID), // Placeholder for results URL
+				ResultURL:             fmt.Sprintf("%s/verify/v1/email/bulk/results/%s", services.Cfg.InternalServices.CustomerOsApiUrl, requestID), // Placeholder for results URL
 				EstimatedCompletionTs: float64(calculateEstimatedCompletionTs(countPendingRequests)),
 			})
 	}
@@ -496,7 +496,7 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 				TotalEmails:   bulkRequest.TotalEmails,
 				Deliverable:   bulkRequest.DeliverableEmails,
 				Undeliverable: bulkRequest.UndeliverableEmails,
-				DownloadURL:   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.Services.CustomerOsApiUrl, requestID),
+				DownloadURL:   fmt.Sprintf("%s/verify/v1/email/bulk/results/%s/download", services.Cfg.InternalServices.CustomerOsApiUrl, requestID),
 			},
 		})
 	}
@@ -605,7 +605,7 @@ func CallApiValidateEmail(ctx context.Context, services *service.Services, email
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("POST", services.Cfg.Services.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("POST", services.Cfg.InternalServices.ValidationApi+"/validateEmailV2", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -614,7 +614,7 @@ func CallApiValidateEmail(ctx context.Context, services *service.Services, email
 	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.ValidationApiKey)
+	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.ValidationApiKey)
 	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
 
 	// Make the HTTP request

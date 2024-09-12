@@ -28,7 +28,11 @@ type Config struct {
 	Neo4j            config.Neo4jConfig
 	Jaeger           tracing.JaegerConfig
 	Metrics          metrics.Config
-	Services         struct {
+	AppConfig        struct {
+		TrackingPublicUrl      string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
+		InvoicePaidRedirectUrl string `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
+	}
+	InternalServices struct {
 		CustomerOsApiUrl   string `env:"CUSTOMER_OS_API_URL" envDefault:"https://api.customeros.ai" validate:"required"`
 		ValidationApi      string `env:"VALIDATION_API" validate:"required"`
 		ValidationApiKey   string `env:"VALIDATION_API_KEY" validate:"required"`
@@ -36,14 +40,12 @@ type Config struct {
 		EnrichmentApiKey   string `env:"ENRICHMENT_API_KEY" validate:"required"`
 		FileStoreApiConfig fsc.FileStoreApiConfig
 	}
-	AppConfig struct {
-		TrackingPublicUrl      string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
-		InvoicePaidRedirectUrl string `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
-	}
-	IntegrationApp struct {
-		WorkspaceKey                    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
-		WorkspaceSecret                 string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
-		ApiTriggerUrlCreatePaymentLinks string `env:"INTEGRATION_APP_API_TRIGGER_URL_CREATE_PAYMENT_LINKS"`
+	ExternalServices struct {
+		IntegrationApp struct {
+			WorkspaceKey                    string `env:"INTEGRATION_APP_WORKSPACE_KEY"`
+			WorkspaceSecret                 string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
+			ApiTriggerUrlCreatePaymentLinks string `env:"INTEGRATION_APP_API_TRIGGER_URL_CREATE_PAYMENT_LINKS"`
+		}
 	}
 }
 
