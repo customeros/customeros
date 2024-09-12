@@ -267,7 +267,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			if enrichPhoneNumber {
 				response.PendingFields = append(response.PendingFields, "phone number")
 			}
-			response.ResultURL = services.Cfg.Services.CustomerOsApiUrl + enrichPersonAcceptedUrl + "/" + dbRecord.ID.String()
+			response.ResultURL = services.Cfg.InternalServices.CustomerOsApiUrl + enrichPersonAcceptedUrl + "/" + dbRecord.ID.String()
 		} else {
 			response.IsComplete = true
 			emailFound, phoneFound := false, false
@@ -475,7 +475,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 			if betterContactDbRecord.EnrichPhoneNumber {
 				response.PendingFields = append(response.PendingFields, "phone number")
 			}
-			response.ResultURL = services.Cfg.Services.CustomerOsApiUrl + enrichPersonAcceptedUrl + "/" + tempId
+			response.ResultURL = services.Cfg.InternalServices.CustomerOsApiUrl + enrichPersonAcceptedUrl + "/" + tempId
 		} else {
 			response.IsComplete = true
 			for _, item := range betterContactResponseBody.Data {
@@ -541,7 +541,7 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("GET", services.Cfg.Services.EnrichmentApiUrl+"/enrichPerson", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("GET", services.Cfg.InternalServices.EnrichmentApiUrl+"/enrichPerson", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -550,7 +550,7 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.EnrichmentApiKey)
+	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.EnrichmentApiKey)
 	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
 
 	// Make the HTTP request
@@ -591,7 +591,7 @@ func callApiFindWorkEmail(ctx context.Context, services *service.Services, span 
 		return nil, err
 	}
 	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("GET", services.Cfg.Services.EnrichmentApiUrl+"/findWorkEmail", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest("GET", services.Cfg.InternalServices.EnrichmentApiUrl+"/findWorkEmail", bytes.NewBuffer(requestBody))
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 		return nil, err
@@ -600,7 +600,7 @@ func callApiFindWorkEmail(ctx context.Context, services *service.Services, span 
 	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, services.Cfg.Services.EnrichmentApiKey)
+	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.EnrichmentApiKey)
 	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
 
 	// Make the HTTP request

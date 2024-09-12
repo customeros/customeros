@@ -114,7 +114,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.BillingProfileService = NewBillingProfileService(log, repositories, grpcClients)
 	services.InvoiceService = NewInvoiceService(log, repositories, grpcClients, &services)
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
-	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
+	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApiConfig)
 	services.CloudflareService = NewCloudflareService(log, &services)
 
 	log.Info("Init cache service")

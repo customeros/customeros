@@ -80,7 +80,7 @@ func generateAndGetNewStripeCheckoutSession(ctx context.Context, services *servi
 	defer span.Finish()
 
 	// Call integration app to create new payment link
-	err := callIntegrationAppWithApiRequestForNewPaymentLink(ctx, services.Cfg.IntegrationApp.WorkspaceKey, services.Cfg.IntegrationApp.WorkspaceSecret, tenant, services.Cfg.IntegrationApp.ApiTriggerUrlCreatePaymentLinks, invoice)
+	err := callIntegrationAppWithApiRequestForNewPaymentLink(ctx, services.Cfg.ExternalServices.IntegrationApp.WorkspaceKey, services.Cfg.ExternalServices.IntegrationApp.WorkspaceSecret, tenant, services.Cfg.ExternalServices.IntegrationApp.ApiTriggerUrlCreatePaymentLinks, invoice)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error calling integration app"))
 		return "", err
