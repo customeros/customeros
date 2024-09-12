@@ -44,6 +44,10 @@ export class FlowSequenceStore implements Store<FlowSequence> {
     return this.value.metadata?.id;
   }
 
+  get flow() {
+    return this.root.flows.value.get(this.value.flow.metadata.id);
+  }
+
   setId(id: string) {
     this.value.metadata.id = id;
   }

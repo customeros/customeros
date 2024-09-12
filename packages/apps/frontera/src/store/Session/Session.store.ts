@@ -84,7 +84,7 @@ export class SessionStore {
     });
 
     autorun(() => {
-      this.tenantApiKey = this.root.settings.tenantApiKey;
+      this.tenantApiKey = this.root.settings?.tenantApiKey;
     });
 
     autorun(() => {

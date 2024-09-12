@@ -280,6 +280,47 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       };
     })
 
+    .with({ property: ColumnViewType.ContactsFlows }, (filter) => {
+      if (!filter.active) return () => true;
+
+      const filterValue = filter.value;
+      const includeEmpty = filter.includeEmpty;
+
+      return (row: ContactStore) => {
+        const flow = row.sequence?.flow;
+
+        if (!flow) {
+          return includeEmpty;
+        }
+
+        if (!filterValue.length) {
+          return !includeEmpty;
+        }
+
+        return filterValue.includes(flow.value.name);
+      };
+    })
+    .with({ property: ColumnViewType.ContactsSequences }, (filter) => {
+      if (!filter.active) return () => true;
+
+      const filterValue = filter.value;
+      const includeEmpty = filter.includeEmpty;
+
+      return (row: ContactStore) => {
+        const sequence = row.sequence;
+
+        if (!sequence) {
+          return includeEmpty;
+        }
+
+        if (!filterValue.length) {
+          return !includeEmpty;
+        }
+
+        return filterValue.includes(sequence.value.name);
+      };
+    })
+
     .with(
       { property: 'EMAIL_VERIFICATION' },
       (filter) => (row: ContactStore) => {
