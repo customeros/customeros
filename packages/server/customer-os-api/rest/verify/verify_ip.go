@@ -1,9 +1,10 @@
-package rest
+package restverify
 
 import (
 	"bytes"
 	"encoding/json"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -101,7 +102,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
 			c.JSON(http.StatusUnauthorized,
-				ErrorResponse{
+				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Missing tenant context",
 				})
@@ -114,7 +115,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		ipAddress := c.Query("address")
 		if ipAddress == "" {
 			c.JSON(http.StatusBadRequest,
-				ErrorResponse{
+				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Missing address parameter",
 				})
@@ -124,7 +125,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 
 		if net.ParseIP(ipAddress) == nil {
 			c.JSON(http.StatusBadRequest,
-				ErrorResponse{
+				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Invalid IP address format",
 				})
@@ -138,7 +139,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
 			c.JSON(http.StatusInternalServerError,
-				ErrorResponse{
+				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -149,7 +150,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
 			c.JSON(http.StatusInternalServerError,
-				ErrorResponse{
+				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -168,7 +169,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
 			c.JSON(http.StatusInternalServerError,
-				ErrorResponse{
+				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})
@@ -180,7 +181,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to decode response"))
 			c.JSON(http.StatusInternalServerError,
-				ErrorResponse{
+				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Internal error",
 				})

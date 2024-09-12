@@ -99,7 +99,6 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
-
 		tracing.SetDefaultRestSpanTags(ctx, span)
 
 		request := CreateOrganizationRequest{}

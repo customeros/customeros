@@ -1,4 +1,4 @@
-package rest
+package restoutreach
 
 import (
 	"github.com/gin-gonic/gin"
