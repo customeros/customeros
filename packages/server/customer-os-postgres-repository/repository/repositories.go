@@ -56,6 +56,7 @@ type Repositories struct {
 	CacheEmailEnrowRepository                   CacheEmailEnrowRepository
 	EmailValidationRecordRepository             EmailValidationRecordRepository
 	EmailValidationRequestBulkRepository        EmailValidationRequestBulkRepository
+	ApiBillableEventRepository                  ApiBillableEventRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -110,6 +111,7 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		CacheEmailEnrowRepository:                   NewCacheEmailEnrowRepository(db),
 		EmailValidationRecordRepository:             NewEmailValidationRecordRepository(db),
 		EmailValidationRequestBulkRepository:        NewEmailValidationRequestBulkRepository(db),
+		ApiBillableEventRepository:                  NewApiBillableEventRepository(db),
 	}
 
 	return repositories
@@ -172,7 +174,8 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.CacheEmailTrueinbox{},
 		&entity.CacheEmailEnrow{},
 		&entity.EmailValidationRecord{},
-		&entity.EmailValidationRequestBulk{})
+		&entity.EmailValidationRequestBulk{},
+		&entity.ApiBillableEvent{})
 	if err != nil {
 		panic(err)
 	}

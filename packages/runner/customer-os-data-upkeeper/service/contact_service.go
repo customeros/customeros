@@ -834,6 +834,34 @@ func (s *contactService) checkBetterContactRequestsWithoutResponse(ctx context.C
 				tracing.TraceErr(span, err)
 				return
 			}
+			// store billable events
+			// first check if it was requested externally
+			personEnrichmentRequest, err := s.commonServices.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetByBettercontactRecordId(ctx, betterContactResponse.Id)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to check if bettercontact record was requested from person enrichment"))
+			} else if personEnrichmentRequest != nil {
+				emailFound, phoneFound := false, false
+				for _, item := range betterContactResponse.Data {
+					if item.ContactEmailAddress != "" {
+						emailFound = true
+					}
+					if item.ContactPhoneNumber != nil && fmt.Sprintf("%v", item.ContactPhoneNumber) != "" {
+						phoneFound = true
+					}
+				}
+				if emailFound {
+					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonEmailFound, personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+					}
+				}
+				if phoneFound {
+					_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonPhoneFound, personEnrichmentRequest.BettercontactRecordId, "generated in upkeeper")
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+					}
+				}
+			}
 		}
 	}
 }

@@ -14,7 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -217,6 +217,17 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 				IsPrimaryDomain: result.Data.DomainData.IsPrimaryDomain,
 			},
 			AlternateEmail: result.Data.EmailData.AlternateEmail,
+		}
+
+		if emailVerificationResponse.Deliverable != "unknown" && emailVerificationResponse.Deliverable != "" {
+			billableEvent := postgresentity.BillableEventEmailVerifiedNotCatchAll
+			if emailVerificationResponse.IsCatchAll {
+				billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
+			}
+			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, billableEvent, "", emailAddress)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
+			}
 		}
 
 		c.Header("Content-Type", "application/json")
@@ -462,7 +473,7 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 			countPendingRequests = 100 // default to 100 records
 		}
 		// Check if the processing is completed
-		if bulkRequest.Status == entity.EmailValidationRequestBulkStatusProcessing {
+		if bulkRequest.Status == postgresentity.EmailValidationRequestBulkStatusProcessing {
 			c.JSON(http.StatusOK,
 				BulkResultsResponse{
 					Status:                "processing",
@@ -540,7 +551,7 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 		}
 
 		// Check if the bulk request is completed before proceeding
-		if bulkRequest.Status != entity.EmailValidationRequestBulkStatusCompleted {
+		if bulkRequest.Status != postgresentity.EmailValidationRequestBulkStatusCompleted {
 			c.JSON(http.StatusAccepted, gin.H{
 				"status":  "processing",
 				"message": "The bulk request is still being processed. Please try again later.",

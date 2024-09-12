@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -235,6 +236,11 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 					//LinkedIn: TBD,
 				},
 			}
+		}
+
+		_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventIpVerificationSuccess, "", ipAddress)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
 		}
 
 		c.JSON(http.StatusOK, ipIntelligenceResponse)
