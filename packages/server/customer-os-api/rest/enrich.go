@@ -377,19 +377,36 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 			response.ResultURL = services.Cfg.Services.CustomerOsApiUrl + enrichPersonAcceptedUrl + "/" + dbRecord.ID.String()
 		} else {
 			response.IsComplete = true
+			emailFound, phoneFound := false, false
 			for _, item := range betterContactResponseBody.Data {
 				if item.ContactEmailAddress != "" {
+					emailFound = true
 					response.Data.Emails = append(response.Data.Emails, EnrichPersonEmail{
 						Address: item.ContactEmailAddress,
 					})
 				}
 				if enrichPhoneNumber {
 					if item.ContactPhoneNumber != nil && fmt.Sprintf("%v", item.ContactPhoneNumber) != "" {
+						phoneFound = true
 						response.Data.PhoneNumbers = append(response.Data.PhoneNumbers, EnrichPersonPhoneNumber{
 							Number: fmt.Sprintf("%v", item.ContactPhoneNumber),
 							Type:   "mobile",
 						})
 					}
+				}
+			}
+			if emailFound {
+				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonEmailFound, betterContactResponseBody.Id,
+					fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName))
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
+				}
+			}
+			if phoneFound {
+				_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichPersonPhoneFound, betterContactResponseBody.Id,
+					fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", email, linkedinUrl, firstName, lastName))
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 				}
 			}
 		}
@@ -712,6 +729,15 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 				},
 			},
 		}
+
+		if enrichOrganizationApiResponse.Success == true {
+			_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, tenant, postgresentity.BillableEventEnrichOrganizationSuccess, "",
+				fmt.Sprintf("LinkedIn URL: %s, Domain: %s", linkedinUrl, domain))
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
+			}
+		}
+
 		c.JSON(http.StatusOK, response)
 	}
 }

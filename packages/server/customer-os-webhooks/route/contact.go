@@ -3,9 +3,11 @@ package route
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
+	pkgerrors "github.com/pkg/errors"
 	"io"
 	"net/http"
 	"time"
@@ -187,6 +189,35 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 			tracing.TraceErr(span, err)
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed processing better contact response"})
 		} else {
+			// store billable events
+			// first check if it was requested externally
+			personEnrichmentRequest, err := services.CommonServices.PostgresRepositories.CosApiEnrichPersonTempResultRepository.GetByBettercontactRecordId(ctx, betterContactResponse.Id)
+			if err != nil {
+				tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to check if bettercontact record was requested from person enrichment"))
+			} else if personEnrichmentRequest != nil {
+				emailFound, phoneFound := false, false
+				for _, item := range betterContactResponse.Data {
+					if item.ContactEmailAddress != "" {
+						emailFound = true
+					}
+					if item.ContactPhoneNumber != nil && fmt.Sprintf("%v", item.ContactPhoneNumber) != "" {
+						phoneFound = true
+					}
+				}
+				if emailFound {
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonEmailFound, personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
+					if err != nil {
+						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+					}
+				}
+				if phoneFound {
+					_, err = services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, personEnrichmentRequest.Tenant, entity.BillableEventEnrichPersonPhoneFound, personEnrichmentRequest.BettercontactRecordId, "generated in webhooks")
+					if err != nil {
+						tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+					}
+				}
+			}
+
 			c.JSON(http.StatusOK, gin.H{"status": "ok"})
 		}
 	}

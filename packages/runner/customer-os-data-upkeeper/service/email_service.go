@@ -26,6 +26,7 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -240,6 +241,18 @@ func (s *emailService) ValidateEmailsFromBulkRequests() {
 						continue
 					}
 
+					// create billable event
+					if dataObj.EmailData.Deliverable != "unknown" && dataObj.EmailData.Deliverable != "" {
+						billableEvent := postgresentity.BillableEventEmailVerifiedNotCatchAll
+						if dataObj.DomainData.IsCatchAll {
+							billableEvent = postgresentity.BillableEventEmailVerifiedCatchAll
+						}
+						_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, billableEvent, strconv.FormatUint(record.ID, 10), record.Email)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "failed to register billable event"))
+						}
+					}
+
 					// Update bulk request based on deliverable or undeliverable result
 					if strings.ToLower(dataObj.EmailData.Deliverable) == "true" {
 						err = s.commonServices.PostgresRepositories.EmailValidationRequestBulkRepository.IncrementDeliverableEmails(ctx, record.RequestID)
@@ -308,7 +321,7 @@ func (s *emailService) checkAndUpdateBulkRequests(ctx context.Context, requestsT
 		// If there are no unprocessed records, mark the request as completed
 		if unprocessedCount == 0 && request.Status != postgresentity.EmailValidationRequestBulkStatusCompleted {
 			// generate csv result file
-			csvContent, err := s.GenerateBulkEmailValidationResponseCSVFileContent(ctx, requestID)
+			csvContent, err := s.generateBulkEmailValidationResponseCSVFileContent(ctx, requestID)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error generating CSV content"))
 				s.log.Errorf("Failed to generate CSV content for request %s: %v", requestID, err.Error())
@@ -535,8 +548,8 @@ func (s *emailService) callEmailValidation(ctx context.Context, tenant, email st
 	return validationResponse, nil
 }
 
-func (s *emailService) GenerateBulkEmailValidationResponseCSVFileContent(ctx context.Context, requestId string) ([]byte, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GenerateBulkEmailValidationResponseCSVFileContent")
+func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx context.Context, requestId string) ([]byte, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.generateBulkEmailValidationResponseCSVFileContent")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogKV("requestId", requestId)
