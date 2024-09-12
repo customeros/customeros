@@ -6,7 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"golang.org/x/net/context"
 	"net/http"
 )
 
@@ -88,6 +90,8 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
+		callDomainRegistrationWithMailBoxes(ctx, req)
+
 		// Placeholder for response logic (to be implemented)
 		c.JSON(http.StatusCreated,
 			RegisterNewDomainResponse{
@@ -98,4 +102,17 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 				// "mailboxes": req.Mailboxes,
 			})
 	}
+}
+
+func callDomainRegistrationWithMailBoxes(ctx context.Context, req RegisterNewDomainRequest) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "callDomainRegistrationWithMailBoxes")
+	defer span.Finish()
+
+	// step 1 - register domain
+
+	// step 2 - configure domain with cloudflare
+
+	// step 3 - configure mailboxes
+
+	// step 4 - warm mailboxes
 }
