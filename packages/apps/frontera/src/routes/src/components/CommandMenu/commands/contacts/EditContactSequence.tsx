@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { ContactStore } from '@store/Contacts/Contact.store.ts';
+import { ContactStore } from '@store/Contacts/Contact.store';
 import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store';
 
+import { Plus } from '@ui/media/icons/Plus';
 import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
@@ -74,17 +75,41 @@ export const EditContactSequence = observer(() => {
 
   const sequenceOptions = flowSequences.toComputedArray((arr) => arr);
 
+  const handleCreateOption = (value: string) => {
+    flowSequences?.create(
+      { name: value, description: '' },
+      {
+        onSuccess: (sequenceId) => {
+          const newSequence = flowSequences.value.get(
+            sequenceId,
+          ) as FlowSequenceStore;
+
+          if (!newSequence) return;
+          handleSelect(newSequence);
+        },
+      },
+    );
+  };
+  const filteredOptions = sequenceOptions?.filter((sequence) =>
+    sequence.value.name.toLowerCase().includes(search.toLowerCase()),
+  );
+
   return (
-    <Command label='Change or add to sequence'>
+    <Command shouldFilter={false} label='Move to sequence...'>
       <CommandInput
         label={label}
         value={search}
         onValueChange={setSearch}
-        placeholder='Change or add to sequence'
+        placeholder='Move to sequence...'
+        onKeyDownCapture={(e) => {
+          if (e.key === ' ') {
+            e.stopPropagation();
+          }
+        }}
       />
 
       <Command.List>
-        {sequenceOptions.map((flowSequence) => {
+        {filteredOptions.map((flowSequence) => {
           const isSelected =
             context.ids?.length === 1 &&
             contact?.sequence?.id === flowSequence.id;
@@ -101,6 +126,16 @@ export const EditContactSequence = observer(() => {
             </CommandItem>
           );
         })}
+
+        {search && (
+          <CommandItem
+            leftAccessory={<Plus />}
+            onSelect={() => handleCreateOption(search)}
+          >
+            <span className='text-gray-700 ml-1'>Create new sequence:</span>
+            <span className='text-gray-500 ml-1'>{search}</span>
+          </CommandItem>
+        )}
       </Command.List>
     </Command>
   );

@@ -45,11 +45,20 @@ export const ContactCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Shuffle01 />}
+          keywords={contactKeywords.move_to_sequence}
           onSelect={() => {
             store.ui.commandMenu.setType('EditContactSequence');
           }}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>Q</Kbd>
+            </>
+          }
         >
-          Move to sequence
+          Move to sequence...
         </CommandItem>
 
         {!!contact?.value?.tags?.length && (
@@ -154,6 +163,7 @@ export const ContactCommands = observer(() => {
         {contact?.sequence?.value?.name !== undefined && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
+            keywords={contactKeywords.remove_from_sequence}
             onSelect={() => {
               store.ui.commandMenu.setType('UnlinkContactFromSequence');
             }}
@@ -217,4 +227,6 @@ const contactKeywords = {
     'label',
     'profile',
   ],
+  move_to_sequence: ['move', 'to', 'sequence', 'edit', 'change', 'campaign'],
+  remove_from_sequence: ['remove', 'sequence', 'delete', 'campaign'],
 };
