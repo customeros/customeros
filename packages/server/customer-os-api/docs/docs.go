@@ -105,7 +105,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Enrichment results including organizational data",
                         "schema": {
-                            "$ref": "#/definitions/rest.EnrichOrganizationResponse"
+                            "$ref": "#/definitions/restenrich.EnrichOrganizationResponse"
                         }
                     },
                     "400": {
@@ -172,7 +172,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Enrichment results including personal, job, and social data",
                         "schema": {
-                            "$ref": "#/definitions/rest.EnrichPersonResponse"
+                            "$ref": "#/definitions/restenrich.EnrichPersonResponse"
                         }
                     },
                     "400": {
@@ -215,7 +215,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Enrichment results including personal, job, and social data",
                         "schema": {
-                            "$ref": "#/definitions/rest.EnrichPersonResponse"
+                            "$ref": "#/definitions/restenrich.EnrichPersonResponse"
                         }
                     },
                     "400": {
@@ -229,6 +229,54 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Internal Server Error"
+                    }
+                }
+            }
+        },
+        "/mailstack/v1/domains": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Registers a new domain with a list of mailboxes in the MailStack system.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MailStack API"
+                ],
+                "summary": "Register a new domain",
+                "parameters": [
+                    {
+                        "description": "Domain registration payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.RegisterNewDomainRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Domain registered successfully",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.RegisterNewDomainResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or missing input fields"
+                    },
+                    "401": {
+                        "description": "Unauthorized access - API key invalid or expired"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -271,7 +319,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Successful response",
                         "schema": {
-                            "$ref": "#/definitions/rest.EmailVerificationResponse"
+                            "$ref": "#/definitions/restverify.EmailVerificationResponse"
                         }
                     },
                     "400": {
@@ -330,7 +378,7 @@ const docTemplate = `{
                     "200": {
                         "description": "File uploaded successfully, with job ID and result URL",
                         "schema": {
-                            "$ref": "#/definitions/rest.BulkUploadResponse"
+                            "$ref": "#/definitions/restverify.BulkUploadResponse"
                         }
                     },
                     "400": {
@@ -373,7 +421,7 @@ const docTemplate = `{
                     "200": {
                         "description": "Bulk email verification results if processing is completed",
                         "schema": {
-                            "$ref": "#/definitions/rest.BulkResultsResponse"
+                            "$ref": "#/definitions/restverify.BulkResultsResponse"
                         }
                     },
                     "400": {
@@ -459,7 +507,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/rest.IpIntelligenceResponse"
+                            "$ref": "#/definitions/restverify.IpIntelligenceResponse"
                         }
                     },
                     "400": {
@@ -476,81 +524,6 @@ const docTemplate = `{
         }
     },
     "definitions": {
-        "rest.BulkResultsDetails": {
-            "description": "Detailed results of the bulk email verification.",
-            "type": "object",
-            "properties": {
-                "deliverable": {
-                    "type": "integer",
-                    "example": 950
-                },
-                "downloadUrl": {
-                    "type": "string",
-                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download"
-                },
-                "totalEmails": {
-                    "type": "integer",
-                    "example": 1000
-                },
-                "undeliverable": {
-                    "type": "integer",
-                    "example": 45
-                }
-            }
-        },
-        "rest.BulkResultsResponse": {
-            "description": "Response structure for returning bulk email verification results after processing.",
-            "type": "object",
-            "properties": {
-                "estimatedCompletionTs": {
-                    "description": "Epoch timestamp",
-                    "type": "integer",
-                    "example": 1694030400
-                },
-                "fileName": {
-                    "type": "string",
-                    "example": "emails.csv"
-                },
-                "jobId": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "Completed 1000 of 1000 emails"
-                },
-                "results": {
-                    "$ref": "#/definitions/rest.BulkResultsDetails"
-                },
-                "status": {
-                    "type": "string",
-                    "example": "completed"
-                }
-            }
-        },
-        "rest.BulkUploadResponse": {
-            "description": "Response structure for bulk email upload, containing job ID, result URL, and estimated completion time.",
-            "type": "object",
-            "properties": {
-                "estimatedCompletionTs": {
-                    "description": "Epoch timestamp",
-                    "type": "number",
-                    "example": 1694030400
-                },
-                "jobId": {
-                    "type": "string",
-                    "example": "550e8400-e29b-41d4-a716-446655440000"
-                },
-                "message": {
-                    "type": "string",
-                    "example": "File uploaded successfully"
-                },
-                "resultUrl": {
-                    "type": "string",
-                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"
-                }
-            }
-        },
         "rest.CreateOrganizationRequest": {
             "description": "Request to create an organization",
             "type": "object",
@@ -611,124 +584,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EmailVerificationResponse": {
-            "description": "The response structure for email verification, providing detailed validation results.",
-            "type": "object",
-            "properties": {
-                "alternateEmail": {
-                    "description": "AlternateEmail provides an alternate email if available",
-                    "type": "string",
-                    "example": "alternate@example.com"
-                },
-                "deliverable": {
-                    "description": "Deliverable indicates whether the email is deliverable (e.g., \"true\", \"false\", \"unknown\")",
-                    "type": "string",
-                    "example": "true"
-                },
-                "email": {
-                    "description": "Email is the email address that was verified",
-                    "type": "string",
-                    "example": "example@example.com"
-                },
-                "isCatchAll": {
-                    "description": "IsCatchAll indicates if the email address is a catch-all address",
-                    "type": "boolean",
-                    "example": false
-                },
-                "isRisky": {
-                    "description": "IsRisky indicates whether the email address is risky (e.g., used in spam or phishing)",
-                    "type": "boolean",
-                    "example": false
-                },
-                "message": {
-                    "description": "Message contains any additional information or errors related to the verification",
-                    "type": "string",
-                    "example": "Email verified successfully"
-                },
-                "provider": {
-                    "description": "Provider is the email service provider (e.g., Gmail, Outlook)",
-                    "type": "string",
-                    "example": "gmail"
-                },
-                "risk": {
-                    "description": "Risk provides detailed risk factors associated with the email address",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/rest.EmailVerificationRisk"
-                        }
-                    ]
-                },
-                "secureGatewayProvider": {
-                    "description": "SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint, Mimecast)",
-                    "type": "string",
-                    "example": "Proofpoint"
-                },
-                "status": {
-                    "description": "Status indicates the status of the verification (e.g., \"success\" or \"failure\")",
-                    "type": "string",
-                    "example": "success"
-                },
-                "syntax": {
-                    "description": "Syntax provides details on the syntax validation of the email",
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/rest.EmailVerificationSyntax"
-                        }
-                    ]
-                }
-            }
-        },
-        "rest.EmailVerificationRisk": {
-            "type": "object",
-            "properties": {
-                "isFirewalled": {
-                    "description": "IsFirewalled indicates whether the email is protected by a firewall",
-                    "type": "boolean",
-                    "example": false
-                },
-                "isFreeProvider": {
-                    "description": "IsFreeProvider indicates if the email uses a free provider like Gmail or Yahoo",
-                    "type": "boolean",
-                    "example": true
-                },
-                "isMailboxFull": {
-                    "description": "IsMailboxFull indicates if the mailbox is full",
-                    "type": "boolean",
-                    "example": false
-                },
-                "isPrimaryDomain": {
-                    "description": "IsPrimaryDomain indicates if the email belongs to a primary domain (not an alias)",
-                    "type": "boolean",
-                    "example": true
-                },
-                "isRoleMailbox": {
-                    "description": "IsRoleMailbox indicates if the email belongs to a role (e.g., info@, support@)",
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
-        "rest.EmailVerificationSyntax": {
-            "type": "object",
-            "properties": {
-                "domain": {
-                    "description": "Domain represents the domain part of the email address",
-                    "type": "string",
-                    "example": "example.com"
-                },
-                "isValid": {
-                    "description": "IsValid indicates if the syntax of the email is valid",
-                    "type": "boolean",
-                    "example": true
-                },
-                "user": {
-                    "description": "User represents the local part (before the @) of the email address",
-                    "type": "string",
-                    "example": "example"
-                }
-            }
-        },
-        "rest.EnrichOrganizationData": {
+        "restenrich.EnrichOrganizationData": {
             "description": "Detailed data about an organization from enrichment.",
             "type": "object",
             "properties": {
@@ -766,7 +622,7 @@ const docTemplate = `{
                     "description": "Industry in which the organization operates.",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/rest.EnrichOrganizationIndustry"
+                            "$ref": "#/definitions/restenrich.EnrichOrganizationIndustry"
                         }
                     ]
                 },
@@ -774,7 +630,7 @@ const docTemplate = `{
                     "description": "Location information about the organization.",
                     "allOf": [
                         {
-                            "$ref": "#/definitions/rest.EnrichOrganizationLocation"
+                            "$ref": "#/definitions/restenrich.EnrichOrganizationLocation"
                         }
                     ]
                 },
@@ -820,7 +676,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichOrganizationIndustry": {
+        "restenrich.EnrichOrganizationIndustry": {
             "type": "object",
             "properties": {
                 "industry": {
@@ -830,7 +686,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichOrganizationLocation": {
+        "restenrich.EnrichOrganizationLocation": {
             "description": "Location details of an organization.",
             "type": "object",
             "properties": {
@@ -876,12 +732,12 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichOrganizationResponse": {
+        "restenrich.EnrichOrganizationResponse": {
             "description": "Response structure for the organization enrichment API.",
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/rest.EnrichOrganizationData"
+                    "$ref": "#/definitions/restenrich.EnrichOrganizationData"
                 },
                 "message": {
                     "description": "Message for the response.\nExample: Enrichment completed",
@@ -895,32 +751,32 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonData": {
+        "restenrich.EnrichPersonData": {
             "description": "Detailed data about a person from enrichment.",
             "type": "object",
             "properties": {
                 "emails": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/rest.EnrichPersonEmail"
+                        "$ref": "#/definitions/restenrich.EnrichPersonEmail"
                     }
                 },
                 "jobs": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/rest.EnrichPersonJob"
+                        "$ref": "#/definitions/restenrich.EnrichPersonJob"
                     }
                 },
                 "location": {
-                    "$ref": "#/definitions/rest.EnrichPersonLocation"
+                    "$ref": "#/definitions/restenrich.EnrichPersonLocation"
                 },
                 "name": {
-                    "$ref": "#/definitions/rest.EnrichPersonName"
+                    "$ref": "#/definitions/restenrich.EnrichPersonName"
                 },
                 "phoneNumbers": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/rest.EnrichPersonPhoneNumber"
+                        "$ref": "#/definitions/restenrich.EnrichPersonPhoneNumber"
                     }
                 },
                 "profilePic": {
@@ -928,11 +784,11 @@ const docTemplate = `{
                     "example": "https://example.com/profile.jpg"
                 },
                 "social": {
-                    "$ref": "#/definitions/rest.EnrichPersonSocial"
+                    "$ref": "#/definitions/restenrich.EnrichPersonSocial"
                 }
             }
         },
-        "rest.EnrichPersonDiscord": {
+        "restenrich.EnrichPersonDiscord": {
             "description": "Discord profile details of a person.",
             "type": "object",
             "properties": {
@@ -942,7 +798,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonEmail": {
+        "restenrich.EnrichPersonEmail": {
             "description": "Email details of a person.",
             "type": "object",
             "properties": {
@@ -964,7 +820,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonGithub": {
+        "restenrich.EnrichPersonGithub": {
             "description": "Github profile details of a person.",
             "type": "object",
             "properties": {
@@ -978,7 +834,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonJob": {
+        "restenrich.EnrichPersonJob": {
             "description": "Job details of a person.",
             "type": "object",
             "properties": {
@@ -995,7 +851,7 @@ const docTemplate = `{
                     "example": "https://techcorp.com"
                 },
                 "duration": {
-                    "$ref": "#/definitions/rest.EnrichPersonJobDuration"
+                    "$ref": "#/definitions/restenrich.EnrichPersonJobDuration"
                 },
                 "isCurrent": {
                     "type": "boolean",
@@ -1011,7 +867,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonJobDuration": {
+        "restenrich.EnrichPersonJobDuration": {
             "description": "Job duration of a person.",
             "type": "object",
             "properties": {
@@ -1033,7 +889,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonLinkedIn": {
+        "restenrich.EnrichPersonLinkedIn": {
             "description": "LinkedIn profile details of a person.",
             "type": "object",
             "properties": {
@@ -1055,7 +911,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonLocation": {
+        "restenrich.EnrichPersonLocation": {
             "description": "Location details of a person.",
             "type": "object",
             "properties": {
@@ -1077,7 +933,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonName": {
+        "restenrich.EnrichPersonName": {
             "description": "Name details of a person.",
             "type": "object",
             "properties": {
@@ -1095,7 +951,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonPhoneNumber": {
+        "restenrich.EnrichPersonPhoneNumber": {
             "description": "Phone number details of a person.",
             "type": "object",
             "properties": {
@@ -1109,12 +965,12 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonResponse": {
+        "restenrich.EnrichPersonResponse": {
             "description": "Response structure for the person enrichment API.",
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/rest.EnrichPersonData"
+                    "$ref": "#/definitions/restenrich.EnrichPersonData"
                 },
                 "isComplete": {
                     "type": "boolean",
@@ -1144,25 +1000,25 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.EnrichPersonSocial": {
+        "restenrich.EnrichPersonSocial": {
             "description": "Social media details of a person.",
             "type": "object",
             "properties": {
                 "discord": {
-                    "$ref": "#/definitions/rest.EnrichPersonDiscord"
+                    "$ref": "#/definitions/restenrich.EnrichPersonDiscord"
                 },
                 "github": {
-                    "$ref": "#/definitions/rest.EnrichPersonGithub"
+                    "$ref": "#/definitions/restenrich.EnrichPersonGithub"
                 },
                 "linkedin": {
-                    "$ref": "#/definitions/rest.EnrichPersonLinkedIn"
+                    "$ref": "#/definitions/restenrich.EnrichPersonLinkedIn"
                 },
                 "x": {
-                    "$ref": "#/definitions/rest.EnrichPersonX"
+                    "$ref": "#/definitions/restenrich.EnrichPersonX"
                 }
             }
         },
-        "rest.EnrichPersonX": {
+        "restenrich.EnrichPersonX": {
             "description": "X (formerly Twitter) profile details of a person.",
             "type": "object",
             "properties": {
@@ -1176,7 +1032,364 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.IpIntelligenceGeolocation": {
+        "restmailstack.DnsRecordResponse": {
+            "description": "DNS record object in the response",
+            "type": "object",
+            "properties": {
+                "name": {
+                    "description": "Name is the name of the DNS record\nExample: example.com",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "type": {
+                    "description": "Type is the type of the DNS record (e.g., A, MX, TXT)\nExample: A",
+                    "type": "string",
+                    "example": "A"
+                },
+                "value": {
+                    "description": "Value is the value of the DNS record\nExample: 192.0.2.1",
+                    "type": "string",
+                    "example": "192.0.2.1"
+                }
+            }
+        },
+        "restmailstack.MailboxConfig": {
+            "description": "Mailbox object containing username, password, and other configurations",
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "forwardingEnabled": {
+                    "description": "ForwardingEnabled indicates if forwarding is enabled for the mailbox\nExample: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "forwardingTo": {
+                    "description": "ForwardingTo specifies the email address to forward mails to if forwarding is enabled\nExample: forward@example.com",
+                    "type": "string",
+                    "example": "forward@example.com"
+                },
+                "password": {
+                    "description": "Password for the mailbox\nRequired: true\nExample: strongpassword",
+                    "type": "string",
+                    "example": "strongpassword"
+                },
+                "username": {
+                    "description": "Username of the mailbox\nRequired: true\nExample: user@example.com",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "webmailEnabled": {
+                    "description": "WebmailEnabled indicates if webmail access is enabled for the mailbox\nExample: false",
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "restmailstack.MailboxResponse": {
+            "description": "Mailbox object in the response",
+            "type": "object",
+            "properties": {
+                "createdAt": {
+                    "description": "CreatedAt is the date and time the mailbox was created\nExample: 2021-09-01T12:00:00Z",
+                    "type": "string",
+                    "example": "2021-09-01T12:00:00Z"
+                },
+                "email": {
+                    "description": "Email is the email address for the mailbox\nExample: user@example.com",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "lastUpdatedAt": {
+                    "description": "LastUpdatedAt is the date and time the mailbox was last updated\nExample: 2021-09-01T12:00:00Z",
+                    "type": "string",
+                    "example": "2021-09-01T12:00:00Z"
+                }
+            }
+        },
+        "restmailstack.RegisterNewDomainRequest": {
+            "description": "Request body for domain registration",
+            "type": "object",
+            "required": [
+                "domain",
+                "mailboxes"
+            ],
+            "properties": {
+                "domain": {
+                    "description": "Domain is the domain name to be registered\nRequired: true\nExample: example.com",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "mailboxes": {
+                    "description": "Mailboxes is a list of mailboxes to be configured under the domain\nRequired: true",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.MailboxConfig"
+                    }
+                }
+            }
+        },
+        "restmailstack.RegisterNewDomainResponse": {
+            "description": "Response body for a successful domain registration",
+            "type": "object",
+            "properties": {
+                "autoRenew": {
+                    "description": "AutoRenew indicates whether the domain will be automatically renewed upon expiration\nExample: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "createdAt": {
+                    "description": "CreatedAt is the date and time the domain was registered\nExample: 2021-09-01T12:00:00Z",
+                    "type": "string",
+                    "example": "2021-09-01T12:00:00Z"
+                },
+                "dnsRecords": {
+                    "description": "DnsRecords provides a list of DNS records associated with the domain",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.DnsRecordResponse"
+                    }
+                },
+                "domain": {
+                    "description": "Domain is the domain name that was registered\nExample: example.com",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "expiresAt": {
+                    "description": "ExpiresAt is the date and time when the domain registration will expire\nExample: 2022-09-01T12:00:00Z",
+                    "type": "string",
+                    "example": "2022-09-01T12:00:00Z"
+                },
+                "lastUpdatedAt": {
+                    "description": "LastUpdatedAt is the date and time the domain registration was last updated\nExample: 2021-09-01T12:00:00Z",
+                    "type": "string",
+                    "example": "2021-09-01T12:00:00Z"
+                },
+                "mailboxes": {
+                    "description": "Mailboxes provides a list of mailboxes associated with the domain",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.MailboxResponse"
+                    }
+                },
+                "message": {
+                    "description": "Message provides additional information about the registration\nExample: Domain registered successfully",
+                    "type": "string",
+                    "example": "Domain registered successfully"
+                },
+                "nameservers": {
+                    "description": "Nameservers lists the nameservers associated with the domain\nExample: [ns1.example.com, ns2.example.com]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"ns1.example.com\"",
+                        " \"ns2.example.com\"]"
+                    ]
+                },
+                "status": {
+                    "description": "Status indicates the result of the domain registration\nExample: success",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restverify.BulkResultsDetails": {
+            "description": "Detailed results of the bulk email verification.",
+            "type": "object",
+            "properties": {
+                "deliverable": {
+                    "type": "integer",
+                    "example": 950
+                },
+                "downloadUrl": {
+                    "type": "string",
+                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download"
+                },
+                "totalEmails": {
+                    "type": "integer",
+                    "example": 1000
+                },
+                "undeliverable": {
+                    "type": "integer",
+                    "example": 45
+                }
+            }
+        },
+        "restverify.BulkResultsResponse": {
+            "description": "Response structure for returning bulk email verification results after processing.",
+            "type": "object",
+            "properties": {
+                "estimatedCompletionTs": {
+                    "description": "Epoch timestamp",
+                    "type": "integer",
+                    "example": 1694030400
+                },
+                "fileName": {
+                    "type": "string",
+                    "example": "emails.csv"
+                },
+                "jobId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "Completed 1000 of 1000 emails"
+                },
+                "results": {
+                    "$ref": "#/definitions/restverify.BulkResultsDetails"
+                },
+                "status": {
+                    "type": "string",
+                    "example": "completed"
+                }
+            }
+        },
+        "restverify.BulkUploadResponse": {
+            "description": "Response structure for bulk email upload, containing job ID, result URL, and estimated completion time.",
+            "type": "object",
+            "properties": {
+                "estimatedCompletionTs": {
+                    "description": "Epoch timestamp",
+                    "type": "number",
+                    "example": 1694030400
+                },
+                "jobId": {
+                    "type": "string",
+                    "example": "550e8400-e29b-41d4-a716-446655440000"
+                },
+                "message": {
+                    "type": "string",
+                    "example": "File uploaded successfully"
+                },
+                "resultUrl": {
+                    "type": "string",
+                    "example": "https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000"
+                }
+            }
+        },
+        "restverify.EmailVerificationResponse": {
+            "description": "The response structure for email verification, providing detailed validation results.",
+            "type": "object",
+            "properties": {
+                "alternateEmail": {
+                    "description": "AlternateEmail provides an alternate email if available",
+                    "type": "string",
+                    "example": "alternate@example.com"
+                },
+                "deliverable": {
+                    "description": "Deliverable indicates whether the email is deliverable (e.g., \"true\", \"false\", \"unknown\")",
+                    "type": "string",
+                    "example": "true"
+                },
+                "email": {
+                    "description": "Email is the email address that was verified",
+                    "type": "string",
+                    "example": "example@example.com"
+                },
+                "isCatchAll": {
+                    "description": "IsCatchAll indicates if the email address is a catch-all address",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isRisky": {
+                    "description": "IsRisky indicates whether the email address is risky (e.g., used in spam or phishing)",
+                    "type": "boolean",
+                    "example": false
+                },
+                "message": {
+                    "description": "Message contains any additional information or errors related to the verification",
+                    "type": "string",
+                    "example": "Email verified successfully"
+                },
+                "provider": {
+                    "description": "Provider is the email service provider (e.g., Gmail, Outlook)",
+                    "type": "string",
+                    "example": "gmail"
+                },
+                "risk": {
+                    "description": "Risk provides detailed risk factors associated with the email address",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.EmailVerificationRisk"
+                        }
+                    ]
+                },
+                "secureGatewayProvider": {
+                    "description": "SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint, Mimecast)",
+                    "type": "string",
+                    "example": "Proofpoint"
+                },
+                "status": {
+                    "description": "Status indicates the status of the verification (e.g., \"success\" or \"failure\")",
+                    "type": "string",
+                    "example": "success"
+                },
+                "syntax": {
+                    "description": "Syntax provides details on the syntax validation of the email",
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/restverify.EmailVerificationSyntax"
+                        }
+                    ]
+                }
+            }
+        },
+        "restverify.EmailVerificationRisk": {
+            "type": "object",
+            "properties": {
+                "isFirewalled": {
+                    "description": "IsFirewalled indicates whether the email is protected by a firewall",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isFreeProvider": {
+                    "description": "IsFreeProvider indicates if the email uses a free provider like Gmail or Yahoo",
+                    "type": "boolean",
+                    "example": true
+                },
+                "isMailboxFull": {
+                    "description": "IsMailboxFull indicates if the mailbox is full",
+                    "type": "boolean",
+                    "example": false
+                },
+                "isPrimaryDomain": {
+                    "description": "IsPrimaryDomain indicates if the email belongs to a primary domain (not an alias)",
+                    "type": "boolean",
+                    "example": true
+                },
+                "isRoleMailbox": {
+                    "description": "IsRoleMailbox indicates if the email belongs to a role (e.g., info@, support@)",
+                    "type": "boolean",
+                    "example": false
+                }
+            }
+        },
+        "restverify.EmailVerificationSyntax": {
+            "type": "object",
+            "properties": {
+                "domain": {
+                    "description": "Domain represents the domain part of the email address",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "isValid": {
+                    "description": "IsValid indicates if the syntax of the email is valid",
+                    "type": "boolean",
+                    "example": true
+                },
+                "user": {
+                    "description": "User represents the local part (before the @) of the email address",
+                    "type": "string",
+                    "example": "example"
+                }
+            }
+        },
+        "restverify.IpIntelligenceGeolocation": {
             "description": "Geolocation data related to the IP address.",
             "type": "object",
             "properties": {
@@ -1198,7 +1411,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.IpIntelligenceNetwork": {
+        "restverify.IpIntelligenceNetwork": {
             "description": "Network-related data for the IP address.",
             "type": "object",
             "properties": {
@@ -1224,7 +1437,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.IpIntelligenceOrganization": {
+        "restverify.IpIntelligenceOrganization": {
             "description": "Organizational data for the IP address.",
             "type": "object",
             "properties": {
@@ -1242,12 +1455,12 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.IpIntelligenceResponse": {
+        "restverify.IpIntelligenceResponse": {
             "description": "Response structure for IP intelligence lookup.",
             "type": "object",
             "properties": {
                 "geolocation": {
-                    "$ref": "#/definitions/rest.IpIntelligenceGeolocation"
+                    "$ref": "#/definitions/restverify.IpIntelligenceGeolocation"
                 },
                 "ip": {
                     "type": "string",
@@ -1258,24 +1471,24 @@ const docTemplate = `{
                     "example": "No threats detected"
                 },
                 "network": {
-                    "$ref": "#/definitions/rest.IpIntelligenceNetwork"
+                    "$ref": "#/definitions/restverify.IpIntelligenceNetwork"
                 },
                 "organization": {
-                    "$ref": "#/definitions/rest.IpIntelligenceOrganization"
+                    "$ref": "#/definitions/restverify.IpIntelligenceOrganization"
                 },
                 "status": {
                     "type": "string",
                     "example": "success"
                 },
                 "threats": {
-                    "$ref": "#/definitions/rest.IpIntelligenceThreats"
+                    "$ref": "#/definitions/restverify.IpIntelligenceThreats"
                 },
                 "time_zone": {
-                    "$ref": "#/definitions/rest.IpIntelligenceTimeZone"
+                    "$ref": "#/definitions/restverify.IpIntelligenceTimeZone"
                 }
             }
         },
-        "rest.IpIntelligenceThreats": {
+        "restverify.IpIntelligenceThreats": {
             "description": "Threat intelligence data related to the IP address.",
             "type": "object",
             "properties": {
@@ -1309,7 +1522,7 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.IpIntelligenceTimeZone": {
+        "restverify.IpIntelligenceTimeZone": {
             "description": "Timezone data for the IP address.",
             "type": "object",
             "properties": {

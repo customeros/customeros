@@ -6,6 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
+	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
+	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -18,6 +21,7 @@ const (
 	customerBaseV1Path = "/customerbase/v1"
 	verifyV1Path       = "/verify/v1"
 	enrichV1Path       = "/enrich/v1"
+	mailStackV1Path    = "/mailstack/v1"
 )
 
 func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_client.Clients, services *service.Services, cache *commoncaches.Cache) {
@@ -27,6 +31,7 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 	registerCustomerBaseRoutes(ctx, r, services, grpcClients, cache)
 	registerVerifyRoutes(ctx, r, services, cache)
 	registerEnrichRoutes(ctx, r, services, cache)
+	registerMailStackRoutes(ctx, r, services, cache)
 }
 
 func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
@@ -43,11 +48,11 @@ func registerEnrichRoutes(ctx context.Context, r *gin.Engine, services *service.
 }
 
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email", verifyV1Path), services, cache, rest.VerifyEmailAddress(services))
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/email/bulk", verifyV1Path), services, cache, rest.BulkUploadEmailsForVerification(services))
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email/bulk/results/:requestId", verifyV1Path), services, cache, rest.GetBulkEmailVerificationResults(services))
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email/bulk/results/:requestId/download", verifyV1Path), services, cache, rest.DownloadBulkEmailVerificationResults(services))
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/ip", verifyV1Path), services, cache, rest.IpIntelligence(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email", verifyV1Path), services, cache, restverify.VerifyEmailAddress(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/email/bulk", verifyV1Path), services, cache, restverify.BulkUploadEmailsForVerification(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email/bulk/results/:requestId", verifyV1Path), services, cache, restverify.GetBulkEmailVerificationResults(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/email/bulk/results/:requestId/download", verifyV1Path), services, cache, restverify.DownloadBulkEmailVerificationResults(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/ip", verifyV1Path), services, cache, restverify.IpIntelligence(services))
 }
 
 func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
@@ -55,11 +60,15 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *se
 }
 
 func registerOrganizationRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organization", customerBaseV1Path), services, cache, rest.CreateOrganization(services, grpcClients))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, rest.CreateOrganization(services, grpcClients))
 }
 
 func registerOutreachRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/track/email", outreachV1Path), services, cache, rest.GenerateEmailTrackingUrls(services))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/track/email", outreachV1Path), services, cache, restoutreach.GenerateEmailTrackingUrls(services))
+}
+
+func registerMailStackRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains", mailStackV1Path), services, cache, restmailstack.RegisterNewDomain(services))
 }
 
 func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, services *service.Services, cache *commoncaches.Cache, handler gin.HandlerFunc) {

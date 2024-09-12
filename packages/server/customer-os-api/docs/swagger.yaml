@@ -1,62 +1,5 @@
 basePath: /
 definitions:
-  rest.BulkResultsDetails:
-    description: Detailed results of the bulk email verification.
-    properties:
-      deliverable:
-        example: 950
-        type: integer
-      downloadUrl:
-        example: https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download
-        type: string
-      totalEmails:
-        example: 1000
-        type: integer
-      undeliverable:
-        example: 45
-        type: integer
-    type: object
-  rest.BulkResultsResponse:
-    description: Response structure for returning bulk email verification results
-      after processing.
-    properties:
-      estimatedCompletionTs:
-        description: Epoch timestamp
-        example: 1694030400
-        type: integer
-      fileName:
-        example: emails.csv
-        type: string
-      jobId:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-      message:
-        example: Completed 1000 of 1000 emails
-        type: string
-      results:
-        $ref: '#/definitions/rest.BulkResultsDetails'
-      status:
-        example: completed
-        type: string
-    type: object
-  rest.BulkUploadResponse:
-    description: Response structure for bulk email upload, containing job ID, result
-      URL, and estimated completion time.
-    properties:
-      estimatedCompletionTs:
-        description: Epoch timestamp
-        example: 1694030400
-        type: number
-      jobId:
-        example: 550e8400-e29b-41d4-a716-446655440000
-        type: string
-      message:
-        example: File uploaded successfully
-        type: string
-      resultUrl:
-        example: https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000
-        type: string
-    type: object
   rest.CreateOrganizationRequest:
     description: Request to create an organization
     properties:
@@ -124,103 +67,7 @@ definitions:
         example: success
         type: string
     type: object
-  rest.EmailVerificationResponse:
-    description: The response structure for email verification, providing detailed
-      validation results.
-    properties:
-      alternateEmail:
-        description: AlternateEmail provides an alternate email if available
-        example: alternate@example.com
-        type: string
-      deliverable:
-        description: Deliverable indicates whether the email is deliverable (e.g.,
-          "true", "false", "unknown")
-        example: "true"
-        type: string
-      email:
-        description: Email is the email address that was verified
-        example: example@example.com
-        type: string
-      isCatchAll:
-        description: IsCatchAll indicates if the email address is a catch-all address
-        example: false
-        type: boolean
-      isRisky:
-        description: IsRisky indicates whether the email address is risky (e.g., used
-          in spam or phishing)
-        example: false
-        type: boolean
-      message:
-        description: Message contains any additional information or errors related
-          to the verification
-        example: Email verified successfully
-        type: string
-      provider:
-        description: Provider is the email service provider (e.g., Gmail, Outlook)
-        example: gmail
-        type: string
-      risk:
-        allOf:
-        - $ref: '#/definitions/rest.EmailVerificationRisk'
-        description: Risk provides detailed risk factors associated with the email
-          address
-      secureGatewayProvider:
-        description: SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint,
-          Mimecast)
-        example: Proofpoint
-        type: string
-      status:
-        description: Status indicates the status of the verification (e.g., "success"
-          or "failure")
-        example: success
-        type: string
-      syntax:
-        allOf:
-        - $ref: '#/definitions/rest.EmailVerificationSyntax'
-        description: Syntax provides details on the syntax validation of the email
-    type: object
-  rest.EmailVerificationRisk:
-    properties:
-      isFirewalled:
-        description: IsFirewalled indicates whether the email is protected by a firewall
-        example: false
-        type: boolean
-      isFreeProvider:
-        description: IsFreeProvider indicates if the email uses a free provider like
-          Gmail or Yahoo
-        example: true
-        type: boolean
-      isMailboxFull:
-        description: IsMailboxFull indicates if the mailbox is full
-        example: false
-        type: boolean
-      isPrimaryDomain:
-        description: IsPrimaryDomain indicates if the email belongs to a primary domain
-          (not an alias)
-        example: true
-        type: boolean
-      isRoleMailbox:
-        description: IsRoleMailbox indicates if the email belongs to a role (e.g.,
-          info@, support@)
-        example: false
-        type: boolean
-    type: object
-  rest.EmailVerificationSyntax:
-    properties:
-      domain:
-        description: Domain represents the domain part of the email address
-        example: example.com
-        type: string
-      isValid:
-        description: IsValid indicates if the syntax of the email is valid
-        example: true
-        type: boolean
-      user:
-        description: User represents the local part (before the @) of the email address
-        example: example
-        type: string
-    type: object
-  rest.EnrichOrganizationData:
+  restenrich.EnrichOrganizationData:
     description: Detailed data about an organization from enrichment.
     properties:
       description:
@@ -258,11 +105,11 @@ definitions:
         type: array
       industry:
         allOf:
-        - $ref: '#/definitions/rest.EnrichOrganizationIndustry'
+        - $ref: '#/definitions/restenrich.EnrichOrganizationIndustry'
         description: Industry in which the organization operates.
       location:
         allOf:
-        - $ref: '#/definitions/rest.EnrichOrganizationLocation'
+        - $ref: '#/definitions/restenrich.EnrichOrganizationLocation'
         description: Location information about the organization.
       logos:
         description: |-
@@ -308,7 +155,7 @@ definitions:
         example: https://acme.com
         type: string
     type: object
-  rest.EnrichOrganizationIndustry:
+  restenrich.EnrichOrganizationIndustry:
     properties:
       industry:
         description: |-
@@ -317,7 +164,7 @@ definitions:
         example: Technology
         type: string
     type: object
-  rest.EnrichOrganizationLocation:
+  restenrich.EnrichOrganizationLocation:
     description: Location details of an organization.
     properties:
       addressLine1:
@@ -369,11 +216,11 @@ definitions:
         example: California
         type: string
     type: object
-  rest.EnrichOrganizationResponse:
+  restenrich.EnrichOrganizationResponse:
     description: Response structure for the organization enrichment API.
     properties:
       data:
-        $ref: '#/definitions/rest.EnrichOrganizationData'
+        $ref: '#/definitions/restenrich.EnrichOrganizationData'
       message:
         description: |-
           Message for the response.
@@ -387,39 +234,39 @@ definitions:
         example: success
         type: string
     type: object
-  rest.EnrichPersonData:
+  restenrich.EnrichPersonData:
     description: Detailed data about a person from enrichment.
     properties:
       emails:
         items:
-          $ref: '#/definitions/rest.EnrichPersonEmail'
+          $ref: '#/definitions/restenrich.EnrichPersonEmail'
         type: array
       jobs:
         items:
-          $ref: '#/definitions/rest.EnrichPersonJob'
+          $ref: '#/definitions/restenrich.EnrichPersonJob'
         type: array
       location:
-        $ref: '#/definitions/rest.EnrichPersonLocation'
+        $ref: '#/definitions/restenrich.EnrichPersonLocation'
       name:
-        $ref: '#/definitions/rest.EnrichPersonName'
+        $ref: '#/definitions/restenrich.EnrichPersonName'
       phoneNumbers:
         items:
-          $ref: '#/definitions/rest.EnrichPersonPhoneNumber'
+          $ref: '#/definitions/restenrich.EnrichPersonPhoneNumber'
         type: array
       profilePic:
         example: https://example.com/profile.jpg
         type: string
       social:
-        $ref: '#/definitions/rest.EnrichPersonSocial'
+        $ref: '#/definitions/restenrich.EnrichPersonSocial'
     type: object
-  rest.EnrichPersonDiscord:
+  restenrich.EnrichPersonDiscord:
     description: Discord profile details of a person.
     properties:
       username:
         example: johndoe#1234
         type: string
     type: object
-  rest.EnrichPersonEmail:
+  restenrich.EnrichPersonEmail:
     description: Email details of a person.
     properties:
       address:
@@ -435,7 +282,7 @@ definitions:
         example: professional
         type: string
     type: object
-  rest.EnrichPersonGithub:
+  restenrich.EnrichPersonGithub:
     description: Github profile details of a person.
     properties:
       url:
@@ -445,7 +292,7 @@ definitions:
         example: johndoe
         type: string
     type: object
-  rest.EnrichPersonJob:
+  restenrich.EnrichPersonJob:
     description: Job details of a person.
     properties:
       company:
@@ -458,7 +305,7 @@ definitions:
         example: https://techcorp.com
         type: string
       duration:
-        $ref: '#/definitions/rest.EnrichPersonJobDuration'
+        $ref: '#/definitions/restenrich.EnrichPersonJobDuration'
       isCurrent:
         example: true
         type: boolean
@@ -469,7 +316,7 @@ definitions:
         example: Software Engineer
         type: string
     type: object
-  rest.EnrichPersonJobDuration:
+  restenrich.EnrichPersonJobDuration:
     description: Job duration of a person.
     properties:
       endMonth:
@@ -485,7 +332,7 @@ definitions:
         example: 2020
         type: integer
     type: object
-  rest.EnrichPersonLinkedIn:
+  restenrich.EnrichPersonLinkedIn:
     description: LinkedIn profile details of a person.
     properties:
       followerCount:
@@ -501,7 +348,7 @@ definitions:
         example: https://linkedin.com/in/john-doe
         type: string
     type: object
-  rest.EnrichPersonLocation:
+  restenrich.EnrichPersonLocation:
     description: Location details of a person.
     properties:
       city:
@@ -517,7 +364,7 @@ definitions:
         example: PST
         type: string
     type: object
-  rest.EnrichPersonName:
+  restenrich.EnrichPersonName:
     description: Name details of a person.
     properties:
       firstName:
@@ -530,7 +377,7 @@ definitions:
         example: Doe
         type: string
     type: object
-  rest.EnrichPersonPhoneNumber:
+  restenrich.EnrichPersonPhoneNumber:
     description: Phone number details of a person.
     properties:
       number:
@@ -540,11 +387,11 @@ definitions:
         example: mobile
         type: string
     type: object
-  rest.EnrichPersonResponse:
+  restenrich.EnrichPersonResponse:
     description: Response structure for the person enrichment API.
     properties:
       data:
-        $ref: '#/definitions/rest.EnrichPersonData'
+        $ref: '#/definitions/restenrich.EnrichPersonData'
       isComplete:
         example: true
         type: boolean
@@ -565,19 +412,19 @@ definitions:
         example: success
         type: string
     type: object
-  rest.EnrichPersonSocial:
+  restenrich.EnrichPersonSocial:
     description: Social media details of a person.
     properties:
       discord:
-        $ref: '#/definitions/rest.EnrichPersonDiscord'
+        $ref: '#/definitions/restenrich.EnrichPersonDiscord'
       github:
-        $ref: '#/definitions/rest.EnrichPersonGithub'
+        $ref: '#/definitions/restenrich.EnrichPersonGithub'
       linkedin:
-        $ref: '#/definitions/rest.EnrichPersonLinkedIn'
+        $ref: '#/definitions/restenrich.EnrichPersonLinkedIn'
       x:
-        $ref: '#/definitions/rest.EnrichPersonX'
+        $ref: '#/definitions/restenrich.EnrichPersonX'
     type: object
-  rest.EnrichPersonX:
+  restenrich.EnrichPersonX:
     description: X (formerly Twitter) profile details of a person.
     properties:
       handle:
@@ -587,7 +434,331 @@ definitions:
         example: https://x.com/johndoe
         type: string
     type: object
-  rest.IpIntelligenceGeolocation:
+  restmailstack.DnsRecordResponse:
+    description: DNS record object in the response
+    properties:
+      name:
+        description: |-
+          Name is the name of the DNS record
+          Example: example.com
+        example: example.com
+        type: string
+      type:
+        description: |-
+          Type is the type of the DNS record (e.g., A, MX, TXT)
+          Example: A
+        example: A
+        type: string
+      value:
+        description: |-
+          Value is the value of the DNS record
+          Example: 192.0.2.1
+        example: 192.0.2.1
+        type: string
+    type: object
+  restmailstack.MailboxConfig:
+    description: Mailbox object containing username, password, and other configurations
+    properties:
+      forwardingEnabled:
+        description: |-
+          ForwardingEnabled indicates if forwarding is enabled for the mailbox
+          Example: true
+        example: true
+        type: boolean
+      forwardingTo:
+        description: |-
+          ForwardingTo specifies the email address to forward mails to if forwarding is enabled
+          Example: forward@example.com
+        example: forward@example.com
+        type: string
+      password:
+        description: |-
+          Password for the mailbox
+          Required: true
+          Example: strongpassword
+        example: strongpassword
+        type: string
+      username:
+        description: |-
+          Username of the mailbox
+          Required: true
+          Example: user@example.com
+        example: user@example.com
+        type: string
+      webmailEnabled:
+        description: |-
+          WebmailEnabled indicates if webmail access is enabled for the mailbox
+          Example: false
+        example: false
+        type: boolean
+    required:
+    - password
+    - username
+    type: object
+  restmailstack.MailboxResponse:
+    description: Mailbox object in the response
+    properties:
+      createdAt:
+        description: |-
+          CreatedAt is the date and time the mailbox was created
+          Example: 2021-09-01T12:00:00Z
+        example: "2021-09-01T12:00:00Z"
+        type: string
+      email:
+        description: |-
+          Email is the email address for the mailbox
+          Example: user@example.com
+        example: user@example.com
+        type: string
+      lastUpdatedAt:
+        description: |-
+          LastUpdatedAt is the date and time the mailbox was last updated
+          Example: 2021-09-01T12:00:00Z
+        example: "2021-09-01T12:00:00Z"
+        type: string
+    type: object
+  restmailstack.RegisterNewDomainRequest:
+    description: Request body for domain registration
+    properties:
+      domain:
+        description: |-
+          Domain is the domain name to be registered
+          Required: true
+          Example: example.com
+        example: example.com
+        type: string
+      mailboxes:
+        description: |-
+          Mailboxes is a list of mailboxes to be configured under the domain
+          Required: true
+        items:
+          $ref: '#/definitions/restmailstack.MailboxConfig'
+        type: array
+    required:
+    - domain
+    - mailboxes
+    type: object
+  restmailstack.RegisterNewDomainResponse:
+    description: Response body for a successful domain registration
+    properties:
+      autoRenew:
+        description: |-
+          AutoRenew indicates whether the domain will be automatically renewed upon expiration
+          Example: true
+        example: true
+        type: boolean
+      createdAt:
+        description: |-
+          CreatedAt is the date and time the domain was registered
+          Example: 2021-09-01T12:00:00Z
+        example: "2021-09-01T12:00:00Z"
+        type: string
+      dnsRecords:
+        description: DnsRecords provides a list of DNS records associated with the
+          domain
+        items:
+          $ref: '#/definitions/restmailstack.DnsRecordResponse'
+        type: array
+      domain:
+        description: |-
+          Domain is the domain name that was registered
+          Example: example.com
+        example: example.com
+        type: string
+      expiresAt:
+        description: |-
+          ExpiresAt is the date and time when the domain registration will expire
+          Example: 2022-09-01T12:00:00Z
+        example: "2022-09-01T12:00:00Z"
+        type: string
+      lastUpdatedAt:
+        description: |-
+          LastUpdatedAt is the date and time the domain registration was last updated
+          Example: 2021-09-01T12:00:00Z
+        example: "2021-09-01T12:00:00Z"
+        type: string
+      mailboxes:
+        description: Mailboxes provides a list of mailboxes associated with the domain
+        items:
+          $ref: '#/definitions/restmailstack.MailboxResponse'
+        type: array
+      message:
+        description: |-
+          Message provides additional information about the registration
+          Example: Domain registered successfully
+        example: Domain registered successfully
+        type: string
+      nameservers:
+        description: |-
+          Nameservers lists the nameservers associated with the domain
+          Example: [ns1.example.com, ns2.example.com]
+        example:
+        - '["ns1.example.com"'
+        - ' "ns2.example.com"]'
+        items:
+          type: string
+        type: array
+      status:
+        description: |-
+          Status indicates the result of the domain registration
+          Example: success
+        example: success
+        type: string
+    type: object
+  restverify.BulkResultsDetails:
+    description: Detailed results of the bulk email verification.
+    properties:
+      deliverable:
+        example: 950
+        type: integer
+      downloadUrl:
+        example: https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000/download
+        type: string
+      totalEmails:
+        example: 1000
+        type: integer
+      undeliverable:
+        example: 45
+        type: integer
+    type: object
+  restverify.BulkResultsResponse:
+    description: Response structure for returning bulk email verification results
+      after processing.
+    properties:
+      estimatedCompletionTs:
+        description: Epoch timestamp
+        example: 1694030400
+        type: integer
+      fileName:
+        example: emails.csv
+        type: string
+      jobId:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      message:
+        example: Completed 1000 of 1000 emails
+        type: string
+      results:
+        $ref: '#/definitions/restverify.BulkResultsDetails'
+      status:
+        example: completed
+        type: string
+    type: object
+  restverify.BulkUploadResponse:
+    description: Response structure for bulk email upload, containing job ID, result
+      URL, and estimated completion time.
+    properties:
+      estimatedCompletionTs:
+        description: Epoch timestamp
+        example: 1694030400
+        type: number
+      jobId:
+        example: 550e8400-e29b-41d4-a716-446655440000
+        type: string
+      message:
+        example: File uploaded successfully
+        type: string
+      resultUrl:
+        example: https://api.customeros.ai/verify/v1/email/bulk/results/550e8400-e29b-41d4-a716-446655440000
+        type: string
+    type: object
+  restverify.EmailVerificationResponse:
+    description: The response structure for email verification, providing detailed
+      validation results.
+    properties:
+      alternateEmail:
+        description: AlternateEmail provides an alternate email if available
+        example: alternate@example.com
+        type: string
+      deliverable:
+        description: Deliverable indicates whether the email is deliverable (e.g.,
+          "true", "false", "unknown")
+        example: "true"
+        type: string
+      email:
+        description: Email is the email address that was verified
+        example: example@example.com
+        type: string
+      isCatchAll:
+        description: IsCatchAll indicates if the email address is a catch-all address
+        example: false
+        type: boolean
+      isRisky:
+        description: IsRisky indicates whether the email address is risky (e.g., used
+          in spam or phishing)
+        example: false
+        type: boolean
+      message:
+        description: Message contains any additional information or errors related
+          to the verification
+        example: Email verified successfully
+        type: string
+      provider:
+        description: Provider is the email service provider (e.g., Gmail, Outlook)
+        example: gmail
+        type: string
+      risk:
+        allOf:
+        - $ref: '#/definitions/restverify.EmailVerificationRisk'
+        description: Risk provides detailed risk factors associated with the email
+          address
+      secureGatewayProvider:
+        description: SecureGatewayProvider is the secure gateway provider (e.g., Proofpoint,
+          Mimecast)
+        example: Proofpoint
+        type: string
+      status:
+        description: Status indicates the status of the verification (e.g., "success"
+          or "failure")
+        example: success
+        type: string
+      syntax:
+        allOf:
+        - $ref: '#/definitions/restverify.EmailVerificationSyntax'
+        description: Syntax provides details on the syntax validation of the email
+    type: object
+  restverify.EmailVerificationRisk:
+    properties:
+      isFirewalled:
+        description: IsFirewalled indicates whether the email is protected by a firewall
+        example: false
+        type: boolean
+      isFreeProvider:
+        description: IsFreeProvider indicates if the email uses a free provider like
+          Gmail or Yahoo
+        example: true
+        type: boolean
+      isMailboxFull:
+        description: IsMailboxFull indicates if the mailbox is full
+        example: false
+        type: boolean
+      isPrimaryDomain:
+        description: IsPrimaryDomain indicates if the email belongs to a primary domain
+          (not an alias)
+        example: true
+        type: boolean
+      isRoleMailbox:
+        description: IsRoleMailbox indicates if the email belongs to a role (e.g.,
+          info@, support@)
+        example: false
+        type: boolean
+    type: object
+  restverify.EmailVerificationSyntax:
+    properties:
+      domain:
+        description: Domain represents the domain part of the email address
+        example: example.com
+        type: string
+      isValid:
+        description: IsValid indicates if the syntax of the email is valid
+        example: true
+        type: boolean
+      user:
+        description: User represents the local part (before the @) of the email address
+        example: example
+        type: string
+    type: object
+  restverify.IpIntelligenceGeolocation:
     description: Geolocation data related to the IP address.
     properties:
       city:
@@ -603,7 +774,7 @@ definitions:
         example: true
         type: boolean
     type: object
-  rest.IpIntelligenceNetwork:
+  restverify.IpIntelligenceNetwork:
     description: Network-related data for the IP address.
     properties:
       asn:
@@ -622,7 +793,7 @@ definitions:
         example: business
         type: string
     type: object
-  rest.IpIntelligenceOrganization:
+  restverify.IpIntelligenceOrganization:
     description: Organizational data for the IP address.
     properties:
       domain:
@@ -635,11 +806,11 @@ definitions:
         example: Company Name
         type: string
     type: object
-  rest.IpIntelligenceResponse:
+  restverify.IpIntelligenceResponse:
     description: Response structure for IP intelligence lookup.
     properties:
       geolocation:
-        $ref: '#/definitions/rest.IpIntelligenceGeolocation'
+        $ref: '#/definitions/restverify.IpIntelligenceGeolocation'
       ip:
         example: 192.168.1.1
         type: string
@@ -647,18 +818,18 @@ definitions:
         example: No threats detected
         type: string
       network:
-        $ref: '#/definitions/rest.IpIntelligenceNetwork'
+        $ref: '#/definitions/restverify.IpIntelligenceNetwork'
       organization:
-        $ref: '#/definitions/rest.IpIntelligenceOrganization'
+        $ref: '#/definitions/restverify.IpIntelligenceOrganization'
       status:
         example: success
         type: string
       threats:
-        $ref: '#/definitions/rest.IpIntelligenceThreats'
+        $ref: '#/definitions/restverify.IpIntelligenceThreats'
       time_zone:
-        $ref: '#/definitions/rest.IpIntelligenceTimeZone'
+        $ref: '#/definitions/restverify.IpIntelligenceTimeZone'
     type: object
-  rest.IpIntelligenceThreats:
+  restverify.IpIntelligenceThreats:
     description: Threat intelligence data related to the IP address.
     properties:
       isCloudRelay:
@@ -683,7 +854,7 @@ definitions:
         example: false
         type: boolean
     type: object
-  rest.IpIntelligenceTimeZone:
+  restverify.IpIntelligenceTimeZone:
     description: Timezone data for the IP address.
     properties:
       abbr:
@@ -765,7 +936,7 @@ paths:
         "200":
           description: Enrichment results including organizational data
           schema:
-            $ref: '#/definitions/rest.EnrichOrganizationResponse'
+            $ref: '#/definitions/restenrich.EnrichOrganizationResponse'
         "400":
           description: Bad Request
         "401":
@@ -809,7 +980,7 @@ paths:
         "200":
           description: Enrichment results including personal, job, and social data
           schema:
-            $ref: '#/definitions/rest.EnrichPersonResponse'
+            $ref: '#/definitions/restenrich.EnrichPersonResponse'
         "400":
           description: Bad Request
         "401":
@@ -837,7 +1008,7 @@ paths:
         "200":
           description: Enrichment results including personal, job, and social data
           schema:
-            $ref: '#/definitions/rest.EnrichPersonResponse'
+            $ref: '#/definitions/restenrich.EnrichPersonResponse'
         "400":
           description: Bad Request
         "401":
@@ -851,6 +1022,37 @@ paths:
       summary: Enrich Person Callback
       tags:
       - Enrichment API
+  /mailstack/v1/domains:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new domain with a list of mailboxes in the MailStack
+        system.
+      parameters:
+      - description: Domain registration payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/restmailstack.RegisterNewDomainRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Domain registered successfully
+          schema:
+            $ref: '#/definitions/restmailstack.RegisterNewDomainResponse'
+        "400":
+          description: Invalid request body or missing input fields
+        "401":
+          description: Unauthorized access - API key invalid or expired
+        "500":
+          description: Internal server error
+      security:
+      - ApiKeyAuth: []
+      summary: Register a new domain
+      tags:
+      - MailStack API
   /verify/v1/email:
     get:
       consumes:
@@ -874,7 +1076,7 @@ paths:
         "200":
           description: Successful response
           schema:
-            $ref: '#/definitions/rest.EmailVerificationResponse'
+            $ref: '#/definitions/restverify.EmailVerificationResponse'
         "400":
           description: Bad Request
         "401":
@@ -913,7 +1115,7 @@ paths:
         "200":
           description: File uploaded successfully, with job ID and result URL
           schema:
-            $ref: '#/definitions/rest.BulkUploadResponse'
+            $ref: '#/definitions/restverify.BulkUploadResponse'
         "400":
           description: Bad Request
         "401":
@@ -941,7 +1143,7 @@ paths:
         "200":
           description: Bulk email verification results if processing is completed
           schema:
-            $ref: '#/definitions/rest.BulkResultsResponse'
+            $ref: '#/definitions/restverify.BulkResultsResponse'
         "400":
           description: Bad Request
         "401":
@@ -997,7 +1199,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/rest.IpIntelligenceResponse'
+            $ref: '#/definitions/restverify.IpIntelligenceResponse'
         "400":
           description: Bad Request
         "401":
