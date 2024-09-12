@@ -1,6 +1,7 @@
 import { useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store';
 
 import { Check } from '@ui/media/icons/Check';
@@ -22,15 +23,46 @@ export const EditContactSequence = observer(() => {
       ? `Contact - ${contact?.value.name}`
       : `${selectedIds?.length} contacts`;
 
-  const handleSelect = (opt: FlowSequenceStore) => {
-    if (!context.ids?.[0] || !contact) return;
+  const handleOpenConfirmDialog = (id: string) => {
+    ui.commandMenu.toggle('ConfirmBulkSequenceEdit');
+    ui.commandMenu.setContext({
+      ...ui.commandMenu.context,
+      property: id,
+    });
+    ui.commandMenu.setOpen(true);
+  };
 
-    if (selectedIds?.length === 1) {
+  const handleSelect = (opt: FlowSequenceStore) => {
+    const selectedIds = context.ids ?? [];
+
+    if (selectedIds.length === 0) return;
+
+    if (selectedIds.length === 1) {
+      if (contact?.sequence?.id === opt.id || !contact) {
+        ui.commandMenu.setOpen(false);
+
+        return;
+      }
+
       opt.linkContact(contact.id, contact.emailId);
     }
 
-    if (selectedIds?.length > 1) {
-      flowSequences.linkContacts(opt.id, selectedIds);
+    if (selectedIds.length > 1) {
+      const selectedContacts = selectedIds
+        .map((id) => contacts.value.get(id))
+        .filter((contact): contact is ContactStore => contact !== null);
+
+      const hasConflictingSequence = selectedContacts.some(
+        (ct) => !!ct.sequence?.id && ct.sequence.id !== opt.id,
+      );
+
+      if (hasConflictingSequence) {
+        handleOpenConfirmDialog(opt.id);
+
+        return;
+      } else {
+        flowSequences.linkContacts(opt.id, selectedIds);
+      }
     }
 
     ui.commandMenu.setOpen(false);

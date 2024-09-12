@@ -23,6 +23,7 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
+import { ConfirmBulkSequenceEdit } from '@shared/components/CommandMenu/commands/contacts/ConfirmBulkSequenceEdit.tsx';
 
 import {
   EditName,
@@ -93,6 +94,7 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
   ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
   UnlinkContactFromSequence: <UnlinkContactFromSequence />,
+  ConfirmBulkSequenceEdit: <ConfirmBulkSequenceEdit />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,

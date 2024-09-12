@@ -8,3 +8,4 @@ export * from './ChangeOrAddJobRoles';
 export * from './EditContactSequence';
 export * from './ContactEmailVerificationInfoModal';
 export * from './UnlinkContactFromSequence';
+export * from './ConfirmBulkSequenceEdit';
