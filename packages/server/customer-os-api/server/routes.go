@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	restenrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/enrich"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
 	restverify "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/verify"
@@ -42,9 +43,9 @@ func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.
 }
 
 func registerEnrichRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person", enrichV1Path), services, cache, rest.EnrichPerson(services))
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person/results/:id", enrichV1Path), services, cache, rest.EnrichPersonCallback(services))
-	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organizaiton", enrichV1Path), services, cache, rest.EnrichOrganization(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person", enrichV1Path), services, cache, restenrich.EnrichPerson(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/person/results/:id", enrichV1Path), services, cache, restenrich.EnrichPersonCallback(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organizaiton", enrichV1Path), services, cache, restenrich.EnrichOrganization(services))
 }
 
 func registerVerifyRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
