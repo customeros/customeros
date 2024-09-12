@@ -34,7 +34,7 @@ export const SequencesBulkCommands = observer(() => {
             </>
           }
         >
-          Change sequence status
+          Change sequence status...
         </CommandItem>
         <CommandItem
           leftAccessory={<Archive />}
