@@ -137,7 +137,8 @@ export const CommandMenu = observer(() => {
     handler: () => store.ui.commandMenu.setOpen(false),
   });
 
-  useKey('Escape', () => {
+  useKey('Escape', (e) => {
+    e.stopPropagation();
     match(location.pathname)
       .with('/prospects', () => {
         store.ui.commandMenu.setOpen(false);
@@ -149,8 +150,12 @@ export const CommandMenu = observer(() => {
       });
   });
 
-  useModKey('k', () => {
+  useModKey('k', (e) => {
+    e.stopPropagation();
     store.ui.commandMenu.setOpen(true);
+  });
+  useModKey('Enter', (e) => {
+    e.stopPropagation();
   });
 
   return (
@@ -160,18 +165,13 @@ export const CommandMenu = observer(() => {
     >
       <ModalPortal>
         {/* z-[5001] is needed to ensure tooltips are not overlapping  - tooltips have zIndex of 5000 - this should be revisited */}
-        <ModalOverlay className='z-[5001]'>
+        <ModalOverlay
+          className='z-[5001]'
+          // Prevent event propagation to parent elements, except for 'Escape' key
+          onKeyDown={(e) => e.key !== 'Escape' && e.stopPropagation()}
+        >
           <ModalBody>
-            <ModalContent
-              ref={commandRef}
-              //We added this onKeyDown here to not refactor the command componenet and is more easy to extend in the future if needed to add more keybindings
-              //the escape command ( is a default keybinding to close the modal) is not needed in the command component
-              onKeyDown={(e) => {
-                if (e.key !== 'Escape' && e.key !== 'Enter') {
-                  e.stopPropagation();
-                }
-              }}
-            >
+            <ModalContent ref={commandRef}>
               {Commands[store.ui.commandMenu.type ?? 'GlobalHub']}
             </ModalContent>
           </ModalBody>
