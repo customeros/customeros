@@ -5,6 +5,7 @@ import { ContactStore } from '@store/Contacts/Contact.store';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
+import { useModKey } from '@shared/hooks/useModKey';
 import { TableInstance } from '@ui/presentation/Table';
 
 import { SharedTableActions } from './components/SharedActions';
@@ -88,6 +89,14 @@ export const ContactTableActions = ({
       },
     },
     { when: !!focusedId },
+  );
+
+  useModKey(
+    'Backspace',
+    () => {
+      onHideContacts();
+    },
+    { when: enableKeyboardShortcuts },
   );
 
   if (!selectCount && !targetId) return null;
