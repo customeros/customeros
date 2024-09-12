@@ -107,7 +107,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   );
 
   const placeholder = match(tableType)
-    .with(TableViewType.Flow, () => 'by name...')
+    .with(TableViewType.Flow, () => 'by sequence name...')
     .with(TableViewType.Contacts, () => 'by name, organization or email...')
     .with(TableViewType.Contracts, () => 'by contract name...')
     .with(TableViewType.Organizations, () => 'by organization name...')

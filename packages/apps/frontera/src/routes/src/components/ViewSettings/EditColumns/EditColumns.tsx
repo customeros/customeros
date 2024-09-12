@@ -49,6 +49,7 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
           ![
             ColumnViewType.FlowSequenceContactCount,
             ColumnViewType.FlowName,
+            ColumnViewType.ContactsFlows,
           ].includes(c.columnType),
       )
       .map((c) => ({

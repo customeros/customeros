@@ -314,6 +314,7 @@ export enum ColumnViewType {
   ContactsCountry = 'CONTACTS_COUNTRY',
   ContactsEmails = 'CONTACTS_EMAILS',
   ContactsExperience = 'CONTACTS_EXPERIENCE',
+  ContactsFlows = 'CONTACTS_FLOWS',
   ContactsJobTitle = 'CONTACTS_JOB_TITLE',
   ContactsLanguages = 'CONTACTS_LANGUAGES',
   ContactsLastInteraction = 'CONTACTS_LAST_INTERACTION',
@@ -325,6 +326,7 @@ export enum ColumnViewType {
   ContactsPhoneNumbers = 'CONTACTS_PHONE_NUMBERS',
   ContactsRegion = 'CONTACTS_REGION',
   ContactsSchools = 'CONTACTS_SCHOOLS',
+  ContactsSequences = 'CONTACTS_SEQUENCES',
   ContactsSkills = 'CONTACTS_SKILLS',
   ContactsTags = 'CONTACTS_TAGS',
   ContactsTimeInCurrentRole = 'CONTACTS_TIME_IN_CURRENT_ROLE',
@@ -1673,7 +1675,6 @@ export type FlowSequenceStepMergeInput = {
   action: FlowSequenceStepAction;
   actionData: FlowSequenceStepInputActionData;
   id?: InputMaybe<Scalars['ID']['input']>;
-  index: Scalars['Int64']['input'];
   name: Scalars['String']['input'];
 };
 
@@ -2485,6 +2486,7 @@ export type Mutation = {
   flow_sequence_UnlinkContact: Result;
   flow_sequence_UnlinkSender: Result;
   flow_sequence_Update: FlowSequence;
+  flow_sequence_step_ChangeIndex: Result;
   flow_sequence_step_ChangeStatus: FlowSequenceStep;
   flow_sequence_step_Merge: FlowSequenceStep;
   interactionEvent_LinkAttachment: Result;
@@ -2952,6 +2954,11 @@ export type MutationFlow_Sequence_UnlinkSenderArgs = {
 
 export type MutationFlow_Sequence_UpdateArgs = {
   input: FlowSequenceUpdateInput;
+};
+
+export type MutationFlow_Sequence_Step_ChangeIndexArgs = {
+  id: Scalars['ID']['input'];
+  index: Scalars['Int64']['input'];
 };
 
 export type MutationFlow_Sequence_Step_ChangeStatusArgs = {
