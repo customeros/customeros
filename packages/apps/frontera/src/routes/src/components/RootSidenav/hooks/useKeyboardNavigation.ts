@@ -12,6 +12,7 @@ interface Presets {
   customersPreset?: string;
   contractsPreset?: string;
   organizationsPreset?: string;
+  flowSequencesPreset?: string;
   upcomingInvoicesPreset?: string;
 }
 
@@ -44,6 +45,15 @@ export const useKeyboardNavigation = (
     () => {
       if (!presets.customersPreset) return;
       navigate(`/finder?preset=${presets.customersPreset}`);
+    },
+    options,
+  );
+  useSequentialShortcut(
+    'G',
+    'Q',
+    () => {
+      if (!presets.flowSequencesPreset) return;
+      navigate(`/finder?preset=${presets.flowSequencesPreset}`);
     },
     options,
   );
