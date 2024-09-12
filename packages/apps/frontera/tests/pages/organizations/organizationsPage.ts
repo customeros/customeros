@@ -8,7 +8,7 @@ import {
   createResponsePromise,
   clickLocatorThatIsVisible,
   clickLocatorsThatAreVisible,
-} from '../helper';
+} from '../../helper';
 
 export class OrganizationsPage {
   private page: Page;
@@ -56,7 +56,7 @@ export class OrganizationsPage {
     this.page = page;
   }
 
-  async waitForPageLoad() {
+  async goToAllOrgs() {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 

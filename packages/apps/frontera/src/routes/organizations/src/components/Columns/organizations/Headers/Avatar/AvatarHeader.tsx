@@ -24,7 +24,7 @@ export const AvatarHeader = observer(() => {
           size='xxs'
           variant='ghost'
           aria-label='create organization'
-          data-test='create-organization-from-table'
+          dataTest='create-organization-from-table'
           icon={<Plus className='text-gray-400 size-5' />}
           className={cn('size-6', enableFeature ? 'visible' : 'hidden')}
           onClick={() => {

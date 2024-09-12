@@ -104,7 +104,7 @@ const AccountPanelComponent = observer(() => {
                 aria-label='Create new contract'
                 isLoading={store.contracts.isLoading}
                 isDisabled={store.contracts.isLoading}
-                data-test='org-account-nonempty-new-contract'
+                dataTest='org-account-nonempty-new-contract'
                 icon={
                   store.contracts.isLoading ? (
                     <Spinner

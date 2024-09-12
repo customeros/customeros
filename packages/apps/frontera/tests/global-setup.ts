@@ -1,8 +1,8 @@
 import { chromium } from '@playwright/test';
 
-import { LoginPage } from './pages/loginPage';
-import { ContactsPage } from './pages/contactsPage';
-import { OrganizationsPage } from './pages/organizationsPage';
+import { LoginPage } from './pages/loginPage/loginPage';
+import { ContactsPage } from './pages/contacts/contactsPage';
+import { OrganizationsPage } from './pages/organizations/organizationsPage';
 
 async function globalSetup() {
   const browser = await chromium.launch();
@@ -15,7 +15,7 @@ async function globalSetup() {
   await loginPage.login();
 
   // Archive organizations
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   let isSelectAllOrgsClicked = false;
 
@@ -48,7 +48,7 @@ async function globalSetup() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Create initial organization
   await organizationsPage.addInitialOrganization();

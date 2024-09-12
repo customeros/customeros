@@ -56,6 +56,7 @@ export const SettingsSidenav = () => {
           size='xs'
           variant='ghost'
           aria-label='Go back'
+          dataTest='settings-go-back'
           icon={<ArrowNarrowLeft className='text-gray-700' />}
           onClick={() => navigate(`/${lastActivePosition.root}`)}
         />
@@ -72,6 +73,7 @@ export const SettingsSidenav = () => {
         />
         <SidenavItem
           label='Accounts'
+          dataTest='settings-accounts'
           onClick={handleItemClick('oauth')}
           isActive={checkIsActive('oauth') || !searchParams?.get('tab')}
           icon={

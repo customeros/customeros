@@ -1,9 +1,10 @@
 import { test } from '@playwright/test';
 
-import { LoginPage } from './pages/loginPage';
-import { CustomersPage } from './pages/customersPage';
-import { OrganizationsPage } from './pages/organizationsPage';
+import { LoginPage } from './pages/loginPage/loginPage';
+import { CustomersPage } from './pages/customers/customersPage';
+import { OrganizationsPage } from './pages/organizations/organizationsPage';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
+import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
 import { OrganizationPeoplePage } from './pages/organization/organizationPeoplePage';
 import { OrganizationAccountPage } from './pages/organization/organizationAccountPage';
 import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
@@ -19,7 +20,7 @@ test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -52,7 +53,7 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -81,7 +82,7 @@ test('Create People entry in an Organization', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -108,7 +109,7 @@ test('Create Timeline entries in an Organization', async ({
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -136,7 +137,7 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   // Login
   await loginPage.login();
   // Wait for redirect and load All Orgs page
-  await organizationsPage.waitForPageLoad();
+  await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
   const organizationId = await organizationsPage.addNonInitialOrganization(
@@ -166,4 +167,25 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   // Delete a contract
   await organizationAccountPage.deleteContract(1);
   await organizationAccountPage.checkContractsCount(1);
+});
+
+test('CmdK global menu', async ({ page }, testInfo) => {
+  const loginPage = new LoginPage(page);
+  const organizationsPage = new OrganizationsPage(page);
+  const organizationsCmdKPage = new OrganizationsCmdKPage(page);
+
+  await loginPage.login();
+  await organizationsPage.goToAllOrgs();
+
+  await organizationsCmdKPage.accessCmdK();
+  await organizationsCmdKPage.verifyFinder();
+  await organizationsCmdKPage.verifyOrganizationCreation(page, testInfo);
+  await organizationsCmdKPage.verifyNavigationToTargets(page);
+  await organizationsCmdKPage.verifyNavigationToOpportunities(page);
+  await organizationsCmdKPage.verifyNavigationToCustomers(page);
+  await organizationsCmdKPage.verifyNavigationToContacts(page);
+  await organizationsCmdKPage.verifyNavigationToInvoices(page);
+  await organizationsCmdKPage.verifyNavigationToContracts(page);
+  await organizationsCmdKPage.verifyNavigationToSettings(page);
+  await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
 });

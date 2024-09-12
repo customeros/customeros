@@ -31,7 +31,7 @@ export const LogoSection = () => {
   return (
     <Menu>
       <MenuButton className='py-2 px-3 pl-[18px] !outline-none'>
-        <div className='flex items-center gap-1.5'>
+        <div data-test='logo-button' className='flex items-center gap-1.5'>
           {!isLoading ? (
             <>
               <Image
