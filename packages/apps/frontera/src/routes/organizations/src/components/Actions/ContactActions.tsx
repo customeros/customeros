@@ -73,6 +73,16 @@ export const ContactTableActions = ({
     },
     { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
   );
+
+  useKeys(
+    ['Shift', 'Q'],
+    (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      handleOpen('EditContactSequence');
+    },
+    { when: enableKeyboardShortcuts },
+  );
   useKeyBindings(
     {
       Escape: clearSelection,

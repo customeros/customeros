@@ -7,6 +7,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Archive } from '@ui/media/icons/Archive';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
+import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 
 import { CommandsContainer } from './shared';
@@ -32,11 +33,20 @@ export const ContactBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Shuffle01 />}
+          keywords={contactKeywords.move_to_sequence}
           onSelect={() => {
             store.ui.commandMenu.setType('EditContactSequence');
           }}
+          rightAccessory={
+            <>
+              <Kbd>
+                <ArrowBlockUp className='text-inherit size-3' />
+              </Kbd>
+              <Kbd>Q</Kbd>
+            </>
+          }
         >
-          Move to sequence
+          Move to sequence...
         </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}
@@ -68,6 +78,7 @@ export const ContactBulkCommands = observer(() => {
         {contactStores.some((contact) => contact?.sequence !== undefined) && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
+            keywords={contactKeywords.remove_from_sequence}
             onSelect={() => {
               store.ui.commandMenu.setType('UnlinkContactFromSequence');
             }}
@@ -131,4 +142,6 @@ const contactKeywords = {
     'mobile',
     'telephone',
   ],
+  move_to_sequence: ['move', 'to', 'sequence', 'edit', 'change', 'campaign'],
+  remove_from_sequence: ['remove', 'sequence', 'delete', 'campaign'],
 };
