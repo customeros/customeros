@@ -52,7 +52,7 @@ export const ContactCommands = observer(() => {
           leftAccessory={<Shuffle01 />}
           keywords={contactKeywords.move_to_sequence}
           onSelect={() => {
-            store.ui.commandMenu.setType('EditContactSequence');
+            store.ui.commandMenu.setType('EditContactFlow');
           }}
           rightAccessory={
             <>
@@ -167,12 +167,12 @@ export const ContactCommands = observer(() => {
           Edit time zone...
         </CommandItem>
 
-        {contact?.sequence?.value?.name !== undefined && (
+        {contact?.flow?.value?.name !== undefined && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
             keywords={contactKeywords.remove_from_sequence}
             onSelect={() => {
-              store.ui.commandMenu.setType('UnlinkContactFromSequence');
+              store.ui.commandMenu.setType('UnlinkContactFromFlow');
             }}
           >
             Remove from sequence

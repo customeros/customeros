@@ -461,6 +461,7 @@ export type Contact = ExtensibleEntity &
     fieldSets: Array<FieldSet>;
     /** The first name of the contact in customerOS. */
     firstName?: Maybe<Scalars['String']['output']>;
+    flows: Array<Flow>;
     hide?: Maybe<Scalars['Boolean']['output']>;
     /**
      * Deprecated, use metadata instead
@@ -497,7 +498,6 @@ export type Contact = ExtensibleEntity &
     phoneNumbers: Array<PhoneNumber>;
     prefix?: Maybe<Scalars['String']['output']>;
     profilePhotoUrl?: Maybe<Scalars['String']['output']>;
-    sequences: Array<FlowSequence>;
     socials: Array<Social>;
     source: DataSource;
     sourceOfTruth: DataSource;
@@ -1553,63 +1553,109 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
+  actions: Array<FlowAction>;
+  contacts: Array<FlowContact>;
   description: Scalars['String']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
-  sequences: Array<FlowSequence>;
   status: FlowStatus;
 };
 
-export type FlowSequence = MetadataInterface & {
-  __typename?: 'FlowSequence';
-  contacts: Array<FlowSequenceContact>;
-  description: Scalars['String']['output'];
-  flow: Flow;
+export type FlowAction = MetadataInterface & {
+  __typename?: 'FlowAction';
+  actionData: FlowActionData;
+  actionType: FlowActionType;
+  index: Scalars['Int64']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
-  senders: Array<FlowSequenceSender>;
-  status: FlowSequenceStatus;
-  steps: Array<FlowSequenceStep>;
+  senders: Array<FlowActionSender>;
+  status: FlowActionStatus;
 };
 
-export type FlowSequenceContact = MetadataInterface & {
-  __typename?: 'FlowSequenceContact';
-  contact: Contact;
-  email: Email;
-  metadata: Metadata;
+export type FlowActionData =
+  | FlowActionDataEmail
+  | FlowActionDataWait
+  | FlowActionLinkedinConnectionRequest
+  | FlowActionLinkedinMessage;
+
+export type FlowActionDataEmail = {
+  __typename?: 'FlowActionDataEmail';
+  bodyTemplate: Scalars['String']['output'];
+  replyToId?: Maybe<Scalars['String']['output']>;
+  subject: Scalars['String']['output'];
 };
 
-export type FlowSequenceCreateInput = {
-  description: Scalars['String']['input'];
-  flowId?: InputMaybe<Scalars['ID']['input']>;
-  flowName?: InputMaybe<Scalars['String']['input']>;
+export type FlowActionDataWait = {
+  __typename?: 'FlowActionDataWait';
+  minutes: Scalars['Int64']['output'];
+};
+
+export type FlowActionInputData = {
+  email_new?: InputMaybe<FlowActionInputDataEmail>;
+  email_reply?: InputMaybe<FlowActionInputDataEmail>;
+  linkedin_connection_request?: InputMaybe<FlowActionInputDataLinkedinConnectionRequest>;
+  linkedin_message?: InputMaybe<FlowActionInputDataLinkedinMessage>;
+  wait?: InputMaybe<FlowActionInputDataWait>;
+};
+
+export type FlowActionInputDataEmail = {
+  bodyTemplate: Scalars['String']['input'];
+  replyToId?: InputMaybe<Scalars['String']['input']>;
+  subject: Scalars['String']['input'];
+};
+
+export type FlowActionInputDataLinkedinConnectionRequest = {
+  messageTemplate: Scalars['String']['input'];
+};
+
+export type FlowActionInputDataLinkedinMessage = {
+  messageTemplate: Scalars['String']['input'];
+};
+
+export type FlowActionInputDataWait = {
+  minutes: Scalars['Int64']['input'];
+};
+
+export type FlowActionLinkedinConnectionRequest = {
+  __typename?: 'FlowActionLinkedinConnectionRequest';
+  messageTemplate: Scalars['String']['output'];
+};
+
+export type FlowActionLinkedinMessage = {
+  __typename?: 'FlowActionLinkedinMessage';
+  messageTemplate: Scalars['String']['output'];
+};
+
+export type FlowActionMergeInput = {
+  actionData: FlowActionInputData;
+  actionType: FlowActionType;
+  id?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
 };
 
-export type FlowSequenceSender = MetadataInterface & {
-  __typename?: 'FlowSequenceSender';
-  mailbox: Scalars['String']['output'];
+export type FlowActionSender = MetadataInterface & {
+  __typename?: 'FlowActionSender';
+  emailsPerHour?: Maybe<Scalars['Int64']['output']>;
+  mailbox?: Maybe<Scalars['String']['output']>;
   metadata: Metadata;
+  user?: Maybe<User>;
 };
 
-export enum FlowSequenceStatus {
+export type FlowActionSenderMergeInput = {
+  emailsPerHour?: InputMaybe<Scalars['Int64']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  mailbox?: InputMaybe<Scalars['String']['input']>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
+};
+
+export enum FlowActionStatus {
   Active = 'ACTIVE',
   Archived = 'ARCHIVED',
   Inactive = 'INACTIVE',
   Paused = 'PAUSED',
 }
 
-export type FlowSequenceStep = MetadataInterface & {
-  __typename?: 'FlowSequenceStep';
-  action: FlowSequenceStepAction;
-  actionData: FlowSequenceStepActionData;
-  index: Scalars['Int64']['output'];
-  metadata: Metadata;
-  name: Scalars['String']['output'];
-  status: FlowSequenceStepStatus;
-};
-
-export enum FlowSequenceStepAction {
+export enum FlowActionType {
   EmailNew = 'EMAIL_NEW',
   EmailReply = 'EMAIL_REPLY',
   LinkedinConnectionRequest = 'LINKEDIN_CONNECTION_REQUEST',
@@ -1617,77 +1663,15 @@ export enum FlowSequenceStepAction {
   Wait = 'WAIT',
 }
 
-export type FlowSequenceStepActionData =
-  | FlowSequenceStepActionDataEmail
-  | FlowSequenceStepActionDataWait
-  | FlowSequenceStepActionLinkedinConnectionRequest
-  | FlowSequenceStepActionLinkedinMessage;
-
-export type FlowSequenceStepActionDataEmail = {
-  __typename?: 'FlowSequenceStepActionDataEmail';
-  bodyTemplate: Scalars['String']['output'];
-  stepId?: Maybe<Scalars['String']['output']>;
-  subject: Scalars['String']['output'];
+export type FlowContact = MetadataInterface & {
+  __typename?: 'FlowContact';
+  contact: Contact;
+  metadata: Metadata;
 };
 
-export type FlowSequenceStepActionDataWait = {
-  __typename?: 'FlowSequenceStepActionDataWait';
-  minutes: Scalars['Int64']['output'];
-};
-
-export type FlowSequenceStepActionLinkedinConnectionRequest = {
-  __typename?: 'FlowSequenceStepActionLinkedinConnectionRequest';
-  messageTemplate: Scalars['String']['output'];
-};
-
-export type FlowSequenceStepActionLinkedinMessage = {
-  __typename?: 'FlowSequenceStepActionLinkedinMessage';
-  messageTemplate: Scalars['String']['output'];
-};
-
-export type FlowSequenceStepInputActionData = {
-  email_new?: InputMaybe<FlowSequenceStepInputActionDataEmail>;
-  email_reply?: InputMaybe<FlowSequenceStepInputActionDataEmail>;
-  linkedin_connection_request?: InputMaybe<FlowSequenceStepInputActionDataLinkedinConnectionRequest>;
-  linkedin_message?: InputMaybe<FlowSequenceStepInputActionDataLinkedinMessage>;
-  wait?: InputMaybe<FlowSequenceStepInputActionDataWait>;
-};
-
-export type FlowSequenceStepInputActionDataEmail = {
-  bodyTemplate: Scalars['String']['input'];
-  stepId?: InputMaybe<Scalars['String']['input']>;
-  subject: Scalars['String']['input'];
-};
-
-export type FlowSequenceStepInputActionDataLinkedinConnectionRequest = {
-  messageTemplate: Scalars['String']['input'];
-};
-
-export type FlowSequenceStepInputActionDataLinkedinMessage = {
-  messageTemplate: Scalars['String']['input'];
-};
-
-export type FlowSequenceStepInputActionDataWait = {
-  minutes: Scalars['Int64']['input'];
-};
-
-export type FlowSequenceStepMergeInput = {
-  action: FlowSequenceStepAction;
-  actionData: FlowSequenceStepInputActionData;
-  id?: InputMaybe<Scalars['ID']['input']>;
-  name: Scalars['String']['input'];
-};
-
-export enum FlowSequenceStepStatus {
-  Active = 'ACTIVE',
-  Archived = 'ARCHIVED',
-  Inactive = 'INACTIVE',
-  Paused = 'PAUSED',
-}
-
-export type FlowSequenceUpdateInput = {
+export type FlowMergeInput = {
   description: Scalars['String']['input'];
-  id: Scalars['ID']['input'];
+  id?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
 };
 
@@ -2216,11 +2200,6 @@ export type LogEntryUpdateInput = {
   startedAt?: InputMaybe<Scalars['Time']['input']>;
 };
 
-export type Mailbox = {
-  __typename?: 'Mailbox';
-  mailbox: Scalars['String']['output'];
-};
-
 export enum Market {
   B2B = 'B2B',
   B2C = 'B2C',
@@ -2478,17 +2457,15 @@ export type Mutation = {
   fieldSetDeleteFromContact: Result;
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
+  flowActionSender_Delete: Result;
+  flowActionSender_Merge: FlowActionSender;
+  flowAction_ChangeIndex: Result;
+  flowAction_ChangeStatus: FlowAction;
+  flowAction_Merge: FlowAction;
+  flowContact_Add: FlowContact;
+  flowContact_Delete: Result;
   flow_ChangeStatus: Flow;
-  flow_sequence_ChangeStatus: FlowSequence;
-  flow_sequence_Create: FlowSequence;
-  flow_sequence_LinkContact: FlowSequenceContact;
-  flow_sequence_LinkSender: FlowSequenceSender;
-  flow_sequence_UnlinkContact: Result;
-  flow_sequence_UnlinkSender: Result;
-  flow_sequence_Update: FlowSequence;
-  flow_sequence_step_ChangeIndex: Result;
-  flow_sequence_step_ChangeStatus: FlowSequenceStep;
-  flow_sequence_step_Merge: FlowSequenceStep;
+  flow_Merge: Flow;
   interactionEvent_LinkAttachment: Result;
   invoice_NextDryRunForContract: Scalars['ID']['output'];
   invoice_Pay: Invoice;
@@ -2916,59 +2893,46 @@ export type MutationFieldSetUpdateInContactArgs = {
   input: FieldSetUpdateInput;
 };
 
+export type MutationFlowActionSender_DeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationFlowActionSender_MergeArgs = {
+  flowActionId: Scalars['ID']['input'];
+  input: FlowActionSenderMergeInput;
+};
+
+export type MutationFlowAction_ChangeIndexArgs = {
+  id: Scalars['ID']['input'];
+  index: Scalars['Int64']['input'];
+};
+
+export type MutationFlowAction_ChangeStatusArgs = {
+  id: Scalars['ID']['input'];
+  status: FlowActionStatus;
+};
+
+export type MutationFlowAction_MergeArgs = {
+  flowId: Scalars['ID']['input'];
+  input: FlowActionMergeInput;
+};
+
+export type MutationFlowContact_AddArgs = {
+  contactId: Scalars['ID']['input'];
+  flowId: Scalars['ID']['input'];
+};
+
+export type MutationFlowContact_DeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationFlow_ChangeStatusArgs = {
   id: Scalars['ID']['input'];
   status: FlowStatus;
 };
 
-export type MutationFlow_Sequence_ChangeStatusArgs = {
-  id: Scalars['ID']['input'];
-  status: FlowSequenceStatus;
-};
-
-export type MutationFlow_Sequence_CreateArgs = {
-  input: FlowSequenceCreateInput;
-};
-
-export type MutationFlow_Sequence_LinkContactArgs = {
-  contactId: Scalars['ID']['input'];
-  emailId: Scalars['ID']['input'];
-  sequenceId: Scalars['ID']['input'];
-};
-
-export type MutationFlow_Sequence_LinkSenderArgs = {
-  mailbox: Scalars['String']['input'];
-  sequenceId: Scalars['ID']['input'];
-};
-
-export type MutationFlow_Sequence_UnlinkContactArgs = {
-  contactId: Scalars['ID']['input'];
-  emailId: Scalars['ID']['input'];
-  sequenceId: Scalars['ID']['input'];
-};
-
-export type MutationFlow_Sequence_UnlinkSenderArgs = {
-  mailbox: Scalars['String']['input'];
-  sequenceId: Scalars['ID']['input'];
-};
-
-export type MutationFlow_Sequence_UpdateArgs = {
-  input: FlowSequenceUpdateInput;
-};
-
-export type MutationFlow_Sequence_Step_ChangeIndexArgs = {
-  id: Scalars['ID']['input'];
-  index: Scalars['Int64']['input'];
-};
-
-export type MutationFlow_Sequence_Step_ChangeStatusArgs = {
-  id: Scalars['ID']['input'];
-  status: FlowSequenceStepStatus;
-};
-
-export type MutationFlow_Sequence_Step_MergeArgs = {
-  input: FlowSequenceStepMergeInput;
-  sequenceId: Scalars['ID']['input'];
+export type MutationFlow_MergeArgs = {
+  input: FlowMergeInput;
 };
 
 export type MutationInteractionEvent_LinkAttachmentArgs = {
@@ -4398,7 +4362,7 @@ export type Query = {
   invoices: InvoicesPage;
   issue: Issue;
   logEntry: LogEntry;
-  mailboxes: Array<Mailbox>;
+  mailboxes: Array<Scalars['String']['output']>;
   masterPlan: MasterPlan;
   masterPlans: Array<MasterPlan>;
   meeting: Meeting;
@@ -4416,7 +4380,6 @@ export type Query = {
   phoneNumber: PhoneNumber;
   reminder: Reminder;
   remindersForOrganization: Array<Reminder>;
-  sequences: Array<FlowSequence>;
   serviceLineItem: ServiceLineItem;
   slack_Channels: SlackChannelPage;
   tableViewDefs: Array<TableViewDef>;

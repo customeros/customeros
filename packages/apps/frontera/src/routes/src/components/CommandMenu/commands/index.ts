@@ -12,4 +12,7 @@ export * from './ContactHub';
 export * from './ContactCommands';
 export * from './ContactBulkCommands';
 export * from './tableViewDef';
-export * from './sequences';
+export * from './flows';
+export * from './FlowHub';
+export * from './FlowsCommands';
+export * from './FlowsBulkCommands';

@@ -2,14 +2,57 @@ query getFlows {
   flows {
     metadata {
       id
-      created
-      lastUpdated
-      source
-      sourceOfTruth
-      appSource
     }
     name
     description
     status
+    actions {
+      metadata {
+        id
+      }
+      index
+      name
+      status
+      actionType
+      actionData {
+        __typename
+        ... on FlowActionDataWait {
+          minutes
+        }
+        ... on FlowActionDataEmail {
+          replyToId
+          subject
+          bodyTemplate
+        }
+        ... on FlowActionLinkedinConnectionRequest {
+          messageTemplate
+        }
+        ... on FlowActionLinkedinMessage {
+          messageTemplate
+        }
+      }
+      senders {
+        metadata {
+          id
+        }
+        mailbox
+        emailsPerHour
+        user {
+          firstName
+          lastName
+          name
+        }
+      }
+    }
+    contacts {
+      metadata {
+        id
+      }
+      contact {
+        name
+        firstName
+        lastName
+      }
+    }
   }
 }

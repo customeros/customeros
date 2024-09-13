@@ -8,10 +8,10 @@ import { Operation } from '@store/types';
 import { makePayload } from '@store/util';
 import { Transport } from '@store/transport';
 import { rdiffResult } from 'recursive-diff';
+import { FlowStore } from '@store/Flows/Flow.store';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
-import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store.ts';
 
 import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
@@ -78,12 +78,12 @@ export class ContactStore implements Store<Contact>, ContractStore {
     return this.value.organizations.content[0]?.metadata?.id;
   }
 
-  get sequence(): FlowSequenceStore | undefined {
-    if (!this.value.sequences?.length) return undefined;
+  get flow(): FlowStore | undefined {
+    if (!this.value.flows?.length) return undefined;
 
-    return this.root.flowSequences?.value.get(
-      this.value.sequences[0]?.metadata.id,
-    ) as FlowSequenceStore;
+    return this.root.flows?.value.get(
+      this.value.flows[0]?.metadata.id,
+    ) as FlowStore;
   }
 
   get name() {
@@ -508,6 +508,11 @@ const CONTACT_QUERY = gql`
         createdAt
         appSource
       }
+      flows {
+        metadata {
+          id
+        }
+      }
       organizations(pagination: { limit: 2, page: 0 }) {
         content {
           metadata {
@@ -603,7 +608,7 @@ const getDefaultValue = (): Contact => ({
     totalElements: 0,
     totalAvailable: 0,
   },
-  sequences: [],
+  flows: [],
   socials: [],
   timezone: '',
   source: DataSource.Openline,

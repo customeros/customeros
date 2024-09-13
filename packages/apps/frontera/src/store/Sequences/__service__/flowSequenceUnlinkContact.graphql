@@ -1,4 +1,0 @@
-mutation FlowSequenceUnlinkContact($sequenceId: ID!, $contactId: ID!,$emailId: ID!) {
-  flow_sequence_UnlinkContact(sequenceId: $sequenceId, contactId: $contactId,emailId: $emailId) {
-   result
-}}

@@ -210,7 +210,7 @@ export const opportunitiesHelperTextMap: Record<string, string> = {
 
 export const flowsMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'Flow',
-  [ColumnViewType.FlowSequenceName]: 'Sequence',
+  [ColumnViewType.FlowSequenceName]: 'Flow',
   [ColumnViewType.FlowSequenceStatus]: 'Status',
   [ColumnViewType.FlowSequenceStatusUnsuccessfulCount]: 'Ended Early',
   [ColumnViewType.FlowSequenceStatusSuccessfulCount]: 'Completed',

@@ -5,12 +5,12 @@ import { useKeyBindings } from 'rooks';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
 import { ColumnDef } from '@tanstack/react-table';
+import { FlowStore } from '@store/Flows/Flow.store.ts';
 import { InvoiceStore } from '@store/Invoices/Invoice.store';
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { ContractStore } from '@store/Contracts/Contract.store';
 import { useTableActions } from '@invoices/hooks/useTableActions';
-import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
@@ -19,9 +19,9 @@ import { Invoice, WorkflowType, TableViewType } from '@graphql/types';
 import { useColumnSizing } from '@organizations/hooks/useColumnSizing';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import { getSequencesFilterFns } from '@organizations/components/Columns/sequences/filterFns';
-import { getSequenceColumnSortFn } from '@organizations/components/Columns/sequences/sortFns';
-import { getSequenceColumnsConfig } from '@organizations/components/Columns/sequences/columns';
+import { getFlowsFilterFns } from '@organizations/components/Columns/flows/filterFns.ts';
+import { getFlowsColumnSortFn } from '@organizations/components/Columns/flows/sortFns.ts';
+import { getFlowColumnsConfig } from '@organizations/components/Columns/flows/columns.tsx';
 import { getOpportunitiesSortFn } from '@organizations/components/Columns/opportunities/sortFns';
 import { OpportunitiesTableActions } from '@organizations/components/Actions/OpportunityActions';
 import {
@@ -42,15 +42,15 @@ import { getInvoiceColumnsConfig } from '../Columns/invoices/columns';
 import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
 import { ContactPreviewCard } from '../ContactPreviewCard/ContactPreviewCard';
 import {
-  ContactTableActions,
-  SequencesTableActions,
-  OrganizationTableActions,
-} from '../Actions';
-import {
   getContactSortFn,
   getContactFilterFns,
   getContactColumnsConfig,
 } from '../Columns/contacts';
+import {
+  ContactTableActions,
+  OrganizationTableActions,
+  FlowSequencesTableActions,
+} from '../Actions';
 import {
   getOrganizationSortFn,
   getOrganizationFilterFns,
@@ -63,7 +63,7 @@ export type FinderTableEntityTypes =
   | InvoiceStore
   | ContractStore
   | OpportunityStore
-  | FlowSequenceStore;
+  | FlowStore;
 
 interface FinderTableProps {
   isSidePanelOpen: boolean;
@@ -99,7 +99,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
   const invoiceColumns = getInvoiceColumnsConfig(tableViewDef?.value);
   const opportunityColumns = getOpportunityColumnsConfig(tableViewDef?.value);
-  const flowSequenceColumns = getSequenceColumnsConfig(tableViewDef?.value);
+  const flowSequenceColumns = getFlowColumnsConfig(tableViewDef?.value);
 
   const tableColumns = (
     tableType === TableViewType.Organizations
@@ -264,10 +264,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     return arr;
   });
 
-  const flowsData = store.flowSequences.toComputedArray((arr) => {
+  const flowsData = store.flows.toComputedArray((arr) => {
     if (tableType !== TableViewType.Flow) return arr;
 
-    const filters = getSequencesFilterFns(tableViewDef?.getFilters());
+    const filters = getFlowsFilterFns(tableViewDef?.getFilters());
 
     if (filters) {
       arr = arr.filter((v) => filters.every((fn) => fn(v)));
@@ -286,7 +286,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       const isDesc = sorting[0]?.desc;
 
       const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getSequenceColumnSortFn(columnId),
+        getFlowsColumnSortFn(columnId),
       );
 
       return computed;
@@ -392,9 +392,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         if (selectedIds.length === 1) {
           reset();
 
-          store.ui.commandMenu.setType('SequenceCommands');
+          store.ui.commandMenu.setType('FlowCommands');
           store.ui.commandMenu.setContext({
-            entity: 'Sequence',
+            entity: 'Flow',
             ids: selectedIds,
           });
         }
@@ -402,9 +402,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         if (selectedIds.length > 1) {
           reset();
 
-          store.ui.commandMenu.setType('SequencesBulkCommands');
+          store.ui.commandMenu.setType('FlowsBulkCommands');
           store.ui.commandMenu.setContext({
-            entity: 'Sequences',
+            entity: 'Flows',
             ids: selectedIds,
           });
         }
@@ -436,7 +436,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     } else if (tableType === TableViewType.Opportunities) {
       store.ui.commandMenu.setType('OpportunityHub');
     } else if (tableType === TableViewType.Flow) {
-      store.ui.commandMenu.setType('SequenceHub');
+      store.ui.commandMenu.setType('FlowHub');
     } else {
       store.ui.commandMenu.setType('ContactHub');
     }
@@ -503,15 +503,15 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     if (tableType === TableViewType.Flow) {
       if (typeof index !== 'number') {
-        store.ui.commandMenu.setType('SequenceHub');
+        store.ui.commandMenu.setType('FlowHub');
 
         return;
       }
 
       if (index > -1 && selectedIds.length === 0) {
-        store.ui.commandMenu.setType('SequenceCommands');
+        store.ui.commandMenu.setType('FlowCommands');
         store.ui.commandMenu.setContext({
-          entity: 'Sequence',
+          entity: 'Flow',
           ids: [data?.[index]?.id],
         });
       }
@@ -564,8 +564,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       store.invoices?.toArray().length === 0 &&
       !store.invoices.isLoading) ||
     (tableViewDef?.value.tableType === TableViewType.Flow &&
-      store.flowSequences?.toArray().length === 0 &&
-      !store.flowSequences.isLoading) ||
+      store.flows?.toArray().length === 0 &&
+      !store.flows.isLoading) ||
     (tableViewDef?.value.tableType === TableViewType.Contracts &&
       store.contracts?.toArray().length === 0 &&
       !store.contracts.isLoading)
@@ -664,7 +664,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
           if (tableType === TableViewType.Flow) {
             return (
-              <SequencesTableActions
+              <FlowSequencesTableActions
                 selection={selectedIds}
                 table={table as TableInstance<ContactStore>}
                 focusedId={focusRow !== null ? data?.[focusRow]?.id : null}

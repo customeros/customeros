@@ -93,13 +93,13 @@ export const EmptyState = observer(() => {
         };
       case TableIdType.FlowSequences:
         return {
-          title: 'No sequences yet',
+          title: 'No flows yet',
           description:
-            'Your sequences are waiting to take their first steps. Go ahead and create your first sequence.',
-          buttonLabel: 'New sequence',
-          dataTest: 'sequence-create-new-sequence',
+            'Your flows are waiting to take their first steps. Go ahead and create your first flow.',
+          buttonLabel: 'New flow',
+          dataTest: 'sequence-create-new-flow',
           onClick: () => {
-            store.ui.commandMenu.setType('CreateNewSequence');
+            store.ui.commandMenu.setType('CreateNewFlow');
             store.ui.commandMenu.setOpen(true);
           },
         };

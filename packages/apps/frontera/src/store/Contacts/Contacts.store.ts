@@ -362,6 +362,11 @@ const CONTACTS_QUERY = gql`
         metadata {
           id
         }
+        flows {
+          metadata {
+            id
+          }
+        }
         tags {
           metadata {
             id

@@ -76,12 +76,12 @@ export const DeleteConfirmationModal = observer(() => {
         store.opportunities.archiveMany(context.ids);
         context.callback?.();
       })
-      .with('Sequence', () => {
-        store.flowSequences.archive(context.ids?.[0]);
+      .with('Flow', () => {
+        store.flows.archive(context.ids?.[0]);
         context.callback?.();
       })
-      .with('Sequences', () => {
-        store.flowSequences.archiveMany(context.ids);
+      .with('Flows', () => {
+        store.flows.archiveMany(context.ids);
         context.callback?.();
       })
       .with('TableViewDef', () => {
@@ -119,13 +119,10 @@ export const DeleteConfirmationModal = observer(() => {
       'Opportunity',
       () => `Archive ${(entity as OpportunityStore)?.value.name}?`,
     )
-    .with('Sequences', () => `Archive ${context.ids.length} sequences?`)
+    .with('Flows', () => `Archive ${context.ids.length} sequences?`)
     .with(
-      'Sequence',
-      () =>
-        `Archive ${
-          store.flowSequences.value.get(context.ids?.[0])?.value.name
-        }?`,
+      'Flow',
+      () => `Archive ${store.flows.value.get(context.ids?.[0])?.value.name}?`,
     )
 
     .with('Contact', () =>
@@ -140,14 +137,14 @@ export const DeleteConfirmationModal = observer(() => {
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
   const description = match(context.entity)
     .with(
-      'Sequences',
+      'Flows',
       () =>
-        `Archiving these sequences will remove all contacts currently enrolled to it`,
+        `Archiving these flows will remove all contacts currently enrolled to it`,
     )
     .with(
-      'Sequence',
+      'Flow',
       () =>
-        `Archiving this sequence will remove all contacts currently enrolled to it`,
+        `Archiving this flow will remove all contacts currently enrolled to it`,
     )
 
     .otherwise(() => null);

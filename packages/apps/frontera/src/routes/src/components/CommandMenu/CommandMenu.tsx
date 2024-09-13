@@ -10,11 +10,7 @@ import { CommandMenuType } from '@store/UI/CommandMenu.store';
 import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
-import { SequenceHub } from '@shared/components/CommandMenu/commands/SequenceHub.tsx';
-import { SequenceCommands } from '@shared/components/CommandMenu/commands/SequencesCommands.tsx';
 import { DuplicateView } from '@shared/components/CommandMenu/commands/tableViewDef/DuplicateView';
-import { RenameSequence } from '@shared/components/CommandMenu/commands/sequences/RenameSequence.tsx';
-import { SequencesBulkCommands } from '@shared/components/CommandMenu/commands/SequencesBulkCommands.tsx';
 import { OpportunityBulkCommands } from '@shared/components/CommandMenu/commands/OpportunityBulkCommands';
 import {
   Modal,
@@ -23,26 +19,31 @@ import {
   ModalContent,
   ModalOverlay,
 } from '@ui/overlay/Modal/Modal';
-import { ConfirmBulkSequenceEdit } from '@shared/components/CommandMenu/commands/contacts/ConfirmBulkSequenceEdit.tsx';
 
 import {
+  FlowHub,
   EditName,
   GlobalHub,
   EditEmail,
   ChangeTags,
   ContactHub,
+  RenameFlow,
   AssignOwner,
   ChangeStage,
   EditJobTitle,
   EditTimeZone,
+  CreateNewFlow,
+  FlowsCommands,
   OpportunityHub,
   ChangeCurrency,
   EditPersonaTag,
   OrganizationHub,
   EditPhoneNumber,
   ContactCommands,
+  EditContactFlow,
+  ChangeFlowStatus,
   ChangeArrEstimate,
-  CreateNewSequence,
+  FlowsBulkCommands,
   ChangeRelationship,
   UpdateHealthStatus,
   AddNewOrganization,
@@ -50,18 +51,17 @@ import {
   OpportunityCommands,
   ChangeOrAddJobRoles,
   ContactBulkCommands,
-  EditContactSequence,
+  ConfirmBulkFlowEdit,
   OrganizationCommands,
-  ChangeSequenceStatus,
   RenameOpportunityName,
   ChangeBulkArrEstimate,
+  UnlinkContactFromFlow,
   ChooseOpportunityStage,
   MergeConfirmationModal,
   SetOpportunityNextSteps,
   DeleteConfirmationModal,
   AddContactViaLinkedInUrl,
   OrganizationBulkCommands,
-  UnlinkContactFromSequence,
   RenameOrganizationProperty,
   ChooseOpportunityOrganization,
   ContactEmailVerificationInfoModal,
@@ -93,8 +93,8 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   EditPhoneNumber: <EditPhoneNumber />,
   ChangeOrAddJobRoles: <ChangeOrAddJobRoles />,
   ContactEmailVerificationInfoModal: <ContactEmailVerificationInfoModal />,
-  UnlinkContactFromSequence: <UnlinkContactFromSequence />,
-  ConfirmBulkSequenceEdit: <ConfirmBulkSequenceEdit />,
+  UnlinkContactFromFlow: <UnlinkContactFromFlow />,
+  ConfirmBulkFlowEdit: <ConfirmBulkFlowEdit />,
 
   // Opportunity
   OpportunityHub: <OpportunityHub />,
@@ -115,14 +115,14 @@ const Commands: Record<CommandMenuType, ReactElement> = {
   AddContactViaLinkedInUrl: <AddContactViaLinkedInUrl />,
   RenameOrganizationProperty: <RenameOrganizationProperty />,
 
-  // Sequence
-  SequenceHub: <SequenceHub />,
-  SequencesBulkCommands: <SequencesBulkCommands />,
-  SequenceCommands: <SequenceCommands />,
-  CreateNewSequence: <CreateNewSequence />,
-  RenameSequence: <RenameSequence />,
-  ChangeSequenceStatus: <ChangeSequenceStatus />,
-  EditContactSequence: <EditContactSequence />,
+  // Flows
+  FlowHub: <FlowHub />,
+  FlowsBulkCommands: <FlowsBulkCommands />,
+  FlowCommands: <FlowsCommands />,
+  CreateNewFlow: <CreateNewFlow />,
+  RenameFlow: <RenameFlow />,
+  ChangeFlowStatus: <ChangeFlowStatus />,
+  EditContactFlow: <EditContactFlow />,
 
   //TableViewDef
   RenameTableViewDef: <RenameTableViewDef />,

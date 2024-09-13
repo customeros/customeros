@@ -129,7 +129,7 @@ export const ContactTableActions = observer(
       (e) => {
         e.stopPropagation();
         e.preventDefault();
-        handleOpen('EditContactSequence');
+        handleOpen('EditContactFlow');
       },
       { when: enableKeyboardShortcuts },
     );
