@@ -46,6 +46,12 @@ type Config struct {
 			WorkspaceSecret                 string `env:"INTEGRATION_APP_WORKSPACE_SECRET"`
 			ApiTriggerUrlCreatePaymentLinks string `env:"INTEGRATION_APP_API_TRIGGER_URL_CREATE_PAYMENT_LINKS"`
 		}
+		Namecheap struct {
+			ApiKey      string `env:"NAMECHEAP_API_KEY" validate:"required"`
+			ApiUser     string `env:"NAMECHEAP_API_USER" validate:"required"`
+			ApiUsername string `env:"NAMECHEAP_API_USERNAME" validate:"required"`
+			ClientIp    string `env:"NAMECHEAP_CLIENT_IP" validate:"required"`
+		}
 	}
 }
 

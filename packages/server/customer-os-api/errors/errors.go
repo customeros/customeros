@@ -1,4 +1,4 @@
-package errors
+package coserrors
 
 import "github.com/pkg/errors"
 
@@ -7,4 +7,5 @@ var (
 	ErrInvalidEntityType = errors.New("Invalid entity type")
 	ErrMissingInput      = errors.New("Missing input")
 	ErrNotFound          = errors.New("Not found")
+	ErrDomainUnavailable = errors.New("domain unavailable")
 )

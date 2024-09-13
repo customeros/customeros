@@ -4,7 +4,7 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
+	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -98,7 +98,7 @@ func (s *locationService) GetAllForOrganizations(ctx context.Context, organizati
 
 func (s *locationService) CreateLocationForEntity(ctx context.Context, entityType commonModel.EntityType, entityId string, source entity.SourceFields) (*neo4jentity.LocationEntity, error) {
 	if entityType != commonModel.CONTACT && entityType != commonModel.ORGANIZATION && entityType != commonModel.MEETING {
-		return nil, errors.ErrInvalidEntityType
+		return nil, coserrors.ErrInvalidEntityType
 	}
 	locationNode, err := s.repositories.LocationRepository.CreateLocationForEntity(ctx, common.GetTenantFromContext(ctx), entityType, entityId, source)
 	if err != nil {
