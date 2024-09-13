@@ -25,46 +25,19 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 	}
 }
 
-func MapEntitiesToFlows(entities []*neo4jentity.FlowEntity) []*model.Flow {
+func MapEntitiesToFlows(entities *neo4jentity.FlowEntities) []*model.Flow {
 	var mapped []*model.Flow
-	for _, entity := range entities {
-		mapped = append(mapped, MapEntityToFlow(entity))
-	}
-	return mapped
-}
-
-func MapEntityToFlowSequence(entity *neo4jentity.FlowSequenceEntity) *model.FlowSequence {
-	if entity == nil {
-		return nil
-	}
-	return &model.FlowSequence{
-		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
-		},
-		Name:        entity.Name,
-		Description: entity.Description,
-		Status:      entity.Status,
-	}
-}
-
-func MapEntitiesToFlowSequence(entities *neo4jentity.FlowSequenceEntities) []*model.FlowSequence {
-	var mapped []*model.FlowSequence
 	for _, entity := range *entities {
-		mapped = append(mapped, MapEntityToFlowSequence(&entity))
+		mapped = append(mapped, MapEntityToFlow(&entity))
 	}
 	return mapped
 }
 
-func MapEntityToFlowSequenceContact(entity *neo4jentity.FlowSequenceContactEntity) *model.FlowSequenceContact {
+func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowContact {
 	if entity == nil {
 		return nil
 	}
-	return &model.FlowSequenceContact{
+	return &model.FlowContact{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
 			Created:       entity.CreatedAt,
@@ -76,19 +49,19 @@ func MapEntityToFlowSequenceContact(entity *neo4jentity.FlowSequenceContactEntit
 	}
 }
 
-func MapEntitiesToFlowSequenceContacts(entities *neo4jentity.FlowSequenceContactEntities) []*model.FlowSequenceContact {
-	var mapped []*model.FlowSequenceContact
+func MapEntitiesToFlowContacts(entities *neo4jentity.FlowContactEntities) []*model.FlowContact {
+	var mapped []*model.FlowContact
 	for _, entity := range *entities {
-		mapped = append(mapped, MapEntityToFlowSequenceContact(&entity))
+		mapped = append(mapped, MapEntityToFlowContact(&entity))
 	}
 	return mapped
 }
 
-func MapEntityToFlowSequenceSender(entity *neo4jentity.FlowSequenceSenderEntity) *model.FlowSequenceSender {
+func MapEntityToFlowActionSender(entity *neo4jentity.FlowActionSenderEntity) *model.FlowActionSender {
 	if entity == nil {
 		return nil
 	}
-	return &model.FlowSequenceSender{
+	return &model.FlowActionSender{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
 			Created:       entity.CreatedAt,
@@ -97,54 +70,55 @@ func MapEntityToFlowSequenceSender(entity *neo4jentity.FlowSequenceSenderEntity)
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Mailbox: entity.Mailbox,
+		Mailbox:       entity.Mailbox,
+		EmailsPerHour: entity.EmailsPerHour,
 	}
 }
 
-func MapEntitiesToFlowSequenceSenders(entities *neo4jentity.FlowSequenceSenderEntities) []*model.FlowSequenceSender {
-	var mapped []*model.FlowSequenceSender
+func MapEntitiesToFlowActionSenders(entities *neo4jentity.FlowActionSenderEntities) []*model.FlowActionSender {
+	var mapped []*model.FlowActionSender
 	for _, entity := range *entities {
-		mapped = append(mapped, MapEntityToFlowSequenceSender(&entity))
+		mapped = append(mapped, MapEntityToFlowActionSender(&entity))
 	}
 	return mapped
 }
 
-func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *model.FlowSequenceStep {
+func MapEntityToFlowAction(entity *neo4jentity.FlowActionEntity) *model.FlowAction {
 	if entity == nil {
 		return nil
 	}
-	var actionData model.FlowSequenceStepActionData
+	var actionData model.FlowActionData
 
-	if entity.Action == neo4jentity.FlowSequenceStepActionWait {
-		actionData = &model.FlowSequenceStepActionDataWait{
+	if entity.ActionType == neo4jentity.FlowActionTypeWait {
+		actionData = &model.FlowActionDataWait{
 			Minutes: entity.ActionData.Wait.Minutes,
 		}
 	}
-	if entity.Action == neo4jentity.FlowSequenceStepActionEmailNew {
-		actionData = &model.FlowSequenceStepActionDataEmail{
+	if entity.ActionType == neo4jentity.FlowActionTypeEmailNew {
+		actionData = &model.FlowActionDataEmail{
 			Subject:      entity.ActionData.EmailNew.Subject,
 			BodyTemplate: entity.ActionData.EmailNew.BodyTemplate,
 		}
 	}
-	if entity.Action == neo4jentity.FlowSequenceStepActionEmailReply {
-		actionData = &model.FlowSequenceStepActionDataEmail{
-			StepID:       entity.ActionData.EmailReply.StepID,
+	if entity.ActionType == neo4jentity.FlowActionTypeEmailReply {
+		actionData = &model.FlowActionDataEmail{
+			ReplyToID:    entity.ActionData.EmailReply.ReplyToId,
 			Subject:      entity.ActionData.EmailReply.Subject,
 			BodyTemplate: entity.ActionData.EmailReply.BodyTemplate,
 		}
 	}
-	if entity.Action == neo4jentity.FlowSequenceStepActionLinkedinConnectionRequest {
-		actionData = &model.FlowSequenceStepActionLinkedinMessage{
+	if entity.ActionType == neo4jentity.FlowActionTypeLinkedinConnectionRequest {
+		actionData = &model.FlowActionLinkedinMessage{
 			MessageTemplate: entity.ActionData.LinkedinConnectionRequest.MessageTemplate,
 		}
 	}
-	if entity.Action == neo4jentity.FlowSequenceStepActionLinkedinMessage {
-		actionData = &model.FlowSequenceStepActionLinkedinMessage{
+	if entity.ActionType == neo4jentity.FlowActionTypeLinkedinMessage {
+		actionData = &model.FlowActionLinkedinMessage{
 			MessageTemplate: entity.ActionData.LinkedinMessage.MessageTemplate,
 		}
 	}
 
-	return &model.FlowSequenceStep{
+	return &model.FlowAction{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
 			Created:       entity.CreatedAt,
@@ -156,70 +130,72 @@ func MapEntityToFlowSequenceStep(entity *neo4jentity.FlowSequenceStepEntity) *mo
 		Index:      entity.Index,
 		Name:       entity.Name,
 		Status:     entity.Status,
-		Action:     entity.Action,
+		ActionType: entity.ActionType,
 		ActionData: actionData,
 	}
 }
 
-func MapEntitiesToFlowSequenceSteps(entities *neo4jentity.FlowSequenceStepEntities) []*model.FlowSequenceStep {
-	var mapped []*model.FlowSequenceStep
+func MapEntitiesToFlowActions(entities *neo4jentity.FlowActionEntities) []*model.FlowAction {
+	var mapped []*model.FlowAction
 	for _, entity := range *entities {
-		mapped = append(mapped, MapEntityToFlowSequenceStep(&entity))
+		mapped = append(mapped, MapEntityToFlowAction(&entity))
 	}
 	return mapped
 }
 
-func MapFlowSequenceCreateInputToEntity(input model.FlowSequenceCreateInput) *neo4jentity.FlowSequenceEntity {
-	return &neo4jentity.FlowSequenceEntity{
+func MapFlowMergeInputToEntity(input model.FlowMergeInput) *neo4jentity.FlowEntity {
+	return &neo4jentity.FlowEntity{
+		Id:          utils.StringOrEmpty(input.ID),
 		Name:        input.Name,
 		Description: input.Description,
 	}
 }
 
-func MapFlowSequenceUpdateInputToEntity(input model.FlowSequenceUpdateInput) *neo4jentity.FlowSequenceEntity {
-	return &neo4jentity.FlowSequenceEntity{
-		Id:          input.ID,
-		Name:        input.Name,
-		Description: input.Description,
-	}
-}
+func MapFlowActionMergeInputToEntity(input model.FlowActionMergeInput) *neo4jentity.FlowActionEntity {
+	actionData := neo4jentity.FlowActionData{}
 
-func MapFlowSequenceStepMergeInputToEntity(input model.FlowSequenceStepMergeInput) *neo4jentity.FlowSequenceStepEntity {
-	actionData := neo4jentity.FlowSequenceStepActionData{}
-
-	if input.Action == neo4jentity.FlowSequenceStepActionWait {
-		actionData.Wait = &neo4jentity.FlowSequenceStepActionDataWait{
+	if input.ActionType == neo4jentity.FlowActionTypeWait {
+		actionData.Wait = &neo4jentity.FlowActionDataWait{
 			Minutes: input.ActionData.Wait.Minutes,
 		}
 	}
-	if input.Action == neo4jentity.FlowSequenceStepActionEmailNew {
-		actionData.EmailNew = &neo4jentity.FlowSequenceStepActionDataEmail{
+	if input.ActionType == neo4jentity.FlowActionTypeEmailNew {
+		actionData.EmailNew = &neo4jentity.FlowActionDataEmail{
 			Subject:      input.ActionData.EmailNew.Subject,
 			BodyTemplate: input.ActionData.EmailNew.BodyTemplate,
 		}
 	}
-	if input.Action == neo4jentity.FlowSequenceStepActionEmailReply {
-		actionData.EmailReply = &neo4jentity.FlowSequenceStepActionDataEmail{
-			StepID:       input.ActionData.EmailReply.StepID,
+	if input.ActionType == neo4jentity.FlowActionTypeEmailReply {
+		actionData.EmailReply = &neo4jentity.FlowActionDataEmail{
+			ReplyToId:    input.ActionData.EmailReply.ReplyToID,
 			Subject:      input.ActionData.EmailReply.Subject,
 			BodyTemplate: input.ActionData.EmailReply.BodyTemplate,
 		}
 	}
-	if input.Action == neo4jentity.FlowSequenceStepActionLinkedinConnectionRequest {
-		actionData.LinkedinConnectionRequest = &neo4jentity.FlowSequenceStepActionDataLinkedinConnectionRequest{
+	if input.ActionType == neo4jentity.FlowActionTypeLinkedinConnectionRequest {
+		actionData.LinkedinConnectionRequest = &neo4jentity.FlowActionDataLinkedinConnectionRequest{
 			MessageTemplate: input.ActionData.LinkedinConnectionRequest.MessageTemplate,
 		}
 	}
-	if input.Action == neo4jentity.FlowSequenceStepActionLinkedinMessage {
-		actionData.LinkedinMessage = &neo4jentity.FlowSequenceStepActionDataLinkedinMessage{
+	if input.ActionType == neo4jentity.FlowActionTypeLinkedinMessage {
+		actionData.LinkedinMessage = &neo4jentity.FlowActionDataLinkedinMessage{
 			MessageTemplate: input.ActionData.LinkedinMessage.MessageTemplate,
 		}
 	}
 
-	return &neo4jentity.FlowSequenceStepEntity{
+	return &neo4jentity.FlowActionEntity{
 		Id:         utils.StringOrEmpty(input.ID),
 		Name:       input.Name,
-		Action:     input.Action,
+		ActionType: input.ActionType,
 		ActionData: actionData,
+	}
+}
+
+func MapFlowActionSenderMergeInputToEntity(input model.FlowActionSenderMergeInput) *neo4jentity.FlowActionSenderEntity {
+	return &neo4jentity.FlowActionSenderEntity{
+		Id:            utils.StringOrEmpty(input.ID),
+		Mailbox:       input.Mailbox,
+		EmailsPerHour: input.EmailsPerHour,
+		UserId:        input.UserID,
 	}
 }

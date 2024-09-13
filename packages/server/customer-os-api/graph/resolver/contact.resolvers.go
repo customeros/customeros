@@ -227,18 +227,18 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	return mapper.MapEntityToUser(owner), err
 }
 
-// Sequences is the resolver for the sequences field.
-func (r *contactResolver) Sequences(ctx context.Context, obj *model.Contact) ([]*model.FlowSequence, error) {
+// Flows is the resolver for the flows field.
+func (r *contactResolver) Flows(ctx context.Context, obj *model.Contact) ([]*model.Flow, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	entities, err := dataloader.For(ctx).GetFlowSequencesWithContact(ctx, obj.Metadata.ID)
+	entities, err := dataloader.For(ctx).GetFlowsWithContact(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		r.log.Errorf("Failed to get flow sequences for contact %s: %s", obj.ID, err.Error())
-		graphql.AddErrorf(ctx, "Failed to get flow sequences for contact %s", obj.ID)
+		r.log.Errorf("Failed to get flow  for contact %s: %s", obj.ID, err.Error())
+		graphql.AddErrorf(ctx, "Failed to get flows for contact %s", obj.ID)
 		return nil, nil
 	}
-	return mapper.MapEntitiesToFlowSequence(entities), err
+	return mapper.MapEntitiesToFlows(entities), err
 }
 
 // TimelineEvents is the resolver for the timelineEvents field.

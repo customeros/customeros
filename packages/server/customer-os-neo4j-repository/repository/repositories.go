@@ -34,14 +34,12 @@ type Repositories struct {
 	ExternalSystemWriteRepository         ExternalSystemWriteRepository
 	FlowReadRepository                    FlowReadRepository
 	FlowWriteRepository                   FlowWriteRepository
-	FlowSequenceReadRepository            FlowSequenceReadRepository
-	FlowSequenceWriteRepository           FlowSequenceWriteRepository
-	FlowSequenceContactReadRepository     FlowSequenceContactReadRepository
-	FlowSequenceContactWriteRepository    FlowSequenceContactWriteRepository
-	FlowSequenceSenderReadRepository      FlowSequenceSenderReadRepository
-	FlowSequenceSenderWriteRepository     FlowSequenceSenderWriteRepository
-	FlowSequenceStepReadRepository        FlowSequenceStepReadRepository
-	FlowSequenceStepWriteRepository       FlowSequenceStepWriteRepository
+	FlowActionReadRepository              FlowActionReadRepository
+	FlowActionWriteRepository             FlowActionWriteRepository
+	FlowContactReadRepository             FlowContactReadRepository
+	FlowContactWriteRepository            FlowContactWriteRepository
+	FlowActionSenderReadRepository        FlowActionSenderReadRepository
+	FlowActionSenderWriteRepository       FlowActionSenderWriteRepository
 	InteractionEventReadRepository        InteractionEventReadRepository
 	InteractionEventWriteRepository       InteractionEventWriteRepository
 	InteractionSessionReadRepository      InteractionSessionReadRepository
@@ -120,14 +118,12 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		ExternalSystemWriteRepository:         NewExternalSystemWriteRepository(driver, neo4jDatabase),
 		FlowReadRepository:                    NewFlowReadRepository(driver, neo4jDatabase),
 		FlowWriteRepository:                   NewFlowWriteRepository(driver, neo4jDatabase),
-		FlowSequenceReadRepository:            NewFlowSequenceReadRepository(driver, neo4jDatabase),
-		FlowSequenceWriteRepository:           NewFlowSequenceWriteRepository(driver, neo4jDatabase),
-		FlowSequenceContactReadRepository:     NewFlowSequenceContactReadRepository(driver, neo4jDatabase),
-		FlowSequenceContactWriteRepository:    NewFlowSequenceContactWriteRepository(driver, neo4jDatabase),
-		FlowSequenceSenderReadRepository:      NewFlowSequenceSenderReadRepository(driver, neo4jDatabase),
-		FlowSequenceSenderWriteRepository:     NewFlowSequenceSenderWriteRepository(driver, neo4jDatabase),
-		FlowSequenceStepReadRepository:        NewFlowSequenceStepReadRepository(driver, neo4jDatabase),
-		FlowSequenceStepWriteRepository:       NewFlowSequenceStepWriteRepository(driver, neo4jDatabase),
+		FlowActionReadRepository:              NewFlowActionReadRepository(driver, neo4jDatabase),
+		FlowActionWriteRepository:             NewFlowActionWriteRepository(driver, neo4jDatabase),
+		FlowContactReadRepository:             NewFlowContactReadRepository(driver, neo4jDatabase),
+		FlowContactWriteRepository:            NewFlowContactWriteRepository(driver, neo4jDatabase),
+		FlowActionSenderReadRepository:        NewFlowSequenceSenderReadRepository(driver, neo4jDatabase),
+		FlowActionSenderWriteRepository:       NewFlowActionSenderWriteRepository(driver, neo4jDatabase),
 		InteractionEventReadRepository:        NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionEventWriteRepository:       NewInteractionEventWriteRepository(driver, neo4jDatabase),
 		InteractionSessionReadRepository:      NewInteractionSessionReadRepository(driver, neo4jDatabase),

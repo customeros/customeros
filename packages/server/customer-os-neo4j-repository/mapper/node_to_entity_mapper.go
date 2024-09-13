@@ -1149,7 +1149,7 @@ func MapDbNodeToLocationEntity(node *dbtype.Node) *entity.LocationEntity {
 
 func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	if node == nil {
-		return &entity.FlowEntity{}
+		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
 	domain := entity.FlowEntity{
@@ -1163,95 +1163,82 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	return &domain
 }
 
-func MapDbNodeToFlowSequenceEntity(node *dbtype.Node) *entity.FlowSequenceEntity {
+func MapDbNodeToFlowContactEntity(node *dbtype.Node) *entity.FlowContactEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowSequenceEntity{
-		Id:          utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Name:        utils.GetStringPropOrEmpty(props, "name"),
-		Description: utils.GetStringPropOrEmpty(props, "description"),
-		Status:      entity.GetFlowSequenceStatus(utils.GetStringPropOrEmpty(props, "status")),
-	}
-	return &e
-}
-
-func MapDbNodeToFlowSequenceContactEntity(node *dbtype.Node) *entity.FlowSequenceContactEntity {
-	if node == nil {
-		return nil
-	}
-	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowSequenceContactEntity{
+	e := entity.FlowContactEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		ContactId: utils.GetStringPropOrEmpty(props, "contactId"),
 	}
 	return &e
 }
 
-func MapDbNodeToFlowSequenceSenderEntity(node *dbtype.Node) *entity.FlowSequenceSenderEntity {
+func MapDbNodeToFlowActionSenderEntity(node *dbtype.Node) *entity.FlowActionSenderEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowSequenceSenderEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Mailbox:   utils.GetStringPropOrEmpty(props, "mailbox"),
+	e := entity.FlowActionSenderEntity{
+		Id:            utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Mailbox:       utils.GetStringPropOrNil(props, "mailbox"),
+		EmailsPerHour: utils.GetInt64PropOrNil(props, "emailsPerHour"),
+		UserId:        utils.GetStringPropOrNil(props, "userId"),
 	}
 	return &e
 }
 
-func MapDbNodeToFlowSequenceStepEntity(node *dbtype.Node) *entity.FlowSequenceStepEntity {
+func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
 
-	action := entity.GetFlowSequenceStepAction(utils.GetStringPropOrEmpty(props, "action"))
-	actionData := entity.FlowSequenceStepActionData{}
+	actionType := entity.GetFlowActionType(utils.GetStringPropOrEmpty(props, "actionType"))
+	actionData := entity.FlowActionData{}
 
-	if action == entity.FlowSequenceStepActionWait {
-		actionData.Wait = &entity.FlowSequenceStepActionDataWait{
+	if actionType == entity.FlowActionTypeWait {
+		actionData.Wait = &entity.FlowActionDataWait{
 			Minutes: utils.GetInt64PropOrZero(props, "actionData_minutes"),
 		}
 	}
-	if action == entity.FlowSequenceStepActionEmailNew {
-		actionData.EmailNew = &entity.FlowSequenceStepActionDataEmail{
+	if actionType == entity.FlowActionTypeEmailNew {
+		actionData.EmailNew = &entity.FlowActionDataEmail{
 			Subject:      utils.GetStringPropOrEmpty(props, "actionData_subject"),
 			BodyTemplate: utils.GetStringPropOrEmpty(props, "actionData_bodyTemplate"),
 		}
 	}
-	if action == entity.FlowSequenceStepActionEmailReply {
-		actionData.EmailReply = &entity.FlowSequenceStepActionDataEmail{
-			StepID:       utils.GetStringPropOrNil(props, "actionData_stepId"),
+	if actionType == entity.FlowActionTypeEmailReply {
+		actionData.EmailReply = &entity.FlowActionDataEmail{
+			ReplyToId:    utils.GetStringPropOrNil(props, "actionData_replyToId"),
 			Subject:      utils.GetStringPropOrEmpty(props, "actionData_subject"),
 			BodyTemplate: utils.GetStringPropOrEmpty(props, "actionData_bodyTemplate"),
 		}
 	}
-	if action == entity.FlowSequenceStepActionLinkedinConnectionRequest {
-		actionData.LinkedinConnectionRequest = &entity.FlowSequenceStepActionDataLinkedinConnectionRequest{
+	if actionType == entity.FlowActionTypeLinkedinConnectionRequest {
+		actionData.LinkedinConnectionRequest = &entity.FlowActionDataLinkedinConnectionRequest{
 			MessageTemplate: utils.GetStringPropOrEmpty(props, "actionData_messageTemplate"),
 		}
 	}
-	if action == entity.FlowSequenceStepActionLinkedinMessage {
-		actionData.LinkedinMessage = &entity.FlowSequenceStepActionDataLinkedinMessage{
+	if actionType == entity.FlowActionTypeLinkedinMessage {
+		actionData.LinkedinMessage = &entity.FlowActionDataLinkedinMessage{
 			MessageTemplate: utils.GetStringPropOrEmpty(props, "actionData_messageTemplate"),
 		}
 	}
 
-	e := entity.FlowSequenceStepEntity{
+	e := entity.FlowActionEntity{
 		Id:         utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:  utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Index:      utils.GetInt64PropOrZero(props, "index"),
 		Name:       utils.GetStringPropOrEmpty(props, "name"),
-		Status:     entity.GetFlowSequenceStepStatus(utils.GetStringPropOrEmpty(props, "status")),
-		Action:     action,
+		Status:     entity.GetFlowActionStatus(utils.GetStringPropOrEmpty(props, "status")),
+		ActionType: actionType,
 		ActionData: actionData,
 	}
 	return &e

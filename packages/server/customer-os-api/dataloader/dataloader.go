@@ -109,10 +109,10 @@ type Loaders struct {
 	OrganizationPlanMilestonesForOrganizationPlan *dataloader.Loader
 	OrdersForOrganization                         *dataloader.Loader
 	InvoicesForContract                           *dataloader.Loader
-	FlowSequenceContactsForFlowSequence           *dataloader.Loader
-	FlowSequenceSendersForFlowSequence            *dataloader.Loader
-	FlowSequenceStepsForFlowSequence              *dataloader.Loader
-	FlowSequencesWithContact                      *dataloader.Loader
+	FlowContactsForFlow                           *dataloader.Loader
+	FlowActionsForFlow                            *dataloader.Loader
+	FlowActionSendersForFlowAction                *dataloader.Loader
+	FlowsWithContact                              *dataloader.Loader
 }
 
 type tagBatcher struct {
@@ -416,10 +416,10 @@ func NewDataLoader(services *service.Services) *Loaders {
 		InvoiceLinesForInvoice:                        dataloader.NewBatchedLoader(invoiceBatcher.getInvoiceLinesForInvoice, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationPlanMilestonesForOrganizationPlan: dataloader.NewBatchedLoader(organizationPlanBatcher.getOrganizationPlanMilestonesForOrganizationPlans, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		InvoicesForContract:                           dataloader.NewBatchedLoader(invoiceBatcher.getInvoicesForContract, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		FlowSequenceContactsForFlowSequence:           dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceContactsForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		FlowSequenceSendersForFlowSequence:            dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceSendersForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		FlowSequenceStepsForFlowSequence:              dataloader.NewBatchedLoader(flowBatcher.getFlowSequenceStepsForFlowSequence, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		FlowSequencesWithContact:                      dataloader.NewBatchedLoader(flowBatcher.getFlowSequencesWithContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowContactsForFlow:                           dataloader.NewBatchedLoader(flowBatcher.getFlowContactsForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowActionsForFlow:                            dataloader.NewBatchedLoader(flowBatcher.getFlowActionsForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowActionSendersForFlowAction:                dataloader.NewBatchedLoader(flowBatcher.getFlowActionSendersForFlowAction, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowsWithContact:                              dataloader.NewBatchedLoader(flowBatcher.getFlowsWithContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

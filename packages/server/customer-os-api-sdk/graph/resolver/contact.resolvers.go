@@ -73,9 +73,9 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	panic(fmt.Errorf("not implemented: Owner - owner"))
 }
 
-// Sequences is the resolver for the sequences field.
-func (r *contactResolver) Sequences(ctx context.Context, obj *model.Contact) ([]*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+// Flows is the resolver for the flows field.
+func (r *contactResolver) Flows(ctx context.Context, obj *model.Contact) ([]*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: Flows - flows"))
 }
 
 // TimelineEvents is the resolver for the timelineEvents field.
@@ -200,22 +200,3 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
 type contactResolver struct{ *Resolver }
-
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
-	panic(fmt.Errorf("not implemented: Notes - notes"))
-}
-func (r *contactResolver) NotesByTime(ctx context.Context, obj *model.Contact, pagination *model.TimeRange) ([]*model.Note, error) {
-	panic(fmt.Errorf("not implemented: NotesByTime - notesByTime"))
-}
-func (r *mutationResolver) ContactAddTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: ContactAddTagByID - contact_AddTagById"))
-}
-func (r *mutationResolver) ContactRemoveTagByID(ctx context.Context, input model.ContactTagInput) (*model.Contact, error) {
-	panic(fmt.Errorf("not implemented: ContactRemoveTagByID - contact_RemoveTagById"))
-}

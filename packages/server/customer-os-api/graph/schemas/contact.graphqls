@@ -161,7 +161,7 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     "Contact owner (user)"
     owner: User @goField(forceResolver: true)
 
-    sequences: [FlowSequence!]! @goField(forceResolver: true)
+    flows: [Flow!]! @goField(forceResolver: true)
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
