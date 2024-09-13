@@ -189,5 +189,4 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToSequences(page);
   await organizationsCmdKPage.verifyNavigationToSettings(page);
   await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
-  await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
 });
