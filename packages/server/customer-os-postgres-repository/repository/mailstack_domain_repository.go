@@ -8,10 +8,11 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
+	"time"
 )
 
 type MailStackDomainRepository interface {
-	RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
+	RegisterDomain(ctx context.Context, tenant, domain string, createdAt *time.Time) (*entity.MailStackDomain, error)
 }
 
 type mailStackDomainRepository struct {
@@ -22,18 +23,23 @@ func NewMailStackDomainRepository(db *gorm.DB) MailStackDomainRepository {
 	return &mailStackDomainRepository{db: db}
 }
 
-func (r *mailStackDomainRepository) RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error) {
+func (r *mailStackDomainRepository) RegisterDomain(ctx context.Context, tenant, domain string, createdAt *time.Time) (*entity.MailStackDomain, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.RegisterDomain")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	now := utils.Now()
 	mailStackDomain := entity.MailStackDomain{
-		Tenant:    tenant,
-		Domain:    domain,
-		CreatedAt: now,
-		UpdatedAt: now,
+		Tenant: tenant,
+		Domain: domain,
+	}
+	if createdAt != nil {
+		mailStackDomain.CreatedAt = *createdAt
+		mailStackDomain.UpdatedAt = *createdAt
+	} else {
+		now := utils.Now()
+		mailStackDomain.CreatedAt = now
+		mailStackDomain.UpdatedAt = now
 	}
 
 	err := r.db.Create(&mailStackDomain).Error

@@ -64,6 +64,7 @@ type Services struct {
 	ReminderService            ReminderService
 	OfferingService            OfferingService
 	CloudflareService          CloudflareService
+	NamecheapService           NamecheapService
 }
 
 func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *config.Config, commonServices *commonService.Services, grpcClients *grpc_client.Clients, gormDb *gorm.DB, caches *caches.Cache) *Services {
@@ -116,6 +117,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApiConfig)
 	services.CloudflareService = NewCloudflareService(log, &services)
+	services.NamecheapService = NewNamecheapService(log, cfg)
 
 	log.Info("Init cache service")
 	services.Cache = NewCacheService(&services)

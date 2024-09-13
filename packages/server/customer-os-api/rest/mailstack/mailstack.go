@@ -2,12 +2,14 @@ package restmailstack
 
 import (
 	"github.com/gin-gonic/gin"
+	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"net/http"
 )
@@ -90,29 +92,58 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 			}
 		}
 
-		callDomainRegistrationWithMailBoxes(ctx, req)
+		registerNewDomainResponse, err := callDomainRegistrationWithMailBoxes(ctx, services, req)
+		if err != nil {
+			if errors.Is(err, coserrors.ErrDomainUnavailable) {
+				c.JSON(http.StatusConflict,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Domain is already registered",
+					})
+				return
+			} else {
+				c.JSON(http.StatusInternalServerError,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Domain registration failed",
+					})
+				span.LogFields(tracingLog.String("result", "Internal server error"))
+				return
+			}
+		}
+
+		registerNewDomainResponse.Status = "success"
+		registerNewDomainResponse.Message = "Domain registered successfully"
 
 		// Placeholder for response logic (to be implemented)
-		c.JSON(http.StatusCreated,
-			RegisterNewDomainResponse{
-				Status:  "success",
-				Message: "Domain registered successfully",
-				// More response details will be added here later, including:
-				// "domain": req.Domain,
-				// "mailboxes": req.Mailboxes,
-			})
+		c.JSON(http.StatusCreated, registerNewDomainResponse)
 	}
 }
 
-func callDomainRegistrationWithMailBoxes(ctx context.Context, req RegisterNewDomainRequest) {
+func callDomainRegistrationWithMailBoxes(ctx context.Context, services *service.Services, req RegisterNewDomainRequest) (RegisterNewDomainResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "callDomainRegistrationWithMailBoxes")
 	defer span.Finish()
 
-	// step 1 - register domain
+	var registerNewDomainResponse = RegisterNewDomainResponse{}
+	registerNewDomainResponse.Domain = req.Domain
 
-	// step 2 - configure domain with cloudflare
+	// step 1 - check domain availability
+	isAvailable, err := services.NamecheapService.CheckDomainAvailability(ctx, req.Domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
+		return registerNewDomainResponse, err
+	}
+	if !isAvailable {
+		return registerNewDomainResponse, coserrors.ErrDomainUnavailable
+	}
 
-	// step 3 - configure mailboxes
+	// step 2 - purchase domain
 
-	// step 4 - warm mailboxes
+	// step X - configure domain with cloudflare
+
+	// step Y - configure mailboxes
+
+	// step Z - warm mailboxes
+
+	return registerNewDomainResponse, nil
 }
