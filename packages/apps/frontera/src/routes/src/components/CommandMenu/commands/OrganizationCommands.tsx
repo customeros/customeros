@@ -29,6 +29,9 @@ import {
   UpdateHealthStatusSubItemGroup,
 } from '@shared/components/CommandMenu/commands/organization';
 
+import { OwnerSubItemGroup } from './shared/OwnerSubItemGroup';
+import { AddTagSubItemGroup } from './organization/AddTagSubItemGroup';
+
 // TODO - uncomment keyboard shortcuts when they are implemented
 export const OrganizationCommands = observer(() => {
   const store = useStore();
@@ -68,6 +71,7 @@ export const OrganizationCommands = observer(() => {
         >
           Change or add tags...
         </CommandItem>
+        <AddTagSubItemGroup />
 
         {!!organization?.value?.tags?.length && (
           <CommandItem
@@ -201,7 +205,7 @@ export const OrganizationCommands = observer(() => {
             store.ui.commandMenu.setType('UpdateHealthStatus');
           }}
         >
-          Change health status...
+          Health status...
         </CommandItem>
         <UpdateHealthStatusSubItemGroup
           selectedIds={selectedIds}
@@ -226,6 +230,7 @@ export const OrganizationCommands = observer(() => {
         >
           Assign owner...
         </CommandItem>
+        <OwnerSubItemGroup />
 
         <CommandItem
           rightAccessory={<Kbd>O</Kbd>}

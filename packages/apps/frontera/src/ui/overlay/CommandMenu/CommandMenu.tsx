@@ -106,7 +106,9 @@ export const CommandSubItem = ({
     >
       <span className='text-gray-500'>{leftLabel}</span>
       <ChevronRight className='mx-1' />
-      <span>{rightLabel}</span>
+      <span className='overflow-hidden text-ellipsis whitespace-nowrap max-w-[250px]'>
+        {rightLabel}
+      </span>
     </CommandItem>
   );
 };

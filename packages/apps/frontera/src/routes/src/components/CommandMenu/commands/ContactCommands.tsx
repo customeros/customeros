@@ -16,6 +16,10 @@ import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
+import { AddJobRolesSubItemGroup } from './contacts/AddJobRolesSubItemGroup';
+import { AddPersonaTagSubItemGroup } from './contacts/AddPersonaTagSubItemGroup';
+import { AddContactSequenceSubItemGroup } from './contacts/AddContactSequenceSubItemGroup';
+
 export const ContactCommands = observer(() => {
   const store = useStore();
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
@@ -42,6 +46,7 @@ export const ContactCommands = observer(() => {
         >
           Edit persona tag...
         </CommandItem>
+        <AddPersonaTagSubItemGroup />
 
         <CommandItem
           leftAccessory={<Shuffle01 />}
@@ -51,6 +56,7 @@ export const ContactCommands = observer(() => {
         >
           Change or add to sequence
         </CommandItem>
+        <AddContactSequenceSubItemGroup />
 
         {!!contact?.value?.tags?.length && (
           <CommandItem
@@ -141,6 +147,7 @@ export const ContactCommands = observer(() => {
         >
           Edit job roles...
         </CommandItem>
+        <AddJobRolesSubItemGroup />
         <CommandItem
           leftAccessory={<Clock />}
           keywords={contactKeywords.edit_time_zone}
