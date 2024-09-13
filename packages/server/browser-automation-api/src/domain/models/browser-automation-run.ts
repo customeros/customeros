@@ -10,7 +10,8 @@ import {
   type BrowserAutomationRunTrigger,
   BrowserAutomationRunsRepository,
 } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-runs-repository";
-import { BrowserAutomationRunErrorsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-errors-repository";
+import { type BrowserConfigsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-configs-repository";
+import { type BrowserAutomationRunErrorsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-errors-repository";
 import { type BrowserAutomationRunResultsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-results-repository";
 
 export type BrowserAutomationRunPayload = Pick<
@@ -102,6 +103,7 @@ export class BrowserAutomationRun {
     automationRepository: BrowserAutomationRunsRepository,
     resultsRepository: BrowserAutomationRunResultsRepository,
     errorsRepository: BrowserAutomationRunErrorsRepository,
+    configRepository: BrowserConfigsRepository,
   ): JobParams | null {
     const payload = BrowserAutomationRun.parsePayload(this.payload);
 
@@ -148,6 +150,13 @@ export class BrowserAutomationRun {
                     errorCode: err.reference,
                     errorType: err.code,
                   });
+                  if (err.reference === "S001") {
+                    await configRepository.updateByUserId({
+                      userId: this.userId,
+                      tenant: this.tenant,
+                      sessionStatus: "INVALID",
+                    });
+                  }
                   logger.error("Failed to send message", {
                     source: "BrowserAutomationRun",
                   });
@@ -201,6 +210,13 @@ export class BrowserAutomationRun {
                     errorCode: err.reference,
                     errorType: err.code,
                   });
+                  if (err.reference === "S001") {
+                    await configRepository.updateByUserId({
+                      userId: this.userId,
+                      tenant: this.tenant,
+                      sessionStatus: "INVALID",
+                    });
+                  }
                   logger.error("Failed to send connection invite", {
                     source: "BrowserAutomationRun",
                   });
@@ -234,11 +250,25 @@ export class BrowserAutomationRun {
                   source: "BrowserAutomationRun",
                 });
               },
-              onError: async () => {
+              onError: async (err) => {
                 this.updateStatus("FAILED", automationRepository);
                 logger.error("Failed to scrape connections", {
                   source: "BrowserAutomationRun",
                 });
+                await errorsRepository.insert({
+                  runId: this.id,
+                  errorMessage: err.message,
+                  errorDetails: err.details,
+                  errorCode: err.reference,
+                  errorType: err.code,
+                });
+                if (err.reference === "S001") {
+                  await configRepository.updateByUserId({
+                    userId: this.userId,
+                    tenant: this.tenant,
+                    sessionStatus: "INVALID",
+                  });
+                }
                 completeTick();
               },
             });

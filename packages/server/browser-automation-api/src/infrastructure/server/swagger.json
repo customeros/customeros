@@ -32,7 +32,8 @@
                   "cookies": "[{\"name\":\"li_at\",\"value\":\"AQEDARsT3pIA9m89AAABkZyVXisAAAGRwKHiK00Aj0CXIvfHIIDSIJ-Vuz2AuEAvjDY16oHgphHCL1BH5mLhmSkxHFx-g_muiKbxNH3-TNDaEvv8EEa-1_tp9xNOGO1BkE6LIFNw1Sd2fJVCOwanlHJG\",\"domain\":\"www.linkedin.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"Lax\"}]",
                   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
                   "createdAt": "2024-06-01T00:00:00Z",
-                  "updatedAt": "2024-06-01T00:00:00Z"
+                  "updatedAt": "2024-06-01T00:00:00Z",
+                  "sessionStatus": "VALID"
                 }
               }
             }
@@ -74,7 +75,8 @@
                   "cookies": "[{\"name\":\"li_at\",\"value\":\"AQEDARsT3pIA9m89AAABkZyVXisAAAGRwKHiK00Aj0CXIvfHIIDSIJ-Vuz2AuEAvjDY16oHgphHCL1BH5mLhmSkxHFx-g_muiKbxNH3-TNDaEvv8EEa-1_tp9xNOGO1BkE6LIFNw1Sd2fJVCOwanlHJG\",\"domain\":\"www.linkedin.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"Lax\"}]",
                   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
                   "createdAt": "2024-06-01T00:00:00Z",
-                  "updatedAt": "2024-06-01T00:00:00Z"
+                  "updatedAt": "2024-06-01T00:00:00Z",
+                  "sessionStatus": "VALID"
                 }
               }
             }
@@ -116,7 +118,8 @@
                   "cookies": "[{\"name\":\"li_at\",\"value\":\"AQEDARsT3pIA9m89AAABkZyVXisAAAGRwKHiK00Aj0CXIvfHIIDSIJ-Vuz2AuEAvjDY16oHgphHCL1BH5mLhmSkxHFx-g_muiKbxNH3-TNDaEvv8EEa-1_tp9xNOGO1BkE6LIFNw1Sd2fJVCOwanlHJG\",\"domain\":\"www.linkedin.com\",\"path\":\"/\",\"secure\":true,\"httpOnly\":true,\"sameSite\":\"Lax\"}]",
                   "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3",
                   "createdAt": "2024-06-01T00:00:00Z",
-                  "updatedAt": "2024-06-01T00:00:00Z"
+                  "updatedAt": "2024-06-01T00:00:00Z",
+                  "sessionStatus": "VALID"
                 }
               }
             }
@@ -411,6 +414,12 @@
           "format": "date-time",
           "description": "Timestamp when the browser configuration was last updated",
           "default": "CURRENT_TIMESTAMP"
+        },
+        "sessionStatus": {
+          "type": "string",
+          "description": "Status of the browser session",
+          "enum": ["VALID", "INVALID", "EXPIRED"],
+          "default": "VALID"
         }
       }
     },

@@ -118,6 +118,7 @@ export class ScheduleService {
       this.browserAutomationRunsRepository,
       this.browserAutomationRunResultsRepository,
       this.browserAutomationRunErrorsRepository,
+      this.browserConfigsRepository,
     );
 
     if (!jobParams) {
