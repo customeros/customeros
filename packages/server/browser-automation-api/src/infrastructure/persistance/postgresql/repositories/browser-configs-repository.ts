@@ -8,6 +8,7 @@ import { browserConfigs } from "../drizzle/schema";
 
 export type BrowserConfigInsert = typeof browserConfigs.$inferInsert;
 export type BrowserConfigTable = typeof browserConfigs.$inferSelect;
+export type BrowserConfigSessionStatus = BrowserConfigTable["sessionStatus"];
 
 export class BrowserConfigsRepository {
   constructor() {}

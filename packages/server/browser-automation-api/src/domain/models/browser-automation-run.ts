@@ -122,7 +122,7 @@ export class BrowserAutomationRun {
                 onStart: async () => {
                   await this.updateStatus("RUNNING", automationRepository);
                   logger.info("Sending message", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onSuccess: async () => {
@@ -136,7 +136,7 @@ export class BrowserAutomationRun {
                     }),
                   });
                   logger.info("Message sent", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onError: async (err) => {
@@ -145,10 +145,11 @@ export class BrowserAutomationRun {
                     runId: this.id,
                     errorMessage: err.message,
                     errorDetails: err.details,
+                    errorCode: err.reference,
                     errorType: err.code,
                   });
                   logger.error("Failed to send message", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                   completeTick();
                 },
@@ -174,7 +175,7 @@ export class BrowserAutomationRun {
                 onStart: async () => {
                   this.updateStatus("RUNNING", automationRepository);
                   logger.info("Sending connection invite", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onSuccess: async () => {
@@ -188,7 +189,7 @@ export class BrowserAutomationRun {
                     }),
                   });
                   logger.info("Connection request sent", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onError: async (err) => {
@@ -197,10 +198,11 @@ export class BrowserAutomationRun {
                     runId: this.id,
                     errorMessage: err.message,
                     errorDetails: err.details,
+                    errorCode: err.reference,
                     errorType: err.code,
                   });
                   logger.error("Failed to send connection invite", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                   completeTick();
                 },
@@ -222,15 +224,21 @@ export class BrowserAutomationRun {
               dryRun: payload?.dryRun,
               onStart: async () => {
                 await this.updateStatus("RUNNING", automationRepository);
-                logger.info("Scraping connections");
+                logger.info("Scraping connections", {
+                  source: "BrowserAutomationRun",
+                });
               },
               onSuccess: async () => {
                 this.updateStatus("COMPLETED", automationRepository);
-                logger.info("Connections scraped");
+                logger.info("Connections scraped", {
+                  source: "BrowserAutomationRun",
+                });
               },
               onError: async () => {
                 this.updateStatus("FAILED", automationRepository);
-                logger.error("Failed to scrape connections");
+                logger.error("Failed to scrape connections", {
+                  source: "BrowserAutomationRun",
+                });
                 completeTick();
               },
             });

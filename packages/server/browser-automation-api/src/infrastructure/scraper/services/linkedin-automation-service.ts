@@ -2,7 +2,7 @@ import { setTimeout } from "timers/promises";
 
 import { Browser } from "../browser";
 import { logger } from "@/infrastructure";
-import { ErrorParser } from "@/util/error";
+import { ErrorParser, StandardError } from "@/util/error";
 
 export type Cookies = ReadonlyArray<{
   name: string;
@@ -65,12 +65,7 @@ export class LinkedinAutomationService {
         await sendInviteButton.click();
       }
     } catch (err) {
-      const error = ErrorParser.parse(err);
-      logger.error("Error in LinkedinAutomationService", {
-        error: error.message,
-        details: error.details,
-      });
-      throw error;
+      LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
     }
@@ -86,8 +81,12 @@ export class LinkedinAutomationService {
     const page = await context.newPage();
 
     const goToPage = async (currentPage: number) => {
-      const url = `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`;
-      await page.goto(url);
+      try {
+        const url = `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`;
+        return await page.goto(url);
+      } catch (err) {
+        LinkedinAutomationService.handleError(err);
+      }
     };
 
     const scrapeConnections = async () => {
@@ -156,12 +155,7 @@ export class LinkedinAutomationService {
       const connectionUrls = await scrapeConnections();
       return connectionUrls;
     } catch (err) {
-      const error = ErrorParser.parse(err);
-      logger.error("Error in LinkedinAutomationService", {
-        error: error.message,
-        details: error.details,
-      });
-      throw error;
+      LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
     }
@@ -172,16 +166,18 @@ export class LinkedinAutomationService {
     message: string,
     options?: { dryRun?: boolean },
   ) {
-    const browser = await Browser.getInstance(this.proxyConfig);
+    const browser = await Browser.getInstance(this.proxyConfig, {
+      debug: true,
+    });
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
 
     await context.addCookies(this.cookies);
     const page = await context.newPage();
-    await page.goto(profileUrl, { timeout: 60 * 1000 });
 
     try {
+      await page.goto(profileUrl, { timeout: 60 * 1000 });
       const messageButtons = page.locator(
         'button.pvs-profile-actions__action[aria-label*="Message"]',
       );
@@ -199,14 +195,42 @@ export class LinkedinAutomationService {
         await sendButton.click();
       }
     } catch (err) {
-      const error = ErrorParser.parse(err);
-      logger.error("Error in LinkedinAutomationService", {
-        error: error.message,
-        details: error.details,
-      });
-      throw error;
+      LinkedinAutomationService.handleError(err);
     } finally {
-      return await page.close();
+      await page.close();
     }
+  }
+
+  private static handleError(err: unknown) {
+    const error = ErrorParser.parse(err);
+
+    const isTooManyRedirectsErr = error.details?.includes(
+      "ERR_TOO_MANY_REDIRECTS",
+    );
+
+    if (isTooManyRedirectsErr) {
+      const tooManyRedirects = new StandardError({
+        code: "EXTERNAL_ERROR",
+        reference: "S001",
+        details: error.details,
+        message: "Too many redirects: session token might be invalid.",
+        severity: "critical",
+      });
+
+      logger.error("Too many redirects: session token might be invalid.", {
+        error: error.message,
+        details: error.reference,
+        source: "LinkedinAutomationService",
+      });
+
+      throw tooManyRedirects;
+    }
+
+    logger.error("Error in LinkedinAutomationService", {
+      error: error.message,
+      details: error.details,
+      source: "LinkedinAutomationService",
+    });
+    throw error;
   }
 }
