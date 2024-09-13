@@ -77,7 +77,7 @@ const THead = observer(
               ? 'border-gray-300 shadow-sm'
               : 'border-transparent',
             (canSort && isOpen) || isSorted ? 'ml-0' : 'ml-3',
-            !canSort ? '' : 'hover:ml-0',
+            !canSort ? '' : 'group-hover:ml-0',
             'flex items-center border rounded-[4px] transition-opacity duration-200 ease-in-out ',
           )}
         >
@@ -112,7 +112,7 @@ const THead = observer(
             onClick={onToggleSort}
             data-test={`org-header-${id}`}
             className={cn(
-              isSorted ? 'mt-[-2px] tracking-[-0.3px] ' : 'mt-0',
+              isSorted ? ' tracking-[-0.3px] ' : 'mt-0',
               canSort ? 'cursor-pointer' : 'cursor-default',
               !isSorted ? 'font-base' : 'font-medium',
               'text-sm text-gray-700',
