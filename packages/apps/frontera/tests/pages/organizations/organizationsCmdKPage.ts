@@ -46,17 +46,10 @@ export class OrganizationsCmdKPage {
       state: 'visible',
     });
 
-    const isMac = process.platform === 'darwin';
+    await this.page.keyboard.down('Meta');
+    await this.page.keyboard.press('KeyK');
+    await this.page.keyboard.up('Meta');
 
-    if (isMac) {
-      await this.page.keyboard.down('Meta');
-      await this.page.keyboard.press('KeyK');
-      await this.page.keyboard.up('Meta');
-    } else {
-      await this.page.keyboard.down('Control');
-      await this.page.keyboard.press('KeyK');
-      await this.page.keyboard.up('Control');
-    }
     await this.page.waitForSelector(this.organizationsHub, {
       state: 'visible',
     });
