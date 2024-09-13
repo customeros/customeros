@@ -2,6 +2,7 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -9,6 +10,7 @@ import (
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -36,12 +38,19 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
+	clientIp, err := s.getPublicIP()
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get public IP"))
+		s.log.Error("failed to get public IP", err)
+		return false, err
+	}
+
 	apiURL := "https://api.namecheap.com/xml.response"
 	params := url.Values{}
 	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
 	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
 	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
-	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ClientIp)
+	params.Add("ClientIp", clientIp)
 	params.Add("Command", "namecheap.domains.check")
 	params.Add("DomainList", domain)
 
@@ -78,6 +87,20 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	}
 	span.LogFields(tracingLog.Bool("result", false))
 	return false, nil
+}
+
+func (s *namecheapService) getPublicIP() (string, error) {
+	resp, err := http.Get("https://ifconfig.me")
+	if err != nil {
+		return "", fmt.Errorf("failed to get public IP: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	ip, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", fmt.Errorf("failed to read public IP response: %s", err.Error())
+	}
+	return string(ip), nil
 }
 
 //// PurchaseDomain purchases a domain using the Namecheap API and stores it in the DB

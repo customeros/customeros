@@ -6,11 +6,11 @@ type RegisterNewDomainRequest struct {
 	// Domain is the domain name to be registered
 	// Required: true
 	// Example: example.com
-	Domain string `json:"domain" binding:"required" example:"example.com"`
+	Domain string `json:"domain" example:"example.com"`
 
 	// Mailboxes is a list of mailboxes to be configured under the domain
 	// Required: true
-	Mailboxes []MailboxConfig `json:"mailboxes" binding:"required"`
+	Mailboxes []MailboxConfig `json:"mailboxes"`
 }
 
 // MailboxConfig defines the structure of a mailbox object
