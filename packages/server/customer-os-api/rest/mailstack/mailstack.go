@@ -12,11 +12,12 @@ import (
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"net/http"
+	"strings"
 )
 
 // RegisterNewDomain registers a new domain for the mail service
 // @Summary Register a new domain
-// @Description Registers a new domain with a list of mailboxes in the MailStack system.
+// @Description Registers a new domain
 // @Tags MailStack API
 // @Accept  json
 // @Produce  json
@@ -24,12 +25,14 @@ import (
 // @Success 201 {object} RegisterNewDomainResponse "Domain registered successfully"
 // @Failure 400  "Invalid request body or missing input fields"
 // @Failure 401  "Unauthorized access - API key invalid or expired"
+// @Failure 409  "Domain is already registered"
+// @Failure 406  "Restrictions on domain purchase"
 // @Failure 500  "Internal server error"
 // @Router /mailstack/v1/domains [post]
 // @Security ApiKeyAuth
 func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateOrganization", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewDomain", c.Request.Header)
 		defer span.Finish()
 		tracing.SetDefaultRestSpanTags(ctx, span)
 
@@ -69,45 +72,42 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 			return
 		}
 
-		// Check if mailboxes are provided and validate each mailbox
-		if len(req.Mailboxes) == 0 {
-			c.JSON(http.StatusBadRequest,
-				rest.ErrorResponse{
-					Status:  "error",
-					Message: "Missing required field: mailboxes",
-				})
-			span.LogFields(tracingLog.String("result", "Missing mailboxes"))
-			return
-		}
-
-		for _, mailbox := range req.Mailboxes {
-			if mailbox.Username == "" || mailbox.Password == "" {
-				c.JSON(http.StatusBadRequest,
+		registerNewDomainResponse, err := registerDomain(ctx, tenant, req.Domain, services)
+		if err != nil {
+			if errors.Is(err, coserrors.ErrNotSupported) {
+				c.JSON(http.StatusNotAcceptable,
 					rest.ErrorResponse{
 						Status:  "error",
-						Message: "Each mailbox must have a username and password",
+						Message: "Domain TLD not supported, please choose another domain",
 					})
-				span.LogFields(tracingLog.String("result", "Invalid mailbox configuration"))
+				span.LogFields(tracingLog.String("result", "Domain TLD not supported"))
 				return
-			}
-		}
-
-		registerNewDomainResponse, err := callDomainRegistrationWithMailBoxes(ctx, services, req)
-		if err != nil {
-			if errors.Is(err, coserrors.ErrDomainUnavailable) {
+			} else if errors.Is(err, coserrors.ErrDomainUnavailable) {
 				c.JSON(http.StatusConflict,
 					rest.ErrorResponse{
 						Status:  "error",
-						Message: "Domain is already registered",
+						Message: "Domain is already registered, please choose another domain",
 					})
 				return
+			} else if errors.Is(err, coserrors.ErrDomainPremium) {
+				c.JSON(http.StatusNotAcceptable,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Not supporting premium domains, please choose another domain",
+					})
+			} else if errors.Is(err, coserrors.ErrDomainPriceExceeded) {
+				c.JSON(http.StatusNotAcceptable,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Domain price exceeds the maximum allowed price, please contact support",
+					})
 			} else {
 				c.JSON(http.StatusInternalServerError,
 					rest.ErrorResponse{
 						Status:  "error",
 						Message: "Domain registration failed",
 					})
-				span.LogFields(tracingLog.String("result", "Internal server error"))
+				span.LogFields(tracingLog.String("result", "Internal server error, please contact support"))
 				return
 			}
 		}
@@ -120,15 +120,29 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func callDomainRegistrationWithMailBoxes(ctx context.Context, services *service.Services, req RegisterNewDomainRequest) (RegisterNewDomainResponse, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "callDomainRegistrationWithMailBoxes")
+func registerDomain(ctx context.Context, tenant, domain string, services *service.Services) (RegisterNewDomainResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "registerDomain")
 	defer span.Finish()
 
 	var registerNewDomainResponse = RegisterNewDomainResponse{}
-	registerNewDomainResponse.Domain = req.Domain
+	registerNewDomainResponse.Domain = domain
+
+	// check if domain tld is supported
+	// Extract the TLD from the domain (e.g., "com" from "example.com")
+	tld := strings.Split(domain, ".")[1]
+	tldSupported := false
+	for _, supportedTld := range services.Cfg.AppConfig.Mailstack.SupportedTlds {
+		if tld == supportedTld {
+			tldSupported = true
+			break
+		}
+	}
+	if !tldSupported {
+		return registerNewDomainResponse, coserrors.ErrNotSupported
+	}
 
 	// step 1 - check domain availability
-	isAvailable, err := services.NamecheapService.CheckDomainAvailability(ctx, req.Domain)
+	isAvailable, isPremium, err := services.NamecheapService.CheckDomainAvailability(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
 		return registerNewDomainResponse, err
@@ -136,14 +150,28 @@ func callDomainRegistrationWithMailBoxes(ctx context.Context, services *service.
 	if !isAvailable {
 		return registerNewDomainResponse, coserrors.ErrDomainUnavailable
 	}
+	if isPremium {
+		return registerNewDomainResponse, coserrors.ErrDomainPremium
+	}
 
-	// step 2 - purchase domain
+	// step 2 - check pricing
+	domainPrice, err := services.NamecheapService.GetDomainPrice(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain price"))
+		return registerNewDomainResponse, err
+	}
+	if domainPrice > services.Cfg.ExternalServices.Namecheap.MaxPrice {
+		return registerNewDomainResponse, coserrors.ErrDomainPriceExceeded
+	}
+
+	// step 3 - register domain
+	err = services.NamecheapService.PurchaseDomain(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error purchasing domain"))
+		return registerNewDomainResponse, err
+	}
 
 	// step X - configure domain with cloudflare
-
-	// step Y - configure mailboxes
-
-	// step Z - warm mailboxes
 
 	return registerNewDomainResponse, nil
 }
