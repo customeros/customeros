@@ -105,7 +105,7 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 				c.JSON(http.StatusInternalServerError,
 					rest.ErrorResponse{
 						Status:  "error",
-						Message: "Domain registration failed",
+						Message: "Domain registration failed, please contact support",
 					})
 				span.LogFields(tracingLog.String("result", "Internal server error, please contact support"))
 				return
