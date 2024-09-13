@@ -1,8 +1,7 @@
 package service
 
 import (
-	"encoding/json"
-	"fmt"
+	"encoding/xml"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -14,6 +13,20 @@ import (
 	"net/http"
 	"net/url"
 )
+
+// Define namecheap XML struct
+type NamecheapResult struct {
+	XMLName         xml.Name `xml:"ApiResponse"`
+	Status          string   `xml:"Status,attr"`
+	CommandResponse struct {
+		DomainCheckResult struct {
+			Domain                   string `xml:"Domain,attr"`
+			Available                bool   `xml:"Available,attr"`
+			IsPremiumName            bool   `xml:"IsPremiumName,attr"`
+			PremiumRegistrationPrice string `xml:"PremiumRegistrationPrice,attr"`
+		} `xml:"DomainCheckResult"`
+	} `xml:"CommandResponse"`
+}
 
 type NamecheapService interface {
 	CheckDomainAvailability(ctx context.Context, domain string) (bool, error)
@@ -38,19 +51,12 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
-	clientIp, err := s.getPublicIP()
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to get public IP"))
-		s.log.Error("failed to get public IP", err)
-		return false, err
-	}
-
 	apiURL := "https://api.namecheap.com/xml.response"
 	params := url.Values{}
 	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
 	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
 	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
-	params.Add("ClientIp", clientIp)
+	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ApiClientIp)
 	params.Add("Command", "namecheap.domains.check")
 	params.Add("DomainList", domain)
 
@@ -62,45 +68,30 @@ func (s *namecheapService) CheckDomainAvailability(ctx context.Context, domain s
 	}
 	defer resp.Body.Close()
 
-	var result struct {
-		ApiResponse struct {
-			CommandResponse struct {
-				DomainCheckResult []struct {
-					Domain    string `json:"Domain"`
-					Available bool   `json:"Available"`
-				} `json:"DomainCheckResult"`
-			} `json:"CommandResponse"`
-		} `json:"ApiResponse"`
-	}
-
-	if err = json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap response"))
-		s.log.Error("failed to parse Namecheap response", err)
+	responseBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.LogObjectAsJson(span, "responseBody", responseBody)
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
+		s.log.Error("failed to read Namecheap response", err)
 		return false, err
 	}
 
-	for _, res := range result.ApiResponse.CommandResponse.DomainCheckResult {
-		if res.Domain == domain {
-			span.LogFields(tracingLog.Bool("result", res.Available))
-			return res.Available, nil
-		}
-	}
-	span.LogFields(tracingLog.Bool("result", false))
-	return false, nil
-}
+	var result NamecheapResult
 
-func (s *namecheapService) getPublicIP() (string, error) {
-	resp, err := http.Get("https://ifconfig.me")
-	if err != nil {
-		return "", fmt.Errorf("failed to get public IP: %s", err.Error())
+	if err = xml.Unmarshal(responseBody, &result); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
+		s.log.Error("failed to parse Namecheap XML response", err)
+		return false, err
 	}
-	defer resp.Body.Close()
 
-	ip, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", fmt.Errorf("failed to read public IP response: %s", err.Error())
+	// Check availability
+	if result.CommandResponse.DomainCheckResult.Available {
+		span.LogFields(tracingLog.Bool("result.available", true))
+		return true, nil
+	} else {
+		span.LogFields(tracingLog.Bool("result.available", false))
+		return false, nil
 	}
-	return string(ip), nil
 }
 
 //// PurchaseDomain purchases a domain using the Namecheap API and stores it in the DB
