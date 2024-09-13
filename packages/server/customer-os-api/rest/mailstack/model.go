@@ -7,36 +7,6 @@ type RegisterNewDomainRequest struct {
 	// Required: true
 	// Example: example.com
 	Domain string `json:"domain" example:"example.com"`
-
-	// Mailboxes is a list of mailboxes to be configured under the domain
-	// Required: true
-	Mailboxes []MailboxConfig `json:"mailboxes"`
-}
-
-// MailboxConfig defines the structure of a mailbox object
-// @Description Mailbox object containing username, password, and other configurations
-type MailboxConfig struct {
-	// Username of the mailbox
-	// Required: true
-	// Example: user@example.com
-	Username string `json:"username" binding:"required" example:"user@example.com"`
-
-	// Password for the mailbox
-	// Required: true
-	// Example: strongpassword
-	Password string `json:"password" binding:"required" example:"strongpassword"`
-
-	// ForwardingEnabled indicates if forwarding is enabled for the mailbox
-	// Example: true
-	ForwardingEnabled bool `json:"forwardingEnabled" example:"true"`
-
-	// ForwardingTo specifies the email address to forward mails to if forwarding is enabled
-	// Example: forward@example.com
-	ForwardingTo string `json:"forwardingTo" example:"forward@example.com"`
-
-	// WebmailEnabled indicates if webmail access is enabled for the mailbox
-	// Example: false
-	WebmailEnabled bool `json:"webmailEnabled" example:"false"`
 }
 
 // RegisterNewDomainResponse defines the response structure for a successful domain registration
@@ -74,9 +44,6 @@ type RegisterNewDomainResponse struct {
 	// Nameservers lists the nameservers associated with the domain
 	// Example: [ns1.example.com, ns2.example.com]
 	Nameservers []string `json:"nameservers" example:"[\"ns1.example.com\", \"ns2.example.com\"]"`
-
-	// Mailboxes provides a list of mailboxes associated with the domain
-	Mailboxes []MailboxResponse `json:"mailboxes"`
 
 	// DnsRecords provides a list of DNS records associated with the domain
 	DnsRecords []DnsRecordResponse `json:"dnsRecords"`

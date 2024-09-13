@@ -428,3 +428,10 @@ func EnforceSingleValue(slice []string, value string) {
 		slice[i] = value
 	}
 }
+
+func BoolToString(b bool) string {
+	if b {
+		return "true"
+	}
+	return "false"
+}

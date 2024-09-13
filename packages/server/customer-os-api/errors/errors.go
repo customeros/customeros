@@ -1,11 +1,17 @@
 package coserrors
 
-import "github.com/pkg/errors"
+import (
+	"github.com/pkg/errors"
+)
 
 var (
-	ErrAccessDenied      = errors.New("Access denied")
-	ErrInvalidEntityType = errors.New("Invalid entity type")
-	ErrMissingInput      = errors.New("Missing input")
-	ErrNotFound          = errors.New("Not found")
-	ErrDomainUnavailable = errors.New("domain unavailable")
+	ErrAccessDenied        = errors.New("Access denied")
+	ErrInvalidEntityType   = errors.New("Invalid entity type")
+	ErrMissingInput        = errors.New("Missing input")
+	ErrNotFound            = errors.New("Not found")
+	ErrNotSupported        = errors.New("Not supported")
+	ErrDomainUnavailable   = errors.New("domain unavailable")
+	ErrDomainPremium       = errors.New("domain is premium")
+	ErrDomainPriceExceeded = errors.New("domain price exceeds the maximum allowed price")
+	ErrDomainPriceNotFound = errors.New("domain price not found")
 )
