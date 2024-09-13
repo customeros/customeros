@@ -50,6 +50,7 @@ type Config struct {
 			ApiKey      string `env:"NAMECHEAP_API_KEY" validate:"required"`
 			ApiUser     string `env:"NAMECHEAP_API_USER" validate:"required"`
 			ApiUsername string `env:"NAMECHEAP_API_USERNAME" validate:"required"`
+			ApiClientIp string `env:"NAMECHEAP_API_CLIENT_IP" validate:"required"`
 		}
 	}
 }
