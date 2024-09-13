@@ -18,8 +18,8 @@ type ExtensibleEntity interface {
 	GetTemplate() *EntityTemplate
 }
 
-type FlowSequenceStepActionData interface {
-	IsFlowSequenceStepActionData()
+type FlowActionData interface {
+	IsFlowActionData()
 }
 
 type InteractionEventParticipant interface {
@@ -377,7 +377,7 @@ type Contact struct {
 	Template *EntityTemplate `json:"template,omitempty"`
 	// Contact owner (user)
 	Owner                    *User           `json:"owner,omitempty"`
-	Sequences                []*FlowSequence `json:"sequences"`
+	Flows                    []*Flow         `json:"flows"`
 	TimelineEvents           []TimelineEvent `json:"timelineEvents"`
 	TimelineEventsTotalCount int64           `json:"timelineEventsTotalCount"`
 }
@@ -1131,125 +1131,114 @@ type Flow struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Status      entity.FlowStatus `json:"status"`
-	Sequences   []*FlowSequence   `json:"sequences"`
+	Actions     []*FlowAction     `json:"actions"`
+	Contacts    []*FlowContact    `json:"contacts"`
 }
 
 func (Flow) IsMetadataInterface()        {}
 func (this Flow) GetMetadata() *Metadata { return this.Metadata }
 
-type FlowSequence struct {
-	Metadata    *Metadata                 `json:"metadata"`
-	Name        string                    `json:"name"`
-	Description string                    `json:"description"`
-	Status      entity.FlowSequenceStatus `json:"status"`
-	Flow        *Flow                     `json:"flow"`
-	Steps       []*FlowSequenceStep       `json:"steps"`
-	Contacts    []*FlowSequenceContact    `json:"contacts"`
-	Senders     []*FlowSequenceSender     `json:"senders"`
+type FlowAction struct {
+	Metadata   *Metadata               `json:"metadata"`
+	Index      int64                   `json:"index"`
+	Name       string                  `json:"name"`
+	Status     entity.FlowActionStatus `json:"status"`
+	ActionType entity.FlowActionType   `json:"actionType"`
+	ActionData FlowActionData          `json:"actionData"`
+	Senders    []*FlowActionSender     `json:"senders"`
 }
 
-func (FlowSequence) IsMetadataInterface()        {}
-func (this FlowSequence) GetMetadata() *Metadata { return this.Metadata }
+func (FlowAction) IsMetadataInterface()        {}
+func (this FlowAction) GetMetadata() *Metadata { return this.Metadata }
 
-type FlowSequenceContact struct {
+type FlowActionDataEmail struct {
+	ReplyToID    *string `json:"replyToId,omitempty"`
+	Subject      string  `json:"subject"`
+	BodyTemplate string  `json:"bodyTemplate"`
+}
+
+func (FlowActionDataEmail) IsFlowActionData() {}
+
+type FlowActionDataWait struct {
+	Minutes int64 `json:"minutes"`
+}
+
+func (FlowActionDataWait) IsFlowActionData() {}
+
+type FlowActionInputData struct {
+	Wait                      *FlowActionInputDataWait                      `json:"wait,omitempty"`
+	EmailNew                  *FlowActionInputDataEmail                     `json:"email_new,omitempty"`
+	EmailReply                *FlowActionInputDataEmail                     `json:"email_reply,omitempty"`
+	LinkedinConnectionRequest *FlowActionInputDataLinkedinConnectionRequest `json:"linkedin_connection_request,omitempty"`
+	LinkedinMessage           *FlowActionInputDataLinkedinMessage           `json:"linkedin_message,omitempty"`
+}
+
+type FlowActionInputDataEmail struct {
+	ReplyToID    *string `json:"replyToId,omitempty"`
+	Subject      string  `json:"subject"`
+	BodyTemplate string  `json:"bodyTemplate"`
+}
+
+type FlowActionInputDataLinkedinConnectionRequest struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+type FlowActionInputDataLinkedinMessage struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+type FlowActionInputDataWait struct {
+	Minutes int64 `json:"minutes"`
+}
+
+type FlowActionLinkedinConnectionRequest struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+func (FlowActionLinkedinConnectionRequest) IsFlowActionData() {}
+
+type FlowActionLinkedinMessage struct {
+	MessageTemplate string `json:"messageTemplate"`
+}
+
+func (FlowActionLinkedinMessage) IsFlowActionData() {}
+
+type FlowActionMergeInput struct {
+	ID         *string               `json:"id,omitempty"`
+	Name       string                `json:"name"`
+	ActionType entity.FlowActionType `json:"actionType"`
+	ActionData *FlowActionInputData  `json:"actionData"`
+}
+
+type FlowActionSender struct {
+	Metadata      *Metadata `json:"metadata"`
+	Mailbox       *string   `json:"mailbox,omitempty"`
+	EmailsPerHour *int64    `json:"emailsPerHour,omitempty"`
+	User          *User     `json:"user,omitempty"`
+}
+
+func (FlowActionSender) IsMetadataInterface()        {}
+func (this FlowActionSender) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowActionSenderMergeInput struct {
+	ID            *string `json:"id,omitempty"`
+	Mailbox       *string `json:"mailbox,omitempty"`
+	EmailsPerHour *int64  `json:"emailsPerHour,omitempty"`
+	UserID        *string `json:"userId,omitempty"`
+}
+
+type FlowContact struct {
 	Metadata *Metadata `json:"metadata"`
 	Contact  *Contact  `json:"contact"`
-	Email    *Email    `json:"email"`
 }
 
-func (FlowSequenceContact) IsMetadataInterface()        {}
-func (this FlowSequenceContact) GetMetadata() *Metadata { return this.Metadata }
+func (FlowContact) IsMetadataInterface()        {}
+func (this FlowContact) GetMetadata() *Metadata { return this.Metadata }
 
-type FlowSequenceCreateInput struct {
+type FlowMergeInput struct {
+	ID          *string `json:"id,omitempty"`
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
-	FlowID      *string `json:"flowId,omitempty"`
-	FlowName    *string `json:"flowName,omitempty"`
-}
-
-type FlowSequenceSender struct {
-	Metadata *Metadata `json:"metadata"`
-	Mailbox  string    `json:"mailbox"`
-}
-
-func (FlowSequenceSender) IsMetadataInterface()        {}
-func (this FlowSequenceSender) GetMetadata() *Metadata { return this.Metadata }
-
-type FlowSequenceStep struct {
-	Metadata   *Metadata                     `json:"metadata"`
-	Index      int64                         `json:"index"`
-	Name       string                        `json:"name"`
-	Status     entity.FlowSequenceStepStatus `json:"status"`
-	Action     entity.FlowSequenceStepAction `json:"action"`
-	ActionData FlowSequenceStepActionData    `json:"actionData"`
-}
-
-func (FlowSequenceStep) IsMetadataInterface()        {}
-func (this FlowSequenceStep) GetMetadata() *Metadata { return this.Metadata }
-
-type FlowSequenceStepActionDataEmail struct {
-	StepID       *string `json:"stepId,omitempty"`
-	Subject      string  `json:"subject"`
-	BodyTemplate string  `json:"bodyTemplate"`
-}
-
-func (FlowSequenceStepActionDataEmail) IsFlowSequenceStepActionData() {}
-
-type FlowSequenceStepActionDataWait struct {
-	Minutes int64 `json:"minutes"`
-}
-
-func (FlowSequenceStepActionDataWait) IsFlowSequenceStepActionData() {}
-
-type FlowSequenceStepActionLinkedinConnectionRequest struct {
-	MessageTemplate string `json:"messageTemplate"`
-}
-
-func (FlowSequenceStepActionLinkedinConnectionRequest) IsFlowSequenceStepActionData() {}
-
-type FlowSequenceStepActionLinkedinMessage struct {
-	MessageTemplate string `json:"messageTemplate"`
-}
-
-func (FlowSequenceStepActionLinkedinMessage) IsFlowSequenceStepActionData() {}
-
-type FlowSequenceStepInputActionData struct {
-	Wait                      *FlowSequenceStepInputActionDataWait                      `json:"wait,omitempty"`
-	EmailNew                  *FlowSequenceStepInputActionDataEmail                     `json:"email_new,omitempty"`
-	EmailReply                *FlowSequenceStepInputActionDataEmail                     `json:"email_reply,omitempty"`
-	LinkedinConnectionRequest *FlowSequenceStepInputActionDataLinkedinConnectionRequest `json:"linkedin_connection_request,omitempty"`
-	LinkedinMessage           *FlowSequenceStepInputActionDataLinkedinMessage           `json:"linkedin_message,omitempty"`
-}
-
-type FlowSequenceStepInputActionDataEmail struct {
-	StepID       *string `json:"stepId,omitempty"`
-	Subject      string  `json:"subject"`
-	BodyTemplate string  `json:"bodyTemplate"`
-}
-
-type FlowSequenceStepInputActionDataLinkedinConnectionRequest struct {
-	MessageTemplate string `json:"messageTemplate"`
-}
-
-type FlowSequenceStepInputActionDataLinkedinMessage struct {
-	MessageTemplate string `json:"messageTemplate"`
-}
-
-type FlowSequenceStepInputActionDataWait struct {
-	Minutes int64 `json:"minutes"`
-}
-
-type FlowSequenceStepMergeInput struct {
-	ID         *string                          `json:"id,omitempty"`
-	Name       string                           `json:"name"`
-	Action     entity.FlowSequenceStepAction    `json:"action"`
-	ActionData *FlowSequenceStepInputActionData `json:"actionData"`
-}
-
-type FlowSequenceUpdateInput struct {
-	ID          string `json:"id"`
-	Name        string `json:"name"`
-	Description string `json:"description"`
 }
 
 type GCliAttributeKeyValuePair struct {
@@ -1683,10 +1672,6 @@ type LogEntryUpdateInput struct {
 	Content     *string    `json:"content,omitempty"`
 	ContentType *string    `json:"contentType,omitempty"`
 	StartedAt   *time.Time `json:"startedAt,omitempty"`
-}
-
-type Mailbox struct {
-	Mailbox string `json:"mailbox"`
 }
 
 type MasterPlan struct {

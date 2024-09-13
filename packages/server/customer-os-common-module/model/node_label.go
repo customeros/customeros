@@ -48,10 +48,9 @@ const (
 	NodeLabelReminder                  = "Reminder"
 	NodeLabelOffering                  = "Offering"
 	NodeLabelFlow                      = "Flow"
-	NodeLabelFlowSequence              = "FlowSequence"
-	NodeLabelFlowSequenceContact       = "FlowSequenceContact"
-	NodeLabelFlowSequenceSender        = "FlowSequenceSender"
-	NodeLabelFlowSequenceStep          = "FlowSequenceStep"
+	NodeLabelFlowAction                = "FlowAction"
+	NodeLabelFlowContact               = "FlowContact"
+	NodeLabelFlowActionSender          = "FlowActionSender"
 )
 
 func NodeLabelWithTenant(label string, tenant string) string {

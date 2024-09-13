@@ -12,39 +12,34 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
-// Sequences is the resolver for the sequences field.
-func (r *flowResolver) Sequences(ctx context.Context, obj *model.Flow) ([]*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: Sequences - sequences"))
-}
-
-// Flow is the resolver for the flow field.
-func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence) (*model.Flow, error) {
-	panic(fmt.Errorf("not implemented: Flow - flow"))
-}
-
-// Steps is the resolver for the steps field.
-func (r *flowSequenceResolver) Steps(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceStep, error) {
-	panic(fmt.Errorf("not implemented: Steps - steps"))
+// Actions is the resolver for the actions field.
+func (r *flowResolver) Actions(ctx context.Context, obj *model.Flow) ([]*model.FlowAction, error) {
+	panic(fmt.Errorf("not implemented: Actions - actions"))
 }
 
 // Contacts is the resolver for the contacts field.
-func (r *flowSequenceResolver) Contacts(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceContact, error) {
+func (r *flowResolver) Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error) {
 	panic(fmt.Errorf("not implemented: Contacts - contacts"))
 }
 
 // Senders is the resolver for the senders field.
-func (r *flowSequenceResolver) Senders(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceSender, error) {
+func (r *flowActionResolver) Senders(ctx context.Context, obj *model.FlowAction) ([]*model.FlowActionSender, error) {
 	panic(fmt.Errorf("not implemented: Senders - senders"))
 }
 
+// User is the resolver for the user field.
+func (r *flowActionSenderResolver) User(ctx context.Context, obj *model.FlowActionSender) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: User - user"))
+}
+
 // Contact is the resolver for the contact field.
-func (r *flowSequenceContactResolver) Contact(ctx context.Context, obj *model.FlowSequenceContact) (*model.Contact, error) {
+func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContact) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: Contact - contact"))
 }
 
-// Email is the resolver for the email field.
-func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.FlowSequenceContact) (*model.Email, error) {
-	panic(fmt.Errorf("not implemented: Email - email"))
+// FlowMerge is the resolver for the flow_Merge field.
+func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeInput) (*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: FlowMerge - flow_Merge"))
 }
 
 // FlowChangeStatus is the resolver for the flow_changeStatus field.
@@ -52,54 +47,39 @@ func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, stat
 	panic(fmt.Errorf("not implemented: FlowChangeStatus - flow_changeStatus"))
 }
 
-// FlowSequenceCreate is the resolver for the flow_sequence_Create field.
-func (r *mutationResolver) FlowSequenceCreate(ctx context.Context, input model.FlowSequenceCreateInput) (*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceCreate - flow_sequence_Create"))
+// FlowContactAdd is the resolver for the flowContact_Add field.
+func (r *mutationResolver) FlowContactAdd(ctx context.Context, flowID string, contactID string) (*model.FlowContact, error) {
+	panic(fmt.Errorf("not implemented: FlowContactAdd - flowContact_Add"))
 }
 
-// FlowSequenceUpdate is the resolver for the flow_sequence_Update field.
-func (r *mutationResolver) FlowSequenceUpdate(ctx context.Context, input model.FlowSequenceUpdateInput) (*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceUpdate - flow_sequence_Update"))
+// FlowContactDelete is the resolver for the flowContact_Delete field.
+func (r *mutationResolver) FlowContactDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowContactDelete - flowContact_Delete"))
 }
 
-// FlowSequenceChangeStatus is the resolver for the flow_sequence_changeStatus field.
-func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status model.FlowSequenceStatus) (*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceChangeStatus - flow_sequence_changeStatus"))
+// FlowActionMerge is the resolver for the flowAction_Merge field.
+func (r *mutationResolver) FlowActionMerge(ctx context.Context, flowID string, input model.FlowActionMergeInput) (*model.FlowAction, error) {
+	panic(fmt.Errorf("not implemented: FlowActionMerge - flowAction_Merge"))
 }
 
-// FlowSequenceStepMerge is the resolver for the flow_sequence_step_Merge field.
-func (r *mutationResolver) FlowSequenceStepMerge(ctx context.Context, sequenceID string, input model.FlowSequenceStepMergeInput) (*model.FlowSequenceStep, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceStepMerge - flow_sequence_step_Merge"))
+// FlowActionChangeIndex is the resolver for the flowAction_ChangeIndex field.
+func (r *mutationResolver) FlowActionChangeIndex(ctx context.Context, id string, index int64) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowActionChangeIndex - flowAction_ChangeIndex"))
 }
 
-// FlowSequenceStepChangeIndex is the resolver for the flow_sequence_step_ChangeIndex field.
-func (r *mutationResolver) FlowSequenceStepChangeIndex(ctx context.Context, id string, index int64) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceStepChangeIndex - flow_sequence_step_ChangeIndex"))
+// FlowActionChangeStatus is the resolver for the flowAction_ChangeStatus field.
+func (r *mutationResolver) FlowActionChangeStatus(ctx context.Context, id string, status model.FlowActionStatus) (*model.FlowAction, error) {
+	panic(fmt.Errorf("not implemented: FlowActionChangeStatus - flowAction_ChangeStatus"))
 }
 
-// FlowSequenceStepChangeStatus is the resolver for the flow_sequence_step_changeStatus field.
-func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceStepChangeStatus - flow_sequence_step_changeStatus"))
+// FlowActionSenderMerge is the resolver for the flowActionSender_Merge field.
+func (r *mutationResolver) FlowActionSenderMerge(ctx context.Context, flowActionID string, input model.FlowActionSenderMergeInput) (*model.FlowActionSender, error) {
+	panic(fmt.Errorf("not implemented: FlowActionSenderMerge - flowActionSender_Merge"))
 }
 
-// FlowSequenceLinkContact is the resolver for the flow_sequence_LinkContact field.
-func (r *mutationResolver) FlowSequenceLinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.FlowSequenceContact, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceLinkContact - flow_sequence_LinkContact"))
-}
-
-// FlowSequenceUnlinkContact is the resolver for the flow_sequence_UnlinkContact field.
-func (r *mutationResolver) FlowSequenceUnlinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkContact - flow_sequence_UnlinkContact"))
-}
-
-// FlowSequenceLinkSender is the resolver for the flow_sequence_LinkSender field.
-func (r *mutationResolver) FlowSequenceLinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.FlowSequenceSender, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceLinkSender - flow_sequence_LinkSender"))
-}
-
-// FlowSequenceUnlinkSender is the resolver for the flow_sequence_UnlinkSender field.
-func (r *mutationResolver) FlowSequenceUnlinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkSender - flow_sequence_UnlinkSender"))
+// FlowActionSenderDelete is the resolver for the flowActionSender_Delete field.
+func (r *mutationResolver) FlowActionSenderDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowActionSenderDelete - flowActionSender_Delete"))
 }
 
 // Flows is the resolver for the flows field.
@@ -107,27 +87,101 @@ func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: Flows - flows"))
 }
 
-// Sequences is the resolver for the sequences field.
-func (r *queryResolver) Sequences(ctx context.Context) ([]*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: Sequences - sequences"))
-}
-
 // Mailboxes is the resolver for the mailboxes field.
-func (r *queryResolver) Mailboxes(ctx context.Context) ([]*model.Mailbox, error) {
+func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
 	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
 }
 
 // Flow returns generated.FlowResolver implementation.
 func (r *Resolver) Flow() generated.FlowResolver { return &flowResolver{r} }
 
-// FlowSequence returns generated.FlowSequenceResolver implementation.
-func (r *Resolver) FlowSequence() generated.FlowSequenceResolver { return &flowSequenceResolver{r} }
+// FlowAction returns generated.FlowActionResolver implementation.
+func (r *Resolver) FlowAction() generated.FlowActionResolver { return &flowActionResolver{r} }
 
-// FlowSequenceContact returns generated.FlowSequenceContactResolver implementation.
+// FlowActionSender returns generated.FlowActionSenderResolver implementation.
+func (r *Resolver) FlowActionSender() generated.FlowActionSenderResolver {
+	return &flowActionSenderResolver{r}
+}
+
+// FlowContact returns generated.FlowContactResolver implementation.
+func (r *Resolver) FlowContact() generated.FlowContactResolver { return &flowContactResolver{r} }
+
+type flowResolver struct{ *Resolver }
+type flowActionResolver struct{ *Resolver }
+type flowActionSenderResolver struct{ *Resolver }
+type flowContactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *flowResolver) Sequences(ctx context.Context, obj *model.Flow) ([]*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+}
+func (r *flowSequenceResolver) Flow(ctx context.Context, obj *model.FlowSequence) (*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: Flow - flow"))
+}
+func (r *flowSequenceResolver) Steps(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: Steps - steps"))
+}
+func (r *flowSequenceResolver) Contacts(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceContact, error) {
+	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+}
+func (r *flowSequenceResolver) Senders(ctx context.Context, obj *model.FlowSequence) ([]*model.FlowSequenceSender, error) {
+	panic(fmt.Errorf("not implemented: Senders - senders"))
+}
+func (r *flowSequenceContactResolver) Contact(ctx context.Context, obj *model.FlowSequenceContact) (*model.Contact, error) {
+	panic(fmt.Errorf("not implemented: Contact - contact"))
+}
+func (r *flowSequenceContactResolver) Email(ctx context.Context, obj *model.FlowSequenceContact) (*model.Email, error) {
+	panic(fmt.Errorf("not implemented: Email - email"))
+}
+func (r *mutationResolver) FlowSequenceCreate(ctx context.Context, input model.FlowSequenceCreateInput) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceCreate - flow_sequence_Create"))
+}
+func (r *mutationResolver) FlowSequenceUpdate(ctx context.Context, input model.FlowSequenceUpdateInput) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceUpdate - flow_sequence_Update"))
+}
+func (r *mutationResolver) FlowSequenceChangeStatus(ctx context.Context, id string, status model.FlowSequenceStatus) (*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceChangeStatus - flow_sequence_changeStatus"))
+}
+func (r *mutationResolver) FlowSequenceStepMerge(ctx context.Context, sequenceID string, input model.FlowSequenceStepMergeInput) (*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: FlowActionMerge - flow_sequence_step_Merge"))
+}
+func (r *mutationResolver) FlowSequenceStepChangeIndex(ctx context.Context, id string, index int64) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowActionChangeIndex - flow_sequence_step_ChangeIndex"))
+}
+func (r *mutationResolver) FlowSequenceStepChangeStatus(ctx context.Context, id string, status model.FlowSequenceStepStatus) (*model.FlowSequenceStep, error) {
+	panic(fmt.Errorf("not implemented: FlowActionChangeStatus - flow_sequence_step_changeStatus"))
+}
+func (r *mutationResolver) FlowSequenceLinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.FlowSequenceContact, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceLinkContact - flow_sequence_LinkContact"))
+}
+func (r *mutationResolver) FlowSequenceUnlinkContact(ctx context.Context, sequenceID string, contactID string, emailID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkContact - flow_sequence_UnlinkContact"))
+}
+func (r *mutationResolver) FlowSequenceSenderMerge(ctx context.Context, sequenceID string, input model.FlowSequenceSenderMergeInput) (*model.FlowSequenceSender, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceSenderMerge - flow_sequence_sender_Merge"))
+}
+func (r *mutationResolver) FlowSequenceSenderDelete(ctx context.Context, flowSequenceSenderID string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowActionSenderDelete - flow_sequence_sender_Delete"))
+}
+func (r *queryResolver) Sequences(ctx context.Context) ([]*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+}
+func (r *Resolver) FlowSequence() generated.FlowSequenceResolver { return &flowSequenceResolver{r} }
 func (r *Resolver) FlowSequenceContact() generated.FlowSequenceContactResolver {
 	return &flowSequenceContactResolver{r}
 }
 
-type flowResolver struct{ *Resolver }
 type flowSequenceResolver struct{ *Resolver }
 type flowSequenceContactResolver struct{ *Resolver }
+
+func (r *mutationResolver) FlowSequenceLinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.FlowSequenceSender, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceLinkSender - flow_sequence_LinkSender"))
+}
+func (r *mutationResolver) FlowSequenceUnlinkSender(ctx context.Context, sequenceID string, mailbox string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowSequenceUnlinkSender - flow_sequence_UnlinkSender"))
+}

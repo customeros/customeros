@@ -73,9 +73,9 @@ func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model
 	panic(fmt.Errorf("not implemented: Owner - owner"))
 }
 
-// Sequences is the resolver for the sequences field.
-func (r *contactResolver) Sequences(ctx context.Context, obj *model.Contact) ([]*model.FlowSequence, error) {
-	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+// Flows is the resolver for the flows field.
+func (r *contactResolver) Flows(ctx context.Context, obj *model.Contact) ([]*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: Flows - flows"))
 }
 
 // TimelineEvents is the resolver for the timelineEvents field.
@@ -207,6 +207,9 @@ type contactResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *contactResolver) Sequences(ctx context.Context, obj *model.Contact) ([]*model.FlowSequence, error) {
+	panic(fmt.Errorf("not implemented: Sequences - sequences"))
+}
 func (r *contactResolver) Notes(ctx context.Context, obj *model.Contact, pagination *model.Pagination) (*model.NotePage, error) {
 	panic(fmt.Errorf("not implemented: Notes - notes"))
 }

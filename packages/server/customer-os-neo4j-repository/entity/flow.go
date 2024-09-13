@@ -17,32 +17,7 @@ type FlowEntity struct {
 
 type FlowEntities []FlowEntity
 
-type FlowSequenceEntity struct {
-	DataLoaderKey
-	Id          string
-	CreatedAt   time.Time
-	UpdatedAt   time.Time
-	Name        string
-	Description string
-	Status      FlowSequenceStatus
-
-	////Schedule
-	ActiveDaysString string `gorm:"type:varchar(255)" json:"-"`
-
-	ActiveTimeWindowStart    string `gorm:"type:varchar(255)" json:"activeTimeWindowStart"` //09:00:00
-	ActiveTimeWindowEnd      string `gorm:"type:varchar(255)" json:"activeTimeWindowEnd"`   //18:00:00
-	PauseOnHolidays          bool   `json:"pauseOnHolidays"`
-	RespectRecipientTimezone bool   `json:"respectRecipientTimezone"`
-
-	MinutesDelayBetweenEmails int `json:"minutesDelayBetweenEmails"`
-
-	EmailsPerMailboxPerHour int `json:"emailsPerMailboxPerHour"`
-	EmailsPerMailboxPerDay  int `json:"emailsPerMailboxPerDay"`
-}
-
-type FlowSequenceEntities []FlowSequenceEntity
-
-type FlowSequenceStepEntity struct {
+type FlowActionEntity struct {
 	DataLoaderKey
 	Id        string
 	CreatedAt time.Time
@@ -51,62 +26,63 @@ type FlowSequenceStepEntity struct {
 	Name  string
 	Index int64
 
-	Status FlowSequenceStepStatus
+	Status FlowActionStatus
 
-	Action     FlowSequenceStepAction
-	ActionData FlowSequenceStepActionData
+	ActionType FlowActionType
+	ActionData FlowActionData
 }
 
-type FlowSequenceStepEntities []FlowSequenceStepEntity
+type FlowActionEntities []FlowActionEntity
 
-type FlowSequenceStepActionData struct {
-	Wait                      *FlowSequenceStepActionDataWait
-	EmailNew                  *FlowSequenceStepActionDataEmail
-	EmailReply                *FlowSequenceStepActionDataEmail
-	LinkedinConnectionRequest *FlowSequenceStepActionDataLinkedinConnectionRequest
-	LinkedinMessage           *FlowSequenceStepActionDataLinkedinMessage
+type FlowActionData struct {
+	Wait                      *FlowActionDataWait
+	EmailNew                  *FlowActionDataEmail
+	EmailReply                *FlowActionDataEmail
+	LinkedinConnectionRequest *FlowActionDataLinkedinConnectionRequest
+	LinkedinMessage           *FlowActionDataLinkedinMessage
 }
 
-type FlowSequenceStepActionDataEmail struct {
-	StepID       *string
+type FlowActionDataEmail struct {
+	ReplyToId    *string
 	Subject      string
 	BodyTemplate string
 }
 
-type FlowSequenceStepActionDataLinkedinConnectionRequest struct {
+type FlowActionDataLinkedinConnectionRequest struct {
 	MessageTemplate string
 }
 
-type FlowSequenceStepActionDataLinkedinMessage struct {
+type FlowActionDataLinkedinMessage struct {
 	MessageTemplate string
 }
 
-type FlowSequenceStepActionDataWait struct {
+type FlowActionDataWait struct {
 	Minutes int64
 }
 
-type FlowSequenceContactEntity struct {
+type FlowContactEntity struct {
 	DataLoaderKey
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
 	ContactId string
-	EmailId   string
 }
 
-type FlowSequenceContactEntities []FlowSequenceContactEntity
+type FlowContactEntities []FlowContactEntity
 
-type FlowSequenceSenderEntity struct {
+type FlowActionSenderEntity struct {
 	DataLoaderKey
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Mailbox string
+	Mailbox       *string
+	EmailsPerHour *int64
+	UserId        *string
 }
 
-type FlowSequenceSenderEntities []FlowSequenceSenderEntity
+type FlowActionSenderEntities []FlowActionSenderEntity
 
 type FlowStatus string
 
@@ -134,29 +110,29 @@ func GetFlowSequenceStatus(s string) FlowSequenceStatus {
 	return FlowSequenceStatus(s)
 }
 
-type FlowSequenceStepStatus string
+type FlowActionStatus string
 
 const (
-	FlowSequenceStepStatusInactive FlowSequenceStepStatus = "INACTIVE"
-	FlowSequenceStepStatusActive   FlowSequenceStepStatus = "ACTIVE"
-	FlowSequenceStepStatusPaused   FlowSequenceStepStatus = "PAUSED"
-	FlowSequenceStepStatusArchived FlowSequenceStepStatus = "ARCHIVED"
+	FlowActionStatusInactive FlowActionStatus = "INACTIVE"
+	FlowActionStatusActive   FlowActionStatus = "ACTIVE"
+	FlowActionStatusPaused   FlowActionStatus = "PAUSED"
+	FlowActionStatusArchived FlowActionStatus = "ARCHIVED"
 )
 
-func GetFlowSequenceStepStatus(s string) FlowSequenceStepStatus {
-	return FlowSequenceStepStatus(s)
+func GetFlowActionStatus(s string) FlowActionStatus {
+	return FlowActionStatus(s)
 }
 
-type FlowSequenceStepAction string
+type FlowActionType string
 
 const (
-	FlowSequenceStepActionWait                      FlowSequenceStepAction = "WAIT"
-	FlowSequenceStepActionEmailNew                  FlowSequenceStepAction = "EMAIL_NEW"
-	FlowSequenceStepActionEmailReply                FlowSequenceStepAction = "EMAIL_REPLY"
-	FlowSequenceStepActionLinkedinConnectionRequest FlowSequenceStepAction = "LINKEDIN_CONNECTION_REQUEST"
-	FlowSequenceStepActionLinkedinMessage           FlowSequenceStepAction = "LINKEDIN_MESSAGE"
+	FlowActionTypeWait                      FlowActionType = "WAIT"
+	FlowActionTypeEmailNew                  FlowActionType = "EMAIL_NEW"
+	FlowActionTypeEmailReply                FlowActionType = "EMAIL_REPLY"
+	FlowActionTypeLinkedinConnectionRequest FlowActionType = "LINKEDIN_CONNECTION_REQUEST"
+	FlowActionTypeLinkedinMessage           FlowActionType = "LINKEDIN_MESSAGE"
 )
 
-func GetFlowSequenceStepAction(s string) FlowSequenceStepAction {
-	return FlowSequenceStepAction(s)
+func GetFlowActionType(s string) FlowActionType {
+	return FlowActionType(s)
 }
