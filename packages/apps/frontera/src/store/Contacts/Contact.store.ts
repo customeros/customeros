@@ -492,11 +492,7 @@ const CONTACT_QUERY = gql`
       metadata {
         id
       }
-      sequences {
-        metadata {
-          id
-        }
-      }
+
       tags {
         metadata {
           id
@@ -608,8 +604,8 @@ const getDefaultValue = (): Contact => ({
     totalElements: 0,
     totalAvailable: 0,
   },
-  socials: [],
   sequences: [],
+  socials: [],
   timezone: '',
   source: DataSource.Openline,
   sourceOfTruth: DataSource.Openline,

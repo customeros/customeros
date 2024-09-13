@@ -362,11 +362,6 @@ const CONTACTS_QUERY = gql`
         metadata {
           id
         }
-        sequences {
-          metadata {
-            id
-          }
-        }
         tags {
           metadata {
             id
