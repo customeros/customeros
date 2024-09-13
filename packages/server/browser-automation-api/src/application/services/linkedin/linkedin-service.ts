@@ -80,13 +80,14 @@ export class LinkedinService {
   }
 
   private static async handleError(
-    arr: unknown,
+    err: unknown,
     cb?: (err: StandardError) => void,
   ) {
-    const error = ErrorParser.parse(arr);
+    const error = ErrorParser.parse(err);
     logger.error("Error in LinkedinService", {
       error: error.message,
-      details: error.details,
+      details: error.details ?? error.reference,
+      source: "LinkedinService",
     });
     cb?.(error);
   }

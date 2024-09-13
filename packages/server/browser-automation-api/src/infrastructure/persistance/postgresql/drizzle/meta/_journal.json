@@ -15,6 +15,20 @@
       "when": 1725529027895,
       "tag": "0001_same_black_widow",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1726132140191,
+      "tag": "0002_grey_molten_man",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1726212793506,
+      "tag": "0003_goofy_leech",
+      "breakpoints": true
     }
   ]
 }

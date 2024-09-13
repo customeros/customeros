@@ -1180,12 +1180,20 @@ export const oauthToken = pgTable(
   },
 );
 
+export const browserConfigSessionStatus = pgEnum(
+  "browser_config_session_status",
+  ["VALID", "INVALID", "EXPIRED"],
+);
+
 export const browserConfigs = pgTable("browser_configs", {
   id: serial("id").primaryKey(),
   userId: varchar("user_id", { length: 36 }).notNull().unique(),
   tenant: text("tenant").notNull(),
   cookies: text("cookies"),
   userAgent: text("user_agent"),
+  sessionStatus: browserConfigSessionStatus("session_status")
+    .notNull()
+    .default("VALID"),
   createdAt: timestamp("created_at", { mode: "string" }).default(
     sql`CURRENT_TIMESTAMP`,
   ),
@@ -1286,6 +1294,7 @@ export const browserAutomationRunErrors = pgTable(
       sql`CURRENT_TIMESTAMP`,
     ),
     errorType: varchar("error_type", { length: 100 }).notNull(),
+    errorCode: varchar("error_code", { length: 50 }),
     errorMessage: text("error_message").notNull(),
     errorDetails: text("error_details"),
   },

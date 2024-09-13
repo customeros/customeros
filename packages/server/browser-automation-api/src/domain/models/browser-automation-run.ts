@@ -10,7 +10,8 @@ import {
   type BrowserAutomationRunTrigger,
   BrowserAutomationRunsRepository,
 } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-runs-repository";
-import { BrowserAutomationRunErrorsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-errors-repository";
+import { type BrowserConfigsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-configs-repository";
+import { type BrowserAutomationRunErrorsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-errors-repository";
 import { type BrowserAutomationRunResultsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-results-repository";
 
 export type BrowserAutomationRunPayload = Pick<
@@ -102,6 +103,7 @@ export class BrowserAutomationRun {
     automationRepository: BrowserAutomationRunsRepository,
     resultsRepository: BrowserAutomationRunResultsRepository,
     errorsRepository: BrowserAutomationRunErrorsRepository,
+    configRepository: BrowserConfigsRepository,
   ): JobParams | null {
     const payload = BrowserAutomationRun.parsePayload(this.payload);
 
@@ -122,7 +124,7 @@ export class BrowserAutomationRun {
                 onStart: async () => {
                   await this.updateStatus("RUNNING", automationRepository);
                   logger.info("Sending message", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onSuccess: async () => {
@@ -136,7 +138,7 @@ export class BrowserAutomationRun {
                     }),
                   });
                   logger.info("Message sent", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onError: async (err) => {
@@ -145,10 +147,18 @@ export class BrowserAutomationRun {
                     runId: this.id,
                     errorMessage: err.message,
                     errorDetails: err.details,
+                    errorCode: err.reference,
                     errorType: err.code,
                   });
+                  if (err.reference === "S001") {
+                    await configRepository.updateByUserId({
+                      userId: this.userId,
+                      tenant: this.tenant,
+                      sessionStatus: "INVALID",
+                    });
+                  }
                   logger.error("Failed to send message", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                   completeTick();
                 },
@@ -174,7 +184,7 @@ export class BrowserAutomationRun {
                 onStart: async () => {
                   this.updateStatus("RUNNING", automationRepository);
                   logger.info("Sending connection invite", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onSuccess: async () => {
@@ -188,7 +198,7 @@ export class BrowserAutomationRun {
                     }),
                   });
                   logger.info("Connection request sent", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                 },
                 onError: async (err) => {
@@ -197,10 +207,18 @@ export class BrowserAutomationRun {
                     runId: this.id,
                     errorMessage: err.message,
                     errorDetails: err.details,
+                    errorCode: err.reference,
                     errorType: err.code,
                   });
+                  if (err.reference === "S001") {
+                    await configRepository.updateByUserId({
+                      userId: this.userId,
+                      tenant: this.tenant,
+                      sessionStatus: "INVALID",
+                    });
+                  }
                   logger.error("Failed to send connection invite", {
-                    profileUrl: payload?.profileUrl,
+                    source: "BrowserAutomationRun",
                   });
                   completeTick();
                 },
@@ -222,15 +240,35 @@ export class BrowserAutomationRun {
               dryRun: payload?.dryRun,
               onStart: async () => {
                 await this.updateStatus("RUNNING", automationRepository);
-                logger.info("Scraping connections");
+                logger.info("Scraping connections", {
+                  source: "BrowserAutomationRun",
+                });
               },
               onSuccess: async () => {
                 this.updateStatus("COMPLETED", automationRepository);
-                logger.info("Connections scraped");
+                logger.info("Connections scraped", {
+                  source: "BrowserAutomationRun",
+                });
               },
-              onError: async () => {
+              onError: async (err) => {
                 this.updateStatus("FAILED", automationRepository);
-                logger.error("Failed to scrape connections");
+                logger.error("Failed to scrape connections", {
+                  source: "BrowserAutomationRun",
+                });
+                await errorsRepository.insert({
+                  runId: this.id,
+                  errorMessage: err.message,
+                  errorDetails: err.details,
+                  errorCode: err.reference,
+                  errorType: err.code,
+                });
+                if (err.reference === "S001") {
+                  await configRepository.updateByUserId({
+                    userId: this.userId,
+                    tenant: this.tenant,
+                    sessionStatus: "INVALID",
+                  });
+                }
                 completeTick();
               },
             });

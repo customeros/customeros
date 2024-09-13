@@ -43,7 +43,9 @@ export class Browser {
       });
     }
 
-    logger.debug("returning browser instance");
+    logger.debug("returning browser instance", {
+      source: "Browser",
+    });
     return instance;
   }
 
@@ -54,6 +56,20 @@ export class Browser {
           if (this.debug) {
             this.browser = await chromium.launch({
               headless: false,
+              logger: {
+                isEnabled: (_name, severity) => true,
+                log: (_name, _severity, message, _args) => {
+                  if (message instanceof Error) {
+                    return logger.error(message.message, {
+                      source: "Playwright",
+                    });
+                  }
+
+                  return logger.info(message, {
+                    source: "Playwright",
+                  });
+                },
+              },
             });
           } else {
             if (!apiKey || !bcatUrl) {
@@ -64,7 +80,9 @@ export class Browser {
               });
             }
 
-            logger.info("Connecting to Browsercat");
+            logger.info("Connecting to Browsercat", {
+              source: "Browser",
+            });
             const browser = await chromium.connect(bcatUrl, {
               headers: {
                 "api-key": apiKey,
@@ -73,7 +91,9 @@ export class Browser {
             });
             this.browser = browser;
           }
-          logger.info("Browser initialized successfully");
+          logger.info("Browser initialized successfully", {
+            source: "Browser",
+          });
           resolve();
         } catch (err) {
           const error = ErrorParser.parse(err);

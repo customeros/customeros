@@ -4,6 +4,7 @@ import {
   BrowserConfigTable,
   BrowserConfigInsert,
   BrowserConfigsRepository,
+  BrowserConfigSessionStatus,
 } from "@/infrastructure/persistance/postgresql/repositories/browser-configs-repository";
 
 export type BrowserConfigPayload = Pick<
@@ -19,6 +20,7 @@ export class BrowserConfig {
   userAgent: string | null = null;
   createdAt: string | null = null;
   updatedAt: string | null = null;
+  sessionStatus: BrowserConfigSessionStatus;
 
   constructor(values: BrowserConfigTable) {
     this.id = values.id;
@@ -28,6 +30,7 @@ export class BrowserConfig {
     this.userAgent = values.userAgent;
     this.createdAt = values.createdAt;
     this.updatedAt = values.updatedAt;
+    this.sessionStatus = values.sessionStatus;
   }
 
   static async create(
