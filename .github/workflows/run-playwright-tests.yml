@@ -2,11 +2,6 @@ name: Playwright Tests
 
 on:
   workflow_dispatch:
-  repository_dispatch:
-    types:
-      - frontera-app * deployed
-      - frontera-middleware * deployed
-      - realtime-api * deployed
 
 concurrency:
   group: ${{ github.workflow }}-global
@@ -23,14 +18,32 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
-          cache-dependency-path: './packages/apps/frontera/package-lock.json'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        id: npm-cache
+        with:
+          path: |
+            ~/.npm
+            ./packages/apps/frontera/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
 
       - name: Install dependencies
+        if: steps.npm-cache.outputs.cache-hit != 'true'
         run: npm ci
         working-directory: ./packages/apps/frontera
 
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ hashFiles('**/package-lock.json') }}
+
       - name: Install Playwright browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
         working-directory: ./packages/apps/frontera
 
