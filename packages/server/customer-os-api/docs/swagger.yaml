@@ -456,67 +456,6 @@ definitions:
         example: 192.0.2.1
         type: string
     type: object
-  restmailstack.MailboxConfig:
-    description: Mailbox object containing username, password, and other configurations
-    properties:
-      forwardingEnabled:
-        description: |-
-          ForwardingEnabled indicates if forwarding is enabled for the mailbox
-          Example: true
-        example: true
-        type: boolean
-      forwardingTo:
-        description: |-
-          ForwardingTo specifies the email address to forward mails to if forwarding is enabled
-          Example: forward@example.com
-        example: forward@example.com
-        type: string
-      password:
-        description: |-
-          Password for the mailbox
-          Required: true
-          Example: strongpassword
-        example: strongpassword
-        type: string
-      username:
-        description: |-
-          Username of the mailbox
-          Required: true
-          Example: user@example.com
-        example: user@example.com
-        type: string
-      webmailEnabled:
-        description: |-
-          WebmailEnabled indicates if webmail access is enabled for the mailbox
-          Example: false
-        example: false
-        type: boolean
-    required:
-    - password
-    - username
-    type: object
-  restmailstack.MailboxResponse:
-    description: Mailbox object in the response
-    properties:
-      createdAt:
-        description: |-
-          CreatedAt is the date and time the mailbox was created
-          Example: 2021-09-01T12:00:00Z
-        example: "2021-09-01T12:00:00Z"
-        type: string
-      email:
-        description: |-
-          Email is the email address for the mailbox
-          Example: user@example.com
-        example: user@example.com
-        type: string
-      lastUpdatedAt:
-        description: |-
-          LastUpdatedAt is the date and time the mailbox was last updated
-          Example: 2021-09-01T12:00:00Z
-        example: "2021-09-01T12:00:00Z"
-        type: string
-    type: object
   restmailstack.RegisterNewDomainRequest:
     description: Request body for domain registration
     properties:
@@ -527,31 +466,15 @@ definitions:
           Example: example.com
         example: example.com
         type: string
-      mailboxes:
-        description: |-
-          Mailboxes is a list of mailboxes to be configured under the domain
-          Required: true
-        items:
-          $ref: '#/definitions/restmailstack.MailboxConfig'
-        type: array
-    required:
-    - domain
-    - mailboxes
     type: object
   restmailstack.RegisterNewDomainResponse:
     description: Response body for a successful domain registration
     properties:
-      autoRenew:
+      createdDate:
         description: |-
-          AutoRenew indicates whether the domain will be automatically renewed upon expiration
-          Example: true
-        example: true
-        type: boolean
-      createdAt:
-        description: |-
-          CreatedAt is the date and time the domain was registered
-          Example: 2021-09-01T12:00:00Z
-        example: "2021-09-01T12:00:00Z"
+          CreatedDate is the date the domain was registered
+          Example: 09/14/2024
+        example: 09/14/2024
         type: string
       dnsRecords:
         description: DnsRecords provides a list of DNS records associated with the
@@ -565,23 +488,12 @@ definitions:
           Example: example.com
         example: example.com
         type: string
-      expiresAt:
+      expiredDate:
         description: |-
-          ExpiresAt is the date and time when the domain registration will expire
-          Example: 2022-09-01T12:00:00Z
-        example: "2022-09-01T12:00:00Z"
+          ExpiredDate is the date when the domain registration will expire
+          Example: 09/14/2025
+        example: 09/14/2025
         type: string
-      lastUpdatedAt:
-        description: |-
-          LastUpdatedAt is the date and time the domain registration was last updated
-          Example: 2021-09-01T12:00:00Z
-        example: "2021-09-01T12:00:00Z"
-        type: string
-      mailboxes:
-        description: Mailboxes provides a list of mailboxes associated with the domain
-        items:
-          $ref: '#/definitions/restmailstack.MailboxResponse'
-        type: array
       message:
         description: |-
           Message provides additional information about the registration
@@ -1026,8 +938,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Registers a new domain with a list of mailboxes in the MailStack
-        system.
+      description: Registers a new domain
       parameters:
       - description: Domain registration payload
         in: body
@@ -1046,6 +957,10 @@ paths:
           description: Invalid request body or missing input fields
         "401":
           description: Unauthorized access - API key invalid or expired
+        "406":
+          description: Restrictions on domain purchase
+        "409":
+          description: Domain is already registered
         "500":
           description: Internal server error
       security:

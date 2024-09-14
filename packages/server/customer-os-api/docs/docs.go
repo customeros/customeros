@@ -240,7 +240,7 @@ const docTemplate = `{
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Registers a new domain with a list of mailboxes in the MailStack system.",
+                "description": "Registers a new domain",
                 "consumes": [
                     "application/json"
                 ],
@@ -274,6 +274,12 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized access - API key invalid or expired"
+                    },
+                    "406": {
+                        "description": "Restrictions on domain purchase"
+                    },
+                    "409": {
+                        "description": "Domain is already registered"
                     },
                     "500": {
                         "description": "Internal server error"
@@ -1053,81 +1059,14 @@ const docTemplate = `{
                 }
             }
         },
-        "restmailstack.MailboxConfig": {
-            "description": "Mailbox object containing username, password, and other configurations",
-            "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
-            "properties": {
-                "forwardingEnabled": {
-                    "description": "ForwardingEnabled indicates if forwarding is enabled for the mailbox\nExample: true",
-                    "type": "boolean",
-                    "example": true
-                },
-                "forwardingTo": {
-                    "description": "ForwardingTo specifies the email address to forward mails to if forwarding is enabled\nExample: forward@example.com",
-                    "type": "string",
-                    "example": "forward@example.com"
-                },
-                "password": {
-                    "description": "Password for the mailbox\nRequired: true\nExample: strongpassword",
-                    "type": "string",
-                    "example": "strongpassword"
-                },
-                "username": {
-                    "description": "Username of the mailbox\nRequired: true\nExample: user@example.com",
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "webmailEnabled": {
-                    "description": "WebmailEnabled indicates if webmail access is enabled for the mailbox\nExample: false",
-                    "type": "boolean",
-                    "example": false
-                }
-            }
-        },
-        "restmailstack.MailboxResponse": {
-            "description": "Mailbox object in the response",
-            "type": "object",
-            "properties": {
-                "createdAt": {
-                    "description": "CreatedAt is the date and time the mailbox was created\nExample: 2021-09-01T12:00:00Z",
-                    "type": "string",
-                    "example": "2021-09-01T12:00:00Z"
-                },
-                "email": {
-                    "description": "Email is the email address for the mailbox\nExample: user@example.com",
-                    "type": "string",
-                    "example": "user@example.com"
-                },
-                "lastUpdatedAt": {
-                    "description": "LastUpdatedAt is the date and time the mailbox was last updated\nExample: 2021-09-01T12:00:00Z",
-                    "type": "string",
-                    "example": "2021-09-01T12:00:00Z"
-                }
-            }
-        },
         "restmailstack.RegisterNewDomainRequest": {
             "description": "Request body for domain registration",
             "type": "object",
-            "required": [
-                "domain",
-                "mailboxes"
-            ],
             "properties": {
                 "domain": {
                     "description": "Domain is the domain name to be registered\nRequired: true\nExample: example.com",
                     "type": "string",
                     "example": "example.com"
-                },
-                "mailboxes": {
-                    "description": "Mailboxes is a list of mailboxes to be configured under the domain\nRequired: true",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/restmailstack.MailboxConfig"
-                    }
                 }
             }
         },
@@ -1135,15 +1074,10 @@ const docTemplate = `{
             "description": "Response body for a successful domain registration",
             "type": "object",
             "properties": {
-                "autoRenew": {
-                    "description": "AutoRenew indicates whether the domain will be automatically renewed upon expiration\nExample: true",
-                    "type": "boolean",
-                    "example": true
-                },
-                "createdAt": {
-                    "description": "CreatedAt is the date and time the domain was registered\nExample: 2021-09-01T12:00:00Z",
+                "createdDate": {
+                    "description": "CreatedDate is the date the domain was registered\nExample: 09/14/2024",
                     "type": "string",
-                    "example": "2021-09-01T12:00:00Z"
+                    "example": "09/14/2024"
                 },
                 "dnsRecords": {
                     "description": "DnsRecords provides a list of DNS records associated with the domain",
@@ -1157,22 +1091,10 @@ const docTemplate = `{
                     "type": "string",
                     "example": "example.com"
                 },
-                "expiresAt": {
-                    "description": "ExpiresAt is the date and time when the domain registration will expire\nExample: 2022-09-01T12:00:00Z",
+                "expiredDate": {
+                    "description": "ExpiredDate is the date when the domain registration will expire\nExample: 09/14/2025",
                     "type": "string",
-                    "example": "2022-09-01T12:00:00Z"
-                },
-                "lastUpdatedAt": {
-                    "description": "LastUpdatedAt is the date and time the domain registration was last updated\nExample: 2021-09-01T12:00:00Z",
-                    "type": "string",
-                    "example": "2021-09-01T12:00:00Z"
-                },
-                "mailboxes": {
-                    "description": "Mailboxes provides a list of mailboxes associated with the domain",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/restmailstack.MailboxResponse"
-                    }
+                    "example": "09/14/2025"
                 },
                 "message": {
                     "description": "Message provides additional information about the registration\nExample: Domain registered successfully",
