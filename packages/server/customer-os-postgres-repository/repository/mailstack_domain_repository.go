@@ -6,12 +6,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
 type MailStackDomainRepository interface {
 	RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
+	CheckDomainOwnership(ctx context.Context, tenant, domain string) (bool, error)
 }
 
 type mailStackDomainRepository struct {
@@ -34,6 +36,7 @@ func (r *mailStackDomainRepository) RegisterDomain(ctx context.Context, tenant, 
 		Domain:    domain,
 		CreatedAt: now,
 		UpdatedAt: now,
+		Active:    true,
 	}
 
 	err := r.db.Create(&mailStackDomain).Error
@@ -43,4 +46,32 @@ func (r *mailStackDomainRepository) RegisterDomain(ctx context.Context, tenant, 
 	}
 
 	return &mailStackDomain, nil
+}
+
+func (r *mailStackDomainRepository) CheckDomainOwnership(ctx context.Context, tenant, domain string) (bool, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.CheckDomainOwnership")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain)
+
+	var mailStackDomain entity.MailStackDomain
+	err := r.db.WithContext(ctx).
+		Where("tenant = ? AND domain = ? AND active = ?", tenant, domain, true).
+		First(&mailStackDomain).Error
+
+	if err != nil {
+		// If the record is not found, return false without an error
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.LogFields(tracingLog.Bool("response.exists", false))
+			return false, nil
+		}
+		// If any other error occurs, log and trace it
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return false, err
+	}
+
+	// If the record is found, return true
+	span.LogFields(tracingLog.Bool("response.exists", true))
+	return true, nil
 }
