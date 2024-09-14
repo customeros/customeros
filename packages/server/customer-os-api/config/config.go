@@ -50,13 +50,13 @@ type Config struct {
 			ApiTriggerUrlCreatePaymentLinks string `env:"INTEGRATION_APP_API_TRIGGER_URL_CREATE_PAYMENT_LINKS"`
 		}
 		Namecheap struct {
+			Url                   string  `env:"NAMECHEAP_URL" envDefault:"https://api.namecheap.com/xml.response" validate:"required"`
 			ApiKey                string  `env:"NAMECHEAP_API_KEY" validate:"required"`
 			ApiUser               string  `env:"NAMECHEAP_API_USER" validate:"required"`
 			ApiUsername           string  `env:"NAMECHEAP_API_USERNAME" validate:"required"`
 			ApiClientIp           string  `env:"NAMECHEAP_API_CLIENT_IP" validate:"required"`
 			MaxPrice              float64 `env:"NAMECHEAP_MAX_PRICE" envDefault:"20.0" validate:"required"`
 			Years                 int     `env:"NAMECHEAP_YEARS" envDefault:"1" validate:"required"`
-			AutoRenew             bool    `env:"NAMECHEAP_AUTO_RENEW" envDefault:"true" validate:"required"`
 			RegistrantFirstName   string  `env:"NAMECHEAP_REGISTRANT_FIRST_NAME" validate:"required"`
 			RegistrantLastName    string  `env:"NAMECHEAP_REGISTRANT_LAST_NAME" validate:"required"`
 			RegistrantCompanyName string  `env:"NAMECHEAP_REGISTRANT_COMPANY_NAME" validate:"required"`

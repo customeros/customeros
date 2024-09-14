@@ -25,21 +25,13 @@ type RegisterNewDomainResponse struct {
 	// Example: example.com
 	Domain string `json:"domain" example:"example.com"`
 
-	// CreatedAt is the date and time the domain was registered
-	// Example: 2021-09-01T12:00:00Z
-	CreatedAt string `json:"createdAt" example:"2021-09-01T12:00:00Z"`
+	// CreatedDate is the date the domain was registered
+	// Example: 09/14/2024
+	CreatedDate string `json:"createdDate" example:"09/14/2024"`
 
-	// ExpiresAt is the date and time when the domain registration will expire
-	// Example: 2022-09-01T12:00:00Z
-	ExpiresAt string `json:"expiresAt" example:"2022-09-01T12:00:00Z"`
-
-	// LastUpdatedAt is the date and time the domain registration was last updated
-	// Example: 2021-09-01T12:00:00Z
-	LastUpdatedAt string `json:"lastUpdatedAt" example:"2021-09-01T12:00:00Z"`
-
-	// AutoRenew indicates whether the domain will be automatically renewed upon expiration
-	// Example: true
-	AutoRenew bool `json:"autoRenew" example:"true"`
+	// ExpiredDate is the date when the domain registration will expire
+	// Example: 09/14/2025
+	ExpiredDate string `json:"expiredDate" example:"09/14/2025"`
 
 	// Nameservers lists the nameservers associated with the domain
 	// Example: [ns1.example.com, ns2.example.com]

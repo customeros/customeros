@@ -141,7 +141,7 @@ func registerDomain(ctx context.Context, tenant, domain string, services *servic
 		return registerNewDomainResponse, coserrors.ErrNotSupported
 	}
 
-	// step 1 - check domain availability
+	//step 1 - check domain availability
 	isAvailable, isPremium, err := services.NamecheapService.CheckDomainAvailability(ctx, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
@@ -164,14 +164,23 @@ func registerDomain(ctx context.Context, tenant, domain string, services *servic
 		return registerNewDomainResponse, coserrors.ErrDomainPriceExceeded
 	}
 
-	// step 3 - register domain
+	//step 3 - register domain
 	err = services.NamecheapService.PurchaseDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error purchasing domain"))
 		return registerNewDomainResponse, err
 	}
 
-	// step X - configure domain with cloudflare
+	// get domain details
+	domainInfo, err := services.NamecheapService.GetDomainInfo(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
+		return registerNewDomainResponse, err
+	}
+	registerNewDomainResponse.CreatedDate = domainInfo.CreatedDate
+	registerNewDomainResponse.ExpiredDate = domainInfo.ExpiredDate
+	registerNewDomainResponse.Nameservers = domainInfo.Nameservers
+	registerNewDomainResponse.Domain = domainInfo.DomainName
 
 	return registerNewDomainResponse, nil
 }
