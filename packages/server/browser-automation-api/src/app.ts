@@ -1,4 +1,4 @@
-import { logger, Server } from "@/infrastructure";
+import { Server } from "@/infrastructure";
 import { AuthMiddleware } from "@/infrastructure/middleware";
 import { UserRepository } from "@/infrastructure/persistance/neo4j/repositories";
 import {
@@ -10,8 +10,7 @@ import {
   BrowserRouter,
   LinkedinRouter,
 } from "@/application/interface/routes";
-import { ScheduleService } from "@/application/services/schedule-service";
-import { setTimeout } from "timers/promises";
+import { AutomationSchedulerService } from "@/application/services/automation-scheduler-service";
 
 const PORT = 3000;
 
@@ -22,7 +21,7 @@ export class App {
     new BrowserConfigsRepository(),
     new TenantWebhookApiKeysRepository(),
   );
-  private scheduleService = ScheduleService.getInstance();
+  private automationSchedulerService = AutomationSchedulerService.getInstance();
 
   constructor() {}
 
@@ -32,7 +31,7 @@ export class App {
     this.server.instance.use("/linkedin", new LinkedinRouter().router);
     this.server.instance.use("/proxy", new ProxyRouter().router);
 
-    this.scheduleService.pollBrowserAutomationRuns();
+    this.automationSchedulerService.pollBrowserAutomationRuns();
     this.registerShutdownHooks();
   }
 
@@ -56,7 +55,7 @@ export class App {
     process.on("SIGTERM", () => {
       this.blockIO();
       this.server.stop(async () => {
-        await this.scheduleService.shutdown();
+        await this.automationSchedulerService.shutdown();
         this.unblockIO();
         process.exit(0);
       });
@@ -64,7 +63,7 @@ export class App {
     process.on("SIGINT", () => {
       this.blockIO();
       this.server.stop(async () => {
-        await this.scheduleService.shutdown();
+        await this.automationSchedulerService.shutdown();
         this.unblockIO();
         process.exit(0);
       });

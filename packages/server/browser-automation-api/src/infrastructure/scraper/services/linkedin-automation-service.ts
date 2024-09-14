@@ -166,9 +166,7 @@ export class LinkedinAutomationService {
     message: string,
     options?: { dryRun?: boolean },
   ) {
-    const browser = await Browser.getInstance(this.proxyConfig, {
-      debug: true,
-    });
+    const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });

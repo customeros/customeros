@@ -3,10 +3,13 @@ import { validationResult } from "express-validator";
 
 import { logger } from "@/infrastructure";
 import { ErrorParser } from "@/util/error";
-import { ScheduleService } from "@/application/services/schedule-service";
+import { BrowserAutomationRunService } from "@/application/services/browser-automation-run-service";
+import { BrowserAutomationRunsRepository } from "@/infrastructure/persistance/postgresql/repositories";
 
 export class ConnectionsController {
-  private scheduleService = ScheduleService.getInstance();
+  private browserAutomationRunService = new BrowserAutomationRunService(
+    new BrowserAutomationRunsRepository(),
+  );
 
   constructor() {
     this.scrapeConnections = this.scrapeConnections.bind(this);
@@ -31,20 +34,27 @@ export class ConnectionsController {
     }
 
     try {
-      const automationRun = await this.scheduleService.createAutomationRun(
-        res.locals.browserConfig,
-        "FIND_CONNECTIONS",
+      const newAutomationRun = await this.browserAutomationRunService.createRun(
+        {
+          browserConfigId: res.locals.browserConfig.id,
+          tenant: res.locals.tenantName,
+          type: "FIND_CONNECTIONS",
+          userId: res.locals.user.id,
+          payload: req.body,
+        },
       );
+
       res.send({
         success: true,
         message: "Browser automation scheduled successfully",
-        data: automationRun,
+        data: newAutomationRun?.toDTO(),
       });
     } catch (err) {
       const error = ErrorParser.parse(err);
       logger.error("Error in ConnectController", {
         error: error.message,
         details: error.details,
+        source: "ConnectionsController",
       });
       res.status(500).send({
         success: false,
