@@ -9,36 +9,13 @@ type RegisterNewDomainRequest struct {
 	Domain string `json:"domain" example:"example.com"`
 }
 
-// RegisterNewDomainResponse defines the response structure for a successful domain registration
-// @Description Response body for a successful domain registration
-// @example 201 {object} RegisterNewDomainResponse
-type RegisterNewDomainResponse struct {
-	// Status indicates the result of the domain registration
-	// Example: success
-	Status string `json:"status" example:"success"`
-
-	// Message provides additional information about the registration
-	// Example: Domain registered successfully
-	Message string `json:"message" example:"Domain registered successfully"`
-
-	// Domain is the domain name that was registered
+// ConfigureDomainRequest defines the request body for configuring domain
+// @Description Request body for domain configuration
+type ConfigureDomainRequest struct {
+	// Domain is the domain name to be configured
+	// Required: true
 	// Example: example.com
 	Domain string `json:"domain" example:"example.com"`
-
-	// CreatedDate is the date the domain was registered
-	// Example: 09/14/2024
-	CreatedDate string `json:"createdDate" example:"09/14/2024"`
-
-	// ExpiredDate is the date when the domain registration will expire
-	// Example: 09/14/2025
-	ExpiredDate string `json:"expiredDate" example:"09/14/2025"`
-
-	// Nameservers lists the nameservers associated with the domain
-	// Example: [ns1.example.com, ns2.example.com]
-	Nameservers []string `json:"nameservers" example:"[\"ns1.example.com\", \"ns2.example.com\"]"`
-
-	// DnsRecords provides a list of DNS records associated with the domain
-	DnsRecords []DnsRecordResponse `json:"dnsRecords"`
 }
 
 // MailboxResponse defines the structure of a mailbox in the response
@@ -96,7 +73,7 @@ type DomainResponse struct {
 
 	// Nameservers lists the nameservers associated with the domain
 	// Example: [ns1.example.com, ns2.example.com]
-	Nameservers []string `json:"nameservers" example:"[\"ns1.example.com\", \"ns2.example.com\"]"`
+	Nameservers []string `json:"nameservers" example:"['ns1.example.com', 'ns2.example.com']"`
 
 	// DnsRecords provides a list of DNS records associated with the domain
 	DnsRecords []DnsRecordResponse `json:"dnsRecords"`
