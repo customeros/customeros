@@ -488,7 +488,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   }
 
   async deleteFlowContact() {
-    return this.flowContact?.deleteFlowContact();
+    return this.flowContact?.removeFlowContact();
   }
 }
 

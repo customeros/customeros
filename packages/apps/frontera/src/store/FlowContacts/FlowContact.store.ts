@@ -51,13 +51,19 @@ export class FlowContactStore implements Store<FlowContact> {
 
   async invalidate() {}
 
+  public removeFlowContact = async () => {
+    return this.service.deleteFlowContact({
+      id: this.id,
+    });
+  };
+
   public deleteFlowContact = async () => {
     this.isLoading = true;
 
+    const flowName = this.contact?.flow?.value.name;
+
     try {
-      await this.service.deleteFlowContact({
-        id: this.id,
-      });
+      await this.removeFlowContact();
 
       runInAction(() => {
         const contactStore = this.contact;
@@ -71,8 +77,8 @@ export class FlowContactStore implements Store<FlowContact> {
           { mutate: false },
         );
         this.root.ui.toastSuccess(
-          `Contact removed from '${this.value.contact.name}'`,
-          'unlink-contact-from-sequence-success',
+          `Contact removed from '${flowName}'`,
+          'unlink-contact-from-flow-success',
         );
         this.root.contacts.sync({
           action: 'INVALIDATE',
@@ -84,8 +90,8 @@ export class FlowContactStore implements Store<FlowContact> {
     } catch (e) {
       runInAction(() => {
         this.root.ui.toastError(
-          `We couldn't remove a contact from a sequence`,
-          'unlink-contact-from-sequence-error',
+          `We couldn't remove a contact from a flow`,
+          'unlink-contact-from-flow-error',
         );
       });
     } finally {

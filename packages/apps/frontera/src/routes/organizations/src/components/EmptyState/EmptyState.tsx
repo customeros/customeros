@@ -97,7 +97,7 @@ export const EmptyState = observer(() => {
           description:
             'Your flows are waiting to take their first steps. Go ahead and create your first flow.',
           buttonLabel: 'New flow',
-          dataTest: 'sequence-create-new-flow',
+          dataTest: 'flow-create-new-flow',
           onClick: () => {
             store.ui.commandMenu.setType('CreateNewFlow');
             store.ui.commandMenu.setOpen(true);

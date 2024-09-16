@@ -53,7 +53,7 @@ export const OrganizationSidenav = observer(() => {
     organizationsPreset: store.tableViewDefs.organizationsPreset,
     upcomingInvoicesPreset: store.tableViewDefs.upcomingInvoicesPreset,
     contractsPreset: store.tableViewDefs.contractsPreset,
-    flowSequencesPreset: store.tableViewDefs.flowSequencesPreset,
+    flowSequencesPreset: store.tableViewDefs.flowsPreset,
   };
 
   useKeyboardNavigation(presets, {

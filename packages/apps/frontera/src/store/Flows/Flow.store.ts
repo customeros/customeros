@@ -90,12 +90,9 @@ export class FlowStore implements Store<Flow> {
     try {
       const contactStore = this.root.contacts.value.get(contactId);
 
-      // if (contactStore?.flow) {
-      //   await this.service.deleteContact({
-      //     contactId,
-      //     flowId: this.id,
-      //   });
-      // }
+      if (contactStore?.flow) {
+        await contactStore.deleteFlowContact();
+      }
 
       await this.service.addContact({
         contactId,
@@ -139,6 +136,11 @@ export class FlowStore implements Store<Flow> {
         return this.root.contacts.value.get(e);
       });
 
+      await Promise.all(
+        contactStores
+          .filter((e): e is NonNullable<typeof e> => !!e && !!e.flowContact)
+          .map((e) => e?.flowContact?.deleteFlowContact()),
+      );
       await this.service.addContactBulk({
         contactId: contactIds,
         flowId: this.id,
@@ -158,16 +160,16 @@ export class FlowStore implements Store<Flow> {
           return e;
         });
         this.root.ui.toastSuccess(
-          `Contact added to '${this.value.name}'`,
-          'link-contact-to-flows-success',
+          `${contactIds.length} contacts added to '${this.value.name}'`,
+          'link-contacts-to-flows-success',
         );
         this.root.contacts.sync({ action: 'INVALIDATE', ids: contactIds });
       });
     } catch (e) {
       runInAction(() => {
         this.root.ui.toastError(
-          "We couldn't add a contact to a flow",
-          'link-contact-to-flows-error',
+          "We couldn't add contacts to a flow",
+          'link-contacts-to-flows-error',
         );
       });
     } finally {

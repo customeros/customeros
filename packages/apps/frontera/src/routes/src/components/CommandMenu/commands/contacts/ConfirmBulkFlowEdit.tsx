@@ -1,6 +1,7 @@
 import React, { useRef } from 'react';
 
 import { observer } from 'mobx-react-lite';
+import { FlowStore } from '@store/Flows/Flow.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
@@ -21,8 +22,8 @@ export const ConfirmBulkFlowEdit = observer(() => {
 
   const selectedIds = context.ids;
 
-  const selectedSequence = context.property
-    ? flows.value.get(context.property)
+  const selectedFlow = context.property
+    ? (flows.value.get(context.property) as FlowStore)
     : null;
 
   const contactsInFlows = selectedIds
@@ -32,7 +33,7 @@ export const ConfirmBulkFlowEdit = observer(() => {
   const handleConfirm = () => {
     if (!context.ids?.length || !context.property) return;
 
-    // flows.linkContacts();
+    selectedFlow?.linkContacts(selectedIds);
 
     ui.commandMenu.setOpen(false);
   };
@@ -48,17 +49,18 @@ export const ConfirmBulkFlowEdit = observer(() => {
 
   return (
     <Command>
-      <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
-        <div className='flex items-center justify-between'>
+      <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100 cursor-default'>
+        <div className='flex justify-between'>
           <h1 className='text-base font-semibold'>
             {contactsInFlows?.length} of your selected contacts are already in
             other flows
           </h1>
-          <CommandCancelIconButton onClose={handleClose} />
+          <div>
+            <CommandCancelIconButton onClose={handleClose} />
+          </div>
         </div>
         <p className='mt-1 text-sm'>
-          To add them to {selectedSequence?.value?.name}, we’ll have to remove
-          them from their existing flows.
+          Would you like to move them into '{selectedFlow?.value?.name}'?
         </p>
 
         <div className='flex justify-between gap-3 mt-6'>
@@ -71,7 +73,7 @@ export const ConfirmBulkFlowEdit = observer(() => {
             colorScheme='primary'
             ref={confirmButtonRef}
             onClick={handleConfirm}
-            data-test='contact-actions-confirm-sequence-change'
+            data-test='contact-actions-confirm-flow-change'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();

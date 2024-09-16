@@ -175,7 +175,7 @@ export const ContactCommands = observer(() => {
               store.ui.commandMenu.setType('UnlinkContactFromFlow');
             }}
           >
-            Remove from sequence
+            Remove from flow
           </CommandItem>
         )}
 

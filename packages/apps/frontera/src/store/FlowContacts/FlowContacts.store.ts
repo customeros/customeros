@@ -33,21 +33,4 @@ export class FlowContactsStore implements GroupStore<FlowContact> {
     });
     this.service = FlowContactsService.getInstance(transport);
   }
-
-  getByContactId(contactId: string): Store<FlowContact> | undefined {
-    return Array.from(this.value.values()).find(
-      (flowContactStore) =>
-        flowContactStore.value.contact?.metadata?.id === contactId,
-    );
-  }
-
-  getByContactIds(contactIds: string[]): Store<FlowContact>[] {
-    const contactIdSet = new Set(contactIds);
-
-    return Array.from(this.value.values()).filter(
-      (flowContactStore) =>
-        flowContactStore.value.contact?.metadata?.id &&
-        contactIdSet.has(flowContactStore.value.contact.metadata.id),
-    );
-  }
 }
