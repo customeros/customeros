@@ -8,6 +8,7 @@ extend type Mutation {
     flow_ChangeStatus(id: ID!, status: FlowStatus!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowContact_Add(flowId: ID!, contactId: ID!): FlowContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowContact_AddBulk(flowId: ID!, contactId: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowContact_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowAction_Merge(flowId: ID!, input: FlowActionMergeInput!): FlowAction! @hasRole(roles: [ADMIN, USER]) @hasTenant
