@@ -6,7 +6,6 @@ package resolver
 
 import (
 	"context"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -116,6 +115,23 @@ func (r *mutationResolver) FlowContactAdd(ctx context.Context, flowID string, co
 		return nil, err
 	}
 	return mapper.MapEntityToFlowContact(entity), nil
+}
+
+// FlowContactAddBulk is the resolver for the flowContact_AddBulk field.
+func (r *mutationResolver) FlowContactAddBulk(ctx context.Context, flowID string, contactID []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowContactAdd", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	for _, id := range contactID {
+		entity, err := r.Services.CommonServices.FlowService.FlowContactAdd(ctx, flowID, id)
+		if err != nil || entity == nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return &model.Result{Result: false}, err
+		}
+	}
+	return &model.Result{Result: true}, nil
 }
 
 // FlowContactDelete is the resolver for the flowContact_Delete field.
