@@ -497,10 +497,9 @@ func dnsConfigsForMailStack(domain string) []DNSConfig {
 		{RecordType: "A", Name: "@", Content: "192.0.2.1", Proxied: true, TTL: 1},
 		{RecordType: "CNAME", Name: "www", Content: domain, Proxied: true, TTL: 1},
 		{RecordType: "CNAME", Name: "mail", Content: "mail.customerosmail.com", Proxied: false, TTL: 1},
-		//{RecordType: "CNAME", Name: "stats", Content: "custosmetrics.com", Proxied: false, TTL: 1},
 		{RecordType: "MX", Name: "@", Content: fmt.Sprintf("mx.%s.cust.a.hostedemail.com", domain), Proxied: false, TTL: 1, Priority: utils.IntPtr(10)},
 		{RecordType: "TXT", Name: "@", Content: "v=spf1 include:_spf.hostedemail.com -all", Proxied: false, TTL: 1},
-		{RecordType: "TXT", Name: "_dmarc", Content: "v=DMARC1; p=reject; aspf=s; adkim=s; sp=reject; pct=100; ruf=mailto:dmarc@customerosmail.com; rua=mailto:monitor@customerosmail.com; fo=1; ri=86400", Proxied: false, TTL: 3600},
+		{RecordType: "TXT", Name: "_dmarc", Content: "v=DMARC1; p=reject; aspf=s; adkim=s; sp=reject; pct=100; ruf=mailto:dmarc@customerosmail.com; rua=mailto:monitor@customerosmail.com; fo=1; ri=86400", Proxied: false, TTL: 1},
 		{RecordType: "TXT", Name: "dkim._domainkey", Content: "Copy the output value from the script dkim.py", Proxied: false, TTL: 1},
 	}
 }

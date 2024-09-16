@@ -21,8 +21,8 @@ import (
 // @Tags MailStack API
 // @Accept  json
 // @Produce  json
-// @Param   body   body    RegisterNewDomainRequest  true  "Domain registration payload"
-// @Success 201 {object} RegisterNewDomainResponse "Domain registered successfully"
+// @Param   body  RegisterNewDomainRequest  true  "Domain registration payload"
+// @Success 201 {object} DomainResponse "Domain registered successfully"
 // @Failure 400  "Invalid request body or missing input fields"
 // @Failure 401  "Unauthorized access - API key invalid or expired"
 // @Failure 409  "Domain is already registered"
@@ -103,7 +103,7 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 						Message: "Domain price exceeds the maximum allowed price, please contact support",
 					})
 				return
-			} else if errors.Is(err, coserrors.ErrDomainConfigure) {
+			} else if errors.Is(err, coserrors.ErrDomainConfigurationFailed) {
 				c.JSON(http.StatusInternalServerError,
 					rest.ErrorResponse{
 						Status:  "error",
@@ -129,11 +129,11 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func registerDomain(ctx context.Context, tenant, domain string, services *service.Services) (RegisterNewDomainResponse, error) {
+func registerDomain(ctx context.Context, tenant, domain string, services *service.Services) (DomainResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registerDomain")
 	defer span.Finish()
 
-	var registerNewDomainResponse = RegisterNewDomainResponse{}
+	var registerNewDomainResponse = DomainResponse{}
 	registerNewDomainResponse.Domain = domain
 
 	var err error
@@ -182,32 +182,146 @@ func registerDomain(ctx context.Context, tenant, domain string, services *servic
 		return registerNewDomainResponse, err
 	}
 
-	// step 4 - setup domain in cloudflare
+	//step 4 - configure domain
+	return configureDomain(ctx, tenant, domain, services)
+}
+
+// ConfigureDomain configure given domain for the mail service
+// @Summary Configure domain DNS records
+// @Description Configures the DNS records for the given domain
+// @Tags MailStack API
+// @Accept  json
+// @Produce  json
+// @Param   body  ConfigureDomainRequest  true  "Domain payload"
+// @Success 201 {object} DomainResponse "Domain configured successfully"
+// @Failure 400  "Invalid request body or missing input fields"
+// @Failure 401  "Unauthorized access - API key invalid or expired"
+// @Failure 500  "Internal server error"
+// @Router /mailstack/v1/domains/configure [post]
+// @Security ApiKeyAuth
+func ConfigureDomain(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ConfigureDomain", c.Request.Header)
+		defer span.Finish()
+		tracing.SetDefaultRestSpanTags(ctx, span)
+
+		tenant := common.GetTenantFromContext(ctx)
+		// if tenant missing return auth error
+		if tenant == "" {
+			c.JSON(http.StatusUnauthorized,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "API key invalid or expired",
+				})
+			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			return
+		}
+		span.SetTag(tracing.SpanTagTenant, tenant)
+
+		// Parse and validate request body
+		var req ConfigureDomainRequest
+		if err := c.ShouldBindJSON(&req); err != nil {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Invalid request body or missing input fields",
+				})
+			span.LogFields(tracingLog.String("result", "Invalid request body"))
+			return
+		}
+
+		// Check for missing domain
+		if req.Domain == "" {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Missing required field: domain",
+				})
+			span.LogFields(tracingLog.String("result", "Missing domain"))
+			return
+		}
+
+		domainResponse, err := configureDomain(ctx, tenant, req.Domain, services)
+		if err != nil {
+			if errors.Is(err, coserrors.ErrDomainNotFound) {
+				c.JSON(http.StatusNotFound,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Domain not found",
+					})
+				span.LogFields(tracingLog.String("result", "Domain not found"))
+				return
+			} else if errors.Is(err, coserrors.ErrDomainConfigurationFailed) {
+				c.JSON(http.StatusInternalServerError,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Error configuring domain, please contact support",
+					})
+				return
+			} else {
+				c.JSON(http.StatusInternalServerError,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Domain registration failed, please contact support",
+					})
+				span.LogFields(tracingLog.String("result", "Internal server error, please contact support"))
+				return
+			}
+		}
+
+		domainResponse.Status = "success"
+		domainResponse.Message = "Domain configured successfully"
+
+		// Placeholder for response logic (to be implemented)
+		c.JSON(http.StatusCreated, domainResponse)
+	}
+}
+
+func configureDomain(ctx context.Context, tenant, domain string, services *service.Services) (DomainResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "configureDomain")
+	defer span.Finish()
+
+	var domainResponse = DomainResponse{}
+	domainResponse.Domain = domain
+
+	var err error
+
+	// get all active domains from postgres
+	domainBelongsToTenant, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain"))
+		return domainResponse, err
+	}
+	if !domainBelongsToTenant {
+		return domainResponse, coserrors.ErrDomainNotFound
+	}
+
+	// setup domain in cloudflare
 	nameservers, err := services.CloudflareService.SetupDomainForMailStack(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in Cloudflare"))
-		return registerNewDomainResponse, coserrors.ErrDomainConfigure
+		return domainResponse, coserrors.ErrDomainConfigurationFailed
 	}
 
-	// step 5 - replace nameservers in namecheap
+	// replace nameservers in namecheap
 	err = services.NamecheapService.UpdateNameservers(ctx, tenant, domain, nameservers)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error updating nameservers"))
-		return registerNewDomainResponse, coserrors.ErrDomainConfigure
+		return domainResponse, coserrors.ErrDomainConfigurationFailed
 	}
 
 	// get domain details
 	domainInfo, err := services.NamecheapService.GetDomainInfo(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
-		return registerNewDomainResponse, err
+		return domainResponse, err
 	}
-	registerNewDomainResponse.CreatedDate = domainInfo.CreatedDate
-	registerNewDomainResponse.ExpiredDate = domainInfo.ExpiredDate
-	registerNewDomainResponse.Nameservers = domainInfo.Nameservers
-	registerNewDomainResponse.Domain = domainInfo.DomainName
+	domainResponse.CreatedDate = domainInfo.CreatedDate
+	domainResponse.ExpiredDate = domainInfo.ExpiredDate
+	domainResponse.Nameservers = domainInfo.Nameservers
+	domainResponse.Domain = domainInfo.DomainName
 
-	return registerNewDomainResponse, nil
+	return domainResponse, nil
 }
 
 // GetDomains retrieves all active domains for the tenant
