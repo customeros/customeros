@@ -1,7 +1,6 @@
 module github.com/openline-ai/openline-customer-os/packages/server/customer-os-api
 
 go 1.21.0
-
 toolchain go1.22.6
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
@@ -19,7 +18,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/validation-a
 replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
 
 require (
-	github.com/99designs/gqlgen v0.17.49
+	github.com/99designs/gqlgen v0.17.51
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/cloudflare/cloudflare-go v0.104.0
 	github.com/customeros/mailsherpa v0.2.9
@@ -70,7 +69,7 @@ require (
 	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0 // indirect
 	github.com/KyleBanks/depth v1.2.1 // indirect
 	github.com/Microsoft/go-winio v0.6.2 // indirect
-	github.com/PuerkitoBio/goquery v1.9.2 // indirect
+	github.com/PuerkitoBio/goquery v1.9.3 // indirect
 	github.com/agnivade/levenshtein v1.1.1 // indirect
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
