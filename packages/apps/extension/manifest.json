@@ -1,6 +1,6 @@
 {
     "manifest_version": 3,
-    "name": "CustomerOs",
+    "name": "CustomerOS",
     "version": "1.0",
    "permissions": [
         "cookies",
