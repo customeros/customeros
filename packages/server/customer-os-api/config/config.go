@@ -69,6 +69,11 @@ type Config struct {
 			RegistrantPhoneNumber string  `env:"NAMECHEAP_REGISTRANT_PHONE_NUMBER" validate:"required"`
 			RegistrantEmail       string  `env:"NAMECHEAP_REGISTRANT_EMAIL" validate:"required"`
 		}
+		Cloudflare struct {
+			Url    string `env:"CLOUDFLARE_URL" envDefault:"https://api.cloudflare.com/client/v4" validate:"required"`
+			ApiKey string `env:"CLOUDFLARE_API_KEY" validate:"required"`
+			Email  string `env:"CLOUDFLARE_API_EMAIL" validate:"required"`
+		}
 	}
 }
 
