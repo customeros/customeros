@@ -57,6 +57,51 @@ type MailboxResponse struct {
 	LastUpdatedAt string `json:"lastUpdatedAt" example:"2021-09-01T12:00:00Z"`
 }
 
+// DomainsResponse defines the response structure for multiple domains in the response
+// @Description Response body for all domain details
+type DomainsResponse struct {
+	// Status indicates the result of the action
+	// Example: success
+	Status string `json:"status,omitempty" example:"success"`
+
+	// Message provides additional information about the action
+	// Example: Domain retrieved successfully
+	Message string `json:"message,omitempty" example:"Domains retrieved successfully"`
+
+	Domains []DomainResponse `json:"domains"`
+}
+
+// DomainResponse defines the structure of a domain in the response
+// @Description Domain object in the response
+type DomainResponse struct {
+	// Status indicates the result of the action
+	// Example: success
+	Status string `json:"status,omitempty" example:"success"`
+
+	// Message provides additional information about the action
+	// Example: Domain registered successfully
+	Message string `json:"message,omitempty" example:"Domain retrieved successfully"`
+
+	// Domain is the domain name that was registered
+	// Example: example.com
+	Domain string `json:"domain" example:"example.com"`
+
+	// CreatedDate is the date the domain was registered
+	// Example: 09/14/2024
+	CreatedDate string `json:"createdDate" example:"09/14/2024"`
+
+	// ExpiredDate is the date when the domain registration will expire
+	// Example: 09/14/2025
+	ExpiredDate string `json:"expiredDate" example:"09/14/2025"`
+
+	// Nameservers lists the nameservers associated with the domain
+	// Example: [ns1.example.com, ns2.example.com]
+	Nameservers []string `json:"nameservers" example:"[\"ns1.example.com\", \"ns2.example.com\"]"`
+
+	// DnsRecords provides a list of DNS records associated with the domain
+	DnsRecords []DnsRecordResponse `json:"dnsRecords"`
+}
+
 // DnsRecordResponse defines the structure of a DNS record in the response
 // @Description DNS record object in the response
 type DnsRecordResponse struct {

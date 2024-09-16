@@ -456,6 +456,76 @@ definitions:
         example: 192.0.2.1
         type: string
     type: object
+  restmailstack.DomainResponse:
+    description: Domain object in the response
+    properties:
+      createdDate:
+        description: |-
+          CreatedDate is the date the domain was registered
+          Example: 09/14/2024
+        example: 09/14/2024
+        type: string
+      dnsRecords:
+        description: DnsRecords provides a list of DNS records associated with the
+          domain
+        items:
+          $ref: '#/definitions/restmailstack.DnsRecordResponse'
+        type: array
+      domain:
+        description: |-
+          Domain is the domain name that was registered
+          Example: example.com
+        example: example.com
+        type: string
+      expiredDate:
+        description: |-
+          ExpiredDate is the date when the domain registration will expire
+          Example: 09/14/2025
+        example: 09/14/2025
+        type: string
+      message:
+        description: |-
+          Message provides additional information about the action
+          Example: Domain registered successfully
+        example: Domain retrieved successfully
+        type: string
+      nameservers:
+        description: |-
+          Nameservers lists the nameservers associated with the domain
+          Example: [ns1.example.com, ns2.example.com]
+        example:
+        - '["ns1.example.com"'
+        - ' "ns2.example.com"]'
+        items:
+          type: string
+        type: array
+      status:
+        description: |-
+          Status indicates the result of the action
+          Example: success
+        example: success
+        type: string
+    type: object
+  restmailstack.DomainsResponse:
+    description: Response body for all domain details
+    properties:
+      domains:
+        items:
+          $ref: '#/definitions/restmailstack.DomainResponse'
+        type: array
+      message:
+        description: |-
+          Message provides additional information about the action
+          Example: Domain retrieved successfully
+        example: Domains retrieved successfully
+        type: string
+      status:
+        description: |-
+          Status indicates the result of the action
+          Example: success
+        example: success
+        type: string
+    type: object
   restmailstack.RegisterNewDomainRequest:
     description: Request body for domain registration
     properties:
@@ -935,6 +1005,26 @@ paths:
       tags:
       - Enrichment API
   /mailstack/v1/domains:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all active domains associated with the tenant
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved domains
+          schema:
+            $ref: '#/definitions/restmailstack.DomainsResponse'
+        "401":
+          description: Unauthorized access - API key invalid or expired
+        "500":
+          description: Internal server error
+      security:
+      - ApiKeyAuth: []
+      summary: Get active domains
+      tags:
+      - MailStack API
     post:
       consumes:
       - application/json

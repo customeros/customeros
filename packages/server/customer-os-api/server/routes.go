@@ -70,6 +70,7 @@ func registerOutreachRoutes(ctx context.Context, r *gin.Engine, services *servic
 
 func registerMailStackRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains", mailStackV1Path), services, cache, restmailstack.RegisterNewDomain(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains", mailStackV1Path), services, cache, restmailstack.GetDomains(services))
 }
 
 func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, services *service.Services, cache *commoncaches.Cache, handler gin.HandlerFunc) {

@@ -231,6 +231,38 @@
             }
         },
         "/mailstack/v1/domains": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all active domains associated with the tenant",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MailStack API"
+                ],
+                "summary": "Get active domains",
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved domains",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.DomainsResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized access - API key invalid or expired"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -1053,6 +1085,77 @@
                     "description": "Value is the value of the DNS record\nExample: 192.0.2.1",
                     "type": "string",
                     "example": "192.0.2.1"
+                }
+            }
+        },
+        "restmailstack.DomainResponse": {
+            "description": "Domain object in the response",
+            "type": "object",
+            "properties": {
+                "createdDate": {
+                    "description": "CreatedDate is the date the domain was registered\nExample: 09/14/2024",
+                    "type": "string",
+                    "example": "09/14/2024"
+                },
+                "dnsRecords": {
+                    "description": "DnsRecords provides a list of DNS records associated with the domain",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.DnsRecordResponse"
+                    }
+                },
+                "domain": {
+                    "description": "Domain is the domain name that was registered\nExample: example.com",
+                    "type": "string",
+                    "example": "example.com"
+                },
+                "expiredDate": {
+                    "description": "ExpiredDate is the date when the domain registration will expire\nExample: 09/14/2025",
+                    "type": "string",
+                    "example": "09/14/2025"
+                },
+                "message": {
+                    "description": "Message provides additional information about the action\nExample: Domain registered successfully",
+                    "type": "string",
+                    "example": "Domain retrieved successfully"
+                },
+                "nameservers": {
+                    "description": "Nameservers lists the nameservers associated with the domain\nExample: [ns1.example.com, ns2.example.com]",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "[\"ns1.example.com\"",
+                        " \"ns2.example.com\"]"
+                    ]
+                },
+                "status": {
+                    "description": "Status indicates the result of the action\nExample: success",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
+        "restmailstack.DomainsResponse": {
+            "description": "Response body for all domain details",
+            "type": "object",
+            "properties": {
+                "domains": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.DomainResponse"
+                    }
+                },
+                "message": {
+                    "description": "Message provides additional information about the action\nExample: Domain retrieved successfully",
+                    "type": "string",
+                    "example": "Domains retrieved successfully"
+                },
+                "status": {
+                    "description": "Status indicates the result of the action\nExample: success",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

@@ -184,3 +184,72 @@ func registerDomain(ctx context.Context, tenant, domain string, services *servic
 
 	return registerNewDomainResponse, nil
 }
+
+// GetDomains retrieves all active domains for the tenant
+// @Summary Get active domains
+// @Description Retrieves a list of all active domains associated with the tenant
+// @Tags MailStack API
+// @Accept  json
+// @Produce  json
+// @Success 200 {object} DomainsResponse "Successfully retrieved domains"
+// @Failure 401 "Unauthorized access - API key invalid or expired"
+// @Failure 500 "Internal server error"
+// @Router /mailstack/v1/domains [get]
+// @Security ApiKeyAuth
+func GetDomains(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetDomains", c.Request.Header)
+		defer span.Finish()
+		tracing.SetDefaultRestSpanTags(ctx, span)
+		tenant := common.GetTenantFromContext(ctx)
+		// if tenant missing return auth error
+		if tenant == "" {
+			c.JSON(http.StatusUnauthorized,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "API key invalid or expired",
+				})
+			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			return
+		}
+		span.SetTag(tracing.SpanTagTenant, tenant)
+
+		// get all active domains from postgres
+		activeDomainRecords, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving domains"))
+			span.LogFields(tracingLog.String("result", "Error retrieving domains"))
+			c.JSON(http.StatusInternalServerError,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Error retrieving domains",
+				})
+			return
+		}
+
+		response := DomainsResponse{
+			Status: "success",
+		}
+		for _, domainRecord := range activeDomainRecords {
+			domain, err := services.NamecheapService.GetDomainInfo(ctx, tenant, domainRecord.Domain)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error getting domain info"))
+				span.LogFields(tracingLog.String("result", "Error getting domain info"))
+				c.JSON(http.StatusInternalServerError,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Error getting domain info",
+					})
+				return
+			}
+			response.Domains = append(response.Domains, DomainResponse{
+				Domain:      domain.DomainName,
+				CreatedDate: domain.CreatedDate,
+				ExpiredDate: domain.ExpiredDate,
+				Nameservers: domain.Nameservers,
+			})
+		}
+
+		c.JSON(http.StatusOK, response)
+	}
+}
