@@ -77,6 +77,11 @@ func (r *mutationResolver) FlowActionChangeStatus(ctx context.Context, id string
 	panic(fmt.Errorf("not implemented: FlowActionChangeStatus - flowAction_ChangeStatus"))
 }
 
+// FlowActionDelete is the resolver for the flowAction_Delete field.
+func (r *mutationResolver) FlowActionDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowActionDelete - flowAction_Delete"))
+}
+
 // FlowActionSenderMerge is the resolver for the flowActionSender_Merge field.
 func (r *mutationResolver) FlowActionSenderMerge(ctx context.Context, flowActionID string, input model.FlowActionSenderMergeInput) (*model.FlowActionSender, error) {
 	panic(fmt.Errorf("not implemented: FlowActionSenderMerge - flowActionSender_Merge"))

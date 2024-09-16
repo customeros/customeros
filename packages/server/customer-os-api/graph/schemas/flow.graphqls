@@ -14,6 +14,7 @@ extend type Mutation {
     flowAction_Merge(flowId: ID!, input: FlowActionMergeInput!): FlowAction! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowAction_ChangeIndex(id: ID!, index: Int64!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowAction_ChangeStatus(id: ID!, status: FlowActionStatus!): FlowAction! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowAction_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowActionSender_Merge(flowActionId: ID!, input: FlowActionSenderMergeInput!): FlowActionSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowActionSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant

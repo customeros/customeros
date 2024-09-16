@@ -38,13 +38,15 @@ func (r *flowActionSenderWriteRepositoryImpl) Merge(ctx context.Context, entity 
 			ON CREATE SET
 				fs.createdAt = $createdAt,
 				fs.updatedAt = $updatedAt,
-				fs.mailbox = $mailbox
+				fs.mailbox = $mailbox,
+				fs.userId = $userId
 			RETURN fs`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
 		"tenant":    common.GetTenantFromContext(ctx),
 		"id":        entity.Id,
 		"mailbox":   entity.Mailbox,
+		"userId":    entity.UserId,
 		"createdAt": utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
 	}
