@@ -14,6 +14,7 @@ import (
 type MailStackDomainRepository interface {
 	RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
 	CheckDomainOwnership(ctx context.Context, tenant, domain string) (bool, error)
+	GetActiveDomains(ctx context.Context, tenant string) ([]entity.MailStackDomain, error)
 }
 
 type mailStackDomainRepository struct {
@@ -74,4 +75,22 @@ func (r *mailStackDomainRepository) CheckDomainOwnership(ctx context.Context, te
 	// If the record is found, return true
 	span.LogFields(tracingLog.Bool("response.exists", true))
 	return true, nil
+}
+
+func (r *mailStackDomainRepository) GetActiveDomains(ctx context.Context, tenant string) ([]entity.MailStackDomain, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetActiveDomains")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	var mailStackDomains []entity.MailStackDomain
+	err := r.db.WithContext(ctx).
+		Where("tenant = ? AND active = ?", tenant, true).
+		Find(&mailStackDomains).Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return nil, err
+	}
+
+	return mailStackDomains, nil
 }
