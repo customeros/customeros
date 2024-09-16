@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -22,10 +23,11 @@ type DNSConfig struct {
 	Content    string
 	Proxied    bool
 	TTL        int
+	Priority   *int
 }
 
 type CloudflareService interface {
-	SetupDomainForMailstack(ctx context.Context, tenant, domain string) error
+	SetupDomainForMailStack(ctx context.Context, tenant, domain string) ([]string, error)
 }
 
 type cloudflareService struct {
@@ -43,8 +45,8 @@ func NewCloudflareService(log logger.Logger, services *Services, cfg *config.Con
 	}
 }
 
-func (s *cloudflareService) SetupDomainForMailstack(ctx context.Context, tenant, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.SetupDomainForMailstack")
+func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant, domain string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.SetupDomainForMailStack")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
@@ -55,7 +57,7 @@ func (s *cloudflareService) SetupDomainForMailstack(ctx context.Context, tenant,
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain existence"))
 		s.log.Error("failed to check domain existence")
-		return err
+		return nil, err
 	}
 
 	// step 2: Delete all DNS records for the domain
@@ -64,17 +66,17 @@ func (s *cloudflareService) SetupDomainForMailstack(ctx context.Context, tenant,
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to delete DNS records"))
 			s.log.Error("failed to delete DNS records")
-			return err
+			return nil, err
 		}
 	}
 
 	// step 3: Add the domain to Cloudflare
 	if !domainExists {
-		zoneID, err = s.AddDomain(ctx, domain)
+		zoneID, err = s.addDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to add domain"))
 			s.log.Errorf("failed to add domain %s", domain)
-			return err
+			return nil, err
 		}
 		domainExists = true
 	}
@@ -82,15 +84,22 @@ func (s *cloudflareService) SetupDomainForMailstack(ctx context.Context, tenant,
 	// step 4: Configure DNS records
 	dnsConfigs := dnsConfigsForMailStack(domain)
 	for _, dnsConfig := range dnsConfigs {
-		err = s.addDNSRecord(ctx, zoneID, dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content, dnsConfig.TTL, dnsConfig.Proxied)
+		err = s.addDNSRecord(ctx, zoneID, dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content, dnsConfig.TTL, dnsConfig.Proxied, dnsConfig.Priority)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to add DNS record"))
 			s.log.Errorf("failed to add DNS record %s %s -> %s", dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content)
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	nameservers, err := s.getNameservers(ctx, zoneID)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get nameservers"))
+		s.log.Error("failed to get nameservers")
+		return nil, err
+	}
+
+	return nameservers, nil
 }
 
 func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain string) error {
@@ -167,9 +176,9 @@ func (s *cloudflareService) deleteAllDNSRecords(ctx context.Context, domain stri
 				return err
 			}
 
-			req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
-			req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
-			req.Header.Set("Content-Type", "application/json")
+			deleteReq.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
+			deleteReq.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+			deleteReq.Header.Set("Content-Type", "application/json")
 
 			delResp, err := http.DefaultClient.Do(deleteReq)
 			if err != nil {
@@ -237,14 +246,17 @@ func (s *cloudflareService) checkDomain(ctx context.Context, domain string) (boo
 
 	// Check if the domain exists
 	if zonesResponse.Success && len(zonesResponse.Result) > 0 {
+		span.LogFields(tracingLog.Bool("result.exists", true))
 		return true, zonesResponse.Result[0].ID, nil
 	}
+
+	span.LogFields(tracingLog.Bool("result.exists", false))
 
 	return false, "", nil
 }
 
-func (s *cloudflareService) AddDomain(ctx context.Context, domain string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.AddDomain")
+func (s *cloudflareService) addDomain(ctx context.Context, domain string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.addDomain")
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
@@ -326,10 +338,11 @@ func (s *cloudflareService) AddDomain(ctx context.Context, domain string) (strin
 	return zoneID, nil
 }
 
-func (s *cloudflareService) addDNSRecord(ctx context.Context, zoneID, recordType, name, content string, ttl int, proxied bool) error {
+func (s *cloudflareService) addDNSRecord(ctx context.Context, zoneID, recordType, name, content string, ttl int, proxied bool, priority *int) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.addDNSRecord")
 	defer span.Finish()
 	span.LogKV("zoneID", zoneID, "recordType", recordType, "name", name)
+	span.LogFields(tracingLog.String("content", content), tracingLog.Int("ttl", ttl), tracingLog.Bool("proxied", proxied))
 
 	cloudflareUrl := fmt.Sprintf("%s/zones/%s/dns_records", s.cfg.ExternalServices.Cloudflare.Url, zoneID)
 
@@ -340,6 +353,10 @@ func (s *cloudflareService) addDNSRecord(ctx context.Context, zoneID, recordType
 		"content": content,
 		"ttl":     ttl,
 		"proxied": proxied,
+	}
+	// Include priority if the record type is MX
+	if recordType == "MX" && priority != nil {
+		payload["priority"] = *priority
 	}
 
 	payloadData, err := json.Marshal(payload)
@@ -406,15 +423,84 @@ func (s *cloudflareService) addDNSRecord(ctx context.Context, zoneID, recordType
 	return nil
 }
 
+func (s *cloudflareService) getNameservers(ctx context.Context, zoneID string) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.getNameservers")
+	defer span.Finish()
+	span.LogKV("zoneID", zoneID)
+
+	cloudflareUrl := fmt.Sprintf("%s/zones/%s", s.cfg.ExternalServices.Cloudflare.Url, zoneID)
+
+	req, err := http.NewRequestWithContext(ctx, "GET", cloudflareUrl, nil)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
+		s.log.Error("failed to create HTTP request", err)
+		return nil, err
+	}
+
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain info from Cloudflare"))
+		s.log.Error("failed to get domain info from Cloudflare", err)
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		s.log.Error("failed to read response body", err)
+		return nil, err
+	}
+
+	// Define the response structure
+	var domainInfoResponse struct {
+		Success bool `json:"success"`
+		Result  struct {
+			NameServers []string `json:"name_servers"`
+		} `json:"result"`
+		Errors []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	if err = json.Unmarshal(body, &domainInfoResponse); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response body"))
+		s.log.Error("failed to unmarshal response body", err)
+		return nil, err
+	}
+
+	if !domainInfoResponse.Success {
+		errMsg := "failed to get nameservers from Cloudflare"
+		if len(domainInfoResponse.Errors) > 0 {
+			errMsg = domainInfoResponse.Errors[0].Message
+		}
+		err = fmt.Errorf(errMsg)
+		tracing.TraceErr(span, err)
+		s.log.Error("Cloudflare API error: ", errMsg)
+		return nil, err
+	}
+
+	// Log and return the nameservers
+	nameservers := domainInfoResponse.Result.NameServers
+	span.LogKV("result.nameservers", nameservers)
+	s.log.Infof("Retrieved nameservers: %v", nameservers)
+
+	return nameservers, nil
+}
+
 func dnsConfigsForMailStack(domain string) []DNSConfig {
 	return []DNSConfig{
-		{RecordType: "A", Name: "@", Content: "192.0.2.1", Proxied: true, TTL: 3600},
-		{RecordType: "CNAME", Name: "www", Content: domain, Proxied: true, TTL: 3600},
-		{RecordType: "CNAME", Name: "mail", Content: "mail.customerosmail.com", Proxied: false, TTL: 3600},
-		{RecordType: "CNAME", Name: "stats", Content: "custosmetrics.com", Proxied: false, TTL: 3600},
-		{RecordType: "MX", Name: "@", Content: fmt.Sprintf("mx.%s.cust.a.hostedemail.com", domain), Proxied: false, TTL: 3600},
-		{RecordType: "TXT", Name: "@", Content: "v=spf1 include:_spf.hostedemail.com -all", Proxied: false, TTL: 3600},
+		{RecordType: "A", Name: "@", Content: "192.0.2.1", Proxied: true, TTL: 1},
+		{RecordType: "CNAME", Name: "www", Content: domain, Proxied: true, TTL: 1},
+		{RecordType: "CNAME", Name: "mail", Content: "mail.customerosmail.com", Proxied: false, TTL: 1},
+		//{RecordType: "CNAME", Name: "stats", Content: "custosmetrics.com", Proxied: false, TTL: 1},
+		{RecordType: "MX", Name: "@", Content: fmt.Sprintf("mx.%s.cust.a.hostedemail.com", domain), Proxied: false, TTL: 1, Priority: utils.IntPtr(10)},
+		{RecordType: "TXT", Name: "@", Content: "v=spf1 include:_spf.hostedemail.com -all", Proxied: false, TTL: 1},
 		{RecordType: "TXT", Name: "_dmarc", Content: "v=DMARC1; p=reject; aspf=s; adkim=s; sp=reject; pct=100; ruf=mailto:dmarc@customerosmail.com; rua=mailto:monitor@customerosmail.com; fo=1; ri=86400", Proxied: false, TTL: 3600},
-		{RecordType: "TXT", Name: "dkim._domainkey", Content: "Copy the output value from the script dkim.py", Proxied: false, TTL: 3600},
+		{RecordType: "TXT", Name: "dkim._domainkey", Content: "Copy the output value from the script dkim.py", Proxied: false, TTL: 1},
 	}
 }

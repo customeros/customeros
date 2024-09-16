@@ -95,18 +95,21 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 						Status:  "error",
 						Message: "Not supporting premium domains, please choose another domain",
 					})
+				return
 			} else if errors.Is(err, coserrors.ErrDomainPriceExceeded) {
 				c.JSON(http.StatusNotAcceptable,
 					rest.ErrorResponse{
 						Status:  "error",
 						Message: "Domain price exceeds the maximum allowed price, please contact support",
 					})
+				return
 			} else if errors.Is(err, coserrors.ErrDomainConfigure) {
 				c.JSON(http.StatusInternalServerError,
 					rest.ErrorResponse{
 						Status:  "error",
 						Message: "Error configuring domain, please contact support",
 					})
+				return
 			} else {
 				c.JSON(http.StatusInternalServerError,
 					rest.ErrorResponse{
@@ -180,9 +183,16 @@ func registerDomain(ctx context.Context, tenant, domain string, services *servic
 	//}
 
 	// step 4 - setup domain in cloudflare
-	err = services.CloudflareService.SetupDomainForMailstack(ctx, tenant, domain)
+	nameservers, err := services.CloudflareService.SetupDomainForMailStack(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in Cloudflare"))
+		return registerNewDomainResponse, coserrors.ErrDomainConfigure
+	}
+
+	// step 5 - replace nameservers in namecheap
+	err = services.NamecheapService.UpdateNameservers(ctx, tenant, domain, nameservers)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error updating nameservers"))
 		return registerNewDomainResponse, coserrors.ErrDomainConfigure
 	}
 
