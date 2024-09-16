@@ -1,3 +1,5 @@
+import { Check } from '@ui/media/icons/Check';
+import { useStore } from '@shared/hooks/useStore';
 import { Activity } from '@ui/media/icons/Activity';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
 import { OpportunityRenewalLikelihood } from '@graphql/types';
@@ -16,6 +18,19 @@ export const UpdateHealthStatusSubItemGroup = ({
     health: OpportunityRenewalLikelihood,
   ) => void;
 }) => {
+  const store = useStore();
+
+  const isSelected = () => {
+    if (selectedIds.length > 1) {
+      return;
+    } else {
+      const organization = store.organizations.value.get(selectedIds[0]);
+
+      return organization?.value.accountDetails?.renewalSummary
+        ?.renewalLikelihood;
+    }
+  };
+
   return (
     <>
       <CommandSubItem
@@ -27,6 +42,11 @@ export const UpdateHealthStatusSubItemGroup = ({
           updateHealth(selectedIds, OpportunityRenewalLikelihood.HighRenewal);
           closeMenu();
         }}
+        rightAccessory={
+          isSelected() === OpportunityRenewalLikelihood.HighRenewal ? (
+            <Check />
+          ) : null
+        }
       />
 
       <CommandSubItem
@@ -38,6 +58,11 @@ export const UpdateHealthStatusSubItemGroup = ({
           updateHealth(selectedIds, OpportunityRenewalLikelihood.MediumRenewal);
           closeMenu();
         }}
+        rightAccessory={
+          isSelected() === OpportunityRenewalLikelihood.MediumRenewal ? (
+            <Check />
+          ) : null
+        }
       />
 
       <CommandSubItem
@@ -49,6 +74,11 @@ export const UpdateHealthStatusSubItemGroup = ({
           updateHealth(selectedIds, OpportunityRenewalLikelihood.LowRenewal);
           closeMenu();
         }}
+        rightAccessory={
+          isSelected() === OpportunityRenewalLikelihood.LowRenewal ? (
+            <Check />
+          ) : null
+        }
       />
     </>
   );

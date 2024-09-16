@@ -10,6 +10,8 @@ import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 import { sequenceKeywords } from '@shared/components/CommandMenu/commands/sequences/keywords';
 
+import { ChangeSequenceStatusSubItemGroup } from './sequences/ChangeSequenceStatusSubItemGroup';
+
 export const SequenceCommands = observer(() => {
   const store = useStore();
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
@@ -66,6 +68,7 @@ export const SequenceCommands = observer(() => {
         >
           Change sequence status
         </CommandItem>
+        <ChangeSequenceStatusSubItemGroup />
         <CommandItem
           leftAccessory={<Archive />}
           keywords={sequenceKeywords.archive_sequence}

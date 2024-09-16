@@ -1,3 +1,5 @@
+import { Check } from '@ui/media/icons/Check';
+import { useStore } from '@shared/hooks/useStore';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
 import { OrganizationRelationship } from '@graphql/types';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
@@ -16,6 +18,18 @@ export const RelationshipSubItemGroup = ({
     relationship: OrganizationRelationship,
   ) => void;
 }) => {
+  const store = useStore();
+
+  const isSelected = () => {
+    if (selectedIds.length > 1) {
+      return;
+    } else {
+      const organization = store.organizations.value.get(selectedIds[0]);
+
+      return organization?.value.relationship;
+    }
+  };
+
   return (
     <>
       <CommandSubItem
@@ -23,6 +37,9 @@ export const RelationshipSubItemGroup = ({
         leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
         keywords={organizationKeywords.change_relationship_to_customer}
+        rightAccessory={
+          isSelected() === OrganizationRelationship.Customer ? <Check /> : null
+        }
         onSelectAction={() => {
           updateRelationship(selectedIds, OrganizationRelationship.Customer);
           closeMenu();
@@ -34,6 +51,11 @@ export const RelationshipSubItemGroup = ({
         leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
         keywords={organizationKeywords.change_relationship_to_former_customer}
+        rightAccessory={
+          isSelected() === OrganizationRelationship.FormerCustomer ? (
+            <Check />
+          ) : null
+        }
         onSelectAction={() => {
           updateRelationship(
             selectedIds,
@@ -48,6 +70,9 @@ export const RelationshipSubItemGroup = ({
         leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
         keywords={organizationKeywords.change_relationship_to_unqualified}
+        rightAccessory={
+          isSelected() === OrganizationRelationship.NotAFit ? <Check /> : null
+        }
         onSelectAction={() => {
           updateRelationship(selectedIds, OrganizationRelationship.NotAFit);
           closeMenu();
@@ -58,6 +83,9 @@ export const RelationshipSubItemGroup = ({
         leftLabel='Change relationship'
         icon={<AlignHorizontalCentre02 />}
         keywords={organizationKeywords.change_relationship_to_prospect}
+        rightAccessory={
+          isSelected() === OrganizationRelationship.Prospect ? <Check /> : null
+        }
         onSelectAction={() => {
           updateRelationship(selectedIds, OrganizationRelationship.Prospect);
           closeMenu();

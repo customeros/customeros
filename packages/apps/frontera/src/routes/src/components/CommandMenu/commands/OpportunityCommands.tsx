@@ -15,6 +15,10 @@ import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
+import { OwnerSubItemGroup } from './shared/OwnerSubItemGroup';
+import { ChangeStageSubItemGroup } from './shared/ChangeStageSubItemGroup';
+import { AddCurrencySubItemGroup } from './opportunity/AddCurrencySubItemGroup';
+
 export const OpportunityCommands = observer(() => {
   const store = useStore();
   const opportunity = store.opportunities.value.get(
@@ -50,6 +54,8 @@ export const OpportunityCommands = observer(() => {
         >
           Change stage...
         </CommandItem>
+
+        <ChangeStageSubItemGroup />
 
         <CommandItem
           leftAccessory={<ArrowsRight />}
@@ -116,6 +122,7 @@ export const OpportunityCommands = observer(() => {
         >
           Change ARR currency...
         </CommandItem>
+        <AddCurrencySubItemGroup />
 
         <CommandItem
           leftAccessory={<Edit03 />}
@@ -162,6 +169,7 @@ export const OpportunityCommands = observer(() => {
         >
           Assign owner...
         </CommandItem>
+        <OwnerSubItemGroup />
 
         <CommandItem
           leftAccessory={<Archive />}
