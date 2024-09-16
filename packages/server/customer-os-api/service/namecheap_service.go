@@ -34,6 +34,7 @@ type NamecheapService interface {
 	PurchaseDomain(ctx context.Context, tenant, domain string) error
 	GetDomainPrice(ctx context.Context, domain string) (float64, error)
 	GetDomainInfo(ctx context.Context, tenant, domain string) (NamecheapDomainInfo, error)
+	UpdateNameservers(ctx context.Context, tenant, domain string, nameservers []string) error
 }
 
 type namecheapService struct {
@@ -508,4 +509,105 @@ func (s *namecheapService) GetDomainInfo(ctx context.Context, tenant, domain str
 	span.LogKV("domainInfo", domainInfo)
 
 	return domainInfo, nil
+}
+
+func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain string, nameservers []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "NamecheapService.UpdateNameservers")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain, "nameservers", nameservers)
+
+	// Check if domain belongs to the tenant in PostgreSQL and is active
+	exists, err := s.repositories.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check domain ownership in postgres"))
+		s.log.Error("failed to check domain ownership in postgres", err)
+		return err
+	}
+	if !exists {
+		err := fmt.Errorf("domain %s does not belong to tenant %s or is not active", domain, tenant)
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return err
+	}
+
+	sld := strings.Split(domain, ".")[0]
+	tld := strings.Split(domain, ".")[1]
+
+	// Prepare the parameters for the Namecheap API call
+	params := url.Values{}
+	params.Add("ApiKey", s.cfg.ExternalServices.Namecheap.ApiKey)
+	params.Add("ApiUser", s.cfg.ExternalServices.Namecheap.ApiUser)
+	params.Add("UserName", s.cfg.ExternalServices.Namecheap.ApiUsername)
+	params.Add("ClientIp", s.cfg.ExternalServices.Namecheap.ApiClientIp)
+	params.Add("Command", "namecheap.domains.dns.setCustom")
+	params.Add("SLD", sld)
+	params.Add("TLD", tld)
+	params.Add("Nameservers", strings.Join(nameservers, ","))
+
+	// Execute the request
+	resp, err := http.PostForm(s.cfg.ExternalServices.Namecheap.Url, params)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to call Namecheap API for setting custom nameservers"))
+		s.log.Error("failed to call Namecheap API for setting custom nameservers", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	responseBody, err := io.ReadAll(resp.Body)
+	span.LogFields(tracingLog.String("responseBody", string(responseBody)))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read Namecheap response"))
+		s.log.Error("failed to read Namecheap response", err)
+		return err
+	}
+
+	// Define XML response structure for Namecheap setCustom DNS response
+	type NamecheapSetCustomDNSResult struct {
+		XMLName xml.Name `xml:"ApiResponse"`
+		Status  string   `xml:"Status,attr"`
+		Errors  struct {
+			Error []struct {
+				Number  string `xml:"Number,attr"`
+				Message string `xml:",chardata"`
+			} `xml:"Error"`
+		} `xml:"Errors"`
+		CommandResponse struct {
+			DomainDNSSetCustomResult struct {
+				Domain  string `xml:"Domain,attr"`
+				Success bool   `xml:"Success,attr"`
+			} `xml:"DomainDNSSetCustomResult"`
+		} `xml:"CommandResponse"`
+	}
+
+	var result NamecheapSetCustomDNSResult
+	if err = xml.Unmarshal(responseBody, &result); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to parse Namecheap XML response"))
+		s.log.Error("failed to parse Namecheap XML response", err)
+		return err
+	}
+
+	// Check if any errors exist
+	if len(result.Errors.Error) > 0 {
+		for _, e := range result.Errors.Error {
+			errMsg := fmt.Sprintf("Error %s: %s", e.Number, e.Message)
+			tracing.TraceErr(span, fmt.Errorf(errMsg))
+			s.log.Errorf("Namecheap API returned an error: %s", errMsg)
+		}
+		return fmt.Errorf("Namecheap API returned errors")
+	}
+
+	// Check if the operation was successful
+	if !result.CommandResponse.DomainDNSSetCustomResult.Success {
+		err := fmt.Errorf("failed to set custom nameservers for domain %s", domain)
+		tracing.TraceErr(span, err)
+		s.log.Error(err)
+		return err
+	}
+
+	// Log success
+	span.LogKV("result", "success")
+	s.log.Infof("Successfully set custom nameservers for domain %s", domain)
+
+	return nil
 }
