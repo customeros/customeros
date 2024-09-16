@@ -1,11 +1,13 @@
 {
     "manifest_version": 3,
-    "name": "CustomerOS",
+    "name": "CustomerOs",
     "version": "1.0",
-    "permissions": [
+   "permissions": [
         "cookies",
         "tabs",
-        "storage"
+        "storage",
+        "scripting",
+        "alarms"
 ],
     "background": {
       "service_worker": "background.js"
