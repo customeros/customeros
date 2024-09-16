@@ -13,12 +13,12 @@
     "service_worker": "background.js"
   },
   "icons": {
-    "16": "assets/customeros.png",
-    "48": "assets/customeros.png",
-    "128": "assets/customeros.png"
+    "16": "src/assets/customeros.png",
+    "48": "src/assets/customeros.png",
+    "128": "src/assets/customeros.png"
   },
   "browser_action": {
-    "default_icon": "assets/customeros.png"
+    "default_icon": "src/assets/customeros.png"
   },
   "content_scripts": [
     {

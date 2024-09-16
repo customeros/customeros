@@ -3,10 +3,10 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
-  "scripts": {
+"scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "vite",
-    "build": "vite build && copyfiles ./manifest.json ./dist/"
+    "build": "vite build && copyfiles ./manifest.json ./dist/ && copyfiles ./src/assets/**/* ./dist/"
   },
   "keywords": [],
   "author": "",
