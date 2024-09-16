@@ -125,7 +125,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 		}
 		fileType = types.NewType("csv", "text/csv")
 	} else {
-		fileType, err := utils.GetFileType(headBytes)
+		fileType, err = utils.GetFileType(headBytes)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error getting file type"))
 			return nil, err
