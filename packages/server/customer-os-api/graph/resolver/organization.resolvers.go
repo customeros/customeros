@@ -25,10 +25,11 @@ import (
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -79,8 +80,17 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 				return nil, nil
 			}
 			if orgDbNode != nil {
+				organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+				if organizationEntity.Hide {
+					_, err = r.OrganizationShow(ctx, organizationEntity.ID)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						graphql.AddErrorf(ctx, "Failed to un-archive organization %s", organizationEntity.ID)
+						return nil, nil
+					}
+				}
 				graphql.AddErrorf(ctx, "Organization already exists with domain %s", domain)
-				return nil, nil
+				return mapper.MapEntityToOrganization(organizationEntity), nil
 			}
 		}
 	}
