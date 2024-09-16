@@ -14,4 +14,5 @@ var (
 	ErrDomainPremium       = errors.New("domain is premium")
 	ErrDomainPriceExceeded = errors.New("domain price exceeds the maximum allowed price")
 	ErrDomainPriceNotFound = errors.New("domain price not found")
+	ErrDomainConfigure     = errors.New("domain configure failed")
 )
