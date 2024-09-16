@@ -575,7 +575,7 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 		CommandResponse struct {
 			DomainDNSSetCustomResult struct {
 				Domain  string `xml:"Domain,attr"`
-				Success bool   `xml:"Success,attr"`
+				Updated bool   `xml:"Updated,attr"`
 			} `xml:"DomainDNSSetCustomResult"`
 		} `xml:"CommandResponse"`
 	}
@@ -598,7 +598,7 @@ func (s *namecheapService) UpdateNameservers(ctx context.Context, tenant, domain
 	}
 
 	// Check if the operation was successful
-	if !result.CommandResponse.DomainDNSSetCustomResult.Success {
+	if !result.CommandResponse.DomainDNSSetCustomResult.Updated {
 		err := fmt.Errorf("failed to set custom nameservers for domain %s", domain)
 		tracing.TraceErr(span, err)
 		s.log.Error(err)
