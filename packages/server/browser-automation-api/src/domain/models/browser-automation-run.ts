@@ -1,7 +1,5 @@
 import { logger } from "@/infrastructure";
 import { ErrorParser } from "@/util/error";
-import { type JobParams } from "@/infrastructure/scheduler";
-import { type LinkedinService } from "@/application/services/linkedin/linkedin-service";
 import {
   type BrowserAutomationRunType,
   type BrowserAutomationRunTable,
@@ -9,10 +7,7 @@ import {
   type BrowserAutomationRunStatus,
   type BrowserAutomationRunTrigger,
   BrowserAutomationRunsRepository,
-} from "@/infrastructure/persistance/postgresql/repositories/browser-automation-runs-repository";
-import { type BrowserConfigsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-configs-repository";
-import { type BrowserAutomationRunErrorsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-errors-repository";
-import { type BrowserAutomationRunResultsRepository } from "@/infrastructure/persistance/postgresql/repositories/browser-automation-run-results-repository";
+} from "@/infrastructure/persistance/postgresql/repositories";
 
 export type BrowserAutomationRunPayload = Pick<
   BrowserAutomationRunInsert,
@@ -64,6 +59,33 @@ export class BrowserAutomationRun {
     this.logLocation = values.logLocation;
   }
 
+  start() {
+    this.status = "RUNNING";
+    this.startedAt = new Date().toISOString();
+  }
+
+  complete() {
+    this.status = "COMPLETED";
+    this.finishedAt = new Date().toISOString();
+    this.runDuration = this.getDuration();
+  }
+
+  fail() {
+    this.status = "FAILED";
+    this.finishedAt = new Date().toISOString();
+    this.runDuration = this.getDuration();
+  }
+
+  private getDuration(): number | null {
+    if (this.startedAt && this.finishedAt) {
+      return (
+        new Date(this.finishedAt).getTime() - new Date(this.startedAt).getTime()
+      );
+    }
+
+    return null;
+  }
+
   toDTO(): BrowserAutomationRunTable {
     return {
       id: this.id,
@@ -98,189 +120,6 @@ export class BrowserAutomationRun {
     }
   }
 
-  toJobParams(
-    linkedinService: LinkedinService,
-    automationRepository: BrowserAutomationRunsRepository,
-    resultsRepository: BrowserAutomationRunResultsRepository,
-    errorsRepository: BrowserAutomationRunErrorsRepository,
-    configRepository: BrowserConfigsRepository,
-  ): JobParams | null {
-    const payload = BrowserAutomationRun.parsePayload(this.payload);
-
-    switch (this.type) {
-      case "SEND_MESSAGE": {
-        if (!payload) return null;
-
-        return {
-          cronTime: "* * * * * *",
-          start: true,
-          runOnce: true,
-          onTick: async (completeTick) => {
-            await linkedinService.sendMessage(
-              payload?.profileUrl,
-              payload?.message,
-              {
-                dryRun: payload?.dryRun,
-                onStart: async () => {
-                  await this.updateStatus("RUNNING", automationRepository);
-                  logger.info("Sending message", {
-                    source: "BrowserAutomationRun",
-                  });
-                },
-                onSuccess: async () => {
-                  await this.updateStatus("COMPLETED", automationRepository);
-                  await resultsRepository.insert({
-                    runId: this.id,
-                    type: "SEND_MESSAGE",
-                    resultData: JSON.stringify({
-                      profileUrl: payload?.profileUrl,
-                      message: "Message sent successfully",
-                    }),
-                  });
-                  logger.info("Message sent", {
-                    source: "BrowserAutomationRun",
-                  });
-                },
-                onError: async (err) => {
-                  await this.updateStatus("FAILED", automationRepository);
-                  await errorsRepository.insert({
-                    runId: this.id,
-                    errorMessage: err.message,
-                    errorDetails: err.details,
-                    errorCode: err.reference,
-                    errorType: err.code,
-                  });
-                  if (err.reference === "S001") {
-                    await configRepository.updateByUserId({
-                      userId: this.userId,
-                      tenant: this.tenant,
-                      sessionStatus: "INVALID",
-                    });
-                  }
-                  logger.error("Failed to send message", {
-                    source: "BrowserAutomationRun",
-                  });
-                  completeTick();
-                },
-              },
-            );
-            completeTick();
-          },
-        };
-      }
-      case "SEND_CONNECTION_REQUEST": {
-        if (!payload) return null;
-
-        return {
-          cronTime: "* * * * * *",
-          start: true,
-          runOnce: true,
-          onTick: async (completeTick) => {
-            await linkedinService.sendInvite(
-              payload?.profileUrl,
-              payload?.message,
-              {
-                dryRun: payload?.dryRun,
-                onStart: async () => {
-                  this.updateStatus("RUNNING", automationRepository);
-                  logger.info("Sending connection invite", {
-                    source: "BrowserAutomationRun",
-                  });
-                },
-                onSuccess: async () => {
-                  this.updateStatus("COMPLETED", automationRepository);
-                  await resultsRepository.insert({
-                    runId: this.id,
-                    type: "SEND_CONNECTION_REQUEST",
-                    resultData: JSON.stringify({
-                      profileUrl: payload?.profileUrl,
-                      message: "Connection invite sent successfully",
-                    }),
-                  });
-                  logger.info("Connection request sent", {
-                    source: "BrowserAutomationRun",
-                  });
-                },
-                onError: async (err) => {
-                  this.updateStatus("FAILED", automationRepository);
-                  await errorsRepository.insert({
-                    runId: this.id,
-                    errorMessage: err.message,
-                    errorDetails: err.details,
-                    errorCode: err.reference,
-                    errorType: err.code,
-                  });
-                  if (err.reference === "S001") {
-                    await configRepository.updateByUserId({
-                      userId: this.userId,
-                      tenant: this.tenant,
-                      sessionStatus: "INVALID",
-                    });
-                  }
-                  logger.error("Failed to send connection invite", {
-                    source: "BrowserAutomationRun",
-                  });
-                  completeTick();
-                },
-              },
-            );
-            completeTick();
-          },
-        };
-      }
-      case "FIND_CONNECTIONS": {
-        if (!payload) return null;
-
-        return {
-          cronTime: "0 0 0 * * *",
-          start: true,
-          runOnce: true,
-          onTick: async (completeTick) => {
-            await linkedinService.scrapeConnections({
-              dryRun: payload?.dryRun,
-              onStart: async () => {
-                await this.updateStatus("RUNNING", automationRepository);
-                logger.info("Scraping connections", {
-                  source: "BrowserAutomationRun",
-                });
-              },
-              onSuccess: async () => {
-                this.updateStatus("COMPLETED", automationRepository);
-                logger.info("Connections scraped", {
-                  source: "BrowserAutomationRun",
-                });
-              },
-              onError: async (err) => {
-                this.updateStatus("FAILED", automationRepository);
-                logger.error("Failed to scrape connections", {
-                  source: "BrowserAutomationRun",
-                });
-                await errorsRepository.insert({
-                  runId: this.id,
-                  errorMessage: err.message,
-                  errorDetails: err.details,
-                  errorCode: err.reference,
-                  errorType: err.code,
-                });
-                if (err.reference === "S001") {
-                  await configRepository.updateByUserId({
-                    userId: this.userId,
-                    tenant: this.tenant,
-                    sessionStatus: "INVALID",
-                  });
-                }
-                completeTick();
-              },
-            });
-            completeTick();
-          },
-        };
-      }
-      default:
-        return null;
-    }
-  }
-
   static async create(
     values: BrowserAutomationRunPayload,
     browserAutomationRunsRepository: BrowserAutomationRunsRepository,
@@ -292,7 +131,7 @@ export class BrowserAutomationRun {
     }
   }
 
-  private static parsePayload(payload: string | null) {
+  static parsePayload(payload: string | null) {
     try {
       if (!payload) return null;
       return JSON.parse(payload);

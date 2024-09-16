@@ -3,17 +3,19 @@ import { validationResult } from "express-validator";
 
 import { logger } from "@/infrastructure";
 import { ErrorParser } from "@/util/error";
-import { ScheduleService } from "@/application/services/schedule-service";
+import { BrowserAutomationRunService } from "@/application/services/browser-automation-run-service";
+import { BrowserAutomationRunsRepository } from "@/infrastructure/persistance/postgresql/repositories";
 
 export class ConnectController {
-  private scheduleService = ScheduleService.getInstance();
+  private browserAutomationRunService = new BrowserAutomationRunService(
+    new BrowserAutomationRunsRepository(),
+  );
 
   constructor() {
     this.sendConnectionInvite = this.sendConnectionInvite.bind(this);
   }
 
   async sendConnectionInvite(req: Request, res: Response) {
-    const { profileUrl, message, dryRun } = req.body;
     const validationErrors = validationResult(req);
 
     if (!validationErrors.isEmpty()) {
@@ -25,22 +27,27 @@ export class ConnectController {
     }
 
     try {
-      const automationRun = await this.scheduleService.createAutomationRun(
-        res.locals.browserConfig,
-        "SEND_CONNECTION_REQUEST",
-        { profileUrl, message, dryRun },
+      const newAutomationRun = await this.browserAutomationRunService.createRun(
+        {
+          browserConfigId: res.locals.browserConfig.id,
+          tenant: res.locals.tenantName,
+          type: "SEND_CONNECTION_REQUEST",
+          userId: res.locals.user.id,
+          payload: req.body,
+        },
       );
 
       res.send({
         success: true,
         message: "Connection request sent successfully",
-        data: automationRun,
+        data: newAutomationRun?.toDTO(),
       });
     } catch (err) {
       const error = ErrorParser.parse(err);
       logger.error("Error in ConnectController", {
         error: error.message,
         details: error.details,
+        source: "ConnectController",
       });
       res.status(500).send({
         success: false,

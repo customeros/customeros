@@ -3,17 +3,19 @@ import { validationResult } from "express-validator";
 
 import { logger } from "@/infrastructure";
 import { ErrorParser } from "@/util/error";
-import { ScheduleService } from "@/application/services/schedule-service";
+import { BrowserAutomationRunService } from "@/application/services/browser-automation-run-service";
+import { BrowserAutomationRunsRepository } from "@/infrastructure/persistance/postgresql/repositories";
 
 export class MessagesController {
-  private scheduleService = ScheduleService.getInstance();
+  private browserAutomationRunService = new BrowserAutomationRunService(
+    new BrowserAutomationRunsRepository(),
+  );
 
   constructor() {
     this.sendMessage = this.sendMessage.bind(this);
   }
 
   async sendMessage(req: Request, res: Response) {
-    const { profileUrl, message, dryRun } = req?.body;
     const validationErrors = validationResult(req);
 
     if (!validationErrors.isEmpty()) {
@@ -32,22 +34,27 @@ export class MessagesController {
     }
 
     try {
-      const automationRun = await this.scheduleService.createAutomationRun(
-        res.locals.browserConfig,
-        "SEND_MESSAGE",
-        { profileUrl, message, dryRun },
+      const newAutomationRun = await this.browserAutomationRunService.createRun(
+        {
+          browserConfigId: res.locals.browserConfig.id,
+          tenant: res.locals.tenantName,
+          type: "SEND_MESSAGE",
+          userId: res.locals.user.id,
+          payload: JSON.stringify(req.body),
+        },
       );
 
       res.send({
         success: true,
         message: "Browser automation scheduled successfully",
-        data: automationRun,
+        data: newAutomationRun?.toDTO(),
       });
     } catch (err) {
       const error = ErrorParser.parse(err);
       logger.error("Error in MessagesController", {
         error: error.message,
         details: error.details,
+        source: "MessagesController",
       });
       res.status(500).send({
         success: false,

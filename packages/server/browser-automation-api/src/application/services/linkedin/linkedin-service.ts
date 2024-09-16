@@ -1,15 +1,7 @@
 import { logger } from "@/infrastructure";
-import { Proxy } from "@/domain/models/proxy";
-import { ErrorParser, StandardError } from "@/util/error";
+import { ErrorParser } from "@/util/error";
 import { BrowserConfig } from "@/domain/models/browser-config";
 import { LinkedinAutomationService } from "@/infrastructure/scraper/services/linkedin-automation-service";
-
-type LinkedinServiceMethodOptions = {
-  dryRun?: boolean;
-  onStart?: () => Promise<void>;
-  onSuccess?: () => Promise<void>;
-  onError?: (err: StandardError) => Promise<void>;
-};
 
 export class LinkedinService {
   private linkedinAutomationService: LinkedinAutomationService;
@@ -25,70 +17,93 @@ export class LinkedinService {
     );
   }
 
-  async sendInvite(
-    profileUrl: string,
-    message: string,
-    options?: LinkedinServiceMethodOptions,
-  ) {
+  async sendInvite(payload: unknown) {
+    const { profileUrl, message, dryRun } = payload as {
+      profileUrl: string;
+      message: string;
+      dryRun?: boolean;
+    };
+
     try {
-      await options?.onStart?.();
+      logger.info("Sending connection invite...", {
+        source: "LinkedinService",
+      });
+
       await this.linkedinAutomationService.sendConenctionInvite(
         profileUrl,
         message,
-        { dryRun: options?.dryRun },
+        { dryRun },
       );
-      await options?.onSuccess?.();
-    } catch (err) {
-      LinkedinService.handleError(err, async (error) => {
-        await options?.onError?.(error);
+
+      logger.info("Connection invite sent.", {
+        source: "LinkedinService",
       });
+      return { profileUrl, message: "Connection invite sent successfully" };
+    } catch (err) {
+      logger.info("Failed to send connection invite.", {
+        source: "LinkedinService",
+      });
+      throw LinkedinService.handleError(err);
     }
   }
 
-  async scrapeConnections(options?: LinkedinServiceMethodOptions) {
+  async scrapeConnections() {
     try {
-      await options?.onStart?.();
-      const result = await this.linkedinAutomationService.getConnections();
-      await options?.onSuccess?.();
+      logger.info("Scraping connections...", {
+        source: "LinkedinService",
+      });
 
+      const result = await this.linkedinAutomationService.getConnections();
+
+      logger.info("Connections scraped.", {
+        source: "LinkedinService",
+      });
       return result;
     } catch (err) {
-      LinkedinService.handleError(err, async (error) => {
-        await options?.onError?.(error);
+      logger.info("Failed to scrape connections", {
+        source: "LinkedinService",
       });
+      throw LinkedinService.handleError(err);
     }
   }
 
-  async sendMessage(
-    profileUrl: string,
-    message: string,
-    options?: LinkedinServiceMethodOptions,
-  ) {
+  async sendMessage(payload: unknown) {
+    const { profileUrl, message, dryRun } = payload as {
+      profileUrl: string;
+      message: string;
+      dryRun?: boolean;
+    };
+
     try {
-      await options?.onStart?.();
+      logger.info("Sending message", {
+        source: "LinkedinService",
+      });
+
       await this.linkedinAutomationService.sendMessageToConnection(
         profileUrl,
         message,
-        { dryRun: options?.dryRun },
+        { dryRun },
       );
-      await options?.onSuccess?.();
-    } catch (err) {
-      LinkedinService.handleError(err, async (error) => {
-        await options?.onError?.(error);
+
+      logger.info("Message sent", {
+        source: "LinkedinService",
       });
+      return { profileUrl, message: "Message sent successfully" };
+    } catch (err) {
+      logger.info("Failed to send message", {
+        source: "LinkedinService",
+      });
+      throw LinkedinService.handleError(err);
     }
   }
 
-  private static async handleError(
-    err: unknown,
-    cb?: (err: StandardError) => void,
-  ) {
+  private static handleError(err: unknown) {
     const error = ErrorParser.parse(err);
     logger.error("Error in LinkedinService", {
       error: error.message,
-      details: error.details ?? error.reference,
+      details: error.reference ?? error.details,
       source: "LinkedinService",
     });
-    cb?.(error);
+    return error;
   }
 }
