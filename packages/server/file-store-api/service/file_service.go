@@ -6,7 +6,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
-	"errors"
 	"fmt"
 	"github.com/aws/aws-sdk-go/aws"
 	awsSes "github.com/aws/aws-sdk-go/aws/session"
@@ -27,6 +26,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/model"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -71,7 +71,7 @@ func (s *fileService) GetById(ctx context.Context, userEmail, tenantName, id str
 
 	attachment, err := s.getCosAttachmentById(ctx, userEmail, tenantName, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
 
@@ -93,20 +93,20 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 
 	fileName, err := storeMultipartFileToTemp(ctx, fileId, multipartFileHeader)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error storing multipart file to temp"))
 		return nil, err
 	}
 
 	file, err := os.Open(fileName)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error opening file"))
 		return nil, err
 	}
 	defer file.Close()
 
 	headBytes, err := utils.GetFileTypeHeadFromMultipart(file)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting file type head"))
 		return nil, err
 	}
 
@@ -119,7 +119,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 		// Validate if the detected MIME type is "text/csv"
 		if mimeType != "text/csv" && mimeType != "application/octet-stream" {
 			err = errors.New("Invalid mime type for CSV")
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "Invalid file type"))
 			s.log.Error("Invalid file type")
 			return nil, err
 		}
@@ -127,13 +127,13 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	} else {
 		fileType, err := utils.GetFileType(headBytes)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error getting file type"))
 			return nil, err
 		}
 
 		if fileType == filetype.Unknown {
 			err = errors.New("Unknown file type")
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "Unknown file type"))
 			s.log.Error("Unknown multipartFile type")
 			return nil, err
 		}
@@ -170,13 +170,13 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 
 		cloudflareApi, err := cloudflare.NewWithAPIToken(s.cfg.Service.CloudflareImageUploadApiKey)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error creating cloudflare api"))
 			return nil, err
 		}
 
 		open, err := os.Open(fileName)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error opening file"))
 			return nil, err
 		}
 
@@ -188,7 +188,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 			RequireSignedURLs: true,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to cdn"))
 			return nil, err
 		}
 
@@ -199,7 +199,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
 		s.log.Fatal(err)
 	}
 
@@ -209,11 +209,11 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 
 	err = uploadFileToS3(ctx, s.cfg, session, tenantName, basePath, fileId+"."+fileType.Extension, multipartFileHeader)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to s3"))
 		s.log.Fatal(err)
 	}
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error uploading file to s3"))
 		return nil, err
 	}
 
@@ -221,12 +221,12 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 
 	err = s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error adding headers to graph request"))
 		return nil, err
 	}
 	ctx, cancel, err := s.contextWithTimeout(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating context with timeout"))
 		return nil, err
 	}
 	defer cancel()
@@ -234,7 +234,7 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	var graphqlResponse model.AttachmentCreateResponse
 	tracing.InjectSpanContextIntoGraphQLRequest(graphqlRequest, span)
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error running graphql client"))
 		return nil, err
 	}
 
@@ -250,13 +250,13 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 	attachment, err := s.getCosAttachmentById(ctx, userEmail, tenantName, id)
 	byId := mapper.MapAttachmentResponseToFileEntity(attachment)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
 		log.Error(err)
 		ginContext.AbortWithError(http.StatusInternalServerError, err)
 	}
@@ -279,7 +279,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 		Key:    aws.String(tenantName + byId.BasePath + "/" + attachment.ID + "." + extension),
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting object metadata"))
 		ginContext.AbortWithError(http.StatusInternalServerError, err)
 		return nil, err
 	}
@@ -332,7 +332,7 @@ func (s *fileService) DownloadSingleFile(ctx context.Context, userEmail, tenantN
 		Range:  aws.String("bytes=" + strconv.FormatInt(start, 10) + "-" + strconv.FormatInt(end, 10)),
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting object"))
 		// Handle error
 		s.log.Errorf("Error getting object: %v", err)
 		ginContext.AbortWithError(http.StatusInternalServerError, err)
@@ -353,13 +353,13 @@ func (s *fileService) Base64Image(ctx context.Context, userEmail, tenantName str
 
 	attachment, err := s.getCosAttachmentById(ctx, userEmail, tenantName, id)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
 		return nil, err
 	}
 
 	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
 		s.log.Error(err)
 	}
 
@@ -376,7 +376,7 @@ func (s *fileService) Base64Image(ctx context.Context, userEmail, tenantName str
 			Key:    aws.String(attachment.ID),
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error downloading file"))
 		return nil, err
 	}
 
@@ -425,12 +425,12 @@ func (s *fileService) getCosAttachmentById(ctx context.Context, userEmail, tenan
 
 	err := s.addHeadersToGraphRequest(graphqlRequest, tenantName, userEmail)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error adding headers to graph request"))
 		return nil, err
 	}
 	ctx, cancel, err := s.contextWithTimeout(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating context with timeout"))
 		return nil, err
 	}
 	defer cancel()
@@ -438,7 +438,7 @@ func (s *fileService) getCosAttachmentById(ctx context.Context, userEmail, tenan
 	var graphqlResponse model.AttachmentResponse
 	tracing.InjectSpanContextIntoGraphQLRequest(graphqlRequest, span)
 	if err = s.graphqlClient.Run(ctx, graphqlRequest, &graphqlResponse); err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error running graphql client"))
 		return nil, err
 	}
 	return &graphqlResponse.Attachment, nil
@@ -455,7 +455,7 @@ func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Ses
 
 	fileStream, err := multipartFile.Open()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error opening file"))
 		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
@@ -466,7 +466,7 @@ func uploadFileToS3(ctx context.Context, cfg *config.Config, session *awsSes.Ses
 		ContentLength: aws.Int64(0),
 	})
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error putting object"))
 		return fmt.Errorf("uploadFileToS3: %w", err)
 	}
 
@@ -507,25 +507,25 @@ func storeMultipartFileToTemp(ctx context.Context, fileId string, multipartFileH
 
 	file, err := os.CreateTemp("", fileId)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating temp file"))
 		return "", err
 	}
 	src, err := multipartFileHeader.Open()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error opening multipart file"))
 		return "", err
 	}
 	defer src.Close()
 
 	_, err = io.Copy(file, src)
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error copying file"))
 		return "", err
 	}
 
 	err = file.Close()
 	if err != nil {
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "Error closing file"))
 		return "", err
 	}
 
