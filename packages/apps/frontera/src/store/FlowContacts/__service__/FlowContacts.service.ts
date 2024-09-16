@@ -3,7 +3,7 @@ import type { Transport } from '@store/transport';
 import {
   FlowContactDeleteMutation,
   FlowContactDeleteMutationVariables,
-} from '@store/Flows/__service__/flowContactDelete.generated';
+} from '@store/FlowContacts/__service__/flowContactDelete.generated';
 
 import DeleteContactDocument from './flowContactDelete.graphql';
 

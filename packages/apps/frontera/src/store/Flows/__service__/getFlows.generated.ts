@@ -48,9 +48,7 @@ export type GetFlowsQuery = {
       metadata: { __typename?: 'Metadata'; id: string };
       contact: {
         __typename?: 'Contact';
-        name?: string | null;
-        firstName?: string | null;
-        lastName?: string | null;
+        metadata: { __typename?: 'Metadata'; id: string };
       };
     }>;
   }>;
