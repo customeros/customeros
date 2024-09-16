@@ -1,14 +1,11 @@
 {
     "manifest_version": 3,
-    "name": "Your Extension Name",
+    "name": "CustomerOS",
     "version": "1.0",
     "permissions": [
-        "notifications",
         "cookies",
         "tabs",
-        "storage",
-        "scripting",
-        "alarms"
+        "storage"
 ],
     "background": {
       "service_worker": "background.js"
