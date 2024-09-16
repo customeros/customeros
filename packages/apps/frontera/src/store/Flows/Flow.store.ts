@@ -1,5 +1,6 @@
 import type { RootStore } from '@store/root';
 
+import set from 'lodash/set';
 import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
@@ -71,7 +72,16 @@ export class FlowStore implements Store<Flow> {
   }
 
   init(data: Flow) {
-    return merge(this.value, data);
+    const output = merge(this.value, data);
+    const flowContacts = data.contacts?.map((item) => {
+      this.root.flowContacts.load([item]);
+
+      return this.root.flowContacts.value.get(item?.metadata?.id)?.value;
+    });
+
+    flowContacts && set(output, 'contacts', flowContacts);
+
+    return output;
   }
 
   public linkContact = async (contactId: string) => {
@@ -121,36 +131,43 @@ export class FlowStore implements Store<Flow> {
     }
   };
 
-  public unlinkContact = async (contactId: string) => {
+  public linkContacts = async (contactIds: string[]) => {
     this.isLoading = true;
 
     try {
-      await this.service.deleteContact({
-        id: this.id,
+      const contactStores = contactIds.map((e) => {
+        return this.root.contacts.value.get(e);
+      });
+
+      await this.service.addContactBulk({
+        contactId: contactIds,
+        flowId: this.id,
       });
 
       runInAction(() => {
-        const contactStore = this.root.contacts.value.get(contactId);
+        contactStores.map((e) => {
+          e?.update(
+            (c) => {
+              c.flows = [{ ...this.value }];
 
-        contactStore?.update(
-          (c) => {
-            c.flows = [];
+              return c;
+            },
+            { mutate: false },
+          );
 
-            return c;
-          },
-          { mutate: false },
-        );
+          return e;
+        });
         this.root.ui.toastSuccess(
-          `Contact removed from '${this.value.name}'`,
-          'unlink-contact-from-sequence-success',
+          `Contact added to '${this.value.name}'`,
+          'link-contact-to-flows-success',
         );
-        contactStore?.invalidate();
+        this.root.contacts.sync({ action: 'INVALIDATE', ids: contactIds });
       });
     } catch (e) {
       runInAction(() => {
         this.root.ui.toastError(
-          `We couldn't remove a contact from a sequence`,
-          'unlink-contact-from-sequence-error',
+          "We couldn't add a contact to a flow",
+          'link-contact-to-flows-error',
         );
       });
     } finally {

@@ -16,6 +16,10 @@ import {
   FlowContactDeleteMutation,
   FlowContactDeleteMutationVariables,
 } from '@store/Flows/__service__/flowContactDelete.generated';
+import {
+  FlowContactAddBulkMutation,
+  FlowContactAddBulkMutationVariables,
+} from '@store/Flows/__service__/flowContactAddBulk.generated.ts';
 
 import { Flow } from '@graphql/types';
 
@@ -24,6 +28,7 @@ import MergeFlowDocument from './flowMerge.graphql';
 import AddContactDocument from './flowContactAdd.graphql';
 import ChangeStatusDocument from './changeFlowStatus.graphql';
 import DeleteContactDocument from './flowContactDelete.graphql';
+import AddContactBulkDocument from './flowContactAddBulk.graphql';
 
 class FlowService {
   private static instance: FlowService | null = null;
@@ -57,6 +62,13 @@ class FlowService {
       FlowContactAddMutation,
       FlowContactAddMutationVariables
     >(AddContactDocument, payload);
+  }
+
+  async addContactBulk(payload: FlowContactAddBulkMutationVariables) {
+    return this.transport.graphql.request<
+      FlowContactAddBulkMutation,
+      FlowContactAddBulkMutationVariables
+    >(AddContactBulkDocument, payload);
   }
 
   async deleteContact(payload: FlowContactDeleteMutationVariables) {

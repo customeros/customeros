@@ -46,7 +46,7 @@ export const ContactBulkCommands = observer(() => {
             </>
           }
         >
-          Move to sequence...
+          Move to flow...
         </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}

@@ -29,19 +29,17 @@ export const UnlinkContactFromFlow = observer(() => {
     store.ui.commandMenu.clearCallback();
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!context.ids?.length) return;
 
     if (context.ids?.length > 1) {
-      store.flows.unlinkContacts(context.ids);
+      await store.contacts.deleteFlowContacts(context.ids);
       handleClose();
 
       return;
     }
 
-    store.contacts.value
-      .get(context.ids[0])
-      ?.flow?.unlinkContact(context.ids[0]);
+    store.contacts.value.get(context.ids[0])?.deleteFlowContact();
     handleClose();
   };
 

@@ -49,9 +49,9 @@ query getFlows {
         id
       }
       contact {
-        name
-        firstName
-        lastName
+        metadata {
+          id
+        }
       }
     }
   }

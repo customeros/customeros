@@ -2461,8 +2461,10 @@ export type Mutation = {
   flowActionSender_Merge: FlowActionSender;
   flowAction_ChangeIndex: Result;
   flowAction_ChangeStatus: FlowAction;
+  flowAction_Delete: Result;
   flowAction_Merge: FlowAction;
   flowContact_Add: FlowContact;
+  flowContact_AddBulk: Result;
   flowContact_Delete: Result;
   flow_ChangeStatus: Flow;
   flow_Merge: Flow;
@@ -2912,6 +2914,10 @@ export type MutationFlowAction_ChangeStatusArgs = {
   status: FlowActionStatus;
 };
 
+export type MutationFlowAction_DeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type MutationFlowAction_MergeArgs = {
   flowId: Scalars['ID']['input'];
   input: FlowActionMergeInput;
@@ -2919,6 +2925,11 @@ export type MutationFlowAction_MergeArgs = {
 
 export type MutationFlowContact_AddArgs = {
   contactId: Scalars['ID']['input'];
+  flowId: Scalars['ID']['input'];
+};
+
+export type MutationFlowContact_AddBulkArgs = {
+  contactId: Array<Scalars['ID']['input']>;
   flowId: Scalars['ID']['input'];
 };
 

@@ -1,4 +1,4 @@
-import type { Transport } from '@store/transport';
+import type { Transport } from '@store/transport.ts';
 
 import { gql } from 'graphql-request';
 

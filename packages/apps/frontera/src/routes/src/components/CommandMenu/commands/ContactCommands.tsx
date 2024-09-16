@@ -18,7 +18,7 @@ import { CommandsContainer } from '@shared/components/CommandMenu/commands/share
 
 import { AddJobRolesSubItemGroup } from './contacts/AddJobRolesSubItemGroup';
 import { AddPersonaTagSubItemGroup } from './contacts/AddPersonaTagSubItemGroup';
-import { AddContactSequenceSubItemGroup } from './contacts/AddContactSequenceSubItemGroup';
+import { AddContactFlowSubItemGroup } from './contacts/AddContactFlowSubItemGroup.tsx';
 
 export const ContactCommands = observer(() => {
   const store = useStore();
@@ -63,9 +63,9 @@ export const ContactCommands = observer(() => {
             </>
           }
         >
-          Move to sequence...
+          Move to flow...
         </CommandItem>
-        <AddContactSequenceSubItemGroup />
+        <AddContactFlowSubItemGroup />
 
         {!!contact?.value?.tags?.length && (
           <CommandItem

@@ -62,7 +62,7 @@ export const EditContactFlow = observer(() => {
 
         return;
       } else {
-        flows.linkContacts();
+        opt.linkContacts(selectedIds);
       }
     }
 

@@ -12,10 +12,11 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { countryMap } from '@assets/countries/countriesMap';
+import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
 
 import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
-import { ContactService } from './Contact.service';
+import { ContactService } from './__service__/Contact.service.ts';
 
 interface ContractStore {
   get name(): string;
@@ -84,6 +85,16 @@ export class ContactStore implements Store<Contact>, ContractStore {
     return this.root.flows?.value.get(
       this.value.flows[0]?.metadata.id,
     ) as FlowStore;
+  }
+
+  get flowContact(): FlowContactStore | undefined {
+    const fcId = this.flow?.value.contacts?.find(
+      (fc) => fc.contact.metadata.id === this.id,
+    )?.metadata.id;
+
+    if (!fcId) return undefined;
+
+    return this.root.flowContacts.value.get(fcId) as FlowContactStore;
   }
 
   get name() {
@@ -475,7 +486,12 @@ export class ContactStore implements Store<Contact>, ContractStore {
       });
     }
   }
+
+  async deleteFlowContact() {
+    return this.flowContact?.deleteFlowContact();
+  }
 }
+
 type CONTACT_QUERY_RESULT = {
   contact: Contact;
 };

@@ -16,7 +16,7 @@ import {
 
 import mock from './mock.json';
 import { ContactStore } from './Contact.store';
-import { ContactService } from './Contact.service';
+import { ContactService } from './__service__/Contact.service.ts';
 
 export class ContactsStore implements GroupStore<Contact> {
   version = 0;
@@ -335,6 +335,12 @@ export class ContactsStore implements GroupStore<Contact> {
         this.sync({ action: 'DELETE', ids: [id] });
       });
     }
+  }
+
+  async deleteFlowContacts(contactIds: string[]) {
+    return contactIds.forEach((contactId) => {
+      this.value.get(contactId)?.deleteFlowContact();
+    });
   }
 }
 

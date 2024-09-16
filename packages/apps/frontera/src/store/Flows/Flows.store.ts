@@ -81,16 +81,6 @@ export class FlowsStore implements GroupStore<Flow> {
     this.isLoading = true;
   }
 
-  public linkContacts = async () => {
-    // todo
-  };
-
-  public unlinkContacts = async (ids: Array<string>) => {
-    ids.forEach(() => {
-      // todo
-    });
-  };
-
   async create(
     payload: FlowMergeMutationVariables['input'],
     options?: { onSuccess?: (serverId: string) => void },
