@@ -71,7 +71,7 @@ func (r flowReadRepositoryImpl) GetListWithContact(ctx context.Context, contactI
 	}
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowContact_%s)-[:HAS]->(c:Contact_%s) `, tenant, tenant, tenant)
-	cypher += "where c.id in $contactIds RETURN fs, c.id"
+	cypher += "where c.id in $contactIds RETURN f, c.id"
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
