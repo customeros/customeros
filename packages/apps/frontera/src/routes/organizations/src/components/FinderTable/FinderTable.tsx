@@ -348,7 +348,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const onSelectionChange = (selectedIds: string[]) => {
     if (selectedIds.length > 0 && !isCommandMenuPrompted) {
-      store.ui.commandMenu.setCallback((id?: string) => {
+      store.ui.commandMenu.setCallback(() => {
         tableRef?.current?.resetRowSelection();
       });
 
