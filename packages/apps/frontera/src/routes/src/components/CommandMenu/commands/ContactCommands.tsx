@@ -50,7 +50,7 @@ export const ContactCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Shuffle01 />}
-          keywords={contactKeywords.move_to_sequence}
+          keywords={contactKeywords.move_to_flow}
           onSelect={() => {
             store.ui.commandMenu.setType('EditContactFlow');
           }}
@@ -170,7 +170,7 @@ export const ContactCommands = observer(() => {
         {contact?.flow?.value?.name !== undefined && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
-            keywords={contactKeywords.remove_from_sequence}
+            keywords={contactKeywords.remove_from_flow}
             onSelect={() => {
               store.ui.commandMenu.setType('UnlinkContactFromFlow');
             }}
@@ -234,6 +234,6 @@ const contactKeywords = {
     'label',
     'profile',
   ],
-  move_to_sequence: ['move', 'to', 'sequence', 'edit', 'change', 'campaign'],
-  remove_from_sequence: ['remove', 'sequence', 'delete', 'campaign'],
+  move_to_flow: ['move', 'to', 'flow'],
+  remove_from_flow: ['remove', 'flow', 'delete'],
 };

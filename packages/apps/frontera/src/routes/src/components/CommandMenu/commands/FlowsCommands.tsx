@@ -68,7 +68,7 @@ export const FlowsCommands = observer(() => {
         </CommandItem>
         <CommandItem
           leftAccessory={<Archive />}
-          keywords={flowKeywords.archive_sequence}
+          keywords={flowKeywords.archive_flow}
           onSelect={() => {
             store.ui.commandMenu.setType('DeleteConfirmationModal');
           }}
