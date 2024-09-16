@@ -1,95 +1,138 @@
 import { useState, useEffect } from 'react';
 
+import { observer } from 'mobx-react-lite';
 import { useKeys, useKeyBindings } from 'rooks';
 import { ContactStore } from '@store/Contacts/Contact.store';
-import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
+import { CommandMenuType } from '@store/UI/CommandMenu.store';
 
+import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { TableInstance } from '@ui/presentation/Table';
 import { SharedTableActions } from '@organizations/components/Actions/components/SharedActions.tsx';
 
 interface TableActionsProps {
-  focusedId: string | null;
-  onOpenCommandK: () => void;
+  selection: string[];
+  focusedId?: string | null;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<ContactStore>;
-  handleOpen: (type: CommandMenuType) => void;
 }
 
-export const OpportunitiesTableActions = ({
-  table,
-  enableKeyboardShortcuts,
-  onOpenCommandK,
-  handleOpen,
-  focusedId,
-}: TableActionsProps) => {
-  const [targetId, setTargetId] = useState<string | null>(null);
-  const selection = table.getState().rowSelection;
-  const selectedIds = Object.keys(selection);
-  const selectCount = selectedIds.length;
-  const clearSelection = () => table.resetRowSelection();
+export const OpportunitiesTableActions = observer(
+  ({
+    table,
+    enableKeyboardShortcuts,
+    selection,
+    focusedId,
+  }: TableActionsProps) => {
+    const store = useStore();
 
-  useEffect(() => {
-    if (selectCount === 1) {
-      setTargetId(selectedIds[0]);
-    }
+    const [targetId, setTargetId] = useState<string | null>(null);
 
-    if (selectCount < 1) {
-      setTargetId(null);
-    }
-  }, [selectCount]);
+    const selectCount = selection?.length;
+    const clearSelection = () => table.resetRowSelection();
 
-  useKeys(
-    ['Shift', 'S'],
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      handleOpen('ChangeStage');
-    },
-    { when: enableKeyboardShortcuts },
-  );
-  useKeys(
-    ['Shift', 'O'],
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      handleOpen('AssignOwner');
-    },
-    { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
-  );
+    const onOpenCommandK = () => {
+      if (selection?.length > 0) return;
 
-  useKeys(
-    ['Shift', 'R'],
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      handleOpen('RenameOpportunityName');
-    },
-    { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
-  );
+      if (selection?.length === 1) {
+        store.ui.commandMenu.setType('OpportunityCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selection,
+        });
+        store.ui.commandMenu.setOpen(true);
+      } else {
+        store.ui.commandMenu.setType('OpportunityBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Contact',
+          ids: selection,
+        });
+        store.ui.commandMenu.setOpen(true);
+      }
+    };
 
-  useModKey(
-    'Backspace',
-    () => {
-      handleOpen('DeleteConfirmationModal');
-    },
-    { when: enableKeyboardShortcuts },
-  );
-  useKeyBindings(
-    {
-      Escape: clearSelection,
-    },
-    { when: enableKeyboardShortcuts },
-  );
+    const handleOpen = (type: CommandMenuType, property?: string) => {
+      if (selection?.length >= 1) {
+        store.ui.commandMenu.setContext({
+          ids: selection,
+          entity: 'Opportunity',
+          property: property,
+        });
+      } else {
+        store.ui.commandMenu.setContext({
+          ids: [focusedId || ''],
+          entity: 'Opportunity',
+          property: property,
+        });
+      }
 
-  if (!selectCount && !targetId) return null;
+      store.ui.commandMenu.setType(type);
+      store.ui.commandMenu.setOpen(true);
+    };
 
-  return (
-    <SharedTableActions
-      table={table}
-      handleOpen={handleOpen}
-      onOpenCommandK={onOpenCommandK}
-      onHide={() => handleOpen('DeleteConfirmationModal')}
-    />
-  );
-};
+    useEffect(() => {
+      if (selectCount === 1) {
+        setTargetId(selection[0]);
+      }
+
+      if (selectCount < 1) {
+        setTargetId(null);
+      }
+    }, [selectCount]);
+
+    useKeys(
+      ['Shift', 'S'],
+      (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleOpen('ChangeStage');
+      },
+      { when: enableKeyboardShortcuts },
+    );
+    useKeys(
+      ['Shift', 'O'],
+      (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleOpen('AssignOwner');
+      },
+      { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
+    );
+
+    useKeys(
+      ['Shift', 'R'],
+      (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleOpen('RenameOpportunityName');
+      },
+      { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
+    );
+
+    useModKey(
+      'Backspace',
+      () => {
+        handleOpen('DeleteConfirmationModal');
+      },
+      { when: enableKeyboardShortcuts },
+    );
+    useKeyBindings(
+      {
+        Escape: clearSelection,
+      },
+      { when: enableKeyboardShortcuts },
+    );
+
+    if (!selectCount && !targetId) return null;
+
+    return (
+      <SharedTableActions
+        table={table}
+        handleOpen={handleOpen}
+        selectCount={selectCount}
+        onOpenCommandK={onOpenCommandK}
+        onHide={() => handleOpen('DeleteConfirmationModal')}
+      />
+    );
+  },
+);

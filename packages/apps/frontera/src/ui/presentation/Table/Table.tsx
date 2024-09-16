@@ -19,8 +19,9 @@ import React, {
 } from 'react';
 
 import { twMerge } from 'tailwind-merge';
-import { useMergeRefs, useKeyBindings, useOutsideClick } from 'rooks';
+import { difference, intersection } from 'lodash';
 import { Virtualizer, useVirtualizer } from '@tanstack/react-virtual';
+import { useKey, useMergeRefs, useKeyBindings, useOutsideClick } from 'rooks';
 import {
   createRow,
   flexRender,
@@ -73,12 +74,16 @@ interface TableProps<T extends object> {
   onSortingChange?: OnChangeFn<SortingState>;
   getRowId?: (row: T, index: number) => string;
   onResizeColumn?: OnChangeFn<ColumnSizingState>;
-  onSelectionChange?: OnChangeFn<RowSelectionState>;
+  onSelectionChange?: (selectedIds: string[]) => void;
   tableRef: MutableRefObject<TableInstance<T> | null>;
-  onFocusedRowChange?: (index: number | null) => void;
   onSelectedIndexChange?: (index: number | null) => void;
+  onFocusedRowChange?: (index: number | null, selectedIds: string[]) => void;
   // REASON: Typing TValue is too exhaustive and has no benefit
-  renderTableActions?: (table: TableInstance<T>) => React.ReactNode;
+  renderTableActions?: (
+    table: TableInstance<T>,
+    focusRow: number | null,
+    selectedIds: string[],
+  ) => React.ReactNode;
 }
 
 export const Table = <T extends object>({
@@ -93,7 +98,6 @@ export const Table = <T extends object>({
   totalItems = 40,
   onSortingChange,
   sorting: _sorting,
-  selection: _selection,
   renderTableActions,
   enableRowSelection,
   enableTableActions,
@@ -101,11 +105,10 @@ export const Table = <T extends object>({
   rowHeight = 33,
   contentHeight,
   borderColor,
-  manualFiltering,
   onSelectionChange,
+  manualFiltering,
   onFocusedRowChange,
   onFullRowSelection,
-  onSelectedIndexChange,
   enableKeyboardShortcuts,
   enableColumnResizing = false,
   onResizeColumn,
@@ -116,13 +119,72 @@ export const Table = <T extends object>({
   const [selection, setSelection] = useState<RowSelectionState>({});
   const [focusedRowIndex, setFocusedRowIndex] = useState<number | null>(null);
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [isShiftPressed, setIsShiftPressed] = useState(false);
+
+  const selectedIds = Object.keys(selection);
+
+  useKey(
+    'Shift',
+    (e) => {
+      setIsShiftPressed(e.type === 'keydown');
+    },
+    { eventTypes: ['keydown', 'keyup'] },
+  );
+
+  const handleSelectionChange: OnChangeFn<RowSelectionState> = (
+    nextSelection,
+  ) => {
+    if (!isShiftPressed) {
+      setSelection(nextSelection);
+
+      return;
+    }
+
+    if (isShiftPressed && selectedIndex !== null && focusedRowIndex !== null) {
+      setSelection((prev) => {
+        const edgeIndexes = [
+          Math.min(selectedIndex, focusedRowIndex),
+          Math.max(selectedIndex, focusedRowIndex),
+        ];
+
+        const ids = data
+          .slice(edgeIndexes[0], edgeIndexes[1] + 1)
+          .map((d) => (d as unknown as { id: string }).id);
+
+        const newSelection: Record<string, boolean> = {
+          ...prev,
+        };
+
+        const prevIds = Object.keys(prev);
+        const diff = difference(ids, prevIds);
+        const match = intersection(ids, prevIds);
+        const shouldRemove = diff.length < match.length;
+
+        const endId = (data[edgeIndexes[1]] as unknown as { id: string }).id;
+
+        diff.forEach((id) => {
+          newSelection[id] = true;
+        });
+        shouldRemove &&
+          [endId, ...match].forEach((id) => {
+            delete newSelection[id];
+          });
+
+        const selectedIds = Object.keys(newSelection);
+
+        onSelectionChange?.(selectedIds);
+
+        return newSelection;
+      });
+    }
+  };
 
   const table = useReactTable<T>({
     data,
     columns,
     state: {
       sorting: _sorting ?? sorting,
-      rowSelection: _selection ?? selection,
+      rowSelection: selection,
     },
     enableColumnResizing,
     columnResizeMode: 'onChange',
@@ -138,7 +200,7 @@ export const Table = <T extends object>({
     getSortedRowModel: getSortedRowModel<T>(),
     getFilteredRowModel: getFilteredRowModel<T>(),
     onSortingChange: onSortingChange ?? setSorting,
-    onRowSelectionChange: onSelectionChange ?? setSelection,
+    onRowSelectionChange: handleSelectionChange,
     columnResizeDirection: 'ltr',
     onColumnSizingChange: onResizeColumn,
   });
@@ -193,8 +255,8 @@ export const Table = <T extends object>({
   }, [table]);
 
   useEffect(() => {
-    onFocusedRowChange?.(focusedRowIndex);
-  }, [focusedRowIndex, onFocusedRowChange]);
+    onFocusedRowChange?.(focusedRowIndex, selectedIds);
+  }, [focusedRowIndex, onFocusedRowChange, selectedIds.length]);
 
   useKeyBindings(
     {
@@ -251,11 +313,6 @@ export const Table = <T extends object>({
   useEffect(() => {
     setFocusedRowIndex((prev) => (prev === null ? prev : 0));
   }, [totalItems]);
-
-  useEffect(() => {
-    if (selectedIndex === -1) return;
-    onSelectedIndexChange?.(selectedIndex);
-  }, [selectedIndex]);
 
   useOutsideClick(scrollElementRef, () => {
     setFocusedRowIndex(null);
@@ -402,7 +459,11 @@ export const Table = <T extends object>({
         />
       </TContent>
 
-      {enableTableActions && <TActions>{renderTableActions?.(table)}</TActions>}
+      {enableTableActions && (
+        <TActions>
+          {renderTableActions?.(table, focusedRowIndex, selectedIds)}
+        </TActions>
+      )}
     </div>
   );
 };

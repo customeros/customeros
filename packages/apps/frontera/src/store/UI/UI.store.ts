@@ -15,6 +15,7 @@ export class UIStore {
   activeConfirmation: string | null = null;
   contactPreviewCardOpen: boolean = false;
   movedIcpOrganization: number = 0;
+  focusRow: number | string | null = null;
   commandMenu = new CommandMenuStore();
   private activeConfirmationCallback: () => void = () => {};
 
@@ -80,5 +81,9 @@ export class UIStore {
 
   setContactPreviewCardOpen(value: boolean) {
     this.contactPreviewCardOpen = value;
+  }
+
+  setFocusRow(value: number | string | null) {
+    this.focusRow = value;
   }
 }

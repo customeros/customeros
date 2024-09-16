@@ -13,7 +13,7 @@ export const LinkedInSolid02 = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g clip-path='url(#clip0_3360_24743)'>
+    <g clipPath='url(#clip0_3360_24743)'>
       <path
         fill='#667085'
         fill-rule='evenodd'

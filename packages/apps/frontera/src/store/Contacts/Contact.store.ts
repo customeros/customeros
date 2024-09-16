@@ -492,7 +492,6 @@ const CONTACT_QUERY = gql`
       metadata {
         id
       }
-
       tags {
         metadata {
           id
