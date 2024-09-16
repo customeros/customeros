@@ -27,6 +27,7 @@ type FlowService interface {
 	FlowActionMerge(ctx context.Context, sequenceId string, entity *neo4jentity.FlowActionEntity) (*neo4jentity.FlowActionEntity, error)
 	FlowActionChangeIndex(ctx context.Context, id string, index int64) error
 	FlowActionChangeStatus(ctx context.Context, id string, status neo4jentity.FlowActionStatus) (*neo4jentity.FlowActionEntity, error)
+	FlowActionDelete(ctx context.Context, id string) error
 
 	FlowContactGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowContactEntities, error)
 	FlowContactGetById(ctx context.Context, id string) (*neo4jentity.FlowContactEntity, error)
@@ -430,6 +431,64 @@ func (s *flowService) FlowActionChangeStatus(ctx context.Context, id string, sta
 	return mapper.MapDbNodeToFlowActionEntity(node), nil
 }
 
+func (s *flowService) FlowActionDelete(ctx context.Context, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionDelete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	node, err := s.services.Neo4jRepositories.FlowActionReadRepository.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if node == nil {
+		tracing.TraceErr(span, errors.New("flow action not found"))
+		return errors.New("flow action")
+	}
+
+	list, err := s.FlowActionSenderGetList(ctx, []string{id})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	for _, v := range *list {
+		err = s.FlowActionSenderDelete(ctx, v.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	flowEntity, err := s.FlowGetByActionId(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, tenant, repository.LinkDetails{
+		FromEntityId:   flowEntity.Id,
+		FromEntityType: model.FLOW,
+		Relationship:   model.HAS,
+		ToEntityId:     id,
+		ToEntityType:   model.FLOW_ACTION,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.Neo4jRepositories.FlowActionWriteRepository.Delete(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
 func (s *flowService) FlowContactGetList(ctx context.Context, sequenceIds []string) (*neo4jentity.FlowContactEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowContactGetList")
 	defer span.Finish()
@@ -511,6 +570,8 @@ func (s *flowService) FlowContactAdd(ctx context.Context, flowId, contactId stri
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
+
+		toStore.ContactId = contactId
 
 		identified, err = s.services.Neo4jRepositories.FlowContactWriteRepository.Merge(ctx, &toStore)
 		if err != nil {

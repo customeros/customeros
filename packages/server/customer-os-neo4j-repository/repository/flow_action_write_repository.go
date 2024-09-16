@@ -15,6 +15,7 @@ import (
 
 type FlowActionWriteRepository interface {
 	Merge(ctx context.Context, entity *entity.FlowActionEntity) (*dbtype.Node, error)
+	Delete(ctx context.Context, id string) error
 }
 
 type flowActionWriteRepositoryImpl struct {
@@ -126,4 +127,41 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, input *entity
 	}
 
 	return result.(*dbtype.Node), nil
+}
+
+func (r *flowActionWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.Delete")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("id", id))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fa:FlowAction_%s {id:$id}) delete r, fa`, tenant)
+
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     id,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
