@@ -152,35 +152,35 @@ func registerDomain(ctx context.Context, tenant, domain string, services *servic
 		return registerNewDomainResponse, coserrors.ErrNotSupported
 	}
 
-	////step 1 - check domain availability
-	//isAvailable, isPremium, err := services.NamecheapService.CheckDomainAvailability(ctx, domain)
-	//if err != nil {
-	//	tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
-	//	return registerNewDomainResponse, err
-	//}
-	//if !isAvailable {
-	//	return registerNewDomainResponse, coserrors.ErrDomainUnavailable
-	//}
-	//if isPremium {
-	//	return registerNewDomainResponse, coserrors.ErrDomainPremium
-	//}
-	//
-	//// step 2 - check pricing
-	//domainPrice, err := services.NamecheapService.GetDomainPrice(ctx, domain)
-	//if err != nil {
-	//	tracing.TraceErr(span, errors.Wrap(err, "Error getting domain price"))
-	//	return registerNewDomainResponse, err
-	//}
-	//if domainPrice > services.Cfg.ExternalServices.Namecheap.MaxPrice {
-	//	return registerNewDomainResponse, coserrors.ErrDomainPriceExceeded
-	//}
-	//
-	////step 3 - register domain
-	//err = services.NamecheapService.PurchaseDomain(ctx, tenant, domain)
-	//if err != nil {
-	//	tracing.TraceErr(span, errors.Wrap(err, "Error purchasing domain"))
-	//	return registerNewDomainResponse, err
-	//}
+	//step 1 - check domain availability
+	isAvailable, isPremium, err := services.NamecheapService.CheckDomainAvailability(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain availability"))
+		return registerNewDomainResponse, err
+	}
+	if !isAvailable {
+		return registerNewDomainResponse, coserrors.ErrDomainUnavailable
+	}
+	if isPremium {
+		return registerNewDomainResponse, coserrors.ErrDomainPremium
+	}
+
+	// step 2 - check pricing
+	domainPrice, err := services.NamecheapService.GetDomainPrice(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting domain price"))
+		return registerNewDomainResponse, err
+	}
+	if domainPrice > services.Cfg.ExternalServices.Namecheap.MaxPrice {
+		return registerNewDomainResponse, coserrors.ErrDomainPriceExceeded
+	}
+
+	//step 3 - register domain
+	err = services.NamecheapService.PurchaseDomain(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error purchasing domain"))
+		return registerNewDomainResponse, err
+	}
 
 	// step 4 - setup domain in cloudflare
 	nameservers, err := services.CloudflareService.SetupDomainForMailStack(ctx, tenant, domain)
