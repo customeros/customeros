@@ -69,6 +69,32 @@ export class LinkedinService {
     }
   }
 
+  async scrapeCompanyPeople(payload: unknown) {
+    const { companyName, dryRun } = payload as {
+      companyName: string;
+      dryRun?: boolean;
+    };
+
+    try {
+      logger.info("Scraping company people...", {
+        source: "LinkedinService",
+      });
+
+      const result =
+        await this.linkedinAutomationService.getCompanyPeople(companyName);
+
+      logger.info("Company people scraped.", {
+        source: "LinkedinService",
+      });
+      return result;
+    } catch (err) {
+      logger.info("Failed to scrape company people", {
+        source: "LinkedinService",
+      });
+      throw LinkedinService.handleError(err);
+    }
+  }
+
   async sendMessage(payload: unknown) {
     const { profileUrl, message, dryRun } = payload as {
       profileUrl: string;

@@ -1231,6 +1231,7 @@ export const assignedProxies = pgTable("assigned_proxies", {
 
 export const browserAutomationRunType = pgEnum("browser_automation_run_type", [
   "FIND_CONNECTIONS",
+  "FIND_COMPANY_PEOPLE",
   "SEND_CONNECTION_REQUEST",
   "SEND_MESSAGE",
 ]);

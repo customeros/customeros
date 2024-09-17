@@ -44,6 +44,9 @@ export class AutomationRunnerService {
           retryPayload = lastPageVisited;
 
           break;
+        case "FIND_COMPANY_PEOPLE":
+          result = await linkedinService.scrapeCompanyPeople(payload);
+          break;
         case "SEND_CONNECTION_REQUEST":
           result = await linkedinService.sendInvite(payload);
           break;
