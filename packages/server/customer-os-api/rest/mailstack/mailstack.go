@@ -21,7 +21,7 @@ import (
 // @Tags MailStack API
 // @Accept  json
 // @Produce  json
-// @Param   body  RegisterNewDomainRequest  true  "Domain registration payload"
+// @Param   body  body  RegisterNewDomainRequest  true  "Domain registration payload"
 // @Success 201 {object} DomainResponse "Domain registered successfully"
 // @Failure 400  "Invalid request body or missing input fields"
 // @Failure 401  "Unauthorized access - API key invalid or expired"
@@ -200,7 +200,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 // @Tags MailStack API
 // @Accept  json
 // @Produce  json
-// @Param   body  ConfigureDomainRequest  true  "Domain payload"
+// @Param   body  body  ConfigureDomainRequest  true  "Domain payload"
 // @Success 201 {object} DomainResponse "Domain configured successfully"
 // @Failure 400  "Invalid request body or missing input fields"
 // @Failure 401  "Unauthorized access - API key invalid or expired"

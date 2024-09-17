@@ -3,7 +3,12 @@ package service
 import (
 	"bytes"
 	"context"
+	"crypto/rand"
+	"crypto/rsa"
+	"crypto/x509"
+	"encoding/base64"
 	"encoding/json"
+	"encoding/pem"
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -82,7 +87,12 @@ func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant,
 	}
 
 	// step 4: Configure DNS records
-	dnsConfigs := dnsConfigsForMailStack(domain)
+	dnsConfigs, err := s.dnsConfigsForMailStack(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get DNS configs"))
+		s.log.Error("failed to get DNS config data")
+		return nil, err
+	}
 	for _, dnsConfig := range dnsConfigs {
 		err = s.addDNSRecord(ctx, zoneID, dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content, dnsConfig.TTL, dnsConfig.Proxied, dnsConfig.Priority)
 		if err != nil {
@@ -632,14 +642,71 @@ func (s *cloudflareService) addRedirectPageRule(ctx context.Context, zoneID stri
 	return nil
 }
 
-func dnsConfigsForMailStack(domain string) []DNSConfig {
-	return []DNSConfig{
+func (s *cloudflareService) dnsConfigsForMailStack(ctx context.Context, tenant, domain string) ([]DNSConfig, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.dnsConfigsForMailStack")
+	defer span.Finish()
+
+	dnses := []DNSConfig{
 		{RecordType: "A", Name: "@", Content: "192.0.2.1", Proxied: true, TTL: 1},
 		{RecordType: "CNAME", Name: "www", Content: domain, Proxied: true, TTL: 1},
 		{RecordType: "CNAME", Name: "mail", Content: "mail.customerosmail.com", Proxied: false, TTL: 1},
 		{RecordType: "MX", Name: "@", Content: fmt.Sprintf("mx.%s.cust.a.hostedemail.com", domain), Proxied: false, TTL: 1, Priority: utils.IntPtr(10)},
 		{RecordType: "TXT", Name: "@", Content: "v=spf1 include:_spf.hostedemail.com -all", Proxied: false, TTL: 1},
 		{RecordType: "TXT", Name: "_dmarc", Content: "v=DMARC1; p=reject; aspf=s; adkim=s; sp=reject; pct=100; ruf=mailto:dmarc@customerosmail.com; rua=mailto:monitor@customerosmail.com; fo=1; ri=86400", Proxied: false, TTL: 1},
-		{RecordType: "TXT", Name: "dkim._domainkey", Content: "Copy the output value from the script dkim.py", Proxied: false, TTL: 1},
 	}
+
+	// get domain record
+	domainRecord, err := s.services.Repositories.PostgresRepositories.MailStackDomainRepository.GetDomain(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain record"))
+		return nil, err
+	}
+	if domainRecord != nil && domainRecord.DkimPublic != "" {
+		dnses = append(dnses, DNSConfig{RecordType: "TXT", Name: "dkim._domainkey", Content: domainRecord.DkimPublic, Proxied: false, TTL: 1})
+	} else {
+		dkimPublic, dkimPrivate, err := generateDKIMKeyPair()
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to generate DKIM key pair"))
+			s.log.Error("failed to generate DKIM key pair", err)
+			return nil, err
+		}
+		err = s.services.Repositories.PostgresRepositories.MailStackDomainRepository.SetDkimKeys(ctx, tenant, domain, dkimPublic, dkimPrivate)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to set DKIM keys"))
+			s.log.Error("failed to set DKIM keys", err)
+			return nil, err
+		}
+		dnses = append(dnses, DNSConfig{RecordType: "TXT", Name: "dkim._domainkey", Content: dkimPublic, Proxied: false, TTL: 1})
+	}
+
+	return dnses, nil
+}
+
+func generateDKIMKeyPair() (string, string, error) {
+	// Generate a 2048-bit RSA private key
+	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to generate private key: %v", err)
+	}
+
+	// Convert the private key to PEM format
+	privateKeyPEM := pem.EncodeToMemory(&pem.Block{
+		Type:  "RSA PRIVATE KEY",
+		Bytes: x509.MarshalPKCS1PrivateKey(privateKey),
+	})
+
+	// Extract the public key from the private key
+	publicKey := &privateKey.PublicKey
+	publicKeyBytes, err := x509.MarshalPKIXPublicKey(publicKey)
+	if err != nil {
+		return "", "", fmt.Errorf("failed to marshal public key: %v", err)
+	}
+
+	// Encode the public key in base64 for DNS
+	publicKeyBase64 := base64.StdEncoding.EncodeToString(publicKeyBytes)
+
+	// Create the DKIM public key string for DNS record
+	publicKeyString := fmt.Sprintf("v=DKIM1; k=rsa; p=%s", publicKeyBase64)
+
+	return publicKeyString, string(privateKeyPEM), nil
 }
