@@ -1183,12 +1183,11 @@ func MapDbNodeToFlowActionSenderEntity(node *dbtype.Node) *entity.FlowActionSend
 	}
 	props := utils.GetPropsFromNode(*node)
 	e := entity.FlowActionSenderEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Mailbox:       utils.GetStringPropOrNil(props, "mailbox"),
-		EmailsPerHour: utils.GetInt64PropOrNil(props, "emailsPerHour"),
-		UserId:        utils.GetStringPropOrNil(props, "userId"),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
+		UserId:    utils.GetStringPropOrNil(props, "userId"),
 	}
 	return &e
 }

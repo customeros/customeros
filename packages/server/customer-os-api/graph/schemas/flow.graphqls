@@ -10,6 +10,7 @@ extend type Mutation {
     flowContact_Add(flowId: ID!, contactId: ID!): FlowContact! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowContact_AddBulk(flowId: ID!, contactId: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowContact_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowContact_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     flowAction_Merge(flowId: ID!, input: FlowActionMergeInput!): FlowAction! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowAction_ChangeIndex(id: ID!, index: Int64!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -106,7 +107,6 @@ type FlowActionSender implements MetadataInterface {
     metadata: Metadata!
 
     mailbox:    String
-    emailsPerHour: Int64
     user: User @goField(forceResolver: true)
 }
 
@@ -115,7 +115,6 @@ input FlowActionSenderMergeInput {
 
     #email action type
     mailbox: String
-    emailsPerHour: Int64
 
     #linkedin action type
     userId: ID

@@ -159,7 +159,7 @@ func (r *mutationResolver) FlowContactAdd(ctx context.Context, flowID string, co
 
 // FlowContactAddBulk is the resolver for the flowContact_AddBulk field.
 func (r *mutationResolver) FlowContactAddBulk(ctx context.Context, flowID string, contactID []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowContactAdd", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowContactAddBulk", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
@@ -185,6 +185,23 @@ func (r *mutationResolver) FlowContactDelete(ctx context.Context, id string) (*m
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
 		return &model.Result{Result: false}, err
+	}
+	return &model.Result{Result: true}, nil
+}
+
+// FlowContactDeleteBulk is the resolver for the flowContact_DeleteBulk field.
+func (r *mutationResolver) FlowContactDeleteBulk(ctx context.Context, id []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowContactDeleteBulk", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	for _, id := range id {
+		err := r.Services.CommonServices.FlowService.FlowContactDelete(ctx, id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "")
+			return &model.Result{Result: false}, err
+		}
 	}
 	return &model.Result{Result: true}, nil
 }

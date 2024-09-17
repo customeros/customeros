@@ -62,6 +62,11 @@ func (r *mutationResolver) FlowContactDelete(ctx context.Context, id string) (*m
 	panic(fmt.Errorf("not implemented: FlowContactDelete - flowContact_Delete"))
 }
 
+// FlowContactDeleteBulk is the resolver for the flowContact_DeleteBulk field.
+func (r *mutationResolver) FlowContactDeleteBulk(ctx context.Context, id []string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: FlowContactDeleteBulk - flowContact_DeleteBulk"))
+}
+
 // FlowActionMerge is the resolver for the flowAction_Merge field.
 func (r *mutationResolver) FlowActionMerge(ctx context.Context, flowID string, input model.FlowActionMergeInput) (*model.FlowAction, error) {
 	panic(fmt.Errorf("not implemented: FlowActionMerge - flowAction_Merge"))

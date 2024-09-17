@@ -70,8 +70,7 @@ func MapEntityToFlowActionSender(entity *neo4jentity.FlowActionSenderEntity) *mo
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Mailbox:       entity.Mailbox,
-		EmailsPerHour: entity.EmailsPerHour,
+		Mailbox: entity.Mailbox,
 	}
 }
 
@@ -193,9 +192,8 @@ func MapFlowActionMergeInputToEntity(input model.FlowActionMergeInput) *neo4jent
 
 func MapFlowActionSenderMergeInputToEntity(input model.FlowActionSenderMergeInput) *neo4jentity.FlowActionSenderEntity {
 	return &neo4jentity.FlowActionSenderEntity{
-		Id:            utils.StringOrEmpty(input.ID),
-		Mailbox:       input.Mailbox,
-		EmailsPerHour: input.EmailsPerHour,
-		UserId:        input.UserID,
+		Id:      utils.StringOrEmpty(input.ID),
+		Mailbox: input.Mailbox,
+		UserId:  input.UserID,
 	}
 }
