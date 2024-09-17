@@ -7,6 +7,11 @@ type RegisterNewDomainRequest struct {
 	// Required: true
 	// Example: example.com
 	Domain string `json:"domain" example:"example.com"`
+
+	// Destination website for permanent redirect
+	// Required: true
+	// Example: www.example.com
+	Website string `json:"website" example:"www.example.com"`
 }
 
 // ConfigureDomainRequest defines the request body for configuring domain
@@ -16,6 +21,11 @@ type ConfigureDomainRequest struct {
 	// Required: true
 	// Example: example.com
 	Domain string `json:"domain" example:"example.com"`
+
+	// Destination website for permanent redirect
+	// Required: true
+	// Example: www.example.com
+	Website string `json:"website" example:"www.example.com"`
 }
 
 // MailboxResponse defines the structure of a mailbox in the response
