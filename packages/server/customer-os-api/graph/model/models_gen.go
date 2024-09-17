@@ -1211,20 +1211,18 @@ type FlowActionMergeInput struct {
 }
 
 type FlowActionSender struct {
-	Metadata      *Metadata `json:"metadata"`
-	Mailbox       *string   `json:"mailbox,omitempty"`
-	EmailsPerHour *int64    `json:"emailsPerHour,omitempty"`
-	User          *User     `json:"user,omitempty"`
+	Metadata *Metadata `json:"metadata"`
+	Mailbox  *string   `json:"mailbox,omitempty"`
+	User     *User     `json:"user,omitempty"`
 }
 
 func (FlowActionSender) IsMetadataInterface()        {}
 func (this FlowActionSender) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowActionSenderMergeInput struct {
-	ID            *string `json:"id,omitempty"`
-	Mailbox       *string `json:"mailbox,omitempty"`
-	EmailsPerHour *int64  `json:"emailsPerHour,omitempty"`
-	UserID        *string `json:"userId,omitempty"`
+	ID      *string `json:"id,omitempty"`
+	Mailbox *string `json:"mailbox,omitempty"`
+	UserID  *string `json:"userId,omitempty"`
 }
 
 type FlowContact struct {

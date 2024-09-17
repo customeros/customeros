@@ -77,9 +77,8 @@ type FlowActionSenderEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Mailbox       *string
-	EmailsPerHour *int64
-	UserId        *string
+	Mailbox *string
+	UserId  *string
 }
 
 type FlowActionSenderEntities []FlowActionSenderEntity
@@ -136,3 +135,21 @@ const (
 func GetFlowActionType(s string) FlowActionType {
 	return FlowActionType(s)
 }
+
+type FlowActionExecutionEntity struct {
+	Id           string
+	FlowId       string
+	ActionId     string
+	ContactId    string
+	ScheduledFor time.Time
+	ExecutedAt   *time.Time
+	Status       FlowActionStatus
+}
+
+type FlowActionExecutionStatus string
+
+const (
+	FlowActionExecutionStatusPending FlowActionExecutionStatus = "PENDING"
+	FlowActionExecutionStatusSuccess FlowActionExecutionStatus = "SUCCESS"
+	FlowActionExecutionStatusError   FlowActionExecutionStatus = "ERROR"
+)

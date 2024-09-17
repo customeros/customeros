@@ -749,7 +749,6 @@ func (s *flowService) FlowActionSenderMerge(ctx context.Context, flowActionId st
 	}
 
 	toStore.Mailbox = input.Mailbox
-	toStore.EmailsPerHour = input.EmailsPerHour
 	toStore.UserId = input.UserId
 
 	node, err := s.services.Neo4jRepositories.FlowActionSenderWriteRepository.Merge(ctx, toStore)
