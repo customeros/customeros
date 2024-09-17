@@ -9,6 +9,7 @@ import { ProspectsRoute } from './prospects/route';
 import { FinderRoute } from './organizations/route';
 import { NotFound } from './src/components/NotFound';
 import { CustomerMapRoute } from './customer-map/route';
+import { FlowEditorRoute } from './flowEditor/route.tsx';
 import { OrganizationRoute } from './organization/route';
 
 const NotFoundRoute: RouteObject = {
@@ -26,6 +27,7 @@ export const RootRoute: RouteObject = {
     FinderRoute,
     CustomerMapRoute,
     ProspectsRoute,
+    FlowEditorRoute,
     NotFoundRoute,
   ],
   errorElement: <Error />,

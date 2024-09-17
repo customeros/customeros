@@ -53,6 +53,7 @@
     "@tiptap/react": "^2.3.0",
     "@tiptap/starter-kit": "^2.3.0",
     "@visx/visx": "3.5.1",
+    "@xyflow/react": "^12.3.0",
     "axios": "^1.7.5",
     "city-timezones": "^1.3.0",
     "class-variance-authority": "^0.7.0",
