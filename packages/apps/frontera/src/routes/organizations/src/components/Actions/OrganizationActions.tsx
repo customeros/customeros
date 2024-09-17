@@ -68,8 +68,6 @@ export const OrganizationTableActions = observer(
     };
 
     const onOpenCommandK = () => {
-      if (selection?.length > 0) return;
-
       if (selection?.length === 1) {
         store.ui.commandMenu.setType('OrganizationCommands');
         store.ui.commandMenu.setContext({

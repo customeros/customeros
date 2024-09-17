@@ -29,8 +29,6 @@ export const SequencesTableActions = ({
   const clearSelection = () => table.resetRowSelection();
 
   const onOpenCommandK = () => {
-    if (selection?.length > 0) return;
-
     if (selection.length === 1) {
       store.ui.commandMenu.setType('OpportunityCommands');
       store.ui.commandMenu.setContext({

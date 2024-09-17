@@ -170,10 +170,6 @@ export const Table = <T extends object>({
             delete newSelection[id];
           });
 
-        const selectedIds = Object.keys(newSelection);
-
-        onSelectionChange?.(selectedIds);
-
         return newSelection;
       });
     }
@@ -257,6 +253,10 @@ export const Table = <T extends object>({
   useEffect(() => {
     onFocusedRowChange?.(focusedRowIndex, selectedIds);
   }, [focusedRowIndex, onFocusedRowChange, selectedIds.length]);
+
+  useEffect(() => {
+    onSelectionChange?.(selectedIds);
+  }, [selectedIds, onSelectionChange]);
 
   useKeyBindings(
     {
