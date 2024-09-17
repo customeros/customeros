@@ -12,8 +12,14 @@ import (
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
-	"net/url"
+	"time"
 )
+
+type OpenSRSResponse struct {
+	Success     bool   `json:"success"`
+	Error       string `json:"error,omitempty"`
+	ErrorNumber int    `json:"error_number,omitempty"`
+}
 
 type OpensrsService interface {
 	SetupDomainForMailStack(ctx context.Context, tenant, domain string) error
@@ -53,45 +59,67 @@ func (s *opensrsService) SetupDomainForMailStack(ctx context.Context, tenant, do
 		s.log.Errorf("domain record not found for domain")
 		return errors.New("domain record not found")
 	}
-	//dkimPrivateKey := domainRecord.DkimPrivate
 
-	// step 2: Register the domain in Opensrs
-	err = s.registerDomain(ctx, domain)
+	// step 2: Configure the domain in OpenSRS
+	err = s.setEmailDomainInOpenSRS(ctx, domain, domainRecord.DkimPrivate)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to register domain"))
-		s.log.Error("failed to register domain")
+		tracing.TraceErr(span, errors.Wrap(err, "failed to configure email domain in open SRS"))
+		s.log.Error("failed to configure email domain in open SRS", err)
 		return err
 	}
 
 	return nil
 }
 
-// checkDomainExists checks if the domain is already registered in OpenSRS
-func (s *opensrsService) checkDomainExists(ctx context.Context, domain string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.checkDomainExists")
+func (s *opensrsService) setEmailDomainInOpenSRS(ctx context.Context, domain, dkimPrivateKey string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.setEmailDomainInOpenSRS")
 	defer span.Finish()
 	span.LogKV("domain", domain)
 
-	// Construct the OpenSRS API endpoint for checking domain existence
-	apiURL := fmt.Sprintf("%s/check_domain/%s", s.cfg.ExternalServices.OpenSRS.Url, url.PathEscape(domain))
+	// Define the API endpoint (replace with your environment's URL)
+	apiURL := s.cfg.ExternalServices.OpenSRS.Url + "/api/change_domain"
 
-	req, err := http.NewRequestWithContext(ctx, "GET", apiURL, nil)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-		s.log.Error("failed to create request")
-		return false, errors.Wrap(err, "failed to create request")
+	// Prepare the request body
+	requestBody := map[string]interface{}{
+		"credentials": map[string]string{
+			"user":     s.cfg.ExternalServices.OpenSRS.Username,
+			"password": s.cfg.ExternalServices.OpenSRS.ApiKey,
+		},
+		"domain": domain,
+		"attributes": map[string]interface{}{
+			"dkim_selector": "dkim",
+			"dkim_key":      dkimPrivateKey,
+		},
 	}
 
-	// Set headers for OpenSRS API authentication
-	req.Header.Set("Authorization", "Bearer "+s.cfg.ExternalServices.OpenSRS.ApiKey)
+	// Convert the request body to JSON
+	requestData, err := json.Marshal(requestBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
+		s.log.Error("failed to marshal request body", err)
+		return fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	// Create a new HTTP request with context
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(requestData))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
+		s.log.Error("failed to create HTTP request", err)
+		return fmt.Errorf("failed to create HTTP request: %v", err)
+	}
+
+	// Set necessary headers
 	req.Header.Set("Content-Type", "application/json")
 
-	// Execute the request
-	resp, err := http.DefaultClient.Do(req)
+	// Create an HTTP client with a timeout
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Make the HTTP request
+	resp, err := client.Do(req)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to execute OpenSRS API request"))
-		s.log.Error("failed to execute OpenSRS API request")
-		return false, errors.Wrap(err, "failed to execute OpenSRS API request")
+		tracing.TraceErr(span, errors.Wrap(err, "failed to make API request"))
+		s.log.Error("failed to make API request", err)
+		return fmt.Errorf("failed to make API request: %s", err.Error())
 	}
 	defer resp.Body.Close()
 
@@ -99,80 +127,25 @@ func (s *opensrsService) checkDomainExists(ctx context.Context, domain string) (
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		s.log.Error("failed to read response body")
-		return false, errors.Wrap(err, "failed to read response body")
-	}
-
-	span.LogKV("responseBody", string(body))
-
-	// Check response status
-	if resp.StatusCode == http.StatusNotFound {
-		// Domain does not exist
-		return false, nil
-	} else if resp.StatusCode != http.StatusOK {
-		// Unexpected status code, return error
-		return false, fmt.Errorf("unexpected status code from OpenSRS API: %d", resp.StatusCode)
-	}
-
-	// Assume success means the domain exists
-	return true, nil
-}
-
-func (s *opensrsService) registerDomain(ctx context.Context, domain string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.registerDomain")
-	defer span.Finish()
-	span.LogKV("domain", domain)
-
-	// if domain already exists, return
-	exists, err := s.checkDomainExists(ctx, domain)
-	if err != nil {
-		return errors.Wrap(err, "failed to check domain existence")
-	}
-	if exists {
-		return nil
-	}
-
-	apiURL := fmt.Sprintf("%s/add_domain", s.cfg.ExternalServices.OpenSRS.Url)
-
-	// Create the request payload
-	payload := map[string]string{
-		"domain": domain,
-	}
-
-	payloadBytes, err := json.Marshal(payload)
-	if err != nil {
-		return errors.Wrap(err, "failed to marshal payload")
-	}
-
-	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(payloadBytes))
-	if err != nil {
-		return errors.Wrap(err, "failed to create request")
-	}
-
-	// Set headers for OpenSRS API authentication
-	req.Header.Set("Authorization", "Bearer "+s.cfg.ExternalServices.OpenSRS.ApiKey)
-	req.Header.Set("Content-Type", "application/json")
-
-	// Execute the request
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to execute OpenSRS API request"))
-		s.log.Error("failed to execute OpenSRS API request")
-		return errors.Wrap(err, "failed to execute OpenSRS API request")
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
-		s.log.Error("failed to read response body")
-		return err
+		s.log.Error("failed to read response body", err)
+		return errors.Wrap(err, "failed to read response body")
 	}
 	span.LogKV("responseBody", string(body))
 
-	// Check response status
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("failed to register domain: %s", string(body))
+	// Check for a successful response
+	var response OpenSRSResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response"))
+		s.log.Error("failed to unmarshal response", err)
+		return fmt.Errorf("failed to unmarshal response: %v", err)
+	}
+
+	// Check if the response indicates success
+	if !response.Success {
+		tracing.TraceErr(span, errors.New(response.Error))
+		s.log.Error("API request failed", response.Error)
+		return fmt.Errorf("API request failed: %s", response.Error)
 	}
 
 	return nil

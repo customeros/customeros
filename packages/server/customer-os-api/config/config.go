@@ -75,8 +75,9 @@ type Config struct {
 			Email  string `env:"CLOUDFLARE_API_EMAIL" validate:"required"`
 		}
 		OpenSRS struct {
-			Url    string `env:"OPENSRS_URL" envDefault:"https://rr-n1-tor.opensrs.net" validate:"required"`
-			ApiKey string `env:"OPENSRS_API_KEY" validate:"required"`
+			Url      string `env:"OPENSRS_URL" envDefault:"https://admin.a.hostedemail.com" validate:"required"`
+			ApiKey   string `env:"OPENSRS_API_KEY" validate:"required"`
+			Username string `env:"OPENSRS_API_USERNAME" validate:"required"`
 		}
 	}
 }
