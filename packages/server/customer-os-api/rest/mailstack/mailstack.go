@@ -70,9 +70,17 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 				})
 			span.LogFields(tracingLog.String("result", "Missing domain"))
 			return
+		} else if req.Website == "" {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Missing required field: website",
+				})
+			span.LogFields(tracingLog.String("result", "Missing website"))
+			return
 		}
 
-		registerNewDomainResponse, err := registerDomain(ctx, tenant, req.Domain, services)
+		registerNewDomainResponse, err := registerDomain(ctx, tenant, req.Domain, req.Website, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrNotSupported) {
 				c.JSON(http.StatusNotAcceptable,
@@ -129,7 +137,7 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func registerDomain(ctx context.Context, tenant, domain string, services *service.Services) (DomainResponse, error) {
+func registerDomain(ctx context.Context, tenant, domain, website string, services *service.Services) (DomainResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "registerDomain")
 	defer span.Finish()
 
@@ -183,7 +191,7 @@ func registerDomain(ctx context.Context, tenant, domain string, services *servic
 	}
 
 	//step 4 - configure domain
-	return configureDomain(ctx, tenant, domain, services)
+	return configureDomain(ctx, tenant, domain, website, services)
 }
 
 // ConfigureDomain configure given domain for the mail service
@@ -239,9 +247,17 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 				})
 			span.LogFields(tracingLog.String("result", "Missing domain"))
 			return
+		} else if req.Website == "" {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Missing required field: website",
+				})
+			span.LogFields(tracingLog.String("result", "Missing website"))
+			return
 		}
 
-		domainResponse, err := configureDomain(ctx, tenant, req.Domain, services)
+		domainResponse, err := configureDomain(ctx, tenant, req.Domain, req.Website, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,
@@ -277,7 +293,7 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 	}
 }
 
-func configureDomain(ctx context.Context, tenant, domain string, services *service.Services) (DomainResponse, error) {
+func configureDomain(ctx context.Context, tenant, domain, website string, services *service.Services) (DomainResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "configureDomain")
 	defer span.Finish()
 
@@ -297,10 +313,16 @@ func configureDomain(ctx context.Context, tenant, domain string, services *servi
 	}
 
 	// setup domain in cloudflare
-	nameservers, err := services.CloudflareService.SetupDomainForMailStack(ctx, tenant, domain)
+	nameservers, err := services.CloudflareService.SetupDomainForMailStack(ctx, tenant, domain, website)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in Cloudflare"))
 		return domainResponse, coserrors.ErrDomainConfigurationFailed
+	}
+
+	// mark domain as configured
+	err = services.CommonServices.PostgresRepositories.MailStackDomainRepository.SetConfigured(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting domain as configured"))
 	}
 
 	// replace nameservers in namecheap

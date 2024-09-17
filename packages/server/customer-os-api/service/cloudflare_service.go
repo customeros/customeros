@@ -27,7 +27,7 @@ type DNSConfig struct {
 }
 
 type CloudflareService interface {
-	SetupDomainForMailStack(ctx context.Context, tenant, domain string) ([]string, error)
+	SetupDomainForMailStack(ctx context.Context, tenant, domain, destinationUrl string) ([]string, error)
 }
 
 type cloudflareService struct {
@@ -45,12 +45,12 @@ func NewCloudflareService(log logger.Logger, services *Services, cfg *config.Con
 	}
 }
 
-func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant, domain string) ([]string, error) {
+func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant, domain, destinationUrl string) ([]string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.SetupDomainForMailStack")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagTenant(span, tenant)
-	span.LogKV("domain", domain)
+	span.LogKV("domain", domain, "destinationUrl", destinationUrl)
 
 	// step 1: Check if the domain exists in Cloudflare
 	domainExists, zoneID, err := s.checkDomain(ctx, domain)
@@ -90,6 +90,14 @@ func (s *cloudflareService) SetupDomainForMailStack(ctx context.Context, tenant,
 			s.log.Errorf("failed to add DNS record %s %s -> %s", dnsConfig.RecordType, dnsConfig.Name, dnsConfig.Content)
 			return nil, err
 		}
+	}
+
+	// step 5: Add redirect page rules
+	err = s.addMailStackRedirectPageRules(ctx, zoneID, domain, destinationUrl)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to add redirect page rules"))
+		s.log.Error("failed to add redirect page rules")
+		return nil, err
 	}
 
 	nameservers, err := s.getNameservers(ctx, zoneID)
@@ -490,6 +498,138 @@ func (s *cloudflareService) getNameservers(ctx context.Context, zoneID string) (
 	s.log.Infof("Retrieved nameservers: %v", nameservers)
 
 	return nameservers, nil
+}
+
+func (s *cloudflareService) addMailStackRedirectPageRules(ctx context.Context, zoneID, domain, destinationURL string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.addMailStackRedirectPageRules")
+	defer span.Finish()
+	span.LogKV("zoneID", zoneID, "domain", domain, "destinationURL", destinationURL)
+
+	// Page rule configurations
+	pageRules := []map[string]interface{}{
+		{
+			"targets": []map[string]interface{}{
+				{
+					"target": "url",
+					"constraint": map[string]string{
+						"operator": "matches",
+						"value":    fmt.Sprintf("*.%s/*", domain),
+					},
+				},
+			},
+			"actions": []map[string]interface{}{
+				{
+					"id": "forwarding_url",
+					"value": map[string]interface{}{
+						"url":         destinationURL,
+						"status_code": 301,
+					},
+				},
+			},
+			"priority": 1,
+			"status":   "active",
+		},
+		{
+			"targets": []map[string]interface{}{
+				{
+					"target": "url",
+					"constraint": map[string]string{
+						"operator": "matches",
+						"value":    fmt.Sprintf("%s/*", domain),
+					},
+				},
+			},
+			"actions": []map[string]interface{}{
+				{
+					"id": "forwarding_url",
+					"value": map[string]interface{}{
+						"url":         destinationURL,
+						"status_code": 301,
+					},
+				},
+			},
+			"priority": 2,
+			"status":   "active",
+		},
+	}
+
+	// Create each page rule
+	for _, pageRule := range pageRules {
+		err := s.addRedirectPageRule(ctx, zoneID, pageRule)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to add page rule"))
+			s.log.Error("failed to add page rule", err)
+		}
+	}
+
+	// Log success
+	s.log.Infof("Successfully added page rules for domain %s", domain)
+	return nil
+}
+
+func (s *cloudflareService) addRedirectPageRule(ctx context.Context, zoneID string, pageRule map[string]interface{}) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CloudflareService.addRedirectPageRule")
+	defer span.Finish()
+
+	url := fmt.Sprintf("%s/zones/%s/pagerules", s.cfg.ExternalServices.Cloudflare.Url, zoneID)
+	payloadData, err := json.Marshal(pageRule)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal page rule payload"))
+		s.log.Error("failed to marshal page rule payload", err)
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", url, bytes.NewBuffer(payloadData))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request for adding page rule"))
+		s.log.Error("failed to create HTTP request for adding page rule", err)
+		return err
+	}
+
+	req.Header.Set("X-Auth-Email", s.cfg.ExternalServices.Cloudflare.Email)
+	req.Header.Set("X-Auth-Key", s.cfg.ExternalServices.Cloudflare.ApiKey)
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to add page rule to Cloudflare"))
+		s.log.Error("failed to add page rule to Cloudflare", err)
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		s.log.Error("failed to read response body", err)
+		return err
+	}
+
+	// Define the response structure
+	var addPageRuleResponse struct {
+		Success bool `json:"success"`
+		Errors  []struct {
+			Message string `json:"message"`
+		} `json:"errors"`
+	}
+
+	if err = json.Unmarshal(body, &addPageRuleResponse); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response body"))
+		s.log.Error("failed to unmarshal response body", err)
+		return err
+	}
+
+	if !addPageRuleResponse.Success {
+		errMsg := "failed to add page rule to Cloudflare"
+		if len(addPageRuleResponse.Errors) > 0 {
+			errMsg = addPageRuleResponse.Errors[0].Message
+		}
+		err = fmt.Errorf(errMsg)
+		tracing.TraceErr(span, err)
+		s.log.Error("Cloudflare API error: ", errMsg)
+		return err
+	}
+	return nil
 }
 
 func dnsConfigsForMailStack(domain string) []DNSConfig {

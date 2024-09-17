@@ -15,10 +15,32 @@ type MailStackDomainRepository interface {
 	RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
 	CheckDomainOwnership(ctx context.Context, tenant, domain string) (bool, error)
 	GetActiveDomains(ctx context.Context, tenant string) ([]entity.MailStackDomain, error)
+	SetConfigured(ctx context.Context, tenant, domain string) error
 }
 
 type mailStackDomainRepository struct {
 	db *gorm.DB
+}
+
+func (r *mailStackDomainRepository) SetConfigured(ctx context.Context, tenant, domain string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.SetConfigured")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain)
+
+	err := r.db.WithContext(ctx).
+		Model(&entity.MailStackDomain{}).
+		Where("tenant = ? AND domain = ?", tenant, domain).
+		UpdateColumn("configured", true).
+		UpdateColumn("updated_at", utils.Now()).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return err
+	}
+
+	return nil
 }
 
 func NewMailStackDomainRepository(db *gorm.DB) MailStackDomainRepository {
