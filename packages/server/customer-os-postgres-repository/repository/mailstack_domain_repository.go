@@ -14,33 +14,14 @@ import (
 type MailStackDomainRepository interface {
 	RegisterDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
 	CheckDomainOwnership(ctx context.Context, tenant, domain string) (bool, error)
+	GetDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error)
 	GetActiveDomains(ctx context.Context, tenant string) ([]entity.MailStackDomain, error)
-	SetConfigured(ctx context.Context, tenant, domain string) error
+	MarkConfigured(ctx context.Context, tenant, domain string) error
+	SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error
 }
 
 type mailStackDomainRepository struct {
 	db *gorm.DB
-}
-
-func (r *mailStackDomainRepository) SetConfigured(ctx context.Context, tenant, domain string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.SetConfigured")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("domain", domain)
-
-	err := r.db.WithContext(ctx).
-		Model(&entity.MailStackDomain{}).
-		Where("tenant = ? AND domain = ?", tenant, domain).
-		UpdateColumn("configured", true).
-		UpdateColumn("updated_at", utils.Now()).
-		Error
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "db error"))
-		return err
-	}
-
-	return nil
 }
 
 func NewMailStackDomainRepository(db *gorm.DB) MailStackDomainRepository {
@@ -115,4 +96,69 @@ func (r *mailStackDomainRepository) GetActiveDomains(ctx context.Context, tenant
 	}
 
 	return mailStackDomains, nil
+}
+
+func (r *mailStackDomainRepository) MarkConfigured(ctx context.Context, tenant, domain string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.MarkConfigured")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain)
+
+	err := r.db.WithContext(ctx).
+		Model(&entity.MailStackDomain{}).
+		Where("tenant = ? AND domain = ?", tenant, domain).
+		UpdateColumn("configured", true).
+		UpdateColumn("updated_at", utils.Now()).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return err
+	}
+
+	return nil
+}
+
+func (r *mailStackDomainRepository) SetDkimKeys(ctx context.Context, tenant, domain, dkimPublic, dkimPrivate string) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.SetDkimKeys")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain)
+
+	err := r.db.WithContext(ctx).
+		Model(&entity.MailStackDomain{}).
+		Where("tenant = ? AND domain = ?", tenant, domain).
+		UpdateColumn("dkim_public", dkimPublic).
+		UpdateColumn("dkim_private", dkimPrivate).
+		UpdateColumn("updated_at", utils.Now()).
+		Error
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return err
+	}
+
+	return nil
+}
+
+func (r *mailStackDomainRepository) GetDomain(ctx context.Context, tenant, domain string) (*entity.MailStackDomain, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "MailStackDomainRepository.GetDomain")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain)
+
+	var mailStackDomain entity.MailStackDomain
+	err := r.db.WithContext(ctx).
+		Where("tenant = ? AND domain = ?", tenant, domain).
+		First(&mailStackDomain).Error
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, nil
+		}
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return nil, err
+	}
+
+	return &mailStackDomain, nil
 }

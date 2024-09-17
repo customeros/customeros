@@ -320,7 +320,7 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	}
 
 	// mark domain as configured
-	err = services.CommonServices.PostgresRepositories.MailStackDomainRepository.SetConfigured(ctx, tenant, domain)
+	err = services.CommonServices.PostgresRepositories.MailStackDomainRepository.MarkConfigured(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting domain as configured"))
 	}
