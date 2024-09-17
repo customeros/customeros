@@ -655,7 +655,7 @@ func (s *cloudflareService) dnsConfigsForMailStack(ctx context.Context, tenant, 
 		{RecordType: "TXT", Name: "_dmarc", Content: "v=DMARC1; p=reject; aspf=s; adkim=s; sp=reject; pct=100; ruf=mailto:dmarc@customerosmail.com; rua=mailto:monitor@customerosmail.com; fo=1; ri=86400", Proxied: false, TTL: 1},
 	}
 
-	// get domain record
+	// add dkim dns record
 	domainRecord, err := s.services.Repositories.PostgresRepositories.MailStackDomainRepository.GetDomain(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain record"))
