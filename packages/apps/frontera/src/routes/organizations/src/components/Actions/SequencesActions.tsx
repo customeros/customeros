@@ -4,34 +4,72 @@ import { useKeys, useKeyBindings } from 'rooks';
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 
+import { useStore } from '@shared/hooks/useStore';
 import { useModKey } from '@shared/hooks/useModKey';
 import { TableInstance } from '@ui/presentation/Table';
 import { SharedTableActions } from '@organizations/components/Actions/components/SharedActions.tsx';
 
 interface TableActionsProps {
-  focusedId: string | null;
-  onOpenCommandK: () => void;
+  selection: string[];
+  focusedId?: string | null;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<ContactStore>;
-  handleOpen: (type: CommandMenuType) => void;
 }
 
 export const SequencesTableActions = ({
   table,
   enableKeyboardShortcuts,
-  onOpenCommandK,
-  handleOpen,
+  selection,
   focusedId,
 }: TableActionsProps) => {
+  const store = useStore();
+
   const [targetId, setTargetId] = useState<string | null>(null);
-  const selection = table.getState().rowSelection;
-  const selectedIds = Object.keys(selection);
-  const selectCount = selectedIds.length;
+  const selectCount = selection?.length;
   const clearSelection = () => table.resetRowSelection();
+
+  const onOpenCommandK = () => {
+    if (selection?.length > 0) return;
+
+    if (selection.length === 1) {
+      store.ui.commandMenu.setType('OpportunityCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Contact',
+        ids: selection,
+      });
+      store.ui.commandMenu.setOpen(true);
+    } else {
+      store.ui.commandMenu.setType('OpportunityBulkCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Contact',
+        ids: selection,
+      });
+      store.ui.commandMenu.setOpen(true);
+    }
+  };
+
+  const handleOpen = (type: CommandMenuType, property?: string) => {
+    if (selection?.length >= 1) {
+      store.ui.commandMenu.setContext({
+        ids: selection,
+        entity: 'Opportunity',
+        property: property,
+      });
+    } else {
+      store.ui.commandMenu.setContext({
+        ids: [focusedId || ''],
+        entity: 'Opportunity',
+        property: property,
+      });
+    }
+
+    store.ui.commandMenu.setType(type);
+    store.ui.commandMenu.setOpen(true);
+  };
 
   useEffect(() => {
     if (selectCount === 1) {
-      setTargetId(selectedIds[0]);
+      setTargetId(selection[0]);
     }
 
     if (selectCount < 1) {
@@ -54,7 +92,7 @@ export const SequencesTableActions = ({
     (e) => {
       e.stopPropagation();
       e.preventDefault();
-      handleOpen('RenameSequence');
+      handleOpen('RenameSequence', 'name');
     },
     { when: enableKeyboardShortcuts && (selectCount === 1 || !!focusedId) },
   );
@@ -79,6 +117,7 @@ export const SequencesTableActions = ({
     <SharedTableActions
       table={table}
       handleOpen={handleOpen}
+      selectCount={selectCount}
       onOpenCommandK={onOpenCommandK}
       onHide={() => handleOpen('DeleteConfirmationModal')}
     />

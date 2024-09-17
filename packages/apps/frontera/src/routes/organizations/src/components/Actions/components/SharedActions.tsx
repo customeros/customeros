@@ -11,6 +11,7 @@ import { ActionItem } from '@organizations/components/Actions/components/ActionI
 
 interface TableActionsProps {
   onHide: () => void;
+  selectCount: number;
   onOpenCommandK: () => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<ContactStore>;
@@ -21,10 +22,8 @@ export const SharedTableActions = ({
   table,
   onOpenCommandK,
   onHide,
+  selectCount,
 }: TableActionsProps) => {
-  const selection = table.getState().rowSelection;
-  const selectedIds = Object.keys(selection);
-  const selectCount = selectedIds.length;
   const clearSelection = () => table.resetRowSelection();
 
   if (!selectCount) return null;

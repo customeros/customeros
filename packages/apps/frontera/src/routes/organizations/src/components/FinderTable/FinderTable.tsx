@@ -1,17 +1,13 @@
 import { useSearchParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
+import { useKeyBindings } from 'rooks';
 import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
-import difference from 'lodash/difference';
-import { useKey, useKeyBindings } from 'rooks';
-import intersection from 'lodash/intersection';
-import { OnChangeFn } from '@tanstack/table-core';
 import { ColumnDef } from '@tanstack/react-table';
 import { InvoiceStore } from '@store/Invoices/Invoice.store';
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { CommandMenuType } from '@store/UI/CommandMenu.store';
 import { ContractStore } from '@store/Contracts/Contract.store';
 import { useTableActions } from '@invoices/hooks/useTableActions';
 import { FlowSequenceStore } from '@store/Sequences/FlowSequence.store';
@@ -21,18 +17,13 @@ import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { useStore } from '@shared/hooks/useStore';
 import { Invoice, WorkflowType, TableViewType } from '@graphql/types';
 import { useColumnSizing } from '@organizations/hooks/useColumnSizing';
+import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 import { getSequencesFilterFns } from '@organizations/components/Columns/sequences/filterFns';
 import { getSequenceColumnSortFn } from '@organizations/components/Columns/sequences/sortFns';
 import { getSequenceColumnsConfig } from '@organizations/components/Columns/sequences/columns';
 import { getOpportunitiesSortFn } from '@organizations/components/Columns/opportunities/sortFns';
 import { OpportunitiesTableActions } from '@organizations/components/Actions/OpportunityActions';
-import {
-  Table,
-  SortingState,
-  TableInstance,
-  RowSelectionState,
-} from '@ui/presentation/Table';
 import {
   getOpportunityFilterFns,
   getOpportunityColumnsConfig,
@@ -86,11 +77,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
   ]);
-  const [selection, setSelection] = useState<RowSelectionState>({});
-  const [isShiftPressed, setIsShiftPressed] = useState(false);
-  const [focusIndex, setFocusIndex] = useState<number | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
-  const [lastFocusedId, setLastFocusedId] = useState<string | null>(null);
+
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
 
@@ -359,60 +346,10 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const data = dataMap[tableType];
 
-  const handleSelectionChange: OnChangeFn<RowSelectionState> = (
-    nextSelection,
-  ) => {
-    if (!isShiftPressed) {
-      setSelection(nextSelection);
-
-      return;
-    }
-
-    if (isShiftPressed && selectedIndex !== null && focusIndex !== null) {
-      setSelection((prev) => {
-        const edgeIndexes = [
-          Math.min(selectedIndex, focusIndex),
-          Math.max(selectedIndex, focusIndex),
-        ];
-
-        const ids = data
-          .slice(edgeIndexes[0], edgeIndexes[1] + 1)
-          .map((d) => d.id);
-
-        const newSelection: Record<string, boolean> = {
-          ...prev,
-        };
-
-        const prevIds = Object.keys(prev);
-        const diff = difference(ids, prevIds);
-        const match = intersection(ids, prevIds);
-        const shouldRemove = diff.length < match.length;
-
-        const endId = data[edgeIndexes[1]].id;
-
-        diff.forEach((id) => {
-          newSelection[id] = true;
-        });
-        shouldRemove &&
-          [endId, ...match].forEach((id) => {
-            delete newSelection[id];
-          });
-
-        return newSelection;
-      });
-    }
-  };
-
-  const selectedIds = Object.keys(selection);
-
-  useEffect(() => {
+  const onSelectionChange = (selectedIds: string[]) => {
     if (selectedIds.length > 0 && !isCommandMenuPrompted) {
-      store.ui.commandMenu.setCallback((id?: string) => {
+      store.ui.commandMenu.setCallback(() => {
         tableRef?.current?.resetRowSelection();
-
-        if (id) {
-          setSelection(() => ({ [id]: true }));
-        }
       });
 
       if (tableType === TableViewType.Organizations) {
@@ -489,7 +426,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
       }
     }
-  }, [isCommandMenuPrompted, selectedIds.length]);
+  };
 
   useEffect(() => {
     tableRef.current?.resetRowSelection();
@@ -510,42 +447,19 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     store.ui.setFilteredTable(data);
   }, [data.length]);
 
-  useKey(
-    'Shift',
-    (e) => {
-      setIsShiftPressed(e.type === 'keydown');
-    },
-    { eventTypes: ['keydown', 'keyup'] },
-  );
-
   const isEditing = store.ui.isEditingTableCell;
   const isFiltering = store.ui.isFilteringTable;
   const isSearching =
     store.ui.isSearching === tableViewDef?.value?.tableType?.toLowerCase();
 
-  const focusedId =
-    typeof focusIndex === 'number' ? data?.[focusIndex]?.id : null;
   const targetInvoice: Invoice = data?.find(
     (i) => i.value.metadata?.id === targetId,
   )?.value as Invoice;
   const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
   const targetInvoiceEmail = targetInvoice?.customer?.email || '';
 
-  const createSocial = () => {
-    if (!focusedId) return;
-    store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
-
-    store.ui.commandMenu.setOpen(true);
-    store.ui.commandMenu.setContext({
-      entity: 'Organization',
-      ids: [focusedId],
-    });
-  };
-
-  const handleSetFocused = (index: number | null) => {
+  const handleSetFocused = (index: number | null, selectedIds: string[]) => {
     if (isCommandMenuPrompted) return;
-
-    setFocusIndex(index);
 
     if (selectedIds.length > 0) return;
 
@@ -556,7 +470,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         return;
       }
 
-      if (index > -1 && Object.keys(selection).length === 0) {
+      if (index > -1 && selectedIds.length === 0) {
         store.ui.commandMenu.setType('OrganizationCommands');
         store.ui.commandMenu.setContext({
           entity: 'Organization',
@@ -566,13 +480,19 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
 
     if (tableType === TableViewType.Contacts) {
+      if (!store.ui.contactPreviewCardOpen) {
+        if (index !== null) {
+          store.ui.setFocusRow(data?.[index]?.id);
+        }
+      }
+
       if (typeof index !== 'number') {
         store.ui.commandMenu.setType('ContactHub');
 
         return;
       }
 
-      if (index > -1 && Object.keys(selection).length === 0) {
+      if (index > -1 && selectedIds.length === 0) {
         store.ui.commandMenu.setType('ContactCommands');
         store.ui.commandMenu.setContext({
           entity: 'Contact',
@@ -588,7 +508,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         return;
       }
 
-      if (index > -1 && Object.keys(selection).length === 0) {
+      if (index > -1 && selectedIds.length === 0) {
         store.ui.commandMenu.setType('SequenceCommands');
         store.ui.commandMenu.setContext({
           entity: 'Sequence',
@@ -604,7 +524,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         return;
       }
 
-      if (index > -1 && Object.keys(selection).length === 0) {
+      if (index > -1 && selectedIds.length === 0) {
         store.ui.commandMenu.setType('OpportunityCommands');
         store.ui.commandMenu.setContext({
           entity: 'Opportunity',
@@ -614,116 +534,17 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     }
   };
 
-  const handleOpenCommandKMenu = () => {
-    const selectedIds = Object.keys(selection);
-    const reset = () =>
-      store.ui.commandMenu.setCallback((id?: string) => {
-        tableRef?.current?.resetRowSelection();
-
-        if (id) {
-          setSelection(() => ({ [id]: true }));
-        }
-      });
-
-    if (tableType === TableViewType.Organizations) {
-      if (selectedIds.length === 1) {
-        reset();
-        store.ui.commandMenu.setType('OrganizationCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Organization',
-          ids: selectedIds,
-        });
-      }
-
-      if (selectedIds.length > 1) {
-        reset();
-
-        store.ui.commandMenu.setType('OrganizationBulkCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Organizations',
-          ids: selectedIds,
-        });
-      }
-    } else if (tableType === TableViewType.Opportunities) {
-      if (selectedIds.length === 1) {
-        reset();
-
-        store.ui.commandMenu.setType('OpportunityCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Opportunity',
-          ids: selectedIds,
-        });
-      }
-
-      if (selectedIds.length > 1) {
-        reset();
-
-        store.ui.commandMenu.setType('OpportunityBulkCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Opportunities',
-          ids: selectedIds,
-        });
-      }
-    } else if (tableType === TableViewType.Flow) {
-      if (selectedIds.length === 1) {
-        reset();
-
-        store.ui.commandMenu.setType('SequenceCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Sequence',
-          ids: selectedIds,
-        });
-      }
-
-      if (selectedIds.length > 1) {
-        reset();
-
-        store.ui.commandMenu.setType('SequencesBulkCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Sequences',
-          ids: selectedIds,
-        });
-      }
-    } else {
-      if (selectedIds.length === 1) {
-        reset();
-
-        store.ui.commandMenu.setType('ContactCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Contact',
-          ids: selectedIds,
-        });
-      }
-
-      if (selectedIds.length > 1) {
-        reset();
-
-        store.ui.commandMenu.setType('ContactBulkCommands');
-        store.ui.commandMenu.setContext({
-          entity: 'Contact',
-          ids: selectedIds,
-        });
-      }
-    }
-
-    store.ui.commandMenu.setOpen(true);
-  };
-
-  useEffect(() => {
-    if (focusedId && !store.ui.contactPreviewCardOpen) {
-      setLastFocusedId(focusedId);
-    }
-  }, [focusedId]);
-
   useEffect(() => {
     return () => {
       store.ui.setContactPreviewCardOpen(false);
     };
   }, []);
-
   useKeyBindings(
     {
       Escape: () => {
+        store.ui.setContactPreviewCardOpen(false);
+      },
+      Space: () => {
         store.ui.setContactPreviewCardOpen(false);
       },
     },
@@ -759,18 +580,16 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         manualFiltering
         sorting={sorting}
         tableRef={tableRef}
-        selection={selection}
         columns={tableColumns}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
         onSortingChange={setSorting}
         onResizeColumn={handleColumnSizing}
+        onSelectionChange={onSelectionChange}
         onFocusedRowChange={handleSetFocused}
         tableId={tableViewDef?.value?.tableId}
         dataTest={`finder-table-${tableType}`}
-        onSelectedIndexChange={setSelectedIndex}
         isLoading={store.organizations.isLoading}
-        onSelectionChange={handleSelectionChange}
         fullRowSelection={tableType === TableViewType.Invoices}
         totalItems={store.organizations.isLoading ? 40 : data.length}
         enableKeyboardShortcuts={
@@ -792,40 +611,20 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             ? enableFeature
             : true
         }
-        renderTableActions={(table) => {
+        renderTableActions={(table, focusRow, selectedIds) => {
           if (tableType === TableViewType.Organizations) {
             return (
               <OrganizationTableActions
-                focusedId={focusedId}
-                onCreateContact={createSocial}
-                onOpenCommandK={handleOpenCommandKMenu}
+                selection={selectedIds}
                 isCommandMenuOpen={isCommandMenuPrompted}
-                onUpdateStage={store.organizations.updateStage}
                 table={table as TableInstance<OrganizationStore>}
+                focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isEditing &&
                   !isFiltering &&
                   !isSearching &&
                   !isCommandMenuPrompted
                 }
-                onHide={() => {
-                  store.ui.commandMenu.setCallback(() =>
-                    table.resetRowSelection(),
-                  );
-                  handleOpenCommandKMenu();
-                  store.ui.commandMenu.setType('DeleteConfirmationModal');
-                }}
-                handleOpen={(type: CommandMenuType, context) => {
-                  handleOpenCommandKMenu();
-                  store.ui.commandMenu.setType(type);
-
-                  if (context) {
-                    store.ui.commandMenu.setContext({
-                      ...store.ui.commandMenu.context,
-                      ...context,
-                    });
-                  }
-                }}
               />
             );
           }
@@ -833,26 +632,16 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Contacts) {
             return (
               <ContactTableActions
-                focusedId={focusedId}
-                onOpenCommandK={handleOpenCommandKMenu}
+                selection={selectedIds}
+                isCommandMenuOpen={isCommandMenuPrompted}
                 table={table as TableInstance<ContactStore>}
-                handleOpen={(type: CommandMenuType) => {
-                  handleOpenCommandKMenu();
-                  store.ui.commandMenu.setType(type);
-                }}
+                focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isSearching &&
                   !isFiltering &&
                   !isEditing &&
                   !isCommandMenuPrompted
                 }
-                onHideContacts={() => {
-                  store.ui.commandMenu.setCallback(() =>
-                    table.resetRowSelection(),
-                  );
-                  handleOpenCommandKMenu();
-                  store.ui.commandMenu.setType('DeleteConfirmationModal');
-                }}
               />
             );
           }
@@ -860,13 +649,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Opportunities) {
             return (
               <OpportunitiesTableActions
-                focusedId={focusedId}
-                onOpenCommandK={handleOpenCommandKMenu}
+                selection={selectedIds}
                 table={table as TableInstance<ContactStore>}
-                handleOpen={(type: CommandMenuType) => {
-                  handleOpenCommandKMenu();
-                  store.ui.commandMenu.setType(type);
-                }}
+                focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isSearching &&
                   !isFiltering &&
@@ -880,13 +665,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Flow) {
             return (
               <SequencesTableActions
-                focusedId={focusedId}
-                onOpenCommandK={handleOpenCommandKMenu}
+                selection={selectedIds}
                 table={table as TableInstance<ContactStore>}
-                handleOpen={(type: CommandMenuType) => {
-                  handleOpenCommandKMenu();
-                  store.ui.commandMenu.setType(type);
-                }}
+                focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isSearching &&
                   !isFiltering &&
@@ -897,13 +678,11 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
             );
           }
 
-          return null;
+          return <></>;
         }}
       />
       {isSidePanelOpen && <SidePanel />}
-      {store.ui.contactPreviewCardOpen && (
-        <ContactPreviewCard contactId={lastFocusedId || ''} />
-      )}
+      {store.ui.contactPreviewCardOpen && <ContactPreviewCard />}
       <ConfirmDeleteDialog
         onClose={reset}
         hideCloseButton

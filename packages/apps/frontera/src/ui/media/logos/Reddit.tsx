@@ -14,7 +14,7 @@ export const Reddit = ({ className, ...props }: IconProps) => (
     {...props}
     className={twMerge('inline-block size-4', className)}
   >
-    <g clip-path='url(#clip0_1027_1555)'>
+    <g clipPath='url(#clip0_1027_1555)'>
       <path
         fill='#FF4500'
         d='M12 24C18.6274 24 24 18.6274 24 12C24 5.37258 18.6274 0 12 0C5.37258 0 0 5.37258 0 12C0 18.6274 5.37258 24 12 24Z'

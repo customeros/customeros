@@ -1,12 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 
+import { observer } from 'mobx-react-lite';
 import { useKeys, useKeyBindings } from 'rooks';
-import { Context, CommandMenuType } from '@store/UI/CommandMenu.store.ts';
+import { CommandMenuType } from '@store/UI/CommandMenu.store.ts';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
 import { X } from '@ui/media/icons/X';
 import { Copy07 } from '@ui/media/icons/Copy07';
 import { Archive } from '@ui/media/icons/Archive';
+import { useStore } from '@shared/hooks/useStore';
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { OrganizationStage } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
@@ -18,233 +20,283 @@ import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
 import { ActionItem } from '@organizations/components/Actions/components/ActionItem.tsx';
 
 interface TableActionsProps {
-  onHide: () => void;
+  selection: string[];
   focusedId?: string | null;
-  onOpenCommandK: () => void;
   isCommandMenuOpen: boolean;
-  onCreateContact: () => void;
   enableKeyboardShortcuts?: boolean;
   table: TableInstance<OrganizationStore>;
-  onUpdateStage: (ids: string[], stage: OrganizationStage) => void;
-  handleOpen: (type: CommandMenuType, context?: Partial<Context>) => void;
 }
 
-export const OrganizationTableActions = ({
-  table,
-  onHide,
-  onUpdateStage,
-  enableKeyboardShortcuts,
-  onCreateContact,
-  focusedId,
-  isCommandMenuOpen,
-  onOpenCommandK,
-  handleOpen,
-}: TableActionsProps) => {
-  const [targetId, setTargetId] = useState<string | null>(null);
+export const OrganizationTableActions = observer(
+  ({
+    table,
+    enableKeyboardShortcuts,
+    focusedId,
+    selection,
+    isCommandMenuOpen,
+  }: TableActionsProps) => {
+    const store = useStore();
 
-  const selection = table.getState().rowSelection;
+    const [targetId, setTargetId] = useState<string | null>(null);
 
-  const selectedIds = Object.keys(selection);
+    const selectCount = selection?.length;
 
-  const selectCount = selectedIds?.length;
+    const clearSelection = () => table.resetRowSelection();
 
-  const clearSelection = () => table.resetRowSelection();
+    const handleMergeOrganizations = () => {
+      store.ui.commandMenu.setType('MergeConfirmationModal');
+      store.ui.commandMenu.setOpen(true);
+    };
 
-  const handleMergeOrganizations = () => {
-    handleOpen('MergeConfirmationModal');
-  };
+    const onHideOrganizations = () => {
+      store.ui.commandMenu.setType('DeleteConfirmationModal');
+      store.ui.commandMenu.setOpen(true);
+      store.ui.commandMenu.setCallback(() => {
+        clearSelection();
+      });
+    };
 
-  useEffect(() => {
-    if (selectCount === 1 && focusedId === selectedIds[0]) {
-      setTargetId(selectedIds[0]);
-    }
+    const onCreateContact = () => {
+      if (!focusedId) return;
+      store.ui.commandMenu.setType('AddContactViaLinkedInUrl');
 
-    if (selectCount < 1) {
-      setTargetId(null);
+      store.ui.commandMenu.setOpen(true);
+      store.ui.commandMenu.setContext({
+        entity: 'Organization',
+        ids: [focusedId],
+      });
+    };
+
+    const onOpenCommandK = () => {
+      if (selection?.length > 0) return;
+
+      if (selection?.length === 1) {
+        store.ui.commandMenu.setType('OrganizationCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organization',
+          ids: selection,
+        });
+      } else {
+        store.ui.commandMenu.setType('OrganizationBulkCommands');
+        store.ui.commandMenu.setContext({
+          entity: 'Organization',
+          ids: selection,
+        });
+      }
+      store.ui.commandMenu.setOpen(true);
+    };
+
+    useEffect(() => {
+      if (selectCount === 1 && focusedId === selection[0]) {
+        setTargetId(selection[0]);
+      }
+
+      if (selectCount < 1) {
+        setTargetId(null);
+        clearSelection();
+      }
+    }, [selectCount, focusedId]);
+
+    const moveToAllOrgs = () => {
+      if (!selectCount && !focusedId) return;
+
+      if (!selectCount && focusedId) {
+        store.organizations.updateStage(
+          [focusedId],
+          OrganizationStage.Unqualified,
+        );
+
+        return;
+      }
+
+      store.organizations.updateStage(selection, OrganizationStage.Unqualified);
       clearSelection();
-    }
-  }, [selectCount, focusedId]);
+    };
 
-  const moveToAllOrgs = () => {
-    if (!selectCount && !focusedId) return;
+    const moveToTarget = () => {
+      if (!selectCount && !focusedId) return;
 
-    if (!selectCount && focusedId) {
-      onUpdateStage([focusedId], OrganizationStage.Unqualified);
+      if (!selectCount && focusedId) {
+        store.organizations.updateStage([focusedId], OrganizationStage.Target);
 
-      return;
-    }
+        return;
+      }
+      store.organizations.updateStage(selection, OrganizationStage.Target);
+      clearSelection();
+    };
 
-    onUpdateStage(selectedIds, OrganizationStage.Unqualified);
-    clearSelection();
-  };
+    const moveToOpportunities = () => {
+      if (!selectCount && !focusedId) return;
 
-  const moveToTarget = () => {
-    if (!selectCount && !focusedId) return;
+      if (!selectCount && focusedId) {
+        store.organizations.updateStage([focusedId], OrganizationStage.Engaged);
 
-    if (!selectCount && focusedId) {
-      onUpdateStage([focusedId], OrganizationStage.Target);
+        return;
+      }
+      store.organizations.updateStage(selection, OrganizationStage.Engaged);
+      clearSelection();
+    };
 
-      return;
-    }
-    onUpdateStage(selectedIds, OrganizationStage.Target);
-    clearSelection();
-  };
+    const handleOpen = (type: CommandMenuType, property?: string) => {
+      if (selection?.length >= 1) {
+        store.ui.commandMenu.setContext({
+          ids: selection,
+          entity: 'Organization',
+          property: property,
+        });
+      } else {
+        store.ui.commandMenu.setContext({
+          ids: [focusedId || ''],
+          entity: 'Organization',
+          property: property,
+        });
+      }
+      store.ui.commandMenu.setType(type);
+      store.ui.commandMenu.setOpen(true);
+    };
 
-  const moveToOpportunities = () => {
-    if (!selectCount && !focusedId) return;
+    useKeyBindings(
+      {
+        u: moveToAllOrgs,
+        t: moveToTarget,
+        o: moveToOpportunities,
+        c: (e) => {
+          e.stopPropagation();
+          e.preventDefault();
 
-    if (!selectCount && focusedId) {
-      onUpdateStage([focusedId], OrganizationStage.Engaged);
-
-      return;
-    }
-    onUpdateStage(selectedIds, OrganizationStage.Engaged);
-    clearSelection();
-  };
-
-  useKeyBindings(
-    {
-      u: moveToAllOrgs,
-      t: moveToTarget,
-      o: moveToOpportunities,
-      c: (e) => {
+          if (selectCount > 1) return;
+          onCreateContact();
+        },
+        Escape: clearSelection,
+      },
+      { when: enableKeyboardShortcuts },
+    );
+    useKeys(
+      ['Shift', 'O'],
+      (e) => {
         e.stopPropagation();
         e.preventDefault();
-
-        if (selectCount > 1) return;
-        onCreateContact();
+        handleOpen('AssignOwner');
       },
-      Escape: clearSelection,
-    },
-    { when: enableKeyboardShortcuts },
-  );
-  useKeys(
-    ['Shift', 'O'],
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      handleOpen('AssignOwner');
-    },
-    { when: enableKeyboardShortcuts },
-  );
-  useKeys(
-    ['Shift', 'T'],
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      handleOpen('ChangeTags');
-    },
-    { when: enableKeyboardShortcuts },
-  );
-  useKeys(
-    ['Shift', 'R'],
-    (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      handleOpen('RenameOrganizationProperty', {
-        property: 'name',
-      });
-    },
-    { when: enableKeyboardShortcuts },
-  );
+      { when: enableKeyboardShortcuts },
+    );
+    useKeys(
+      ['Shift', 'T'],
+      (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleOpen('ChangeTags');
+      },
+      { when: enableKeyboardShortcuts },
+    );
+    useKeys(
+      ['Shift', 'R'],
+      (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        handleOpen('RenameOrganizationProperty', 'name');
+      },
+      { when: enableKeyboardShortcuts },
+    );
 
-  useModKey(
-    'Backspace',
-    () => {
-      onHide();
-    },
-    { when: enableKeyboardShortcuts },
-  );
+    useModKey(
+      'Backspace',
+      () => {
+        handleOpen('DeleteConfirmationModal');
+      },
+      { when: enableKeyboardShortcuts },
+    );
 
-  useModKey(
-    'v',
-    () => {
-      if (focusedId) {
-        if (!targetId) {
-          setTargetId(focusedId);
+    useModKey(
+      'v',
+      () => {
+        if (focusedId) {
+          if (!targetId) {
+            setTargetId(focusedId);
+          }
+          onCreateContact();
         }
-        onCreateContact();
-      }
-    },
-    {
-      when:
-        enableKeyboardShortcuts &&
-        selectCount <= 1 &&
-        typeof focusedId === 'string',
-    },
-  );
+      },
+      {
+        when:
+          enableKeyboardShortcuts &&
+          selectCount <= 1 &&
+          typeof focusedId === 'string',
+      },
+    );
 
-  return (
-    <>
-      {selectCount > 0 && !isCommandMenuOpen && (
-        <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
-          {selectCount && (
-            <Tooltip
-              className='p-1.5'
-              label={
-                <div className='flex items-center text-sm'>
-                  Open command menu
-                  <CommandKbd className='bg-gray-600 text-gray-25 mx-1' />
-                  <div className='bg-gray-600 text-xs min-h-5 min-w-5 rounded-sm flex justify-center items-center'>
-                    K
+    return (
+      <>
+        {selectCount > 0 && !isCommandMenuOpen && (
+          <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
+            {selectCount && (
+              <Tooltip
+                className='p-1.5'
+                label={
+                  <div className='flex items-center text-sm'>
+                    Open command menu
+                    <CommandKbd className='bg-gray-600 text-gray-25 mx-1' />
+                    <div className='bg-gray-600 text-xs min-h-5 min-w-5 rounded-sm flex justify-center items-center'>
+                      K
+                    </div>
+                  </div>
+                }
+              >
+                <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
+                  <p
+                    onClick={clearSelection}
+                    className='flex text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
+                  >
+                    {`${selectCount} selected`}
+                    <span className='ml-1 inline-flex items-center'>
+                      <X />
+                    </span>
+                  </p>
+                </div>
+              </Tooltip>
+            )}
+
+            <ActionItem
+              onClick={onHideOrganizations}
+              dataTest='org-actions-archive'
+              icon={<Archive className='text-inherit size-3' />}
+              tooltip={
+                <div className='flex gap-1'>
+                  <span className='text-sm'>Archive</span>
+                  <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
+                    {isUserPlatformMac() ? '⌘' : 'Ctrl'}
+                  </div>
+                  <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
+                    <Delete className='text-inherit' />
                   </div>
                 </div>
               }
             >
-              <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
-                <p
-                  onClick={clearSelection}
-                  className='flex text-gray-25 text-sm font-semibold text-nowrap leading-5 outline-dashed outline-1 rounded-[2px] outline-gray-400 pl-2 pr-1 hover:bg-gray-800 transition-colors cursor-pointer'
-                >
-                  {`${selectCount} selected`}
-                  <span className='ml-1 inline-flex items-center'>
-                    <X />
-                  </span>
-                </p>
-              </div>
-            </Tooltip>
-          )}
-
-          <ActionItem
-            onClick={onHide}
-            dataTest='org-actions-archive'
-            icon={<Archive className='text-inherit size-3' />}
-            tooltip={
-              <div className='flex gap-1'>
-                <span className='text-sm'>Archive</span>
-                <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
-                  {isUserPlatformMac() ? '⌘' : 'Ctrl'}
-                </div>
-                <div className='bg-gray-600  min-h-5 min-w-5 rounded flex justify-center items-center'>
-                  <Delete className='text-inherit' />
-                </div>
-              </div>
-            }
-          >
-            Archive
-          </ActionItem>
-          {selectCount > 1 && (
-            <ActionItem
-              onClick={handleMergeOrganizations}
-              tooltip={<span className='text-sm'>Merge</span>}
-              icon={<Copy07 className='text-inherit size-3' />}
-            >
-              Merge
+              Archive
             </ActionItem>
-          )}
-          <ActionItem
-            onClick={onOpenCommandK}
-            dataTest='org-actions-commandk'
-            icon={
-              <span className='text-inherit w-auto h-auto'>
-                {isUserPlatformMac() ? '⌘' : 'Ctrl'}
-              </span>
-            }
-          >
-            Command
-          </ActionItem>
-        </ButtonGroup>
-      )}
-    </>
-  );
-};
+            {selectCount > 1 && (
+              <ActionItem
+                onClick={handleMergeOrganizations}
+                tooltip={<span className='text-sm'>Merge</span>}
+                icon={<Copy07 className='text-inherit size-3' />}
+              >
+                Merge
+              </ActionItem>
+            )}
+            <ActionItem
+              onClick={onOpenCommandK}
+              dataTest='org-actions-commandk'
+              icon={
+                <span className='text-inherit w-auto h-auto'>
+                  {isUserPlatformMac() ? '⌘' : 'Ctrl'}
+                </span>
+              }
+            >
+              Command
+            </ActionItem>
+          </ButtonGroup>
+        )}
+      </>
+    );
+  },
+);
