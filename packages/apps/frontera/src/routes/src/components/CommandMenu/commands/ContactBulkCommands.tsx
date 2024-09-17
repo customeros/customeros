@@ -33,9 +33,9 @@ export const ContactBulkCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Shuffle01 />}
-          keywords={contactKeywords.move_to_sequence}
+          keywords={contactKeywords.move_to_flow}
           onSelect={() => {
-            store.ui.commandMenu.setType('EditContactSequence');
+            store.ui.commandMenu.setType('EditContactFlow');
           }}
           rightAccessory={
             <>
@@ -46,7 +46,7 @@ export const ContactBulkCommands = observer(() => {
             </>
           }
         >
-          Move to sequence...
+          Move to flow...
         </CommandItem>
         <CommandItem
           leftAccessory={<Certificate02 />}
@@ -75,15 +75,15 @@ export const ContactBulkCommands = observer(() => {
           Edit time zone...
         </CommandItem>
 
-        {contactStores.some((contact) => contact?.sequence !== undefined) && (
+        {contactStores.some((contact) => contact?.flow !== undefined) && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
-            keywords={contactKeywords.remove_from_sequence}
+            keywords={contactKeywords.remove_from_flow}
             onSelect={() => {
-              store.ui.commandMenu.setType('UnlinkContactFromSequence');
+              store.ui.commandMenu.setType('UnlinkContactFromFlow');
             }}
           >
-            Remove from sequence
+            Remove from flow
           </CommandItem>
         )}
 
@@ -142,6 +142,6 @@ const contactKeywords = {
     'mobile',
     'telephone',
   ],
-  move_to_sequence: ['move', 'to', 'sequence', 'edit', 'change', 'campaign'],
-  remove_from_sequence: ['remove', 'sequence', 'delete', 'campaign'],
+  move_to_flow: ['move', 'to', 'flow', 'edit', 'change'],
+  remove_from_flow: ['remove', 'flow', 'delete'],
 };

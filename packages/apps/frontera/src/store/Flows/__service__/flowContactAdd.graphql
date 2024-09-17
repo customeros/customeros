@@ -1,0 +1,7 @@
+mutation flowContactAdd($flowId: ID!, $contactId: ID!) {
+  flowContact_Add(flowId: $flowId, contactId: $contactId) {
+    metadata {
+      id
+    }
+  }
+}

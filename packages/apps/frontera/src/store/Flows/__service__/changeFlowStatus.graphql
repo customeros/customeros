@@ -1,0 +1,7 @@
+mutation flowChangeStatus($id: ID!, $status: FlowStatus!) {
+  flow_ChangeStatus(id: $id, status: $status) {
+    metadata {
+      id
+    }
+  }
+}

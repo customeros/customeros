@@ -18,7 +18,7 @@ import { CommandsContainer } from '@shared/components/CommandMenu/commands/share
 
 import { AddJobRolesSubItemGroup } from './contacts/AddJobRolesSubItemGroup';
 import { AddPersonaTagSubItemGroup } from './contacts/AddPersonaTagSubItemGroup';
-import { AddContactSequenceSubItemGroup } from './contacts/AddContactSequenceSubItemGroup';
+import { AddContactFlowSubItemGroup } from './contacts/AddContactFlowSubItemGroup.tsx';
 
 export const ContactCommands = observer(() => {
   const store = useStore();
@@ -50,9 +50,9 @@ export const ContactCommands = observer(() => {
 
         <CommandItem
           leftAccessory={<Shuffle01 />}
-          keywords={contactKeywords.move_to_sequence}
+          keywords={contactKeywords.move_to_flow}
           onSelect={() => {
-            store.ui.commandMenu.setType('EditContactSequence');
+            store.ui.commandMenu.setType('EditContactFlow');
           }}
           rightAccessory={
             <>
@@ -63,9 +63,9 @@ export const ContactCommands = observer(() => {
             </>
           }
         >
-          Move to sequence...
+          Move to flow...
         </CommandItem>
-        <AddContactSequenceSubItemGroup />
+        <AddContactFlowSubItemGroup />
 
         {!!contact?.value?.tags?.length && (
           <CommandItem
@@ -167,15 +167,15 @@ export const ContactCommands = observer(() => {
           Edit time zone...
         </CommandItem>
 
-        {contact?.sequence?.value?.name !== undefined && (
+        {contact?.flow?.value?.name !== undefined && (
           <CommandItem
             leftAccessory={<Shuffle01 />}
-            keywords={contactKeywords.remove_from_sequence}
+            keywords={contactKeywords.remove_from_flow}
             onSelect={() => {
-              store.ui.commandMenu.setType('UnlinkContactFromSequence');
+              store.ui.commandMenu.setType('UnlinkContactFromFlow');
             }}
           >
-            Remove from sequence
+            Remove from flow
           </CommandItem>
         )}
 
@@ -234,6 +234,6 @@ const contactKeywords = {
     'label',
     'profile',
   ],
-  move_to_sequence: ['move', 'to', 'sequence', 'edit', 'change', 'campaign'],
-  remove_from_sequence: ['remove', 'sequence', 'delete', 'campaign'],
+  move_to_flow: ['move', 'to', 'flow'],
+  remove_from_flow: ['remove', 'flow', 'delete'],
 };

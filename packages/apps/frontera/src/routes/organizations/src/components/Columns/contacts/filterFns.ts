@@ -287,7 +287,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       const includeEmpty = filter.includeEmpty;
 
       return (row: ContactStore) => {
-        const flow = row.sequence?.flow;
+        const flow = row.flow;
 
         if (!flow) {
           return includeEmpty;
@@ -300,27 +300,6 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return filterValue.includes(flow.value.name);
       };
     })
-    .with({ property: ColumnViewType.ContactsSequences }, (filter) => {
-      if (!filter.active) return () => true;
-
-      const filterValue = filter.value;
-      const includeEmpty = filter.includeEmpty;
-
-      return (row: ContactStore) => {
-        const sequence = row.sequence;
-
-        if (!sequence) {
-          return includeEmpty;
-        }
-
-        if (!filterValue.length) {
-          return !includeEmpty;
-        }
-
-        return filterValue.includes(sequence.value.name);
-      };
-    })
-
     .with(
       { property: 'EMAIL_VERIFICATION' },
       (filter) => (row: ContactStore) => {

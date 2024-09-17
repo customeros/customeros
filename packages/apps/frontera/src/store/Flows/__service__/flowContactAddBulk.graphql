@@ -1,0 +1,5 @@
+mutation flowContactAddBulk($flowId: ID!, $contactId: [ID!]!) {
+  flowContact_AddBulk(flowId: $flowId, contactId: $contactId) {
+    result
+  }
+}

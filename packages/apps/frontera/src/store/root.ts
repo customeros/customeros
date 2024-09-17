@@ -2,7 +2,7 @@ import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { FlowsStore } from '@store/Flows/Flows.store.ts';
 import { configurePersistable } from 'mobx-persist-store';
-import { FlowSequencesStore } from '@store/Sequences/FlowSequences.store.ts';
+import { FlowContactsStore } from '@store/FlowContacts/FlowContacts.store.ts';
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
@@ -51,8 +51,8 @@ export class RootStore {
   settings: SettingsStore;
   invoices: InvoicesStore;
   contacts: ContactsStore;
-  flowSequences: FlowSequencesStore;
   flows: FlowsStore;
+  flowContacts: FlowContactsStore;
   contracts: ContractsStore;
   reminders: RemindersStore;
   globalCache: GlobalCacheStore;
@@ -86,7 +86,7 @@ export class RootStore {
     this.opportunities = new OpportunitiesStore(this, this.transport);
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
-    this.flowSequences = new FlowSequencesStore(this, this.transport);
+    this.flowContacts = new FlowContactsStore(this, this.transport);
     this.flows = new FlowsStore(this, this.transport);
 
     this.externalSystemInstances = new ExternalSystemInstancesStore(
@@ -125,7 +125,6 @@ export class RootStore {
       this.contacts.bootstrap(),
       this.workFlows.bootstrap(),
       this.flows.bootstrap(),
-      this.flowSequences.bootstrap(),
     ]);
   }
 

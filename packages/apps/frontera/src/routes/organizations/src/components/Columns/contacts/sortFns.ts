@@ -56,9 +56,7 @@ export const getContactSortFn = (columnId: string) =>
       return row.value.locations?.[0]?.region?.toLowerCase() || null;
     })
     .with(ColumnViewType.ContactsSequences, () => (row: ContactStore) => {
-      return row.sequence?.value?.name?.toLowerCase() || null;
+      return row.flow?.value?.name?.toLowerCase() || null;
     })
-    .with(ColumnViewType.ContactsFlows, () => (row: ContactStore) => {
-      return row.sequence?.flow?.value.name?.toLowerCase() || null;
-    })
+
     .otherwise(() => (_row: ContactStore) => false);

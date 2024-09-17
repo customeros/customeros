@@ -1,0 +1,5 @@
+mutation flowContactDelete($id: ID!) {
+  flowContact_Delete(id: $id) {
+    result
+  }
+}

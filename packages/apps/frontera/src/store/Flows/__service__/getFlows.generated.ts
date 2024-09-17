@@ -9,14 +9,47 @@ export type GetFlowsQuery = {
     name: string;
     description: string;
     status: Types.FlowStatus;
-    metadata: {
-      __typename?: 'Metadata';
-      id: string;
-      created: any;
-      lastUpdated: any;
-      source: Types.DataSource;
-      sourceOfTruth: Types.DataSource;
-      appSource: string;
-    };
+    metadata: { __typename?: 'Metadata'; id: string };
+    actions: Array<{
+      __typename?: 'FlowAction';
+      index: any;
+      name: string;
+      status: Types.FlowActionStatus;
+      actionType: Types.FlowActionType;
+      metadata: { __typename?: 'Metadata'; id: string };
+      actionData:
+        | {
+            __typename: 'FlowActionDataEmail';
+            replyToId?: string | null;
+            subject: string;
+            bodyTemplate: string;
+          }
+        | { __typename: 'FlowActionDataWait'; minutes: any }
+        | {
+            __typename: 'FlowActionLinkedinConnectionRequest';
+            messageTemplate: string;
+          }
+        | { __typename: 'FlowActionLinkedinMessage'; messageTemplate: string };
+      senders: Array<{
+        __typename?: 'FlowActionSender';
+        mailbox?: string | null;
+        emailsPerHour?: any | null;
+        metadata: { __typename?: 'Metadata'; id: string };
+        user?: {
+          __typename?: 'User';
+          firstName: string;
+          lastName: string;
+          name?: string | null;
+        } | null;
+      }>;
+    }>;
+    contacts: Array<{
+      __typename?: 'FlowContact';
+      metadata: { __typename?: 'Metadata'; id: string };
+      contact: {
+        __typename?: 'Contact';
+        metadata: { __typename?: 'Metadata'; id: string };
+      };
+    }>;
   }>;
 };

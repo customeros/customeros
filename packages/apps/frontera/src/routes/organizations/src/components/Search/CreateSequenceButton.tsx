@@ -8,7 +8,7 @@ export const CreateSequenceButton = observer(() => {
   const store = useStore();
 
   const handleCreateSequence = () => {
-    store.ui.commandMenu.toggle('CreateNewSequence');
+    store.ui.commandMenu.toggle('CreateNewFlow');
   };
 
   return (
@@ -18,7 +18,7 @@ export const CreateSequenceButton = observer(() => {
       leftIcon={<Plus />}
       onClick={handleCreateSequence}
     >
-      New sequence
+      New flow
     </Button>
   );
 });

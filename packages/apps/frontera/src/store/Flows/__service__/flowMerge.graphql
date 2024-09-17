@@ -1,0 +1,7 @@
+mutation flowMerge($input: FlowMergeInput!) {
+  flow_Merge(input: $input) {
+    metadata {
+      id
+    }
+  }
+}

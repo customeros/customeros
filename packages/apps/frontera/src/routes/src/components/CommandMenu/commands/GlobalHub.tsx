@@ -50,7 +50,7 @@ export const GlobalSharedCommands = observer(
     const contactsPreset = store.tableViewDefs.contactsPreset;
     const upcomingInvoicesPreset = store.tableViewDefs.upcomingInvoicesPreset;
     const contractsPreset = store.tableViewDefs.contractsPreset;
-    const sequencesPreset = store.tableViewDefs.flowSequencesPreset;
+    const flowsPreset = store.tableViewDefs.flowsPreset;
 
     const handleGoTo = (path: string, preset?: string) => {
       navigate(path + (preset ? `?preset=${preset}` : ''));
@@ -145,11 +145,11 @@ export const GlobalSharedCommands = observer(
         <CommandItem
           dataTest={`${dataTest}-gq`}
           leftAccessory={<ArrowNarrowRight />}
-          keywords={navigationKeywords.go_to_sequences}
+          keywords={navigationKeywords.go_to_flows}
           rightAccessory={<KeyboardShortcut shortcut='Q' />}
-          onSelect={() => handleGoTo('/finder', sequencesPreset)}
+          onSelect={() => handleGoTo('/finder', flowsPreset)}
         >
-          Go to Sequences
+          Go to Flows
         </CommandItem>
         <CommandItem
           dataTest={`${dataTest}-gs`}
@@ -190,7 +190,7 @@ const navigationKeywords = {
   go_to_targets: ['go to', 'targets', 'navigate'],
   go_to_customers: ['go to', 'customers', 'navigate'],
   go_to_address_book: ['go to', 'organizations', 'navigate'],
-  go_to_sequences: ['go to', 'sequences', 'navigate', 'campaign'],
+  go_to_flows: ['go to', 'flows', 'navigate', 'campaign'],
   go_to_opportunities: [
     'go to',
     'opportunities',

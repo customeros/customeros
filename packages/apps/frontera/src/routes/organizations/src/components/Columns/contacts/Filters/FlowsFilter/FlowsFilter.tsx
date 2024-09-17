@@ -20,7 +20,7 @@ interface ContactFilterProps {
 }
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.ContactsFlows,
+  property: ColumnViewType.ContactsSequences,
   value: [],
   active: false,
   caseSensitive: false,
@@ -63,7 +63,7 @@ export const FlowsFilter = observer(
     const options = [
       ...new Set(
         store.flows
-          .toArray()
+          .toComputedArray((arr) => arr)
           .map((e) => e.value.name)
           .filter((e) => !!e?.length),
       ),

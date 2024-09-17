@@ -17,7 +17,6 @@ import {
   TableViewDef,
   ColumnViewType,
 } from '@graphql/types';
-import { SequencesFilter } from '@organizations/components/Columns/contacts/Filters/SequencesFilter';
 import { ConnectedToFilter } from '@organizations/components/Columns/contacts/Filters/ConnectedToFilter';
 
 import { EmailCell } from './Cells/email';
@@ -25,6 +24,7 @@ import { PhoneCell } from './Cells/phone';
 import { AvatarCell } from './Cells/avatar';
 import { EmailFilter } from './Filters/Email';
 import { ContactsTagsCell } from './Cells/tags';
+import { FlowsFilter } from './Filters/FlowsFilter';
 import { ContactLinkedInCell } from './Cells/socials';
 import { ContactNameCell } from './Cells/contactName';
 import { ContactAvatarHeader } from './Headers/Avatar';
@@ -619,17 +619,17 @@ const columns: Record<string, Column> = {
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
-      const sequence = props.row.original.sequence?.value?.name ?? '';
+      const flow = props.row.original.flow?.value?.name ?? '';
 
-      return <TextCell text={sequence} unknownText='None' />;
+      return <TextCell text={flow} unknownText='None' />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
+        title='Current Flow'
         filterWidth='17.5rem'
-        title='Current Sequence'
         id={ColumnViewType.ContactsSequences}
         renderFilter={(initialFocusRef) => (
-          <SequencesFilter
+          <FlowsFilter
             placeholder='e.g. Aerospace CTO'
             initialFocusRef={initialFocusRef}
           />
@@ -639,34 +639,6 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
-  // This will be uncommented at later stage
-  // [ColumnViewType.ContactsFlows]: columnHelper.accessor((row) => row, {
-  //   id: ColumnViewType.ContactsFlows,
-  //   minSize: 150,
-  //   maxSize: 600,
-  //   enableResizing: true,
-  //   enableColumnFilter: true,
-  //   enableSorting: true,
-  //   cell: (props) => {
-  //     const flow = props.row.original.sequence?.value?.flow?.name ?? '';
-  //
-  //     return <TextCell text={flow} unknownText='None' />;
-  //   },
-  //   header: (props) => (
-  //     <THead<HTMLInputElement>
-  //       title='Current Flow'
-  //       id={ColumnViewType.ContactsFlows}
-  //       renderFilter={(initialFocusRef) => (
-  //         <FlowsFilter
-  //           placeholder='e.g. Education'
-  //           initialFocusRef={initialFocusRef}
-  //         />
-  //       )}
-  //       {...getTHeadProps<ContactStore>(props)}
-  //     />
-  //   ),
-  //   skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
-  // }),
 };
 
 export const getContactColumnsConfig = (

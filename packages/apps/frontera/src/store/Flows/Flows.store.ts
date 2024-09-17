@@ -7,8 +7,9 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { FlowService } from '@store/Flows/__service__';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
+import { FlowMergeMutationVariables } from '@store/Flows/__service__/flowMerge.generated.ts';
 
-import { Flow } from '@graphql/types';
+import { Flow, FlowStatus } from '@graphql/types';
 
 export class FlowsStore implements GroupStore<Flow> {
   version = 0;
@@ -38,14 +39,10 @@ export class FlowsStore implements GroupStore<Flow> {
     return Array.from(this.value.values());
   }
 
-  get educationFlow() {
-    return this.toArray().find(
-      (flow) => flow.value.name?.toLowerCase() === 'education',
-    );
-  }
-
   toComputedArray(compute: (arr: FlowStore[]) => FlowStore[]) {
-    const arr = this.toArray();
+    const arr = this.toArray().filter(
+      (item) => item.value.status !== FlowStatus.Archived,
+    );
 
     return compute(arr as FlowStore[]);
   }
@@ -84,11 +81,140 @@ export class FlowsStore implements GroupStore<Flow> {
     this.isLoading = true;
   }
 
-  async create() {
-    // todo
+  async create(
+    payload: FlowMergeMutationVariables['input'],
+    options?: { onSuccess?: (serverId: string) => void },
+  ) {
+    const newFlow = new FlowStore(this.root, this.transport);
+    const tempId = newFlow.value.metadata?.id;
+
+    newFlow.value = {
+      ...newFlow.value,
+      ...payload,
+    };
+
+    let serverId: string | undefined;
+
+    this.value.set(tempId, newFlow);
+
+    try {
+      const { flow_Merge } = await this.service.mergeFlow({
+        input: payload,
+      });
+
+      runInAction(() => {
+        serverId = flow_Merge?.metadata.id;
+        newFlow.setId(serverId);
+
+        this.value.set(serverId, newFlow);
+        this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      serverId && options?.onSuccess?.(serverId);
+      setTimeout(() => {
+        if (serverId) {
+          this.value.get(serverId)?.invalidate();
+          this.root.flows.bootstrap();
+        }
+      }, 1000);
+    }
   }
 
-  async remove() {
-    // todo
-  }
+  archive = async (id: string, options?: { onSuccess?: () => void }) => {
+    this.isLoading = true;
+
+    const flow = this.value.get(id);
+
+    try {
+      const { flow_ChangeStatus } = await this.service.changeStatus({
+        id,
+        status: FlowStatus.Archived,
+      });
+
+      if (flow_ChangeStatus.metadata.id) {
+        runInAction(() => {
+          flow?.update(
+            (seq) => {
+              seq.status = FlowStatus.Archived;
+
+              return seq;
+            },
+            { mutate: false },
+          );
+
+          this.sync({
+            action: 'INVALIDATE',
+            ids: [id],
+          });
+        });
+        this.root.ui.toastSuccess(
+          `Sequence archived`,
+          'archive-sequence-success',
+        );
+      }
+    } catch (err) {
+      runInAction(() => {
+        this.error = (err as Error).message;
+        this.root.ui.toastError(
+          `We couldn't archive this sequence`,
+          'archive-view-error',
+        );
+      });
+    } finally {
+      this.isLoading = false;
+      options?.onSuccess?.();
+    }
+  };
+
+  archiveMany = async (ids: string[], options?: { onSuccess?: () => void }) => {
+    this.isLoading = true;
+
+    try {
+      const results = await Promise.all(
+        ids.map((id) =>
+          this.service.changeStatus({
+            id,
+            status: FlowStatus.Archived,
+          }),
+        ),
+      );
+
+      const successfulIds = results.map(
+        ({ flow_ChangeStatus }) => flow_ChangeStatus?.metadata?.id,
+      );
+
+      runInAction(() => {
+        successfulIds.forEach((id) => {
+          this.value
+            .get(id)
+            ?.update((seq) => ({ ...seq, status: FlowStatus.Archived }), {
+              mutate: false,
+            });
+        });
+
+        if (successfulIds.length > 0) {
+          this.sync({ action: 'INVALIDATE', ids: successfulIds });
+          this.root.ui.toastSuccess(
+            `${successfulIds.length} flows archived`,
+            'archive-flows-success',
+          );
+        }
+      });
+    } catch (err) {
+      this.error = (err as Error).message;
+      this.root.ui.toastError(
+        "We couldn't archive these flows",
+        'archive-flows-error',
+      );
+    } finally {
+      this.isLoading = false;
+      options?.onSuccess?.();
+    }
+  };
 }

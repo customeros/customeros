@@ -37,15 +37,15 @@ export type CommandMenuType =
   | 'DuplicateView'
   | 'OpportunityBulkCommands'
   | 'ChangeBulkArrEstimate'
-  | 'CreateNewSequence'
-  | 'RenameSequence'
-  | 'SequenceCommands'
-  | 'ChangeSequenceStatus'
-  | 'SequencesBulkCommands'
-  | 'SequenceHub'
-  | 'EditContactSequence'
-  | 'UnlinkContactFromSequence'
-  | 'ConfirmBulkSequenceEdit'
+  | 'CreateNewFlow'
+  | 'RenameFlow'
+  | 'FlowCommands'
+  | 'ChangeFlowStatus'
+  | 'FlowsBulkCommands'
+  | 'FlowHub'
+  | 'EditContactFlow'
+  | 'UnlinkContactFromFlow'
+  | 'ConfirmBulkFlowEdit'
   | 'ContactBulkCommands';
 
 export type Context = {
@@ -60,10 +60,10 @@ export type Context = {
     | 'Organizations'
     | 'Opportunities'
     | 'Contact'
-    | 'ContactSequences'
+    | 'ContactFlows'
     | 'TableViewDef'
-    | 'Sequence'
-    | 'Sequences'
+    | 'Flow'
+    | 'Flows'
     | null;
 };
 

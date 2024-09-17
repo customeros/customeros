@@ -16,7 +16,7 @@ import {
 
 import mock from './mock.json';
 import { ContactStore } from './Contact.store';
-import { ContactService } from './Contact.service';
+import { ContactService } from './__service__/Contact.service.ts';
 
 export class ContactsStore implements GroupStore<Contact> {
   version = 0;
@@ -336,6 +336,53 @@ export class ContactsStore implements GroupStore<Contact> {
       });
     }
   }
+
+  async deleteFlowContacts(contactIds: string[]) {
+    this.isLoading = true;
+
+    try {
+      await Promise.all(
+        contactIds.map((contactId) => {
+          this.value.get(contactId)?.deleteFlowContact();
+        }),
+      );
+
+      runInAction(() => {
+        const contactStores = contactIds.map((e) => this.value.get(e));
+
+        contactStores.forEach((contactStore) => {
+          contactStore?.update(
+            (c) => {
+              c.flows = [];
+
+              return c;
+            },
+            { mutate: false },
+          );
+        });
+
+        this.root.ui.toastSuccess(
+          `${contactIds.length} contacts removed from their flows`,
+          'unlink-contact-from-flow-success',
+        );
+        this.root.contacts.sync({
+          action: 'INVALIDATE',
+          ids: contactIds,
+        });
+
+        this.root.flows.invalidate();
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          `We couldn't remove those contacts from their flows`,
+          'unlink-contact-from-sequence-error',
+        );
+      });
+    } finally {
+      this.isLoading = false;
+    }
+  }
 }
 
 type CONTACTS_QUERY_RESPONSE = {
@@ -361,6 +408,11 @@ const CONTACTS_QUERY = gql`
         timezone
         metadata {
           id
+        }
+        flows {
+          metadata {
+            id
+          }
         }
         tags {
           metadata {

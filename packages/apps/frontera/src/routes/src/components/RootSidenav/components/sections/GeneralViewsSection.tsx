@@ -50,7 +50,7 @@ export const GeneralViewsSection = observer(
       store.tableViewDefs.opportunitiesTablePreset ?? '',
     );
     const flowSequencesView = store.tableViewDefs.getById(
-      store.tableViewDefs.flowSequencesPreset ?? '',
+      store.tableViewDefs.flowsPreset ?? '',
     );
 
     const invoicesViews = [
@@ -175,9 +175,9 @@ export const GeneralViewsSection = observer(
               )}
             />
             <RootSidenavItem
-              label='Sequences'
+              label='Flows'
               id={flowSequencesView?.value?.id}
-              dataTest={`side-nav-item-all-sequences`}
+              dataTest={`side-nav-item-all-flows`}
               onClick={() =>
                 handleItemClick(`finder?preset=${flowSequencesView?.value?.id}`)
               }
