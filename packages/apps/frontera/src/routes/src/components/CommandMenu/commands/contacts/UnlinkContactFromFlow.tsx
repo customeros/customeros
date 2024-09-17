@@ -29,11 +29,11 @@ export const UnlinkContactFromFlow = observer(() => {
     store.ui.commandMenu.clearCallback();
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (!context.ids?.length) return;
 
     if (context.ids?.length > 1) {
-      await store.contacts.deleteFlowContacts(context.ids);
+      store.contacts.deleteFlowContacts(context.ids);
       handleClose();
 
       return;
