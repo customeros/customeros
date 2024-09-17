@@ -319,10 +319,11 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 		return domainResponse, coserrors.ErrDomainConfigurationFailed
 	}
 
-	// mark domain as configured
-	err = services.CommonServices.PostgresRepositories.MailStackDomainRepository.MarkConfigured(ctx, tenant, domain)
+	// setup domain in openSRS
+	err = services.OpensrsService.SetupDomainForMailStack(ctx, tenant, domain)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error setting domain as configured"))
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting up domain in OpenSRS"))
+		return domainResponse, coserrors.ErrDomainConfigurationFailed
 	}
 
 	// replace nameservers in namecheap
@@ -330,6 +331,12 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error updating nameservers"))
 		return domainResponse, coserrors.ErrDomainConfigurationFailed
+	}
+
+	// mark domain as configured
+	err = services.CommonServices.PostgresRepositories.MailStackDomainRepository.MarkConfigured(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting domain as configured"))
 	}
 
 	// get domain details

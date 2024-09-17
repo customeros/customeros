@@ -85,3 +85,21 @@ type DomainResponse struct {
 	// Example: [ns1.example.com, ns2.example.com]
 	Nameservers []string `json:"nameservers" example:"['ns1.example.com', 'ns2.example.com']"`
 }
+
+// MailboxRequest represents the request body to add and configure a new mailbox
+type MailboxRequest struct {
+	// Username for the mailbox (e.g., "john.doe")
+	Username string `json:"username" example:"john.doe" binding:"required"`
+
+	// Password for the mailbox (e.g., "SecurePassword123!")
+	Password string `json:"password" example:"SecurePassword123!" binding:"required"`
+
+	// Specifies if email forwarding is enabled
+	ForwardingEnabled bool `json:"forwardingEnabled" example:"true"`
+
+	// Email address to forward to (if forwarding is enabled)
+	ForwardingTo string `json:"forwardingTo" example:"johndoe.forward@example.com"`
+
+	// Specifies if webmail access is enabled
+	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
+}
