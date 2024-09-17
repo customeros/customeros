@@ -434,26 +434,22 @@ definitions:
         example: https://x.com/johndoe
         type: string
     type: object
-  restmailstack.DnsRecordResponse:
-    description: DNS record object in the response
+  restmailstack.ConfigureDomainRequest:
+    description: Request body for domain configuration
     properties:
-      name:
+      domain:
         description: |-
-          Name is the name of the DNS record
+          Domain is the domain name to be configured
+          Required: true
           Example: example.com
         example: example.com
         type: string
-      type:
+      website:
         description: |-
-          Type is the type of the DNS record (e.g., A, MX, TXT)
-          Example: A
-        example: A
-        type: string
-      value:
-        description: |-
-          Value is the value of the DNS record
-          Example: 192.0.2.1
-        example: 192.0.2.1
+          Destination website for permanent redirect
+          Required: true
+          Example: www.example.com
+        example: www.example.com
         type: string
     type: object
   restmailstack.DomainResponse:
@@ -465,12 +461,6 @@ definitions:
           Example: 09/14/2024
         example: 09/14/2024
         type: string
-      dnsRecords:
-        description: DnsRecords provides a list of DNS records associated with the
-          domain
-        items:
-          $ref: '#/definitions/restmailstack.DnsRecordResponse'
-        type: array
       domain:
         description: |-
           Domain is the domain name that was registered
@@ -494,8 +484,8 @@ definitions:
           Nameservers lists the nameservers associated with the domain
           Example: [ns1.example.com, ns2.example.com]
         example:
-        - '["ns1.example.com"'
-        - ' "ns2.example.com"]'
+        - '[''ns1.example.com'''
+        - ' ''ns2.example.com'']'
         items:
           type: string
         type: array
@@ -536,55 +526,12 @@ definitions:
           Example: example.com
         example: example.com
         type: string
-    type: object
-  restmailstack.RegisterNewDomainResponse:
-    description: Response body for a successful domain registration
-    properties:
-      createdDate:
+      website:
         description: |-
-          CreatedDate is the date the domain was registered
-          Example: 09/14/2024
-        example: 09/14/2024
-        type: string
-      dnsRecords:
-        description: DnsRecords provides a list of DNS records associated with the
-          domain
-        items:
-          $ref: '#/definitions/restmailstack.DnsRecordResponse'
-        type: array
-      domain:
-        description: |-
-          Domain is the domain name that was registered
-          Example: example.com
-        example: example.com
-        type: string
-      expiredDate:
-        description: |-
-          ExpiredDate is the date when the domain registration will expire
-          Example: 09/14/2025
-        example: 09/14/2025
-        type: string
-      message:
-        description: |-
-          Message provides additional information about the registration
-          Example: Domain registered successfully
-        example: Domain registered successfully
-        type: string
-      nameservers:
-        description: |-
-          Nameservers lists the nameservers associated with the domain
-          Example: [ns1.example.com, ns2.example.com]
-        example:
-        - '["ns1.example.com"'
-        - ' "ns2.example.com"]'
-        items:
-          type: string
-        type: array
-      status:
-        description: |-
-          Status indicates the result of the domain registration
-          Example: success
-        example: success
+          Destination website for permanent redirect
+          Required: true
+          Example: www.example.com
+        example: www.example.com
         type: string
     type: object
   restverify.BulkResultsDetails:
@@ -1042,7 +989,7 @@ paths:
         "201":
           description: Domain registered successfully
           schema:
-            $ref: '#/definitions/restmailstack.RegisterNewDomainResponse'
+            $ref: '#/definitions/restmailstack.DomainResponse'
         "400":
           description: Invalid request body or missing input fields
         "401":
@@ -1056,6 +1003,36 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Register a new domain
+      tags:
+      - MailStack API
+  /mailstack/v1/domains/configure:
+    post:
+      consumes:
+      - application/json
+      description: Configures the DNS records for the given domain
+      parameters:
+      - description: Domain payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/restmailstack.ConfigureDomainRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Domain configured successfully
+          schema:
+            $ref: '#/definitions/restmailstack.DomainResponse'
+        "400":
+          description: Invalid request body or missing input fields
+        "401":
+          description: Unauthorized access - API key invalid or expired
+        "500":
+          description: Internal server error
+      security:
+      - ApiKeyAuth: []
+      summary: Configure domain DNS records
       tags:
       - MailStack API
   /verify/v1/email:

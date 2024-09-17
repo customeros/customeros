@@ -295,7 +295,7 @@
                     "201": {
                         "description": "Domain registered successfully",
                         "schema": {
-                            "$ref": "#/definitions/restmailstack.RegisterNewDomainResponse"
+                            "$ref": "#/definitions/restmailstack.DomainResponse"
                         }
                     },
                     "400": {
@@ -309,6 +309,54 @@
                     },
                     "409": {
                         "description": "Domain is already registered"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
+        "/mailstack/v1/domains/configure": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Configures the DNS records for the given domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MailStack API"
+                ],
+                "summary": "Configure domain DNS records",
+                "parameters": [
+                    {
+                        "description": "Domain payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.ConfigureDomainRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Domain configured successfully",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.DomainResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body or missing input fields"
+                    },
+                    "401": {
+                        "description": "Unauthorized access - API key invalid or expired"
                     },
                     "500": {
                         "description": "Internal server error"
@@ -1067,24 +1115,19 @@
                 }
             }
         },
-        "restmailstack.DnsRecordResponse": {
-            "description": "DNS record object in the response",
+        "restmailstack.ConfigureDomainRequest": {
+            "description": "Request body for domain configuration",
             "type": "object",
             "properties": {
-                "name": {
-                    "description": "Name is the name of the DNS record\nExample: example.com",
+                "domain": {
+                    "description": "Domain is the domain name to be configured\nRequired: true\nExample: example.com",
                     "type": "string",
                     "example": "example.com"
                 },
-                "type": {
-                    "description": "Type is the type of the DNS record (e.g., A, MX, TXT)\nExample: A",
+                "website": {
+                    "description": "Destination website for permanent redirect\nRequired: true\nExample: www.example.com",
                     "type": "string",
-                    "example": "A"
-                },
-                "value": {
-                    "description": "Value is the value of the DNS record\nExample: 192.0.2.1",
-                    "type": "string",
-                    "example": "192.0.2.1"
+                    "example": "www.example.com"
                 }
             }
         },
@@ -1096,13 +1139,6 @@
                     "description": "CreatedDate is the date the domain was registered\nExample: 09/14/2024",
                     "type": "string",
                     "example": "09/14/2024"
-                },
-                "dnsRecords": {
-                    "description": "DnsRecords provides a list of DNS records associated with the domain",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/restmailstack.DnsRecordResponse"
-                    }
                 },
                 "domain": {
                     "description": "Domain is the domain name that was registered\nExample: example.com",
@@ -1126,8 +1162,8 @@
                         "type": "string"
                     },
                     "example": [
-                        "[\"ns1.example.com\"",
-                        " \"ns2.example.com\"]"
+                        "['ns1.example.com'",
+                        " 'ns2.example.com']"
                     ]
                 },
                 "status": {
@@ -1167,55 +1203,11 @@
                     "description": "Domain is the domain name to be registered\nRequired: true\nExample: example.com",
                     "type": "string",
                     "example": "example.com"
-                }
-            }
-        },
-        "restmailstack.RegisterNewDomainResponse": {
-            "description": "Response body for a successful domain registration",
-            "type": "object",
-            "properties": {
-                "createdDate": {
-                    "description": "CreatedDate is the date the domain was registered\nExample: 09/14/2024",
+                },
+                "website": {
+                    "description": "Destination website for permanent redirect\nRequired: true\nExample: www.example.com",
                     "type": "string",
-                    "example": "09/14/2024"
-                },
-                "dnsRecords": {
-                    "description": "DnsRecords provides a list of DNS records associated with the domain",
-                    "type": "array",
-                    "items": {
-                        "$ref": "#/definitions/restmailstack.DnsRecordResponse"
-                    }
-                },
-                "domain": {
-                    "description": "Domain is the domain name that was registered\nExample: example.com",
-                    "type": "string",
-                    "example": "example.com"
-                },
-                "expiredDate": {
-                    "description": "ExpiredDate is the date when the domain registration will expire\nExample: 09/14/2025",
-                    "type": "string",
-                    "example": "09/14/2025"
-                },
-                "message": {
-                    "description": "Message provides additional information about the registration\nExample: Domain registered successfully",
-                    "type": "string",
-                    "example": "Domain registered successfully"
-                },
-                "nameservers": {
-                    "description": "Nameservers lists the nameservers associated with the domain\nExample: [ns1.example.com, ns2.example.com]",
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    },
-                    "example": [
-                        "[\"ns1.example.com\"",
-                        " \"ns2.example.com\"]"
-                    ]
-                },
-                "status": {
-                    "description": "Status indicates the result of the domain registration\nExample: success",
-                    "type": "string",
-                    "example": "success"
+                    "example": "www.example.com"
                 }
             }
         },

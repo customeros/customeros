@@ -84,23 +84,4 @@ type DomainResponse struct {
 	// Nameservers lists the nameservers associated with the domain
 	// Example: [ns1.example.com, ns2.example.com]
 	Nameservers []string `json:"nameservers" example:"['ns1.example.com', 'ns2.example.com']"`
-
-	// DnsRecords provides a list of DNS records associated with the domain
-	DnsRecords []DnsRecordResponse `json:"dnsRecords"`
-}
-
-// DnsRecordResponse defines the structure of a DNS record in the response
-// @Description DNS record object in the response
-type DnsRecordResponse struct {
-	// Type is the type of the DNS record (e.g., A, MX, TXT)
-	// Example: A
-	Type string `json:"type" example:"A"`
-
-	// Name is the name of the DNS record
-	// Example: example.com
-	Name string `json:"name" example:"example.com"`
-
-	// Value is the value of the DNS record
-	// Example: 192.0.2.1
-	Value string `json:"value" example:"192.0.2.1"`
 }
