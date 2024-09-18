@@ -35,8 +35,8 @@ import { extractPlainText } from '@ui/form/Editor/utils/extractPlainText.ts';
 import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01.tsx';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml.ts';
 
-import SidePanel from './src/SidePanel';
-import { TimeTriggerEdge } from './src/edges';
+import SidePanel from './SidePanel';
+import { TimeTriggerEdge } from './edges';
 
 import '@xyflow/react/dist/style.css';
 
@@ -211,7 +211,7 @@ export const MarketingFlowBuilder = () => {
   });
 
   return (
-    <div className='flex h-full'>
+    <div style={{ width: '100vw', height: '100vh' }}>
       <ReactFlow
         fitView
         nodes={nodes}

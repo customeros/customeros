@@ -249,7 +249,7 @@ const SidePanel = ({
   };
 
   return (
-    <div className='min-w-[400px] w-[450px] bg-white absolute top-0 right-0 py-4 px-6 flex flex-col h-[100vh] border-t border-l animate-slideLeft shadow-xl'>
+    <div className='min-w-[400px] w-[400px] bg-white absolute top-0 right-0 py-4 px-6 flex flex-col h-[100vh] border-t border-l animate-slideLeft shadow-xl'>
       <div className='flex mt-3 mb-9'>
         <div className='flex-1'>
           <div className='font-bold text-2xl'>
