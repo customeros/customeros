@@ -89,7 +89,7 @@ type MailboxRequest struct {
 
 	// Email address to forward to (if forwarding is enabled)
 	// Example: johndoe.forward@example.com
-	ForwardingTo string `json:"forwardingTo" example:"johndoe.forward@example.com"`
+	ForwardingTo []string `json:"forwardingTo" example:"['user1@example.com', 'user2@example.com']"`
 
 	// Specifies if webmail access is enabled
 	// Example: true
@@ -101,11 +101,11 @@ type MailboxRequest struct {
 type MailboxResponse struct {
 	// Status indicates the result of the action
 	// Example: success
-	Status string `json:"status" example:"success"`
+	Status string `json:"status,omitempty" example:"success"`
 
 	// Message provides additional information about the action
 	// Example: Mailbox setup successful
-	Message string `json:"message" example:"Mailbox setup successful"`
+	Message string `json:"message,omitempty" example:"Mailbox setup successful"`
 
 	// Email is the email address for the mailbox
 	// Required: true
@@ -118,9 +118,23 @@ type MailboxResponse struct {
 
 	// ForwardingTo is the email address the mailbox forwards to
 	// Example: user@forward.com
-	ForwardingTo string `json:"forwardingTo" example:"user@forward.com"`
+	ForwardingTo []string `json:"forwardingTo" example:"['user1@example.com', 'user2@example.com']"`
 
 	// WebmailEnabled indicates if webmail access is enabled
 	// Example: true
 	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
+}
+
+// MailboxesResponse defines the response structure for multiple mailboxes in the response
+// @Description Response body for all mailbox details
+type MailboxesResponse struct {
+	// Status indicates the result of the action
+	// Example: success
+	Status string `json:"status,omitempty" example:"success"`
+
+	// Message provides additional information about the action
+	// Example: Mailboxes retrieved successfully
+	Message string `json:"message,omitempty" example:"Mailboxes retrieved successfully"`
+
+	Mailboxes []MailboxResponse `json:"mailboxes"`
 }

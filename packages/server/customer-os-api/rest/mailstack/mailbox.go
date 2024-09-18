@@ -167,7 +167,7 @@ func addMailbox(ctx context.Context, tenant, domain string, request MailboxReque
 	}
 
 	// Save mailbox details in postgres
-	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.SaveMailbox(ctx, tenant, mailboxResponse.Email, request.Password)
+	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.SaveMailbox(ctx, tenant, domain, mailboxResponse.Email, request.Password)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error saving mailbox"))
 		return mailboxResponse, err
@@ -188,4 +188,89 @@ func validateMailboxUsername(username string) error {
 	}
 	// Additional checks (length, etc.) can be added if necessary
 	return nil
+}
+
+// GetMailboxes retrieves all mailboxes for a specified domain
+// @Summary Get all mailboxes
+// @Description Retrieves a list of all mailboxes associated with a specified domain
+// @Tags MailStack API
+// @Accept json
+// @Produce json
+// @Param domain path string true "Domain for which to retrieve mailboxes"
+// @Success 200 {object} MailboxesResponse "Successfully retrieved mailboxes"
+// @Failure 400 {object} rest.ErrorResponse "Missing domain"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
+// @Failure 500 {object} rest.ErrorResponse "Error retrieving mailboxes"
+// @Router /mailstack/v1/domains/{domain}/mailboxes [get]
+// @Security ApiKeyAuth
+func GetMailboxes(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetMailboxes", c.Request.Header)
+		defer span.Finish()
+		tracing.SetDefaultRestSpanTags(ctx, span)
+
+		// get domain from path
+		domain := c.Param("domain")
+		if domain == "" {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Missing domain",
+				})
+			return
+		}
+		span.LogKV("request.domain", domain)
+
+		// get tenant from context
+		tenant := common.GetTenantFromContext(ctx)
+		// if tenant missing return auth error
+		if tenant == "" {
+			c.JSON(http.StatusUnauthorized,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "API key invalid or expired",
+				})
+			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			return
+		}
+		span.SetTag(tracing.SpanTagTenant, tenant)
+
+		// get mailboxes for domain from postgres
+		mailboxRecords, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, tenant, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error retrieving mailboxes"))
+			span.LogFields(tracingLog.String("result", "Error retrieving mailboxes"))
+			c.JSON(http.StatusInternalServerError,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Error retrieving mailboxes",
+				})
+			return
+		}
+
+		response := MailboxesResponse{
+			Status: "success",
+		}
+		for _, mailboxRecord := range mailboxRecords {
+			mailboxDetails, err := services.OpensrsService.GetMailboxDetails(ctx, mailboxRecord.MailboxUsername)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error getting mailbox details"))
+				span.LogFields(tracingLog.String("result", "Error getting mailbox details"))
+				c.JSON(http.StatusInternalServerError,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Error getting mailbox details",
+					})
+				return
+			}
+			response.Mailboxes = append(response.Mailboxes, MailboxResponse{
+				Email:             mailboxRecord.MailboxUsername,
+				ForwardingEnabled: mailboxDetails.ForwardingEnabled,
+				ForwardingTo:      mailboxDetails.ForwardingTo,
+				WebmailEnabled:    mailboxDetails.WebmailEnabled,
+			})
+		}
+
+		c.JSON(http.StatusOK, response)
+	}
 }
