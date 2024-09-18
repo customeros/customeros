@@ -44,7 +44,7 @@ export const RenameFlow = observer(() => {
       <CommandInput
         value={name}
         label={label}
-        placeholder='Rename flow...'
+        placeholder='Rename flow'
         onValueChange={(value) => setName(value)}
       />
       <Command.List>

@@ -14,7 +14,7 @@ export const FlowsCommands = observer(() => {
   const store = useStore();
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
   const sequence = store.flows.value.get(id);
-  const label = `Sequence - ${sequence?.value.name}`;
+  const label = `Flow - ${sequence?.value.name}`;
 
   return (
     <CommandsContainer label={label}>
@@ -46,7 +46,7 @@ export const FlowsCommands = observer(() => {
             });
           }}
         >
-          Rename Sequence
+          Rename flow
         </CommandItem>
 
         <CommandItem
@@ -64,7 +64,7 @@ export const FlowsCommands = observer(() => {
             </>
           }
         >
-          Change sequence status
+          Change flow status...
         </CommandItem>
         <CommandItem
           leftAccessory={<Archive />}
@@ -81,7 +81,7 @@ export const FlowsCommands = observer(() => {
             </>
           }
         >
-          Archive sequence
+          Archive flow
         </CommandItem>
       </>
     </CommandsContainer>

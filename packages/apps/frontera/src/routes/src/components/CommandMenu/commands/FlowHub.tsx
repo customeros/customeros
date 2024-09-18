@@ -9,7 +9,7 @@ export const FlowHub = observer(() => {
   const store = useStore();
 
   return (
-    <CommandsContainer label={'Sequences'}>
+    <CommandsContainer label={'Flows'}>
       <CommandItem
         leftAccessory={<PlusCircle />}
         onSelect={() => {
