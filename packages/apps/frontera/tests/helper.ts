@@ -90,7 +90,7 @@ export async function clickLocatorsThatAreVisible(
   ...selectors: string[]
 ) {
   for (const selector of selectors) {
-    await page.locator(selector).scrollIntoViewIfNeeded();
+    await page.locator(selector).scrollIntoViewIfNeeded({ timeout: 5000 });
     await ensureLocatorIsVisible(page, selector);
 
     await page.click(selector);
