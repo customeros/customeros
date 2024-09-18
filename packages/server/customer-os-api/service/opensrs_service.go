@@ -23,6 +23,7 @@ type OpenSRSResponse struct {
 
 type OpensrsService interface {
 	SetupDomainForMailStack(ctx context.Context, tenant, domain string) error
+	SetMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo string, webmailEnabled bool) error
 }
 
 type opensrsService struct {
@@ -146,6 +147,108 @@ func (s *opensrsService) setEmailDomainInOpenSRS(ctx context.Context, domain, dk
 		tracing.TraceErr(span, errors.New(response.Error))
 		s.log.Error("API request failed", response.Error)
 		return fmt.Errorf("API request failed: %s", response.Error)
+	}
+
+	return nil
+}
+
+func (s *opensrsService) SetMailbox(ctx context.Context, tenant, domain, username, password string, forwardingEnabled bool, forwardingTo string, webmailEnabled bool) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpensrsService.SetMailbox")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("domain", domain, "username", username)
+
+	// Define the API endpoint for adding a mailbox (replace with your environment's URL)
+	apiURL := s.cfg.ExternalServices.OpenSRS.Url + "/api/change_user"
+
+	attributes := map[string]interface{}{
+		"type":           "mailbox",
+		"password":       password,
+		"delivery_local": true, // Store mail locally
+	}
+
+	if webmailEnabled {
+		attributes["service_webmail"] = "enabled"
+	} else {
+		attributes["service_webmail"] = "disabled"
+	}
+	// Add forwarding options if enabled
+	if forwardingEnabled && forwardingTo != "" {
+		attributes["delivery_forward"] = true
+		attributes["forward_recipients"] = []string{forwardingTo}
+	}
+
+	// Create the requestBody with the extracted attributes
+	requestBody := map[string]interface{}{
+		"credentials": map[string]string{
+			"user":     s.cfg.ExternalServices.OpenSRS.Username,
+			"password": s.cfg.ExternalServices.OpenSRS.ApiKey,
+		},
+		"user":       username + "@" + domain,
+		"attributes": attributes,
+	}
+
+	// Convert the request body to JSON
+	requestData, err := json.Marshal(requestBody)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request body"))
+		s.log.Error("failed to marshal request body", err)
+		return fmt.Errorf("failed to marshal request body: %v", err)
+	}
+
+	// Create a new HTTP request with context
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewBuffer(requestData))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to create HTTP request"))
+		s.log.Error("failed to create HTTP request", err)
+		return fmt.Errorf("failed to create HTTP request: %s", err.Error())
+	}
+
+	// Set necessary headers
+	req.Header.Set("Content-Type", "application/json")
+
+	// Create an HTTP client with a timeout
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Make the HTTP request
+	resp, err := client.Do(req)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to make API request"))
+		s.log.Error("failed to make API request", err)
+		return fmt.Errorf("failed to make API request: %s", err.Error())
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		tracing.TraceErr(span, errors.New("API request failed"))
+		s.log.Error("API request failed", err)
+		return fmt.Errorf("API request failed")
+	}
+
+	// Parse the response
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to read response body"))
+		s.log.Error("failed to read response body", err)
+		return err
+	}
+	span.LogKV("responseBody", string(body))
+
+	// Check for a successful response
+	var response OpenSRSResponse
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal response"))
+		s.log.Error("failed to unmarshal response", err)
+		return err
+	}
+
+	// Check if the response indicates success
+	if !response.Success {
+		tracing.TraceErr(span, errors.New(response.Error))
+		s.log.Error("API request failed", response.Error)
+		return err
 	}
 
 	return nil

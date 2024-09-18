@@ -28,22 +28,6 @@ type ConfigureDomainRequest struct {
 	Website string `json:"website" example:"www.example.com"`
 }
 
-// MailboxResponse defines the structure of a mailbox in the response
-// @Description Mailbox object in the response
-type MailboxResponse struct {
-	// Email is the email address for the mailbox
-	// Example: user@example.com
-	Email string `json:"email" example:"user@example.com"`
-
-	// CreatedAt is the date and time the mailbox was created
-	// Example: 2021-09-01T12:00:00Z
-	CreatedAt string `json:"createdAt" example:"2021-09-01T12:00:00Z"`
-
-	// LastUpdatedAt is the date and time the mailbox was last updated
-	// Example: 2021-09-01T12:00:00Z
-	LastUpdatedAt string `json:"lastUpdatedAt" example:"2021-09-01T12:00:00Z"`
-}
-
 // DomainsResponse defines the response structure for multiple domains in the response
 // @Description Response body for all domain details
 type DomainsResponse struct {
@@ -101,5 +85,41 @@ type MailboxRequest struct {
 	ForwardingTo string `json:"forwardingTo" example:"johndoe.forward@example.com"`
 
 	// Specifies if webmail access is enabled
+	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
+}
+
+// MailboxResponse defines the structure of a mailbox in the response
+// @Description Mailbox object in the response
+type MailboxResponse struct {
+	// Status indicates the result of the action
+	// Example: success
+	Status string `json:"status" example:"success"`
+
+	// Message provides additional information about the action
+	// Example: Mailbox setup successful
+	Message string `json:"message" example:"Mailbox setup successful"`
+
+	// Email is the email address for the mailbox
+	// Example: user@example.com
+	Email string `json:"email" example:"user@example.com"`
+
+	// CreatedAt is the date and time the mailbox was created
+	// Example: 2021-09-01T12:00:00Z
+	CreatedAt string `json:"createdAt" example:"2021-09-01T12:00:00Z"`
+
+	// LastUpdatedAt is the date and time the mailbox was last updated
+	// Example: 2021-09-01T12:00:00Z
+	LastUpdatedAt string `json:"lastUpdatedAt" example:"2021-09-01T12:00:00Z"`
+
+	// ForwardingEnabled indicates if email forwarding is enabled
+	// Example: true
+	ForwardingEnabled bool `json:"forwardingEnabled" example:"true"`
+
+	// ForwardingTo is the email address the mailbox forwards to
+	// Example: user@forward.com
+	ForwardingTo string `json:"forwardingTo" example:"user@forward.com"`
+
+	// WebmailEnabled indicates if webmail access is enabled
+	// Example: true
 	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
 }

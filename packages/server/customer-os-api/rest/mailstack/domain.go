@@ -280,7 +280,7 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 						Status:  "error",
 						Message: "Domain registration failed, please contact support",
 					})
-				span.LogFields(tracingLog.String("result", "Internal server error, please contact support"))
+				span.LogFields(tracingLog.String("result", "Internal server error"))
 				return
 			}
 		}
@@ -302,7 +302,6 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 
 	var err error
 
-	// get all active domains from postgres
 	domainBelongsToTenant, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain"))

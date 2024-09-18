@@ -1,0 +1,175 @@
+package restmailstack
+
+import (
+	"github.com/gin-gonic/gin"
+	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/opentracing/opentracing-go"
+	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
+	"golang.org/x/net/context"
+	"net/http"
+	"regexp"
+)
+
+func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewDomain", c.Request.Header)
+		defer span.Finish()
+		tracing.SetDefaultRestSpanTags(ctx, span)
+
+		// get domain from path
+		domain := c.Param("domain")
+		if domain == "" {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Missing domain",
+				})
+			return
+		}
+		span.LogKV("request.domain", domain)
+
+		// get tenant from context
+		tenant := common.GetTenantFromContext(ctx)
+		// if tenant missing return auth error
+		if tenant == "" {
+			c.JSON(http.StatusUnauthorized,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "API key invalid or expired",
+				})
+			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			return
+		}
+		span.SetTag(tracing.SpanTagTenant, tenant)
+
+		// Parse and validate request body
+		var mailboxRequest MailboxRequest
+		if err := c.ShouldBindJSON(&mailboxRequest); err != nil {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Invalid request body or missing input fields",
+				})
+			span.LogFields(tracingLog.String("result", "Invalid request body"))
+			return
+		}
+		if mailboxRequest.Username == "" || mailboxRequest.Password == "" {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: "Missing username or password",
+				})
+			span.LogFields(tracingLog.String("result", "Missing username or password"))
+			return
+		}
+		tracing.LogObjectAsJson(span, "request", mailboxRequest)
+
+		// validate username format
+		if err := validateMailboxUsername(mailboxRequest.Username); err != nil {
+			c.JSON(http.StatusBadRequest,
+				rest.ErrorResponse{
+					Status:  "error",
+					Message: err.Error(),
+				})
+			span.LogFields(tracingLog.String("result", "Invalid username format"))
+			return
+		}
+
+		// add mailbox
+		response, err := addMailbox(ctx, tenant, domain, mailboxRequest, services)
+		if err != nil {
+			if errors.Is(err, coserrors.ErrDomainNotFound) {
+				c.JSON(http.StatusNotFound,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Domain not found",
+					})
+				span.LogFields(tracingLog.String("result", "Domain not found"))
+				return
+			} else if errors.Is(err, coserrors.ErrMailboxExists) {
+				c.JSON(http.StatusConflict,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Username already exists",
+					})
+				span.LogFields(tracingLog.String("result", "Mailbox already exists"))
+				return
+			} else {
+				c.JSON(http.StatusInternalServerError,
+					rest.ErrorResponse{
+						Status:  "error",
+						Message: "Mailbox setup failed, please contact support",
+					})
+				span.LogFields(tracingLog.String("result", "Internal server error"))
+				return
+			}
+		}
+
+		response.Status = "success"
+		response.Message = "Mailbox setup successful"
+		c.JSON(http.StatusOK, response)
+	}
+}
+
+func addMailbox(ctx context.Context, tenant, domain string, request MailboxRequest, services *service.Services) (MailboxResponse, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "addMailbox")
+	defer span.Finish()
+
+	mailboxResponse := MailboxResponse{
+		Email: request.Username + "@" + domain,
+	}
+
+	// Check domain belongs to tenant
+	domainBelongsToTenant, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain"))
+		return mailboxResponse, err
+	}
+	if !domainBelongsToTenant {
+		return mailboxResponse, coserrors.ErrDomainNotFound
+	}
+
+	// Check mailbox doesn't already exist
+	mailboxRecord, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, mailboxResponse.Email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error checking mailbox"))
+		return mailboxResponse, err
+	}
+	if mailboxRecord != nil {
+		return mailboxResponse, coserrors.ErrMailboxExists
+	}
+
+	err = services.OpensrsService.SetMailbox(ctx, tenant, domain, request.Username, request.Password, request.ForwardingEnabled, request.ForwardingTo, request.WebmailEnabled)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error setting mailbox"))
+		return mailboxResponse, err
+	}
+
+	// Save mailbox details in postgres
+	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.SaveMailbox(ctx, tenant, mailboxResponse.Email, request.Password)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error saving mailbox"))
+		return mailboxResponse, err
+	}
+
+	mailboxResponse.WebmailEnabled = request.WebmailEnabled
+	mailboxResponse.ForwardingEnabled = request.ForwardingEnabled
+	mailboxResponse.ForwardingTo = request.ForwardingTo
+
+	return mailboxResponse, nil
+}
+
+func validateMailboxUsername(username string) error {
+	// Regular expression for a valid username (allows alphanumeric, dots, underscores, hyphens)
+	var re = regexp.MustCompile(`^[a-zA-Z0-9._-]+$`)
+	if !re.MatchString(username) {
+		return errors.New("invalid username format: only alphanumeric characters, dots, underscores, and hyphens are allowed")
+	}
+	// Additional checks (length, etc.) can be added if necessary
+	return nil
+}

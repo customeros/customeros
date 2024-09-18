@@ -3,9 +3,11 @@ package repository
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +19,7 @@ type TenantSettingsMailboxRepository interface {
 	Get(c context.Context, tenant string) ([]*entity.TenantSettingsMailbox, error)
 	GetByMailbox(c context.Context, tenant, mailbox string) (*entity.TenantSettingsMailbox, error)
 	GetById(c context.Context, tenant, id string) (*entity.TenantSettingsMailbox, error)
+	SaveMailbox(c context.Context, tenant, mailboxEmail, mailboxPassword string) error
 }
 
 func NewTenantSettingsMailboxRepository(db *gorm.DB) TenantSettingsMailboxRepository {
@@ -106,4 +109,50 @@ func (r *tenantSettingsMailboxRepository) GetById(c context.Context, tenant, id 
 	span.LogFields(tracingLog.Bool("result.found", true))
 
 	return &result, nil
+}
+
+func (r *tenantSettingsMailboxRepository) SaveMailbox(c context.Context, tenant, mailboxEmail, mailboxPassword string) error {
+	span, _ := opentracing.StartSpanFromContext(c, "TenantSettingsMailboxRepository.SaveMailbox")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("mailboxEmail", mailboxEmail)
+
+	// Check if the mailbox already exists
+	var mailbox entity.TenantSettingsMailbox
+	err := r.gormDb.
+		Where("tenant = ? AND mailbox_username = ?", tenant, mailboxEmail).
+		First(&mailbox).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// If not found, create a new mailbox
+		mailbox = entity.TenantSettingsMailbox{
+			Tenant:          tenant,
+			MailboxUsername: mailboxEmail,
+			MailboxPassword: mailboxPassword,
+		}
+
+		err = r.gormDb.Create(&mailbox).Error
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	} else {
+		// If found, update the existing mailbox
+		mailbox.MailboxPassword = mailboxPassword
+		mailbox.UpdatedAt = utils.Now()
+
+		err = r.gormDb.Save(&mailbox).Error
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	return nil
 }
