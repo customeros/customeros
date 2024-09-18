@@ -387,6 +387,7 @@ export enum ColumnViewType {
   OrganizationsName = 'ORGANIZATIONS_NAME',
   OrganizationsOnboardingStatus = 'ORGANIZATIONS_ONBOARDING_STATUS',
   OrganizationsOwner = 'ORGANIZATIONS_OWNER',
+  OrganizationsParentOrganization = 'ORGANIZATIONS_PARENT_ORGANIZATION',
   OrganizationsRelationship = 'ORGANIZATIONS_RELATIONSHIP',
   OrganizationsRenewalDate = 'ORGANIZATIONS_RENEWAL_DATE',
   OrganizationsRenewalLikelihood = 'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
@@ -1635,14 +1636,12 @@ export type FlowActionMergeInput = {
 
 export type FlowActionSender = MetadataInterface & {
   __typename?: 'FlowActionSender';
-  emailsPerHour?: Maybe<Scalars['Int64']['output']>;
   mailbox?: Maybe<Scalars['String']['output']>;
   metadata: Metadata;
   user?: Maybe<User>;
 };
 
 export type FlowActionSenderMergeInput = {
-  emailsPerHour?: InputMaybe<Scalars['Int64']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
   mailbox?: InputMaybe<Scalars['String']['input']>;
   userId?: InputMaybe<Scalars['ID']['input']>;
@@ -2466,6 +2465,7 @@ export type Mutation = {
   flowContact_Add: FlowContact;
   flowContact_AddBulk: Result;
   flowContact_Delete: Result;
+  flowContact_DeleteBulk: Result;
   flow_ChangeStatus: Flow;
   flow_Merge: Flow;
   interactionEvent_LinkAttachment: Result;
@@ -2935,6 +2935,10 @@ export type MutationFlowContact_AddBulkArgs = {
 
 export type MutationFlowContact_DeleteArgs = {
   id: Scalars['ID']['input'];
+};
+
+export type MutationFlowContact_DeleteBulkArgs = {
+  id: Array<Scalars['ID']['input']>;
 };
 
 export type MutationFlow_ChangeStatusArgs = {
