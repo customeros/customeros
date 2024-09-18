@@ -1,6 +1,7 @@
 import { observer } from 'mobx-react-lite';
 
 import { Select } from '@ui/form/Select';
+import { Organization } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
 
@@ -55,7 +56,16 @@ export const ParentOrgInput = observer(
 
           findOrg?.update((org) => {
             if (!organization) return org;
-            org.subsidiaries = [{ organization: organization?.value }];
+
+            org.subsidiaries = [
+              {
+                organization: {
+                  id: organization?.value?.metadata?.id,
+                  name: organization?.value?.name,
+                  metadata: { ...organization?.value?.metadata },
+                } as Organization,
+              },
+            ];
 
             return org;
           });

@@ -627,6 +627,17 @@ export class OrganizationStore extends Syncable<Organization> {
               value?.organization?.metadata?.id,
           );
         }
+
+        if (type === 'update') {
+          if (typeof value === 'string') {
+            this.addSubsidiary(value);
+          } else {
+            this.addSubsidiary(
+              value[0]?.organization?.metadata?.id ||
+                value?.organization?.metadata?.id,
+            );
+          }
+        }
       })
       .with(['parentCompanies', ...P.array()], () => {
         if (type === 'delete') {
