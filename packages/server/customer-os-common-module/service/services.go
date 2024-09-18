@@ -24,6 +24,7 @@ type Services struct {
 	EmailingService           EmailingService
 	ExternalSystemService     ExternalSystemService
 	FlowService               FlowService
+	FlowExecutionService      FlowExecutionService
 	JobRoleService            JobRoleService
 	InvoiceService            InvoiceService
 	InteractionSessionService InteractionSessionService
@@ -66,6 +67,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.EmailingService = NewEmailingService(nil, services)
 	services.ExternalSystemService = NewExternalSystemService(nil, services)
 	services.FlowService = NewFlowService(services)
+	services.FlowExecutionService = NewFlowExecutionService(services)
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
 	services.InvoiceService = NewInvoiceService(services)
 	services.JobRoleService = NewJobRoleService(services)

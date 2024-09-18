@@ -1242,3 +1242,48 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	}
 	return &e
 }
+
+func MapDbNodeToFlowExecutionSettingsEntity(node *dbtype.Node) *entity.FlowExecutionSettingsEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	e := entity.FlowExecutionSettingsEntity{
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		FlowId:    utils.GetStringPropOrEmpty(props, "flowId"),
+		EntityId:  utils.GetStringPropOrEmpty(props, "entityId"),
+		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
+	}
+	return &e
+}
+
+func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionExecutionEntity {
+	if node == nil {
+		return nil
+	}
+	props := utils.GetPropsFromNode(*node)
+	e := entity.FlowActionExecutionEntity{
+		Id:          utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		FlowId:      utils.GetStringPropOrEmpty(props, "flowId"),
+		ContactId:   utils.GetStringPropOrEmpty(props, "contactId"),
+		ActionId:    utils.GetStringPropOrEmpty(props, "actionId"),
+		ScheduledAt: utils.GetTimePropOrNow(props, "scheduledAt"),
+		ExecutedAt:  utils.GetTimePropOrNil(props, "executedAt"),
+		Status:      entity.GetFlowActionExecutionStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Error:       utils.GetStringPropOrNil(props, "error"),
+
+		Mailbox: utils.GetStringPropOrNil(props, "mailbox"),
+
+		Subject: utils.GetStringPropOrNil(props, "subject"),
+		Body:    utils.GetStringPropOrNil(props, "subject"),
+		From:    utils.GetStringPropOrNil(props, "subject"),
+		To:      utils.GetListStringPropOrEmpty(props, "subject"),
+		Cc:      utils.GetListStringPropOrEmpty(props, "subject"),
+		Bcc:     utils.GetListStringPropOrEmpty(props, "subject"),
+	}
+	return &e
+}

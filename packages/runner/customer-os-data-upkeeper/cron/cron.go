@@ -24,6 +24,7 @@ const (
 	workflowGroup              = "workflow"
 	emailGroup                 = "email"
 	emailBulkValidationGroup   = "emailBulkValidation"
+	flowExecutionGroup         = "flowExecutionGroup"
 )
 
 var jobLocks = struct {
@@ -46,6 +47,7 @@ var jobLocks = struct {
 		workflowGroup:              {},
 		emailGroup:                 {},
 		emailBulkValidationGroup:   {},
+		flowExecutionGroup:         {},
 	},
 }
 
@@ -235,6 +237,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
+		lockAndRunJob(cont, flowExecutionGroup, flowExecution)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -356,4 +365,8 @@ func checkScrubbyResult(cont *container.Container) {
 
 func checkEnrowResult(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CheckEnrowRequestsWithoutResponse()
+}
+
+func flowExecution(cont *container.Container) {
+	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ExecuteScheduledFlowActions()
 }

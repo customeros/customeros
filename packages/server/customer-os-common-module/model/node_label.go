@@ -51,6 +51,8 @@ const (
 	NodeLabelFlowAction                = "FlowAction"
 	NodeLabelFlowContact               = "FlowContact"
 	NodeLabelFlowActionSender          = "FlowActionSender"
+	NodeLabelFlowExecutionSettings     = "FlowExecutionSettings"
+	NodeLabelFlowActionExecution       = "FlowActionExecution"
 )
 
 func NodeLabelWithTenant(label string, tenant string) string {
