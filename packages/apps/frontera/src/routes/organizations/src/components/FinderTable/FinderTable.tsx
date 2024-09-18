@@ -390,8 +390,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
       } else if (tableType === TableViewType.Flow) {
         if (selectedIds.length === 1) {
-          reset();
-
           store.ui.commandMenu.setType('FlowCommands');
           store.ui.commandMenu.setContext({
             entity: 'Flow',
@@ -400,8 +398,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
 
         if (selectedIds.length > 1) {
-          reset();
-
           store.ui.commandMenu.setType('FlowsBulkCommands');
           store.ui.commandMenu.setContext({
             entity: 'Flows',
