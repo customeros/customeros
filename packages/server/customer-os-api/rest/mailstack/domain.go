@@ -17,17 +17,17 @@ import (
 
 // RegisterNewDomain registers a new domain for the mail service
 // @Summary Register a new domain
-// @Description Registers a new domain
+// @Description Registers a new domain for the mail service
 // @Tags MailStack API
-// @Accept  json
-// @Produce  json
-// @Param   body  body  RegisterNewDomainRequest  true  "Domain registration payload"
+// @Accept json
+// @Produce json
+// @Param body body RegisterNewDomainRequest true "Domain registration payload"
 // @Success 201 {object} DomainResponse "Domain registered successfully"
-// @Failure 400  "Invalid request body or missing input fields"
-// @Failure 401  "Unauthorized access - API key invalid or expired"
-// @Failure 409  "Domain is already registered"
-// @Failure 406  "Restrictions on domain purchase"
-// @Failure 500  "Internal server error"
+// @Failure 400 {object} rest.ErrorResponse "Invalid request body or missing input fields"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
+// @Failure 409 {object} rest.ErrorResponse "Domain is already registered"
+// @Failure 406 {object} rest.ErrorResponse "Restrictions on domain purchase"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /mailstack/v1/domains [post]
 // @Security ApiKeyAuth
 func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
@@ -194,17 +194,18 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 	return configureDomain(ctx, tenant, domain, website, services)
 }
 
-// ConfigureDomain configure given domain for the mail service
+// ConfigureDomain configures the given domain for the mail service
 // @Summary Configure domain DNS records
 // @Description Configures the DNS records for the given domain
 // @Tags MailStack API
-// @Accept  json
-// @Produce  json
-// @Param   body  body  ConfigureDomainRequest  true  "Domain payload"
+// @Accept json
+// @Produce json
+// @Param body body ConfigureDomainRequest true "Domain payload"
 // @Success 201 {object} DomainResponse "Domain configured successfully"
-// @Failure 400  "Invalid request body or missing input fields"
-// @Failure 401  "Unauthorized access - API key invalid or expired"
-// @Failure 500  "Internal server error"
+// @Failure 400 {object} rest.ErrorResponse "Invalid request body or missing input fields"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
+// @Failure 404 {object} rest.ErrorResponse "Domain not found"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /mailstack/v1/domains/configure [post]
 // @Security ApiKeyAuth
 func ConfigureDomain(services *service.Services) gin.HandlerFunc {
@@ -280,7 +281,7 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 						Status:  "error",
 						Message: "Domain registration failed, please contact support",
 					})
-				span.LogFields(tracingLog.String("result", "Internal server error, please contact support"))
+				span.LogFields(tracingLog.String("result", "Internal server error"))
 				return
 			}
 		}
@@ -302,7 +303,6 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 
 	var err error
 
-	// get all active domains from postgres
 	domainBelongsToTenant, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.CheckDomainOwnership(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error checking domain"))
@@ -357,11 +357,11 @@ func configureDomain(ctx context.Context, tenant, domain, website string, servic
 // @Summary Get active domains
 // @Description Retrieves a list of all active domains associated with the tenant
 // @Tags MailStack API
-// @Accept  json
-// @Produce  json
+// @Accept json
+// @Produce json
 // @Success 200 {object} DomainsResponse "Successfully retrieved domains"
-// @Failure 401 "Unauthorized access - API key invalid or expired"
-// @Failure 500 "Internal server error"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
 // @Router /mailstack/v1/domains [get]
 // @Security ApiKeyAuth
 func GetDomains(services *service.Services) gin.HandlerFunc {

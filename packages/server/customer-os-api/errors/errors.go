@@ -5,15 +5,18 @@ import (
 )
 
 var (
-	ErrAccessDenied              = errors.New("Access denied")
-	ErrInvalidEntityType         = errors.New("Invalid entity type")
-	ErrMissingInput              = errors.New("Missing input")
-	ErrNotFound                  = errors.New("Not found")
-	ErrNotSupported              = errors.New("Not supported")
+	ErrAccessDenied      = errors.New("Access denied")
+	ErrInvalidEntityType = errors.New("Invalid entity type")
+	ErrMissingInput      = errors.New("Missing input")
+	ErrNotFound          = errors.New("Not found")
+	ErrNotSupported      = errors.New("Not supported")
+
 	ErrDomainUnavailable         = errors.New("domain unavailable")
 	ErrDomainPremium             = errors.New("domain is premium")
 	ErrDomainPriceExceeded       = errors.New("domain price exceeds the maximum allowed price")
 	ErrDomainPriceNotFound       = errors.New("domain price not found")
 	ErrDomainConfigurationFailed = errors.New("domain configuration failed")
 	ErrDomainNotFound            = errors.New("domain not found")
+
+	ErrMailboxExists = errors.New("mailbox already exists")
 )
