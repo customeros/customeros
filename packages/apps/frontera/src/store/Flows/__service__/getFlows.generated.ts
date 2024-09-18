@@ -33,7 +33,6 @@ export type GetFlowsQuery = {
       senders: Array<{
         __typename?: 'FlowActionSender';
         mailbox?: string | null;
-        emailsPerHour?: any | null;
         metadata: { __typename?: 'Metadata'; id: string };
         user?: {
           __typename?: 'User';

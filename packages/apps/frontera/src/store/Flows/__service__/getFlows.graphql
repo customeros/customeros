@@ -36,7 +36,6 @@ query getFlows {
           id
         }
         mailbox
-        emailsPerHour
         user {
           firstName
           lastName
