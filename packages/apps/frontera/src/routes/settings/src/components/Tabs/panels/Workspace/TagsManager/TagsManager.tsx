@@ -212,35 +212,37 @@ export const TagsManager = observer(() => {
               >
                 <div className='flex-grow'>
                   {editingTag?.id === tag.value.id ? (
-                    <Input
-                      autoFocus
-                      size='xs'
-                      variant='unstyled'
-                      className='ml-6 mb-[1px]'
-                      defaultValue={tag.value.name}
-                      onFocus={(e) => {
-                        e.target.select();
-                      }}
-                      onBlur={() => {
-                        handleEditTag(tag.value.id, newTag || tag.value.name);
-                        setEditingTag(null);
-                      }}
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter') {
-                          handleEditTag(tag.value.id, e.currentTarget.value);
-                        }
-                      }}
-                      onChange={(e) => {
-                        const trimmedValue = e.target.value.trim();
+                    <div className='ml-6 overflow-hidden'>
+                      <Input
+                        autoFocus
+                        size='xs'
+                        variant='unstyled'
+                        className='mb-[1px]'
+                        defaultValue={tag.value.name}
+                        onFocus={(e) => {
+                          e.target.select();
+                        }}
+                        onBlur={() => {
+                          handleEditTag(tag.value.id, newTag || tag.value.name);
+                          setEditingTag(null);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            handleEditTag(tag.value.id, e.currentTarget.value);
+                          }
+                        }}
+                        onChange={(e) => {
+                          const trimmedValue = e.target.value.trim();
 
-                        if (trimmedValue.length > 0) {
-                          setNewTag(trimmedValue);
-                        }
-                      }}
-                    />
+                          if (trimmedValue.length > 0) {
+                            setNewTag(trimmedValue);
+                          }
+                        }}
+                      />
+                    </div>
                   ) : (
                     <span
-                      className='cursor-pointer ml-6 text-sm line-clamp-1'
+                      className='cursor-pointer ml-6 text-sm break-all line-clamp-1'
                       onClick={() =>
                         setEditingTag({
                           id: tag.value.id,
