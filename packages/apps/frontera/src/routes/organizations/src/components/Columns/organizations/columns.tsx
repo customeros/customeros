@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Store } from '@store/store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 
@@ -870,6 +868,48 @@ export const columns: Record<string, Column> = {
               locationType='countryCodeA2'
               initialFocusRef={initialFocusRef}
               property={ColumnViewType.OrganizationsHeadquarters}
+            />
+          )}
+          {...getTHeadProps<Store<Organization>>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+    },
+  ),
+
+  [ColumnViewType.OrganizationsParentOrganization]: columnHelper.accessor(
+    (row) => row,
+    {
+      id: ColumnViewType.OrganizationsParentOrganization,
+      size: 210,
+      minSize: 210,
+      maxSize: 400,
+      enableResizing: true,
+      enableColumnFilter: false,
+      enableSorting: false,
+      cell: (props) => {
+        const parentOrg =
+          props.getValue()?.value?.parentCompanies?.[0]?.organization;
+
+        if (!parentOrg) return null;
+
+        return (
+          <OrganizationCell
+            isSubsidiary={false}
+            name={parentOrg?.name}
+            parentOrganizationName={''}
+            id={parentOrg?.metadata?.id}
+          />
+        );
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          title='Parent Org'
+          id={ColumnViewType.OrganizationsParentOrganization}
+          renderFilter={(initialFocusRef) => (
+            <OrganizationFilter
+              initialFocusRef={initialFocusRef}
+              property={ColumnViewType.OrganizationsParentOrganization}
             />
           )}
           {...getTHeadProps<Store<Organization>>(props)}
