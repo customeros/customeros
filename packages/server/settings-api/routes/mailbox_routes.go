@@ -34,7 +34,7 @@ func getMailboxesHandler(services *service.Services) gin.HandlerFunc {
 
 		span.SetTag(tracing.SpanTagTenant, tenant)
 
-		mailboxes, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Get(ctx, tenant)
+		mailboxes, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx, tenant)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			c.Status(500)
