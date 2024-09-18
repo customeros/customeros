@@ -9,6 +9,7 @@ type TenantSettingsMailbox struct {
 	UpdatedAt       time.Time `gorm:"column:updated_at;type:timestamp" json:"updatedAt"`
 	MailboxUsername string    `gorm:"column:mailbox_username;type:varchar(255)" json:"mailboxUsername"`
 	MailboxPassword string    `gorm:"column:mailbox_password;type:varchar(255)" json:"mailboxPassword"`
+	Domain          string    `gorm:"column:domain;type:varchar(255)" json:"domain"`
 	Username        string    `gorm:"column:user_name;type:varchar(255)" json:"userName"` // holds the email address of the user in the neo4j
 }
 

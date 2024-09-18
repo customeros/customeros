@@ -74,6 +74,7 @@ func registerMailStackRoutes(ctx context.Context, r *gin.Engine, services *servi
 	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains", mailStackV1Path), services, cache, restmailstack.GetDomains(services))
 
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/domains/:domain/mailboxes", mailStackV1Path), services, cache, restmailstack.RegisterNewMailbox(services))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/domains/:domain/mailboxes", mailStackV1Path), services, cache, restmailstack.GetMailboxes(services))
 }
 
 func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, services *service.Services, cache *commoncaches.Cache, handler gin.HandlerFunc) {

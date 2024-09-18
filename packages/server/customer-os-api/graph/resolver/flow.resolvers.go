@@ -317,7 +317,7 @@ func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entities, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.Get(ctx, common.GetTenantFromContext(ctx))
+	entities, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
 	if err != nil || entities == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")

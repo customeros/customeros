@@ -195,7 +195,7 @@ func registerDomain(ctx context.Context, tenant, domain, website string, service
 }
 
 // ConfigureDomain configures the given domain for the mail service
-// @Summary Configure domain DNS records
+// @Summary Configure domain
 // @Description Configures the DNS records for the given domain
 // @Tags MailStack API
 // @Accept json
