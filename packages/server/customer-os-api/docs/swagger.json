@@ -256,10 +256,16 @@
                         }
                     },
                     "401": {
-                        "description": "Unauthorized access - API key invalid or expired"
+                        "description": "Unauthorized access - API key invalid or expired",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     },
                     "500": {
-                        "description": "Internal server error"
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     }
                 }
             },
@@ -269,7 +275,7 @@
                         "ApiKeyAuth": []
                     }
                 ],
-                "description": "Registers a new domain",
+                "description": "Registers a new domain for the mail service",
                 "consumes": [
                     "application/json"
                 ],
@@ -299,19 +305,34 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request body or missing input fields"
+                        "description": "Invalid request body or missing input fields",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized access - API key invalid or expired"
+                        "description": "Unauthorized access - API key invalid or expired",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     },
                     "406": {
-                        "description": "Restrictions on domain purchase"
+                        "description": "Restrictions on domain purchase",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     },
                     "409": {
-                        "description": "Domain is already registered"
+                        "description": "Domain is already registered",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     },
                     "500": {
-                        "description": "Internal server error"
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -353,13 +374,104 @@
                         }
                     },
                     "400": {
-                        "description": "Invalid request body or missing input fields"
+                        "description": "Invalid request body or missing input fields",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     },
                     "401": {
-                        "description": "Unauthorized access - API key invalid or expired"
+                        "description": "Unauthorized access - API key invalid or expired",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Domain not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     },
                     "500": {
-                        "description": "Internal server error"
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            }
+        },
+        "/mailstack/v1/domains/{domain}/mailboxes": {
+            "post": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Registers a new mailbox for the specified domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MailStack API"
+                ],
+                "summary": "Register a new mailbox",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain for which to register the mailbox",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Mailbox registration payload",
+                        "name": "body",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.MailboxRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Mailbox setup successful",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.MailboxResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid request body, missing input fields, or invalid username format",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized access - API key invalid or expired",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "404": {
+                        "description": "Domain not found",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "409": {
+                        "description": "Mailbox already exists",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal server error",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
                     }
                 }
             }
@@ -664,6 +776,17 @@
                     "description": "Status indicates the status of the creation process (e.g., \"success\" or \"partial_success\")\nExample: success",
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "rest.ErrorResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string"
                 }
             }
         },
@@ -1192,6 +1315,77 @@
                     "description": "Status indicates the result of the action\nExample: success",
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "restmailstack.MailboxRequest": {
+            "description": "Request body for adding and configuring a new mailbox",
+            "type": "object",
+            "required": [
+                "password",
+                "username"
+            ],
+            "properties": {
+                "forwardingEnabled": {
+                    "description": "Specifies if email forwarding is enabled\nExample: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "forwardingTo": {
+                    "description": "Email address to forward to (if forwarding is enabled)\nExample: johndoe.forward@example.com",
+                    "type": "string",
+                    "example": "johndoe.forward@example.com"
+                },
+                "password": {
+                    "description": "Password for the mailbox (e.g., \"SecurePassword123!\")\nRequired: true\nExample: SecurePassword123!",
+                    "type": "string",
+                    "example": "SecurePassword123!"
+                },
+                "username": {
+                    "description": "Username for the mailbox (e.g., \"john.doe\")\nRequired: true\nExample: john.doe",
+                    "type": "string",
+                    "example": "john.doe"
+                },
+                "webmailEnabled": {
+                    "description": "Specifies if webmail access is enabled\nExample: true",
+                    "type": "boolean",
+                    "example": true
+                }
+            }
+        },
+        "restmailstack.MailboxResponse": {
+            "description": "Mailbox object in the response",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "description": "Email is the email address for the mailbox\nRequired: true\nExample: user@example.com",
+                    "type": "string",
+                    "example": "user@example.com"
+                },
+                "forwardingEnabled": {
+                    "description": "ForwardingEnabled indicates if email forwarding is enabled\nExample: true",
+                    "type": "boolean",
+                    "example": true
+                },
+                "forwardingTo": {
+                    "description": "ForwardingTo is the email address the mailbox forwards to\nExample: user@forward.com",
+                    "type": "string",
+                    "example": "user@forward.com"
+                },
+                "message": {
+                    "description": "Message provides additional information about the action\nExample: Mailbox setup successful",
+                    "type": "string",
+                    "example": "Mailbox setup successful"
+                },
+                "status": {
+                    "description": "Status indicates the result of the action\nExample: success",
+                    "type": "string",
+                    "example": "success"
+                },
+                "webmailEnabled": {
+                    "description": "WebmailEnabled indicates if webmail access is enabled\nExample: true",
+                    "type": "boolean",
+                    "example": true
                 }
             }
         },

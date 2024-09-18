@@ -71,20 +71,28 @@ type DomainResponse struct {
 }
 
 // MailboxRequest represents the request body to add and configure a new mailbox
+// @Description Request body for adding and configuring a new mailbox
 type MailboxRequest struct {
 	// Username for the mailbox (e.g., "john.doe")
+	// Required: true
+	// Example: john.doe
 	Username string `json:"username" example:"john.doe" binding:"required"`
 
 	// Password for the mailbox (e.g., "SecurePassword123!")
+	// Required: true
+	// Example: SecurePassword123!
 	Password string `json:"password" example:"SecurePassword123!" binding:"required"`
 
 	// Specifies if email forwarding is enabled
+	// Example: true
 	ForwardingEnabled bool `json:"forwardingEnabled" example:"true"`
 
 	// Email address to forward to (if forwarding is enabled)
+	// Example: johndoe.forward@example.com
 	ForwardingTo string `json:"forwardingTo" example:"johndoe.forward@example.com"`
 
 	// Specifies if webmail access is enabled
+	// Example: true
 	WebmailEnabled bool `json:"webmailEnabled" example:"true"`
 }
 
@@ -100,16 +108,9 @@ type MailboxResponse struct {
 	Message string `json:"message" example:"Mailbox setup successful"`
 
 	// Email is the email address for the mailbox
+	// Required: true
 	// Example: user@example.com
 	Email string `json:"email" example:"user@example.com"`
-
-	// CreatedAt is the date and time the mailbox was created
-	// Example: 2021-09-01T12:00:00Z
-	CreatedAt string `json:"createdAt" example:"2021-09-01T12:00:00Z"`
-
-	// LastUpdatedAt is the date and time the mailbox was last updated
-	// Example: 2021-09-01T12:00:00Z
-	LastUpdatedAt string `json:"lastUpdatedAt" example:"2021-09-01T12:00:00Z"`
 
 	// ForwardingEnabled indicates if email forwarding is enabled
 	// Example: true

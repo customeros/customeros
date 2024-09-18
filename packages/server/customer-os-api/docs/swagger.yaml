@@ -67,6 +67,13 @@ definitions:
         example: success
         type: string
     type: object
+  rest.ErrorResponse:
+    properties:
+      message:
+        type: string
+      status:
+        type: string
+    type: object
   restenrich.EnrichOrganizationData:
     description: Detailed data about an organization from enrichment.
     properties:
@@ -515,6 +522,86 @@ definitions:
           Example: success
         example: success
         type: string
+    type: object
+  restmailstack.MailboxRequest:
+    description: Request body for adding and configuring a new mailbox
+    properties:
+      forwardingEnabled:
+        description: |-
+          Specifies if email forwarding is enabled
+          Example: true
+        example: true
+        type: boolean
+      forwardingTo:
+        description: |-
+          Email address to forward to (if forwarding is enabled)
+          Example: johndoe.forward@example.com
+        example: johndoe.forward@example.com
+        type: string
+      password:
+        description: |-
+          Password for the mailbox (e.g., "SecurePassword123!")
+          Required: true
+          Example: SecurePassword123!
+        example: SecurePassword123!
+        type: string
+      username:
+        description: |-
+          Username for the mailbox (e.g., "john.doe")
+          Required: true
+          Example: john.doe
+        example: john.doe
+        type: string
+      webmailEnabled:
+        description: |-
+          Specifies if webmail access is enabled
+          Example: true
+        example: true
+        type: boolean
+    required:
+    - password
+    - username
+    type: object
+  restmailstack.MailboxResponse:
+    description: Mailbox object in the response
+    properties:
+      email:
+        description: |-
+          Email is the email address for the mailbox
+          Required: true
+          Example: user@example.com
+        example: user@example.com
+        type: string
+      forwardingEnabled:
+        description: |-
+          ForwardingEnabled indicates if email forwarding is enabled
+          Example: true
+        example: true
+        type: boolean
+      forwardingTo:
+        description: |-
+          ForwardingTo is the email address the mailbox forwards to
+          Example: user@forward.com
+        example: user@forward.com
+        type: string
+      message:
+        description: |-
+          Message provides additional information about the action
+          Example: Mailbox setup successful
+        example: Mailbox setup successful
+        type: string
+      status:
+        description: |-
+          Status indicates the result of the action
+          Example: success
+        example: success
+        type: string
+      webmailEnabled:
+        description: |-
+          WebmailEnabled indicates if webmail access is enabled
+          Example: true
+        example: true
+        type: boolean
     type: object
   restmailstack.RegisterNewDomainRequest:
     description: Request body for domain registration
@@ -965,8 +1052,12 @@ paths:
             $ref: '#/definitions/restmailstack.DomainsResponse'
         "401":
           description: Unauthorized access - API key invalid or expired
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
         "500":
           description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Get active domains
@@ -975,7 +1066,7 @@ paths:
     post:
       consumes:
       - application/json
-      description: Registers a new domain
+      description: Registers a new domain for the mail service
       parameters:
       - description: Domain registration payload
         in: body
@@ -992,17 +1083,77 @@ paths:
             $ref: '#/definitions/restmailstack.DomainResponse'
         "400":
           description: Invalid request body or missing input fields
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
         "401":
           description: Unauthorized access - API key invalid or expired
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
         "406":
           description: Restrictions on domain purchase
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
         "409":
           description: Domain is already registered
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
         "500":
           description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Register a new domain
+      tags:
+      - MailStack API
+  /mailstack/v1/domains/{domain}/mailboxes:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new mailbox for the specified domain
+      parameters:
+      - description: Domain for which to register the mailbox
+        in: path
+        name: domain
+        required: true
+        type: string
+      - description: Mailbox registration payload
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/restmailstack.MailboxRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Mailbox setup successful
+          schema:
+            $ref: '#/definitions/restmailstack.MailboxResponse'
+        "400":
+          description: Invalid request body, missing input fields, or invalid username
+            format
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized access - API key invalid or expired
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Domain not found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "409":
+          description: Mailbox already exists
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Register a new mailbox
       tags:
       - MailStack API
   /mailstack/v1/domains/configure:
@@ -1026,10 +1177,20 @@ paths:
             $ref: '#/definitions/restmailstack.DomainResponse'
         "400":
           description: Invalid request body or missing input fields
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
         "401":
           description: Unauthorized access - API key invalid or expired
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "404":
+          description: Domain not found
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
         "500":
           description: Internal server error
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
       security:
       - ApiKeyAuth: []
       summary: Configure domain DNS records

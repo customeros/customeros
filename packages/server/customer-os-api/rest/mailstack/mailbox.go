@@ -15,6 +15,22 @@ import (
 	"regexp"
 )
 
+// RegisterNewMailbox registers a new mailbox for the given domain
+// @Summary Register a new mailbox
+// @Description Registers a new mailbox for the specified domain
+// @Tags MailStack API
+// @Accept json
+// @Produce json
+// @Param domain path string true "Domain for which to register the mailbox"
+// @Param body body MailboxRequest true "Mailbox registration payload"
+// @Success 200 {object} MailboxResponse "Mailbox setup successful"
+// @Failure 400 {object} rest.ErrorResponse "Invalid request body, missing input fields, or invalid username format"
+// @Failure 401 {object} rest.ErrorResponse "Unauthorized access - API key invalid or expired"
+// @Failure 404 {object} rest.ErrorResponse "Domain not found"
+// @Failure 409 {object} rest.ErrorResponse "Mailbox already exists"
+// @Failure 500 {object} rest.ErrorResponse "Internal server error"
+// @Router /mailstack/v1/domains/{domain}/mailboxes [post]
+// @Security ApiKeyAuth
 func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewDomain", c.Request.Header)
