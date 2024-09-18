@@ -83,19 +83,6 @@ export class OrganizationsPage {
 
     const organizationName = randomUUID();
 
-    if (testInfo) {
-      process.stdout.write(
-        '\nOrganization ' +
-          organizationName +
-          ' was created for the test: ' +
-          testInfo.title,
-      );
-    } else {
-      process.stdout.write(
-        '\nInitial Organization ' + organizationName + ' was created',
-      );
-    }
-
     const requestPromise = createRequestPromise(
       this.page,
       'name',
@@ -116,6 +103,19 @@ export class OrganizationsPage {
       `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
       { timeout: 30000 },
     );
+
+    if (testInfo) {
+      process.stdout.write(
+        '\nOrganization ' +
+          organizationName +
+          ' was created for the test: ' +
+          testInfo.title,
+      );
+    } else {
+      process.stdout.write(
+        '\nInitial Organization ' + organizationName + ' was created',
+      );
+    }
 
     return organizationName;
   }
