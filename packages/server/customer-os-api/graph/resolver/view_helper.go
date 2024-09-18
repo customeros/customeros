@@ -367,6 +367,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 8, ColumnType: model.ColumnViewTypeOrganizationsForecastArr.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 9, ColumnType: model.ColumnViewTypeOrganizationsOwner.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeOrganizationsLastTouchpoint.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 11, ColumnType: model.ColumnViewTypeOrganizationsParentOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeOrganizations.String():
@@ -418,6 +419,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 14, ColumnType: model.ColumnViewTypeOrganizationsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 15, ColumnType: model.ColumnViewTypeOrganizationsTags.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeOrganizationsContactCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 17, ColumnType: model.ColumnViewTypeOrganizationsParentOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeUpcomingInvoices.String():

@@ -75,7 +75,8 @@ type OrganizationsColumnType =
   | ColumnViewType.OrganizationsRenewalLikelihood
   | ColumnViewType.OrganizationsRenewalDate
   | ColumnViewType.OrganizationsWebsite
-  | ColumnViewType.OrganizationsChurnDate;
+  | ColumnViewType.OrganizationsChurnDate
+  | ColumnViewType.OrganizationsParentOrganization;
 
 export const organizationsOptionsMap: Record<
   OrganizationsColumnType | string,
@@ -107,6 +108,7 @@ export const organizationsOptionsMap: Record<
   [ColumnViewType.OrganizationsIsPublic]: 'Ownership Type',
   [ColumnViewType.OrganizationsContactCount]: 'Contacts',
   [ColumnViewType.OrganizationsHeadquarters]: 'Country',
+  [ColumnViewType.OrganizationsParentOrganization]: 'Parent Org',
 };
 
 export const organizationsHelperTextMap: Record<
@@ -139,6 +141,7 @@ export const organizationsHelperTextMap: Record<
   [ColumnViewType.OrganizationsChurnDate]: 'E.g. 15 Aug 2024',
   [ColumnViewType.OrganizationsLtv]: 'E.g. $109,280',
   [ColumnViewType.OrganizationsHeadquarters]: 'E.g. Germany',
+  [ColumnViewType.OrganizationsParentOrganization]: 'E.g. Alphabet',
 };
 
 export const contactsHelperTextMap: Record<string, string> = {
