@@ -57,7 +57,7 @@ export const CreateNewFlow = observer(() => {
           id='sequenceName'
           variant='unstyled'
           value={sequenceName}
-          placeholder='Sequence name'
+          placeholder='Flow name'
           onChange={(e) => {
             setSequenceName(e.target.value);
           }}
