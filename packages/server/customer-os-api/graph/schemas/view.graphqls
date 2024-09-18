@@ -3,37 +3,44 @@ extend type Query {
 }
 
 extend type Mutation {
-    tableViewDef_Create(input: TableViewDefCreateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    tableViewDef_Update(input: TableViewDefUpdateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    tableViewDef_UpdateShared(input: TableViewDefUpdateInput!): TableViewDef! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    tableViewDef_Archive(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    tableViewDef_Create(input: TableViewDefCreateInput!): TableViewDef!
+        @hasRole(roles: [ADMIN, USER])
+        @hasTenant
+    tableViewDef_Update(input: TableViewDefUpdateInput!): TableViewDef!
+        @hasRole(roles: [ADMIN, USER])
+        @hasTenant
+    tableViewDef_UpdateShared(input: TableViewDefUpdateInput!): TableViewDef!
+        @hasRole(roles: [ADMIN, USER])
+        @hasTenant
+    tableViewDef_Archive(id: ID!): ActionResponse!
+        @hasRole(roles: [ADMIN, USER])
+        @hasTenant
 }
 
 type TableViewDef implements Node {
-    id:                 ID!
-    name:               String!
-    tableType:          TableViewType!
-    tableId:            TableIdType!
-    order:              Int!
-    icon:               String!
-    columns:            [ColumnView!]!
-    filters:            String!
-    sorting:            String!
-    isPreset:           Boolean!
-    isShared:           Boolean!
-    createdAt:          Time!
-    updatedAt:          Time!
+    id: ID!
+    name: String!
+    tableType: TableViewType!
+    tableId: TableIdType!
+    order: Int!
+    icon: String!
+    columns: [ColumnView!]!
+    filters: String!
+    sorting: String!
+    isPreset: Boolean!
+    isShared: Boolean!
+    createdAt: Time!
+    updatedAt: Time!
 }
 
 type ColumnView {
-    columnId:   Int!
+    columnId: Int!
     columnType: ColumnViewType!
-    width:      Int!
-    visible:    Boolean!
-    name:       String!
-    filter:     String!
+    width: Int!
+    visible: Boolean!
+    name: String!
+    filter: String!
 }
-
 
 enum TableViewType {
     ORGANIZATIONS
@@ -96,6 +103,7 @@ enum ColumnViewType {
     ORGANIZATIONS_LINKEDIN_FOLLOWER_COUNT
     ORGANIZATIONS_TAGS
     ORGANIZATIONS_HEADQUARTERS
+    ORGANIZATIONS_PARENT_ORGANIZATION
 
     CONTACTS_AVATAR
     CONTACTS_NAME
@@ -154,33 +162,33 @@ enum ColumnViewType {
 }
 
 input TableViewDefUpdateInput {
-    id:                 ID!
-    name:               String!
-    order:              Int!
-    icon:               String!
-    columns:            [ColumnViewInput!]!
-    filters:            String!
-    sorting:            String!
+    id: ID!
+    name: String!
+    order: Int!
+    icon: String!
+    columns: [ColumnViewInput!]!
+    filters: String!
+    sorting: String!
 }
 
 input TableViewDefCreateInput {
-    tableType:          TableViewType!
-    tableId:            TableIdType!
-    name:               String!
-    order:              Int!
-    icon:               String!
-    columns:            [ColumnViewInput!]!
-    filters:            String!
-    sorting:            String!
-    isPreset:           Boolean!
-    isShared:           Boolean!
+    tableType: TableViewType!
+    tableId: TableIdType!
+    name: String!
+    order: Int!
+    icon: String!
+    columns: [ColumnViewInput!]!
+    filters: String!
+    sorting: String!
+    isPreset: Boolean!
+    isShared: Boolean!
 }
 
 input ColumnViewInput {
-    columnId:   Int!
+    columnId: Int!
     columnType: ColumnViewType!
-    width:      Int!
-    visible:    Boolean!
-    name:       String!
-    filter:     String!
+    width: Int!
+    visible: Boolean!
+    name: String!
+    filter: String!
 }
