@@ -354,7 +354,7 @@
                 "tags": [
                     "MailStack API"
                 ],
-                "summary": "Configure domain DNS records",
+                "summary": "Configure domain",
                 "parameters": [
                     {
                         "description": "Domain payload",
@@ -401,6 +401,59 @@
             }
         },
         "/mailstack/v1/domains/{domain}/mailboxes": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of all mailboxes associated with a specified domain",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "MailStack API"
+                ],
+                "summary": "Get all mailboxes",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Domain for which to retrieve mailboxes",
+                        "name": "domain",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved mailboxes",
+                        "schema": {
+                            "$ref": "#/definitions/restmailstack.MailboxesResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Missing domain",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized access - API key invalid or expired",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    },
+                    "500": {
+                        "description": "Error retrieving mailboxes",
+                        "schema": {
+                            "$ref": "#/definitions/rest.ErrorResponse"
+                        }
+                    }
+                }
+            },
             "post": {
                 "security": [
                     {
@@ -1333,8 +1386,14 @@
                 },
                 "forwardingTo": {
                     "description": "Email address to forward to (if forwarding is enabled)\nExample: johndoe.forward@example.com",
-                    "type": "string",
-                    "example": "johndoe.forward@example.com"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "['user1@example.com'",
+                        " 'user2@example.com']"
+                    ]
                 },
                 "password": {
                     "description": "Password for the mailbox (e.g., \"SecurePassword123!\")\nRequired: true\nExample: SecurePassword123!",
@@ -1369,8 +1428,14 @@
                 },
                 "forwardingTo": {
                     "description": "ForwardingTo is the email address the mailbox forwards to\nExample: user@forward.com",
-                    "type": "string",
-                    "example": "user@forward.com"
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "['user1@example.com'",
+                        " 'user2@example.com']"
+                    ]
                 },
                 "message": {
                     "description": "Message provides additional information about the action\nExample: Mailbox setup successful",
@@ -1386,6 +1451,28 @@
                     "description": "WebmailEnabled indicates if webmail access is enabled\nExample: true",
                     "type": "boolean",
                     "example": true
+                }
+            }
+        },
+        "restmailstack.MailboxesResponse": {
+            "description": "Response body for all mailbox details",
+            "type": "object",
+            "properties": {
+                "mailboxes": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/restmailstack.MailboxResponse"
+                    }
+                },
+                "message": {
+                    "description": "Message provides additional information about the action\nExample: Mailboxes retrieved successfully",
+                    "type": "string",
+                    "example": "Mailboxes retrieved successfully"
+                },
+                "status": {
+                    "description": "Status indicates the result of the action\nExample: success",
+                    "type": "string",
+                    "example": "success"
                 }
             }
         },

@@ -536,8 +536,12 @@ definitions:
         description: |-
           Email address to forward to (if forwarding is enabled)
           Example: johndoe.forward@example.com
-        example: johndoe.forward@example.com
-        type: string
+        example:
+        - '[''user1@example.com'''
+        - ' ''user2@example.com'']'
+        items:
+          type: string
+        type: array
       password:
         description: |-
           Password for the mailbox (e.g., "SecurePassword123!")
@@ -582,8 +586,12 @@ definitions:
         description: |-
           ForwardingTo is the email address the mailbox forwards to
           Example: user@forward.com
-        example: user@forward.com
-        type: string
+        example:
+        - '[''user1@example.com'''
+        - ' ''user2@example.com'']'
+        items:
+          type: string
+        type: array
       message:
         description: |-
           Message provides additional information about the action
@@ -602,6 +610,26 @@ definitions:
           Example: true
         example: true
         type: boolean
+    type: object
+  restmailstack.MailboxesResponse:
+    description: Response body for all mailbox details
+    properties:
+      mailboxes:
+        items:
+          $ref: '#/definitions/restmailstack.MailboxResponse'
+        type: array
+      message:
+        description: |-
+          Message provides additional information about the action
+          Example: Mailboxes retrieved successfully
+        example: Mailboxes retrieved successfully
+        type: string
+      status:
+        description: |-
+          Status indicates the result of the action
+          Example: success
+        example: success
+        type: string
     type: object
   restmailstack.RegisterNewDomainRequest:
     description: Request body for domain registration
@@ -1107,6 +1135,40 @@ paths:
       tags:
       - MailStack API
   /mailstack/v1/domains/{domain}/mailboxes:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of all mailboxes associated with a specified domain
+      parameters:
+      - description: Domain for which to retrieve mailboxes
+        in: path
+        name: domain
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully retrieved mailboxes
+          schema:
+            $ref: '#/definitions/restmailstack.MailboxesResponse'
+        "400":
+          description: Missing domain
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "401":
+          description: Unauthorized access - API key invalid or expired
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+        "500":
+          description: Error retrieving mailboxes
+          schema:
+            $ref: '#/definitions/rest.ErrorResponse'
+      security:
+      - ApiKeyAuth: []
+      summary: Get all mailboxes
+      tags:
+      - MailStack API
     post:
       consumes:
       - application/json
@@ -1193,7 +1255,7 @@ paths:
             $ref: '#/definitions/rest.ErrorResponse'
       security:
       - ApiKeyAuth: []
-      summary: Configure domain DNS records
+      summary: Configure domain
       tags:
       - MailStack API
   /verify/v1/email:
