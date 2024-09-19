@@ -56,7 +56,7 @@ export const ConfirmDeleteDialog = ({
           <AlertDialogContent className='rounded-xl'>
             {!hideCloseButton && <AlertDialogCloseIconButton />}
             <AlertDialogHeader className='font-bold'>
-              <p className='pb-0 font-semibold'>{label}</p>
+              <p className='pb-0 font-semibold truncate'>{label}</p>
               {description && (
                 <p className='mt-1 text-sm text-gray-700 font-normal'>
                   {description}
