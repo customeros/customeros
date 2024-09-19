@@ -1236,7 +1236,15 @@ export const browserAutomationRunType = pgEnum("browser_automation_run_type", [
 ]);
 export const browserAutomationRunStatus = pgEnum(
   "browser_automation_run_status",
-  ["SCHEDULED", "RUNNING", "COMPLETED", "FAILED", "CANCELLED", "PROCESSED"],
+  [
+    "SCHEDULED",
+    "RUNNING",
+    "COMPLETED",
+    "FAILED",
+    "CANCELLED",
+    "PROCESSED",
+    "RETRYING",
+  ],
 );
 export const browserAutomationTrigger = pgEnum(
   "browser_automation_run_trigger",

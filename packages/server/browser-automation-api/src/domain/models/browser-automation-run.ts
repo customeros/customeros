@@ -76,6 +76,16 @@ export class BrowserAutomationRun {
     this.runDuration = this.getDuration();
   }
 
+  retry(payload?: string) {
+    this.status = "RETRYING";
+    this.retryCount = this.retryCount ? this.retryCount + 1 : 1;
+    this.startedAt = new Date().toISOString();
+    // retryPayload column should be added to store this instead of normal payload
+    if (payload) {
+      this.payload = payload;
+    }
+  }
+
   private getDuration(): number | null {
     if (this.startedAt && this.finishedAt) {
       return (
