@@ -40,7 +40,7 @@ export class ConnectionsController {
           tenant: res.locals.tenantName,
           type: "FIND_CONNECTIONS",
           userId: res.locals.user.id,
-          payload: req.body,
+          payload: "",
         },
       );
 

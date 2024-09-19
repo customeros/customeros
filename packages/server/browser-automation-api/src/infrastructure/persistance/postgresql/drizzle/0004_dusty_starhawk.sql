@@ -1,0 +1,1 @@
+ALTER TYPE "browser_automation_run_status" ADD VALUE 'PROCESSED';
