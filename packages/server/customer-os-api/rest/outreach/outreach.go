@@ -3,8 +3,8 @@ package restoutreach
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"net/http"
 )
@@ -13,13 +13,14 @@ func GenerateEmailTrackingUrls(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GenerateEmailTrackingUrls", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
 			c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Missing tenant context"})
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 		log := services.Log
 

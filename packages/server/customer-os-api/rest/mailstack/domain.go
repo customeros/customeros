@@ -5,8 +5,8 @@ import (
 	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -34,7 +34,8 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewDomain", c.Request.Header)
 		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
@@ -47,7 +48,6 @@ func RegisterNewDomain(services *service.Services) gin.HandlerFunc {
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
 
 		// Parse and validate request body
 		var req RegisterNewDomainRequest
@@ -212,7 +212,8 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "ConfigureDomain", c.Request.Header)
 		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
@@ -225,7 +226,6 @@ func ConfigureDomain(services *service.Services) gin.HandlerFunc {
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
 
 		// Parse and validate request body
 		var req ConfigureDomainRequest
@@ -368,7 +368,9 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetDomains", c.Request.Header)
 		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
 		if tenant == "" {
@@ -380,7 +382,6 @@ func GetDomains(services *service.Services) gin.HandlerFunc {
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
 
 		// get all active domains from postgres
 		activeDomainRecords, err := services.CommonServices.PostgresRepositories.MailStackDomainRepository.GetActiveDomains(ctx, tenant)

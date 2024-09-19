@@ -6,8 +6,8 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/data"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -25,6 +25,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RedirectToPayInvoice", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
 
 		// Get invoice ID from path parameter
 		invoiceID := c.Param("invoiceId")
@@ -39,6 +40,7 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Invoice not found"})
 			return
 		}
+		tracing.TagTenant(span, tenant)
 
 		// Check invoice status
 		switch invoice.Status {

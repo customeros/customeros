@@ -6,10 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -91,6 +90,8 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "CreateOrganization", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		// if tenant missing return auth error
@@ -99,7 +100,6 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
-		tracing.SetDefaultRestSpanTags(ctx, span)
 
 		request := CreateOrganizationRequest{}
 		// Bind the JSON request body to the struct
@@ -211,7 +211,7 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 			upsertOrganizationRequest.Stage = enummapper.MapStageFromModel(model.OrganizationStageTarget).String()
 		}
 
-		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 		})

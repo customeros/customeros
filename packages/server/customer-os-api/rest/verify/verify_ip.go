@@ -6,10 +6,9 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
@@ -98,6 +97,8 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "IpIntelligence", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -108,7 +109,6 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 				})
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 		logger := services.Log
 
 		// Check if address is provided
@@ -157,7 +157,7 @@ func IpIntelligence(services *service.Services) gin.HandlerFunc {
 			return
 		}
 		// Inject span context into the HTTP request
-		req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
+		req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 		// Set the request headers
 		req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.ValidationApiKey)

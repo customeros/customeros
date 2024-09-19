@@ -29,6 +29,7 @@ const (
 const (
 	SpanTagComponentPostgresRepository = "postgresRepository"
 	SpanTagComponentNeo4jRepository    = "neo4jRepository"
+	SpanTagComponentRest               = "rest"
 	SpanTagComponentCronJob            = "cronJob"
 )
 
@@ -39,6 +40,7 @@ func TracingEnhancer(ctx context.Context, endpoint string) func(c *gin.Context) 
 			span.LogFields(log.String("request.header.key", k), log.Object("request.header.value", v))
 		}
 		defer span.Finish()
+		TagComponentRest(span)
 		c.Request = c.Request.WithContext(ctxWithSpan)
 		c.Next()
 	}
@@ -188,9 +190,15 @@ func TagComponentNeo4jRepository(span opentracing.Span) {
 }
 
 func TagTenant(span opentracing.Span, tenant string) {
-	span.SetTag(SpanTagTenant, tenant)
+	if tenant != "" {
+		span.SetTag(SpanTagTenant, tenant)
+	}
 }
 
 func TagComponentCronJob(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentCronJob)
+}
+
+func TagComponentRest(span opentracing.Span) {
+	span.SetTag(SpanTagComponent, SpanTagComponentRest)
 }
