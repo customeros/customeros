@@ -119,7 +119,7 @@ export const DeleteConfirmationModal = observer(() => {
       'Opportunity',
       () => `Archive ${(entity as OpportunityStore)?.value.name}?`,
     )
-    .with('Flows', () => `Archive ${context.ids.length} sequences?`)
+    .with('Flows', () => `Archive ${context.ids.length} flows?`)
     .with(
       'Flow',
       () => `Archive ${store.flows.value.get(context.ids?.[0])?.value.name}?`,
