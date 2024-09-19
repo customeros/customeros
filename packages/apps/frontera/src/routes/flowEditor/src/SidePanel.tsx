@@ -135,8 +135,6 @@ const SidePanel = ({
   edges,
   setEdges,
 }) => {
-  console.log('🏷️ ----- open: ', open);
-
   const node = nodes.find((n) => n.id === nodeId);
   const outgoingEdges = edges.filter((e) => e.source === nodeId);
 

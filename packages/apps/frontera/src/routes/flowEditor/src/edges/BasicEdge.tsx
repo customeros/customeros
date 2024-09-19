@@ -44,8 +44,8 @@ export const BasicEdge: React.FC<EdgeProps> = ({ id, data, ...props }) => {
 
     // Create the new node
     const newNode = {
-      id: `step-${nodes.length + 1}`,
-      type: 'default', // or any other type you want
+      id: `${type}-${nodes.length + 1}`,
+      type, // or any other type you want
       position: { x: midX, y: midY },
       data: { label: `New Step ${nodes.length + 1}` },
     };
@@ -124,6 +124,7 @@ export const BasicEdge: React.FC<EdgeProps> = ({ id, data, ...props }) => {
             </Button>
             <Button
               variant='ghost'
+              onClick={() => handleAddNode('trigger')}
               className='px-1 py-0.5 cursor-pointer justify-start'
             >
               Add trigger
