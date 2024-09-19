@@ -18,12 +18,14 @@ func OrganizationsCacheHandler(serviceContainer *service.Services) gin.HandlerFu
 	return func(c *gin.Context) {
 		_, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/stream/organizations-cache", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
 
 		tenant := c.Keys[security.KEY_TENANT_NAME].(string)
 
 		c.Writer.Header().Set("Content-Type", "text/plain")
 		c.Writer.Header().Set("Transfer-Encoding", "chunked")
 		c.Writer.WriteHeader(http.StatusOK)
+		tracing.TagTenant(span, tenant)
 
 		// Get the http.Flusher interface to flush data to the client
 		flusher, ok := c.Writer.(http.Flusher)
@@ -65,12 +67,14 @@ func OrganizationsPatchesCacheHandler(serviceContainer *service.Services) gin.Ha
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "/stream/organizations-cache", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
 
 		tenant := c.Keys[security.KEY_TENANT_NAME].(string)
 
 		c.Writer.Header().Set("Content-Type", "text/plain")
 		c.Writer.Header().Set("Transfer-Encoding", "chunked")
 		c.Writer.WriteHeader(http.StatusOK)
+		tracing.TagTenant(span, tenant)
 
 		// Get the http.Flusher interface to flush data to the client
 		flusher, ok := c.Writer.(http.Flusher)

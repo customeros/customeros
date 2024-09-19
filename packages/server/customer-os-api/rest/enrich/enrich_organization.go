@@ -147,6 +147,8 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichOrganization", c.Request.Header)
 		defer span.Finish()
+		commontracing.TagComponentRest(span)
+		commontracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -157,7 +159,6 @@ func EnrichOrganization(services *service.Services) gin.HandlerFunc {
 				})
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 		linkedinUrl := c.Query("linkedinUrl")
 		domain := c.Query("domain")

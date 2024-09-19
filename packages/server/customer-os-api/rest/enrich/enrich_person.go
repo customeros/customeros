@@ -164,6 +164,8 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
 		defer span.Finish()
+		commontracing.TagComponentRest(span)
+		commontracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -174,7 +176,6 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 				})
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 		linkedinUrl := c.Query("linkedinUrl")
 		email := c.Query("email")
@@ -356,6 +357,8 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "EnrichPerson", c.Request.Header)
 		defer span.Finish()
+		commontracing.TagComponentRest(span)
+		commontracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -366,7 +369,6 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 				})
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 
 		tempId := c.Param("id")
 		span.LogFields(log.String("request.tempId", tempId))

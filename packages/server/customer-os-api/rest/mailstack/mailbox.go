@@ -5,8 +5,8 @@ import (
 	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -35,7 +35,8 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewDomain", c.Request.Header)
 		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		// get domain from path
 		domain := c.Param("domain")
@@ -61,7 +62,6 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
 
 		// Parse and validate request body
 		var mailboxRequest MailboxRequest
@@ -207,7 +207,8 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetMailboxes", c.Request.Header)
 		defer span.Finish()
-		tracing.SetDefaultRestSpanTags(ctx, span)
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		// get domain from path
 		domain := c.Param("domain")
@@ -233,7 +234,6 @@ func GetMailboxes(services *service.Services) gin.HandlerFunc {
 			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
 
 		// get mailboxes for domain from postgres
 		mailboxRecords, err := services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByDomain(ctx, tenant, domain)

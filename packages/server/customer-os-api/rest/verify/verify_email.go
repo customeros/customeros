@@ -10,10 +10,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	validationmodel "github.com/openline-ai/openline-customer-os/packages/server/validation-api/model"
@@ -146,13 +145,14 @@ func VerifyEmailAddress(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "VerifyEmailAddress", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
 			c.JSON(http.StatusUnauthorized, rest.ErrorResponse{Status: "error", Message: "Missing tenant context"})
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, common.GetTenantFromContext(ctx))
 		logger := services.Log
 
 		// Check if email address is provided
@@ -254,6 +254,8 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "BulkUploadEmailsForVerification", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		tenant := common.GetTenantFromContext(ctx)
 		if tenant == "" {
@@ -264,7 +266,6 @@ func BulkUploadEmailsForVerification(services *service.Services) gin.HandlerFunc
 				})
 			return
 		}
-		span.SetTag(tracing.SpanTagTenant, tenant)
 		logger := services.Log
 
 		// Get email column param (optional)
@@ -436,6 +437,8 @@ func GetBulkEmailVerificationResults(services *service.Services) gin.HandlerFunc
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		requestID := c.Param("requestId")
 		if requestID == "" {
@@ -518,6 +521,8 @@ func DownloadBulkEmailVerificationResults(services *service.Services) gin.Handle
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetBulkEmailVerificationResults", c.Request.Header)
 		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
 
 		// Extract requestID from the path parameter
 		requestID := c.Param("requestId")
@@ -611,7 +616,7 @@ func CallApiValidateEmail(ctx context.Context, services *service.Services, email
 		return nil, err
 	}
 	// Inject span context into the HTTP request
-	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
+	req = tracing.InjectSpanContextIntoHTTPRequest(req, span)
 
 	// Set the request headers
 	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.ValidationApiKey)
