@@ -136,10 +136,10 @@ export const OrganizationTableActions = observer(
     };
 
     const handleOpen = (type: CommandMenuType, property?: string) => {
-      if (selection?.length >= 1) {
+      if (selection?.length > 1) {
         store.ui.commandMenu.setContext({
           ids: selection,
-          entity: 'Organization',
+          entity: 'Organizations',
           property: property,
         });
       } else {
