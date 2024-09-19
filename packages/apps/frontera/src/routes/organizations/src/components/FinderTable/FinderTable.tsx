@@ -370,8 +370,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
       } else if (tableType === TableViewType.Opportunities) {
         if (selectedIds.length === 1) {
-          reset();
-
           store.ui.commandMenu.setType('OpportunityCommands');
           store.ui.commandMenu.setContext({
             entity: 'Opportunity',
@@ -380,8 +378,6 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }
 
         if (selectedIds.length > 1) {
-          reset();
-
           store.ui.commandMenu.setType('OpportunityBulkCommands');
           store.ui.commandMenu.setContext({
             entity: 'Opportunities',
