@@ -110,7 +110,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r := gin.Default()
 
 	corsConfig := cors.DefaultConfig()
-	corsConfig.AllowOrigins = []string{"*"}
+	corsConfig.AllowOrigins = server.cfg.AppConfig.AllowedOrigins
 	adminApiHandler := cosHandler.NewAdminApiHandler(server.cfg, commonServices)
 
 	// Initialize postgres db

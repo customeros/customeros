@@ -29,8 +29,9 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Metrics          metrics.Config
 	AppConfig        struct {
-		TrackingPublicUrl      string `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
-		InvoicePaidRedirectUrl string `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
+		AllowedOrigins         []string `env:"ALLOWED_ORIGINS" envDefault:"*"`
+		TrackingPublicUrl      string   `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
+		InvoicePaidRedirectUrl string   `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
 		Mailstack              struct {
 			SupportedTlds []string `env:"MAILSTACK_SUPPORTED_TLDS" envDefault:"com"`
 		}
