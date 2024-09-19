@@ -341,7 +341,7 @@ func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgresEntity.Tabl
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeFlow.String(),
 		TableId:     model.TableIDTypeFlowSequences.String(),
-		Name:        "Sequences",
+		Name:        "Flows",
 		ColumnsJson: string(jsonData),
 		Order:       9,
 		Icon:        "Shuffle01",
