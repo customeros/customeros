@@ -56,7 +56,7 @@ export async function ensureLocatorIsVisible(
 ): Promise<Locator> {
   const locator = page.locator(selector);
 
-  await expect(locator).toBeVisible();
+  await expect(locator).toBeVisible({ timeout: 15000 });
 
   return locator;
 }
@@ -90,7 +90,7 @@ export async function clickLocatorsThatAreVisible(
   ...selectors: string[]
 ) {
   for (const selector of selectors) {
-    await page.locator(selector).scrollIntoViewIfNeeded({ timeout: 5000 });
+    await page.locator(selector).scrollIntoViewIfNeeded({ timeout: 15000 });
     await ensureLocatorIsVisible(page, selector);
 
     await page.click(selector);

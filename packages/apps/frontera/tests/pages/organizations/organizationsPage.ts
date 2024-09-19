@@ -120,13 +120,13 @@ export class OrganizationsPage {
     return organizationName;
   }
 
-  async checkNewOrganizationEntry(organizationId: string) {
+  async checkNewOrganizationEntry(organizationName: string) {
     const maxAttempts = 3;
     const retryInterval = 20000;
 
     const newEntry = this.page
       .locator(
-        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationId}")`,
+        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
       )
       .locator('..')
       .locator('..')
@@ -141,7 +141,7 @@ export class OrganizationsPage {
         .locator(this.organizationNameInAllOrgsTable)
         .innerText();
 
-      expect(organization).toBe(organizationId);
+      expect(organization).toBe(organizationName);
     });
 
     await assertWithRetry(async () => {
@@ -318,10 +318,10 @@ export class OrganizationsPage {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllOrgs);
   }
 
-  async updateOrgToCustomer(organizationId: string) {
+  async updateOrgToCustomer(organizationName: string) {
     const newEntry = this.page
       .locator(
-        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationId}")`,
+        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
       )
       .locator('..')
       .locator('..')
@@ -333,10 +333,10 @@ export class OrganizationsPage {
     await clickLocatorThatIsVisible(this.page, this.relationshipCustomer);
   }
 
-  async goToOrganization(organizationId: string) {
+  async goToOrganization(organizationName: string) {
     await this.page
       .locator(
-        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationId}")`,
+        `${this.finderTableOrganizations} ${this.organizationNameInAllOrgsTable}:has-text("${organizationName}")`,
       )
       .click();
   }
