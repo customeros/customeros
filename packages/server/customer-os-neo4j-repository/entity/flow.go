@@ -136,14 +136,42 @@ func GetFlowActionType(s string) FlowActionType {
 	return FlowActionType(s)
 }
 
+type FlowExecutionSettingsEntity struct {
+	Id        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	FlowId   string
+	EntityId string
+
+	Mailbox *string
+}
+
 type FlowActionExecutionEntity struct {
-	Id           string
-	FlowId       string
-	ActionId     string
-	ContactId    string
-	ScheduledFor time.Time
-	ExecutedAt   *time.Time
-	Status       FlowActionStatus
+	Id        string
+	CreatedAt time.Time
+	UpdatedAt time.Time
+
+	FlowId    string
+	ActionId  string
+	ContactId string
+
+	// Scheduling Info
+	ScheduledAt time.Time
+	ExecutedAt  *time.Time
+	Status      FlowActionExecutionStatus
+
+	// Execution details for email
+	Subject *string
+	Body    *string
+	From    *string
+	To      []string
+	Cc      []string
+	Bcc     []string
+	Mailbox *string
+
+	// Additional metadata
+	Error *string // If execution fails, store the error message
 }
 
 type FlowActionExecutionStatus string
@@ -153,3 +181,7 @@ const (
 	FlowActionExecutionStatusSuccess FlowActionExecutionStatus = "SUCCESS"
 	FlowActionExecutionStatusError   FlowActionExecutionStatus = "ERROR"
 )
+
+func GetFlowActionExecutionStatus(s string) FlowActionExecutionStatus {
+	return FlowActionExecutionStatus(s)
+}

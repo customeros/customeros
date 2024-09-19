@@ -40,6 +40,10 @@ type Repositories struct {
 	FlowContactWriteRepository            FlowContactWriteRepository
 	FlowActionSenderReadRepository        FlowActionSenderReadRepository
 	FlowActionSenderWriteRepository       FlowActionSenderWriteRepository
+	FlowExecutionSettingsReadRepository   FlowExecutionSettingsReadRepository
+	FlowExecutionSettingsWriteRepository  FlowExecutionSettingsWriteRepository
+	FlowActionExecutionReadRepository     FlowActionExecutionReadRepository
+	FlowActionExecutionWriteRepository    FlowActionExecutionWriteRepository
 	InteractionEventReadRepository        InteractionEventReadRepository
 	InteractionEventWriteRepository       InteractionEventWriteRepository
 	InteractionSessionReadRepository      InteractionSessionReadRepository
@@ -124,6 +128,10 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		FlowContactWriteRepository:            NewFlowContactWriteRepository(driver, neo4jDatabase),
 		FlowActionSenderReadRepository:        NewFlowSequenceSenderReadRepository(driver, neo4jDatabase),
 		FlowActionSenderWriteRepository:       NewFlowActionSenderWriteRepository(driver, neo4jDatabase),
+		FlowActionExecutionReadRepository:     NewFlowActionExecutionReadRepository(driver, neo4jDatabase),
+		FlowExecutionSettingsWriteRepository:  NewFlowExecutionSettingsWriteRepository(driver, neo4jDatabase),
+		FlowActionExecutionWriteRepository:    NewFlowActionExecutionWriteRepository(driver, neo4jDatabase),
+		FlowExecutionSettingsReadRepository:   NewFlowExecutionSettingsReadRepository(driver, neo4jDatabase),
 		InteractionEventReadRepository:        NewInteractionEventReadRepository(driver, neo4jDatabase),
 		InteractionEventWriteRepository:       NewInteractionEventWriteRepository(driver, neo4jDatabase),
 		InteractionSessionReadRepository:      NewInteractionSessionReadRepository(driver, neo4jDatabase),

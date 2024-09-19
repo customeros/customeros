@@ -22,7 +22,7 @@ type FlowService interface {
 	FlowMerge(ctx context.Context, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
 	FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error)
 
-	FlowActionGetList(ctx context.Context, sequenceIds []string) (*neo4jentity.FlowActionEntities, error)
+	FlowActionGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowActionEntities, error)
 	FlowActionGetById(ctx context.Context, id string) (*neo4jentity.FlowActionEntity, error)
 	FlowActionMerge(ctx context.Context, sequenceId string, entity *neo4jentity.FlowActionEntity) (*neo4jentity.FlowActionEntity, error)
 	FlowActionChangeIndex(ctx context.Context, id string, index int64) error
