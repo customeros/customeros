@@ -30,16 +30,16 @@ export const FlowSequencesTableActions = ({
 
   const onOpenCommandK = () => {
     if (selection.length === 1) {
-      store.ui.commandMenu.setType('OpportunityCommands');
+      store.ui.commandMenu.setType('FlowCommands');
       store.ui.commandMenu.setContext({
-        entity: 'Contact',
+        entity: 'Flow',
         ids: selection,
       });
       store.ui.commandMenu.setOpen(true);
     } else {
-      store.ui.commandMenu.setType('OpportunityBulkCommands');
+      store.ui.commandMenu.setType('FlowsBulkCommands');
       store.ui.commandMenu.setContext({
-        entity: 'Contact',
+        entity: 'Flows',
         ids: selection,
       });
       store.ui.commandMenu.setOpen(true);
@@ -47,16 +47,16 @@ export const FlowSequencesTableActions = ({
   };
 
   const handleOpen = (type: CommandMenuType, property?: string) => {
-    if (selection?.length >= 1) {
+    if (selection?.length > 1) {
       store.ui.commandMenu.setContext({
         ids: selection,
-        entity: 'Opportunity',
+        entity: 'Flows',
         property: property,
       });
     } else {
       store.ui.commandMenu.setContext({
         ids: [focusedId || ''],
-        entity: 'Opportunity',
+        entity: 'Flow',
         property: property,
       });
     }
