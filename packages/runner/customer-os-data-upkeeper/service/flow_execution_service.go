@@ -49,7 +49,6 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 	span.LogFields(log.Int("actionsToExecute.count", len(actionsToExecute)))
 
 	for _, actionExecutionNode := range actionsToExecute {
-		// Do something with the action
 		actionExecution := neo4jmapper.MapDbNodeToFlowActionExecutionEntity(actionExecutionNode)
 
 		err := s.processActionExecution(ctx, actionExecution)

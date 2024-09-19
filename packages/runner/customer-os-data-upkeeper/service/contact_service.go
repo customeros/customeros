@@ -25,11 +25,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventbuffer"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
 	"net/http"
-	"sync"
 	"time"
 )
 
@@ -39,7 +39,8 @@ type ContactService interface {
 	EnrichWithWorkEmailFromBetterContact()
 	CheckBetterContactRequestsWithoutResponse()
 	EnrichContacts()
-	SyncWeConnectContacts()
+	AskForLinkedInConnections()
+	ProcessLinkedInConnections()
 	LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 }
 
@@ -254,11 +255,18 @@ func (s *contactService) CheckBetterContactRequestsWithoutResponse() {
 	s.checkBetterContactRequestsWithoutResponse(ctx)
 }
 
-func (s *contactService) SyncWeConnectContacts() {
+func (s *contactService) AskForLinkedInConnections() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	s.syncWeConnectContacts(ctx)
+	s.askForLinkedInConnections(ctx)
+}
+
+func (s *contactService) ProcessLinkedInConnections() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	s.processLinkedInConnections(ctx)
 }
 
 func (s *contactService) LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn() {
@@ -266,31 +274,6 @@ func (s *contactService) LinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn()
 	defer cancel()
 
 	s.linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx)
-}
-
-type WeConnectContactResponse struct {
-	Linkedin           string `json:"linkedin"`
-	LinkedinProfileUrl string `json:"linkedin_profile_url"`
-	Name               string `json:"name"`
-	Type               string `json:"type"`
-	FirstName          string `json:"first_name"`
-	LastName           string `json:"last_name"`
-	Company            string `json:"company"`
-	Title              string `json:"title"`
-	Industry           string `json:"industry"`
-	Email              string `json:"email"`
-	Education          string `json:"education"`
-	Location           string `json:"location"`
-	Connections        string `json:"connections"`
-	Experience         []struct {
-		Name  string `json:"name"`
-		Title string `json:"title"`
-	} `json:"experience"`
-	Campaigns []string `json:"campaigns"`
-	//CustomFields         []interface{} `json:"custom_fields"`
-	ConnectedAt          string `json:"connected_at"`
-	TimestampConnectedAt int    `json:"timestamp_connected_at"`
-	Id                   string `json:"id"`
 }
 
 type BetterContactRequestBody struct {
@@ -312,201 +295,183 @@ type BetterContactResponseBody struct {
 	Message string `json:"message"`
 }
 
-func (s *contactService) syncWeConnectContacts(c context.Context) {
-	parentSpan, ctx := tracing.StartTracerSpan(c, "ContactService.syncWeConnectContacts")
-	defer parentSpan.Finish()
-	tracing.TagComponentCronJob(parentSpan)
+func (s *contactService) askForLinkedInConnections(c context.Context) {
+	span, ctx := tracing.StartTracerSpan(c, "ContactService.askForLinkedInConnections")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
-	weConnectIntegrations, err := s.commonServices.PostgresRepositories.PersonalIntegrationRepository.FindActivesByIntegration(c, "weconnect")
+	linkedinTokens, err := s.commonServices.PostgresRepositories.BrowserConfigRepository.Get(ctx)
 	if err != nil {
-		tracing.TraceErr(parentSpan, err)
+		tracing.TraceErr(span, err)
 		return
 	}
 
-	parentSpan.LogFields(log.Int("integrationsCount", len(weConnectIntegrations)))
+	span.LogFields(log.Int("linkedinTokens", len(linkedinTokens)))
 
-	var waitGroup sync.WaitGroup
-	waitGroup.Add(len(weConnectIntegrations))
-
-	for _, integration := range weConnectIntegrations {
-		go func(parentCtx context.Context, integration entity.PersonalIntegration) {
-			defer waitGroup.Done()
-
-			span, ctx := tracing.StartTracerSpan(parentCtx, "ContactService.syncWeConnectContacts.thread")
-			defer span.Finish()
-
-			tenant := integration.TenantName
-			tracing.TagTenant(span, tenant)
-			span.LogFields(log.String("integrationEmail", integration.Email))
-
-			useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, integration.Email)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "UserReadRepository.GetFirstUserByEmail"))
-				return
-			}
-
-			var userId string
-
-			if useByEmailNode != nil {
-				userProps := utils.GetPropsFromNode(*useByEmailNode)
-				userId = utils.GetStringPropOrEmpty(userProps, "id")
-			}
-
-			page := 0
-
-			total := 0
-			skippedEmptyEmail := 0
-			skippedExisting := 0
-			created := 0
-			addedSocial := 0
-
-			for {
-				select {
-				case <-ctx.Done():
-					s.log.Infof("Context cancelled, stopping")
-					return
-				default:
-					// continue as normal
-				}
-
-				// Create new request
-				req, err := http.NewRequest("GET", "https://api-us-1.we-connect.io/api/v1/connections?api_key="+integration.Secret+"&page="+fmt.Sprintf("%d", page), nil)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "http.NewRequest"))
-					span.LogFields(log.Int("failedPageNumber", page))
-					return
-				}
-
-				req.Header.Add("Content-Type", "application/json")
-
-				responseBody, err := s.callWeconnectHttpAndReturnResponseBody(req)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "callWeconnectHttpAndReturnResponseBody"))
-					span.LogFields(log.Int("failedPageNumber", page))
-					s.log.Errorf("Error calling weconnect: %s", err.Error())
-					return
-				}
-
-				contactList := make([]WeConnectContactResponse, 0)
-
-				// Convert response to map
-				err = json.Unmarshal(responseBody, &contactList)
-				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "json.Unmarshal"))
-					span.LogFields(log.Int("failedPageNumber", page))
-					truncatedResponseBody := string(responseBody)[:min(len(string(responseBody)), 8192)]
-					span.LogFields(log.String("responseBody", truncatedResponseBody))
-					s.log.Errorf("Error unmarshalling weconnect response: {%s}", string(responseBody))
-					return
-				}
-
-				if len(contactList) == 0 {
-					break
-				} else {
-					page++
-					total += len(contactList)
-				}
-
-				for _, contact := range contactList {
-
-					linkedinProfileUrl := contact.LinkedinProfileUrl
-					if linkedinProfileUrl != "" && linkedinProfileUrl[len(linkedinProfileUrl)-1] != '/' {
-						linkedinProfileUrl = linkedinProfileUrl + "/"
-					}
-
-					linkedinProfileUrl = utils.NormalizeString(linkedinProfileUrl)
-
-					contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "ContactReadRepository.GetContactsWithSocialUrl"))
-						return
-					}
-
-					var contactIds []string
-					if len(contactsWithLinkedin) == 0 {
-						created++
-						contactInput := cosModel.ContactInput{
-							FirstName: &contact.FirstName,
-							LastName:  &contact.LastName,
-							SocialURL: &linkedinProfileUrl,
-							ExternalReference: &cosModel.ExternalSystemReferenceInput{
-								Type:       "WECONNECT",
-								ExternalID: contact.Id,
-							},
-						}
-
-						contactId, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
-						if err != nil {
-							tracing.TraceErr(span, errors.Wrap(err, "CreateContact"))
-							return
-						}
-						contactIds = append(contactIds, contactId)
-					} else {
-						for _, contactWithLinkedin := range contactsWithLinkedin {
-							contactId := utils.GetStringPropOrEmpty(contactWithLinkedin.Props, "id")
-							contactIds = append(contactIds, contactId)
-						}
-					}
-
-					//link contacts to user
-					if userId != "" {
-						for _, cid := range contactIds {
-
-							isLinkedWith, err := s.commonServices.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, cid, model.CONTACT, "CONNECTED_WITH", userId, model.USER)
-							if err != nil {
-								tracing.TraceErr(span, errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
-								return
-							}
-
-							if !isLinkedWith {
-								evt := generic.LinkEntityWithEntity{
-									BaseEvent: event.BaseEvent{
-										EventName:  generic.LinkEntityWithEntityV1,
-										Tenant:     tenant,
-										CreatedAt:  utils.Now(),
-										AppSource:  constants.AppSourceDataUpkeeper,
-										Source:     "WECONNECT",
-										EntityId:   cid,
-										EntityType: model.CONTACT,
-									},
-									WithEntityId:   userId,
-									WithEntityType: model.USER,
-									Relationship:   "CONNECTED_WITH",
-								}
-
-								err = s.eventBufferService.ParkBaseEvent(ctx, &evt, tenant, utils.Now().Add(time.Minute*1))
-								if err != nil {
-									tracing.TraceErr(span, errors.Wrap(err, "ParkBaseEvent"))
-									return
-								}
-							}
-						}
-					}
-
-				}
-
-			}
-
-			span.LogFields(log.Int("total", total), log.Int("created", created), log.Int("addedSocial", addedSocial), log.Int("skippedEmptyEmail", skippedEmptyEmail), log.Int("skippedExisting", skippedExisting))
-		}(ctx, *integration)
+	for _, linkedinToken := range linkedinTokens {
+		//todo check if there is already a scheduled job for this token today
+		err := s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.Add(ctx, entity.BrowserAutomationsRun{
+			BrowserConfigId: linkedinToken.Id,
+			UserId:          linkedinToken.UserId,
+			Tenant:          linkedinToken.Tenant,
+			Type:            "FIND_CONNECTIONS",
+			Status:          "SCHEDULED",
+			Payload:         "\"\"",
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			break
+		}
 	}
 
-	waitGroup.Wait()
 }
 
-func (s *contactService) callWeconnectHttpAndReturnResponseBody(req *http.Request) ([]byte, error) {
-	client := &http.Client{}
-	res, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	defer res.Body.Close()
+func (s *contactService) processLinkedInConnections(c context.Context) {
+	span, ctx := tracing.StartTracerSpan(c, "ContactService.processLinkedInConnections")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
 
-	responseBody, err := io.ReadAll(res.Body)
+	automationsRuns, err := s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.Get(ctx, "FIND_CONNECTIONS", "COMPLETED")
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return
 	}
-	return responseBody, nil
+
+	span.LogFields(log.Int("processing", len(automationsRuns)))
+
+	for _, automationRun := range automationsRuns {
+		s.processAutomationRunResult(ctx, automationRun)
+	}
+}
+
+func (s *contactService) processAutomationRunResult(c context.Context, automationRun entity.BrowserAutomationsRun) {
+	span, ctx := opentracing.StartSpanFromContext(c, "ContactService.processAutomationRunResult")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	result, err := s.commonServices.PostgresRepositories.BrowserAutomationRunResultRepository.Get(ctx, automationRun.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	if result == nil || result.ResultData == "" {
+		span.LogFields(log.String("results", "empty"))
+		return
+	}
+
+	useByEmailNode, err := s.commonServices.Neo4jRepositories.UserReadRepository.GetUserById(ctx, automationRun.Tenant, automationRun.UserId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "UserReadRepository.GetUserById"))
+		return
+	}
+	if useByEmailNode == nil {
+		tracing.TraceErr(span, errors.Wrap(err, "User does not exist"))
+		return
+	}
+
+	var results []string
+
+	err = json.Unmarshal([]byte(result.ResultData), &results)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	span.LogFields(log.Int("results", len(results)))
+
+	tenant := automationRun.Tenant
+	userId := automationRun.UserId
+
+	for _, linkedinUrl := range results {
+		err := s.processLinkedInUrl(ctx, tenant, linkedinUrl, userId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+	}
+
+	err = s.commonServices.PostgresRepositories.BrowserAutomationRunRepository.MarkAsProcessed(ctx, automationRun.Id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+}
+
+func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedinUrl, userId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.processLinkedInUrl")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	linkedinProfileUrl := linkedinUrl
+	if linkedinProfileUrl != "" && linkedinProfileUrl[len(linkedinProfileUrl)-1] != '/' {
+		linkedinProfileUrl = linkedinProfileUrl + "/"
+	}
+
+	linkedinProfileUrl = utils.NormalizeString(linkedinProfileUrl)
+
+	contactsWithLinkedin, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithSocialUrl(ctx, tenant, linkedinProfileUrl)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "ContactReadRepository.GetContactsWithSocialUrl"))
+		return err
+	}
+
+	var contactIds []string
+	if len(contactsWithLinkedin) == 0 {
+		contactInput := cosModel.ContactInput{
+			SocialURL: &linkedinProfileUrl,
+		}
+
+		contactId, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "CreateContact"))
+			return err
+		}
+		contactIds = append(contactIds, contactId)
+	} else {
+		for _, contactWithLinkedin := range contactsWithLinkedin {
+			contactId := utils.GetStringPropOrEmpty(contactWithLinkedin.Props, "id")
+			contactIds = append(contactIds, contactId)
+		}
+	}
+
+	//link contacts to user
+	if userId != "" {
+		for _, cid := range contactIds {
+
+			isLinkedWith, err := s.commonServices.Neo4jRepositories.CommonReadRepository.IsLinkedWith(ctx, tenant, cid, model.CONTACT, "CONNECTED_WITH", userId, model.USER)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "CommonReadRepository.IsLinkedWith"))
+				return err
+			}
+
+			if !isLinkedWith {
+				evt := generic.LinkEntityWithEntity{
+					BaseEvent: event.BaseEvent{
+						EventName:  generic.LinkEntityWithEntityV1,
+						Tenant:     tenant,
+						CreatedAt:  utils.Now(),
+						AppSource:  constants.AppSourceDataUpkeeper,
+						Source:     "WECONNECT",
+						EntityId:   cid,
+						EntityType: model.CONTACT,
+					},
+					WithEntityId:   userId,
+					WithEntityType: model.USER,
+					Relationship:   "CONNECTED_WITH",
+				}
+
+				err = s.eventBufferService.ParkBaseEvent(ctx, &evt, tenant, utils.Now().Add(time.Minute*1))
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "ParkBaseEvent"))
+					return err
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(ctx context.Context) {

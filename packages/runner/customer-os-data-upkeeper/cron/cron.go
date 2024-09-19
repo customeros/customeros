@@ -9,22 +9,23 @@ import (
 )
 
 const (
-	organizationGroup          = "organization"
-	contractGroup              = "contract"
-	orphanContactsGroup        = "orphanContactsGroup"
-	invoiceGroup               = "invoice"
-	refreshLastTouchpointGroup = "refreshLastTouchpoint"
-	currencyGroup              = "currency"
-	linkUnthreadIssuesGroup    = "linkUnthreadIssues"
-	contactGroup               = "contact"
-	contactEnrichGroup         = "contactEnrich"
-	contactBettercontactGroup  = "contactEnrichWithBettercontact"
-	contactWeconnectGroup      = "contactWeconnect"
-	apiCacheGroup              = "api_cache"
-	workflowGroup              = "workflow"
-	emailGroup                 = "email"
-	emailBulkValidationGroup   = "emailBulkValidation"
-	flowExecutionGroup         = "flowExecutionGroup"
+	organizationGroup               = "organization"
+	contractGroup                   = "contract"
+	orphanContactsGroup             = "orphanContactsGroup"
+	invoiceGroup                    = "invoice"
+	refreshLastTouchpointGroup      = "refreshLastTouchpoint"
+	currencyGroup                   = "currency"
+	linkUnthreadIssuesGroup         = "linkUnthreadIssues"
+	contactGroup                    = "contact"
+	contactEnrichGroup              = "contactEnrich"
+	contactBettercontactGroup       = "contactEnrichWithBettercontact"
+	askForLinkedInConnectionsGroup  = "askForLinkedInConnectionsGroup"
+	processLinkedInConnectionsGroup = "processLinkedInConnectionsGroup"
+	apiCacheGroup                   = "api_cache"
+	workflowGroup                   = "workflow"
+	emailGroup                      = "email"
+	emailBulkValidationGroup        = "emailBulkValidation"
+	flowExecutionGroup              = "flowExecutionGroup"
 )
 
 var jobLocks = struct {
@@ -32,22 +33,23 @@ var jobLocks = struct {
 	locks map[string]*sync.Mutex
 }{
 	locks: map[string]*sync.Mutex{
-		organizationGroup:          {},
-		contactGroup:               {},
-		contactBettercontactGroup:  {},
-		contactWeconnectGroup:      {},
-		contactEnrichGroup:         {},
-		orphanContactsGroup:        {},
-		contractGroup:              {},
-		invoiceGroup:               {},
-		refreshLastTouchpointGroup: {},
-		currencyGroup:              {},
-		linkUnthreadIssuesGroup:    {},
-		apiCacheGroup:              {},
-		workflowGroup:              {},
-		emailGroup:                 {},
-		emailBulkValidationGroup:   {},
-		flowExecutionGroup:         {},
+		organizationGroup:               {},
+		contactGroup:                    {},
+		contactBettercontactGroup:       {},
+		askForLinkedInConnectionsGroup:  {},
+		processLinkedInConnectionsGroup: {},
+		contactEnrichGroup:              {},
+		orphanContactsGroup:             {},
+		contractGroup:                   {},
+		invoiceGroup:                    {},
+		refreshLastTouchpointGroup:      {},
+		currencyGroup:                   {},
+		linkUnthreadIssuesGroup:         {},
+		apiCacheGroup:                   {},
+		workflowGroup:                   {},
+		emailGroup:                      {},
+		emailBulkValidationGroup:        {},
+		flowExecutionGroup:              {},
 	},
 }
 
@@ -174,11 +176,18 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkBetterContactRequestsWithoutResponseJob", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleWeConnectSyncContacts, func() {
-		lockAndRunJob(cont, contactWeconnectGroup, weConnectContacts)
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForLinkedInConnections, func() {
+		lockAndRunJob(cont, askForLinkedInConnectionsGroup, askForLinkedInConnections)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "weConnectContacts", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "triggerAskLinkedInConnections", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessLinkedInConnections, func() {
+		lockAndRunJob(cont, processLinkedInConnectionsGroup, processLinkedInConnections)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "syncLinkedInConnections", err.Error())
 	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContacts, func() {
@@ -287,8 +296,12 @@ func checkBetterContactRequestsWithoutResponseJob(cont *container.Container) {
 	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).CheckBetterContactRequestsWithoutResponse()
 }
 
-func weConnectContacts(cont *container.Container) {
-	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).SyncWeConnectContacts()
+func askForLinkedInConnections(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).AskForLinkedInConnections()
+}
+
+func processLinkedInConnections(cont *container.Container) {
+	service.NewContactService(cont.Cfg, cont.Log, cont.CommonServices, cont.CustomerOSApiClient, cont.EventBufferStoreService).ProcessLinkedInConnections()
 }
 
 func enrichContacts(cont *container.Container) {

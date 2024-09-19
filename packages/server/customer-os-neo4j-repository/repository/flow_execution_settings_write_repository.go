@@ -31,21 +31,23 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	cypher := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Flow_%s {id: $flowId})
 			MERGE (t)<-[:BELONGS_TO_TENANT]-(fes:FlowExecutionSettings:FlowExecutionSettings_%s {id: $id})<-[:HAS]-(f)
 			ON MATCH SET
-				fes.updatedAt = $updatedAt,
+				fes.updatedAt = $updatedAt
 			ON CREATE SET
 				fes.createdAt = $createdAt,
 				fes.updatedAt = $updatedAt,
 				fes.flowId = $flowId,
 				fes.entityId = $entityId,
 				fes.mailbox = $mailbox
-			RETURN fae`, common.GetTenantFromContext(ctx))
+			RETURN fes`, tenant, tenant)
 
 	params := map[string]any{
-		"tenant":    common.GetTenantFromContext(ctx),
+		"tenant":    tenant,
 		"id":        entity.Id,
 		"createdAt": utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),

@@ -14,7 +14,7 @@ import (
 )
 
 type FlowWriteRepository interface {
-	Merge(ctx context.Context, entity *entity.FlowEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowEntity) (*dbtype.Node, error)
 }
 
 type flowWriteRepositoryImpl struct {
@@ -26,7 +26,7 @@ func NewFlowWriteRepository(driver *neo4j.DriverWithContext, database string) Fl
 	return &flowWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.FlowEntity) (*dbtype.Node, error) {
+func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -63,16 +63,29 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.Flow
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
+	if tx == nil {
+		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+		defer session.Close(ctx)
 
-	return result.(*dbtype.Node), nil
+		queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			qr, err := tx.Run(ctx, cypher, params)
+			if err != nil {
+				return nil, err
+			}
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return queryResult.(*neo4j.Node), nil
+	} else {
+		queryResult, err := (*tx).Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}
 }

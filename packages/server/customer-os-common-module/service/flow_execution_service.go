@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-const numberOfEmailsPerDay = 5
+const numberOfEmailsPerDay = 2
 const minMinutesBetweenEmails = int(5)
 const maxMinutesBetweenEmails = int(10)
 
@@ -81,8 +81,6 @@ func (s *flowExecutionService) ScheduleFlowForContact(ctx context.Context, tx *n
 		if len(*actionList) > 0 {
 			nextAction = &(*actionList)[0]
 		}
-
-		return nil
 	} else {
 
 		// Get the last executed action
@@ -180,6 +178,10 @@ func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4
 			return err
 		}
 
+		if fastestMailbox == nil {
+			fastestMailbox = &availableMailboxes[0]
+		}
+
 		id, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowExecutionSettings)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -201,13 +203,13 @@ func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4
 	}
 
 	// 2. Schedule the email action
-	actualScheduleAt, err := s.getFirstAvailableSlotForMailbox(ctx, *flowExecutionSettings.Mailbox, scheduleAt)
+	actualScheduleAt, err := s.getFirstAvailableSlotForMailbox(ctx, tx, *flowExecutionSettings.Mailbox, scheduleAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	err = s.StoreNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, contactId, *actualScheduleAt)
+	err = s.StoreNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, contactId, flowExecutionSettings.Mailbox, *actualScheduleAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -216,7 +218,7 @@ func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4
 	return nil
 }
 
-func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, mailbox string, scheduleAt time.Time) (*time.Time, error) {
+func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, scheduleAt time.Time) (*time.Time, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getFirstAvailableSlotForMailbox")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -224,7 +226,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	startDate := utils.StartOfDayInUTC(scheduleAt)
 	endDate := utils.EndOfDayInUTC(scheduleAt)
 
-	emailsScheduledAlready, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay(ctx, mailbox, startDate, endDate)
+	emailsScheduledAlready, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay(ctx, tx, mailbox, startDate, endDate)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -234,7 +236,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 		// If the mailbox has already reached the daily limit, schedule the next email for the next day
 		scheduleAt = startDate.Add(24 * time.Hour)
 		// todo break recursive based on index or smth
-		return s.getFirstAvailableSlotForMailbox(ctx, mailbox, scheduleAt)
+		return s.getFirstAvailableSlotForMailbox(ctx, tx, mailbox, scheduleAt)
 	} else {
 		lastScheduledExecutionNode, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetLastScheduledForMailbox(ctx, mailbox)
 		if err != nil {
@@ -274,7 +276,7 @@ func (s *flowExecutionService) getMailboxForContact(ctx context.Context, flowId,
 	return mapper.MapDbNodeToFlowExecutionSettingsEntity(node), nil
 }
 
-func (s *flowExecutionService) StoreNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId, contactId string, executionTime time.Time) error {
+func (s *flowExecutionService) StoreNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId, contactId string, mailbox *string, executionTime time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.StoreNextActionExecutionEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -293,6 +295,7 @@ func (s *flowExecutionService) StoreNextActionExecutionEntity(ctx context.Contex
 		FlowId:      flowId,
 		ActionId:    actionId,
 		ContactId:   contactId,
+		Mailbox:     mailbox,
 		ScheduledAt: executionTime,
 		Status:      entity.FlowActionExecutionStatusPending,
 	}
