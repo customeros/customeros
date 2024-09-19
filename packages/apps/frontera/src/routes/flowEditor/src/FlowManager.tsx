@@ -36,7 +36,7 @@ import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01.tsx';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml.ts';
 
 import SidePanel from './SidePanel';
-import { TimeTriggerEdge } from './edges';
+import { BasicEdge } from './edges';
 
 import '@xyflow/react/dist/style.css';
 
@@ -114,7 +114,7 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-  triggerEdge: TimeTriggerEdge,
+  triggerEdge: BasicEdge,
 };
 
 export const MarketingFlowBuilder = () => {

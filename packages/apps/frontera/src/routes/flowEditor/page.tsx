@@ -13,6 +13,7 @@ import {
   MarkerType,
   useNodesState,
   useEdgesState,
+  ReactFlowProvider,
 } from '@xyflow/react';
 
 import { Select } from '@ui/form/Select';
@@ -27,6 +28,8 @@ import { Editor } from '@ui/form/Editor/Editor.tsx';
 import { Mail01 } from '@ui/media/icons/Mail01.tsx';
 import { Users01 } from '@ui/media/icons/Users01.tsx';
 import { Input, ResizableInput } from '@ui/form/Input';
+import { PieChart03 } from '@ui/media/icons/PieChart03.tsx';
+import { Dataflow03 } from '@ui/media/icons/Dataflow03.tsx';
 import { UserPlus01 } from '@ui/media/icons/UserPlus01.tsx';
 import { Hourglass02 } from '@ui/media/icons/Hourglass02.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
@@ -36,7 +39,7 @@ import { MessageTextSquare01 } from '@ui/media/icons/MessageTextSquare01.tsx';
 import { convertPlainTextToHtml } from '@ui/form/Editor/utils/convertPlainTextToHtml.ts';
 
 import SidePanel from './src/SidePanel';
-import { TimeTriggerEdge } from './src/edges';
+import { BasicEdge } from './src/edges';
 
 import '@xyflow/react/dist/style.css';
 
@@ -103,6 +106,7 @@ const EmailNode = ({ data }) => (
 
 const nodeTypes = {
   startNode: StartNode,
+  step: StartNode,
 
   emailNode: (props) => <EmailNode {...props} type='Email' />,
   linkedInMessageNode: (props) => (
@@ -114,7 +118,7 @@ const nodeTypes = {
 };
 
 const edgeTypes = {
-  triggerEdge: TimeTriggerEdge,
+  baseEdge: BasicEdge,
 };
 
 export const MarketingFlowBuilder = () => {
@@ -152,7 +156,7 @@ export const MarketingFlowBuilder = () => {
         addEdge(
           {
             ...params,
-            type: 'triggerEdge',
+            type: 'baseEdge',
             data: edgeData,
             style: { strokeWidth: 2 },
             markerEnd: { type: MarkerType.Arrow },
@@ -211,68 +215,92 @@ export const MarketingFlowBuilder = () => {
   });
 
   return (
-    <div className='flex h-full'>
-      <ReactFlow
-        fitView
-        nodes={nodes}
-        edges={edges}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onEdgeDoubleClick={(_, edge) => editEdge(edge)}
-        onNodeDoubleClick={(_, node) => editNode(node?.id)}
-      >
-        <div className='bg-white px-10 h-14 border-b flex items-center text-base font-bold'>
-          <span className='font-medium text-gray-500'>Flows</span>
-          <ChevronRight className='size-4 mx-1.5 text-gray-500' />
-          <span className='mr-2'>Waitlist</span>
-          <Tag
-            size='md'
-            variant='outline'
-            colorScheme='gray'
-            onClick={() => {}}
-            className='bg-transparent py-0.5 cursor-pointer text-gray-500'
-          >
-            <TagLeftIcon>
-              <Users01 />
-            </TagLeftIcon>
-            <TagLabel>4 contacts</TagLabel>
-          </Tag>
-        </div>
-        <Background />
-        <Controls />
-        <MiniMap />
-        <Panel position='bottom-center'>
-          <ButtonGroup className='bg-white'>
-            <IconButton
-              icon={<Mail01 />}
-              aria-label='Add Email'
-              onClick={() => addNode('emailNode')}
-            />
-            <IconButton
-              icon={<MessageTextSquare01 />}
-              aria-label='Send LinkedIn Message'
-              onClick={() => addNode('linkedInMessageNode')}
-            />
-            <IconButton
-              icon={<UserPlus01 />}
-              aria-label='Send LinkedIn Invite'
-              onClick={() => addNode('linkedInInviteNode')}
-            />
-          </ButtonGroup>
-        </Panel>
-      </ReactFlow>
-      <SidePanel
-        open={open}
-        nodeId={open}
-        nodes={nodes}
-        edges={edges}
-        setOpen={setOpen}
-        setNodes={setNodes}
-        setEdges={setEdges}
-      />
-    </div>
+    <ReactFlowProvider>
+      <div className='flex h-full'>
+        <ReactFlow
+          fitView
+          nodes={nodes}
+          edges={edges}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodesChange={onNodesChange}
+          onEdgesChange={onEdgesChange}
+          onEdgeDoubleClick={(_, edge) => editEdge(edge)}
+          onNodeDoubleClick={(_, node) => editNode(node?.id)}
+        >
+          {/* HEADER L1 */}
+          <div className='bg-white px-10 h-14 border-b flex items-center text-base font-bold justify-between'>
+            <div className='flex items-center'>
+              <span className='font-medium text-gray-500'>Flows</span>
+              <ChevronRight className='size-4 mx-1.5 text-gray-500' />
+              <span className='mr-2'>Waitlist</span>
+              <Tag
+                size='md'
+                variant='outline'
+                colorScheme='gray'
+                onClick={() => {}}
+                className='bg-transparent py-0.5 cursor-pointer text-gray-500'
+              >
+                <TagLeftIcon>
+                  <Users01 />
+                </TagLeftIcon>
+                <TagLabel>4 contacts</TagLabel>
+              </Tag>
+            </div>
+            <Button
+              size='xs'
+              variant='outline'
+              leftIcon={<Play />}
+              colorScheme='primary'
+            >
+              Start flow
+            </Button>
+          </div>
+          {/* HEADER L2 */}
+          <div className='bg-white px-10 border-b flex items-center text-base font-bold gap-2 py-2'>
+            <Button size='xs' variant='outline' leftIcon={<Dataflow03 />}>
+              Editor
+            </Button>
+            <Button size='xs' variant='ghost' leftIcon={<PieChart03 />}>
+              Report
+            </Button>
+            <Button size='xs' variant='ghost' leftIcon={<Users01 />}>
+              Users
+            </Button>
+          </div>
+          <Background />
+          <Controls />
+          <Panel position='bottom-center'>
+            <ButtonGroup className='bg-white'>
+              <IconButton
+                icon={<Mail01 />}
+                aria-label='Add Email'
+                onClick={() => addNode('emailNode')}
+              />
+              <IconButton
+                icon={<MessageTextSquare01 />}
+                aria-label='Send LinkedIn Message'
+                onClick={() => addNode('linkedInMessageNode')}
+              />
+              <IconButton
+                icon={<UserPlus01 />}
+                aria-label='Send LinkedIn Invite'
+                onClick={() => addNode('linkedInInviteNode')}
+              />
+            </ButtonGroup>
+          </Panel>
+        </ReactFlow>
+        <SidePanel
+          open={open}
+          nodeId={open}
+          nodes={nodes}
+          edges={edges}
+          setOpen={setOpen}
+          setNodes={setNodes}
+          setEdges={setEdges}
+        />
+      </div>
+    </ReactFlowProvider>
   );
 };

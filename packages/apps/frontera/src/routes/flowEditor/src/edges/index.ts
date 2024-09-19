@@ -1,1 +1,1 @@
-export { TimeTriggerEdge } from './TimeTriggerEdge';
+export { BasicEdge } from './BasicEdge.tsx';
