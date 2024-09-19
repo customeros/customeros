@@ -28,13 +28,20 @@ export class AutomationRunnerService {
       await this.runsRepository.updateById(browserAutomationRun.toDTO());
 
       let result;
+      let errorValue;
+
       const payload = BrowserAutomationRun.parsePayload(
         browserAutomationRun.payload,
       );
 
       switch (browserAutomationRun.type) {
         case "FIND_CONNECTIONS":
-          result = await linkedinService.scrapeConnections();
+          const [res, err] = await linkedinService.scrapeConnections();
+          result = res;
+          errorValue = err;
+
+          console.log("aici", err);
+
           break;
         case "SEND_CONNECTION_REQUEST":
           result = await linkedinService.sendInvite(payload);
@@ -50,7 +57,31 @@ export class AutomationRunnerService {
           });
       }
 
-      browserAutomationRun.complete();
+      if (errorValue) {
+        console.log("erroare", errorValue);
+        browserAutomationRun.retry();
+        await this.errorsRepository.insert({
+          runId: browserAutomationRun.id,
+          errorMessage: errorValue.message,
+          errorDetails: errorValue.details,
+          errorCode: errorValue.reference,
+          errorType: errorValue.code,
+        });
+        logger.error("Automation run failed", {
+          error: errorValue.message,
+          details: errorValue.reference ?? errorValue.details,
+          source: "AutomationRunnerService",
+        });
+        if (errorValue.reference === "S001") {
+          await this.configRepository.updateByUserId({
+            userId: browserAutomationRun.userId,
+            tenant: browserAutomationRun.tenant,
+            sessionStatus: "INVALID",
+          });
+        }
+      } else {
+        browserAutomationRun.complete();
+      }
 
       await this.runsRepository.updateById(browserAutomationRun.toDTO());
       await this.resultsRepository.insert({

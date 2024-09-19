@@ -1,4 +1,5 @@
 import { setTimeout } from "timers/promises";
+import { setTimeout as setTimeoutSync } from "timers";
 
 import { Browser } from "../browser";
 import { logger } from "@/infrastructure";
@@ -65,13 +66,13 @@ export class LinkedinAutomationService {
         await sendInviteButton.click();
       }
     } catch (err) {
-      LinkedinAutomationService.handleError(err);
+      throw LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
     }
   }
 
-  async getConnections() {
+  async getConnections(): Promise<[string[], StandardError | undefined]> {
     const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
@@ -81,16 +82,17 @@ export class LinkedinAutomationService {
     const page = await context.newPage();
 
     const goToPage = async (currentPage: number) => {
-      try {
+      return await retry(async () => {
         const url = `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`;
         return await page.goto(url);
-      } catch (err) {
-        LinkedinAutomationService.handleError(err);
-      }
+      });
     };
 
-    const scrapeConnections = async () => {
+    const scrapeConnections = async (): Promise<
+      [string[], StandardError | undefined]
+    > => {
       let accumulator: string[] = [];
+      let error: StandardError | undefined;
 
       // Initial page load
       let currentPage = 1;
@@ -106,7 +108,7 @@ export class LinkedinAutomationService {
       const lastPage = parseInt(lastPageBtn?.trim() ?? "1");
 
       while (currentPage <= lastPage) {
-        try {
+        const scrapeCurrentPage = async () => {
           // Wait for results to load on the current page
           const results = page.locator(
             "ul.reusable-search__entity-result-list",
@@ -128,12 +130,17 @@ export class LinkedinAutomationService {
                     ),
                 )
                 .map((link) => link.getAttribute("href") ?? "")
-                .filter((href) => href.includes("/in/"));
+                .filter((href) => href.includes("/in/"))
+                .map((raw) => raw.split("?")[0] + "/");
 
               return Array.from(new Set(hrefs)); // Remove duplicates
             });
 
           accumulator = [...accumulator, ...current];
+        };
+
+        try {
+          await retry(scrapeCurrentPage);
 
           const delayTime = Math.floor(Math.random() * 3000) + 2000;
           await setTimeout(delayTime);
@@ -142,20 +149,23 @@ export class LinkedinAutomationService {
           if (currentPage <= lastPage) {
             await goToPage(currentPage);
           }
-        } catch (error) {
-          console.error(`Error scraping page ${currentPage}:`, error);
+        } catch (err) {
+          error = LinkedinAutomationService.handleError(err);
+          logger.error(`Error scraping page ${currentPage}`, {
+            source: "LinkedinAutomationService",
+          });
+
           break;
         }
       }
 
-      return accumulator;
+      return [accumulator, error];
     };
 
     try {
-      const connectionUrls = await scrapeConnections();
-      return connectionUrls;
+      return await scrapeConnections();
     } catch (err) {
-      LinkedinAutomationService.handleError(err);
+      throw LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
     }
@@ -193,13 +203,13 @@ export class LinkedinAutomationService {
         await sendButton.click();
       }
     } catch (err) {
-      LinkedinAutomationService.handleError(err);
+      throw LinkedinAutomationService.handleError(err);
     } finally {
       await page.close();
     }
   }
 
-  private static handleError(err: unknown) {
+  private static handleError(err: unknown): StandardError {
     const error = ErrorParser.parse(err);
 
     const isTooManyRedirectsErr = error.details?.includes(
@@ -221,7 +231,7 @@ export class LinkedinAutomationService {
         source: "LinkedinAutomationService",
       });
 
-      throw tooManyRedirects;
+      return tooManyRedirects;
     }
 
     logger.error("Error in LinkedinAutomationService", {
@@ -229,6 +239,36 @@ export class LinkedinAutomationService {
       details: error.details,
       source: "LinkedinAutomationService",
     });
-    throw error;
+
+    return error;
   }
 }
+
+const retry = async (
+  fn: () => Promise<any>,
+  retries: number = 4,
+  delay: number = 1000,
+) => {
+  let attempt = 0;
+  while (attempt < retries) {
+    try {
+      return await fn();
+    } catch (err) {
+      attempt++;
+      if (attempt >= retries) {
+        throw err; // If all retries fail, throw the error
+      }
+
+      const exponentialBackoff = delay * Math.pow(2, attempt);
+      logger.info(
+        `Retrying after ${exponentialBackoff}ms... (${attempt}/${retries})`,
+        {
+          source: "LinkedinAutomationService",
+        },
+      );
+      await new Promise((resolve) =>
+        setTimeoutSync(resolve, exponentialBackoff),
+      );
+    }
+  }
+};
