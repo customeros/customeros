@@ -315,8 +315,9 @@ input OrganizationUpdateInput {
 
 input LinkOrganizationsInput {
     organizationId: ID!
-    subsidiaryId: ID!
-    type: String
+    subsidiaryId:   ID!
+    type:           String
+    removeExisting: Boolean
 }
 
 input OnboardingStatusInput {

@@ -1571,6 +1571,7 @@ type LinkOrganizationsInput struct {
 	OrganizationID string  `json:"organizationId"`
 	SubsidiaryID   string  `json:"subsidiaryId"`
 	Type           *string `json:"type,omitempty"`
+	RemoveExisting *bool   `json:"removeExisting,omitempty"`
 }
 
 type LinkedOrganization struct {
