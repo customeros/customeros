@@ -2102,6 +2102,7 @@ export enum LastTouchpointType {
 
 export type LinkOrganizationsInput = {
   organizationId: Scalars['ID']['input'];
+  removeExisting?: InputMaybe<Scalars['Boolean']['input']>;
   subsidiaryId: Scalars['ID']['input'];
   type?: InputMaybe<Scalars['String']['input']>;
 };
