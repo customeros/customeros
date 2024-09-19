@@ -3,8 +3,8 @@ import type { RootStore } from '@store/root';
 import { Channel } from 'phoenix';
 import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { Store, makeAutoSyncable } from '@store/store';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
 import { FlowContactsService } from '@store/FlowContacts/__service__';
 
@@ -42,7 +42,7 @@ export class FlowContactStore implements Store<FlowContact> {
   }
 
   get contact() {
-    return this.root.contacts.value.get(this.value.contact?.metadata?.id);
+    return this.root.contacts.value.get(this.value.contact.metadata.id);
   }
 
   setId(id: string) {
@@ -60,14 +60,13 @@ export class FlowContactStore implements Store<FlowContact> {
   public deleteFlowContact = async () => {
     this.isLoading = true;
 
+    const contactStore = this.contact;
+
     const flowName = this.contact?.flow?.value.name;
 
     try {
       await this.removeFlowContact();
-
       runInAction(() => {
-        const contactStore = this.contact;
-
         contactStore?.update(
           (c) => {
             c.flows = [];
@@ -76,6 +75,7 @@ export class FlowContactStore implements Store<FlowContact> {
           },
           { mutate: false },
         );
+
         this.root.ui.toastSuccess(
           `Contact removed from '${flowName}'`,
           'unlink-contact-from-flow-success',

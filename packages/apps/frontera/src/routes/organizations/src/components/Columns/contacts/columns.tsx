@@ -10,6 +10,7 @@ import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import { CountryCell } from '@organizations/components/Columns/Cells/country';
 import { TextCell } from '@organizations/components/Columns/shared/Cells/TextCell';
 import { JobTitleCell } from '@organizations/components/Columns/contacts/Cells/jobTitle';
+import { ContactFlowCell } from '@organizations/components/Columns/contacts/Cells/contactFlow';
 import {
   User,
   Social,
@@ -619,9 +620,7 @@ const columns: Record<string, Column> = {
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
-      const flow = props.row.original.flow?.value?.name ?? '';
-
-      return <TextCell text={flow} unknownText='None' />;
+      return <ContactFlowCell contactId={props.row.original.id} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
