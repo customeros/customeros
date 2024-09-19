@@ -612,8 +612,8 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
-  [ColumnViewType.ContactsSequences]: columnHelper.accessor((row) => row, {
-    id: ColumnViewType.ContactsSequences,
+  [ColumnViewType.ContactsFlows]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.ContactsFlows,
     minSize: 170,
     maxSize: 600,
     enableResizing: true,
@@ -626,7 +626,7 @@ const columns: Record<string, Column> = {
       <THead<HTMLInputElement>
         title='Current Flow'
         filterWidth='17.5rem'
-        id={ColumnViewType.ContactsSequences}
+        id={ColumnViewType.ContactsFlows}
         renderFilter={(initialFocusRef) => (
           <FlowsFilter
             placeholder='e.g. Aerospace CTO'

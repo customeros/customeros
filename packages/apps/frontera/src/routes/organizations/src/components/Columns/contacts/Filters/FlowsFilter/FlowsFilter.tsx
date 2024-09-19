@@ -20,7 +20,7 @@ interface ContactFilterProps {
 }
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.ContactsSequences,
+  property: ColumnViewType.ContactsFlows,
   value: [],
   active: false,
   caseSensitive: false,
