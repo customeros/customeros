@@ -55,7 +55,7 @@ export const UnlinkContactFromFlow = observer(() => {
       ? `Removing ${context.ids?.length} contacts will end their flows`
       : `Removing ${
           (entity as ContactStore)?.value?.name
-        } will end the sequence for them`;
+        } will end the flow for them`;
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -87,7 +87,7 @@ export const UnlinkContactFromFlow = observer(() => {
               }
             }}
           >
-            Remove contacts
+            Remove {context.ids.length === 1 ? 'contact' : 'contacts'}
           </Button>
         </div>
       </article>
