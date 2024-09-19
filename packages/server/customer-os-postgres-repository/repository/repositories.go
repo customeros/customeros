@@ -58,6 +58,9 @@ type Repositories struct {
 	EmailValidationRequestBulkRepository        EmailValidationRequestBulkRepository
 	ApiBillableEventRepository                  ApiBillableEventRepository
 	MailStackDomainRepository                   MailStackDomainRepository
+	BrowserConfigRepository                     BrowserConfigRepository
+	BrowserAutomationRunRepository              BrowserAutomationRunRepository
+	BrowserAutomationRunResultRepository        BrowserAutomationRunResultRepository
 }
 
 func InitRepositories(db *gorm.DB) *Repositories {
@@ -114,6 +117,9 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		EmailValidationRequestBulkRepository:        NewEmailValidationRequestBulkRepository(db),
 		ApiBillableEventRepository:                  NewApiBillableEventRepository(db),
 		MailStackDomainRepository:                   NewMailStackDomainRepository(db),
+		BrowserConfigRepository:                     NewBrowserConfigRepository(db),
+		BrowserAutomationRunRepository:              NewBrowserAutomationRunRepository(db),
+		BrowserAutomationRunResultRepository:        NewBrowserAutomationRunResultRepository(db),
 	}
 
 	return repositories

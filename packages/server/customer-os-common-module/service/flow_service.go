@@ -2,9 +2,11 @@ package service
 
 import (
 	"context"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
@@ -185,7 +187,7 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 	toStore.Name = input.Name
 	toStore.Description = input.Description
 
-	node, err := s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, toStore)
+	node, err := s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, toStore)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -217,9 +219,38 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 		return flow, nil
 	}
 
-	flow.Status = status
+	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
+	defer session.Close(ctx)
 
-	node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, flow)
+	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		//if status == neo4jentity.FlowStatusActive {
+		//	flowContactList, err := s.FlowContactGetList(ctx, []string{flow.Id})
+		//	if err != nil {
+		//		tracing.TraceErr(span, err)
+		//		return nil, err
+		//	}
+		//
+		//	for _, v := range *flowContactList {
+		//		err := s.services.FlowExecutionService.ScheduleFlowForContact(ctx, &tx, flow.Id, v.ContactId)
+		//		if err != nil {
+		//			tracing.TraceErr(span, err)
+		//			return nil, err
+		//		}
+		//	}
+		//}
+
+		flow.Status = status
+
+		node, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, &tx, flow)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -489,12 +520,14 @@ func (s *flowService) FlowActionDelete(ctx context.Context, id string) error {
 	return nil
 }
 
-func (s *flowService) FlowContactGetList(ctx context.Context, sequenceIds []string) (*neo4jentity.FlowContactEntities, error) {
+func (s *flowService) FlowContactGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowContactEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowContactGetList")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	nodes, err := s.services.Neo4jRepositories.FlowContactReadRepository.GetList(ctx, sequenceIds)
+	span.LogFields(log.Object("flowIds", flowIds))
+
+	nodes, err := s.services.Neo4jRepositories.FlowContactReadRepository.GetList(ctx, flowIds)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

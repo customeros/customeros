@@ -32,6 +32,8 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	cypher := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Flow_%s {id: $flowId})
 			MERGE (t)<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution:FlowActionExecution_%s {id: $id})<-[:HAS]-(f)
@@ -43,7 +45,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 				fae.from = $from,
 				fae.to = $to,
 				fae.cc = $cc,
-				fae.bcc = $bcc,
+				fae.bcc = $bcc
 			ON CREATE SET
 				fae.createdAt = $createdAt,
 				fae.updatedAt = $updatedAt,
@@ -53,10 +55,10 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 				fae.scheduledAt = $scheduledAt,
 				fae.status = $status,
 				fae.mailbox = $mailbox
-			RETURN fae`, common.GetTenantFromContext(ctx))
+			RETURN fae`, tenant, tenant)
 
 	params := map[string]any{
-		"tenant":      common.GetTenantFromContext(ctx),
+		"tenant":      tenant,
 		"id":          entity.Id,
 		"createdAt":   utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt":   utils.TimeOrNow(entity.UpdatedAt),

@@ -20,7 +20,7 @@ type FlowActionExecutionReadRepository interface {
 	GetLastScheduledForMailbox(ctx context.Context, mailbox string) (*dbtype.Node, error)
 	GetScheduledBefore(ctx context.Context, before time.Time) ([]*dbtype.Node, error)
 
-	CountEmailsPerMailboxPerDay(ctx context.Context, mailbox string, startDate, endDate time.Time) (int64, error)
+	CountEmailsPerMailboxPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startDate, endDate time.Time) (int64, error)
 }
 
 type flowActionExecutionReadRepositoryImpl struct {
@@ -107,7 +107,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetFastestMailboxAvailable(ctx co
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-[:HAS]->(fae:FlowActionExecution_%s) where fae.status = 'SCHEDULED' and fae.mailbox in $availableMailboxes RETURN fae.mailbox limit 1 order by fae.scheduledAt desc`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution_%s) where fae.status = 'SCHEDULED' and fae.mailbox in $availableMailboxes RETURN fae.mailbox order by fae.scheduledAt desc limit 1`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
 		"availableMailboxes": availableMailboxes,
@@ -126,6 +126,9 @@ func (r flowActionExecutionReadRepositoryImpl) GetFastestMailboxAvailable(ctx co
 			return utils.ExtractSingleRecordFirstValueAsString(ctx, queryResult, err)
 		}
 	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +144,7 @@ func (r flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx co
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-[:HAS]->(fae:FlowActionExecution_%s) where fae.status = 'SCHEDULED' and fae.mailbox = $mailbox RETURN fae limit 1 order by fae.scheduledAt desc`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution_%s) where fae.status = 'SCHEDULED' and fae.mailbox = $mailbox RETURN fae order by fae.scheduledAt desc limit 1`, tenant)
 	params := map[string]any{
 		"tenant":  tenant,
 		"mailbox": mailbox,
@@ -160,13 +163,16 @@ func (r flowActionExecutionReadRepositoryImpl) GetLastScheduledForMailbox(ctx co
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
 	})
+	if err != nil && err.Error() == "Result contains no more records" {
+		return nil, nil
+	}
 	if err != nil {
 		return nil, err
 	}
 	return result.(*neo4j.Node), nil
 }
 
-func (r flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx context.Context, mailbox string, startDate, endDate time.Time) (int64, error) {
+func (r flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string, startDate, endDate time.Time) (int64, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -175,7 +181,7 @@ func (r flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx c
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-[:HAS]->(fae:FlowActionExecution_%s) where fae.scheduledAt >= $startDate and fae.scheduledAt <= $endDate and fae.mailbox = $mailbox RETURN count(fae)`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution_%s) where fae.scheduledAt >= $startDate and fae.scheduledAt <= $endDate and fae.mailbox = $mailbox RETURN count(fae)`, tenant)
 	params := map[string]any{
 		"tenant":    tenant,
 		"mailbox":   mailbox,
@@ -189,17 +195,42 @@ func (r flowActionExecutionReadRepositoryImpl) CountEmailsPerMailboxPerDay(ctx c
 	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
+	if tx == nil {
+		session := utils.NewNeo4jReadSession(ctx, *r.driver)
+		defer session.Close(ctx)
+
+		queryResult, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			queryResult, err := tx.Run(ctx, cypher, params)
+			if err != nil {
+				return nil, err
+			}
 			return queryResult.Single(ctx)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return 0, err
 		}
-	})
-	if err != nil {
-		return 0, err
+
+		count := queryResult.(*db.Record).Values[0].(int64)
+		span.LogFields(log.Int64("result", count))
+		return count, nil
+	} else {
+		queryResult, err := (*tx).Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return 0, err
+		}
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return 0, err
+		}
+		single, err := queryResult.Single(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return 0, err
+		}
+		count := single.Values[0].(int64)
+		span.LogFields(log.Int64("result", count))
+		return count, nil
 	}
-	count := result.(*db.Record).Values[0].(int64)
-	span.LogFields(log.Int64("result", count))
-	return count, nil
 }
