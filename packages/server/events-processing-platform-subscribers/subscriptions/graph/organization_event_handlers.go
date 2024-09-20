@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -122,7 +122,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 				ExternalSource:   eventData.ExternalSystem.ExternalSource,
 				SyncDate:         eventData.ExternalSystem.SyncDate,
 			}
-			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, externalSystemData)
+			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, externalSystemData)
 			if err != nil {
 				h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 				return nil, err
@@ -158,7 +158,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Set create action
-	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, model2.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -182,6 +182,8 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", organizationId, err.Error())
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -331,7 +333,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 					ExternalSource:   eventData.ExternalSystem.ExternalSource,
 					SyncDate:         eventData.ExternalSystem.SyncDate,
 				}
-				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, externalSystemData)
+				innerErr := h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, externalSystemData)
 				if innerErr != nil {
 					h.log.Errorf("Error while link organization %s with external system %s: %s", organizationId, eventData.ExternalSystem.ExternalSystemId, err.Error())
 					return nil, innerErr
@@ -379,6 +381,8 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		h.handleStageChange(ctx, eventData.Tenant, &beforeOrganizationEntity, &afterOrganizationEntity)
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -395,8 +399,13 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 
-	return err
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -412,8 +421,13 @@ func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Conte
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 
-	return err
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -429,6 +443,11 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.LocationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
 
 	return err
 }
@@ -459,8 +478,14 @@ func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Cont
 	}
 
 	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Error("Not linked domain to organization %s : %s", organizationId, err.Error())
+	}
 
-	return err
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnDomainUnlinkedFromOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -477,8 +502,13 @@ func (h *OrganizationEventHandler) OnDomainUnlinkedFromOrganization(ctx context.
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
 	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UnlinkFromDomain(ctx, eventData.Tenant, organizationId, eventData.Domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 
-	return err
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -508,9 +538,14 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 			AppSource:     helper.GetSource(eventData.AppSource),
 		},
 	}
-	err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, data)
+	err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
 
-	return err
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -528,18 +563,20 @@ func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.C
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	if eventData.SocialId != "" {
-		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, eventData.SocialId)
+		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityById(ctx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, eventData.SocialId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
 		}
 	} else {
-		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, organizationId, model2.NodeLabelOrganization, eventData.Url)
+		err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.RemoveSocialForEntityByUrl(ctx, eventData.Tenant, organizationId, commonmodel.NodeLabelOrganization, eventData.Url)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil
 		}
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -560,7 +597,10 @@ func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt e
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	return err
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
@@ -587,6 +627,8 @@ func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt e
 		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
 	return err
 }
 
@@ -607,6 +649,8 @@ func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventst
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -665,6 +709,8 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummaryV1(ctx context.Context
 		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -696,7 +742,7 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	customFieldExists, err := h.services.CommonServices.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, model2.NodeLabelCustomField)
+	customFieldExists, err := h.services.CommonServices.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, eventData.CustomFieldId, commonmodel.NodeLabelCustomField)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed to check if custom field exists: %s", err.Error())
@@ -727,6 +773,8 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 		//TODO implement update custom field
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -742,7 +790,12 @@ func (h *OrganizationEventHandler) OnLinkWithParentOrganization(ctx context.Cont
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	return h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithParentOrganization(ctx, eventData.Tenant, organizationId, eventData.ParentOrganizationId, eventData.Type)
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithParentOrganization(ctx, eventData.Tenant, organizationId, eventData.ParentOrganizationId, eventData.Type)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnUnlinkFromParentOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -757,7 +810,12 @@ func (h *OrganizationEventHandler) OnUnlinkFromParentOrganization(ctx context.Co
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	return h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UnlinkParentOrganization(ctx, eventData.Tenant, organizationId, eventData.ParentOrganizationId)
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.UnlinkParentOrganization(ctx, eventData.Tenant, organizationId, eventData.ParentOrganizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context, evt eventstore.Event) error {
@@ -808,6 +866,8 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 			h.log.Errorf("Failed to save onboarding status change action for organization %s: %s", organizationId, err.Error())
 		}
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -868,7 +928,7 @@ func (h *OrganizationEventHandler) saveOnboardingStatusChangeAction(ctx context.
 		"status":   eventData.Status,
 		"comments": eventData.Comments,
 	}
-	_, err := h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, model2.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
+	_, err := h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionOnboardingStatusChanged, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
 }
 
@@ -904,7 +964,12 @@ func (h *OrganizationEventHandler) OnUpdateOwner(ctx context.Context, evt events
 		return errors.Wrap(err, "evt.GetJsonData")
 	}
 
-	return h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, eventData.Tenant, eventData.OrganizationId, eventData.OwnerUserId)
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, eventData.Tenant, eventData.OrganizationId, eventData.OwnerUserId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), eventData.OrganizationId, evt.GetEventType(), h.grpcClients)
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -929,7 +994,12 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 			AppSource: helper.GetSource(eventData.SourceFields.AppSource),
 		},
 	}
-	return h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.Create(ctx, eventData.Tenant, eventData.BillingProfileId, data)
+	err := h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.Create(ctx, eventData.Tenant, eventData.BillingProfileId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnUpdateBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -951,7 +1021,12 @@ func (h *OrganizationEventHandler) OnUpdateBillingProfile(ctx context.Context, e
 		UpdateLegalName: eventData.UpdateLegalName(),
 		UpdateTaxId:     eventData.UpdateTaxId(),
 	}
-	return h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.Update(ctx, eventData.Tenant, eventData.BillingProfileId, data)
+	err := h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.Update(ctx, eventData.Tenant, eventData.BillingProfileId, data)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnEmailLinkedToBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -966,7 +1041,14 @@ func (h *OrganizationEventHandler) OnEmailLinkedToBillingProfile(ctx context.Con
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.LinkEmailToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId, eventData.Primary)
+	err := h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.LinkEmailToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId, eventData.Primary)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnEmailUnlinkedFromBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -980,7 +1062,14 @@ func (h *OrganizationEventHandler) OnEmailUnlinkedFromBillingProfile(ctx context
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.UnlinkEmailFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId)
+	err := h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.UnlinkEmailFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.EmailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnLocationLinkedToBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -995,7 +1084,14 @@ func (h *OrganizationEventHandler) OnLocationLinkedToBillingProfile(ctx context.
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.LinkLocationToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId)
+	err := h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.LinkLocationToBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnLocationUnlinkedFromBillingProfile(ctx context.Context, evt eventstore.Event) error {
@@ -1009,7 +1105,15 @@ func (h *OrganizationEventHandler) OnLocationUnlinkedFromBillingProfile(ctx cont
 	}
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
 
-	return h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.UnlinkLocationFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId)
+	err := h.services.CommonServices.Neo4jRepositories.BillingProfileWriteRepository.UnlinkLocationFromBillingProfile(ctx, eventData.Tenant, organizationId, eventData.BillingProfileId, eventData.LocationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Failed to unlink location %s from billing profile %s: %s", eventData.LocationId, eventData.BillingProfileId, err.Error())
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) addDomainToOrg(ctx context.Context, tenant string, organizationId string, website string) {
@@ -1088,6 +1192,9 @@ func (h *OrganizationEventHandler) OnRefreshDerivedDataV1(ctx context.Context, e
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -1314,11 +1421,13 @@ func (h *OrganizationEventHandler) OnAddTag(ctx context.Context, evt eventstore.
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, model2.NodeLabelOrganization, eventData.TaggedAt)
+	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, commonmodel.NodeLabelOrganization, eventData.TaggedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while adding tag %s to organization %s: %s", eventData.TagId, organizationId, err.Error())
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
 
 	return err
 }
@@ -1337,13 +1446,15 @@ func (h *OrganizationEventHandler) OnRemoveTag(ctx context.Context, evt eventsto
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, model2.NodeLabelOrganization)
+	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, organizationId, commonmodel.NodeLabelOrganization)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while removing tag %s to organization %s: %s", eventData.TagId, organizationId, err.Error())
 	}
 
-	return err
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *OrganizationEventHandler) OnLocationAddedToOrganization(ctx context.Context, evt eventstore.Event) error {
@@ -1405,6 +1516,8 @@ func (h *OrganizationEventHandler) OnLocationAddedToOrganization(ctx context.Con
 		h.log.Errorf("error while linking location %s to organization %s: %s", eventData.LocationId, organizationId, err.Error())
 		return err
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
