@@ -15,12 +15,16 @@ export class Browser {
   private static instances: Map<string, Browser>;
   public browser: BrowserType | null = null;
 
-  private constructor(private debug?: boolean) {}
+  private constructor(
+    private debug?: boolean,
+    private debugBrowserCat?: boolean,
+  ) {}
 
   public static async getInstance(
     proxyConfig: string,
     options?: {
       debug?: boolean;
+      debugBrowserCat?: boolean;
     },
   ): Promise<Browser> {
     if (!Browser.instances) {
@@ -28,7 +32,7 @@ export class Browser {
     }
 
     if (!Browser.instances.has(proxyConfig)) {
-      const instance = new Browser(options?.debug);
+      const instance = new Browser(options?.debug, options?.debugBrowserCat);
       Browser.instances.set(proxyConfig, instance);
       await instance.init(proxyConfig);
     }
@@ -87,6 +91,20 @@ export class Browser {
               headers: {
                 "api-key": apiKey,
                 "browsercat-opts": proxyConfig,
+              },
+              logger: {
+                isEnabled: (_name, severity) => !!this.debugBrowserCat,
+                log: (_name, _severity, message, _args) => {
+                  if (message instanceof Error) {
+                    return logger.error(message.message, {
+                      source: "Playwright",
+                    });
+                  }
+
+                  return logger.info(message, {
+                    source: "Playwright",
+                  });
+                },
               },
             });
             this.browser = browser;

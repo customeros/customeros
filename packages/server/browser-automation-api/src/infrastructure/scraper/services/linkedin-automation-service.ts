@@ -72,8 +72,16 @@ export class LinkedinAutomationService {
     }
   }
 
-  async getConnections(): Promise<[string[], StandardError | undefined]> {
-    const browser = await Browser.getInstance(this.proxyConfig);
+  async getConnections(): Promise<
+    [
+      result: string[],
+      error: StandardError | undefined,
+      lastPageVisited?: number,
+    ]
+  > {
+    const browser = await Browser.getInstance(this.proxyConfig, {
+      debug: true,
+    });
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -84,12 +92,16 @@ export class LinkedinAutomationService {
     const goToPage = async (currentPage: number) => {
       return await retry(async () => {
         const url = `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`;
-        return await page.goto(url);
+        return await page.goto(url, { timeout: 60 * 1000 });
       });
     };
 
     const scrapeConnections = async (): Promise<
-      [string[], StandardError | undefined]
+      [
+        result: string[],
+        error: StandardError | undefined,
+        lastPageVisited?: number,
+      ]
     > => {
       let accumulator: string[] = [];
       let error: StandardError | undefined;
@@ -159,7 +171,7 @@ export class LinkedinAutomationService {
         }
       }
 
-      return [accumulator, error];
+      return [accumulator, error, currentPage];
     };
 
     try {
