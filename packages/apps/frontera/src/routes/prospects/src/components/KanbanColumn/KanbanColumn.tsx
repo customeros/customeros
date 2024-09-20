@@ -168,16 +168,18 @@ export const KanbanColumn = observer(
                 />
               </Tooltip>
               <Tooltip asChild label='Create new opportunity'>
-                <IconButton
-                  size='xxs'
-                  icon={<Plus />}
-                  onClick={handleCreateDraft}
-                  aria-label='Add new opportunity'
-                  className={cn(
-                    isHover ? 'opacity-100' : 'opacity-0',
-                    canEdit && 'mr-2',
-                  )}
-                />
+                {canEdit && (
+                  <IconButton
+                    size='xxs'
+                    icon={<Plus />}
+                    onClick={handleCreateDraft}
+                    aria-label='Add new opportunity'
+                    className={cn(
+                      isHover ? 'opacity-100' : 'opacity-0',
+                      canEdit && 'mr-2',
+                    )}
+                  />
+                )}
               </Tooltip>
               {canEdit && (
                 <Menu>
