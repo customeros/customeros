@@ -115,7 +115,7 @@ export const ConnectedToFilter = observer(
             value={searchValue}
             ref={initialFocusRef}
             className='border-none'
-            placeholder={placeholder || 'e.g. CustomerOS'}
+            placeholder={placeholder || 'e.g. Riana Gill'}
             onChange={(e) => setSearchValue(e.target.value)}
           />
         </InputGroup>
