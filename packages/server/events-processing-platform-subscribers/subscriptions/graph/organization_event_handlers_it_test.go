@@ -18,9 +18,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	commonEvents "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"regexp"
 	"testing"
 	"time"
@@ -59,6 +61,13 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 		},
 	}
 	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
@@ -263,9 +272,18 @@ func TestGraphOrganizationEventHandler_OnSocialAddedToOrganization_SocialUrlAlre
 	neo4jt.LinkSocial(ctx, testDatabase.Driver, existingSocialId, orgId)
 
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	sourceFields := commonEvents.Source{
 		Source:        constants.SourceOpenline,
@@ -321,8 +339,17 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToOrganization(t *testing
 	propsAfterLocationCreate := utils.GetPropsFromNode(*dbNodeAfterLocationCreate)
 	require.Equal(t, locationName, utils.GetStringPropOrEmpty(propsAfterLocationCreate, "name"))
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	now := utils.Now()
@@ -368,9 +395,18 @@ func TestGraphOrganizationEventHandler_OnRefreshArr(t *testing.T) {
 	})
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Contract": 2, "Opportunity": 4})
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	// prepare event handler
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 	event, err := events.NewOrganizationRefreshArrEvent(orgAggregate)
@@ -480,9 +516,18 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus(t *testing.T) {
 		Name: "test org",
 	})
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	now := utils.Now()
 	event, err := events.NewUpdateOnboardingStatusEvent(orgAggregate, "DONE", "Some comments", userId, "", now)
@@ -535,8 +580,17 @@ func TestGraphOrganizationEventHandler_OnUpdateOnboardingStatus_CausedByContract
 	})
 	contractId := neo4jtest.CreateContractForOrganization(ctx, testDatabase.Driver, tenantName, orgId, neo4jentity.ContractEntity{})
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -596,8 +650,18 @@ func TestGraphOrganizationEventHandler_OnCreateBillingProfile(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{})
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -646,8 +710,18 @@ func TestGraphOrganizationEventHandler_OnUpdateBillingProfile(t *testing.T) {
 		LegalName: "Billing profile",
 		TaxId:     "Tax id",
 	})
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -688,7 +762,8 @@ func TestGraphOrganizationEventHandler_OnEmailLinkedToBillingProfile(t *testing.
 	newEmailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{})
 
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -725,7 +800,8 @@ func TestGraphOrganizationEventHandler_OnEmailUnlinkedFromBillingProfile(t *test
 	neo4jtest.LinkNodes(ctx, testDatabase.Driver, billingProfileId, existingEmailId, "HAS", map[string]interface{}{"primary": true})
 
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -762,7 +838,8 @@ func TestGraphOrganizationEventHandler_OnLocationLinkedToBillingProfile(t *testi
 	locationId := neo4jtest.CreateLocation(ctx, testDatabase.Driver, tenantName, neo4jentity.LocationEntity{})
 
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -798,7 +875,8 @@ func TestGraphOrganizationEventHandler_OnLocationUnlinkedFromBillingProfile(t *t
 	neo4jtest.LinkNodes(ctx, testDatabase.Driver, billingProfileId, existingLocationId, "HAS")
 
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
@@ -834,7 +912,8 @@ func TestGraphOrganizationEventHandler_OnDomainUnlinkedFromOrganization(t *testi
 	neo4jtest.LinkDomainToOrganization(ctx, testDatabase.Driver, orgId, "openline.ai")
 
 	orgEventHandler := &OrganizationEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
 
