@@ -1,4 +1,4 @@
-export function formatSocialUrl(value = '') {
+export function formatSocialUrl(value = '', orgUrl?: boolean) {
   let url = value;
 
   if (url.startsWith('http')) {
@@ -13,7 +13,7 @@ export function formatSocialUrl(value = '') {
     url = url.replace('www.', '');
   }
 
-  if (url.includes('twitter')) {
+  if (url.includes('twitter') && !orgUrl) {
     url = url.replace('twitter.com', '');
   }
 
