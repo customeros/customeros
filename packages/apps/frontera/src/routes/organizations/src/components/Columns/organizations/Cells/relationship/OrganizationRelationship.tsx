@@ -14,10 +14,11 @@ import { relationshipOptions } from './util';
 
 interface OrganizationRelationshipProps {
   id: string;
+  dataTest?: string;
 }
 
 export const OrganizationRelationshipCell = observer(
-  ({ id }: OrganizationRelationshipProps) => {
+  ({ id, dataTest }: OrganizationRelationshipProps) => {
     const store = useStore();
     const [isEditing, setIsEditing] = useState(false);
 
@@ -70,10 +71,10 @@ export const OrganizationRelationshipCell = observer(
               size='xxs'
               variant='ghost'
               id='edit-button'
+              dataTest={dataTest}
               aria-label='edit relationship'
               onClick={() => setIsEditing(true)}
               icon={<Edit03 className='text-gray-500' />}
-              dataTest='organization-relationship-button-in-all-orgs-table'
               className={cn(
                 'rounded-md opacity-0 group-hover/relationship:opacity-100 min-w-5',
                 isEditing && 'opacity-100',

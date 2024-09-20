@@ -171,7 +171,12 @@ export const columns: Record<string, Column> = {
       cell: (props) => {
         const id = props.row.original.value.metadata?.id;
 
-        return <OrganizationRelationshipCell id={id} />;
+        return (
+          <OrganizationRelationshipCell
+            id={id}
+            dataTest='organization-relationship-button-in-all-orgs-table'
+          />
+        );
       },
       skeleton: () => <Skeleton className='w-[100%] h-[14px]' />,
     },
