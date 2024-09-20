@@ -57,6 +57,19 @@ export class BrowserAutomationRunsRepository {
     }
   }
 
+  async selectAllRetrying() {
+    try {
+      const results = await db
+        .select()
+        .from(browserAutomationRuns)
+        .where(eq(browserAutomationRuns.status, "RETRYING"));
+
+      return results;
+    } catch (err) {
+      BrowserAutomationRunsRepository.handleError(err);
+    }
+  }
+
   async insert(values: BrowserAutomationRunInsert) {
     try {
       const result = await db

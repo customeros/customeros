@@ -38,7 +38,7 @@ export class AutomationRunnerService {
       switch (browserAutomationRun.type) {
         case "FIND_CONNECTIONS":
           const [res, err, lastPageVisited] =
-            await linkedinService.scrapeConnections();
+            await linkedinService.scrapeConnections(payload);
           result = res;
           errorValue = err;
           retryPayload = lastPageVisited;
@@ -60,6 +60,7 @@ export class AutomationRunnerService {
 
       if (errorValue) {
         browserAutomationRun.retry({ lastPageVisited: retryPayload });
+
         await this.errorsRepository.insert({
           runId: browserAutomationRun.id,
           errorMessage: errorValue.message,

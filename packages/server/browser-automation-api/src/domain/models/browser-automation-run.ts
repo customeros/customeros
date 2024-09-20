@@ -77,13 +77,19 @@ export class BrowserAutomationRun {
   }
 
   retry(payload?: object) {
+    if (payload) {
+      // retryPayload column should be added to store this instead of normal payload
+      this.payload = JSON.stringify(payload);
+    }
+
+    if (this.retryCount && this?.retryCount >= 10) {
+      this.fail();
+      return;
+    }
+
     this.status = "RETRYING";
     this.retryCount = this.retryCount ? this.retryCount + 1 : 1;
     this.startedAt = new Date().toISOString();
-    // retryPayload column should be added to store this instead of normal payload
-    if (payload) {
-      this.payload = JSON.stringify(payload);
-    }
   }
 
   private getDuration(): number | null {

@@ -2,6 +2,7 @@
 .fleet
 .vscode
 .DS_Store
+.zed
 
 deployment/scripts/openline-setup/*.*
 

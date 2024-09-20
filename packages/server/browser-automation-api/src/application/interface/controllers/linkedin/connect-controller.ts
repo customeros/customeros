@@ -33,7 +33,7 @@ export class ConnectController {
           tenant: res.locals.tenantName,
           type: "SEND_CONNECTION_REQUEST",
           userId: res.locals.user.id,
-          payload: req.body,
+          payload: JSON.stringify(req.body),
         },
       );
 
