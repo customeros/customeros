@@ -2,7 +2,7 @@ module github.com/openline-ai/openline-customer-os/packages/server/email-trackin
 
 go 1.21
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
+//replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module => ../customer-os-common-module
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
 
@@ -14,8 +14,8 @@ require (
 	github.com/gin-contrib/zap v1.1.4
 	github.com/gin-gonic/gin v1.10.0
 	github.com/joho/godotenv v1.5.1
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240206104907-b429ee046270
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240731112436-8aa56804b2e9
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240920145110-37b66a416a6a
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
 	github.com/prometheus/client_golang v1.20.4
