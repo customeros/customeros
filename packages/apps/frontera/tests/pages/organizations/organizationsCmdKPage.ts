@@ -386,7 +386,7 @@ export class OrganizationsCmdKPage {
   }
 
   async verifyNavigationToFlows(page: Page) {
-    const flowsPage = new FlowsPage();
+    const flowsPage = new FlowsPage(page);
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(

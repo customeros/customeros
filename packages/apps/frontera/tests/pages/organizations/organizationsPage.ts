@@ -80,8 +80,20 @@ export class OrganizationsPage {
       organizationCreatorLocator,
       this.organizationsCreateNewOrgOrgName,
     );
+    // organizationsCreateNewOrgOrgName
+
+    const organizationsCreateNewOrgOrgNameLocator = this.page.locator(
+      this.organizationsCreateNewOrgOrgName,
+    );
 
     const organizationName = randomUUID();
+
+    process.stdout.write(
+      '\nIs organizationsCreateNewOrgOrgNameLocator visible so that we create org ' +
+        organizationName +
+        ' ? : ' +
+        (await organizationsCreateNewOrgOrgNameLocator.isVisible()),
+    );
 
     const requestPromise = createRequestPromise(
       this.page,

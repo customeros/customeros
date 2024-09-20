@@ -122,7 +122,16 @@ export class FlowsPage {
       if (isVisible) {
         await allFlowsSelectAllContacts.click();
 
-        return true;
+        // Wait for a short time to allow for any asynchronous updates
+        await this.page.waitForTimeout(100);
+
+        // Check if the button is checked after clicking
+        return (
+          (await allFlowsSelectAllContacts.getAttribute('aria-checked')) ===
+            'true' ||
+          (await allFlowsSelectAllContacts.getAttribute('data-state')) ===
+            'checked'
+        );
       }
     } catch (error) {
       if (error.name === 'TimeoutError') {

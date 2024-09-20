@@ -192,30 +192,6 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
 });
 
-test('Flows TearDown', async ({ page }, testInfo) => {
-  const flowsPage = new FlowsPage(page);
-  const loginPage = new LoginPage(page);
-
-  await loginPage.login();
-  await flowsPage.goToFlows();
-
-  await flowsPage.waitForPageLoad();
-
-  let isSelectAllFlowsClicked = false;
-
-  try {
-    isSelectAllFlowsClicked = await flowsPage.selectAllFlows(); // Returns true if successful
-  } catch (error) {
-    console.warn('Select All Flows button not found or visible:', error);
-  }
-
-  if (isSelectAllFlowsClicked) {
-    await flowsPage.archiveOrgs();
-    await flowsPage.confirmArchiveOrgs();
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  }
-});
-
 test('Assign contact to flow', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const flowsPage = new FlowsPage(page);
