@@ -50,7 +50,7 @@ export const OpportunitiesTableActions = observer(
     };
 
     const handleOpen = (type: CommandMenuType, property?: string) => {
-      if (selection?.length >= 1) {
+      if (selection?.length > 1) {
         store.ui.commandMenu.setContext({
           ids: selection,
           entity: 'Opportunity',
@@ -58,7 +58,15 @@ export const OpportunitiesTableActions = observer(
         });
       } else {
         store.ui.commandMenu.setContext({
-          ids: [focusedId || ''],
+          ids: selection || focusedId,
+          entity: 'Opportunity',
+          property: property,
+        });
+      }
+
+      if (selection?.length === 1) {
+        store.ui.commandMenu.setContext({
+          ids: selection,
           entity: 'Opportunity',
           property: property,
         });

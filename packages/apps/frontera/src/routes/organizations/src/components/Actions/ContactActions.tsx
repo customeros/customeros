@@ -65,6 +65,14 @@ export const ContactTableActions = observer(
         });
       }
 
+      if (selection?.length === 1) {
+        store.ui.commandMenu.setContext({
+          ids: selection,
+          entity: 'Contact',
+          property: property,
+        });
+      }
+
       store.ui.commandMenu.setType(type);
       store.ui.commandMenu.setOpen(true);
     };

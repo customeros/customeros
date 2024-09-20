@@ -144,7 +144,15 @@ export const OrganizationTableActions = observer(
         });
       } else {
         store.ui.commandMenu.setContext({
-          ids: [focusedId || ''],
+          ids: selection,
+          entity: 'Organization',
+          property: property,
+        });
+      }
+
+      if (selection?.length === 1) {
+        store.ui.commandMenu.setContext({
+          ids: selection,
           entity: 'Organization',
           property: property,
         });
