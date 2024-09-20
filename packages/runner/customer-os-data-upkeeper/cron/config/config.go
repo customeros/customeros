@@ -64,5 +64,5 @@ type Config struct {
 	CronScheduleCheckEnrowResults              string `env:"CRON_SCHEDULE_CHECK_ENROW_RESULTS" envDefault:"0 */5 * * * *"`
 
 	// Flows
-	CronScheduleFlowExecution string `env:"CRON_SCHEDULE_FLOW_EXECUTION" envDefault:"0 */1 * * * *"`
+	CronScheduleFlowExecution string `env:"CRON_SCHEDULE_FLOW_EXECUTION" envDefault:"*/5 * * * * *"`
 }

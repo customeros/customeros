@@ -5,6 +5,8 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -50,6 +52,10 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 
 	for _, actionExecutionNode := range actionsToExecute {
 		actionExecution := neo4jmapper.MapDbNodeToFlowActionExecutionEntity(actionExecutionNode)
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: model.GetTenantFromLabels(actionExecutionNode.Labels, model.NodeLabelFlowActionExecution),
+		})
 
 		err := s.processActionExecution(ctx, actionExecution)
 		if err != nil {

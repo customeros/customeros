@@ -70,12 +70,8 @@ func (r flowActionExecutionReadRepositoryImpl) GetScheduledBefore(ctx context.Co
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	tenant := common.GetTenantFromContext(ctx)
-
-	//TODO check that FlowAction is active
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-[:HAS]->(f:Flow_%s {status: 'ACTIVE'})-[:HAS]->(fae:FlowActionExecution_%s) where fae.status = 'SCHEDULED' and fae.scheduledAt < $before RETURN fae limit 100 order by fae.scheduledAt`, tenant)
+	cypher := fmt.Sprintf(`MATCH (f:Flow {status: 'ACTIVE'})-[:HAS]->(fae:FlowActionExecution) where fae.status = 'SCHEDULED' and fae.scheduledAt < $before RETURN fae order by fae.scheduledAt limit 100`)
 	params := map[string]any{
-		"tenant": tenant,
 		"before": before,
 	}
 
