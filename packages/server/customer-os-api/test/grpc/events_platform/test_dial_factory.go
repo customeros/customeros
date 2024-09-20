@@ -2,6 +2,7 @@ package events_platform
 
 import (
 	"context"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	offeringpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/offering"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -59,6 +60,7 @@ func (dfi TestDialFactoryImpl) GetEventsProcessingPlatformConn() (*grpc.ClientCo
 	tenantpb.RegisterTenantGrpcServiceServer(server, &MockTenantService{})
 	eventstorepb.RegisterEventStoreGrpcServiceServer(server, &MockEventStoreService{})
 	offeringpb.RegisterOfferingGrpcServiceServer(server, &MockOfferingService{})
+	eventcompletionpb.RegisterEventCompletionGrpcServiceServer(server, &MockEventCompletionService{})
 
 	go func() {
 		if err := server.Serve(listener); err != nil {

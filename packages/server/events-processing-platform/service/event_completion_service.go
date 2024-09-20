@@ -26,6 +26,7 @@ type Event struct {
 }
 
 type eventCompletionService struct {
+	eventcompletionpb.UnimplementedEventCompletionGrpcServiceServer
 	services       *Services
 	log            logger.Logger
 	aggregateStore eventstore.AggregateStore

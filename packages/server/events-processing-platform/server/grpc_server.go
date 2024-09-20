@@ -1,6 +1,7 @@
 package server
 
 import (
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"net"
 	"time"
@@ -95,4 +96,5 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	tenantpb.RegisterTenantGrpcServiceServer(grpcServer, services.TenantService)
 	orgplanpb.RegisterOrganizationPlanGrpcServiceServer(grpcServer, services.OrganizationPlanService)
 	eventstorepb.RegisterEventStoreGrpcServiceServer(grpcServer, services.EventStoreService)
+	eventcompletionpb.RegisterEventCompletionGrpcServiceServer(grpcServer, services.EventCompletionService)
 }
