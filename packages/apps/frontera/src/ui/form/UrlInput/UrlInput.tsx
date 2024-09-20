@@ -32,7 +32,7 @@ export const UrlInput = memo(
 
     const href = value?.startsWith('http') ? value : `https://${value}`;
 
-    const formattedUrl = formatSocialUrl(value);
+    const formattedUrl = formatSocialUrl(value, true);
 
     const handleFocus = () => {
       setIsFocused(true);
