@@ -47,7 +47,7 @@ export const SharedTableActions = ({
 
         <ActionItem
           onClick={() => onHide()}
-          dataTest='contacts-actions-archive'
+          dataTest='actions-archive'
           icon={<Archive className='text-inherit size-3' />}
           tooltip={
             <div className='flex gap-1'>

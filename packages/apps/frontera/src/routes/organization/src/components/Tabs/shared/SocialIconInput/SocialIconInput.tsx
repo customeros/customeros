@@ -91,7 +91,7 @@ export const SocialIconInput = ({
           <Input
             name={name}
             ref={newInputRef}
-            data-test={dataTest}
+            dataTest={dataTest}
             onBlur={handleNewSocial}
             onChange={(e) => {
               setSocialIconValue(e.target.value);

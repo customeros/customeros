@@ -1,5 +1,6 @@
 import { chromium } from '@playwright/test';
 
+import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { ContactsPage } from './pages/contacts/contactsPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
@@ -11,6 +12,7 @@ async function globalSetup() {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const contactsPage = new ContactsPage(page);
+  const flowsPage = new FlowsPage(page);
 
   await loginPage.login();
 
@@ -39,7 +41,7 @@ async function globalSetup() {
   try {
     isSelectAllContactsClicked = await contactsPage.selectAllContacts(); // Returns true if successful
   } catch (error) {
-    console.warn('Select All Orgs button not found or visible:', error);
+    console.warn('Select All Contacts button not found or visible:', error);
   }
 
   if (isSelectAllContactsClicked) {
@@ -48,9 +50,26 @@ async function globalSetup() {
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 
-  await organizationsPage.goToAllOrgs();
+  // Archive flows
+  await flowsPage.waitForPageLoad();
+
+  let isSelectAllFlowsClicked = false;
+
+  try {
+    isSelectAllFlowsClicked = await flowsPage.selectAllFlows(); // Returns true if successful
+  } catch (error) {
+    console.warn('Select All Flows button not found or visible:', error);
+  }
+
+  if (isSelectAllFlowsClicked) {
+    await flowsPage.archiveOrgs();
+    await flowsPage.confirmArchiveOrgs();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
 
   // Create initial organization
+  await organizationsPage.goToAllOrgs();
+
   await organizationsPage.addInitialOrganization();
 
   await browser.close();

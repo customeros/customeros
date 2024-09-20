@@ -10,8 +10,7 @@ export class ContactsPage {
   sideNavItemAllContactsSelected =
     'button[data-test="side-nav-item-all-contacts"] div[aria-selected="true"]';
   private allOrgsSelectAllOrgs = 'button[data-test="all-orgs-select-all-orgs"]';
-  private contactsActionsArchive =
-    'button[data-test="contacts-actions-archive"]';
+  private contactsActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
 

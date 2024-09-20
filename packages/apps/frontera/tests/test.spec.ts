@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
 
+import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { CustomersPage } from './pages/customers/customersPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
@@ -189,4 +190,55 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToFlows(page);
   await organizationsCmdKPage.verifyNavigationToSettings(page);
   await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
+});
+
+test('Flows TearDown', async ({ page }, testInfo) => {
+  const flowsPage = new FlowsPage(page);
+  const loginPage = new LoginPage(page);
+
+  await loginPage.login();
+  await flowsPage.goToFlows();
+
+  await flowsPage.waitForPageLoad();
+
+  let isSelectAllFlowsClicked = false;
+
+  try {
+    isSelectAllFlowsClicked = await flowsPage.selectAllFlows(); // Returns true if successful
+  } catch (error) {
+    console.warn('Select All Flows button not found or visible:', error);
+  }
+
+  if (isSelectAllFlowsClicked) {
+    await flowsPage.archiveOrgs();
+    await flowsPage.confirmArchiveOrgs();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+});
+
+test('Assign contact to flow', async ({ page }, testInfo) => {
+  const loginPage = new LoginPage(page);
+  const flowsPage = new FlowsPage(page);
+
+  //
+  await loginPage.login();
+  await flowsPage.goToFlows();
+
+  const flowName = await flowsPage.addFlow();
+
+  await flowsPage.checkNewFlowEntry(flowName);
+
+  //
+  // await organizationsCmdKPage.accessCmdK();
+  // await organizationsCmdKPage.verifyFinder();
+  // await organizationsCmdKPage.verifyOrganizationCreation(page, testInfo);
+  // await organizationsCmdKPage.verifyNavigationToTargets(page);
+  // await organizationsCmdKPage.verifyNavigationToOpportunities(page);
+  // await organizationsCmdKPage.verifyNavigationToCustomers(page);
+  // await organizationsCmdKPage.verifyNavigationToContacts(page);
+  // await organizationsCmdKPage.verifyNavigationToInvoices(page);
+  // await organizationsCmdKPage.verifyNavigationToContracts(page);
+  // await organizationsCmdKPage.verifyNavigationToFlows(page);
+  // await organizationsCmdKPage.verifyNavigationToSettings(page);
+  // await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
 });
