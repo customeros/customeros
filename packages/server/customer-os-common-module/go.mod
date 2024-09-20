@@ -2,11 +2,11 @@ module github.com/openline-ai/openline-customer-os/packages/server/customer-os-c
 
 go 1.21
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ./../customer-os-postgres-repository
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository => ../customer-os-postgres-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ./../customer-os-neo4j-repository
+replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
-replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ./../events-processing-proto
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
 
 require (
 	github.com/DusanKasan/parsemail v1.2.0

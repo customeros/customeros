@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	"github.com/opentracing/opentracing-go"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc/codes"
@@ -51,12 +50,13 @@ func EventCompleted(ctx context.Context, tenant, entity, entityId, entityType st
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
-		return grpcClients.EventCompletionClient.NotifyEventProcessed(ctx, &eventcompletionpb.NotifyEventProcessedRequest{
-			Tenant:    tenant,
-			EventType: entityType,
-			Entity:    entity,
-			EntityId:  entityId,
-		})
+		//return grpcClients.EventCompletionClient.NotifyEventProcessed(ctx, &eventcompletionpb.NotifyEventProcessedRequest{
+		//	Tenant:    tenant,
+		//	EventType: entityType,
+		//	Entity:    entity,
+		//	EntityId:  entityId,
+		//})
+		return &emptypb.Empty{}, nil
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
