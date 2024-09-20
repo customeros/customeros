@@ -16,6 +16,7 @@ import { DateTimeUtils } from '@utils/date';
 import { Clock } from '@ui/media/icons/Clock';
 import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { Building06 } from '@ui/media/icons/Building06';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { InternalStage } from '@shared/types/__generated__/graphql.types';
@@ -139,19 +140,24 @@ export const KanbanCard = observer(
         <div className='flex flex-col w-full items-start gap-2'>
           <div className='flex items-center gap-2 w-full justify-between'>
             <div className='flex gap-2 items-center'>
-              <Avatar
-                size='xs'
-                variant='outlineSquare'
-                src={logo || undefined}
-                className='w-5 h-5 min-w-5'
-                name={`${card.value?.name}`}
-                icon={<Building06 className='text-primary-500 size-3' />}
-                onMouseUp={() => {
-                  navigate(
-                    `/organization/${card.value?.organization?.metadata.id}/`,
-                  );
-                }}
-              />
+              <Tooltip label={organization?.value.name}>
+                <div>
+                  <Avatar
+                    size='xs'
+                    variant='outlineSquare'
+                    src={logo || undefined}
+                    className='w-5 h-5 min-w-5'
+                    name={`${card.value?.name}`}
+                    icon={<Building06 className='text-primary-500 size-3' />}
+                    onMouseUp={() => {
+                      navigate(
+                        `/organization/${card.value?.organization?.metadata.id}/`,
+                      );
+                    }}
+                  />
+                </div>
+              </Tooltip>
+
               <OpportunityName opportunityId={card.id} />
             </div>
 
