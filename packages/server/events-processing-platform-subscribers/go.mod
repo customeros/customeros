@@ -29,9 +29,9 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/mrz1836/postmark v1.6.5
 	github.com/neo4j/neo4j-go-driver/v5 v5.24.0
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240411100038-1cc91d17a866
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240920145110-37b66a416a6a
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240410144729-44cbe53c019c
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240731112436-8aa56804b2e9
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20240814144953-b2d24510865a
 	github.com/openline-ai/openline-customer-os/packages/server/events v0.0.0-20240413132139-bfffc416fdeb
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform v0.0.0-20240305183844-4e6aa5b2c822
