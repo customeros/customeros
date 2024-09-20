@@ -90,11 +90,12 @@ export const LinkComponent = ({ isEditing }: LinkComponentProps) => {
   return (
     <div
       ref={ref}
-      className='flex items-center relative py-0 px-3 rounded-lg bg-gray-700'
+      className='flex items-center relative py-0 px-3 rounded-lg bg-gray-700 mt-3'
     >
       <Input
         tabIndex={1}
         value={href}
+        variant='unstyled'
         placeholder='Paste or enter a link'
         onChange={(event: ChangeEvent<HTMLInputElement>) =>
           setHref(event.target.value)
