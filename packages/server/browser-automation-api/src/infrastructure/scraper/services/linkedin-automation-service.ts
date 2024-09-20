@@ -92,7 +92,9 @@ export class LinkedinAutomationService {
       lastPageVisited?: number,
     ]
   > {
-    const browser = await Browser.getInstance(this.proxyConfig);
+    const browser = await Browser.getInstance(this.proxyConfig, {
+      debugBrowserCat: true,
+    });
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -119,7 +121,6 @@ export class LinkedinAutomationService {
       let accumulator: string[] = [];
       let error: StandardError | undefined;
 
-      console.log("initialPage in scrapeConnections", initialPage);
       // Initial page load
       let currentPage = initialPage ?? 1;
       await goToPage(currentPage);

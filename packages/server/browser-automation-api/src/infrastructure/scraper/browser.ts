@@ -32,12 +32,28 @@ export class Browser {
     }
 
     if (!Browser.instances.has(proxyConfig)) {
+      logger.info("Creating new browser instance entry.", {
+        source: "Browser",
+      });
       const instance = new Browser(options?.debug, options?.debugBrowserCat);
       Browser.instances.set(proxyConfig, instance);
+
+      logger.info("Initiating the browser instance...", {
+        source: "Browser",
+      });
       await instance.init(proxyConfig);
+      logger.info("Browser instance initiated ok.", {
+        source: "Browser",
+      });
     }
 
+    logger.info("Retriving browser instance from cache.", {
+      source: "Browser",
+    });
     const instance = Browser.instances.get(proxyConfig);
+    logger.info("Browser instance retrieved ok.", {
+      source: "Browser",
+    });
 
     if (!instance) {
       throw new StandardError({
@@ -47,7 +63,7 @@ export class Browser {
       });
     }
 
-    logger.debug("returning browser instance", {
+    logger.debug("Returning browser instance", {
       source: "Browser",
     });
     return instance;
