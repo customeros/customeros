@@ -5,6 +5,7 @@ import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { Input } from '@ui/form/Input';
+import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { Filter } from '@ui/presentation/Filter';
 import { useStore } from '@shared/hooks/useStore';
@@ -103,17 +104,27 @@ export const Filters = observer(
       return filterType?.filterType;
     };
 
-    // tableViewDef?.removeFilters();
-
     return (
       <div className='flex gap-2'>
         {flattenedFilters.map((f) => (
           <Filter
             key={f.property}
-            operatorValue={f.operation || ''}
+            filterValue={f.value}
             filterName={handleFilterName(f.property)}
             operators={getFilterOperators(f.property)}
             filterType={getFilterTypes(f.property) || ''}
+            operatorValue={f.operation || ComparisonOperator.Between}
+            onClearFilter={() => {
+              tableViewDef?.removeFilter(f.property);
+            }}
+            onChangeFilterValue={(value: string) => {
+              tableViewDef?.setFilter({
+                ...f,
+                value: value,
+                property: f.property,
+                active: true,
+              });
+            }}
             onChangeOperator={(operation: string) => {
               tableViewDef?.setFilter({
                 ...f,
@@ -125,14 +136,24 @@ export const Filters = observer(
         ))}
         <Menu>
           <MenuButton>
-            <IconButton
-              size='xs'
-              variant='outline'
-              aria-label='filters'
-              icon={<FilterLines />}
-              colorScheme='grayModern'
-              className='border-transparent'
-            />
+            {flattenedFilters.length ? (
+              <IconButton
+                size='xs'
+                variant='outline'
+                aria-label='filters'
+                icon={<FilterLines />}
+                colorScheme='grayModern'
+                className='border-transparent'
+              />
+            ) : (
+              <Button
+                size='xs'
+                colorScheme='grayModern'
+                leftIcon={<FilterLines />}
+              >
+                Filters
+              </Button>
+            )}
           </MenuButton>
           <MenuList>
             <Input
@@ -153,6 +174,9 @@ export const Filters = observer(
                         property: filter?.filterAccesor || '',
                         value: undefined,
                         active: false,
+                        operation:
+                          getFilterOperators(filter?.filterAccesor ?? '')[0] ||
+                          '',
                       })
                     }
                   >

@@ -6,8 +6,13 @@ interface PropertyFilterInterface {
 
 export const PropertyFilter = ({ name }: PropertyFilterInterface) => {
   return (
-    <Button size='xs' colorScheme='grayModern' className='border-transparent'>
-      {name || 'mariana'}
+    <Button
+      size='xs'
+      isDisabled
+      colorScheme='grayModern'
+      className='border-transparent'
+    >
+      {name || 'Property'}
     </Button>
   );
 };

@@ -34,9 +34,11 @@ export const OperatorFilter = ({
         <Button
           size='xs'
           colorScheme='grayModern'
-          className='border-transparent'
+          className=' border-transparent rounded-none'
         >
-          {handleOperatorName(value as ComparisonOperator) ?? defaultOperator}
+          {value
+            ? handleOperatorName(value as ComparisonOperator)
+            : defaultOperator}
         </Button>
       </MenuButton>
       <MenuList>

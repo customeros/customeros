@@ -70,6 +70,8 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const filterValue = filter?.value;
 
+        if (!filterValue) return false;
+
         if (filter.includeEmpty && row.value.name === 'Unnamed') {
           return true;
         }
@@ -78,7 +80,9 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           return false;
         }
 
-        return row.value.name.toLowerCase().includes(filterValue.toLowerCase());
+        return row.value.name
+          ?.toLowerCase()
+          .includes(filterValue?.toLowerCase());
       },
     )
     .with(
