@@ -26,7 +26,7 @@ export class LinkedinAutomationService {
 
   async sendConenctionInvite(
     profileUrl: string,
-    message: string,
+    message?: string,
     options?: { dryRun?: boolean },
   ) {
     const browser = await Browser.getInstance(this.proxyConfig);
@@ -49,21 +49,32 @@ export class LinkedinAutomationService {
 
       const sendInviteModal = page.locator("div.send-invite");
       await sendInviteModal.waitFor({ timeout: 10000 });
-      const addNoteButton = sendInviteModal.locator(
-        "button.artdeco-button--secondary",
-      );
 
-      await addNoteButton.click();
-      const noteInput = sendInviteModal.locator("textarea#custom-message");
-      await noteInput.fill(message);
+      if (message) {
+        const addNoteButton = sendInviteModal.locator(
+          "button.artdeco-button--secondary",
+        );
+        await addNoteButton.click();
+        const noteInput = sendInviteModal.locator("textarea#custom-message");
+        await noteInput.fill(message);
 
-      const sendInviteButton = sendInviteModal.locator(
-        'button.artdeco-button--primary[aria-label="Send invitation"]',
-      );
+        const sendInviteButton = sendInviteModal.locator(
+          'button.artdeco-button--primary[aria-label="Send invitation"]',
+        );
 
-      await setTimeout(1000);
-      if (!options?.dryRun) {
-        await sendInviteButton.click();
+        await setTimeout(1000);
+        if (!options?.dryRun) {
+          await sendInviteButton.click();
+        }
+      } else {
+        const sendWithoutNodeButton = sendInviteModal.locator(
+          'button.artdeco-button--primary[aria-label="Send without a note"]',
+        );
+
+        await setTimeout(1000);
+        if (!options?.dryRun) {
+          await sendWithoutNodeButton.click();
+        }
       }
     } catch (err) {
       throw LinkedinAutomationService.handleError(err);
@@ -72,7 +83,15 @@ export class LinkedinAutomationService {
     }
   }
 
-  async getConnections(): Promise<[string[], StandardError | undefined]> {
+  async getConnections(
+    startPage?: number,
+  ): Promise<
+    [
+      result: string[],
+      error: StandardError | undefined,
+      lastPageVisited?: number,
+    ]
+  > {
     const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
@@ -84,18 +103,25 @@ export class LinkedinAutomationService {
     const goToPage = async (currentPage: number) => {
       return await retry(async () => {
         const url = `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`;
-        return await page.goto(url);
+        return await page.goto(url, { timeout: 60 * 1000 });
       });
     };
 
-    const scrapeConnections = async (): Promise<
-      [string[], StandardError | undefined]
+    const scrapeConnections = async (
+      initialPage?: number,
+    ): Promise<
+      [
+        result: string[],
+        error: StandardError | undefined,
+        lastPageVisited?: number,
+      ]
     > => {
       let accumulator: string[] = [];
       let error: StandardError | undefined;
 
+      console.log("initialPage in scrapeConnections", initialPage);
       // Initial page load
-      let currentPage = 1;
+      let currentPage = initialPage ?? 1;
       await goToPage(currentPage);
 
       // Scroll to bottom to load pagination
@@ -159,11 +185,11 @@ export class LinkedinAutomationService {
         }
       }
 
-      return [accumulator, error];
+      return [accumulator, error, currentPage];
     };
 
     try {
-      return await scrapeConnections();
+      return await scrapeConnections(startPage);
     } catch (err) {
       throw LinkedinAutomationService.handleError(err);
     } finally {
@@ -247,7 +273,7 @@ export class LinkedinAutomationService {
 const retry = async (
   fn: () => Promise<any>,
   retries: number = 4,
-  delay: number = 1000,
+  delay: number = 3000,
 ) => {
   let attempt = 0;
   while (attempt < retries) {

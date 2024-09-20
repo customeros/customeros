@@ -47,13 +47,15 @@ export class LinkedinService {
     }
   }
 
-  async scrapeConnections() {
+  async scrapeConnections(payload?: { lastPageVisited?: number }) {
     try {
       logger.info("Scraping connections...", {
         source: "LinkedinService",
       });
 
-      const result = await this.linkedinAutomationService.getConnections();
+      const result = await this.linkedinAutomationService.getConnections(
+        payload?.lastPageVisited,
+      );
 
       logger.info("Connections scraped.", {
         source: "LinkedinService",

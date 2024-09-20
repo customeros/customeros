@@ -9,8 +9,7 @@ export const connectValidators = [
     .isURL()
     .withMessage("Invalid URL"),
   body("message")
-    .notEmpty()
-    .withMessage("message field is required")
+    .optional()
     .isString()
     .withMessage("message field must be a string")
     .escape(),
