@@ -4,6 +4,7 @@ import { TableCellTooltip } from '@ui/presentation/Table';
 
 interface TextCellProps {
   text: string;
+  dataTest?: string;
   unknownText?: string;
   leftIcon?: ReactNode;
 }
@@ -12,10 +13,16 @@ export const TextCell = ({
   text,
   leftIcon,
   unknownText = 'Unknown',
+  dataTest,
 }: TextCellProps) => {
   const itemRef = useRef<HTMLDivElement>(null);
 
-  if (!text) return <div className='text-gray-400'>{unknownText}</div>;
+  if (!text)
+    return (
+      <div data-test={dataTest} className='text-gray-400'>
+        {unknownText}
+      </div>
+    );
 
   return (
     <TableCellTooltip
@@ -27,7 +34,12 @@ export const TextCell = ({
     >
       <div ref={itemRef} className='flex overflow-hidden'>
         {leftIcon && <div className='mr-1'>{leftIcon}</div>}
-        <div className=' overflow-x-hidden overflow-ellipsis'>{text}</div>
+        <div
+          data-test={dataTest}
+          className=' overflow-x-hidden overflow-ellipsis'
+        >
+          {text}
+        </div>
       </div>
     </TableCellTooltip>
   );

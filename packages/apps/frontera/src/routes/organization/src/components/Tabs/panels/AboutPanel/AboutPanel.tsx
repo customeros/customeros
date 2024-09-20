@@ -221,7 +221,7 @@ export const AboutPanel = observer(() => {
             autoComplete='off'
             variant='unstyled'
             onChange={handleChange}
-            data-test='org-about-name'
+            dataTest='org-about-name'
             placeholder='Company name'
             disabled={orgNameReadOnly}
             onFocus={(e) => e.target.select()}

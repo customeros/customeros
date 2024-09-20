@@ -1,11 +1,11 @@
 import { Page, expect, TestInfo } from '@playwright/test';
 
+import { FlowsPage } from '../flows/flowsPage';
 import { TargetsPage } from '../targets/targetsPage';
 import { SettingsPage } from '../settings/settingsPage';
 import { InvoicesPage } from '../invoices/invoicesPage';
 import { ContactsPage } from '../contacts/contactsPage';
 import { OrganizationsPage } from './organizationsPage';
-import { SequencesPage } from '../sequences/sequencesPage';
 import { ContractsPage } from '../contracts/contractsPage';
 import { CustomersPage } from '../customers/customersPage';
 import { CustomerMapPage } from '../customer-map/customerMapPage';
@@ -385,13 +385,13 @@ export class OrganizationsCmdKPage {
     await organizationsPage.goToAllOrgs();
   }
 
-  async verifyNavigationToSequences(page: Page) {
-    const sequencesPage = new SequencesPage();
+  async verifyNavigationToFlows(page: Page) {
+    const flowsPage = new FlowsPage(page);
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
       'KeyQ',
-      sequencesPage.sideNavItemAllSequencesSelected,
+      flowsPage.sideNavItemAllFlowsSelected,
     );
 
     await this.page.goBack();
@@ -399,7 +399,7 @@ export class OrganizationsCmdKPage {
     await this.openCmdK();
     await this.verifyNavigationWithClick(
       this.organizationHubGq,
-      sequencesPage.sideNavItemAllSequencesSelected,
+      flowsPage.sideNavItemAllFlowsSelected,
     );
 
     await organizationsPage.goToAllOrgs();

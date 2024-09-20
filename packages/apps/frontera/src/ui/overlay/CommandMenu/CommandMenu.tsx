@@ -197,7 +197,11 @@ export const CommandCancelButton = forwardRef(
   (
     {
       onClose,
-    }: { onClose: () => void } & React.HTMLAttributes<HTMLButtonElement>,
+      dataTest,
+    }: {
+      dataTest?: string;
+      onClose: () => void;
+    } & React.HTMLAttributes<HTMLButtonElement>,
     ref: Ref<HTMLButtonElement>,
   ) => {
     return (
@@ -207,6 +211,7 @@ export const CommandCancelButton = forwardRef(
         variant='outline'
         onClick={onClose}
         className='w-full'
+        data-test={dataTest}
         onKeyDown={(e) => {
           if (e.key === 'Enter') {
             e.stopPropagation();

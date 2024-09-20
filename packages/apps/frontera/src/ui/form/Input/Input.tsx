@@ -60,6 +60,7 @@ export const inputVariants = cva(
 export interface InputProps
   extends VariantProps<typeof inputVariants>,
     Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
+  dataTest?: string;
   className?: string;
   placeholder?: string;
   allowKeyDownEventPropagation?: boolean;
@@ -74,6 +75,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
       allowKeyDownEventPropagation,
       className,
       onKeyDown,
+      dataTest,
       ...rest
     },
     ref,
@@ -83,6 +85,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         {...rest}
         ref={ref}
         data-1p-ignore
+        data-test={dataTest}
         className={twMerge(inputVariants({ className, size, variant }))}
         onKeyDown={(e) => {
           if (onKeyDown) {

@@ -59,7 +59,7 @@ export const UrlInput = memo(
             ref={inputRef}
             variant='unstyled'
             onBlur={handleBlur}
-            data-test={dataTest}
+            dataTest={dataTest}
             onFocus={handleFocus}
             className='border border-transparent text-md'
             {...rest}

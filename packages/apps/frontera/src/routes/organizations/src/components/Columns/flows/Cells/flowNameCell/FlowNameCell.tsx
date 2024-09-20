@@ -72,7 +72,10 @@ export const FlowNameCell = observer(({ id }: FlowNameCellProps) => {
             targetRef={itemRef}
           >
             <div ref={itemRef} className='flex overflow-hidden'>
-              <div className=' overflow-x-hidden overflow-ellipsis font-medium'>
+              <div
+                data-test='flow-name-in-all-orgs-table'
+                className=' overflow-x-hidden overflow-ellipsis font-medium'
+              >
                 {flowName}
               </div>
             </div>

@@ -1,5 +1,6 @@
 import { test } from '@playwright/test';
 
+import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { CustomersPage } from './pages/customers/customersPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
@@ -23,11 +24,11 @@ test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
-  const organizationId = await organizationsPage.addNonInitialOrganization(
+  const organizationName = await organizationsPage.addNonInitialOrganization(
     testInfo,
   );
 
-  await organizationsPage.checkNewOrganizationEntry(organizationId);
+  await organizationsPage.checkNewOrganizationEntry(organizationName);
 
   // Go to Customers page and ensure no new org
   await organizationsPage.goToCustomersPage();
@@ -37,7 +38,7 @@ test('Convert an Organization to Customer', async ({ page }, testInfo) => {
   await organizationsPage.goToAllOrgsPage();
 
   // Make the organization a customer
-  await organizationsPage.updateOrgToCustomer(organizationId);
+  await organizationsPage.updateOrgToCustomer(organizationName);
 
   // Go to Customers page and ensure we have a new customer
   await organizationsPage.goToCustomersPage();
@@ -56,19 +57,19 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
-  const organizationId = await organizationsPage.addNonInitialOrganization(
+  const organizationName = await organizationsPage.addNonInitialOrganization(
     testInfo,
   );
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationId);
+  await organizationsPage.goToOrganization(organizationName);
 
   // Go to People page
   await organizationSideNavPage.goToAbout();
   await organizationAboutPage.populateAboutFields();
   await organizationAboutPage.checkPopulatedAboutFields(
-    organizationId,
+    organizationName,
     'customeros.fe.testing',
   );
 });
@@ -85,13 +86,13 @@ test('Create People entry in an Organization', async ({ page }, testInfo) => {
   await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
-  const organizationId = await organizationsPage.addNonInitialOrganization(
+  const organizationName = await organizationsPage.addNonInitialOrganization(
     testInfo,
   );
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationId);
+  await organizationsPage.goToOrganization(organizationName);
 
   // Go to People page
   await organizationSideNavPage.goToPeople();
@@ -112,13 +113,13 @@ test('Create Timeline entries in an Organization', async ({
   await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
-  const organizationId = await organizationsPage.addNonInitialOrganization(
+  const organizationName = await organizationsPage.addNonInitialOrganization(
     testInfo,
   );
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationId);
+  await organizationsPage.goToOrganization(organizationName);
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
@@ -140,13 +141,13 @@ test('Create Contracts in an Organization', async ({ page }, testInfo) => {
   await organizationsPage.goToAllOrgs();
 
   // Add organization and check new entry
-  const organizationId = await organizationsPage.addNonInitialOrganization(
+  const organizationName = await organizationsPage.addNonInitialOrganization(
     testInfo,
   );
 
   //Access newly created organization
   await new Promise((resolve) => setTimeout(resolve, 1500));
-  await organizationsPage.goToOrganization(organizationId);
+  await organizationsPage.goToOrganization(organizationName);
 
   // Go to Account page and update org
   await organizationSideNavPage.goToAccount();
@@ -186,7 +187,34 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToContacts(page);
   await organizationsCmdKPage.verifyNavigationToInvoices(page);
   await organizationsCmdKPage.verifyNavigationToContracts(page);
-  await organizationsCmdKPage.verifyNavigationToSequences(page);
+  await organizationsCmdKPage.verifyNavigationToFlows(page);
   await organizationsCmdKPage.verifyNavigationToSettings(page);
   await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
+});
+
+test('Assign contact to flow', async ({ page }, testInfo) => {
+  const loginPage = new LoginPage(page);
+  const flowsPage = new FlowsPage(page);
+
+  //
+  await loginPage.login();
+  await flowsPage.goToFlows();
+
+  const flowName = await flowsPage.addFlow();
+
+  await flowsPage.checkNewFlowEntry(flowName);
+
+  //
+  // await organizationsCmdKPage.accessCmdK();
+  // await organizationsCmdKPage.verifyFinder();
+  // await organizationsCmdKPage.verifyOrganizationCreation(page, testInfo);
+  // await organizationsCmdKPage.verifyNavigationToTargets(page);
+  // await organizationsCmdKPage.verifyNavigationToOpportunities(page);
+  // await organizationsCmdKPage.verifyNavigationToCustomers(page);
+  // await organizationsCmdKPage.verifyNavigationToContacts(page);
+  // await organizationsCmdKPage.verifyNavigationToInvoices(page);
+  // await organizationsCmdKPage.verifyNavigationToContracts(page);
+  // await organizationsCmdKPage.verifyNavigationToFlows(page);
+  // await organizationsCmdKPage.verifyNavigationToSettings(page);
+  // await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
 });

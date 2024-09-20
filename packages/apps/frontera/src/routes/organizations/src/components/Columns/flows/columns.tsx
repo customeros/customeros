@@ -197,7 +197,13 @@ const columns: Record<string, Column> = {
           {...getTHeadProps(props)}
         />
       ),
-      cell: () => <TextCell text={''} unknownText='No data yet' />,
+      cell: () => (
+        <TextCell
+          text={''}
+          unknownText='No data yet'
+          dataTest={'flow-ended-early-in-all-orgs-table'}
+        />
+      ),
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),

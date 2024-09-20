@@ -41,7 +41,12 @@ export const CreateNewFlow = observer(() => {
     <Command label={`Rename `}>
       <div className='p-6 pb-4 flex flex-col gap-1 '>
         <div className='flex items-center justify-between'>
-          <h1 className='text-base font-semibold'>Create new flow</h1>
+          <h1
+            className='text-base font-semibold'
+            data-test='create-new-flow-modal-title'
+          >
+            Create new flow
+          </h1>
 
           <CommandCancelIconButton
             onClose={() => {
@@ -58,6 +63,7 @@ export const CreateNewFlow = observer(() => {
           variant='unstyled'
           value={sequenceName}
           placeholder='Flow name'
+          dataTest='create-new-flow-name'
           onChange={(e) => {
             setSequenceName(e.target.value);
           }}
@@ -71,6 +77,7 @@ export const CreateNewFlow = observer(() => {
 
       <div className='flex w-full gap-2 pl-6 pr-6 pb-6'>
         <CommandCancelButton
+          dataTest='cancel-create-new-flow'
           onClose={() => {
             store.ui.commandMenu.setOpen(false);
           }}
@@ -80,6 +87,7 @@ export const CreateNewFlow = observer(() => {
           className='w-full'
           colorScheme='primary'
           onClick={handleConfirm}
+          data-test='confirm-create-new-flow'
         >
           Create
         </Button>
