@@ -3,6 +3,7 @@ import React, { useRef, useEffect } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
+import { FlowStore } from '@store/Flows/Flow.store';
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
@@ -31,12 +32,17 @@ export const DeleteConfirmationModal = observer(() => {
       | OrganizationStore
       | TableViewDefStore
       | ContactStore
+      | FlowStore
       | undefined
     >()
     .with('Opportunity', () => store.opportunities.value.get(context.ids?.[0]))
     .with('Organization', () => store.organizations.value.get(context.ids?.[0]))
     .with('Contact', () => store.contacts.value.get(context.ids?.[0]))
     .with('TableViewDef', () => store.tableViewDefs.getById(context.ids?.[0]))
+    .with(
+      'Flow',
+      () => store.flows.value.get(context.ids?.[0]) as FlowStore | undefined,
+    )
     .otherwise(() => undefined);
 
   const handleClose = () => {
