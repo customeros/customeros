@@ -37,6 +37,7 @@ type Subscriptions struct {
 	InvoiceSubscription               InvoiceSubscription
 	ReminderSubscription              ReminderSubscription
 	EnrichSubscription                EnrichSubscription
+	NotifyRealtimeSubscription        NotifyRealtimeSubscription
 }
 
 type GraphSubscription struct {
@@ -137,6 +138,11 @@ type ReminderSubscription struct {
 	PoolSize         int    `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_POOL_SIZE" envDefault:"5" validate:"required,gte=0"`
 	BufferSizeClient uint32 `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_CLIENT_BUFFER_SIZE" envDefault:"10" validate:"required,gte=0"`
 	IgnoreEvents     bool   `env:"EVENT_STORE_SUBSCRIPTIONS_REMINDER_IGNORE_EVENTS" envDefault:"false"`
+}
+
+type NotifyRealtimeSubscription struct {
+	GroupName string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFY_REALTIME_GROUP_NAME" envDefault:"notifyRealtime-v2" validate:"required"`
+	Prefix    string `env:"EVENT_STORE_SUBSCRIPTIONS_NOTIFY_REALTIME_PREFIX" envDefault:"event_completion-" validate:"required"`
 }
 
 type Services struct {

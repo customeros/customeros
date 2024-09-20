@@ -184,6 +184,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 
 	switch evt.GetEventType() {
 
+	case "V1_EVENT_COMPLETED":
+		return nil
+
 	case generic.LinkEntityWithEntityV1:
 		return s.genericEventHandler.OnLinkEntityWithEntityV1(ctx, evt)
 

@@ -115,8 +115,8 @@ func NewAggregateBase(when when) *AggregateBase {
 }
 
 // SetID set AggregateBase ID
-func (a *AggregateBase) SetID(id string) *AggregateBase {
-	a.ID = fmt.Sprintf("%s-%s", a.GetType(), id)
+func (a *AggregateBase) SetID(suffix string) *AggregateBase {
+	a.ID = fmt.Sprintf("%s-%s", a.GetType(), suffix)
 	return a
 }
 

@@ -167,6 +167,19 @@ func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 		return err
 	}
 
+	notifyRealtimeEventSubscriptionSettings := esdb.SubscriptionSettingsDefault()
+	notifyRealtimeEventSubscriptionSettings.ExtraStatistics = false
+	if err := s.subscribeToAll(ctx,
+		s.cfg.Subscriptions.NotifyRealtimeSubscription.GroupName,
+		&esdb.SubscriptionFilter{Type: esdb.StreamFilterType, Prefixes: []string{s.cfg.Subscriptions.NotifyRealtimeSubscription.Prefix}},
+		&notifyRealtimeEventSubscriptionSettings,
+		false,
+		false,
+		esdb.End{},
+	); err != nil {
+		return err
+	}
+
 	return nil
 }
 
