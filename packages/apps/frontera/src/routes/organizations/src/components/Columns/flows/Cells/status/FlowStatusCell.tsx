@@ -39,8 +39,8 @@ export const FlowStatusCell = observer(
     return (
       <div className='flex gap-1 items-center group/relationship'>
         <p
-          data-test='flow-status-in-flows-table'
           onDoubleClick={() => setIsEditing(true)}
+          data-test={`${dataTest}-text-in-flows-table`}
           className={cn(
             'cursor-default text-gray-700',
             !value && 'text-gray-400',
@@ -54,24 +54,24 @@ export const FlowStatusCell = observer(
               size='xxs'
               variant='ghost'
               id='edit-button'
-              dataTest={dataTest}
               aria-label='edit relationship'
               onClick={() => setIsEditing(true)}
               icon={<Edit03 className='text-gray-500' />}
+              dataTest={`${dataTest}-button-in-flows-table`}
               className={cn(
                 'rounded-md opacity-0 group-hover/relationship:opacity-100 min-w-5',
                 isEditing && 'opacity-100',
               )}
             />
           </MenuButton>
-          <MenuList>
+          <MenuList data-test={'flow-statuses'}>
             {flowOptions
               .filter((e) => e.value !== FlowStatus.Archived)
               .map((option) => (
                 <MenuItem
                   key={option.value.toString()}
                   onClick={() => handleSelect(option)}
-                  data-test={`relationship-${option.value}`}
+                  data-test={`flow-status-${option.value}`}
                 >
                   {option.label}
                 </MenuItem>

@@ -83,7 +83,7 @@ const columns: Record<string, Column> = {
     ),
     cell: (props) => (
       <FlowStatusCell
-        dataTest={'flow-status-in-all-orgs-table'}
+        dataTest={'flow-status'}
         id={props.row?.original?.value?.metadata?.id ?? ''}
       />
     ),

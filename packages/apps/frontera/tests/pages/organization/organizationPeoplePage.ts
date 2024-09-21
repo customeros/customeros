@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { Page, expect } from '@playwright/test';
 
 import {
@@ -61,19 +62,27 @@ export class OrganizationPeoplePage {
       this.orgPeopleContactName,
     );
 
-    const requestPromise = createRequestPromise(this.page, 'name', 'John Doe');
+    const contactName = randomUUID().slice(0, 8);
+    const requestPromise = createRequestPromise(this.page, 'name', contactName);
 
     const responsePromise = createResponsePromise(
       this.page,
-      'contact_Update?.id',
+      'contact_Update.id',
       undefined,
     );
 
-    await orgPeopleContactNameInput.pressSequentially('John Doe', {
+    await orgPeopleContactNameInput.pressSequentially(contactName, {
       delay: 500,
     });
-    await Promise.all([requestPromise, responsePromise]);
-    await expect(orgPeopleContactNameInput).toHaveValue('John Doe');
+
+    const [_, response] = await Promise.all([requestPromise, responsePromise]);
+
+    await expect(orgPeopleContactNameInput).toHaveValue(contactName);
+
+    const responseBody = await response.json();
+    const contactId = responseBody.data?.contact_Update?.id;
+
+    return { contactName, contactId };
   }
 
   async addTitleToContact() {
@@ -179,9 +188,13 @@ export class OrganizationPeoplePage {
 
   async createContactFromEmpty() {
     await this.addContactEmpty();
-    await this.addNameToContact();
+
+    const { contactName, contactId } = await this.addNameToContact();
+
     await this.addTitleToContact();
     await this.addJobRolesToContact();
     await this.addDetailsToCustomer();
+
+    return { contactName, contactId };
   }
 }

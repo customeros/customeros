@@ -70,6 +70,7 @@ export const OrganizationSidenav = observer(() => {
           size='xs'
           variant='ghost'
           aria-label='Go back'
+          dataTest='org-side-nav-back'
           icon={<ArrowNarrowLeft className=' text-gray-700 ' />}
           onClick={() => {
             navigate(`/${lastActivePosition?.root || 'finder'}`);

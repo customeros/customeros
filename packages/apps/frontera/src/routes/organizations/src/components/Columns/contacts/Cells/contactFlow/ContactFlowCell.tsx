@@ -56,6 +56,7 @@ export const ContactFlowCell = observer(
             id='edit-button'
             aria-label='edit owner'
             className='edit-button opacity-0'
+            dataTest={`contact-flow-edit-${contactId}`}
             icon={<Edit03 className='text-gray-500 size-3' />}
           />
         </div>
@@ -77,7 +78,10 @@ export const ContactFlowCell = observer(
             )}
           >
             <div ref={itemRef} className='flex overflow-hidden'>
-              <div className=' overflow-x-hidden overflow-ellipsis'>
+              <div
+                data-test='flow-name'
+                className=' overflow-x-hidden overflow-ellipsis'
+              >
                 {flowName}
               </div>
             </div>
@@ -117,6 +121,7 @@ export const ContactFlowCell = observer(
         onBlur={close}
         defaultMenuIsOpen
         placeholder='Flow'
+        dataTest='flow-name'
         backspaceRemovesValue
         openMenuOnClick={false}
         onChange={handleSelect}
