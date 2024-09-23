@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	pkgerrors "github.com/pkg/errors"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -32,6 +31,7 @@ import (
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	pkgerrors "github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 

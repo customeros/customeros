@@ -20,6 +20,7 @@ const (
 	OrganizationPropertyIndustryCheckedAt         OrganizationProperty = "techIndustryCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
 	OrganizationPropertyIcpFit                    OrganizationProperty = "icpFit"
+	OrganizationPropertyHiddenAt                  OrganizationProperty = "hiddenAt"
 )
 
 type OrganizationEntity struct {
@@ -110,6 +111,7 @@ type OrganizationInternalFields struct {
 	IndustryCheckedAt         *time.Time
 	EnrichRequestedAt         *time.Time
 	LastTouchpointRequestedAt *time.Time
+	HiddenAt                  *time.Time
 }
 
 type OrganizationEntities []OrganizationEntity

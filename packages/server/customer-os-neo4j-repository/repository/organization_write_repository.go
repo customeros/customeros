@@ -240,6 +240,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.name = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.name IS NULL OR org.name = '' THEN $name ELSE org.name END,
 						org.description = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.description IS NULL OR org.description = '' THEN $description ELSE org.description END,
 						org.hide = CASE WHEN $overwrite=true OR org.hide IS NULL OR (org.sourceOfTruth=$sourceOfTruth AND $hide = false) THEN $hide ELSE org.hide END,
+						org.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE org.hiddenAt END,
 						org.website = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.website IS NULL OR org.website = '' THEN $website ELSE org.website END,
 						org.industry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.industry IS NULL OR org.industry = '' THEN $industry ELSE org.industry END,
 						org.subIndustry = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.subIndustry IS NULL OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,
@@ -342,6 +343,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	}
 	if data.UpdateHide {
 		cypher += `org.hide = CASE WHEN $overwrite=true OR $hide = false THEN $hide ELSE org.hide END,`
+		cypher += `org.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE org.hiddenAt END,`
 		params["hide"] = data.Hide
 	}
 	if data.UpdateWebsite {
@@ -552,6 +554,7 @@ func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant,
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$id})
 			WHERE org:Organization_%s
 		 SET	org.hide = $hide,
+				org.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE org.hiddenAt END,
 				org.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":     organizationId,

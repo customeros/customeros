@@ -457,6 +457,40 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 	return mapper.MapEntityToContact(contactEntityPtr), nil
 }
 
+// ContactHide is the resolver for the contact_Hide field.
+func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactHide", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV(log.String("request.contactID", contactID))
+
+	contactEntity, err := r.Services.ContactService.GetById(ctx, contactID)
+	if err != nil || contactEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("contact %s not found", contactID)
+		}
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Contact %s not found", contactID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return r.Clients.ContactClient.HideContact(ctx, &contactpb.ContactIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			ContactId:      contactID,
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error while hiding contact")
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	return &model.ActionResponse{Accepted: true}, nil
+}
+
 // ContactAddTag is the resolver for the contact_AddTag field.
 func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTag", graphql.GetOperationContext(ctx))
