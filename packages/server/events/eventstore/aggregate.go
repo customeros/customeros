@@ -98,6 +98,7 @@ type AggregateBase struct {
 	withAppliedEvents bool
 	when              when
 	streamMetadata    *esdb.StreamMetadata
+	temporal          bool
 }
 
 func NewAggregateBase(when when) *AggregateBase {
@@ -131,7 +132,11 @@ func (a *AggregateBase) GetTenant() string {
 }
 
 func (a *AggregateBase) IsTemporal() bool {
-	return false
+	return a.temporal
+}
+
+func (a *AggregateBase) SetTemporal(temporal bool) {
+	a.temporal = temporal
 }
 
 // SetType set AggregateBase AggregateType

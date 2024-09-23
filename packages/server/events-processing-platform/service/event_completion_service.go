@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -76,60 +75,44 @@ func (s *eventCompletionService) NotifyEventProcessed(ctx context.Context, reque
 		EntityID:  request.EntityId,
 	}
 
-	for attempt := 0; attempt == 0 || attempt < s.cfg.Utils.RetriesOnOptimisticLockException; attempt++ {
-		aggr := eventstore.NewCommonAggregateWithId(aggregateType, request.Tenant)
-		if aggr == nil {
-			tracing.TraceErr(span, errors.New("invalid aggregate"))
-			return &emptypb.Empty{}, nil
-		}
+	aggr := eventstore.NewCommonAggregateWithId(aggregateType, request.Tenant)
+	if aggr == nil {
+		tracing.TraceErr(span, errors.New("invalid aggregate"))
+		return &emptypb.Empty{}, nil
+	}
+	aggr.SetTemporal(true)
 
-		err = eventstore.LoadAggregate(ctx, s.aggregateStore, aggr, *eventstore.NewLoadAggregateOptions().WithSkipLoadEvents())
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error loading aggregate"))
-			return &emptypb.Empty{}, nil
-		}
+	err = eventstore.LoadAggregate(ctx, s.aggregateStore, aggr, *eventstore.NewLoadAggregateOptions().WithSkipLoadEvents())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error loading aggregate"))
+		return &emptypb.Empty{}, nil
+	}
 
-		// if aggregate version is divided by 1000, then update stream metadata
-		if aggr.GetVersion()%1000 == 0 {
-			updateStreamMetadata = true
-		}
+	// if aggregate version is divided by 1000, then update stream metadata
+	if aggr.GetVersion()%1000 == 0 {
+		updateStreamMetadata = true
+	}
 
-		event := eventstore.NewBaseEvent(aggr, eventType)
-		if err = event.SetJsonData(&eventData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error setting json data"))
-			return &emptypb.Empty{}, nil
-		}
-		err = aggr.Apply(event)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "error applying event"))
-			return &emptypb.Empty{}, nil
-		}
+	event := eventstore.NewBaseEvent(aggr, eventType)
+	if err = event.SetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error setting json data"))
+		return &emptypb.Empty{}, nil
+	}
+	err = aggr.Apply(event)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error applying event"))
+		return &emptypb.Empty{}, nil
+	}
 
-		err = s.aggregateStore.Save(ctx, aggr)
-		if err == nil {
-			break
-		}
-
-		if eventstore.IsEventStoreErrorCodeWrongExpectedVersion(err) {
-			if attempt == s.cfg.Utils.RetriesOnOptimisticLockException-1 {
-				// If we have reached the maximum number of retries, return an error
-				tracing.TraceErr(span, errors.Wrap(err, "reached maximum number of retries"))
-				return &emptypb.Empty{}, nil
-			}
-			// Handle concurrency error
-			span.LogFields(log.Int("retryAttempt", attempt+1))
-			time.Sleep(utils.BackOffExponentialDelay(attempt)) // backoffDelay is a function that increases the delay with each attempt
-			continue                                           // Retry
-		} else {
-			// Some other error occurred
-			tracing.TraceErr(span, errors.Wrap(err, "error saving aggregate"))
-			return &emptypb.Empty{}, nil
-		}
+	err = s.aggregateStore.Save(ctx, aggr)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "error saving aggregate"))
+		return &emptypb.Empty{}, nil
 	}
 
 	if updateStreamMetadata {
-		// 1 day in seconds
-		maxAgeSeconds := 24 * 60 * 60
+		// 7 days in seconds
+		maxAgeSeconds := 7 * 24 * 60 * 60
 		streamMetadata := esdb.StreamMetadata{}
 		streamMetadata.SetMaxAge(time.Duration(maxAgeSeconds) * time.Second)
 
