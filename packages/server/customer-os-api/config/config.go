@@ -30,7 +30,7 @@ type Config struct {
 	Metrics          metrics.Config
 	AppConfig        struct {
 		AllowOrigins           []string `env:"ALLOW_ORIGINS" envDefault:"*"`
-		AllowHeaders           []string `env:"ALLOW_ORIGINS" envDefault:"x-openline-username"`
+		AllowHeaders           []string `env:"ALLOW_HEADERS" envDefault:"x-openline-username"`
 		TrackingPublicUrl      string   `env:"TRACKING_PUBLIC_URL" envDefault:"https://custosmetrics.com"`
 		InvoicePaidRedirectUrl string   `env:"INVOICE_PAID_REDIRECT_URL" envDefault:"https://customeros.ai/payments/status/paid/"`
 		Mailstack              struct {
