@@ -18,6 +18,8 @@ defmodule CustomerOsRealtimeWeb.UserSocket do
   channel "Organizations:*", CustomerOsRealtimeWeb.OrganizationsChannel
   channel "Contract:*", CustomerOsRealtimeWeb.ContractChannel
   channel "Contracts:*", CustomerOsRealtimeWeb.ContractsChannel
+  channel "Flow:*", CustomerOsRealtimeWeb.FlowChannel
+  channel "Flows:*", CustomerOsRealtimeWeb.FlowsChannel
   channel "FlowContact:*", CustomerOsRealtimeWeb.FlowContactChannel
   channel "FlowContacts:*", CustomerOsRealtimeWeb.FlowContactsChannel
   channel "ContractLineItem:*", CustomerOsRealtimeWeb.ContractLineItemChannel
