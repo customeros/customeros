@@ -8,9 +8,9 @@ export const PropertyFilter = ({ name }: PropertyFilterInterface) => {
   return (
     <Button
       size='xs'
-      isDisabled
+      variant='outline'
       colorScheme='grayModern'
-      className='border-transparent'
+      className='cursor-not-allowed font-normal bg-white focus:bg-white hover:bg-white'
     >
       {name || 'Property'}
     </Button>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -26,21 +26,29 @@ export const ValueFilter = ({
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(filterValue);
 
-  const handleSetFilter = (value: boolean) => {
-    setIsOpen(value);
+  useEffect(() => {
+    if (filterName) {
+      const timer = setTimeout(() => setIsOpen(true), 0);
 
-    if (!value) {
-      onChangeFilterValue(inputValue);
+      return () => clearTimeout(timer);
     }
+  }, [filterName]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newValue = e.target.value;
+
+    setInputValue(newValue);
+    onChangeFilterValue(newValue);
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={(value) => handleSetFilter(value)}>
+    <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
       <PopoverTrigger>
         <Button
           size='xs'
           colorScheme='grayModern'
-          className='border-transparent rounded-none text-gray-400'
+          onClick={() => setIsOpen(!isOpen)}
+          className='border-l-0 rounded-none text-gray-700 bg-white font-normal'
         >
           {filterValue ? filterValue : '...'}
         </Button>
@@ -50,8 +58,8 @@ export const ValueFilter = ({
           size='sm'
           variant='unstyled'
           value={inputValue}
+          onChange={handleInputChange}
           placeholder={`${filterName} ${operatorValue}`}
-          onChange={(e) => setInputValue(e.target.value)}
         />
       </PopoverContent>
     </Popover>

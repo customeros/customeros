@@ -117,20 +117,30 @@ export const Filters = observer(
             onClearFilter={() => {
               tableViewDef?.removeFilter(f.property);
             }}
-            onChangeFilterValue={(value: string) => {
-              tableViewDef?.setFilter({
-                ...f,
-                value: value,
-                property: f.property,
-                active: true,
-              });
-            }}
             onChangeOperator={(operation: string) => {
               tableViewDef?.setFilter({
                 ...f,
                 operation: (operation as ComparisonOperator) || '',
                 property: f.property,
               });
+            }}
+            onChangeFilterValue={(value: string) => {
+              if (value.length === 0) {
+                tableViewDef?.setFilter({
+                  ...f,
+                  property: f.property,
+                  active: false,
+                  operation: f.operation,
+                  value: null,
+                });
+              } else {
+                tableViewDef?.setFilter({
+                  ...f,
+                  value: value,
+                  property: f.property,
+                  active: true,
+                });
+              }
             }}
           />
         ))}

@@ -9,11 +9,12 @@ export const ClearFilter = ({ onClearFilter }: ClearFilterProps) => {
   return (
     <IconButton
       size='xs'
-      icon={<X />}
+      variant='outline'
       onClick={onClearFilter}
       colorScheme='grayModern'
-      className='border-transparent'
       aria-label='clear filter selected'
+      icon={<X className='text-gray-500' />}
+      className=' bg-white border-[1px] border-grayModern-300'
     />
   );
 };

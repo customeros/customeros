@@ -33,8 +33,9 @@ export const OperatorFilter = ({
       <MenuButton>
         <Button
           size='xs'
+          variant='outline'
           colorScheme='grayModern'
-          className=' border-transparent rounded-none'
+          className='rounded-none font-normal bg-white text-gray-500'
         >
           {value
             ? handleOperatorName(value as ComparisonOperator)
