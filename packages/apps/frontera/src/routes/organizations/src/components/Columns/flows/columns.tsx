@@ -82,7 +82,10 @@ const columns: Record<string, Column> = {
       />
     ),
     cell: (props) => (
-      <FlowStatusCell id={props.row?.original?.value?.metadata?.id ?? ''} />
+      <FlowStatusCell
+        dataTest={'flow-status'}
+        id={props.row?.original?.value?.metadata?.id ?? ''}
+      />
     ),
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
@@ -131,7 +134,13 @@ const columns: Record<string, Column> = {
           {...getTHeadProps(props)}
         />
       ),
-      cell: () => <TextCell text={''} unknownText='No data yet' />,
+      cell: () => (
+        <TextCell
+          text={''}
+          unknownText='No data yet'
+          dataTest='flow-in-progress-in-flows-table'
+        />
+      ),
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),
@@ -153,7 +162,13 @@ const columns: Record<string, Column> = {
           {...getTHeadProps(props)}
         />
       ),
-      cell: () => <TextCell text={''} unknownText='No data yet' />,
+      cell: () => (
+        <TextCell
+          text={''}
+          unknownText='No data yet'
+          dataTest={'flow-not-started-in-flows-table'}
+        />
+      ),
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),
@@ -175,7 +190,13 @@ const columns: Record<string, Column> = {
           {...getTHeadProps(props)}
         />
       ),
-      cell: () => <TextCell text={''} unknownText='No data yet' />,
+      cell: () => (
+        <TextCell
+          text={''}
+          unknownText='No data yet'
+          dataTest='flow-completed-in-flows-table'
+        />
+      ),
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),
@@ -201,7 +222,7 @@ const columns: Record<string, Column> = {
         <TextCell
           text={''}
           unknownText='No data yet'
-          dataTest={'flow-ended-early-in-all-orgs-table'}
+          dataTest={'flow-ended-early-in-flows-table'}
         />
       ),
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,

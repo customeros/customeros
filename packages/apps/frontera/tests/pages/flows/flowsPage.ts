@@ -2,7 +2,6 @@ import { randomUUID } from 'crypto';
 import { Page, expect } from '@playwright/test';
 
 import {
-  assertWithRetry,
   createRequestPromise,
   createResponsePromise,
   clickLocatorsThatAreVisible,
@@ -25,12 +24,25 @@ export class FlowsPage {
   createNewFlowName = 'input[data-test="create-new-flow-name"]';
   cancelCreateNewFlow = 'button[data-test="cancel-create-new-flow"]';
   confirmCreateNewFlow = 'button[data-test="confirm-create-new-flow"]';
-  flowNameInAllOrgsTable = 'div[data-test="flow-name-in-all-orgs-table"]';
-  flowEndedEarlyInAllOrgsTable =
-    'div[data-test="flow-ended-early-in-all-orgs-table"]';
+  flowNameInFlowsTable = 'div[data-test="flow-name-in-flows-table"]';
+  flowEndedEarlyInFlowTable =
+    'div[data-test="flow-ended-early-in-flows-table"]';
+  flowNotStartedInFlowsTable =
+    'div[data-test="flow-not-started-in-flows-table"]';
+  flowStatusTextInFlowsTable = 'p[data-test="flow-status-text-in-flows-table"]';
+  flowStatusButtonInFlowsTable =
+    'button[data-test="flow-status-button-in-flows-table"]';
+  flowInProgressInFlowsTable =
+    'div[data-test="flow-in-progress-in-flows-table"]';
+  flowCompletedInFlowsTable = 'div[data-test="flow-completed-in-flows-table"]';
   private flowsActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
+  private flowStatuses =
+    'div[data-test="flow-statuses"] > div[role="menuitem"]';
+  private flowsStatusLive = 'div[data-test="flow-status-ACTIVE"]';
+  private flowsStatusNotStarted = 'div[data-test="flow-status-INACTIVE"]';
+  private flowsStatusPaused = 'div[data-test="flow-status-PAUSED"]';
 
   async goToFlows() {
     await clickLocatorsThatAreVisible(this.page, this.sideNavItemAllFlows);
@@ -63,17 +75,17 @@ export class FlowsPage {
 
     await Promise.all([requestPromise, responsePromise]);
     await this.page.waitForSelector(
-      `${this.finderTableFlows} ${this.flowNameInAllOrgsTable}:has-text("${flowName}")`,
+      `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${flowName}")`,
       { timeout: 30000 },
     );
 
     return flowName;
   }
 
-  async checkNewFlowEntry(flowName: string) {
+  async checkNewFlowEntry(expectedFlowName: string, notStarted: string) {
     const flowNameInAllOrgsTable = this.page
       .locator(
-        `${this.finderTableFlows} ${this.flowNameInAllOrgsTable}:has-text("${flowName}")`,
+        `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${expectedFlowName}")`,
       )
       .locator('..')
       .locator('..')
@@ -81,25 +93,40 @@ export class FlowsPage {
       .locator('..')
       .locator('..');
 
-    await this.page.waitForTimeout(2000);
-    await this.page.reload();
     await this.page.waitForSelector('[data-index="0"]', { timeout: 30000 });
 
-    await assertWithRetry(async () => {
-      const flow = await flowNameInAllOrgsTable
-        .locator(this.flowNameInAllOrgsTable)
-        .innerText();
+    const actualFlow = await flowNameInAllOrgsTable
+      .locator(this.flowNameInFlowsTable)
+      .innerText();
 
-      expect(flow).toBe(flowName);
-    });
+    const actualFlowEndedEarly = await flowNameInAllOrgsTable
+      .locator(this.flowEndedEarlyInFlowTable)
+      .innerText();
 
-    await assertWithRetry(async () => {
-      const flow = await flowNameInAllOrgsTable
-        .locator(this.flowEndedEarlyInAllOrgsTable)
-        .innerText();
+    const actualFlowNotStarted = await flowNameInAllOrgsTable
+      .locator(this.flowNotStartedInFlowsTable)
+      .innerText();
 
-      expect(flow).toBe('No data yet');
-    });
+    const actualFlowStatusInAllOrgsTable = await flowNameInAllOrgsTable
+      .locator(this.flowStatusTextInFlowsTable)
+      .innerText();
+
+    const actualflowInProgressInFlowsTable = await flowNameInAllOrgsTable
+      .locator(this.flowInProgressInFlowsTable)
+      .innerText();
+
+    const actualFlowCompletedInFlowsTable = await flowNameInAllOrgsTable
+      .locator(this.flowCompletedInFlowsTable)
+      .innerText();
+
+    await Promise.all([
+      expect.soft(actualFlow).toBe(expectedFlowName),
+      expect.soft(actualFlowEndedEarly).toBe('No data yet'),
+      expect.soft(actualFlowNotStarted).toBe('No data yet'),
+      expect.soft(actualFlowStatusInAllOrgsTable).toBe(notStarted),
+      expect.soft(actualflowInProgressInFlowsTable).toBe('No data yet'),
+      expect.soft(actualFlowCompletedInFlowsTable).toBe('No data yet'),
+    ]);
   }
 
   async waitForPageLoad() {
@@ -151,5 +178,32 @@ export class FlowsPage {
 
   async confirmArchiveOrgs() {
     await clickLocatorsThatAreVisible(this.page, this.orgActionsConfirmArchive);
+  }
+
+  async checkFlowStatuses(flowName: string, live: string) {
+    const flowNameInFlowsTable = this.page
+      .locator(
+        `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${flowName}")`,
+      )
+      .locator('..')
+      .locator('..')
+      .locator('..')
+      .locator('..')
+      .locator('..');
+
+    await flowNameInFlowsTable
+      .locator(this.flowStatusButtonInFlowsTable)
+      .click();
+
+    const flowStatusesGroup = this.page.locator(this.flowStatuses);
+
+    await Promise.all([
+      expect.soft(flowStatusesGroup).toHaveCount(3),
+      expect.soft(flowStatusesGroup.nth(0)).toHaveText('Live'),
+      expect.soft(flowStatusesGroup.nth(1)).toHaveText('Not Started'),
+      expect.soft(flowStatusesGroup.nth(2)).toHaveText('Paused'),
+    ]);
+
+    await this.page.keyboard.press('Escape');
   }
 }

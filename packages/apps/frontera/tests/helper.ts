@@ -2,8 +2,8 @@ import { Page, expect, Locator } from '@playwright/test';
 
 export async function assertWithRetry(
   assertionFunc: () => Promise<void>,
-  maxRetries = 5,
-  retryInterval = 3000,
+  maxRetries = 10,
+  retryInterval = 1000,
 ): Promise<void> {
   let lastError;
 

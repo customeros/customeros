@@ -2,6 +2,8 @@ import { test } from '@playwright/test';
 
 import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
+import { FlowStatuses } from './pages/flows/flowsStatuses';
+import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
@@ -65,7 +67,7 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await new Promise((resolve) => setTimeout(resolve, 1500));
   await organizationsPage.goToOrganization(organizationName);
 
-  // Go to People page
+  // Go to About page
   await organizationSideNavPage.goToAbout();
   await organizationAboutPage.populateAboutFields();
   await organizationAboutPage.checkPopulatedAboutFields(
@@ -195,6 +197,10 @@ test('CmdK global menu', async ({ page }, testInfo) => {
 test('Assign contact to flow', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const flowsPage = new FlowsPage(page);
+  const organizationsPage = new OrganizationsPage(page);
+  const organizationPeoplePage = new OrganizationPeoplePage(page);
+  const organizationSideNavPage = new OrganizationSideNavPage(page);
+  const contactsPage = new ContactsPage(page);
 
   //
   await loginPage.login();
@@ -202,19 +208,26 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
 
   const flowName = await flowsPage.addFlow();
 
-  await flowsPage.checkNewFlowEntry(flowName);
+  await flowsPage.checkNewFlowEntry(flowName, FlowStatuses.NotStarted);
+  await flowsPage.checkFlowStatuses(flowName, FlowStatuses.Live);
 
-  //
-  // await organizationsCmdKPage.accessCmdK();
-  // await organizationsCmdKPage.verifyFinder();
-  // await organizationsCmdKPage.verifyOrganizationCreation(page, testInfo);
-  // await organizationsCmdKPage.verifyNavigationToTargets(page);
-  // await organizationsCmdKPage.verifyNavigationToOpportunities(page);
-  // await organizationsCmdKPage.verifyNavigationToCustomers(page);
-  // await organizationsCmdKPage.verifyNavigationToContacts(page);
-  // await organizationsCmdKPage.verifyNavigationToInvoices(page);
-  // await organizationsCmdKPage.verifyNavigationToContracts(page);
-  // await organizationsCmdKPage.verifyNavigationToFlows(page);
-  // await organizationsCmdKPage.verifyNavigationToSettings(page);
-  // await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
+  await organizationsPage.goToAllOrgs();
+
+  // Add organization and check new entry
+  const organizationName = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
+
+  //Access newly created organization
+  await new Promise((resolve) => setTimeout(resolve, 1500));
+  await organizationsPage.goToOrganization(organizationName);
+
+  // Go to People page
+  await organizationSideNavPage.goToPeople();
+
+  const contact = await organizationPeoplePage.createContactFromEmpty();
+
+  await organizationSideNavPage.goBack();
+  await contactsPage.waitForPageLoad();
+  await contactsPage.updateContactFlow(contact, flowName);
 });

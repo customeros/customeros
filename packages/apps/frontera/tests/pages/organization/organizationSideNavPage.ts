@@ -17,6 +17,8 @@ export class OrganizationSideNavPage {
     'button[data-test="org-side-nav-item-success"]';
   private orgSideNavItemIssues = 'button[data-test="org-side-nav-item-issues"]';
 
+  private orgSideNavBack = 'button[data-test="org-side-nav-back"]';
+
   async goToAbout() {
     await this.page.click(this.orgSideNavItemAbout);
   }
@@ -35,5 +37,9 @@ export class OrganizationSideNavPage {
 
   async goToIssues() {
     await this.page.click(this.orgSideNavItemIssues);
+  }
+
+  async goBack() {
+    await this.page.click(this.orgSideNavBack);
   }
 }

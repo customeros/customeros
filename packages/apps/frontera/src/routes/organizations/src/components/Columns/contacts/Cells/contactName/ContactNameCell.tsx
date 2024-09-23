@@ -85,6 +85,7 @@ export const ContactNameCell = observer(
           <p
             role='button'
             onClick={handleNavigate}
+            data-test={`contact-name-in-contacts-table`}
             className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
           >
             {contactName}
