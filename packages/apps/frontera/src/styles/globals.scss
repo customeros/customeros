@@ -298,3 +298,14 @@
     width: 100%;
   }
 }
+.react-flow__edge.react-flow__edge-baseEdge {
+  --xy-edge-stroke-selected-default: #D0D5DD;
+
+  &.selected {
+    --xy-edge-stroke-selected-default: #9E77ED;
+
+  }
+  path {
+    transition: stroke 0.3s;
+  }
+}

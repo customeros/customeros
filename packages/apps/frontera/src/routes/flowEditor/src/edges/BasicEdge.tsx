@@ -1,145 +1,97 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 
+import { useKey } from 'rooks';
+import { observer } from 'mobx-react-lite';
 import {
   BaseEdge,
   EdgeProps,
   MarkerType,
   useReactFlow,
-  getBezierPath,
-  ViewportPortal,
+  getSmoothStepPath,
   EdgeLabelRenderer,
 } from '@xyflow/react';
 
-import { X } from '@ui/media/icons/X.tsx';
 import { Plus } from '@ui/media/icons/Plus.tsx';
 import { IconButton } from '@ui/form/IconButton';
-import { Button } from '@ui/form/Button/Button.tsx';
+import { useStore } from '@shared/hooks/useStore';
 
-export const BasicEdge: React.FC<EdgeProps> = ({ id, data, ...props }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const { setEdges, setNodes, getNodes } = useReactFlow();
-  const [edgePath, labelX, labelY] = getBezierPath({
-    ...props,
-  });
+import { StepViewportPortal } from './EdgeCommandMenu.tsx';
 
-  const nodes = getNodes();
+export const BasicEdge: React.FC<EdgeProps> = observer(
+  ({ id, data, ...props }) => {
+    const [isOpen] = useState(false);
+    const { setEdges } = useReactFlow();
+    const [edgePath, labelX, labelY] = getSmoothStepPath({
+      ...props,
+    });
+    const { ui } = useStore();
 
-  const toggleOpen = () => {
-    setIsOpen(!isOpen);
-  };
+    const selected = props.selected;
 
-  const handleDisconnectSteps = () => {
-    setEdges((edges) => edges.filter((edge) => edge.id !== id));
-  };
+    const toggleOpen = () => {
+      if (ui.flowCommandMenu.isOpen) {
+        ui.flowCommandMenu.setOpen(false);
+      }
 
-  const handleAddNode = (type: 'trigger' | 'step') => {
-    const sourceNode = nodes.find((node) => node.id === props.source);
-    const targetNode = nodes.find((node) => node.id === props.target);
-
-    if (!sourceNode || !targetNode) return;
-
-    // Calculate the midpoint between source and target nodes
-    const midX = (sourceNode.position.x + targetNode.position.x) / 2;
-    const midY = (sourceNode.position.y + targetNode.position.y) / 2;
-
-    // Create the new node
-    const newNode = {
-      id: `${type}-${nodes.length + 1}`,
-      type, // or any other type you want
-      position: { x: midX, y: midY },
-      data: { label: `New Step ${nodes.length + 1}` },
+      ui.flowCommandMenu.setType('StepsHub');
+      ui.flowCommandMenu.setOpen(true);
+      ui.flowCommandMenu.setContext({
+        entity: 'Step',
+        id,
+        meta: {
+          source: props.source,
+          target: props.target,
+        },
+      });
     };
 
-    // Create two new edges
-    const edgeToNewNode = {
-      id: `e${props.source}-${newNode.id}`,
-      source: props.source,
-      target: newNode.id,
-      type: 'baseEdge',
+    const handleDisconnectSteps = () => {
+      setEdges((edges) => edges.filter((edge) => edge.id !== id));
     };
 
-    const edgeFromNewNode = {
-      id: `e${newNode.id}-${props.target}`,
-      source: newNode.id,
-      target: props.target,
-      type: 'baseEdge',
-    };
+    useKey('Backspace', handleDisconnectSteps, {
+      when: selected,
+    });
 
-    // Update nodes and edges
-    setNodes((nds) => nds.concat(newNode));
-    setEdges(
-      (eds) =>
-        eds
-          .filter((e) => e.id !== id) // Remove the old edge
-          .concat([edgeToNewNode, edgeFromNewNode]), // Add the new edges
-    );
-  };
+    return (
+      <>
+        <BaseEdge
+          {...props}
+          path={edgePath}
+          markerEnd={MarkerType.ArrowClosed}
+        />
 
-  return (
-    <>
-      <BaseEdge path={edgePath} markerEnd={MarkerType.Arrow} />
-      <EdgeLabelRenderer>
-        <div
-          className='nodrag nopan'
-          style={{
-            position: 'absolute',
-            transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
-            fontSize: 12,
-            pointerEvents: 'all',
-          }}
-        >
-          <IconButton
-            size='xxs'
-            onClick={toggleOpen}
-            aria-label='Add step or trigger'
-            className='text-white bg-gray-700 hover:bg-gray-600 hover:text-white focus:bg-gray-600 focus:text-white rounded-full'
-            icon={
-              isOpen ? (
-                <X className='text-inherit' />
-              ) : (
-                <Plus className='text-inherit' />
-              )
-            }
-          />
-        </div>
-      </EdgeLabelRenderer>
-
-      {isOpen && (
-        <ViewportPortal>
+        <EdgeLabelRenderer>
           <div
-            className={`bg-white shadow-md border rounded-lg p-2 flex flex-col justify-start pointer-events-auto`}
+            className='nodrag nopan'
             style={{
-              transform: `translate(-50%, -50%) translate(${labelX + 60}px,${
-                labelY + 30
-              }px)`,
               position: 'absolute',
+              transform: `translate(-50%, -50%) translate(${labelX}px,${labelY}px)`,
+              fontSize: 12,
+              pointerEvents: 'all',
             }}
           >
-            <Button
-              variant='ghost'
-              onClick={() => handleAddNode('step')}
-              className='px-1 py-0.5 cursor-pointer justify-start'
-            >
-              Add step
-            </Button>
-            <Button
-              variant='ghost'
-              onClick={() => handleAddNode('trigger')}
-              className='px-1 py-0.5 cursor-pointer justify-start'
-            >
-              Add trigger
-            </Button>
-
-            <Button
-              variant='ghost'
-              onClick={handleDisconnectSteps}
-              className='px-1 py-0.5 cursor-pointer justify-start'
-            >
-              Disconnect those steps
-            </Button>
+            <IconButton
+              size='xxs'
+              onClick={toggleOpen}
+              aria-label='Add step or trigger'
+              className='text-white bg-gray-700 hover:bg-gray-600 hover:text-white focus:bg-gray-600 focus:text-white rounded-full'
+              icon={
+                <Plus
+                  className='text-inherit transition-transform duration-100'
+                  style={{ transform: isOpen ? 'rotate(45deg)' : 'initial' }}
+                />
+              }
+            />
           </div>
-        </ViewportPortal>
-      )}
-    </>
-  );
-};
+        </EdgeLabelRenderer>
+
+        <StepViewportPortal
+          id={id}
+          positionAbsoluteX={labelX}
+          positionAbsoluteY={labelY}
+        />
+      </>
+    );
+  },
+);

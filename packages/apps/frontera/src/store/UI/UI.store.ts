@@ -1,4 +1,5 @@
 import { makeAutoObservable } from 'mobx';
+import { FlowStepCommandMenuStore } from '@store/UI/FlowStepCommandMenu.store.ts';
 
 import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
@@ -17,6 +18,7 @@ export class UIStore {
   movedIcpOrganization: number = 0;
   focusRow: number | string | null = null;
   commandMenu = new CommandMenuStore();
+  flowCommandMenu = new FlowStepCommandMenuStore();
   private activeConfirmationCallback: () => void = () => {};
 
   constructor() {

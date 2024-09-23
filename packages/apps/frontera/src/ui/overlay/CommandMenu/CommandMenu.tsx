@@ -17,7 +17,9 @@ interface CommandInputProps
   value?: string;
   asChild?: boolean;
   placeholder: string;
+  wrapperClassName?: string;
   children?: React.ReactNode;
+  inputWrapperClassName?: string;
   onValueChange?: (value: string) => void;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
 }
@@ -29,16 +31,28 @@ export const CommandInput = ({
   placeholder,
   onValueChange,
   onKeyDown,
+  wrapperClassName,
+  inputWrapperClassName,
   ...rest
 }: CommandInputProps) => {
   return (
-    <div className='relative w-full p-6 pb-2 flex flex-col gap-2 border-b border-b-gray-100'>
+    <div
+      className={cn(
+        'relative w-full p-6 pb-2 flex flex-col gap-2 border-b border-b-gray-100',
+        wrapperClassName,
+      )}
+    >
       {label && (
         <Tag size='md' variant='subtle' colorScheme='gray'>
           <TagLabel>{label}</TagLabel>
         </Tag>
       )}
-      <div className='w-full min-h-10 flex items-center'>
+      <div
+        className={cn(
+          'w-full min-h-10 flex items-center',
+          inputWrapperClassName,
+        )}
+      >
         <Command.Input
           autoFocus
           asChild={asChild}

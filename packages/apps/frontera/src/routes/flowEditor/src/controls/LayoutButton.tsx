@@ -1,7 +1,9 @@
 import React, { useCallback, useLayoutEffect } from 'react';
 
-import ELK from 'elkjs/lib/elk.bundled.js';
+import { Edge, Node } from '@xyflow/react';
+import { ElkNode, LayoutOptions } from 'elkjs/lib/elk-api';
 import { useReactFlow, ControlButton } from '@xyflow/react';
+import ELK, { ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
 
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02.tsx';
 
@@ -20,9 +22,48 @@ const elkOptions = {
   'elk.spacing.nodeNode': '80',
 };
 
-const getLayoutedElements = (nodes, edges, options = {}) => {
+const getNodeWidth = (node: Node) => {
+  if (node.type === 'trigger') {
+    if (node.data.triggerType === 'EndFlow') {
+      return {
+        width: 131,
+        height: 56,
+      };
+    }
+
+    return {
+      width: 300,
+      height: 71,
+    };
+  }
+
+  if (node.type === 'action') {
+    if (node.data.stepType === 'Wait') {
+      return {
+        width: 150,
+        height: 56,
+      };
+    }
+
+    return {
+      width: 300,
+      height: 56,
+    };
+  }
+
+  return {
+    width: 200,
+    height: 75,
+  };
+};
+
+export const getLayoutedElements = (
+  nodes: Node[],
+  edges: Edge[],
+  options: LayoutOptions = {},
+) => {
   const isHorizontal = options?.['elk.direction'] === 'RIGHT';
-  const graph = {
+  const graph: ElkNode = {
     id: 'root',
     layoutOptions: options,
     children: nodes.map((node) => ({
@@ -33,10 +74,13 @@ const getLayoutedElements = (nodes, edges, options = {}) => {
       sourcePosition: isHorizontal ? 'right' : 'bottom',
 
       // Hardcode a width and height for elk to use when layouting.
-      width: 200,
-      height: 75,
+      width: node.width ?? getNodeWidth(node).width,
+      height: node.height ?? getNodeWidth(node).height,
+      properties: {
+        'org.eclipse.elk.portConstraints': 'FIXED_ORDER',
+      },
     })),
-    edges: edges,
+    edges: edges as unknown as ElkExtendedEdge[],
   };
 
   return elk
@@ -65,6 +109,7 @@ export const LayoutButton = () => {
       const es = edges;
 
       getLayoutedElements(ns, es, opts).then(
+        // @ts-expect-error not for poc
         ({ nodes: layoutedNodes, edges: layoutedEdges }) => {
           setNodes(layoutedNodes);
           setEdges(layoutedEdges);

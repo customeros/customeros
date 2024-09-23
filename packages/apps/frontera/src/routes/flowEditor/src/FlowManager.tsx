@@ -1,6 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback } from 'react';
 
 import { useKey } from 'rooks';
+import { observer } from 'mobx-react-lite';
 import { OnConnect } from '@xyflow/system';
 import {
   Edge,
@@ -14,7 +15,8 @@ import {
   useEdgesState,
 } from '@xyflow/react';
 
-import SidePanel from './SidePanel';
+import { useStore } from '@shared/hooks/useStore';
+
 import { BasicEdge } from './edges';
 import { nodeTypes } from './Nodes.tsx';
 import { Toolbar } from './controls/Toolbar.tsx';
@@ -24,30 +26,53 @@ const edgeTypes = {
   baseEdge: BasicEdge,
 };
 
-export const MarketingFlowBuilder = () => {
-  const [nodes, setNodes, onNodesChange] = useNodesState([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
-  const [open, setOpen] = useState<string | false>(false);
-  const { screenToFlowPosition } = useReactFlow();
+const initialNodes = [
+  {
+    id: 'tn-1',
+    type: 'trigger',
 
-  useEffect(() => {
-    // Add the start node if it doesn't exist
-    if (!nodes.some((node) => node?.type === 'startNode')) {
-      setNodes([
-        //@ts-expect-error not important at this moment
-        {
-          id: 'start-node',
-          type: 'startNode',
-          position: { x: 0, y: 0 },
-          data: {
-            triggerType: 'manual',
-            interval: 1,
-            unit: 'days',
-          },
-        },
-      ]);
-    }
-  }, []);
+    position: { x: 250, y: 100 },
+    data: {
+      triggerEntity: undefined,
+      triggerType: undefined,
+    },
+  },
+  {
+    id: 'tn-2',
+    type: 'trigger',
+    position: { x: 320, y: 300 },
+    data: {
+      triggerEntity: undefined,
+      triggerType: 'EndFlow',
+    },
+  },
+];
+
+const initialEdges: Edge[] = [
+  {
+    id: 'e1-2',
+    source: 'tn-1',
+    target: 'tn-2',
+    selected: false,
+    selectable: true,
+    focusable: true,
+    interactionWidth: 60,
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 60,
+      height: 60,
+      color: '#FF0072',
+    },
+    type: 'baseEdge', // You can change this to other types like 'default', 'straight', etc.
+  },
+];
+
+export const MarketingFlowBuilder = observer(() => {
+  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+
+  const { screenToFlowPosition } = useReactFlow();
+  const { ui } = useStore();
 
   const onConnect: OnConnect = useCallback(
     (params) => {
@@ -57,16 +82,14 @@ export const MarketingFlowBuilder = () => {
         timeUnit: 'days',
       };
 
-      //@ts-expect-error not important at this moment
       setEdges((eds) =>
         addEdge(
           {
             ...params,
             type: 'baseEdge',
+
             data: edgeData,
-            style: { strokeWidth: 2 },
             markerEnd: { type: MarkerType.Arrow },
-            label: `1 day`, // Default label
           },
           eds,
         ),
@@ -99,11 +122,10 @@ export const MarketingFlowBuilder = () => {
         setNodes((nds) => nds.concat(newNode));
         setEdges((eds) =>
           eds.concat({
-            //@ts-expect-error not important at this moment
             id: `e${id}-${newNode.id}`,
             target: newNode.id,
             type: 'baseEdge',
-            source: connectionState?.fromNode?.id,
+            source: connectionState.fromNode?.id ?? '',
           }),
         );
       }
@@ -111,43 +133,16 @@ export const MarketingFlowBuilder = () => {
     [screenToFlowPosition],
   );
 
-  const editNode = useCallback((nodeId: string) => {
-    setOpen(nodeId);
-  }, []);
-
-  const editEdge = useCallback(
-    (edge: Edge) => {
-      setOpen(edge.id);
-    },
-    [setEdges],
-  );
-
-  const addNode = useCallback(
-    (type: string) => {
-      const newNode = {
-        id: `${type}-${nodes.length + 1}`,
-        type: 'step',
-        position: { x: Math.random() * 500, y: Math.random() * 500 },
-        data: {
-          color:
-            type === 'emailNode'
-              ? 'blue'
-              : type === 'linkedInMessageNode'
-              ? 'green'
-              : 'yellow',
-          subject: '',
-        },
-      };
-
-      setNodes((nds) => nds.concat(newNode));
-    },
-    [nodes.length, setNodes],
-  );
-
   // Keyboard shortcuts
-  useKey(['S'], () => addNode('step'), {
-    when: !open,
-  });
+  useKey(
+    'Escape',
+    () => {
+      ui.flowCommandMenu.setOpen(false);
+    },
+    {
+      when: ui.flowCommandMenu.isOpen,
+    },
+  );
 
   return (
     <>
@@ -158,23 +153,32 @@ export const MarketingFlowBuilder = () => {
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
         onConnectEnd={onConnectEnd}
-        onNodesChange={onNodesChange}
-        onEdgesChange={onEdgesChange}
-        onEdgeDoubleClick={(_, edge) => editEdge(edge)}
-        onNodeDoubleClick={(_, node) => editNode(node?.id)}
+        onNodesChange={(changes) => {
+          const shouldProhibitChanges =
+            changes.every((change) => change.type === 'remove') &&
+            nodes.length === 2 &&
+            nodes.every((e) => e.type === 'trigger');
+
+          if (shouldProhibitChanges) return;
+
+          onNodesChange(changes);
+        }}
+        onEdgesChange={(changes) => {
+          // this is hack to prevent removing initial edges automatically for some unknown yet reason
+
+          const shouldProhibitChanges =
+            changes.every((change) => change.type === 'remove') &&
+            edges.length === 1;
+
+          if (shouldProhibitChanges) {
+            return;
+          }
+          onEdgesChange(changes);
+        }}
       >
         <Background />
         <Toolbar />
       </ReactFlow>
-      <SidePanel
-        open={open}
-        nodeId={open}
-        nodes={nodes}
-        edges={edges}
-        setOpen={setOpen}
-        setNodes={setNodes}
-        setEdges={setEdges}
-      />
     </>
   );
-};
+});
