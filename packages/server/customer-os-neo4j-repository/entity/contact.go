@@ -26,6 +26,7 @@ const (
 	ContactPropertyHide                                      ContactProperty = "hide"
 	ContactPropertyUsername                                  ContactProperty = "username"
 	ContactPropertyEnrichedScrapinRecordId                   ContactProperty = "enrichedScrapinRecordId"
+	ContactPropertyHiddenAt                                  ContactProperty = "hiddenAt"
 )
 
 type ContactEntity struct {
@@ -60,6 +61,7 @@ type ContactInternalFields struct {
 	FindWorkEmailWithBetterContactRequestedAt *time.Time
 	FindWorkEmailWithBetterContactCompletedAt *time.Time
 	EnrichRequestedAt                         *time.Time
+	HiddenAt                                  *time.Time
 }
 
 type ContactEnrichDetails struct {

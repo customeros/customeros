@@ -463,6 +463,11 @@ func (h *ContactEventHandler) OnContactHide(ctx context.Context, evt eventstore.
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while hiding contact %s: %s", contactId, err.Error())
 	}
+	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelContact, contactId, string(neo4jentity.ContactPropertyHiddenAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("error while updating hidden at property for contact %s: %s", contactId, err.Error())
+	}
 
 	return err
 }

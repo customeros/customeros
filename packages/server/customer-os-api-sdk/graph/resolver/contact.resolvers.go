@@ -131,6 +131,11 @@ func (r *mutationResolver) ContactMerge(ctx context.Context, primaryContactID st
 	panic(fmt.Errorf("not implemented: ContactMerge - contact_Merge"))
 }
 
+// ContactHide is the resolver for the contact_Hide field.
+func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactHide - contact_Hide"))
+}
+
 // ContactAddTag is the resolver for the contact_AddTag field.
 func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: ContactAddTag - contact_AddTag"))

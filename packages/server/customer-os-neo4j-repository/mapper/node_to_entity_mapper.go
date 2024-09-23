@@ -322,6 +322,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 			DomainCheckedAt:   utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyDomainCheckedAt)),
 			IndustryCheckedAt: utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyIndustryCheckedAt)),
 			EnrichRequestedAt: utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyEnrichRequestedAt)),
+			HiddenAt:          utils.GetTimePropOrNil(props, string(entity.OrganizationPropertyHiddenAt)),
 		},
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
@@ -1060,6 +1061,7 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 			FindWorkEmailWithBetterContactRequestedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt)),
 			FindWorkEmailWithBetterContactCompletedAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt)),
 			EnrichRequestedAt:                         utils.GetTimePropOrNil(props, string(entity.ContactPropertyEnrichRequestedAt)),
+			HiddenAt:                                  utils.GetTimePropOrNil(props, string(entity.ContactPropertyHiddenAt)),
 		},
 		EnrichDetails: entity.ContactEnrichDetails{
 			BettercontactFoundEmailAt: utils.GetTimePropOrNil(props, string(entity.ContactPropertyBettercontactFoundEmailAt)),
