@@ -115,13 +115,14 @@ func (s *fileService) UploadSingleFile(ctx context.Context, userEmail, tenantNam
 	if strings.HasSuffix(strings.ToLower(multipartFileHeader.Filename), ".csv") {
 		// Detect the MIME type using the file content
 		mimeType := http.DetectContentType(headBytes)
+		span.LogFields(log.String("mimeType", mimeType))
 
 		// Validate if the detected MIME type is "text/csv"
 		if mimeType != "text/csv" && mimeType != "application/octet-stream" {
 			err = errors.New("Invalid mime type for CSV")
-			tracing.TraceErr(span, errors.Wrap(err, "Invalid file type"))
-			s.log.Error("Invalid file type")
-			return nil, err
+			tracing.TraceErr(span, errors.Wrap(err, "Unexpected file type"))
+			s.log.Error("Unexpected file type")
+			//return nil, err
 		}
 		fileType = types.NewType("csv", "text/csv")
 	} else {
