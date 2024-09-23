@@ -9,7 +9,7 @@ defmodule CustomerOsRealtime.OrganizationEventSubscriber do
   end
 
   def init(state) do
-    stream_name = "organization-v1"
+    stream_name = "notifyRealtime-v2"
 
     {:ok, subscription} =
       Spear.connect_to_persistent_subscription(EventStoreClient, self(), :all, stream_name)
@@ -18,30 +18,33 @@ defmodule CustomerOsRealtime.OrganizationEventSubscriber do
   end
 
   def handle_info(
-        %Spear.Event{type: type, metadata: %{stream_name: stream_name} = _metadata} =
+        %Spear.Event{
+          body: %{
+            "entity" => entity,
+            "entityId" => entityId,
+            "tenant" => tenant
+          }
+        } =
           event,
         %{subscription: subscription} = state
       ) do
-    "organization-v1-" <> tenant_organization_id = stream_name
+    channel_topic =
+      case entity do
+        "ORGANIZATION" ->
+          "Organizations:#{tenant}"
 
-    [tenant | rest] = String.split(tenant_organization_id, "-")
-    organization_id = Enum.join(rest, "-")
-    channel_topic = "Organizations:" <> tenant
+        _ ->
+          IO.puts("Unknown entity: #{entity}")
+          nil
+      end
 
-    case type do
-      "V1_ORGANIZATION_CREATE" ->
-        IO.puts(~c"Organization Created")
+    if channel_topic != nil do
+      Endpoint.broadcast!(channel_topic, "sync_group_packet", %{
+        action: "INVALIDATE",
+        ids: [entityId]
+      })
 
-      "V1_ORGANIZATION_UPDATE" ->
-        IO.puts(~c"Organization Updated")
-
-        Endpoint.broadcast!(channel_topic, "sync_group_packet", %{
-          action: "INVALIDATE",
-          ids: [organization_id]
-        })
-
-      _ ->
-        IO.puts("Unknown event type: #{type}")
+      IO.puts("Broadcasted V1_EVENT_COMPLETED to #{channel_topic}")
     end
 
     Spear.ack(EventStoreClient, subscription, event)
