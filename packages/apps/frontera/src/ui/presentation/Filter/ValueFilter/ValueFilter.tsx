@@ -27,10 +27,12 @@ export const ValueFilter = ({
   const [inputValue, setInputValue] = useState(filterValue);
 
   useEffect(() => {
-    if (filterName) {
-      const timer = setTimeout(() => setIsOpen(true), 0);
-
-      return () => clearTimeout(timer);
+    if (!filterValue) {
+      if (filterName) {
+        setTimeout(() => {
+          setIsOpen(true);
+        }, 100);
+      }
     }
   }, [filterName]);
 
@@ -42,7 +44,11 @@ export const ValueFilter = ({
   };
 
   return (
-    <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
+    <Popover
+      modal={true}
+      open={isOpen}
+      onOpenChange={(value) => setIsOpen(value)}
+    >
       <PopoverTrigger>
         <Button
           size='xs'

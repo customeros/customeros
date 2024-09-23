@@ -77,8 +77,26 @@ export const Filters = observer(
     const filters = tableViewDef?.getFilters()?.AND as any | undefined;
 
     const flattenedFilters: FilterItem[] =
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      filters?.map((f: any[]) => ({ ...f.filter })) ?? [];
+      filters
+        ?.map((f: FilterItem[]) => ({ ...f.filter }))
+        .filter((filter: FilterItem) => {
+          if (
+            tableId === TableIdType.Customers &&
+            filter.property === 'RELATIONSHIP'
+          ) {
+            return false;
+          }
+
+          if (
+            (tableId === TableIdType.Targets &&
+              filter.property === 'RELATIONSHIP') ||
+            filter.property === 'STAGE'
+          ) {
+            return false;
+          }
+
+          return true;
+        }) ?? [];
 
     const handleFilterName = (property: string) => {
       const filterType = Object.values(filterTypes).find(
