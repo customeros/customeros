@@ -9,8 +9,6 @@ import {
   ReactFlow,
   Background,
   MarkerType,
-  useReactFlow,
-  OnConnectEnd,
   useNodesState,
   useEdgesState,
 } from '@xyflow/react';
@@ -68,10 +66,10 @@ const initialEdges: Edge[] = [
 ];
 
 export const MarketingFlowBuilder = observer(() => {
-  const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
+  const [nodes, , onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
 
-  const { screenToFlowPosition } = useReactFlow();
+  // const { screenToFlowPosition } = useReactFlow();
   const { ui } = useStore();
 
   const onConnect: OnConnect = useCallback(
@@ -98,40 +96,40 @@ export const MarketingFlowBuilder = observer(() => {
     [setEdges],
   );
 
-  const onConnectEnd: OnConnectEnd = useCallback(
-    (event, connectionState) => {
-      // when a connection is dropped on the pane it's not valid
-      if (!connectionState.isValid) {
-        // we need to remove the wrapper bounds, in order to get the correct position
-        const id = Math.random();
-        const { clientX, clientY } =
-          'changedTouches' in event ? event.changedTouches[0] : event;
-        const newNode = {
-          id: `${id}-${nodes.length + 1}`,
-
-          position: screenToFlowPosition({
-            x: clientX,
-            y: clientY,
-          }),
-          data: { label: `Node ${id}` },
-          origin: [0.5, 0.0],
-          type: 'step',
-        };
-
-        //@ts-expect-error not important at this moment
-        setNodes((nds) => nds.concat(newNode));
-        setEdges((eds) =>
-          eds.concat({
-            id: `e${id}-${newNode.id}`,
-            target: newNode.id,
-            type: 'baseEdge',
-            source: connectionState.fromNode?.id ?? '',
-          }),
-        );
-      }
-    },
-    [screenToFlowPosition],
-  );
+  // const onConnectEnd: OnConnectEnd = useCallback(
+  //   (event, connectionState) => {
+  //     // when a connection is dropped on the pane it's not valid
+  //     if (!connectionState.isValid) {
+  //       // we need to remove the wrapper bounds, in order to get the correct position
+  //       const id = Math.random();
+  //       const { clientX, clientY } =
+  //         'changedTouches' in event ? event.changedTouches[0] : event;
+  //       const newNode = {
+  //         id: `${id}-${nodes.length + 1}`,
+  //
+  //         position: screenToFlowPosition({
+  //           x: clientX,
+  //           y: clientY,
+  //         }),
+  //         data: { label: `Node ${id}` },
+  //         origin: [0.5, 0.0],
+  //         type: 'step',
+  //       };
+  //
+  //       //@ts-expect-error not important at this moment
+  //       setNodes((nds) => nds.concat(newNode));
+  //       setEdges((eds) =>
+  //         eds.concat({
+  //           id: `e${id}-${newNode.id}`,
+  //           target: newNode.id,
+  //           type: 'baseEdge',
+  //           source: connectionState.fromNode?.id ?? '',
+  //         }),
+  //       );
+  //     }
+  //   },
+  //   [screenToFlowPosition],
+  // );
 
   // Keyboard shortcuts
   useKey(
@@ -147,12 +145,13 @@ export const MarketingFlowBuilder = observer(() => {
   return (
     <>
       <ReactFlow
+        fitView
         nodes={nodes}
         edges={edges}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
-        onConnectEnd={onConnectEnd}
+        // onConnectEnd={onConnectEnd}
         onNodesChange={(changes) => {
           const shouldProhibitChanges =
             changes.every((change) => change.type === 'remove') &&

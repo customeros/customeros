@@ -1,4 +1,4 @@
-import { Controls, ControlButton } from '@xyflow/react';
+import { Controls } from '@xyflow/react';
 
 import { LayoutButton } from './LayoutButton.tsx';
 
