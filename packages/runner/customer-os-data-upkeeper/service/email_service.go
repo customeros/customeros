@@ -559,7 +559,7 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 	writer := csv.NewWriter(&buffer)
 
 	// Write the CSV header
-	_, header := validationcsv.GenerateCSVRow(validationmodel.ValidateEmailMailSherpaData{})
+	header, _ := validationcsv.GenerateCSVRow(validationmodel.ValidateEmailMailSherpaData{})
 	if err := writer.Write(header); err != nil {
 		return nil, fmt.Errorf("failed to write header: %v", err)
 	}
@@ -569,7 +569,7 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 
 	for {
 		// Fetch a chunk of records
-		records, err := s.commonServices.PostgresRepositories.EmailValidationRecordRepository.GetEmailRecordsInChunks(ctx, chunkSize, offset)
+		records, err := s.commonServices.PostgresRepositories.EmailValidationRecordRepository.GetEmailRecordsInChunks(ctx, requestId, chunkSize, offset)
 		if err != nil {
 			return nil, fmt.Errorf("failed to fetch email records: %v", err)
 		}
