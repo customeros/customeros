@@ -69,4 +69,7 @@ enum ComparisonOperator {
     IS_EMPTY
     LT
     GT
+    IS_NONE_OF
+    IS_NOT_EMPTY
+    NOT_CONTAINS
 }

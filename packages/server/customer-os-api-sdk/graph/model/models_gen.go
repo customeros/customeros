@@ -3621,17 +3621,20 @@ func (e ColumnViewType) MarshalGQL(w io.Writer) {
 type ComparisonOperator string
 
 const (
-	ComparisonOperatorEq         ComparisonOperator = "EQ"
-	ComparisonOperatorContains   ComparisonOperator = "CONTAINS"
-	ComparisonOperatorStartsWith ComparisonOperator = "STARTS_WITH"
-	ComparisonOperatorLte        ComparisonOperator = "LTE"
-	ComparisonOperatorGte        ComparisonOperator = "GTE"
-	ComparisonOperatorIn         ComparisonOperator = "IN"
-	ComparisonOperatorBetween    ComparisonOperator = "BETWEEN"
-	ComparisonOperatorIsNull     ComparisonOperator = "IS_NULL"
-	ComparisonOperatorIsEmpty    ComparisonOperator = "IS_EMPTY"
-	ComparisonOperatorLt         ComparisonOperator = "LT"
-	ComparisonOperatorGt         ComparisonOperator = "GT"
+	ComparisonOperatorEq          ComparisonOperator = "EQ"
+	ComparisonOperatorContains    ComparisonOperator = "CONTAINS"
+	ComparisonOperatorStartsWith  ComparisonOperator = "STARTS_WITH"
+	ComparisonOperatorLte         ComparisonOperator = "LTE"
+	ComparisonOperatorGte         ComparisonOperator = "GTE"
+	ComparisonOperatorIn          ComparisonOperator = "IN"
+	ComparisonOperatorBetween     ComparisonOperator = "BETWEEN"
+	ComparisonOperatorIsNull      ComparisonOperator = "IS_NULL"
+	ComparisonOperatorIsEmpty     ComparisonOperator = "IS_EMPTY"
+	ComparisonOperatorLt          ComparisonOperator = "LT"
+	ComparisonOperatorGt          ComparisonOperator = "GT"
+	ComparisonOperatorIsNoneOf    ComparisonOperator = "IS_NONE_OF"
+	ComparisonOperatorIsNotEmpty  ComparisonOperator = "IS_NOT_EMPTY"
+	ComparisonOperatorNotContains ComparisonOperator = "NOT_CONTAINS"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
@@ -3646,11 +3649,14 @@ var AllComparisonOperator = []ComparisonOperator{
 	ComparisonOperatorIsEmpty,
 	ComparisonOperatorLt,
 	ComparisonOperatorGt,
+	ComparisonOperatorIsNoneOf,
+	ComparisonOperatorIsNotEmpty,
+	ComparisonOperatorNotContains,
 }
 
 func (e ComparisonOperator) IsValid() bool {
 	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween, ComparisonOperatorIsNull, ComparisonOperatorIsEmpty, ComparisonOperatorLt, ComparisonOperatorGt:
+	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween, ComparisonOperatorIsNull, ComparisonOperatorIsEmpty, ComparisonOperatorLt, ComparisonOperatorGt, ComparisonOperatorIsNoneOf, ComparisonOperatorIsNotEmpty, ComparisonOperatorNotContains:
 		return true
 	}
 	return false
