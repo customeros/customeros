@@ -92,9 +92,7 @@ export class LinkedinAutomationService {
       lastPageVisited?: number,
     ]
   > {
-    const browser = await Browser.getInstance(this.proxyConfig, {
-      debugBrowserCat: true,
-    });
+    const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -102,10 +100,23 @@ export class LinkedinAutomationService {
 
     const page = await context.newPage();
 
-    const goToPage = async (currentPage: number) => {
+    const scrollToFooter = async () => {
+      const footer = page.locator("footer.global-footer");
+      await footer.scrollIntoViewIfNeeded();
+    };
+
+    const clickNextButton = async () => {
       return await retry(async () => {
-        const url = `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`;
-        return await page.goto(url, { timeout: 60 * 1000 });
+        const nextButton = page.locator('button[aria-label="Next"]');
+        if (await nextButton.isEnabled()) {
+          await nextButton.click();
+          await page
+            .locator("ul.reusable-search__entity-result-list")
+            .first()
+            .waitFor({ timeout: 60 * 1000 });
+        } else {
+          // return;
+        }
       });
     };
 
@@ -123,11 +134,12 @@ export class LinkedinAutomationService {
 
       // Initial page load
       let currentPage = initialPage ?? 1;
-      await goToPage(currentPage);
+      await page.goto(
+        `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`,
+      );
 
       // Scroll to bottom to load pagination
-      const footer = page.locator("footer.global-footer");
-      await footer.scrollIntoViewIfNeeded();
+      await scrollToFooter();
 
       // Find out the last page number
       const pagination = page.locator("li.artdeco-pagination__indicator");
@@ -174,7 +186,8 @@ export class LinkedinAutomationService {
 
           currentPage++;
           if (currentPage <= lastPage) {
-            await goToPage(currentPage);
+            await scrollToFooter();
+            await clickNextButton();
           }
         } catch (err) {
           error = LinkedinAutomationService.handleError(err);
