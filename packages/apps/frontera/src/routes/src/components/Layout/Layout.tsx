@@ -18,6 +18,7 @@ const knownPaths = [
   '/prospects',
   '/customer-map',
   '/settings',
+  '/flow-editor',
 ];
 
 export const Layout = () => {
@@ -30,6 +31,7 @@ export const Layout = () => {
       P.string.startsWith('/invoices'),
       P.string.startsWith('/prospects'),
       P.string.startsWith('/customer-map'),
+      P.string.startsWith('/flow-editor'),
       () => <RootSidenav />,
     )
     .with(P.string.startsWith('/organization'), () => <OrganizationSidenav />)
@@ -42,6 +44,7 @@ export const Layout = () => {
       P.string.startsWith('/renewals'),
       P.string.startsWith('/invoices'),
       P.string.startsWith('/prospects'),
+      P.string.startsWith('/flow-editor'),
       P.string.startsWith('/customer-map'),
       () => true,
     )
