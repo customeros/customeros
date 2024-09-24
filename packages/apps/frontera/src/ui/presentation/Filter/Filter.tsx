@@ -1,10 +1,11 @@
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 
-import { PropertyFilter } from './PropertyFilter';
-import { OperatorFilter } from './OperatorFilter';
-import { ValueFilter } from './ValueFilter/ValueFilter';
-import { ClearFilter } from './ClearFilter/ClearFilter';
+import { DateFilter } from './components/DateFilter';
+import { PropertyFilter } from './components/PropertyFilter';
+import { OperatorFilter } from './components/OperatorFilter';
+import { TextFilter } from './components/TextFilter/TextFilter';
+import { ClearFilter } from './components/ClearFilter/ClearFilter';
 
 interface FilterProps {
   filterName: string;
@@ -14,7 +15,7 @@ interface FilterProps {
   onClearFilter: () => void;
   operatorValue: ComparisonOperator;
   onChangeOperator: (operator: string) => void;
-  onChangeFilterValue: (value: string) => void;
+  onChangeFilterValue: (value: string | Date) => void;
 }
 
 export const Filter = ({
@@ -36,13 +37,28 @@ export const Filter = ({
         operators={operators}
         onSelect={onChangeOperator}
       />
-      <ValueFilter
-        filterType={filterType}
-        filterName={filterName}
-        filterValue={filterValue}
-        operatorValue={operatorValue}
-        onChangeFilterValue={onChangeFilterValue}
-      />
+      {filterType === 'text' && (
+        <TextFilter
+          filterName={filterName}
+          filterValue={filterValue}
+          operatorValue={operatorValue}
+          onChangeFilterValue={onChangeFilterValue}
+        />
+      )}
+
+      {filterType === 'date' && (
+        <DateFilter
+          filterName={filterName}
+          operatorValue={operatorValue}
+          filterValue={filterValue as string | [string | null, string | null]}
+          onChangeFilterValue={
+            onChangeFilterValue as (
+              value: string | [string | null, string | null],
+            ) => void
+          }
+        />
+      )}
+
       <ClearFilter onClearFilter={onClearFilter} />
     </ButtonGroup>
   );

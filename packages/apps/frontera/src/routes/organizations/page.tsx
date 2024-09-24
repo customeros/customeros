@@ -4,12 +4,13 @@ import { useSearchParams } from 'react-router-dom';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { Preview } from '@invoices/components/Preview';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { FinderTable } from '@organizations/components/FinderTable';
-import { Filters } from '@organizations/components/Filters/Filters';
+import { FinderFilters } from '@organizations/components/FinderFilters/FinderFilters';
 import {
   TableIdType,
   TableViewType,
@@ -21,7 +22,7 @@ export const FinderPage = observer(() => {
   const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
-
+  const filters = useFeatureIsOn('filters-v2');
   const defaultPreset = store.tableViewDefs.defaultPreset;
   const { open, onOpen, onClose } = useDisclosure({ id: 'flow-finder' });
   const currentPreset = store.tableViewDefs
@@ -56,11 +57,14 @@ export const FinderPage = observer(() => {
       <div className='w-[100%] bg-white'>
         <Search open={open} onOpen={onOpen} onClose={onClose} />
         <div className='flex justify-between mx-4 my-2 items-start'>
-          <Filters
-            tableId={tableId || TableIdType.Organizations}
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            type={tableType || (TableViewType.Organizations as any)}
-          />
+          {!filters && (
+            <FinderFilters
+              tableId={tableId || TableIdType.Organizations}
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              type={tableType || (TableViewType.Organizations as any)}
+            />
+          )}
+
           {tableViewType && (
             <ViewSettings tableId={tableId} type={tableViewType} />
           )}

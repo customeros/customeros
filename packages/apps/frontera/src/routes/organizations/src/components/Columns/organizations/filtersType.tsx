@@ -22,7 +22,7 @@ export type FilterType = {
   filterName: string;
   filterAccesor: ColumnViewType;
   filterOperators: ComparisonOperator[];
-  filterType: 'text' | 'date' | 'number' | 'numbers';
+  filterType: 'text' | 'date' | 'number' | 'numbers' | 'list';
 };
 
 export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
@@ -42,21 +42,36 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterType: 'text',
     filterAccesor: ColumnViewType.OrganizationsWebsite,
     filterName: 'Website',
-    filterOperators: [ComparisonOperator.Contains, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Globe01 />,
   },
   [ColumnViewType.OrganizationsRelationship]: {
     filterType: 'text',
     filterName: 'Relationship',
     filterAccesor: ColumnViewType.OrganizationsRelationship,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <AlignHorizontalCentre02 />,
   },
   [ColumnViewType.OrganizationsOnboardingStatus]: {
     filterType: 'text',
     filterName: 'Onboarding status',
     filterAccesor: ColumnViewType.OrganizationsOnboardingStatus,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Trophy01 />,
   },
   [ColumnViewType.OrganizationsRenewalDate]: {
@@ -83,17 +98,27 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     icon: <Calculator />,
   },
   [ColumnViewType.OrganizationsOwner]: {
-    filterType: 'text',
+    filterType: 'list',
     filterName: 'Owner',
     filterAccesor: ColumnViewType.OrganizationsOwner,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Key01 />,
   },
   [ColumnViewType.OrganizationsLeadSource]: {
     filterType: 'text',
     filterName: 'Source',
     filterAccesor: ColumnViewType.OrganizationsLeadSource,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <ArrowCircleDownRight />,
   },
   [ColumnViewType.OrganizationsCreatedDate]: {
@@ -126,6 +151,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
       ComparisonOperator.Lt,
       ComparisonOperator.Gt,
       ComparisonOperator.Between,
+      ComparisonOperator.Eq,
     ],
     icon: <Users03 />,
   },
@@ -179,7 +205,12 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterType: 'text',
     filterName: 'Industry',
     filterAccesor: ColumnViewType.OrganizationsIndustry,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Building05 />,
   },
   [ColumnViewType.OrganizationsContactCount]: {
@@ -198,21 +229,36 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterType: 'text',
     filterName: 'Tags',
     filterAccesor: ColumnViewType.OrganizationsTags,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Tag01 />,
   },
   [ColumnViewType.OrganizationsIsPublic]: {
     filterType: 'text',
     filterName: 'Ownership type',
     filterAccesor: ColumnViewType.OrganizationsIsPublic,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Key01 />,
   },
   [ColumnViewType.OrganizationsStage]: {
     filterType: 'text',
     filterName: 'Stage',
     filterAccesor: ColumnViewType.OrganizationsStage,
-    filterOperators: [ComparisonOperator.Eq, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Columns03 />,
   },
   [ColumnViewType.OrganizationsCity]: {

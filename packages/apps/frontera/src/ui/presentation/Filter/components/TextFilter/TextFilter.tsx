@@ -9,17 +9,16 @@ import {
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
 
-import { handleOperatorName } from '../utils/utils';
+import { handleOperatorName } from '../../utils/utils';
 
 interface ValueFilterProps {
   filterName: string;
-  filterType?: string;
   filterValue: string;
   operatorValue: string;
   onChangeFilterValue: (value: string) => void;
 }
 
-export const ValueFilter = ({
+export const TextFilter = ({
   filterName,
   operatorValue,
   onChangeFilterValue,
@@ -57,19 +56,23 @@ export const ValueFilter = ({
       open={isOpen}
       onOpenChange={(value) => setIsOpen(value)}
     >
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
-          className='border-l-0 rounded-none text-gray-700 bg-white font-normal focus:outline-none'
+          className='rounded-none text-gray-700 bg-white font-normal '
         >
           <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
             {filterValue ? filterValue : '...'}
           </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent side='bottom' align='start' className='py-1 w-[254px]'>
+      <PopoverContent
+        side='bottom'
+        align='start'
+        className='py-1 min-w-[254px]'
+      >
         <Input
           size='sm'
           variant='unstyled'

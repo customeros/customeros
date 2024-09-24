@@ -2,7 +2,7 @@ import { Button } from '@ui/form/Button/Button';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 
-import { handleOperatorIcon, handleOperatorName } from '../utils/utils';
+import { handleOperatorIcon, handleOperatorName } from '../../utils/utils';
 
 interface OperatorFilterProps {
   type: string;
@@ -15,9 +15,11 @@ export const OperatorFilter = ({
   operators,
   onSelect,
   value,
+  type,
 }: OperatorFilterProps) => {
   const defaultOperator = handleOperatorName(
     operators[0] as ComparisonOperator,
+    type,
   );
 
   return (
@@ -30,7 +32,7 @@ export const OperatorFilter = ({
           className='rounded-none font-normal bg-white text-gray-500'
         >
           {value
-            ? handleOperatorName(value as ComparisonOperator)
+            ? handleOperatorName(value as ComparisonOperator, type)
             : defaultOperator}
         </Button>
       </MenuButton>
@@ -43,9 +45,9 @@ export const OperatorFilter = ({
           >
             <div className='flex items-center gap-2'>
               <span className='text-gray-500 group-hover:text-gray-700'>
-                {handleOperatorIcon(operator as ComparisonOperator, 'date')}
+                {handleOperatorIcon(operator as ComparisonOperator, type)}
               </span>
-              {handleOperatorName(operator as ComparisonOperator, 'date')}
+              {handleOperatorName(operator as ComparisonOperator, type)}
             </div>
           </MenuItem>
         ))}
