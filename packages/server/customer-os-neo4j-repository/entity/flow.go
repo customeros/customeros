@@ -12,7 +12,11 @@ type FlowEntity struct {
 
 	Name        string
 	Description string
-	Status      FlowStatus
+
+	Nodes string
+	Edges string
+
+	Status FlowStatus
 }
 
 type FlowEntities []FlowEntity

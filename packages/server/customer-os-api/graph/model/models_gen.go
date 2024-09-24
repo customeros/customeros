@@ -1130,6 +1130,8 @@ type Flow struct {
 	Metadata    *Metadata         `json:"metadata"`
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
+	Nodes       string            `json:"nodes"`
+	Edges       string            `json:"edges"`
 	Status      entity.FlowStatus `json:"status"`
 	Actions     []*FlowAction     `json:"actions"`
 	Contacts    []*FlowContact    `json:"contacts"`
@@ -1237,6 +1239,8 @@ type FlowMergeInput struct {
 	ID          *string `json:"id,omitempty"`
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
+	Nodes       string  `json:"nodes"`
+	Edges       string  `json:"edges"`
 }
 
 type GCliAttributeKeyValuePair struct {

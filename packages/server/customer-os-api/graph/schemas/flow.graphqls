@@ -26,6 +26,10 @@ type Flow implements MetadataInterface {
     metadata:           Metadata!
     name:               String!
     description:        String!
+
+    nodes: String!
+    edges: String!
+
     status: FlowStatus!
     actions: [FlowAction!]! @goField(forceResolver: true)
     contacts: [FlowContact!]! @goField(forceResolver: true)
@@ -35,6 +39,9 @@ input FlowMergeInput {
     id: ID
     name: String!
     description: String!
+
+    nodes: String!
+    edges: String!
 }
 
 enum FlowStatus {

@@ -186,6 +186,8 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 
 	toStore.Name = input.Name
 	toStore.Description = input.Description
+	toStore.Nodes = input.Nodes
+	toStore.Edges = input.Edges
 
 	node, err := s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, toStore)
 	if err != nil {
@@ -224,21 +226,21 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		//if status == neo4jentity.FlowStatusActive {
-		//	flowContactList, err := s.FlowContactGetList(ctx, []string{flow.Id})
-		//	if err != nil {
-		//		tracing.TraceErr(span, err)
-		//		return nil, err
-		//	}
-		//
-		//	for _, v := range *flowContactList {
-		//		err := s.services.FlowExecutionService.ScheduleFlowForContact(ctx, &tx, flow.Id, v.ContactId)
-		//		if err != nil {
-		//			tracing.TraceErr(span, err)
-		//			return nil, err
-		//		}
-		//	}
-		//}
+		if status == neo4jentity.FlowStatusActive {
+			flowContactList, err := s.FlowContactGetList(ctx, []string{flow.Id})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			for _, v := range *flowContactList {
+				err := s.services.FlowExecutionService.ScheduleFlowForContact(ctx, &tx, flow.Id, v.ContactId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+		}
 
 		flow.Status = status
 

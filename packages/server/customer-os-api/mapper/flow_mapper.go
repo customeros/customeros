@@ -21,6 +21,8 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 		},
 		Name:        entity.Name,
 		Description: entity.Description,
+		Nodes:       entity.Nodes,
+		Edges:       entity.Edges,
 		Status:      entity.Status,
 	}
 }
@@ -147,6 +149,8 @@ func MapFlowMergeInputToEntity(input model.FlowMergeInput) *neo4jentity.FlowEnti
 		Id:          utils.StringOrEmpty(input.ID),
 		Name:        input.Name,
 		Description: input.Description,
+		Nodes:       input.Nodes,
+		Edges:       input.Edges,
 	}
 }
 

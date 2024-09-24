@@ -7,6 +7,7 @@ import (
 	"fmt"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
 	"log"
 	"os"
 	"testing"
@@ -21,8 +22,6 @@ import (
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/postgres"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -59,15 +58,12 @@ func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
 	defer func(dbContainer testcontainers.Container, driver neo4j.DriverWithContext, ctx context.Context) {
 		neo4jt.CloseDriver(driver)
-		neo4jt.Terminate(dbContainer, ctx)
+		neo4jt.TerminateNeo4j(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
-	postgresContainer, postgresGormDB, postgresSqlDB = postgres.InitTestDB()
+	postgresContainer, postgresGormDB, postgresSqlDB = neo4jt.InitTestDB()
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
-		err := postgresContainer.Terminate(ctx)
-		if err != nil {
-			log.Fatal("Error during container termination")
-		}
+		neo4jt.TerminatePostgres(postgresContainer, ctx)
 	}(postgresContainer, context.Background())
 
 	prepareClient()
