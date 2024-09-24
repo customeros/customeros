@@ -814,6 +814,11 @@ func (h *InvoiceEventHandler) onInvoiceVoidV1(ctx context.Context, evt eventstor
 		tracing.TraceErr(span, errors.Wrap(err, "InvoiceService.GetById"))
 		return err
 	}
+	if invoiceEntity.DryRun {
+		span.LogFields(log.String("result", "dry run, skipping"))
+		return nil
+	}
+
 	invoiceLines, err := h.services.CommonServices.InvoiceService.GetInvoiceLinesForInvoices(ctx, []string{invoiceId})
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetInvoiceLinesForInvoices"))
