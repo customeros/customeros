@@ -103,7 +103,6 @@ export const DateFilter = ({
       >
         {operatorValue === ComparisonOperator.Between ? (
           <div className='flex  space-y-2'>
-            {/* Start Date Picker */}
             <div>
               <span>Start Date</span>
               <DatePicker
@@ -114,7 +113,6 @@ export const DateFilter = ({
               />
             </div>
 
-            {/* End Date Picker */}
             <div>
               <span>End Date</span>
               <DatePicker
