@@ -34,7 +34,7 @@ func (r *tenantWebhookApiKeyRepository) CreateApiKey(ctx context.Context, tenant
 	now := utils.Now()
 	apiKey := entity.TenantWebhookApiKey{
 		Tenant:    tenant,
-		Key:       entity.KeyPrefix + utils.GenerateKey(32),
+		Key:       entity.KeyPrefix + utils.GenerateKey(32, false),
 		Enabled:   true,
 		CreatedAt: now,
 		UpdatedAt: now,

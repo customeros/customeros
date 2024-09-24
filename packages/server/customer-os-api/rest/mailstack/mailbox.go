@@ -7,12 +7,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"net/http"
 	"regexp"
+	"strings"
 )
 
 // RegisterNewMailbox registers a new mailbox for the given domain
@@ -74,19 +76,28 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			span.LogFields(tracingLog.String("result", "Invalid request body"))
 			return
 		}
-		if mailboxRequest.Username == "" || mailboxRequest.Password == "" {
+
+		username := strings.TrimSpace(mailboxRequest.Username)
+		if username == "" {
 			c.JSON(http.StatusBadRequest,
 				rest.ErrorResponse{
 					Status:  "error",
 					Message: "Missing username or password",
 				})
-			span.LogFields(tracingLog.String("result", "Missing username or password"))
+			span.LogFields(tracingLog.String("result", "Missing username"))
 			return
 		}
-		tracing.LogObjectAsJson(span, "request", mailboxRequest)
+		span.LogKV("request.username", username)
+
+		password := strings.TrimSpace(mailboxRequest.Password)
+		passwordGenerated := false
+		if password == "" {
+			passwordGenerated = true
+			password = utils.GenerateLowerAlpha(1) + utils.GenerateKey(11, false)
+		}
 
 		// validate username format
-		if err := validateMailboxUsername(mailboxRequest.Username); err != nil {
+		if err := validateMailboxUsername(username); err != nil {
 			c.JSON(http.StatusBadRequest,
 				rest.ErrorResponse{
 					Status:  "error",
@@ -97,7 +108,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		}
 
 		// add mailbox
-		response, err := addMailbox(ctx, tenant, domain, mailboxRequest, services)
+		response, err := addMailbox(ctx, tenant, domain, username, password, mailboxRequest.ForwardingEnabled, mailboxRequest.WebmailEnabled, mailboxRequest.ForwardingTo, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,
@@ -128,16 +139,19 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 
 		response.Status = "success"
 		response.Message = "Mailbox setup successful"
+		if passwordGenerated {
+			response.Password = password
+		}
 		c.JSON(http.StatusOK, response)
 	}
 }
 
-func addMailbox(ctx context.Context, tenant, domain string, request MailboxRequest, services *service.Services) (MailboxResponse, error) {
+func addMailbox(ctx context.Context, tenant, domain string, username, password string, forwardingEnabled, webmailEnabled bool, forwardingTo []string, services *service.Services) (MailboxResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "addMailbox")
 	defer span.Finish()
 
 	mailboxResponse := MailboxResponse{
-		Email: request.Username + "@" + domain,
+		Email: username + "@" + domain,
 	}
 
 	// Check domain belongs to tenant
@@ -160,22 +174,22 @@ func addMailbox(ctx context.Context, tenant, domain string, request MailboxReque
 		return mailboxResponse, coserrors.ErrMailboxExists
 	}
 
-	err = services.OpensrsService.SetMailbox(ctx, tenant, domain, request.Username, request.Password, request.ForwardingEnabled, request.ForwardingTo, request.WebmailEnabled)
+	err = services.OpensrsService.SetMailbox(ctx, tenant, domain, username, password, forwardingEnabled, forwardingTo, webmailEnabled)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error setting mailbox"))
 		return mailboxResponse, err
 	}
 
 	// Save mailbox details in postgres
-	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.SaveMailbox(ctx, tenant, domain, mailboxResponse.Email, request.Password)
+	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.SaveMailbox(ctx, tenant, domain, mailboxResponse.Email, password)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error saving mailbox"))
 		return mailboxResponse, err
 	}
 
-	mailboxResponse.WebmailEnabled = request.WebmailEnabled
-	mailboxResponse.ForwardingEnabled = request.ForwardingEnabled
-	mailboxResponse.ForwardingTo = request.ForwardingTo
+	mailboxResponse.WebmailEnabled = webmailEnabled
+	mailboxResponse.ForwardingEnabled = forwardingEnabled
+	mailboxResponse.ForwardingTo = forwardingTo
 
 	return mailboxResponse, nil
 }

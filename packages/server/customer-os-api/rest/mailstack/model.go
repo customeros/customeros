@@ -112,6 +112,11 @@ type MailboxResponse struct {
 	// Example: user@example.com
 	Email string `json:"email" example:"user@example.com"`
 
+	// Password is the password for the mailbox
+	// Required: false
+	// Example: SecurePassword123!
+	Password string `json:"password,omitempty" example:"SecurePassword123!"`
+
 	// ForwardingEnabled indicates if email forwarding is enabled
 	// Example: true
 	ForwardingEnabled bool `json:"forwardingEnabled" example:"true"`
