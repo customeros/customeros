@@ -181,6 +181,9 @@ func (as *aggregateStore) Save(ctx context.Context, aggregate es.Aggregate) erro
 		}
 
 		expectedRevision = esdb.Revision(lastEvent.OriginalEvent().EventNumber)
+		if aggregate.IsTemporal() {
+			expectedRevision = esdb.Any{}
+		}
 		span.LogFields(log.Object("expectedRevision", expectedRevision))
 		as.log.Debugf("(Save) expectedRevision: {%T}", expectedRevision)
 
