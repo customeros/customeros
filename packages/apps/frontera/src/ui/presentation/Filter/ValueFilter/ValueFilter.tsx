@@ -2,22 +2,24 @@ import { useState, useEffect } from 'react';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
+import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
 
+import { handleOperatorName } from '../utils/utils';
+
 interface ValueFilterProps {
   filterName: string;
-  filterType: string;
+  filterType?: string;
   filterValue: string;
   operatorValue: string;
   onChangeFilterValue: (value: string) => void;
 }
 
 export const ValueFilter = ({
-  filterType,
   filterName,
   operatorValue,
   onChangeFilterValue,
@@ -35,6 +37,12 @@ export const ValueFilter = ({
       }
     }
   }, [filterName]);
+
+  if (
+    operatorValue === ComparisonOperator.IsEmpty ||
+    operatorValue === ComparisonOperator.IsNotEmpty
+  )
+    return;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -54,18 +62,22 @@ export const ValueFilter = ({
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
-          className='border-l-0 rounded-none text-gray-700 bg-white font-normal'
+          className='border-l-0 rounded-none text-gray-700 bg-white font-normal focus:outline-none'
         >
-          {filterValue ? filterValue : '...'}
+          <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
+            {filterValue ? filterValue : '...'}
+          </span>
         </Button>
       </PopoverTrigger>
-      <PopoverContent className='py-1 w-[240px]'>
+      <PopoverContent side='bottom' align='start' className='py-1 w-[254px]'>
         <Input
           size='sm'
           variant='unstyled'
           value={inputValue}
           onChange={handleInputChange}
-          placeholder={`${filterName} ${operatorValue}`}
+          placeholder={`${filterName} ${handleOperatorName(
+            operatorValue as ComparisonOperator,
+          )}`}
         />
       </PopoverContent>
     </Popover>

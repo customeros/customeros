@@ -1,5 +1,3 @@
-import { match } from 'ts-pattern';
-
 import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 
@@ -42,30 +40,10 @@ export const Filter = ({
         filterType={filterType}
         filterName={filterName}
         filterValue={filterValue}
+        operatorValue={operatorValue}
         onChangeFilterValue={onChangeFilterValue}
-        operatorValue={handleOperatorName(operatorValue)}
       />
       <ClearFilter onClearFilter={onClearFilter} />
     </ButtonGroup>
   );
-};
-
-const handleOperatorName = (operator: ComparisonOperator, type?: string) => {
-  return match(operator)
-    .with(ComparisonOperator.Between, () => 'between')
-    .with(ComparisonOperator.Contains, () => 'contains')
-    .with(ComparisonOperator.Eq, () => 'equals')
-    .with(ComparisonOperator.Gt, () =>
-      type === 'date' ? 'after' : 'more than',
-    )
-    .with(ComparisonOperator.Gte, () => 'greater than or equal to')
-    .with(ComparisonOperator.In, () => 'in')
-    .with(ComparisonOperator.IsEmpty, () => 'is empty')
-    .with(ComparisonOperator.IsNull, () => 'is null')
-    .with(ComparisonOperator.Lt, () =>
-      type === 'date' ? 'before' : 'less than',
-    )
-    .with(ComparisonOperator.Lte, () => 'less than or equal to')
-    .with(ComparisonOperator.StartsWith, () => 'starts with')
-    .otherwise(() => 'unknown');
 };

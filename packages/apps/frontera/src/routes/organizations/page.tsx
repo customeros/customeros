@@ -55,7 +55,7 @@ export const FinderPage = observer(() => {
     <div className='flex w-full items-start'>
       <div className='w-[100%] bg-white'>
         <Search open={open} onOpen={onOpen} onClose={onClose} />
-        <div className='flex justify-between mx-4 my-2'>
+        <div className='flex justify-between mx-4 my-2 items-start'>
           <Filters
             tableId={tableId || TableIdType.Organizations}
             // eslint-disable-next-line @typescript-eslint/no-explicit-any

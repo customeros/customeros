@@ -123,7 +123,7 @@ export const Filters = observer(
     };
 
     return (
-      <div className='flex gap-2'>
+      <div className='flex gap-2 flex-wrap'>
         {flattenedFilters.map((f) => (
           <Filter
             key={f.property}
@@ -134,13 +134,6 @@ export const Filters = observer(
             operatorValue={f.operation || ComparisonOperator.Between}
             onClearFilter={() => {
               tableViewDef?.removeFilter(f.property);
-            }}
-            onChangeOperator={(operation: string) => {
-              tableViewDef?.setFilter({
-                ...f,
-                operation: (operation as ComparisonOperator) || '',
-                property: f.property,
-              });
             }}
             onChangeFilterValue={(value: string) => {
               if (value.length === 0) {
@@ -159,6 +152,21 @@ export const Filters = observer(
                   active: true,
                 });
               }
+            }}
+            onChangeOperator={(operation: string) => {
+              tableViewDef?.setFilter({
+                ...f,
+                operation: (operation as ComparisonOperator) || '',
+                property: f.property,
+                active:
+                  operation === ComparisonOperator.IsEmpty ||
+                  operation === ComparisonOperator.IsNotEmpty ||
+                  f.value
+                    ? true
+                    : false,
+                includeEmpty:
+                  operation === ComparisonOperator.IsEmpty ? true : false,
+              });
             }}
           />
         ))}
@@ -183,7 +191,7 @@ export const Filters = observer(
               </Button>
             )}
           </MenuButton>
-          <MenuList>
+          <MenuList align='start' side='bottom'>
             <Input
               size='sm'
               value={search}

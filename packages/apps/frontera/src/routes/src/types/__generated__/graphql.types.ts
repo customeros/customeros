@@ -420,9 +420,12 @@ export enum ComparisonOperator {
   Gte = 'GTE',
   In = 'IN',
   IsEmpty = 'IS_EMPTY',
+  IsNoneOf = 'IS_NONE_OF',
+  IsNotEmpty = 'IS_NOT_EMPTY',
   IsNull = 'IS_NULL',
   Lt = 'LT',
   Lte = 'LTE',
+  NotContains = 'NOT_CONTAINS',
   StartsWith = 'STARTS_WITH',
 }
 
@@ -2403,12 +2406,14 @@ export type Mutation = {
   contact_AddOrganizationById: Contact;
   contact_AddSocial: Social;
   contact_AddTag: ActionResponse;
+  /** @deprecated Use contact_Hide instead */
   contact_Archive: Result;
   contact_Create: Scalars['ID']['output'];
   contact_CreateForOrganization: Contact;
   /** @deprecated Decommissioned */
   contact_FindEmail: Scalars['String']['output'];
   contact_HardDelete: Result;
+  contact_Hide: ActionResponse;
   contact_Merge: Contact;
   contact_RemoveLocation: Contact;
   contact_RemoveOrganizationById: Contact;
@@ -2668,6 +2673,10 @@ export type MutationContact_FindEmailArgs = {
 };
 
 export type MutationContact_HardDeleteArgs = {
+  contactId: Scalars['ID']['input'];
+};
+
+export type MutationContact_HideArgs = {
   contactId: Scalars['ID']['input'];
 };
 

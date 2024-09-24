@@ -30,7 +30,12 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterType: 'text',
     filterAccesor: ColumnViewType.OrganizationsName,
     filterName: 'Organization name',
-    filterOperators: [ComparisonOperator.Contains, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Building07 />,
   },
   [ColumnViewType.OrganizationsWebsite]: {
