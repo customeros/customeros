@@ -315,6 +315,17 @@ func (h *InvoiceEventHandler) OnInvoiceUpdateV1(ctx context.Context, evt eventst
 
 	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntityBeforeUpdate.Status, *invoiceEntityAfterUpdate)
 
+	// status changed
+	if invoiceEntityBeforeUpdate.Status != invoiceEntityAfterUpdate.Status {
+		if invoiceEntityAfterUpdate.Status == neo4jenum.InvoiceStatusVoid {
+			err = h.services.CommonServices.InvoiceService.VoidInvoice(ctx, invoiceId, constants.AppSourceEventProcessingPlatformSubscribers)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "h.services.CommonServices.InvoiceService.VoidInvoice"))
+				h.log.Errorf("Error while voiding invoice %s: %s", invoiceId, err.Error())
+			}
+		}
+	}
+
 	return nil
 }
 
