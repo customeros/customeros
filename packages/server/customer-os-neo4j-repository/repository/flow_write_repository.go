@@ -38,12 +38,16 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 				f.name = $name,
 				f.description = $description,
 				f.updatedAt = $updatedAt,
+				f.nodes = $nodes,
+				f.edges = $edges,
 				f.status = $status
 			ON CREATE SET
 				f.createdAt = $createdAt,
 				f.updatedAt = $updatedAt,
 				f.name = $name,
 				f.description = $description,
+				f.nodes = $nodes,
+				f.edges = $edges,
 				f.status = $status
 			RETURN f`, common.GetTenantFromContext(ctx))
 
@@ -52,6 +56,8 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 		"id":          entity.Id,
 		"name":        entity.Name,
 		"description": entity.Description,
+		"nodes":       entity.Nodes,
+		"edges":       entity.Edges,
 		"status":      entity.Status,
 		"createdAt":   utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt":   utils.TimeOrNow(entity.UpdatedAt),

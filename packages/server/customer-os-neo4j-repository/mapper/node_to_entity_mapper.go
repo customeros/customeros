@@ -1160,6 +1160,8 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Name:        utils.GetStringPropOrEmpty(props, "name"),
 		Description: utils.GetStringPropOrEmpty(props, "description"),
+		Nodes:       utils.GetStringPropOrEmpty(props, "nodes"),
+		Edges:       utils.GetStringPropOrEmpty(props, "edges"),
 		Status:      entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
 	}
 	return &domain

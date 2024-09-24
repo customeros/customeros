@@ -1,4 +1,4 @@
-FROM golang:1.21.13-alpine3.20@sha256:2414035b086e3c42b99654c8b26e6f5b1b1598080d65fd03c7f499552ff4dc94 AS builder
+FROM golang:1.23.1-alpine3.20 AS builder
 
 WORKDIR /app
 RUN mkdir /app/packages
