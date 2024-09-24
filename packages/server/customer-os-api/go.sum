@@ -943,6 +943,8 @@ github.com/cucumber/messages/go/v21 v21.0.1 h1:wzA0LxwjlWQYZd32VTlAVDTkW6inOFmSM
 github.com/cucumber/messages/go/v21 v21.0.1/go.mod h1:zheH/2HS9JLVFukdrsPWoPdmUtmYQAQPLk7w5vWsk5s=
 github.com/customeros/mailsherpa v0.2.10 h1:PoWBoVsUQSc1/y8fhkzPNRbgx8vQAHsFM0BhqcgN3Uc=
 github.com/customeros/mailsherpa v0.2.10/go.mod h1:q04Xk7+i6M7XTxrY9tS3uYN68urvgrswbCw8Vi6Zbjw=
+github.com/customeros/mailsherpa v0.2.11 h1:ztJn9/4C+44hcICg1wJclyqjxZ3BiCWjBXbMwlMdA+M=
+github.com/customeros/mailsherpa v0.2.11/go.mod h1:q04Xk7+i6M7XTxrY9tS3uYN68urvgrswbCw8Vi6Zbjw=
 github.com/cyphar/filepath-securejoin v0.2.3/go.mod h1:aPGpWjXOXUn2NCNjFvBE6aRxGGx79pTxQpKOJNYHHl4=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=

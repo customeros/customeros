@@ -85,6 +85,8 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 	result.Syntax.Domain = syntaxValidation.Domain
 	result.Syntax.User = syntaxValidation.User
 	result.Syntax.CleanEmail = syntaxValidation.CleanEmail
+	result.EmailData.IsFreeAccount = syntaxValidation.IsFreeAccount
+	result.EmailData.IsRoleAccount = syntaxValidation.IsRoleAccount
 
 	// if syntax is not valid, return
 	if !syntaxValidation.IsValid {
@@ -151,8 +153,6 @@ func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context
 		}
 		result.EmailData.Deliverable = emailValidation.Deliverable
 		result.EmailData.IsMailboxFull = emailValidation.IsMailboxFull
-		result.EmailData.IsRoleAccount = emailValidation.IsRoleAccount
-		result.EmailData.IsFreeAccount = emailValidation.IsFreeAccount
 		result.EmailData.SmtpSuccess = emailValidation.SmtpSuccess
 		result.EmailData.ResponseCode = emailValidation.ResponseCode
 		result.EmailData.ErrorCode = emailValidation.ErrorCode
