@@ -88,13 +88,13 @@ export const LinkedInSettings = observer(() => {
         {isOpen && (
           <>
             <label className='font-semibold text-sm mb-2'>
-              Email or Phone
+              Email or phone
               <Input
                 size='xs'
                 value={linkedIn}
                 autoComplete='off'
                 name='emailOrPhone'
-                placeholder='olivia@untitledui.com'
+                placeholder='Email or phone'
                 onChange={(e) => {
                   setLinkedIn(e.target.value);
                 }}
@@ -118,7 +118,7 @@ export const LinkedInSettings = observer(() => {
                   size='xs'
                   value={password}
                   name='linkedInPassword'
-                  placeholder='*********'
+                  placeholder='•••••••••••••'
                   type={showPassword ? 'text' : 'password'}
                   onChange={(e) => setPassword(e.target.value)}
                   className={
