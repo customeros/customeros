@@ -2,10 +2,10 @@ import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 
 import { DateFilter } from './components/DateFilter';
+import { ClearFilter } from './components/ClearFilter';
 import { PropertyFilter } from './components/PropertyFilter';
 import { OperatorFilter } from './components/OperatorFilter';
 import { TextFilter } from './components/TextFilter/TextFilter';
-import { ClearFilter } from './components/ClearFilter/ClearFilter';
 
 interface FilterProps {
   filterName: string;

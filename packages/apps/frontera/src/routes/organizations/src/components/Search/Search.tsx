@@ -13,6 +13,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { Tag, TagLabel } from '@ui/presentation/Tag';
 import { TableIdType, TableViewType } from '@graphql/types';
 import { UserPresence } from '@shared/components/UserPresence';
+import { ViewSettings } from '@shared/components/ViewSettings';
 import { TableViewMenu } from '@organizations/components/TableViewMenu/TableViewMenu';
 import {
   InputGroup,
@@ -65,6 +66,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
   const tableViewDef = store.tableViewDefs.getById(preset || '');
   const tableId = tableViewDef?.value.tableId;
+  const tableViewType = tableViewDef?.value.tableType;
 
   const tableType = tableViewDef?.value?.tableType;
   const totalResults = store.ui.searchCount;
@@ -141,6 +143,8 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     { when: allowCreation },
   );
 
+  const flag = useFeatureIsOn('filters-v2');
+
   return (
     <div
       ref={wrapperRef}
@@ -215,6 +219,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       {tableViewDef?.value.tableId === TableIdType.FlowSequences && (
         <CreateSequenceButton />
+      )}
+
+      {tableViewType && !flag && (
+        <ViewSettings tableId={tableId} type={tableViewType} />
       )}
 
       {tableViewDef?.value?.isPreset &&

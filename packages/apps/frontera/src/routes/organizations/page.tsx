@@ -22,7 +22,6 @@ export const FinderPage = observer(() => {
   const store = useStore();
   const [searchParams, setSearchParams] = useSearchParams();
   const preset = searchParams.get('preset');
-  const filters = useFeatureIsOn('filters-v2');
   const defaultPreset = store.tableViewDefs.defaultPreset;
   const { open, onOpen, onClose } = useDisclosure({ id: 'flow-finder' });
   const currentPreset = store.tableViewDefs
@@ -51,25 +50,25 @@ export const FinderPage = observer(() => {
   const tableViewType = tableViewDef?.value.tableType;
 
   const tableType = tableViewDef?.value?.tableType;
+  const flag = useFeatureIsOn('filters-v2');
 
   return (
     <div className='flex w-full items-start'>
       <div className='w-[100%] bg-white'>
         <Search open={open} onOpen={onOpen} onClose={onClose} />
-        <div className='flex justify-between mx-4 my-2 items-start'>
-          {!filters && (
+        {flag && (
+          <div className='flex justify-between mx-4 my-2 items-start'>
             <FinderFilters
               tableId={tableId || TableIdType.Organizations}
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               type={tableType || (TableViewType.Organizations as any)}
             />
-          )}
 
-          {tableViewType && (
-            <ViewSettings tableId={tableId} type={tableViewType} />
-          )}
-        </div>
-
+            {tableViewType && (
+              <ViewSettings tableId={tableId} type={tableViewType} />
+            )}
+          </div>
+        )}
         <FinderTable isSidePanelOpen={open} />
         <Preview />
       </div>
