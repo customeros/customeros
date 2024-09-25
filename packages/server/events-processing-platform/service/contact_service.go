@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"github.com/forPelevin/gomoji"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -42,9 +43,9 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 	contactId := utils.NewUUIDIfEmpty(request.Id)
 
 	dataFields := event.ContactDataFields{
-		FirstName:       request.FirstName,
-		LastName:        request.LastName,
-		Name:            request.Name,
+		FirstName:       gomoji.RemoveEmojis(request.FirstName),
+		LastName:        gomoji.RemoveEmojis(request.LastName),
+		Name:            gomoji.RemoveEmojis(request.Name),
 		Description:     request.Description,
 		Prefix:          request.Prefix,
 		Timezone:        request.Timezone,
