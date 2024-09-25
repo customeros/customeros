@@ -52,13 +52,14 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
     <MaskedInput
       size='xs'
       value={value}
+      maxLength={12}
       variant='unstyled'
       onBlur={handleBlur}
       mask={`${symbol}num`}
+      className='max-w-[100px]'
       placeholder='ARR estimate'
       defaultValue={defaultValue.toString()}
       onClick={(e) => (e.target as HTMLInputElement).select()}
-      className='max-w-[80px] overflow-hidden text-ellipsis whitespace-nowrap'
       onAccept={(v, instance) => {
         setValue(v);
         handleAccept(instance._unmaskedValue);
