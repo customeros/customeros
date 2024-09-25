@@ -46,9 +46,10 @@ defmodule CustomerOsRealtime.MixProject do
       {:bandit, "~> 1.2"},
       {:dialyxir, "~> 1.4", only: [:dev, :test], runtime: false},
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
-      {:dotenv, "~> 3.1.0"},
       {:delta, "~> 0.2.0"},
-      {:spear, "~> 1.4.0"}
+      {:spear, "~> 1.4.0"},
+      {:castore, "~> 1.0"},
+      {:dotenv_parser, "~> 2.0"}
     ]
   end
 

@@ -7,6 +7,10 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
+if Config.config_env() == :dev do
+  DotenvParser.load_file(".env")
+end
+
 # ## Using releases
 #
 # If you use `mix release`, you need to explicitly enable the server
@@ -100,3 +104,6 @@ if config_env() == :prod do
   #
   # See https://hexdocs.pm/swoosh/Swoosh.html#module-installation for details.
 end
+
+config :customer_os_realtime, CustomerOsRealtime.EventStoreClient,
+  connection_string: System.get_env("EVENT_STORE_CONNECTION_STRING")
