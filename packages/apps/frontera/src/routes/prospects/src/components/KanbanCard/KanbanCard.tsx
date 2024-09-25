@@ -140,7 +140,13 @@ export const KanbanCard = observer(
         <div className='flex flex-col w-full items-start gap-2'>
           <div className='flex items-center gap-2 w-full justify-between'>
             <div className='flex gap-2 items-center'>
-              <Tooltip label={organization?.value.name}>
+              <Tooltip
+                label={
+                  logo
+                    ? organization?.value.name
+                    : "We're still loading this org…"
+                }
+              >
                 <div>
                   <Avatar
                     size='xs'
@@ -148,11 +154,13 @@ export const KanbanCard = observer(
                     src={logo || undefined}
                     className='w-5 h-5 min-w-5'
                     name={`${card.value?.name}`}
+                    style={{ cursor: logo ? 'pointer' : 'not-allowed' }}
                     icon={<Building06 className='text-primary-500 size-3' />}
                     onMouseUp={() => {
-                      navigate(
-                        `/organization/${card.value?.organization?.metadata.id}/`,
-                      );
+                      logo &&
+                        navigate(
+                          `/organization/${card.value?.organization?.metadata.id}/`,
+                        );
                     }}
                   />
                 </div>
