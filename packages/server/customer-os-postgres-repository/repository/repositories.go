@@ -20,7 +20,6 @@ type Repositories struct {
 	EventBufferRepository                       EventBufferRepository
 	TableViewDefinitionRepository               TableViewDefinitionRepository
 	TrackingAllowedOriginRepository             TrackingAllowedOriginRepository
-	TechLimitRepository                         TechLimitRepository
 	ExternalAppKeysRepository                   ExternalAppKeysRepository
 	EnrichDetailsBetterContactRepository        EnrichDetailsBetterContactRepository
 	EnrichDetailsScrapInRepository              EnrichDetailsScrapInRepository
@@ -79,7 +78,6 @@ func InitRepositories(db *gorm.DB) *Repositories {
 		EventBufferRepository:                       NewEventBufferRepository(db),
 		TableViewDefinitionRepository:               NewTableViewDefinitionRepository(db),
 		TrackingAllowedOriginRepository:             NewTrackingAllowedOriginRepository(db),
-		TechLimitRepository:                         NewTechLimitRepository(db),
 		ExternalAppKeysRepository:                   NewExternalAppKeysRepository(db),
 		EnrichDetailsBetterContactRepository:        NewEnrichDetailsBetterContactRepository(db),
 		EnrichDetailsScrapInRepository:              NewEnrichDetailsScrapInRepository(db),
@@ -146,7 +144,6 @@ func (r *Repositories) Migration(db *gorm.DB) {
 		&entity.CurrencyRate{},
 		&entity.EventBuffer{},
 		&entity.TableViewDefinition{},
-		&entity.TechLimit{},
 		&entity.TrackingAllowedOrigin{},
 		&entity.TenantSettingsEmailExclusion{},
 		&entity.ExternalAppKeys{},
