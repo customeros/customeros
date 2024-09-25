@@ -63,7 +63,9 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!row.value?.name?.length && filter.includeEmpty) return true;
         if (!filterValue || !row.value?.name?.length) return false;
 
-        return row.value.name.toLowerCase().includes(filterValue.toLowerCase());
+        return row.value.name
+          ?.toLowerCase()
+          .includes(filterValue?.toLowerCase());
       },
     )
     .with(

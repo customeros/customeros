@@ -68,17 +68,29 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsName },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
+        const filterValue = filter?.value?.toLowerCase();
+        const filterOperator = filter?.operation;
 
-        if (filter.includeEmpty && row.value.name === 'Unnamed') {
-          return true;
+        const values = row.value.name.toLowerCase();
+
+        if (
+          filter.includeEmpty &&
+          filterOperator === ComparisonOperator.IsEmpty
+        ) {
+          return !values;
         }
 
-        if (filter.includeEmpty && filterValue.length === 0) {
-          return false;
+        if (filterOperator === ComparisonOperator.IsNotEmpty) {
+          return values;
         }
 
-        return row.value.name.toLowerCase().includes(filterValue.toLowerCase());
+        if (filterOperator === ComparisonOperator.NotContains) {
+          return !values.includes(filterValue);
+        }
+
+        {
+          return values.includes(filterValue);
+        }
       },
     )
     .with(
