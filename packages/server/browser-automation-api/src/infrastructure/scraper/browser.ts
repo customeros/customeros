@@ -15,17 +15,14 @@ export class Browser {
   private static instances: Map<string, Browser>;
   public browser: BrowserType | null = null;
 
-  private constructor(
-    private debug?: boolean,
-    private debugBrowserCat?: boolean,
-  ) {}
+  constructor(private debug?: boolean, private debugBrowserCat?: boolean) {}
 
   public static async getInstance(
     proxyConfig: string,
     options?: {
       debug?: boolean;
       debugBrowserCat?: boolean;
-    },
+    }
   ): Promise<Browser> {
     if (!Browser.instances) {
       Browser.instances = new Map();
@@ -66,6 +63,25 @@ export class Browser {
     logger.debug("Returning browser instance", {
       source: "Browser",
     });
+    return instance;
+  }
+
+  public static async getFreshInstance(
+    proxyConfig: string,
+    options?: {
+      debug?: boolean;
+      debugBrowserCat?: boolean;
+    }
+  ): Promise<Browser> {
+    logger.info("Creating fresh browser instance.", {
+      source: "Browser",
+    });
+    const instance = new Browser(options?.debug, options?.debugBrowserCat);
+    await instance.init(proxyConfig);
+    logger.info("Fresh browser instance created ok.", {
+      source: "Browser",
+    });
+
     return instance;
   }
 
@@ -142,7 +158,7 @@ export class Browser {
               message: `Failed to initialize the browser.`,
               details: error.details,
               severity: "critical",
-            }),
+            })
           );
         }
       }

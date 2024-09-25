@@ -46,7 +46,7 @@ export class LinkedinAutomationService {
     message?: string,
     options?: { dryRun?: boolean }
   ) {
-    const browser = await Browser.getInstance(this.proxyConfig);
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -140,7 +140,7 @@ export class LinkedinAutomationService {
       lastPageVisited?: number
     ]
   > {
-    const browser = await Browser.getInstance(this.proxyConfig);
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -264,7 +264,7 @@ export class LinkedinAutomationService {
     message: string,
     options?: { dryRun?: boolean }
   ) {
-    const browser = await Browser.getInstance(this.proxyConfig);
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
