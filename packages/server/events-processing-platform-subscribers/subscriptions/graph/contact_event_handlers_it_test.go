@@ -10,10 +10,13 @@ import (
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test/mocked_grpc"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -24,8 +27,18 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contactEventHandler := &ContactEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	myContactId, _ := uuid.NewUUID()
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, myContactId.String())
 	curTime := utils.Now()
@@ -36,8 +49,7 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 		Prefix:      "Mr.",
 		Description: "This is a test contact.",
 	}
-	source :=
-		cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
+	source := cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
 	event, err := event2.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
@@ -90,8 +102,17 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	propsAfterLocationCreate := utils.GetPropsFromNode(*dbNodeAfterLocationCreate)
 	require.Equal(t, locationName, utils.GetStringPropOrEmpty(propsAfterLocationCreate, "name"))
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	contactEventHandler := &ContactEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	orgAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	now := utils.Now()
@@ -143,8 +164,17 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 	require.Equal(t, &creationTime, utils.GetTimePropOrNil(propsAfterPhoneNumberCreate, "updatedAt"))
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	contactEventHandler := &ContactEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	phoneNumberLabel := "phoneNumberLabel"
@@ -202,8 +232,17 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 	require.Equal(t, &creationTime, utils.GetTimePropOrNil(propsAfterEmailCreate, "updatedAt"))
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	contactEventHandler := &ContactEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	emailLabel := "emailLabel"
@@ -254,8 +293,17 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	propsAfterOrganizationCreate := utils.GetPropsFromNode(*dbNodeAfterOrganizationCreate)
 	require.Equal(t, organizationName, *utils.GetStringPropOrNil(propsAfterOrganizationCreate, "name"))
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	contactEventHandler := &ContactEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	jobTitle := "Test Title"
@@ -335,8 +383,17 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	propsAfterContactCreate := utils.GetPropsFromNode(*dbNodeAfterContactCreate)
 	require.Equal(t, contactId, utils.GetStringPropOrEmpty(propsAfterContactCreate, "id"))
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	contactEventHandler := &ContactEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	source := constants.SourceOpenline
@@ -400,8 +457,18 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
 	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{})
 	neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{Url: socialUrl})
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	contactEventHandler := &ContactEventHandler{
-		services: testDatabase.Services,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 
