@@ -9,7 +9,9 @@ type ErrorType =
   | "APPLICATION_ERROR";
 type ErrorCode =
   // Session token is expired or invalid;
-  "S001";
+  | "S001"
+  // Profile is already a connection;
+  | "P001";
 
 type ErrorDetails = {
   message: string;

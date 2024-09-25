@@ -13,7 +13,7 @@ export class AuthMiddleware {
   constructor(
     private userRepository: UserRepository,
     private browserConfigsRepository: BrowserConfigsRepository,
-    private tenantWebhookApiKeysRepository: TenantWebhookApiKeysRepository,
+    private tenantWebhookApiKeysRepository: TenantWebhookApiKeysRepository
   ) {
     this.checkApiKey = this.checkApiKey.bind(this);
     this.getValidators = this.getValidators.bind(this);
@@ -53,7 +53,7 @@ export class AuthMiddleware {
 
       const user = await this.userRepository.getUserByEmail(
         tenantName,
-        username,
+        username
       );
 
       if (!user) {
@@ -64,7 +64,7 @@ export class AuthMiddleware {
       }
 
       const browserConfig = await this.browserConfigsRepository.selectByUserId(
-        user.id,
+        user.id
       );
 
       res.locals.tenantName = tenantName;
