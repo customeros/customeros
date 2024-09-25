@@ -34,6 +34,7 @@ import MentionsPlugin from './plugins/MentionsPlugin';
 import AutoLinkPlugin from './plugins/AutoLinkPlugin';
 import HashtagsPlugin from './plugins/HashtagsPlugin';
 import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
+import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbarPlugin';
 
 const theme: EditorThemeClasses = {};
 
@@ -173,11 +174,17 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
             onSearch={onHashtagSearch}
           />
           {floatingAnchorElem && (
-            <FloatingLinkEditorPlugin
-              anchorElem={floatingAnchorElem}
-              isLinkEditMode={isLinkEditMode}
-              setIsLinkEditMode={setIsLinkEditMode}
-            />
+            <>
+              <FloatingLinkEditorPlugin
+                anchorElem={floatingAnchorElem}
+                isLinkEditMode={isLinkEditMode}
+                setIsLinkEditMode={setIsLinkEditMode}
+              />
+              <FloatingTextFormatToolbarPlugin
+                anchorElem={floatingAnchorElem}
+                setIsLinkEditMode={setIsLinkEditMode}
+              />
+            </>
           )}
           <EditorPlugin
             ErrorBoundary={LexicalErrorBoundary}
