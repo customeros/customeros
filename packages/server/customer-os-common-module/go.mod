@@ -18,6 +18,7 @@ require (
 	github.com/coocood/freecache v1.2.4
 	github.com/docker/docker v27.3.1+incompatible
 	github.com/emersion/go-message v0.18.1
+	github.com/forPelevin/gomoji v1.2.0
 	github.com/gin-gonic/gin v1.10.0
 	github.com/google/uuid v1.6.0
 	github.com/h2non/filetype v1.1.3
@@ -91,6 +92,7 @@ require (
 	github.com/opencontainers/image-spec v1.1.0 // indirect
 	github.com/pborman/uuid v1.2.1 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
+	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/robfig/cron v1.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.12.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
