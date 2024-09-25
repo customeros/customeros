@@ -2,6 +2,7 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Textarea } from '@ui/form/Textarea/Textarea';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 
 interface NextStepsProps {
@@ -35,19 +36,21 @@ export const NextSteps = observer(
     };
 
     return (
-      <div className='flex gap-2 w-full items-start justify-start'>
-        <ArrowsRight className='size-4 ml-1 mr-0.5 mt-0.5 text-gray-500' />
-        <Textarea
-          size='xs'
-          value={value}
-          ref={textareaRef}
-          variant='unstyled'
-          onBlur={handleBlur}
-          className='leading-5'
-          onChange={handleChange}
-          placeholder="What's your next step?"
-        />
-      </div>
+      <Tooltip side='top' align='start' label='Next steps'>
+        <div className='flex gap-2 w-full items-start justify-start'>
+          <ArrowsRight className='size-4 ml-1 mr-0.5 mt-0.5 text-gray-500' />
+          <Textarea
+            size='xs'
+            value={value}
+            ref={textareaRef}
+            variant='unstyled'
+            onBlur={handleBlur}
+            className='leading-5'
+            onChange={handleChange}
+            placeholder="What's your next step?"
+          />
+        </div>
+      </Tooltip>
     );
   },
 );
