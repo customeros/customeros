@@ -125,6 +125,7 @@ export const KanbanCard = observer(
         ref={mergedRef}
         {...provided?.draggableProps}
         {...provided?.dragHandleProps}
+        data-test='opp-kanban-card'
         onMouseEnter={() => onFocus(card.id)}
         className={cn(
           'group/kanbanCard  relative flex flex-col items-start px-3 pb-3 pt-[6px] mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
