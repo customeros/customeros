@@ -536,7 +536,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       Escape: () => {
         store.ui.setContactPreviewCardOpen(false);
       },
-      Space: () => {
+      Space: (e) => {
+        e.preventDefault();
         store.ui.setContactPreviewCardOpen(false);
       },
     },
