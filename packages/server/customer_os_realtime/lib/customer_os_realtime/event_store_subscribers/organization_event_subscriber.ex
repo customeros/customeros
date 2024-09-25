@@ -1,4 +1,5 @@
 defmodule CustomerOsRealtime.OrganizationEventSubscriber do
+  @moduledoc false
   use GenServer
 
   alias CustomerOsRealtime.EventStoreClient
@@ -21,7 +22,7 @@ defmodule CustomerOsRealtime.OrganizationEventSubscriber do
         %Spear.Event{
           body: %{
             "entity" => entity,
-            "entityId" => entityId,
+            "entityId" => entity_id,
             "tenant" => tenant
           }
         } =
@@ -41,7 +42,7 @@ defmodule CustomerOsRealtime.OrganizationEventSubscriber do
     if channel_topic != nil do
       Endpoint.broadcast!(channel_topic, "sync_group_packet", %{
         action: "INVALIDATE",
-        ids: [entityId]
+        ids: [entity_id]
       })
 
       IO.puts("Broadcasted V1_EVENT_COMPLETED to #{channel_topic}")
