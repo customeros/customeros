@@ -62,29 +62,35 @@ export const PaymentStatusSelect = observer(
           align='center'
           onCloseAutoFocus={(e) => e.preventDefault()}
         >
-          <MenuItem
-            disabled={isPaid}
-            onClick={(e) => handleClick(e, InvoiceStatus.Void)}
-          >
-            <div className='flex gap-2 items-center'>
-              <SlashCircle01
-                className={cn(isPaid ? 'text-gray-400' : 'text-gray-500')}
-              />
-              <span>Void</span>
-            </div>
-          </MenuItem>
-          <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Paid)}>
-            <div className='flex gap-2 items-center'>
-              <CheckCircle className='text-gray-500' />
-              <span>Paid</span>
-            </div>
-          </MenuItem>
-          <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Due)}>
-            <div className='flex gap-2 items-center'>
-              <Clock className='text-gray-500' />
-              <span>Due</span>
-            </div>
-          </MenuItem>
+          {invoiceStatus !== InvoiceStatus.Void && (
+            <MenuItem
+              disabled={isPaid}
+              onClick={(e) => handleClick(e, InvoiceStatus.Void)}
+            >
+              <div className='flex gap-2 items-center'>
+                <SlashCircle01
+                  className={cn(isPaid ? 'text-gray-400' : 'text-gray-500')}
+                />
+                <span>Void</span>
+              </div>
+            </MenuItem>
+          )}
+          {invoiceStatus !== InvoiceStatus.Paid && (
+            <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Paid)}>
+              <div className='flex gap-2 items-center'>
+                <CheckCircle className='text-gray-500' />
+                <span>Paid</span>
+              </div>
+            </MenuItem>
+          )}
+          {invoiceStatus !== InvoiceStatus.Due && (
+            <MenuItem onClick={(e) => handleClick(e, InvoiceStatus.Due)}>
+              <div className='flex gap-2 items-center'>
+                <Clock className='text-gray-500' />
+                <span>Due</span>
+              </div>
+            </MenuItem>
+          )}
         </MenuList>
       </Menu>
     );
