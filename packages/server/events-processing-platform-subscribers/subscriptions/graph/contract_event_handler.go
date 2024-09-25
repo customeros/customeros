@@ -144,6 +144,8 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -348,6 +350,8 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -414,6 +418,8 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -558,6 +564,8 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		return err
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -649,6 +657,8 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 	}
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -801,6 +811,8 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 			tracing.TraceErr(span, err)
 		}
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
