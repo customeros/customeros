@@ -24,16 +24,23 @@ const elkOptions = {
 
 const getNodeWidth = (node: Node) => {
   if (node.type === 'trigger') {
-    if (node.data.triggerType === 'EndFlow') {
-      return {
-        width: 131,
-        height: 56,
-      };
-    }
-
     return {
       width: 300,
-      height: 71,
+      height: 56,
+    };
+  }
+
+  if (node.type === 'control') {
+    return {
+      width: 131,
+      height: 56,
+    };
+  }
+
+  if (node.type === 'wait') {
+    return {
+      width: 150,
+      height: 56,
     };
   }
 
@@ -128,7 +135,7 @@ export const LayoutButton = () => {
 
   return (
     <ControlButton onClick={() => onLayout({ direction: 'DOWN' })}>
-      <AlignHorizontalCentre02 className='size-4' />
+      <AlignHorizontalCentre02 />
     </ControlButton>
   );
 };

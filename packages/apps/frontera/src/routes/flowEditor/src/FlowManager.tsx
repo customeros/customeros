@@ -1,8 +1,10 @@
-import React, { useCallback } from 'react';
+import { useParams } from 'react-router-dom';
+import React, { MouseEvent, useCallback } from 'react';
 
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { OnConnect } from '@xyflow/system';
+import { FlowStore } from '@store/Flows/Flow.store.ts';
 import {
   Edge,
   addEdge,
@@ -15,8 +17,8 @@ import {
 
 import { useStore } from '@shared/hooks/useStore';
 
+import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
-import { nodeTypes } from './Nodes.tsx';
 import { Toolbar } from './controls/Toolbar.tsx';
 
 import '@xyflow/react/dist/style.css';
@@ -24,50 +26,14 @@ const edgeTypes = {
   baseEdge: BasicEdge,
 };
 
-const initialNodes = [
-  {
-    id: 'tn-1',
-    type: 'trigger',
-
-    position: { x: 250, y: 100 },
-    data: {
-      triggerEntity: undefined,
-      triggerType: undefined,
-    },
-  },
-  {
-    id: 'tn-2',
-    type: 'trigger',
-    position: { x: 320, y: 300 },
-    data: {
-      triggerEntity: undefined,
-      triggerType: 'EndFlow',
-    },
-  },
-];
-
-const initialEdges: Edge[] = [
-  {
-    id: 'e1-2',
-    source: 'tn-1',
-    target: 'tn-2',
-    selected: false,
-    selectable: true,
-    focusable: true,
-    interactionWidth: 60,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 60,
-      height: 60,
-      color: '#FF0072',
-    },
-    type: 'baseEdge', // You can change this to other types like 'default', 'straight', etc.
-  },
-];
-
 export const MarketingFlowBuilder = observer(() => {
-  const [nodes, , onNodesChange] = useNodesState(initialNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
+  const store = useStore();
+  const id = useParams().id as string;
+
+  const flow = store.flows.value.get(id) as FlowStore;
+
+  const [nodes, _setNodes, onNodesChange] = useNodesState(flow?.parsedNodes);
+  const [edges, setEdges, onEdgesChange] = useEdgesState(flow?.parsedEdges);
 
   // const { screenToFlowPosition } = useReactFlow();
   const { ui } = useStore();
@@ -95,6 +61,46 @@ export const MarketingFlowBuilder = observer(() => {
     },
     [setEdges],
   );
+
+  const onEdgeMouseLeave = (_event: MouseEvent, edge: Edge) => {
+    const edgeId = edge.id;
+
+    // Updates edge
+    setEdges((prevElements) =>
+      prevElements.map((element) =>
+        element.id === edgeId
+          ? {
+              ...element,
+
+              data: {
+                ...element.data,
+                isHovered: false,
+              },
+            }
+          : element,
+      ),
+    );
+  };
+
+  const onEdgeMouseEnter = (_event: MouseEvent, edge: Edge) => {
+    const edgeId = edge.id;
+
+    // Updates edge
+    setEdges((prevElements) =>
+      prevElements.map((element) =>
+        element.id === edgeId
+          ? {
+              ...element,
+
+              data: {
+                ...element.data,
+                isHovered: true,
+              },
+            }
+          : element,
+      ),
+    );
+  };
 
   // const onConnectEnd: OnConnectEnd = useCallback(
   //   (event, connectionState) => {
@@ -142,24 +148,46 @@ export const MarketingFlowBuilder = observer(() => {
     },
   );
 
+  if (!store.flows.isBootstrapped) {
+    return 'IS LOADING';
+  }
+
   return (
     <>
       <ReactFlow
-        fitView
+        maxZoom={1}
         nodes={nodes}
         edges={edges}
+        minZoom={0.1}
+        fitView={false}
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        onEdgeMouseLeave={onEdgeMouseLeave}
+        onEdgeMouseEnter={onEdgeMouseEnter}
+        zoomOnPinch={!ui.flowCommandMenu.isOpen}
+        zoomOnScroll={!ui.flowCommandMenu.isOpen}
+        defaultViewport={{ zoom: 0.1, x: 50, y: 0 }}
+        onClick={() => {
+          if (ui.flowCommandMenu.isOpen) {
+            ui.flowCommandMenu.setOpen(false);
+          }
+        }}
+        fitViewOptions={{
+          padding: 0.1,
+          includeHiddenNodes: false,
+          minZoom: 0.1,
+          maxZoom: 1,
+        }}
         // onConnectEnd={onConnectEnd}
         onNodesChange={(changes) => {
+          // this is hack to prevent removing initial edges automatically for some unknown yet reason
+
           const shouldProhibitChanges =
             changes.every((change) => change.type === 'remove') &&
-            nodes.length === 2 &&
-            nodes.every((e) => e.type === 'trigger');
+            nodes.length === changes.length;
 
           if (shouldProhibitChanges) return;
-
           onNodesChange(changes);
         }}
         onEdgesChange={(changes) => {
@@ -167,7 +195,7 @@ export const MarketingFlowBuilder = observer(() => {
 
           const shouldProhibitChanges =
             changes.every((change) => change.type === 'remove') &&
-            edges.length === 1;
+            edges.length === changes.length;
 
           if (shouldProhibitChanges) {
             return;

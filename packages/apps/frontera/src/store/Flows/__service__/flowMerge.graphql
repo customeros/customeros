@@ -3,5 +3,7 @@ mutation flowMerge($input: FlowMergeInput!) {
     metadata {
       id
     }
+    nodes
+    edges
   }
 }

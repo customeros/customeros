@@ -4,45 +4,9 @@ query getFlows {
       id
     }
     name
-    description
+    edges
+    nodes
     status
-    actions {
-      metadata {
-        id
-      }
-      index
-      name
-      status
-      actionType
-      actionData {
-        __typename
-        ... on FlowActionDataWait {
-          minutes
-        }
-        ... on FlowActionDataEmail {
-          replyToId
-          subject
-          bodyTemplate
-        }
-        ... on FlowActionLinkedinConnectionRequest {
-          messageTemplate
-        }
-        ... on FlowActionLinkedinMessage {
-          messageTemplate
-        }
-      }
-      senders {
-        metadata {
-          id
-        }
-        mailbox
-        user {
-          firstName
-          lastName
-          name
-        }
-      }
-    }
     contacts {
       metadata {
         id

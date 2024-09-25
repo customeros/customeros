@@ -5,9 +5,10 @@ import { LayoutButton } from './LayoutButton.tsx';
 export const Toolbar = () => {
   return (
     <Controls
-      className='px-1 py-1'
       position='bottom-left'
+      showInteractive={false}
       orientation='horizontal'
+      className='bg-white rounded'
     >
       <LayoutButton />
     </Controls>

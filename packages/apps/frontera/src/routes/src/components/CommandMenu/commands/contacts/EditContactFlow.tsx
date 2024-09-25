@@ -76,17 +76,14 @@ export const EditContactFlow = observer(() => {
   const flowOptions = flows.toComputedArray((arr) => arr);
 
   const handleCreateOption = (value: string) => {
-    flows?.create(
-      { name: value, description: '' },
-      {
-        onSuccess: (flowId) => {
-          const newFlow = flows.value.get(flowId) as FlowStore;
+    flows?.create(value, {
+      onSuccess: (flowId) => {
+        const newFlow = flows.value.get(flowId) as FlowStore;
 
-          if (!newFlow) return;
-          handleSelect(newFlow);
-        },
+        if (!newFlow) return;
+        handleSelect(newFlow);
       },
-    );
+    });
   };
   const filteredOptions = flowOptions?.filter((flow) =>
     flow.value.name.toLowerCase().includes(search.toLowerCase()),

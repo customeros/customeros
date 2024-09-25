@@ -1,7 +1,9 @@
+import { useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Input } from '@ui/form/Input';
 import { IconButton } from '@ui/form/IconButton';
@@ -18,9 +20,11 @@ export const FlowNameCell = observer(({ id }: FlowNameCellProps) => {
   const store = useStore();
   const ref = useRef<HTMLDivElement | null>(null);
   const nameInputRef = useRef<HTMLInputElement | null>(null);
+  const editorEnabled = useFeatureIsOn('flow-editor-poc');
 
   const [isEdit, setIsEdit] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const navigate = useNavigate();
 
   const flowStore = store.flows.value.get(id);
   const flowName = flowStore?.value?.name;
@@ -52,6 +56,12 @@ export const FlowNameCell = observer(({ id }: FlowNameCellProps) => {
     }
   };
 
+  const handleNavigate = () => {
+    if (editorEnabled) {
+      navigate(`/flow-editor/${id}`);
+    }
+  };
+
   return (
     <div
       ref={ref}
@@ -71,7 +81,12 @@ export const FlowNameCell = observer(({ id }: FlowNameCellProps) => {
             label={flowName}
             targetRef={itemRef}
           >
-            <div ref={itemRef} className='flex overflow-hidden'>
+            <div
+              ref={itemRef}
+              role='button'
+              onClick={handleNavigate}
+              className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
+            >
               <div
                 data-test='flow-name-in-flows-table'
                 className=' overflow-x-hidden overflow-ellipsis font-medium'

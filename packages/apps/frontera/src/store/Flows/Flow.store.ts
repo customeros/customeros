@@ -6,10 +6,12 @@ import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { Transport } from '@store/transport';
+import { Edge, MarkerType } from '@xyflow/react';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
+import { FlowNodeType, FlowActionType } from '@store/Flows/types.ts';
 
 import { Flow, DataSource, FlowStatus } from '@graphql/types';
 
@@ -60,10 +62,66 @@ export class FlowStore implements Store<Flow> {
           input: {
             id: this.id,
             name: this.value.name,
-            description: this.value.description,
+            nodes: JSON.stringify(this.value.nodes),
+            edges: JSON.stringify(this.value.edges),
           },
         });
       });
+  }
+
+  get parsedNodes() {
+    try {
+      return JSON.parse(this.value.nodes);
+    } catch (error) {
+      console.error('Error parsing nodes:', error);
+
+      return initialNodes; // Return an initial array as a fallback
+    }
+  }
+
+  get parsedEdges() {
+    try {
+      return JSON.parse(this.value.edges);
+    } catch (error) {
+      console.error('Error parsing edges:', error);
+
+      return initialEdges; // Return an initial array as a fallback
+    }
+  }
+
+  public async updateFlow({ nodes, edges }: { nodes: string; edges: string }) {
+    this.isLoading = true;
+
+    try {
+      const { flow_Merge } = await this.service.mergeFlow({
+        input: {
+          id: this.id,
+          name: this.value.name,
+          nodes,
+          edges,
+        },
+      });
+
+      runInAction(() => {
+        this.value.nodes = flow_Merge?.nodes ?? '[]';
+        this.value.edges = flow_Merge?.edges ?? '[]';
+        this.root.ui.toastSuccess(
+          'Flow updated successfully',
+          'update-flow-success',
+        );
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.root.ui.toastError(
+          "We couldn't update the flow",
+          'update-flow-error',
+        );
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
   invalidate() {
@@ -182,9 +240,8 @@ export class FlowStore implements Store<Flow> {
 
 const getDefaultValue = (): Flow => ({
   name: '',
-  description: '',
   status: FlowStatus.Inactive,
-
+  description: '',
   metadata: {
     source: DataSource.Openline,
     appSource: DataSource.Openline,
@@ -193,6 +250,45 @@ const getDefaultValue = (): Flow => ({
     lastUpdated: new Date().toISOString(),
     sourceOfTruth: DataSource.Openline,
   },
-  actions: [],
   contacts: [],
+  nodes: JSON.stringify(initialNodes),
+  edges: JSON.stringify(initialEdges),
 });
+const initialNodes = [
+  {
+    id: 'tn-1',
+    type: FlowNodeType.Trigger,
+    position: { x: 250, y: 100 },
+    data: {
+      action: FlowActionType.FLOW_START,
+      entity: null,
+      triggerType: null,
+    },
+  },
+  {
+    id: 'tn-2',
+    type: FlowNodeType.Control,
+    position: { x: 315, y: 300 },
+    data: {
+      action: FlowActionType.FLOW_END,
+    },
+  },
+];
+
+const initialEdges: Edge[] = [
+  {
+    id: 'e1-2',
+    source: 'tn-1',
+    target: 'tn-2',
+    selected: false,
+    selectable: true,
+    focusable: true,
+    interactionWidth: 60,
+    markerEnd: {
+      type: MarkerType.ArrowClosed,
+      width: 60,
+      height: 60,
+    },
+    type: 'baseEdge',
+  },
+];

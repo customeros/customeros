@@ -1,32 +1,45 @@
 import { observer } from 'mobx-react-lite';
+import { useReactFlow } from '@xyflow/react';
 
+import { Code01 } from '@ui/media/icons/Code01';
 import { useStore } from '@shared/hooks/useStore';
-import { Code01 } from '@ui/media/icons/Code01.tsx';
 import { CommandItem } from '@ui/overlay/CommandMenu';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
-import { PlusSquare } from '@ui/media/icons/PlusSquare.tsx';
-import { RefreshCw01 } from '@ui/media/icons/RefreshCw01.tsx';
-import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken.tsx';
-import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
+import { PlusSquare } from '@ui/media/icons/PlusSquare';
+import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
+import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken';
 
-export const FlowHub = observer(() => {
-  const store = useStore();
+export const TriggersHub = observer(() => {
+  const { ui } = useStore();
+  const { setNodes } = useReactFlow();
+
+  const updateSelectedNode = (triggerType: 'RecordAddedManually') => {
+    setNodes((nodes) =>
+      nodes.map((node) => {
+        if (node.id === ui.flowCommandMenu.context.id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+
+              triggerType: triggerType,
+            },
+          };
+        }
+
+        return node;
+      }),
+    );
+    ui.flowCommandMenu.setType(triggerType);
+  };
 
   return (
-    <CommandsContainer label={'Flows'}>
-      <CommandItem
-        leftAccessory={<PlusCircle />}
-        onSelect={() => {
-          store.ui.commandMenu.setType('CreateNewFlow');
-        }}
-      >
-        Add new flow...
-      </CommandItem>
+    <>
       <CommandItem
         leftAccessory={<PlusCircle />}
         keywords={['record', 'added', 'manually']}
         onSelect={() => {
-          // updateSelectedNode('RecordAddedManually');
+          updateSelectedNode('RecordAddedManually');
         }}
       >
         Record added manually...
@@ -47,6 +60,6 @@ export const FlowHub = observer(() => {
         <span className='text-gray-700'>Webhook</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-    </CommandsContainer>
+    </>
   );
 });
