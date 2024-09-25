@@ -11,6 +11,7 @@ const (
 	REPLIES_TO        EntityRelation = "REPLIES_TO"
 	SENT_BY           EntityRelation = "SENT_BY"
 	SENT_TO           EntityRelation = "SENT_TO"
+	NEXT              EntityRelation = "NEXT"
 )
 
 func (entityRelation EntityRelation) String() string {
