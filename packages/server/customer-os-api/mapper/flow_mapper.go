@@ -19,11 +19,10 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Name:        entity.Name,
-		Description: entity.Description,
-		Nodes:       entity.Nodes,
-		Edges:       entity.Edges,
-		Status:      entity.Status,
+		Name:   entity.Name,
+		Nodes:  entity.Nodes,
+		Edges:  entity.Edges,
+		Status: entity.Status,
 	}
 }
 
@@ -84,113 +83,12 @@ func MapEntitiesToFlowActionSenders(entities *neo4jentity.FlowActionSenderEntiti
 	return mapped
 }
 
-func MapEntityToFlowAction(entity *neo4jentity.FlowActionEntity) *model.FlowAction {
-	if entity == nil {
-		return nil
-	}
-	var actionData model.FlowActionData
-
-	if entity.ActionType == neo4jentity.FlowActionTypeWait {
-		actionData = &model.FlowActionDataWait{
-			Minutes: entity.ActionData.Wait.Minutes,
-		}
-	}
-	if entity.ActionType == neo4jentity.FlowActionTypeEmailNew {
-		actionData = &model.FlowActionDataEmail{
-			Subject:      entity.ActionData.EmailNew.Subject,
-			BodyTemplate: entity.ActionData.EmailNew.BodyTemplate,
-		}
-	}
-	if entity.ActionType == neo4jentity.FlowActionTypeEmailReply {
-		actionData = &model.FlowActionDataEmail{
-			ReplyToID:    entity.ActionData.EmailReply.ReplyToId,
-			Subject:      entity.ActionData.EmailReply.Subject,
-			BodyTemplate: entity.ActionData.EmailReply.BodyTemplate,
-		}
-	}
-	if entity.ActionType == neo4jentity.FlowActionTypeLinkedinConnectionRequest {
-		actionData = &model.FlowActionLinkedinMessage{
-			MessageTemplate: entity.ActionData.LinkedinConnectionRequest.MessageTemplate,
-		}
-	}
-	if entity.ActionType == neo4jentity.FlowActionTypeLinkedinMessage {
-		actionData = &model.FlowActionLinkedinMessage{
-			MessageTemplate: entity.ActionData.LinkedinMessage.MessageTemplate,
-		}
-	}
-
-	return &model.FlowAction{
-		Metadata: &model.Metadata{
-			ID:            entity.Id,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        model.DataSourceOpenline,
-			SourceOfTruth: model.DataSourceOpenline,
-			AppSource:     "",
-		},
-		Index:      entity.Index,
-		Name:       entity.Name,
-		Status:     entity.Status,
-		ActionType: entity.ActionType,
-		ActionData: actionData,
-	}
-}
-
-func MapEntitiesToFlowActions(entities *neo4jentity.FlowActionEntities) []*model.FlowAction {
-	var mapped []*model.FlowAction
-	for _, entity := range *entities {
-		mapped = append(mapped, MapEntityToFlowAction(&entity))
-	}
-	return mapped
-}
-
 func MapFlowMergeInputToEntity(input model.FlowMergeInput) *neo4jentity.FlowEntity {
 	return &neo4jentity.FlowEntity{
-		Id:          utils.StringOrEmpty(input.ID),
-		Name:        input.Name,
-		Description: input.Description,
-		Nodes:       input.Nodes,
-		Edges:       input.Edges,
-	}
-}
-
-func MapFlowActionMergeInputToEntity(input model.FlowActionMergeInput) *neo4jentity.FlowActionEntity {
-	actionData := neo4jentity.FlowActionData{}
-
-	if input.ActionType == neo4jentity.FlowActionTypeWait {
-		actionData.Wait = &neo4jentity.FlowActionDataWait{
-			Minutes: input.ActionData.Wait.Minutes,
-		}
-	}
-	if input.ActionType == neo4jentity.FlowActionTypeEmailNew {
-		actionData.EmailNew = &neo4jentity.FlowActionDataEmail{
-			Subject:      input.ActionData.EmailNew.Subject,
-			BodyTemplate: input.ActionData.EmailNew.BodyTemplate,
-		}
-	}
-	if input.ActionType == neo4jentity.FlowActionTypeEmailReply {
-		actionData.EmailReply = &neo4jentity.FlowActionDataEmail{
-			ReplyToId:    input.ActionData.EmailReply.ReplyToID,
-			Subject:      input.ActionData.EmailReply.Subject,
-			BodyTemplate: input.ActionData.EmailReply.BodyTemplate,
-		}
-	}
-	if input.ActionType == neo4jentity.FlowActionTypeLinkedinConnectionRequest {
-		actionData.LinkedinConnectionRequest = &neo4jentity.FlowActionDataLinkedinConnectionRequest{
-			MessageTemplate: input.ActionData.LinkedinConnectionRequest.MessageTemplate,
-		}
-	}
-	if input.ActionType == neo4jentity.FlowActionTypeLinkedinMessage {
-		actionData.LinkedinMessage = &neo4jentity.FlowActionDataLinkedinMessage{
-			MessageTemplate: input.ActionData.LinkedinMessage.MessageTemplate,
-		}
-	}
-
-	return &neo4jentity.FlowActionEntity{
-		Id:         utils.StringOrEmpty(input.ID),
-		Name:       input.Name,
-		ActionType: input.ActionType,
-		ActionData: actionData,
+		Id:    utils.StringOrEmpty(input.ID),
+		Name:  input.Name,
+		Nodes: input.Nodes,
+		Edges: input.Edges,
 	}
 }
 

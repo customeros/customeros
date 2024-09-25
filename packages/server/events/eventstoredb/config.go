@@ -8,9 +8,4 @@ type EventStoreConfig struct {
 	KeepAliveInterval  int    `env:"EVENT_STORE_CONNECTION_KEEP_ALIVE_INTERVAL_MS" envDefault:"10000"`
 	ConnectionUser     string `env:"EVENT_STORE_CONNECTION_USERNAME"`
 	ConnectionPassword string `env:"EVENT_STORE_CONNECTION_PASSWORD,unset"`
-
-	AdminUsername      string `env:"EVENT_STORE_ADMIN_USERNAME"`
-	AdminPassword      string `env:"EVENT_STORE_ADMIN_PASSWORD,unset"`
-	OperationsUsername string `env:"EVENT_STORE_OPS_USERNAME"`
-	OperationsPassword string `env:"EVENT_STORE_OPS_PASSWORD,unset"`
 }

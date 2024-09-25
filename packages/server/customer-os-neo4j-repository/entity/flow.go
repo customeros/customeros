@@ -10,8 +10,7 @@ type FlowEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Name        string
-	Description string
+	Name string
 
 	Nodes string
 	Edges string
@@ -23,46 +22,29 @@ type FlowEntities []FlowEntity
 
 type FlowActionEntity struct {
 	DataLoaderKey
-	Id        string
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id         string
+	ExternalId string
+	Type       string
+	Data       struct {
+		Entity *string // CONTACT / ORGANIZATION / etc
 
-	Name  string
-	Index int64
+		WaitBefore int64 // in minutes
 
-	Status FlowActionStatus
+		Action FlowActionType
 
-	ActionType FlowActionType
-	ActionData FlowActionData
+		//ActionData fields below
+
+		//Email
+		Subject      *string
+		BodyTemplate *string
+
+		//Linkedin
+		MessageTemplate *string
+	} `json:"data"`
+	Json string
 }
 
 type FlowActionEntities []FlowActionEntity
-
-type FlowActionData struct {
-	Wait                      *FlowActionDataWait
-	EmailNew                  *FlowActionDataEmail
-	EmailReply                *FlowActionDataEmail
-	LinkedinConnectionRequest *FlowActionDataLinkedinConnectionRequest
-	LinkedinMessage           *FlowActionDataLinkedinMessage
-}
-
-type FlowActionDataEmail struct {
-	ReplyToId    *string
-	Subject      string
-	BodyTemplate string
-}
-
-type FlowActionDataLinkedinConnectionRequest struct {
-	MessageTemplate string
-}
-
-type FlowActionDataLinkedinMessage struct {
-	MessageTemplate string
-}
-
-type FlowActionDataWait struct {
-	Minutes int64
-}
 
 type FlowContactEntity struct {
 	DataLoaderKey
@@ -100,40 +82,15 @@ func GetFlowStatus(s string) FlowStatus {
 	return FlowStatus(s)
 }
 
-type FlowSequenceStatus string
-
-const (
-	FlowSequenceStatusInactive FlowSequenceStatus = "INACTIVE"
-	FlowSequenceStatusActive   FlowSequenceStatus = "ACTIVE"
-	FlowSequenceStatusPaused   FlowSequenceStatus = "PAUSED"
-	FlowSequenceStatusArchived FlowSequenceStatus = "ARCHIVED"
-)
-
-func GetFlowSequenceStatus(s string) FlowSequenceStatus {
-	return FlowSequenceStatus(s)
-}
-
-type FlowActionStatus string
-
-const (
-	FlowActionStatusInactive FlowActionStatus = "INACTIVE"
-	FlowActionStatusActive   FlowActionStatus = "ACTIVE"
-	FlowActionStatusPaused   FlowActionStatus = "PAUSED"
-	FlowActionStatusArchived FlowActionStatus = "ARCHIVED"
-)
-
-func GetFlowActionStatus(s string) FlowActionStatus {
-	return FlowActionStatus(s)
-}
-
 type FlowActionType string
 
 const (
-	FlowActionTypeWait                      FlowActionType = "WAIT"
+	FlowActionTypeFlowStart                 FlowActionType = "FLOW_START"
 	FlowActionTypeEmailNew                  FlowActionType = "EMAIL_NEW"
 	FlowActionTypeEmailReply                FlowActionType = "EMAIL_REPLY"
 	FlowActionTypeLinkedinConnectionRequest FlowActionType = "LINKEDIN_CONNECTION_REQUEST"
 	FlowActionTypeLinkedinMessage           FlowActionType = "LINKEDIN_MESSAGE"
+	FlowActionTypeFlowEnd                   FlowActionType = "FLOW_END"
 )
 
 func GetFlowActionType(s string) FlowActionType {

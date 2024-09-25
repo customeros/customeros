@@ -2,8 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
-	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -102,14 +100,16 @@ func (s *flowExecutionService) ScheduleFlowForContact(ctx context.Context, tx *n
 		for i, action := range *flowActionList {
 			if action.Id == currentFlowAction.Id && i+1 < len(*flowActionList) {
 				// We found the next action, now handle it
-				actionEntity := (*flowActionList)[i+1]
 
-				if actionEntity.ActionType == entity.FlowActionTypeWait {
-					nextActionDelay += time.Duration(actionEntity.ActionData.Wait.Minutes) * time.Minute
-				} else {
-					nextAction = &actionEntity
-					break
-				}
+				//TODO
+				//actionEntity := (*flowActionList)[i+1]
+
+				//if actionEntity.ActionType == entity.FlowActionTypeWait {
+				//	nextActionDelay += time.Duration(actionEntity.ActionData.Wait.Minutes) * time.Minute
+				//} else {
+				//	nextAction = &actionEntity
+				//	break
+				//}
 			}
 		}
 	}
@@ -131,13 +131,15 @@ func (s *flowExecutionService) scheduleNextActionForContact(ctx context.Context,
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	switch nextAction.ActionType {
-	case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
-		return s.ScheduleEmailAction(ctx, tx, flowId, contactId, scheduleAt, nextAction)
-	default:
-		tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.ActionType))
-		return errors.New("Unsupported action type")
-	}
+	//switch nextAction.ActionType {
+	//case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
+	//	return s.ScheduleEmailAction(ctx, tx, flowId, contactId, scheduleAt, nextAction)
+	//default:
+	//	tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.ActionType))
+	//	return errors.New("Unsupported action type")
+	//}
+
+	return nil
 }
 
 func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {

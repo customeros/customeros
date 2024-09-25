@@ -35,71 +35,69 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, input *entity
 	onCreate := `ON CREATE SET
 				fa.createdAt = $createdAt,
 				fa.updatedAt = $updatedAt,
-				fa.index = $index,
-				fa.name = $name,
-				fa.status = $status,
-				fa.actionType = $actionType,`
+				fa.externalId = $externalId,
+				fa.json = $json,
+				fa.type = $type,
+				fa.waitBefore = $waitBefore,
+				fa.action = $action`
 	onMatch := `ON MATCH SET
 				fa.updatedAt = $updatedAt,
-				fa.index = $index,
-				fa.name = $name,
-				fa.status = $status,
-				fa.actionType = $actionType,`
+				fa.externalId = $externalId,
+				fa.json = $json,
+				fa.type = $type,
+				fa.waitBefore = $waitBefore,
+				fa.action = $action`
 
 	params := map[string]any{
 		"tenant":     common.GetTenantFromContext(ctx),
 		"id":         input.Id,
-		"createdAt":  utils.TimeOrNow(input.CreatedAt),
-		"updatedAt":  utils.TimeOrNow(input.UpdatedAt),
-		"index":      input.Index,
-		"name":       input.Name,
-		"status":     input.Status,
-		"actionType": input.ActionType,
+		"createdAt":  utils.Now(),
+		"updatedAt":  utils.Now(),
+		"externalId": input.ExternalId,
+		"json":       input.Json,
+		"type":       input.Type,
+		"waitBefore": input.Data.WaitBefore,
+		"action":     input.Data.Action,
 	}
 
-	if input.ActionType == entity.FlowActionTypeWait {
-		onCreate += `
-				fa.actionData_minutes = $actionData_waitTime`
-		onMatch += `
-				fa.actionData_minutes = $actionData_waitTime`
-		params["actionData_waitTime"] = input.ActionData.Wait.Minutes
+	if input.Data.Action == entity.FlowActionTypeFlowStart {
+		onCreate += `,
+				fa.data_entity = $data_entity`
+		onMatch += `,
+				fa.data_entity = $data_entity`
+		params["data_entity"] = input.Data.Entity
 	}
-	if input.ActionType == entity.FlowActionTypeEmailNew {
-		onCreate += `
-				fa.actionData_subject = $actionData_subject,
-				fa.actionData_bodyTemplate = $actionData_bodyTemplate`
-		onMatch += `
-				fa.actionData_subject = $actionData_subject,
-				fa.actionData_bodyTemplate = $actionData_bodyTemplate`
-		params["actionData_subject"] = input.ActionData.EmailNew.Subject
-		params["actionData_bodyTemplate"] = input.ActionData.EmailNew.BodyTemplate
+
+	if input.Data.Action == entity.FlowActionTypeEmailNew {
+		onCreate += `,
+				fa.data_subject = $data_subject,
+				fa.data_bodyTemplate = $data_bodyTemplate`
+		onMatch += `,
+				fa.data_subject = $data_subject,
+				fa.data_bodyTemplate = $data_bodyTemplate`
+		params["data_subject"] = input.Data.Subject
+		params["data_bodyTemplate"] = input.Data.BodyTemplate
 	}
-	if input.ActionType == entity.FlowActionTypeEmailReply {
-		onCreate += `
-				fa.actionData_replyToId = $actionData_replyToId,
-				fa.actionData_subject = $actionData_subject,
-				fa.actionData_bodyTemplate = $actionData_bodyTemplate`
-		onMatch += `
-				fa.actionData_replyToId = $actionData_replyToId,
-				fa.actionData_subject = $actionData_subject,
-				fa.actionData_bodyTemplate = $actionData_bodyTemplate`
-		params["actionData_replyToId"] = input.ActionData.EmailReply.ReplyToId
-		params["actionData_subject"] = input.ActionData.EmailReply.Subject
-		params["actionData_bodyTemplate"] = input.ActionData.EmailReply.BodyTemplate
+	if input.Data.Action == entity.FlowActionTypeEmailReply {
+		onCreate += `,
+				fa.data_bodyTemplate = $data_bodyTemplate`
+		onMatch += `,
+				fa.data_bodyTemplate = $data_bodyTemplate`
+		params["data_bodyTemplate"] = input.Data.BodyTemplate
 	}
-	if input.ActionType == entity.FlowActionTypeLinkedinConnectionRequest {
-		onCreate += `
-				fa.actionData_messageTemplate = $actionData_messageTemplate`
-		onMatch += `
-				fa.actionData_messageTemplate = $actionData_messageTemplate`
-		params["actionData_messageTemplate"] = input.ActionData.LinkedinConnectionRequest.MessageTemplate
+	if input.Data.Action == entity.FlowActionTypeLinkedinConnectionRequest {
+		onCreate += `,
+				fa.data_messageTemplate = $data_messageTemplate`
+		onMatch += `,
+				fa.data_messageTemplate = $data_messageTemplate`
+		params["data_messageTemplate"] = input.Data.MessageTemplate
 	}
-	if input.ActionType == entity.FlowActionTypeLinkedinMessage {
-		onCreate += `
-				fa.actionData_messageTemplate = $actionData_messageTemplate`
-		onMatch += `
-				fa.actionData_messageTemplate = $actionData_messageTemplate`
-		params["actionData_messageTemplate"] = input.ActionData.LinkedinMessage.MessageTemplate
+	if input.Data.Action == entity.FlowActionTypeLinkedinMessage {
+		onCreate += `,
+				fa.data_messageTemplate = $data_messageTemplate`
+		onMatch += `,
+				fa.data_messageTemplate = $data_messageTemplate`
+		params["data_messageTemplate"] = input.Data.MessageTemplate
 	}
 
 	cypher := fmt.Sprintf(`

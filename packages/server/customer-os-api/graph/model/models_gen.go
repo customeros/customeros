@@ -18,10 +18,6 @@ type ExtensibleEntity interface {
 	GetTemplate() *EntityTemplate
 }
 
-type FlowActionData interface {
-	IsFlowActionData()
-}
-
 type InteractionEventParticipant interface {
 	IsInteractionEventParticipant()
 }
@@ -1133,39 +1129,11 @@ type Flow struct {
 	Nodes       string            `json:"nodes"`
 	Edges       string            `json:"edges"`
 	Status      entity.FlowStatus `json:"status"`
-	Actions     []*FlowAction     `json:"actions"`
 	Contacts    []*FlowContact    `json:"contacts"`
 }
 
 func (Flow) IsMetadataInterface()        {}
 func (this Flow) GetMetadata() *Metadata { return this.Metadata }
-
-type FlowAction struct {
-	Metadata   *Metadata               `json:"metadata"`
-	Index      int64                   `json:"index"`
-	Name       string                  `json:"name"`
-	Status     entity.FlowActionStatus `json:"status"`
-	ActionType entity.FlowActionType   `json:"actionType"`
-	ActionData FlowActionData          `json:"actionData"`
-	Senders    []*FlowActionSender     `json:"senders"`
-}
-
-func (FlowAction) IsMetadataInterface()        {}
-func (this FlowAction) GetMetadata() *Metadata { return this.Metadata }
-
-type FlowActionDataEmail struct {
-	ReplyToID    *string `json:"replyToId,omitempty"`
-	Subject      string  `json:"subject"`
-	BodyTemplate string  `json:"bodyTemplate"`
-}
-
-func (FlowActionDataEmail) IsFlowActionData() {}
-
-type FlowActionDataWait struct {
-	Minutes int64 `json:"minutes"`
-}
-
-func (FlowActionDataWait) IsFlowActionData() {}
 
 type FlowActionInputData struct {
 	Wait                      *FlowActionInputDataWait                      `json:"wait,omitempty"`
@@ -1193,25 +1161,6 @@ type FlowActionInputDataWait struct {
 	Minutes int64 `json:"minutes"`
 }
 
-type FlowActionLinkedinConnectionRequest struct {
-	MessageTemplate string `json:"messageTemplate"`
-}
-
-func (FlowActionLinkedinConnectionRequest) IsFlowActionData() {}
-
-type FlowActionLinkedinMessage struct {
-	MessageTemplate string `json:"messageTemplate"`
-}
-
-func (FlowActionLinkedinMessage) IsFlowActionData() {}
-
-type FlowActionMergeInput struct {
-	ID         *string               `json:"id,omitempty"`
-	Name       string                `json:"name"`
-	ActionType entity.FlowActionType `json:"actionType"`
-	ActionData *FlowActionInputData  `json:"actionData"`
-}
-
 type FlowActionSender struct {
 	Metadata *Metadata `json:"metadata"`
 	Mailbox  *string   `json:"mailbox,omitempty"`
@@ -1236,11 +1185,10 @@ func (FlowContact) IsMetadataInterface()        {}
 func (this FlowContact) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowMergeInput struct {
-	ID          *string `json:"id,omitempty"`
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Nodes       string  `json:"nodes"`
-	Edges       string  `json:"edges"`
+	ID    *string `json:"id,omitempty"`
+	Name  string  `json:"name"`
+	Nodes string  `json:"nodes"`
+	Edges string  `json:"edges"`
 }
 
 type GCliAttributeKeyValuePair struct {

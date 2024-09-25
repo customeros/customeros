@@ -12,13 +12,9 @@ extend type Mutation {
     flowContact_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowContact_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    flowAction_Merge(flowId: ID!, input: FlowActionMergeInput!): FlowAction! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowAction_ChangeIndex(id: ID!, index: Int64!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowAction_ChangeStatus(id: ID!, status: FlowActionStatus!): FlowAction! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowAction_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    flowActionSender_Merge(flowActionId: ID!, input: FlowActionSenderMergeInput!): FlowActionSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flowActionSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    #low priority to implement
+    flowSender_Merge(flowId: ID!, input: FlowActionSenderMergeInput!): FlowActionSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 #Flow
@@ -31,14 +27,12 @@ type Flow implements MetadataInterface {
     edges: String!
 
     status: FlowStatus!
-    actions: [FlowAction!]! @goField(forceResolver: true)
     contacts: [FlowContact!]! @goField(forceResolver: true)
 }
 
 input FlowMergeInput {
     id: ID
     name: String!
-    description: String!
 
     nodes: String!
     edges: String!
@@ -56,57 +50,6 @@ type FlowContact implements MetadataInterface {
     metadata:               Metadata!
 
     contact: Contact! @goField(forceResolver: true)
-}
-
-#FlowAction
-type FlowAction implements MetadataInterface {
-    metadata: Metadata!
-
-    index: Int64!
-    name: String!
-    status: FlowActionStatus!
-
-    actionType: FlowActionType!
-    actionData: FlowActionData!
-
-    senders: [FlowActionSender!]! @goField(forceResolver: true)
-}
-
-enum FlowActionType {
-    WAIT
-
-    EMAIL_NEW
-    EMAIL_REPLY
-
-    LINKEDIN_CONNECTION_REQUEST
-    LINKEDIN_MESSAGE
-}
-
-union FlowActionData = FlowActionDataWait | FlowActionDataEmail | FlowActionLinkedinConnectionRequest | FlowActionLinkedinMessage
-
-type FlowActionDataWait {
-    minutes: Int64!
-}
-
-type FlowActionDataEmail {
-    replyToId: String
-    subject: String!
-    bodyTemplate: String!
-}
-
-type FlowActionLinkedinConnectionRequest {
-    messageTemplate: String!
-}
-
-type FlowActionLinkedinMessage {
-    messageTemplate: String!
-}
-
-input FlowActionMergeInput {
-    id: ID
-    name: String!
-    actionType: FlowActionType!
-    actionData: FlowActionInputData!
 }
 
 #FlowActionSender
