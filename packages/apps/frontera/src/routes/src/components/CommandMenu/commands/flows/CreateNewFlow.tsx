@@ -29,10 +29,7 @@ export const CreateNewFlow = observer(() => {
     if (!allowSubmit) return;
     setAllowSubmit(false);
 
-    flows.create({
-      name: sequenceName,
-      description: '',
-    });
+    flows.create(sequenceName);
 
     store.ui.commandMenu.toggle('CreateNewFlow');
   };

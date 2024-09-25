@@ -19,7 +19,6 @@ export const FlowEditor = () => {
     <ReactFlowProvider>
       <div className='flex h-full flex-col'>
         <Header />
-
         <MarketingFlowBuilder />
       </div>
     </ReactFlowProvider>

@@ -299,13 +299,22 @@
   }
 }
 .react-flow__edge.react-flow__edge-baseEdge {
-  --xy-edge-stroke-selected-default: #D0D5DD;
+  ----xy-edge-stroke-default: #D0D5DD;
+  --xy-edge-stroke-selected-default: #9E77ED;
 
-  &.selected {
-    --xy-edge-stroke-selected-default: #9E77ED;
-
-  }
   path {
     transition: stroke 0.3s;
   }
+}
+
+
+.react-flow__node.selected > .border{
+    border-color: #7F56D9;
+}
+
+.react-flow__controls-button {
+  border-right: 8px;
+  padding: 8px;
+  height: 40px;
+  width: 40px;
 }

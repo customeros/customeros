@@ -1557,41 +1557,13 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
-  actions: Array<FlowAction>;
   contacts: Array<FlowContact>;
   description: Scalars['String']['output'];
+  edges: Scalars['String']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
+  nodes: Scalars['String']['output'];
   status: FlowStatus;
-};
-
-export type FlowAction = MetadataInterface & {
-  __typename?: 'FlowAction';
-  actionData: FlowActionData;
-  actionType: FlowActionType;
-  index: Scalars['Int64']['output'];
-  metadata: Metadata;
-  name: Scalars['String']['output'];
-  senders: Array<FlowActionSender>;
-  status: FlowActionStatus;
-};
-
-export type FlowActionData =
-  | FlowActionDataEmail
-  | FlowActionDataWait
-  | FlowActionLinkedinConnectionRequest
-  | FlowActionLinkedinMessage;
-
-export type FlowActionDataEmail = {
-  __typename?: 'FlowActionDataEmail';
-  bodyTemplate: Scalars['String']['output'];
-  replyToId?: Maybe<Scalars['String']['output']>;
-  subject: Scalars['String']['output'];
-};
-
-export type FlowActionDataWait = {
-  __typename?: 'FlowActionDataWait';
-  minutes: Scalars['Int64']['output'];
 };
 
 export type FlowActionInputData = {
@@ -1620,23 +1592,6 @@ export type FlowActionInputDataWait = {
   minutes: Scalars['Int64']['input'];
 };
 
-export type FlowActionLinkedinConnectionRequest = {
-  __typename?: 'FlowActionLinkedinConnectionRequest';
-  messageTemplate: Scalars['String']['output'];
-};
-
-export type FlowActionLinkedinMessage = {
-  __typename?: 'FlowActionLinkedinMessage';
-  messageTemplate: Scalars['String']['output'];
-};
-
-export type FlowActionMergeInput = {
-  actionData: FlowActionInputData;
-  actionType: FlowActionType;
-  id?: InputMaybe<Scalars['ID']['input']>;
-  name: Scalars['String']['input'];
-};
-
 export type FlowActionSender = MetadataInterface & {
   __typename?: 'FlowActionSender';
   mailbox?: Maybe<Scalars['String']['output']>;
@@ -1657,14 +1612,6 @@ export enum FlowActionStatus {
   Paused = 'PAUSED',
 }
 
-export enum FlowActionType {
-  EmailNew = 'EMAIL_NEW',
-  EmailReply = 'EMAIL_REPLY',
-  LinkedinConnectionRequest = 'LINKEDIN_CONNECTION_REQUEST',
-  LinkedinMessage = 'LINKEDIN_MESSAGE',
-  Wait = 'WAIT',
-}
-
 export type FlowContact = MetadataInterface & {
   __typename?: 'FlowContact';
   contact: Contact;
@@ -1672,9 +1619,10 @@ export type FlowContact = MetadataInterface & {
 };
 
 export type FlowMergeInput = {
-  description: Scalars['String']['input'];
+  edges: Scalars['String']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
+  nodes: Scalars['String']['input'];
 };
 
 export enum FlowStatus {
@@ -2462,16 +2410,12 @@ export type Mutation = {
   fieldSetDeleteFromContact: Result;
   fieldSetMergeToContact?: Maybe<FieldSet>;
   fieldSetUpdateInContact?: Maybe<FieldSet>;
-  flowActionSender_Delete: Result;
-  flowActionSender_Merge: FlowActionSender;
-  flowAction_ChangeIndex: Result;
-  flowAction_ChangeStatus: FlowAction;
-  flowAction_Delete: Result;
-  flowAction_Merge: FlowAction;
   flowContact_Add: FlowContact;
   flowContact_AddBulk: Result;
   flowContact_Delete: Result;
   flowContact_DeleteBulk: Result;
+  flowSender_Delete: Result;
+  flowSender_Merge: FlowActionSender;
   flow_ChangeStatus: Flow;
   flow_Merge: Flow;
   interactionEvent_LinkAttachment: Result;
@@ -2905,34 +2849,6 @@ export type MutationFieldSetUpdateInContactArgs = {
   input: FieldSetUpdateInput;
 };
 
-export type MutationFlowActionSender_DeleteArgs = {
-  id: Scalars['ID']['input'];
-};
-
-export type MutationFlowActionSender_MergeArgs = {
-  flowActionId: Scalars['ID']['input'];
-  input: FlowActionSenderMergeInput;
-};
-
-export type MutationFlowAction_ChangeIndexArgs = {
-  id: Scalars['ID']['input'];
-  index: Scalars['Int64']['input'];
-};
-
-export type MutationFlowAction_ChangeStatusArgs = {
-  id: Scalars['ID']['input'];
-  status: FlowActionStatus;
-};
-
-export type MutationFlowAction_DeleteArgs = {
-  id: Scalars['ID']['input'];
-};
-
-export type MutationFlowAction_MergeArgs = {
-  flowId: Scalars['ID']['input'];
-  input: FlowActionMergeInput;
-};
-
 export type MutationFlowContact_AddArgs = {
   contactId: Scalars['ID']['input'];
   flowId: Scalars['ID']['input'];
@@ -2949,6 +2865,15 @@ export type MutationFlowContact_DeleteArgs = {
 
 export type MutationFlowContact_DeleteBulkArgs = {
   id: Array<Scalars['ID']['input']>;
+};
+
+export type MutationFlowSender_DeleteArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationFlowSender_MergeArgs = {
+  flowId: Scalars['ID']['input'];
+  input: FlowActionSenderMergeInput;
 };
 
 export type MutationFlow_ChangeStatusArgs = {

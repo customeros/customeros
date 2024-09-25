@@ -8,6 +8,8 @@ export type FlowMergeMutation = {
   __typename?: 'Mutation';
   flow_Merge: {
     __typename?: 'Flow';
+    nodes: string;
+    edges: string;
     metadata: { __typename?: 'Metadata'; id: string };
   };
 };

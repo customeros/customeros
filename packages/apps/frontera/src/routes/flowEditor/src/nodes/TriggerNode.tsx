@@ -1,51 +1,28 @@
-import { ReactElement } from 'react';
+import { MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { NodeProps, useReactFlow, ViewportPortal } from '@xyflow/react';
+import { NodeProps, ViewportPortal } from '@xyflow/react';
 
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
 import { Edit03 } from '@ui/media/icons/Edit03.tsx';
-import { Code01 } from '@ui/media/icons/Code01.tsx';
-import { User01 } from '@ui/media/icons/User01.tsx';
-import { XSquare } from '@ui/media/icons/XSquare.tsx';
 import { UserPlus01 } from '@ui/media/icons/UserPlus01';
-import { Building07 } from '@ui/media/icons/Building07.tsx';
-import { PlusSquare } from '@ui/media/icons/PlusSquare.tsx';
-import { PlusCircle } from '@ui/media/icons/PlusCircle.tsx';
 import { Lightning01 } from '@ui/media/icons/Lightning01.tsx';
-import { RefreshCw01 } from '@ui/media/icons/RefreshCw01.tsx';
-import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
-import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken.tsx';
-import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 
 import { Handle } from '../components';
+import { DropdownCommandMenu } from '../commands/Commands.tsx';
 
-const triggerEventMapper: Record<string, string> = {
-  RecordAddedManually: 'added manually',
-};
+// const triggerEventMapper: Record<string, string> = {
+//   RecordAddedManually: 'added manually',
+// };
 
 export const TriggerNode = (
   props: NodeProps & { data: Record<string, string> },
 ) => {
   const { ui } = useStore();
 
-  if (props.data.triggerType === 'EndFlow') {
-    return (
-      <div className='max-w-[131px] flex bg-white border-2 border-grayModern-300 p-3 rounded-lg items-center'>
-        <div className='size-6 mr-2 bg-gray-100 rounded flex items-center justify-center'>
-          <XSquare className='text-gray-500' />
-        </div>
-        <span className='text-sm'>End Flow</span>
-        <Handle
-          type='target'
-          className={`h-2 w-2 bg-transparent border-transparent`}
-        />
-      </div>
-    );
-  }
-
-  const handleOpen = () => {
+  const handleOpen: MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.stopPropagation();
     ui.flowCommandMenu.setOpen(true);
     ui.flowCommandMenu.setType('TriggersHub');
     ui.flowCommandMenu.setContext({
@@ -57,29 +34,33 @@ export const TriggerNode = (
   return (
     <>
       <div
-        className={`aspect-[9/1] max-w-[300px] bg-white border-2 border-grayModern-300 p-3 rounded-lg group`}
+        className={`aspect-[9/1] h-[56px] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group relative`}
       >
-        <div className='flex items-center text-gray-400 uppercase text-xs mb-1'>
-          Trigger
-        </div>
+        {/*<div className='flex items-center text-gray-400 uppercase text-xs mb-1 absolute top-[-20px]'>*/}
+        {/*  Trigger*/}
+        {/*</div>*/}
 
-        <div className='truncate  text-sm flex items-center '>
+        <div className='truncate  text-sm flex items-center justify-between '>
           <div className='truncate text-sm flex items-center'>
-            <div className='size-6 mr-2 bg-gray-100 rounded flex items-center justify-center'>
-              {props.data.triggerEntity && props.data.triggerType ? (
+            <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
+              {props.data.entity && props.data?.triggerType ? (
                 <UserPlus01 className='text-gray-500 ' />
               ) : (
                 <Lightning01 className='text-gray-500' />
               )}
             </div>
 
-            {props.data.triggerEntity && props.data.triggerType ? (
-              <span className='font-medium'>
-                {props.data.triggerEntity ?? 'Record'}{' '}
-                {triggerEventMapper?.[props.data.triggerType]}
+            {props.data.entity && props.data.triggerType ? (
+              <span className='font-medium '>
+                <span className='capitalize mr-1'>
+                  {props.data.entity?.toLowerCase() ?? 'Record'}
+                </span>
+                added manually
               </span>
             ) : (
-              <span className='text-gray-400'>Select trigger...</span>
+              <span role={'button'} onClick={handleOpen}>
+                What should trigger this flow?
+              </span>
             )}
           </div>
 
@@ -129,7 +110,7 @@ export const TriggerViewportPortal = observer(
                 pointerEvents: 'all',
               }}
             >
-              <TriggerMenu />
+              <DropdownCommandMenu />
             </div>
           </ViewportPortal>
         )}
@@ -137,176 +118,3 @@ export const TriggerViewportPortal = observer(
     );
   },
 );
-
-const RecordAddedManually = observer(() => {
-  const { ui } = useStore();
-  const { setNodes } = useReactFlow();
-
-  const updateSelectedNode = (entity: 'Contact') => {
-    setNodes((nodes) =>
-      nodes.map((node) => {
-        if (node.id === ui.flowCommandMenu.context.id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-              triggerEntity: entity,
-            },
-          };
-        }
-
-        return node;
-      }),
-    );
-  };
-
-  return (
-    <Command>
-      <CommandInput
-        autoFocus
-        className='p-1 text-sm'
-        placeholder='Search record'
-        inputWrapperClassName='min-h-4'
-        wrapperClassName='py-2 px-4 mt-2'
-        onKeyDownCapture={(e) => {
-          if (e.key === ' ') {
-            e.stopPropagation();
-          }
-        }}
-      />
-
-      <Command.List>
-        <CommandItem
-          leftAccessory={<User01 />}
-          onSelect={() => {
-            updateSelectedNode('Contact');
-            ui.flowCommandMenu.setOpen(false);
-            ui.flowCommandMenu.setType('TriggersHub');
-          }}
-        >
-          Contact
-        </CommandItem>
-        <CommandItem disabled leftAccessory={<Building07 />}>
-          <span className='text-gray-700'>Organization</span>{' '}
-          <span className='text-gray-500'>(Coming soon)</span>
-        </CommandItem>{' '}
-        <CommandItem disabled leftAccessory={<CoinsStacked01 />}>
-          <span className='text-gray-700'>Opportunity</span>{' '}
-          <span className='text-gray-500'>(Coming soon)</span>
-        </CommandItem>
-      </Command.List>
-    </Command>
-  );
-});
-
-const RecordCreated = () => (
-  <div>
-    <h2>Record Created</h2>
-    <p>This feature is coming soon.</p>
-  </div>
-);
-
-const RecordUpdated = () => (
-  <div>
-    <h2>Record Updated</h2>
-    <p>This feature is coming soon.</p>
-  </div>
-);
-
-const RecordMatchesCondition = () => (
-  <div>
-    <h2>Record Matches Condition</h2>
-    <p>This feature is coming soon.</p>
-  </div>
-);
-
-const Webhook = () => (
-  <div>
-    <h2>Webhook</h2>
-    <p>This feature is coming soon.</p>
-  </div>
-);
-
-export const TriggersHub = observer(() => {
-  const { ui } = useStore();
-  const { setNodes } = useReactFlow();
-
-  const updateSelectedNode = (triggerType: 'RecordAddedManually') => {
-    setNodes((nodes) =>
-      nodes.map((node) => {
-        if (node.id === ui.flowCommandMenu.context.id) {
-          return {
-            ...node,
-            data: {
-              ...node.data,
-
-              triggerType: triggerType,
-            },
-          };
-        }
-
-        return node;
-      }),
-    );
-    ui.flowCommandMenu.setType(triggerType);
-  };
-
-  return (
-    <Command>
-      <CommandInput
-        autoFocus
-        className='p-1 text-sm'
-        placeholder='Search trigger'
-        inputWrapperClassName='min-h-4'
-        wrapperClassName='py-2 px-4 mt-2'
-        onKeyDownCapture={(e) => {
-          if (e.key === ' ') {
-            e.stopPropagation();
-          }
-        }}
-      />
-
-      <Command.List>
-        <CommandItem
-          leftAccessory={<PlusCircle />}
-          onSelect={() => {
-            updateSelectedNode('RecordAddedManually');
-          }}
-        >
-          Record added manually...
-        </CommandItem>
-        <CommandItem disabled leftAccessory={<PlusSquare />}>
-          <span className='text-gray-700'>Record created</span>{' '}
-          <span className='text-gray-500'>(Coming soon)</span>
-        </CommandItem>
-        <CommandItem disabled leftAccessory={<RefreshCw01 />}>
-          <span className='text-gray-700'>Record updated</span>{' '}
-          <span className='text-gray-500'>(Coming soon)</span>
-        </CommandItem>
-        <CommandItem disabled leftAccessory={<CheckCircleBroken />}>
-          <span className='text-gray-700'>Record matches condition</span>{' '}
-          <span className='text-gray-500'>(Coming soon)</span>
-        </CommandItem>
-        <CommandItem disabled leftAccessory={<Code01 />}>
-          <span className='text-gray-700'>Webhook</span>{' '}
-          <span className='text-gray-500'>(Coming soon)</span>
-        </CommandItem>
-      </Command.List>
-    </Command>
-  );
-});
-
-const Commands: Record<string, ReactElement> = {
-  RecordAddedManually: <RecordAddedManually />,
-  RecordCreated: <RecordCreated />,
-  RecordUpdated: <RecordUpdated />,
-  RecordMatchesCondition: <RecordMatchesCondition />,
-  Webhook: <Webhook />,
-  TriggersHub: <TriggersHub />,
-};
-
-const TriggerMenu = observer(() => {
-  const { ui } = useStore();
-
-  return <>{Commands[ui.flowCommandMenu.type]}</>;
-});

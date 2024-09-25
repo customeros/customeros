@@ -67,6 +67,7 @@ export const CommandInput = ({
 };
 
 interface CommandItemProps extends React.HTMLAttributes<HTMLDivElement> {
+  value?: string;
   dataTest?: string;
   disabled?: boolean;
   keywords?: string[];
@@ -85,7 +86,7 @@ export const CommandItem = ({
   ...props
 }: CommandItemProps) => {
   return (
-    <Command.Item disabled={disabled} data-test={dataTest} {...props}>
+    <Command.Item data-test={dataTest} {...props}>
       {leftAccessory}
       {children}
       <div className='flex gap-1 items-center ml-auto'>{rightAccessory}</div>

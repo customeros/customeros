@@ -7,7 +7,6 @@ import { FlowStore } from '@store/Flows/Flow.store';
 import { FlowService } from '@store/Flows/__service__';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
-import { FlowMergeMutationVariables } from '@store/Flows/__service__/flowMerge.generated.ts';
 
 import { Flow, FlowStatus } from '@graphql/types';
 
@@ -82,7 +81,7 @@ export class FlowsStore implements GroupStore<Flow> {
   }
 
   async create(
-    payload: FlowMergeMutationVariables['input'],
+    name: string,
     options?: { onSuccess?: (serverId: string) => void },
   ) {
     const newFlow = new FlowStore(this.root, this.transport);
@@ -90,7 +89,7 @@ export class FlowsStore implements GroupStore<Flow> {
 
     newFlow.value = {
       ...newFlow.value,
-      ...payload,
+      name,
     };
 
     let serverId: string | undefined;
@@ -99,13 +98,16 @@ export class FlowsStore implements GroupStore<Flow> {
 
     try {
       const { flow_Merge } = await this.service.mergeFlow({
-        input: payload,
+        input: {
+          name,
+          nodes: newFlow.value.nodes,
+          edges: newFlow.value.edges,
+        },
       });
 
       runInAction(() => {
         serverId = flow_Merge?.metadata.id;
         newFlow.setId(serverId);
-
         this.value.set(serverId, newFlow);
         this.value.delete(tempId);
 
@@ -114,6 +116,7 @@ export class FlowsStore implements GroupStore<Flow> {
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
+        this.value.delete(tempId);
       });
     } finally {
       serverId && options?.onSuccess?.(serverId);
