@@ -16,14 +16,11 @@ export const OpportunityName = observer(
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const nextValue = e.target.value;
 
-      opportunity?.update(
-        (value) => {
-          value.name = nextValue;
+      opportunity?.update((value) => {
+        value.name = nextValue;
 
-          return value;
-        },
-        { mutate: !nextValue },
-      );
+        return value;
+      });
     };
 
     const handleBlur = () => {
