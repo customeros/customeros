@@ -3,10 +3,11 @@ import React from 'react';
 import { twMerge } from 'tailwind-merge';
 
 interface IconProps extends React.SVGAttributes<SVGElement> {
+  dataTest?: string;
   className?: string;
 }
 
-export const Clock = ({ className, ...props }: IconProps) => (
+export const Clock = ({ className, dataTest, ...props }: IconProps) => (
   <svg
     fill='none'
     viewBox='0 0 24 24'
@@ -15,6 +16,7 @@ export const Clock = ({ className, ...props }: IconProps) => (
   >
     <path
       strokeWidth='2'
+      data-test={dataTest}
       stroke='currentColor'
       strokeLinecap='round'
       strokeLinejoin='round'

@@ -1,5 +1,5 @@
-import { test } from '@playwright/test';
-
+// import { test } from '@playwright/test';
+import { test } from './videoFixture';
 import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { FlowStatuses } from './pages/flows/flowsStatuses';
@@ -12,6 +12,7 @@ import { OrganizationPeoplePage } from './pages/organization/organizationPeopleP
 import { OrganizationAccountPage } from './pages/organization/organizationAccountPage';
 import { OrganizationSideNavPage } from './pages/organization/organizationSideNavPage';
 import { OrganizationTimelinePage } from './pages/organization/organizationTimelinePage';
+import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportunitiesKanbanPage';
 
 test.setTimeout(180000);
 
@@ -230,4 +231,21 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
   await organizationSideNavPage.goBack();
   await contactsPage.waitForPageLoad();
   await contactsPage.updateContactFlow(contact, flowName);
+});
+
+test('Create opportunities', async ({ page }, testInfo) => {
+  const loginPage = new LoginPage(page);
+  const organizationsPage = new OrganizationsPage(page);
+  const opportunitiesPage = new OpportunitiesKanbanPage(page);
+
+  await loginPage.login();
+  await organizationsPage.goToAllOrgs();
+
+  const organizationName = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
+
+  await opportunitiesPage.goToOpportunitiesKanban();
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(0, 0, 0, 0);
+  await opportunitiesPage.addOpportunity(organizationName);
 });
