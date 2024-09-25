@@ -69,6 +69,7 @@ func (s *contactService) UpkeepContacts() {
 	s.removeEmptySocials(ctx)
 	s.removeDuplicatedSocials(ctx)
 	s.hideContactsWithGroupEmail(ctx)
+	s.updateContactNamesFromEmails(ctx)
 }
 
 func (s *contactService) removeEmptySocials(ctx context.Context) {
@@ -221,6 +222,80 @@ func (s *contactService) hideContactsWithGroupEmail(ctx context.Context) {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error hiding contact {%s}: %s", record.ContactId, err.Error())
+			}
+		}
+
+		// if less than limit records are returned, we are done
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
+		return
+	}
+}
+
+func (s *contactService) updateContactNamesFromEmails(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.updateContactNamesFromEmails")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 200
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithEmailForNameUpdate(ctx, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting contacts: %v", err)
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		// update contact names
+		for _, record := range records {
+			firstName, lastName := neo4jentity.ContactEntity{}.GetNamesFromString(record.FieldStr1)
+			if firstName == "" && lastName == "" {
+				err = errors.New("cannot derive names from email")
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
+				continue
+			}
+
+			upsertRequest := contactpb.UpsertContactGrpcRequest{
+				Tenant: record.Tenant,
+				Id:     record.ContactId,
+				SourceFields: &commonpb.SourceFields{
+					AppSource: constants.AppSourceDataUpkeeper,
+				},
+			}
+			var fieldsMask []contactpb.ContactFieldMask
+			if firstName != "" {
+				upsertRequest.FirstName = firstName
+				fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
+			}
+			if lastName != "" {
+				upsertRequest.LastName = lastName
+				fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
+			}
+			upsertRequest.FieldsMask = fieldsMask
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return s.commonServices.GrpcClients.ContactClient.UpsertContact(ctx, &upsertRequest)
+			})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.UpsertContact"))
+				s.log.Errorf("Error updating contact {%s}: %s", record.ContactId, err.Error())
 			}
 		}
 
@@ -498,7 +573,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 			// continue as normal
 		}
 
-		scrapIn, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, orpanContact.LinkedInUrl, entity.ScrapInFlowPersonProfile)
+		scrapIn, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, orpanContact.FieldStr1, entity.ScrapInFlowPersonProfile)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
@@ -667,7 +742,9 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, 250)
+	limit := 250
+
+	records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichWithEmailFromBetterContact(ctx, limit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return
@@ -675,7 +752,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 
 	for _, record := range records {
 
-		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(ctx, record.RequestId)
+		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(ctx, record.FieldStr1)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
@@ -684,7 +761,7 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 		if detailsBetterContact == nil {
 			tracing.TraceErr(span, errors.New("better contact details by request id not found"))
 
-			detailsBetterContact, err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, record.RequestId)
+			detailsBetterContact, err = s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetById(ctx, record.FieldStr1)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return

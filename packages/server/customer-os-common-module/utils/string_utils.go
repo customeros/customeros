@@ -3,6 +3,7 @@ package utils
 import (
 	"bytes"
 	"crypto/rand"
+	"github.com/forPelevin/gomoji"
 	"github.com/google/uuid"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -172,7 +173,7 @@ func StringToSlice(str string) []string {
 	return strings.Split(str, ",")
 }
 
-func NormalizeString(s string) string {
+func NormalizeString(input string) string {
 	replacements := map[rune]string{
 		'é': "e",
 		'è': "e",
@@ -190,8 +191,12 @@ func NormalizeString(s string) string {
 		'ñ': "n",
 	}
 
+	// remove emojis
+	input = gomoji.RemoveEmojis(input)
+
+	// replace special characters
 	var result strings.Builder
-	for _, r := range s {
+	for _, r := range input {
 		if replacement, ok := replacements[unicode.ToLower(r)]; ok {
 			if unicode.IsUpper(r) {
 				result.WriteString(strings.ToUpper(replacement))
@@ -226,4 +231,11 @@ func SanitizeUTF8(input string) string {
 		}
 	}
 	return validString.String()
+}
+
+func ToCamelCase(input string) string {
+	if input == "" {
+		return ""
+	}
+	return strings.ToUpper(string(input[0])) + strings.ToLower(input[1:])
 }
