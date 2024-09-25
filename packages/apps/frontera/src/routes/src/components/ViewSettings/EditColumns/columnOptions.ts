@@ -32,7 +32,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsPersona]: 'Persona',
   [ColumnViewType.ContactsLastInteraction]: 'Last Interaction',
   [ColumnViewType.ContactsEmails]: 'Email',
-  [ColumnViewType.ContactsPhoneNumbers]: 'Phone Number',
+  [ColumnViewType.ContactsPhoneNumbers]: 'Mobile Number',
   [ColumnViewType.ContactsAvatar]: 'Avatar',
   [ColumnViewType.ContactsLanguages]: 'Languages',
   [ColumnViewType.ContactsTags]: 'Tags',
