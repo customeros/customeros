@@ -1155,14 +1155,13 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	domain := entity.FlowEntity{
-		Id:          utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Name:        utils.GetStringPropOrEmpty(props, "name"),
-		Description: utils.GetStringPropOrEmpty(props, "description"),
-		Nodes:       utils.GetStringPropOrEmpty(props, "nodes"),
-		Edges:       utils.GetStringPropOrEmpty(props, "edges"),
-		Status:      entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Id:        utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Name:      utils.GetStringPropOrEmpty(props, "name"),
+		Nodes:     utils.GetStringPropOrEmpty(props, "nodes"),
+		Edges:     utils.GetStringPropOrEmpty(props, "edges"),
+		Status:    entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
 	}
 	return &domain
 }
@@ -1202,48 +1201,22 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 
-	actionType := entity.GetFlowActionType(utils.GetStringPropOrEmpty(props, "actionType"))
-	actionData := entity.FlowActionData{}
-
-	if actionType == entity.FlowActionTypeWait {
-		actionData.Wait = &entity.FlowActionDataWait{
-			Minutes: utils.GetInt64PropOrZero(props, "actionData_minutes"),
-		}
-	}
-	if actionType == entity.FlowActionTypeEmailNew {
-		actionData.EmailNew = &entity.FlowActionDataEmail{
-			Subject:      utils.GetStringPropOrEmpty(props, "actionData_subject"),
-			BodyTemplate: utils.GetStringPropOrEmpty(props, "actionData_bodyTemplate"),
-		}
-	}
-	if actionType == entity.FlowActionTypeEmailReply {
-		actionData.EmailReply = &entity.FlowActionDataEmail{
-			ReplyToId:    utils.GetStringPropOrNil(props, "actionData_replyToId"),
-			Subject:      utils.GetStringPropOrEmpty(props, "actionData_subject"),
-			BodyTemplate: utils.GetStringPropOrEmpty(props, "actionData_bodyTemplate"),
-		}
-	}
-	if actionType == entity.FlowActionTypeLinkedinConnectionRequest {
-		actionData.LinkedinConnectionRequest = &entity.FlowActionDataLinkedinConnectionRequest{
-			MessageTemplate: utils.GetStringPropOrEmpty(props, "actionData_messageTemplate"),
-		}
-	}
-	if actionType == entity.FlowActionTypeLinkedinMessage {
-		actionData.LinkedinMessage = &entity.FlowActionDataLinkedinMessage{
-			MessageTemplate: utils.GetStringPropOrEmpty(props, "actionData_messageTemplate"),
-		}
-	}
-
 	e := entity.FlowActionEntity{
 		Id:         utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:  utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Index:      utils.GetInt64PropOrZero(props, "index"),
-		Name:       utils.GetStringPropOrEmpty(props, "name"),
-		Status:     entity.GetFlowActionStatus(utils.GetStringPropOrEmpty(props, "status")),
-		ActionType: actionType,
-		ActionData: actionData,
+		ExternalId: utils.GetStringPropOrEmpty(props, "externalId"),
+		Json:       utils.GetStringPropOrEmpty(props, "json"),
+		Type:       utils.GetStringPropOrEmpty(props, "type"),
 	}
+
+	e.Data.Action = entity.GetFlowActionType(utils.GetStringPropOrEmpty(props, "action"))
+
+	e.Data.WaitBefore = utils.GetInt64PropOrZero(props, "waitBefore")
+
+	e.Data.Entity = utils.GetStringPropOrNil(props, "data_entity")
+	e.Data.Subject = utils.GetStringPropOrNil(props, "data_subject")
+	e.Data.BodyTemplate = utils.GetStringPropOrNil(props, "data_bodyTemplate")
+	e.Data.MessageTemplate = utils.GetStringPropOrNil(props, "data_messageTemplate")
+
 	return &e
 }
 

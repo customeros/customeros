@@ -84,11 +84,15 @@ func (s *flowExecutionService) processActionExecution(ctx context.Context, sched
 			return nil, err
 		}
 
-		if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailNew {
-			//TODO send email
-		} else if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailReply {
-			//TODO reply to previous email
+		if currentAction == nil {
+
 		}
+		//TODO
+		//if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailNew {
+		//	//TODO send email
+		//} else if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailReply {
+		//	//TODO reply to previous email
+		//}
 
 		scheduledActionExecution.Status = neo4jEntity.FlowActionExecutionStatusSuccess
 

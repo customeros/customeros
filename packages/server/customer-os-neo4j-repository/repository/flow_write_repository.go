@@ -36,7 +36,6 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 			MERGE (t)<-[:BELONGS_TO_TENANT]-(f:Flow:Flow_%s { id: $id })
 			ON MATCH SET
 				f.name = $name,
-				f.description = $description,
 				f.updatedAt = $updatedAt,
 				f.nodes = $nodes,
 				f.edges = $edges,
@@ -45,22 +44,20 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 				f.createdAt = $createdAt,
 				f.updatedAt = $updatedAt,
 				f.name = $name,
-				f.description = $description,
 				f.nodes = $nodes,
 				f.edges = $edges,
 				f.status = $status
 			RETURN f`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
-		"tenant":      common.GetTenantFromContext(ctx),
-		"id":          entity.Id,
-		"name":        entity.Name,
-		"description": entity.Description,
-		"nodes":       entity.Nodes,
-		"edges":       entity.Edges,
-		"status":      entity.Status,
-		"createdAt":   utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt":   utils.TimeOrNow(entity.UpdatedAt),
+		"tenant":    common.GetTenantFromContext(ctx),
+		"id":        entity.Id,
+		"name":      entity.Name,
+		"nodes":     entity.Nodes,
+		"edges":     entity.Edges,
+		"status":    entity.Status,
+		"createdAt": utils.TimeOrNow(entity.CreatedAt),
+		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
 	}
 
 	span.LogFields(log.String("cypher", cypher))
