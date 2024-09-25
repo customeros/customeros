@@ -24,7 +24,7 @@ require (
 	github.com/machinebox/graphql v0.2.2
 	github.com/neo4j/neo4j-go-driver/v5 v5.24.0
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk v0.0.0-20240413132139-bfffc416fdeb
-	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240219173641-99951e96f1dc
+	github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module v0.0.0-20240925071556-618778a7336e
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240410144729-44cbe53c019c
 	github.com/opentracing/opentracing-go v1.2.0
@@ -54,6 +54,7 @@ require (
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
+	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-logr/logr v1.4.2 // indirect
@@ -82,6 +83,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240413132139-bfffc416fdeb // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
+	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	github.com/uber/jaeger-client-go v2.30.0+incompatible // indirect
