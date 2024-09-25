@@ -21,6 +21,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 require (
 	github.com/EventStore/EventStore-Client-Go/v3 v3.3.0
 	github.com/caarlos0/env/v6 v6.10.1
+	github.com/forPelevin/gomoji v1.2.0
 	github.com/golang/protobuf v1.5.4
 	github.com/google/uuid v1.6.0
 	github.com/grpc-ecosystem/go-grpc-middleware v1.4.0
@@ -88,7 +89,6 @@ require (
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
-	github.com/forPelevin/gomoji v1.2.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/gin-gonic/gin v1.10.0 // indirect
