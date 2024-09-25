@@ -5,6 +5,23 @@ import { Browser } from "../browser";
 import { logger } from "@/infrastructure";
 import { ErrorParser, StandardError } from "@/util/error";
 
+const Selectors = {
+  profileNameHeading: "h1.text-heading-xlarge",
+  connectButton: (profileNameText: string) =>
+    `button[aria-label="Invite ${profileNameText} to connect"]`,
+  connectDiv: (profileNameText: string) =>
+    `div[aria-label="Invite ${profileNameText} to connect"]`,
+  moreActionsButton: 'button[aria-label="More actions"]',
+  sendInviteModal: "div.send-invite",
+  noteInput: "textarea#custom-message",
+  addNoteButton: "button.artdeco-button--secondary",
+  sendInviteButton:
+    'button.artdeco-button--primary[aria-label="Send invitation"]',
+  sendWithoutNoteButton:
+    'button.artdeco-button--primary[aria-label="Send without a note"]',
+  moreActionsDropdown: "div.artdeco-dropdown__content-inner",
+};
+
 export type Cookies = ReadonlyArray<{
   name: string;
   value: string;
@@ -21,15 +38,17 @@ export class LinkedinAutomationService {
   constructor(
     private cookies: Cookies,
     private userAgent: string,
-    private proxyConfig: string,
+    private proxyConfig: string
   ) {}
 
   async sendConenctionInvite(
     profileUrl: string,
     message?: string,
-    options?: { dryRun?: boolean },
+    options?: { dryRun?: boolean }
   ) {
-    const browser = await Browser.getInstance(this.proxyConfig);
+    const browser = await Browser.getInstance(this.proxyConfig, {
+      debug: true,
+    });
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -39,27 +58,58 @@ export class LinkedinAutomationService {
     await page.goto(profileUrl);
 
     try {
-      const profileName = page.locator("h1.text-heading-xlarge");
+      const profileName = page.locator(Selectors.profileNameHeading);
       await profileName.waitFor({ timeout: 10000 });
       const profileNameText = await profileName.textContent();
 
-      const buttons = page.locator(`button[aria-label*="${profileNameText}"]`);
-      await buttons.last().waitFor({ timeout: 10000 });
-      await buttons.last().click();
+      const connectButtons = await page.$$(
+        Selectors.connectButton(profileNameText ?? "")
+      );
+      const moreActionsButtons = await page.$$(Selectors.moreActionsButton);
 
-      const sendInviteModal = page.locator("div.send-invite");
+      if (connectButtons.length > 0) {
+        await connectButtons?.[1].click();
+      } else if (moreActionsButtons.length > 0) {
+        await moreActionsButtons?.[1].click();
+
+        const dropdown = page.locator(Selectors.moreActionsDropdown)?.last();
+        await dropdown.waitFor({ timeout: 10000 });
+
+        const connectButtons = await page.$$(
+          Selectors.connectDiv(profileNameText ?? "")
+        );
+
+        if (connectButtons.length === 0) {
+          logger.warn(
+            "Connect button not found. Profile might be already a connection.",
+            {
+              source: "LinkedinAutomationService",
+            }
+          );
+          return;
+        }
+
+        await connectButtons?.[1]?.scrollIntoViewIfNeeded();
+        await connectButtons?.[1].click();
+      } else {
+        throw new StandardError({
+          code: "INTERNAL_ERROR",
+          message: "Connect button and More button missing.",
+          severity: "high",
+        });
+      }
+
+      const sendInviteModal = page.locator(Selectors.sendInviteModal);
       await sendInviteModal.waitFor({ timeout: 10000 });
 
       if (message) {
-        const addNoteButton = sendInviteModal.locator(
-          "button.artdeco-button--secondary",
-        );
+        const addNoteButton = sendInviteModal.locator(Selectors.addNoteButton);
         await addNoteButton.click();
-        const noteInput = sendInviteModal.locator("textarea#custom-message");
+        const noteInput = sendInviteModal.locator(Selectors.noteInput);
         await noteInput.fill(message);
 
         const sendInviteButton = sendInviteModal.locator(
-          'button.artdeco-button--primary[aria-label="Send invitation"]',
+          Selectors.sendInviteButton
         );
 
         await setTimeout(1000);
@@ -67,13 +117,13 @@ export class LinkedinAutomationService {
           await sendInviteButton.click();
         }
       } else {
-        const sendWithoutNodeButton = sendInviteModal.locator(
-          'button.artdeco-button--primary[aria-label="Send without a note"]',
+        const sendWithoutNoteButton = sendInviteModal.locator(
+          Selectors.sendWithoutNoteButton
         );
 
         await setTimeout(1000);
         if (!options?.dryRun) {
-          await sendWithoutNodeButton.click();
+          await sendWithoutNoteButton.click();
         }
       }
     } catch (err) {
@@ -84,12 +134,12 @@ export class LinkedinAutomationService {
   }
 
   async getConnections(
-    startPage?: number,
+    startPage?: number
   ): Promise<
     [
       result: string[],
       error: StandardError | undefined,
-      lastPageVisited?: number,
+      lastPageVisited?: number
     ]
   > {
     const browser = await Browser.getInstance(this.proxyConfig);
@@ -121,12 +171,12 @@ export class LinkedinAutomationService {
     };
 
     const scrapeConnections = async (
-      initialPage?: number,
+      initialPage?: number
     ): Promise<
       [
         result: string[],
         error: StandardError | undefined,
-        lastPageVisited?: number,
+        lastPageVisited?: number
       ]
     > => {
       let accumulator: string[] = [];
@@ -135,7 +185,7 @@ export class LinkedinAutomationService {
       // Initial page load
       let currentPage = initialPage ?? 1;
       await page.goto(
-        `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`,
+        `https://www.linkedin.com/search/results/people/?network=%5B%22F%22%5D&origin=FACETED_SEARCH&page=${currentPage}`
       );
 
       // Scroll to bottom to load pagination
@@ -150,7 +200,7 @@ export class LinkedinAutomationService {
         const scrapeCurrentPage = async () => {
           // Wait for results to load on the current page
           const results = page.locator(
-            "ul.reusable-search__entity-result-list",
+            "ul.reusable-search__entity-result-list"
           );
           await results.first().waitFor({ timeout: 10000 });
 
@@ -162,11 +212,11 @@ export class LinkedinAutomationService {
                 .filter(
                   (link) =>
                     !link.classList.contains(
-                      "reusable-search-simple-insight__wrapping-link",
+                      "reusable-search-simple-insight__wrapping-link"
                     ) &&
                     !link.parentElement?.classList.contains(
-                      "reusable-search-simple-insight__text",
-                    ),
+                      "reusable-search-simple-insight__text"
+                    )
                 )
                 .map((link) => link.getAttribute("href") ?? "")
                 .filter((href) => href.includes("/in/"))
@@ -214,7 +264,7 @@ export class LinkedinAutomationService {
   async sendMessageToConnection(
     profileUrl: string,
     message: string,
-    options?: { dryRun?: boolean },
+    options?: { dryRun?: boolean }
   ) {
     const browser = await Browser.getInstance(this.proxyConfig);
     const context = await browser.newContext({
@@ -227,7 +277,7 @@ export class LinkedinAutomationService {
     try {
       await page.goto(profileUrl, { timeout: 60 * 1000 });
       const messageButtons = page.locator(
-        'button.pvs-profile-actions__action[aria-label*="Message"]',
+        'button.pvs-profile-actions__action[aria-label*="Message"]'
       );
       await messageButtons.waitFor({ timeout: 10000 });
       await messageButtons.click();
@@ -253,7 +303,7 @@ export class LinkedinAutomationService {
     const error = ErrorParser.parse(err);
 
     const isTooManyRedirectsErr = error.details?.includes(
-      "ERR_TOO_MANY_REDIRECTS",
+      "ERR_TOO_MANY_REDIRECTS"
     );
 
     if (isTooManyRedirectsErr) {
@@ -287,7 +337,7 @@ export class LinkedinAutomationService {
 const retry = async (
   fn: () => Promise<any>,
   retries: number = 4,
-  delay: number = 3000,
+  delay: number = 3000
 ) => {
   let attempt = 0;
   while (attempt < retries) {
@@ -304,10 +354,10 @@ const retry = async (
         `Retrying after ${exponentialBackoff}ms... (${attempt}/${retries})`,
         {
           source: "LinkedinAutomationService",
-        },
+        }
       );
       await new Promise((resolve) =>
-        setTimeoutSync(resolve, exponentialBackoff),
+        setTimeoutSync(resolve, exponentialBackoff)
       );
     }
   }
