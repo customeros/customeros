@@ -174,7 +174,7 @@ const columns: Record<string, Column> = {
 
       header: (props) => (
         <THead<HTMLInputElement>
-          title='Phone'
+          title='Mobile Number'
           id={ColumnViewType.ContactsPhoneNumbers}
           renderFilter={(initialFocusRef) => (
             <SearchTextFilter
