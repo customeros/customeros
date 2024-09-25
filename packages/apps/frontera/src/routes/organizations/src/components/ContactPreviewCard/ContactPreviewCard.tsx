@@ -114,7 +114,8 @@ export const ContactPreviewCard = observer(() => {
       Escape: () => {
         store.ui.setContactPreviewCardOpen(false);
       },
-      Space: () => {
+      Space: (e) => {
+        e.preventDefault();
         store.ui.setContactPreviewCardOpen(false);
       },
     },
