@@ -179,16 +179,22 @@ export const KanbanCard = observer(
             <Owner opportunityId={card.id} ownerId={card.owner?.id} />
 
             <div className='flex items-center justify-between w-full mb-[-4px]'>
-              <ArrEstimate opportunityId={card.id} />
+              <Tooltip label='ARR estimate'>
+                <div>
+                  <ArrEstimate opportunityId={card.id} />
+                </div>
+              </Tooltip>
 
-              {cardStage === InternalStage.Open && (
-                <>
-                  <Clock className='text-gray-500 size-4 mr-1' />
-                  <span className='text-nowrap text-xs items-center'>
-                    {`${daysInStage} ${daysInStage === 1 ? 'day' : 'days'}`}
-                  </span>
-                </>
-              )}
+              <Tooltip label='Time in stage'>
+                {cardStage === InternalStage.Open && (
+                  <div className='flex items-center'>
+                    <Clock className='text-gray-500 size-3 mr-1' />
+                    <span className='text-nowrap text-xs items-center'>
+                      {`${daysInStage} ${daysInStage === 1 ? 'day' : 'days'}`}
+                    </span>
+                  </div>
+                )}
+              </Tooltip>
             </div>
           </div>
         </div>
