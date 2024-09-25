@@ -19,10 +19,19 @@ defmodule CustomerOsRealtime.Application do
       CustomerOsRealtimeWeb.Endpoint,
       CustomerOsRealtime.ColorManager,
       CustomerOsRealtime.DeltaManager,
-      CustomerOsRealtime.StoreManager,
-      CustomerOsRealtime.EventStoreClient,
-      CustomerOsRealtime.OrganizationEventSubscriber
+      CustomerOsRealtime.StoreManager
     ]
+
+    children =
+      if Mix.env() != :test do
+        children ++
+          [
+            CustomerOsRealtime.EventStoreClient,
+            CustomerOsRealtime.OrganizationEventSubscriber
+          ]
+      else
+        children
+      end
 
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
