@@ -116,6 +116,8 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 		}
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -189,6 +191,8 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		}
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -205,6 +209,8 @@ func (h *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, ev
 
 	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.PhoneNumberWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.PhoneNumberId, eventData.Label, eventData.Primary)
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 
 	return err
 }
@@ -223,6 +229,8 @@ func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt even
 	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary)
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return err
 }
 
@@ -239,6 +247,8 @@ func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt e
 
 	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
 	err := h.services.CommonServices.Neo4jRepositories.LocationWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.LocationId)
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 
 	return err
 }
@@ -269,6 +279,8 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 		},
 	}
 	err := h.services.CommonServices.Neo4jRepositories.JobRoleWriteRepository.LinkContactWithOrganization(ctx, eventData.Tenant, contactId, eventData.OrganizationId, data)
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 
 	return err
 }
@@ -302,6 +314,8 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 	}
 	err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, contactId, model.NodeLabelContact, data)
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return err
 }
 
@@ -332,6 +346,9 @@ func (h *ContactEventHandler) OnSocialRemovedFromContactV1(ctx context.Context, 
 			return nil
 		}
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -355,6 +372,8 @@ func (h *ContactEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event
 		h.log.Errorf("error while adding tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return err
 }
 
@@ -377,6 +396,8 @@ func (h *ContactEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Ev
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while removing tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 
 	return err
 }
@@ -441,6 +462,8 @@ func (h *ContactEventHandler) OnLocationAddedToContact(ctx context.Context, evt 
 		return err
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -469,6 +492,8 @@ func (h *ContactEventHandler) OnContactHide(ctx context.Context, evt eventstore.
 		h.log.Errorf("error while updating hidden at property for contact %s: %s", contactId, err.Error())
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
 	return err
 }
 
@@ -491,6 +516,8 @@ func (h *ContactEventHandler) OnContactShow(ctx context.Context, evt eventstore.
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while showing contact %s: %s", contactId, err.Error())
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 
 	return err
 }

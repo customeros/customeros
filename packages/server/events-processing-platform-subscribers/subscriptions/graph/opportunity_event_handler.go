@@ -132,6 +132,8 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 		}
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -209,6 +211,8 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		}
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -260,6 +264,8 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 	}
 
 	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -422,6 +428,8 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -526,6 +534,8 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 			h.log.Errorf("saveLikelihoodChangeAction failed: %v", err.Error())
 		}
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -642,6 +652,8 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 		}
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -734,6 +746,8 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 		}
 	}
 
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+
 	return nil
 }
 
@@ -786,6 +800,8 @@ func (h *OpportunityEventHandler) OnArchive(ctx context.Context, evt eventstore.
 		h.log.Errorf("error while archiving opportunity %s: %s", opportunityId, err.Error())
 		return nil
 	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
