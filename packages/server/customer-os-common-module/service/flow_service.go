@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -191,14 +192,27 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 		return nil, err
 	}
 
-	//unmarshal the Nodes and Edges and store them in the DB
+	//unmarshal the Nodes and Edges
 	var nodesMap []map[string]interface{}
 	err = json.Unmarshal([]byte(toStore.Nodes), &nodesMap)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	var edgesMap []map[string]interface{}
+	err = json.Unmarshal([]byte(toStore.Edges), &edgesMap)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
+	graph := &GraphTraversalIterative{
+		nodes:   make(map[string]neo4jentity.FlowActionEntity),
+		edges:   make(map[string][]string),
+		visited: make(map[string]bool),
+	}
+
+	//populate the nodes
 	if nodesMap != nil && len(nodesMap) > 0 {
 		for _, v := range nodesMap {
 
@@ -254,13 +268,26 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 					}
 
 					//todo use transaction
-					node, err := s.services.Neo4jRepositories.FlowActionWriteRepository.Merge(ctx, &e)
+					storedNode, err := s.services.Neo4jRepositories.FlowActionWriteRepository.Merge(ctx, &e)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return nil, err
 					}
+					stored := mapper.MapDbNodeToFlowActionEntity(storedNode)
 
-					stored := mapper.MapDbNodeToFlowActionEntity(node)
+					if stored.Data.Action == neo4jentity.FlowActionTypeFlowStart {
+						err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, repository.LinkDetails{
+							FromEntityId:   toStore.Id,
+							FromEntityType: model.FLOW,
+							Relationship:   model.HAS,
+							ToEntityId:     stored.Id,
+							ToEntityType:   model.FLOW_ACTION,
+						})
+						if err != nil {
+							tracing.TraceErr(span, err)
+							return nil, err
+						}
+					}
 
 					v["internalId"] = stored.Id
 
@@ -277,9 +304,28 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 						tracing.TraceErr(span, err)
 						return nil, err
 					}
+
+					graph.nodes[stored.ExternalId] = *stored
 				}
 			}
 		}
+	}
+
+	// Populate the edges (adjacency list)
+	for _, v := range edgesMap {
+		source := v["source"].(string)
+		target := v["target"].(string)
+
+		if source != "" && target != "" {
+			graph.edges[source] = append(graph.edges[source], target)
+		}
+	}
+
+	//get the start nodes and traverse the graph
+	err = s.TraverseInputGraph(ctx, graph)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	nodes, err := json.Marshal(&nodesMap)
@@ -295,25 +341,101 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 		return nil, err
 	}
 
-	//unmarshal the Nodes and Edges and store them in the DB
-	var edgesMap []map[string]interface{}
-	err = json.Unmarshal([]byte(toStore.Edges), &edgesMap)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
+	return toStore, nil
+}
+
+type GraphTraversalIterative struct {
+	nodes   map[string]neo4jentity.FlowActionEntity
+	edges   map[string][]string // adjacency list of edges
+	visited map[string]bool
+}
+
+func (s *flowService) FindStartNodes(graph *GraphTraversalIterative) []string {
+	var startNodes []string
+	for _, node := range graph.nodes {
+		if node.Data.Action == neo4jentity.FlowActionTypeFlowStart {
+			startNodes = append(startNodes, node.ExternalId)
+		}
+	}
+	return startNodes
+}
+
+// TraverseBFS traverses the graph iteratively using BFS (Breadth-First Search)
+func (s *flowService) TraverseInputGraph(ctx context.Context, graph *GraphTraversalIterative) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.TraverseBFS")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	queue := s.FindStartNodes(graph)
+
+	for len(queue) > 0 {
+		// Dequeue the first node
+		currentNode := queue[0]
+		queue = queue[1:]
+
+		// Skip if already visited
+		if graph.visited[currentNode] {
+			continue
+		}
+		graph.visited[currentNode] = true
+
+		// Get the next nodes and add them to the queue for further exploration
+		nextNodes := graph.edges[currentNode]
+		queue = append(queue, nextNodes...)
+
+		// Process the current node and its edges (relationship batch)
+		err := s.ProcessNode(ctx, graph, currentNode, nextNodes)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
-	for _, v := range edgesMap {
-		source := v["source"].(string)
-		target := v["target"].(string)
+	return nil
+}
 
-		if source != "" && target != "" {
+func (s *flowService) ProcessNode(ctx context.Context, graph *GraphTraversalIterative, nodeId string, batch []string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.ProcessNode")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
+	tenant := common.GetTenantFromContext(ctx)
+
+	// Process relationships in batch
+	for _, nextNodeId := range batch {
+		fmt.Printf("Creating relationship: %s -> %s\n", nodeId, nextNodeId)
+
+		var currentNodeInternalId, nextNodeInternalId string
+
+		for _, v := range graph.nodes {
+			if v.ExternalId == nodeId {
+				currentNodeInternalId = v.Id
+			}
+			if v.ExternalId == nextNodeId {
+				nextNodeInternalId = v.Id
+			}
 		}
 
+		if currentNodeInternalId == "" || nextNodeInternalId == "" {
+			tracing.TraceErr(span, errors.New("internal ids not found"))
+			return errors.New("internal ids not found")
+		}
+
+		err := s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, repository.LinkDetails{
+			FromEntityId:   currentNodeInternalId,
+			FromEntityType: model.FLOW_ACTION,
+			Relationship:   model.NEXT,
+			ToEntityId:     nextNodeInternalId,
+			ToEntityType:   model.FLOW_ACTION,
+		})
+
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
-	return toStore, nil
+	return nil
 }
 
 func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error) {
