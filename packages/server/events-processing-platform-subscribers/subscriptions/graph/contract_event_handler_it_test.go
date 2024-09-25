@@ -17,10 +17,12 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/model"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 )
 
@@ -96,6 +98,13 @@ func TestContractEventHandler_OnCreate(t *testing.T) {
 		},
 	}
 	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	calledEventsPlatformToCreateRenewalOpportunity := false
 	opportunityCallbacks := mocked_grpc.MockOpportunityServiceCallbacks{
@@ -207,6 +216,13 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 		},
 	}
 	mocked_grpc.SetOrganizationCallbacks(&organizationServiceCallbacks)
+
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	// prepare event handler
 	contractEventHandler := &ContractEventHandler{

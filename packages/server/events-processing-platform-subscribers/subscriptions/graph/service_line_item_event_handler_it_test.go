@@ -14,9 +14,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 )
@@ -46,6 +48,14 @@ func TestServiceLineItemEventHandler_OnCreate(t *testing.T) {
 		services:    testDatabase.Services,
 		grpcClients: testMockedGrpcClient,
 	}
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	// Create a ServiceLineItemCreateEvent
 	timeNow := utils.Now()

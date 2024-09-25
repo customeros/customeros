@@ -17,12 +17,14 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	event "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/net/context"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 )
 
@@ -38,6 +40,14 @@ func TestOpportunityEventHandler_OnCreate(t *testing.T) {
 	neo4jt.CreateExternalSystem(ctx, testDatabase.Driver, tenantName, "sf")
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{
 		"Organization": 1, "User": 2, "ExternalSystem": 1, "Opportunity": 0})
+
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
 
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
@@ -200,10 +210,19 @@ func TestOpportunityEventHandler_OnUpdateNextCycleDate(t *testing.T) {
 	updatedAt := utils.Now()
 	renewedAt := updatedAt.AddDate(0, 6, 0) // 6 months later
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:      testLogger,
-		services: testDatabase.Services,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	// Create an OpportunityUpdateNextCycleDateEvent
@@ -344,10 +363,19 @@ func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
 	})
 	now := utils.Now()
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:      testLogger,
-		services: testDatabase.Services,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	closeOpportunityEvent, err := opportunityevent.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
@@ -381,10 +409,19 @@ func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	})
 	now := utils.Now()
 
+	// prepare grpc mock
+	callbacks := mocked_grpc.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
+
 	// Prepare the event handler
 	opportunityEventHandler := &OpportunityEventHandler{
-		log:      testLogger,
-		services: testDatabase.Services,
+		log:         testLogger,
+		services:    testDatabase.Services,
+		grpcClients: testMockedGrpcClient,
 	}
 
 	closeOpportunityEvent, err := opportunityevent.NewOpportunityCloseLooseEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
