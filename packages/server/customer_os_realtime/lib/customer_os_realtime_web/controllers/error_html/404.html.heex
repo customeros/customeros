@@ -1,31 +1,62 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Welcome to Phoenix!</title>
-    <link rel="stylesheet" href="/assets/app.css" />
-    <script defer type="text/javascript" src="/assets/app.js">
-    </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page Not Found</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+      }
+
+      .container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+      }
+
+      .logo {
+        max-width: 150px;
+        margin-bottom: 20px;
+      }
+
+      h1 {
+        font-size: 48px;
+        margin: 0;
+        color: #333;
+      }
+
+      p {
+        font-size: 18px;
+        color: #666;
+        margin: 10px 0 30px;
+      }
+
+      a {
+        text-decoration: none;
+        color: #007bff;
+        font-size: 18px;
+      }
+
+      a:hover {
+        text-decoration: underline;
+      }
+    </style>
   </head>
 
   <body>
-    <header>
-      <section class="container">
-        <nav>
-          <ul>
-            <li><a href="https://hexdocs.pm/phoenix/overview.html">Get Started</a></li>
-          </ul>
-        </nav>
-        <a href="https://phoenixframework.org/" class="phx-logo">
-          <img src="/images/logo.svg" alt="Phoenix Framework Logo" />
-        </a>
-      </section>
-    </header>
-    <main class="container">
-      <section class="phx-hero">
-        <p>Sorry, the page you are looking for does not exist.</p>
-      </section>
-    </main>
+    <div class="container">
+      <!-- Your logo image here -->
+      <img src="/images/customeros.png" alt="Logo" class="logo" />
+
+      <h1>404 - Page Not Found</h1>
+      <p>This is an API only service. Trying to access any url paths will result in this page.</p>
+    </div>
   </body>
 </html>
