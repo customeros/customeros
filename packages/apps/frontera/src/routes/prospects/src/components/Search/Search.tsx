@@ -59,7 +59,7 @@ export const Search = observer(() => {
         <LeftElement className='ml-2 flex items-center gap-1'>
           <SearchSm className='size-5' />
           <span className='text-nowrap font-medium'>
-            {store.ui.searchCount} opps:
+            {store.ui.searchCount} opportunities:
           </span>
         </LeftElement>
         <Input
