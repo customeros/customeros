@@ -26,6 +26,8 @@ type FlowService interface {
 	FlowMerge(ctx context.Context, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
 	FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error)
 
+	FlowActionGetStart(ctx context.Context, flowId string) (*neo4jentity.FlowActionEntity, error)
+	FlowActionGetNext(ctx context.Context, actionId string) ([]*neo4jentity.FlowActionEntity, error)
 	FlowActionGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowActionEntities, error)
 	FlowActionGetById(ctx context.Context, id string) (*neo4jentity.FlowActionEntity, error)
 
@@ -259,6 +261,7 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 					//exclude nodes not supported
 					if e.Data.Action == neo4jentity.FlowActionTypeFlowStart ||
 						e.Data.Action == neo4jentity.FlowActionTypeFlowEnd ||
+						e.Data.Action == neo4jentity.FlowActionTypeWait ||
 						e.Data.Action == neo4jentity.FlowActionTypeEmailNew ||
 						e.Data.Action == neo4jentity.FlowActionTypeEmailReply ||
 						e.Data.Action == neo4jentity.FlowActionTypeLinkedinConnectionRequest ||
@@ -476,21 +479,21 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		if status == neo4jentity.FlowStatusActive {
-			flowContactList, err := s.FlowContactGetList(ctx, []string{flow.Id})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-
-			for _, v := range *flowContactList {
-				err := s.services.FlowExecutionService.ScheduleFlowForContact(ctx, &tx, flow.Id, v.ContactId)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, err
-				}
-			}
-		}
+		//if status == neo4jentity.FlowStatusActive {
+		//	flowContactList, err := s.FlowContactGetList(ctx, []string{flow.Id})
+		//	if err != nil {
+		//		tracing.TraceErr(span, err)
+		//		return nil, err
+		//	}
+		//
+		//	for _, v := range *flowContactList {
+		//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, v.ContactId)
+		//		if err != nil {
+		//			tracing.TraceErr(span, err)
+		//			return nil, err
+		//		}
+		//	}
+		//}
 
 		flow.Status = status
 
@@ -509,6 +512,44 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	}
 
 	return mapper.MapDbNodeToFlowEntity(node), nil
+}
+
+func (s *flowService) FlowActionGetStart(ctx context.Context, flowId string) (*neo4jentity.FlowActionEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionGetStart")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("flowId", flowId))
+
+	node, err := s.services.Neo4jRepositories.FlowActionReadRepository.GetStartAction(ctx, flowId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowActionEntity(node), nil
+}
+
+func (s *flowService) FlowActionGetNext(ctx context.Context, actionId string) ([]*neo4jentity.FlowActionEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionGetNext")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.Object("actionId", actionId))
+
+	nodes, err := s.services.Neo4jRepositories.FlowActionReadRepository.GetNext(ctx, actionId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	entities := make([]*neo4jentity.FlowActionEntity, 0)
+	for _, v := range nodes {
+		e := mapper.MapDbNodeToFlowActionEntity(v)
+		entities = append(entities, e)
+	}
+
+	return entities, nil
 }
 
 func (s *flowService) FlowActionGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowActionEntities, error) {

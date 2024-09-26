@@ -34,6 +34,17 @@ func (r *flowResolver) Contacts(ctx context.Context, obj *model.Flow) ([]*model.
 	return mapper.MapEntitiesToFlowContacts(entities), nil
 }
 
+// Statistics is the resolver for the statistics field.
+func (r *flowResolver) Statistics(ctx context.Context, obj *model.Flow) (*model.FlowStatistics, error) {
+	return &model.FlowStatistics{
+		Total:      11,
+		Scheduled:  2,
+		InProgress: 5,
+		Paused:     1,
+		Completed:  3,
+	}, nil
+}
+
 // User is the resolver for the user field.
 func (r *flowActionSenderResolver) User(ctx context.Context, obj *model.FlowActionSender) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.User", graphql.GetOperationContext(ctx))

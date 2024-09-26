@@ -102,7 +102,7 @@ func (s *flowExecutionService) processActionExecution(ctx context.Context, sched
 			return nil, err
 		}
 
-		err = s.commonServices.FlowExecutionService.ScheduleFlowForContact(ctx, &tx, scheduledActionExecution.FlowId, scheduledActionExecution.ContactId)
+		err = s.commonServices.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, scheduledActionExecution.ContactId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

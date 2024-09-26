@@ -246,12 +246,12 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
 	}
 
-	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
-		lockAndRunJob(cont, flowExecutionGroup, flowExecution)
-	})
-	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
-	}
+	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
+	//	lockAndRunJob(cont, flowExecutionGroup, flowExecution)
+	//})
+	//if err != nil {
+	//	cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
+	//}
 
 	c.Start()
 
