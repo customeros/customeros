@@ -37,7 +37,7 @@ type ContactReadRepository interface {
 	GetContactCountByOrganizations(ctx context.Context, tenant string, ids []string) (map[string]int64, error)
 	GetContactsToFindWorkEmailWithBetterContact(ctx context.Context, minutesFromLastContactUpdate, limit int) ([]ContactsEnrichWorkEmail, error)
 	GetContactsToEnrichWithEmailFromBetterContact(ctx context.Context, limit int) ([]TenantAndContactId, error)
-	GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error)
+	GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error)
 	GetLinkedOrgDomains(ctx context.Context, tenant, contactId string) ([]string, error)
 	GetContactsWithGroupEmail(ctx context.Context, limit int) ([]TenantAndContactId, error)
 	GetContactsWithEmailForNameUpdate(ctx context.Context, limit int) ([]TenantAndContactId, error)
@@ -343,11 +343,12 @@ func (r *contactReadRepository) GetContactsToFindWorkEmailWithBetterContact(ctx 
 					NOT (c)-[:HAS]->(:Email) AND
 					(c.firstName IS NOT NULL AND c.lastName IS NOT NULL AND c.firstName <> '' AND c.lastName <> '') AND
 					(c.techFindWorkEmailWithBetterContactRequestedAt IS NULL) AND
-					c.updatedAt < datetime() - duration({minutes: 2})
+					c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})
 				WITH t, c, o, d
 				OPTIONAL MATCH (c)-[:HAS]->(s:Social)
-				where s is null or s.url =~ '.*linkedin.com.*'
+				WHERE s IS NULL OR s.url =~ '.*linkedin.com.*'
 				RETURN t.name, c.id, c.firstName, c.lastName, CASE WHEN s is null THEN '' else s.url END, o.id, o.name, d.domain
+				ORDER BY c.createdAt ASC
 				LIMIT $limit`
 	params := map[string]any{
 		"minutesFromLastContactUpdate": minutesFromLastContactUpdate,
@@ -438,21 +439,22 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 	return output, nil
 }
 
-func (r *contactReadRepository) GetContactsToEnrichByEmail(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrichByEmail")
+func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutesFromLastContactUpdate, minutesFromLastEnrichAttempt, minutesFromLastFailure, limit int) ([]TenantAndContactId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactReadRepository.GetContactsToEnrich")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("minutesFromLastContactUpdate", minutesFromLastContactUpdate))
 	span.LogFields(log.Int("minutesFromLastEnrichAttempt", minutesFromLastEnrichAttempt))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email),
+	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
 				(t)--(ts:TenantSettings)
+				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
 				WHERE
 					ts.enrichContacts = true AND
 					c.enrichedAt IS NULL AND
+					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < 3) AND
 					e.isRoleAccount = false AND
-					e.deliverable = "true" AND
 					(e.isPrimaryDomain = true OR e.isPrimaryDomain IS NULL) AND
 					(c.enrichFailedAt IS NULL OR c.enrichFailedAt < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND

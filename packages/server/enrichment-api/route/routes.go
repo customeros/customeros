@@ -57,12 +57,12 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 		tracing.LogObjectAsJson(span, "request", request)
 
 		// validate mandatory parameters
-		if request.LinkedinUrl == "" && request.Email == "" {
-			tracing.TraceErr(span, errors.New("Missing linkedin and email parameters"))
-			services.Logger.Errorf("Missing linkedin and email parameters")
+		if request.LinkedinUrl == "" && request.Email == "" && request.Domain == "" {
+			tracing.TraceErr(span, errors.New("Missing linkedin, email and domain parameters"))
+			services.Logger.Errorf("Missing linkedin, email and domain parameters")
 			c.JSON(http.StatusBadRequest, model.EnrichPersonScrapinResponse{
 				Status:      "error",
-				Message:     "Missing linkedin and email parameters",
+				Message:     "Missing linkedin, email and domain parameters",
 				PersonFound: false,
 			})
 			return
@@ -91,8 +91,8 @@ func enrichPerson(services *service.Services) gin.HandlerFunc {
 
 		foundByLinkedInUrl := enrichPersonData != nil && enrichPersonData.PersonProfile != nil && enrichPersonData.PersonProfile.Person != nil
 
-		// Step 2 - Scrapin by email
-		if !foundByLinkedInUrl && request.Email != "" {
+		// Step 2 - Search by email and domain
+		if !foundByLinkedInUrl && (request.Email != "" || request.Domain != "") {
 			recordId, response, err := services.ScrapeInService.ScrapInSearchPerson(ctx, request.Email, request.FirstName, request.LastName, request.Domain)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "ScrapInSearchPerson"))
