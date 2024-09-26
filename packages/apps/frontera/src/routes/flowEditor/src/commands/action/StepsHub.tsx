@@ -1,4 +1,5 @@
 import { observer } from 'mobx-react-lite';
+import { FlowActionType } from '@store/Flows/types.ts';
 import { MarkerType, useReactFlow } from '@xyflow/react';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -26,7 +27,7 @@ export const StepsHub = observer(() => {
 
   const { setEdges, setNodes, getNodes, getEdges } = useReactFlow();
 
-  const handleAddNode = async (type: 'SendEmail' | 'ReplyToEmail' | 'Wait') => {
+  const handleAddNode = async (type: FlowActionType | 'WAIT') => {
     const nodes = getNodes();
     const edges = getEdges();
 
@@ -40,19 +41,15 @@ export const StepsHub = observer(() => {
     if (!sourceNode || !targetNode) return;
 
     const typeBasedContent =
-      type === 'ReplyToEmail'
-        ? { subject: '', content: '' }
-        : type === 'SendEmail'
-        ? { subject: '', content: '' }
-        : { waitDuration: 1 };
+      type === 'WAIT' ? { subject: '', bodyTemplate: '' } : { waitDuration: 1 };
 
     // Create the new node
     const newNode = {
       id: `${type}-${nodes.length + 1}`,
-      type: type === 'Wait' ? 'wait' : 'action',
+      type: type === 'WAIT' ? 'wait' : 'action',
       position: { x: 0, y: 0 }, // Initial position will be adjusted by ELK
       data: {
-        stepType: type,
+        action: type,
         ...typeBasedContent,
       },
     };
@@ -97,7 +94,7 @@ export const StepsHub = observer(() => {
     setEdges(layoutedEdges);
   };
 
-  const updateSelectedNode = (type: 'SendEmail' | 'ReplyToEmail' | 'Wait') => {
+  const updateSelectedNode = (type: FlowActionType | 'WAIT') => {
     handleAddNode(type);
     ui.flowCommandMenu.setOpen(false);
     ui.flowCommandMenu.reset();
@@ -109,7 +106,7 @@ export const StepsHub = observer(() => {
         leftAccessory={<Mail01 />}
         keywords={['send', 'email']}
         onSelect={() => {
-          updateSelectedNode('SendEmail');
+          updateSelectedNode(FlowActionType.EMAIL_NEW);
         }}
       >
         Send email
@@ -118,7 +115,7 @@ export const StepsHub = observer(() => {
         leftAccessory={<MailReply />}
         keywords={['reply', 'to', 'previous', 'email']}
         onSelect={() => {
-          updateSelectedNode('ReplyToEmail');
+          updateSelectedNode(FlowActionType.EMAIL_REPLY);
         }}
       >
         Reply to previous email
@@ -127,7 +124,7 @@ export const StepsHub = observer(() => {
         keywords={['wait', 'delay']}
         leftAccessory={<Hourglass02 />}
         onSelect={() => {
-          updateSelectedNode('Wait');
+          updateSelectedNode('WAIT');
         }}
       >
         Wait

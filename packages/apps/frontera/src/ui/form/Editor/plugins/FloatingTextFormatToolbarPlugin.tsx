@@ -1,413 +1,214 @@
-/**
- * Copyright (c) Meta Platforms, Inc. and affiliates.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- *
- */
-
 import { createPortal } from 'react-dom';
-import { useRef, Dispatch, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
-import { mergeRegister } from '@lexical/utils';
-import { $isCodeHighlightNode } from '@lexical/code';
-import { $isLinkNode, TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { computePosition } from '@floating-ui/dom';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
-  $isTextNode,
   $getSelection,
-  LexicalEditor,
-  $isParagraphNode,
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
-  COMMAND_PRIORITY_LOW,
-  SELECTION_CHANGE_COMMAND,
+  COMMAND_PRIORITY_NORMAL as NORMAL_PRIORITY,
+  SELECTION_CHANGE_COMMAND as ON_SELECTION_CHANGE,
 } from 'lexical';
 
-import { getSelectedNode } from '../utils/getSelectedNode';
-// import { INSERT_INLINE_COMMAND } from '../CommentPlugin';
-import { getDOMRangeRect } from '../utils/getDOMRangeRect';
-import { setFloatingElemPosition } from '../utils/setFloatingElemPosition';
+import { cn } from '@ui/utils/cn.ts';
+import { IconButton } from '@ui/form/IconButton';
+import { Code01 } from '@ui/media/icons/Code01.tsx';
+import { Bold01 } from '@ui/media/icons/Bold01.tsx';
+import { Italic01 } from '@ui/media/icons/Italic01.tsx';
+import { Underline01 } from '@ui/media/icons/Underline01.tsx';
+import { Strikethrough01 } from '@ui/media/icons/Strikethrough01.tsx';
 
-import './index.css';
+import { usePointerInteractions } from './../utils/usePointerInteractions.tsx';
 
-function TextFormatFloatingToolbar({
-  editor,
-  anchorElem,
-  isLink,
-  isBold,
-  isItalic,
-  isUnderline,
-  isCode,
-  isStrikethrough,
-  isSubscript,
-  isSuperscript,
-  setIsLinkEditMode,
-}: {
-  isBold: boolean;
-  isCode: boolean;
-  isLink: boolean;
-  isItalic: boolean;
-  isSubscript: boolean;
-  isUnderline: boolean;
-  editor: LexicalEditor;
-  isSuperscript: boolean;
-  anchorElem: HTMLElement;
-  isStrikethrough: boolean;
-  setIsLinkEditMode: Dispatch<boolean>;
-}): JSX.Element {
-  const popupCharStylesEditorRef = useRef<HTMLDivElement | null>(null);
+const DEFAULT_DOM_ELEMENT = document.body;
 
-  const insertLink = useCallback(() => {
-    if (!isLink) {
-      setIsLinkEditMode(true);
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://');
-    } else {
-      setIsLinkEditMode(false);
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-    }
-  }, [editor, isLink, setIsLinkEditMode]);
+type FloatingMenuCoords = { x: number; y: number } | undefined;
 
-  // const insertComment = () => {
-  //   editor.dispatchCommand(INSERT_INLINE_COMMAND, undefined);
-  // };
+export type FloatingMenuComponentProps = {
+  shouldShow: boolean;
+  editor: ReturnType<typeof useLexicalComposerContext>[0];
+};
 
-  function mouseMoveListener(e: MouseEvent) {
-    if (
-      popupCharStylesEditorRef?.current &&
-      (e.buttons === 1 || e.buttons === 3)
-    ) {
-      if (popupCharStylesEditorRef.current.style.pointerEvents !== 'none') {
-        const x = e.clientX;
-        const y = e.clientY;
-        const elementUnderMouse = document.elementFromPoint(x, y);
+export type FloatingMenuPluginProps = {
+  element?: HTMLElement;
+};
 
-        if (!popupCharStylesEditorRef.current.contains(elementUnderMouse)) {
-          // Mouse is not over the target element => not a normal click, but probably a drag
-          popupCharStylesEditorRef.current.style.pointerEvents = 'none';
-        }
-      }
-    }
-  }
-
-  function mouseUpListener(e: MouseEvent) {
-    if (popupCharStylesEditorRef?.current) {
-      if (popupCharStylesEditorRef.current.style.pointerEvents !== 'auto') {
-        popupCharStylesEditorRef.current.style.pointerEvents = 'auto';
-      }
-    }
-  }
+export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
+  const [state, setState] = useState<FloatingMenuState>({
+    isBold: false,
+    isCode: false,
+    isItalic: false,
+    isStrikethrough: false,
+    isUnderline: false,
+  });
 
   useEffect(() => {
-    if (popupCharStylesEditorRef?.current) {
-      document.addEventListener('mousemove', mouseMoveListener);
-      document.addEventListener('mouseup', mouseUpListener);
-
-      return () => {
-        document.removeEventListener('mousemove', mouseMoveListener);
-        document.removeEventListener('mouseup', mouseUpListener);
-      };
-    }
-  }, [popupCharStylesEditorRef]);
-
-  const $updateTextFormatFloatingToolbar = useCallback(() => {
-    const selection = $getSelection();
-
-    const popupCharStylesEditorElem = popupCharStylesEditorRef.current;
-    const nativeSelection = window.getSelection();
-
-    if (popupCharStylesEditorElem === null) {
-      return;
-    }
-
-    const rootElement = editor.getRootElement();
-
-    if (
-      selection !== null &&
-      nativeSelection !== null &&
-      !nativeSelection.isCollapsed &&
-      rootElement !== null &&
-      rootElement.contains(nativeSelection.anchorNode)
-    ) {
-      const rangeRect = getDOMRangeRect(nativeSelection, rootElement);
-
-      setFloatingElemPosition(
-        rangeRect,
-        popupCharStylesEditorElem,
-        anchorElem,
-        isLink,
-      );
-    }
-  }, [editor, anchorElem, isLink]);
-
-  useEffect(() => {
-    const scrollerElem = anchorElem.parentElement;
-
-    const update = () => {
-      editor.getEditorState().read(() => {
-        $updateTextFormatFloatingToolbar();
-      });
-    };
-
-    window.addEventListener('resize', update);
-
-    if (scrollerElem) {
-      scrollerElem.addEventListener('scroll', update);
-    }
-
-    return () => {
-      window.removeEventListener('resize', update);
-
-      if (scrollerElem) {
-        scrollerElem.removeEventListener('scroll', update);
-      }
-    };
-  }, [editor, $updateTextFormatFloatingToolbar, anchorElem]);
-
-  useEffect(() => {
-    editor.getEditorState().read(() => {
-      $updateTextFormatFloatingToolbar();
-    });
-
-    return mergeRegister(
-      editor.registerUpdateListener(({ editorState }) => {
+    const unregisterListener = editor.registerUpdateListener(
+      ({ editorState }) => {
         editorState.read(() => {
-          $updateTextFormatFloatingToolbar();
+          const selection = $getSelection();
+
+          if (!$isRangeSelection(selection)) return;
+          setState({
+            isBold: selection.hasFormat('bold'),
+            isCode: selection.hasFormat('code'),
+            isItalic: selection.hasFormat('italic'),
+            isStrikethrough: selection.hasFormat('strikethrough'),
+            isUnderline: selection.hasFormat('underline'),
+          });
         });
-      }),
-
-      editor.registerCommand(
-        SELECTION_CHANGE_COMMAND,
-        () => {
-          $updateTextFormatFloatingToolbar();
-
-          return false;
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
+      },
     );
-  }, [editor, $updateTextFormatFloatingToolbar]);
+
+    return unregisterListener;
+  }, [editor]);
 
   return (
-    <div ref={popupCharStylesEditorRef} className='floating-text-format-popup'>
-      {editor.isEditable() && (
-        <>
-          <button
-            type='button'
-            aria-label='Format text as bold'
-            className={'popup-item spaced ' + (isBold ? 'active' : '')}
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-            }}
-          >
-            <i className='format bold' />
-          </button>
-          <button
-            type='button'
-            aria-label='Format text as italics'
-            className={'popup-item spaced ' + (isItalic ? 'active' : '')}
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-            }}
-          >
-            <i className='format italic' />
-          </button>
-          <button
-            type='button'
-            aria-label='Format text to underlined'
-            className={'popup-item spaced ' + (isUnderline ? 'active' : '')}
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
-            }}
-          >
-            <i className='format underline' />
-          </button>
-          <button
-            type='button'
-            aria-label='Format text with a strikethrough'
-            className={'popup-item spaced ' + (isStrikethrough ? 'active' : '')}
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
-            }}
-          >
-            <i className='format strikethrough' />
-          </button>
-          <button
-            type='button'
-            title='Subscript'
-            aria-label='Format Subscript'
-            className={'popup-item spaced ' + (isSubscript ? 'active' : '')}
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'subscript');
-            }}
-          >
-            <i className='format subscript' />
-          </button>
-          <button
-            type='button'
-            title='Superscript'
-            aria-label='Format Superscript'
-            className={'popup-item spaced ' + (isSuperscript ? 'active' : '')}
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'superscript');
-            }}
-          >
-            <i className='format superscript' />
-          </button>
-          <button
-            type='button'
-            aria-label='Insert code block'
-            className={'popup-item spaced ' + (isCode ? 'active' : '')}
-            onClick={() => {
-              editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
-            }}
-          >
-            <i className='format code' />
-          </button>
-          <button
-            type='button'
-            onClick={insertLink}
-            aria-label='Insert link'
-            className={'popup-item spaced ' + (isLink ? 'active' : '')}
-          >
-            <i className='format link' />
-          </button>
-        </>
-      )}
+    <div className='flex items-center justify-between bg-white border-[1px] border-gray-200 rounded-md '>
+      <IconButton
+        variant='ghost'
+        icon={<Bold01 />}
+        aria-label='Format text as bold'
+        className={cn('rounded-r-none', {
+          'bg-gray-100': state.isBold,
+        })}
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+        }}
+      />
+      <IconButton
+        variant='ghost'
+        icon={<Italic01 />}
+        aria-label='Format text as italics'
+        className={cn('rounded-none', {
+          'bg-gray-100': state.isItalic,
+        })}
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+        }}
+      />
+      <IconButton
+        variant='ghost'
+        icon={<Underline01 />}
+        aria-label='Format text to underlined'
+        className={cn('rounded-none', {
+          'bg-gray-100': state.isUnderline,
+        })}
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
+        }}
+      />
+      <IconButton
+        variant='ghost'
+        icon={<Strikethrough01 />}
+        aria-label='Format text with a strikethrough'
+        className={cn('rounded-none', {
+          'bg-gray-100': state.isStrikethrough,
+        })}
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+        }}
+      />
+      <IconButton
+        variant='ghost'
+        icon={<Code01 />}
+        aria-label='Format text with inline code'
+        className={cn('rounded-l-none', {
+          'bg-gray-100': state.isCode,
+        })}
+        onClick={() => {
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
+        }}
+      />
     </div>
   );
 }
 
-function useFloatingTextFormatToolbar(
-  editor: LexicalEditor,
-  anchorElem: HTMLElement,
-  setIsLinkEditMode: Dispatch<boolean>,
-): JSX.Element | null {
-  const [isText, setIsText] = useState(false);
-  const [isLink, setIsLink] = useState(false);
-  const [isBold, setIsBold] = useState(false);
-  const [isItalic, setIsItalic] = useState(false);
-  const [isUnderline, setIsUnderline] = useState(false);
-  const [isStrikethrough, setIsStrikethrough] = useState(false);
-  const [isSubscript, setIsSubscript] = useState(false);
-  const [isSuperscript, setIsSuperscript] = useState(false);
-  const [isCode, setIsCode] = useState(false);
+export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [coords, setCoords] = useState<FloatingMenuCoords>(undefined);
+  const show = coords !== undefined;
 
-  const updatePopup = useCallback(() => {
-    editor.getEditorState().read(() => {
-      // Should not to pop up the floating toolbar when using IME input
-      if (editor.isComposing()) {
-        return;
-      }
-      const selection = $getSelection();
-      const nativeSelection = window.getSelection();
-      const rootElement = editor.getRootElement();
+  const [editor] = useLexicalComposerContext();
+  const { isPointerDown, isPointerReleased } = usePointerInteractions();
 
-      if (
-        nativeSelection !== null &&
-        (!$isRangeSelection(selection) ||
-          rootElement === null ||
-          !rootElement.contains(nativeSelection.anchorNode))
-      ) {
-        setIsText(false);
+  const calculatePosition = useCallback(() => {
+    const domSelection = getSelection();
+    const domRange =
+      domSelection?.rangeCount !== 0 && domSelection?.getRangeAt(0);
 
-        return;
-      }
+    if (!domRange || !ref.current || isPointerDown) return setCoords(undefined);
 
-      if (!$isRangeSelection(selection)) {
-        return;
-      }
+    computePosition(domRange, ref.current, { placement: 'top' })
+      .then((pos) => {
+        setCoords({ x: pos.x, y: pos.y - 10 });
+      })
+      .catch(() => {
+        setCoords(undefined);
+      });
+  }, [isPointerDown]);
 
-      const node = getSelectedNode(selection);
+  const $handleSelectionChange = useCallback(() => {
+    if (editor.isComposing()) return false;
 
-      // Update text format
-      setIsBold(selection.hasFormat('bold'));
-      setIsItalic(selection.hasFormat('italic'));
-      setIsUnderline(selection.hasFormat('underline'));
-      setIsStrikethrough(selection.hasFormat('strikethrough'));
-      setIsSubscript(selection.hasFormat('subscript'));
-      setIsSuperscript(selection.hasFormat('superscript'));
-      setIsCode(selection.hasFormat('code'));
+    if (editor.getRootElement() !== document.activeElement) {
+      setCoords(undefined);
 
-      // Update links
-      const parent = node.getParent();
+      return true;
+    }
 
-      if ($isLinkNode(parent) || $isLinkNode(node)) {
-        setIsLink(true);
-      } else {
-        setIsLink(false);
-      }
+    const selection = $getSelection();
 
-      if (
-        !$isCodeHighlightNode(selection.anchor.getNode()) &&
-        selection.getTextContent() !== ''
-      ) {
-        setIsText($isTextNode(node) || $isParagraphNode(node));
-      } else {
-        setIsText(false);
-      }
+    if ($isRangeSelection(selection) && !selection.anchor.is(selection.focus)) {
+      calculatePosition();
+    } else {
+      setCoords(undefined);
+    }
 
-      const rawTextContent = selection.getTextContent().replace(/\n/g, '');
-
-      if (!selection.isCollapsed() && rawTextContent === '') {
-        setIsText(false);
-
-        return;
-      }
-    });
-  }, [editor]);
+    return true;
+  }, [editor, calculatePosition]);
 
   useEffect(() => {
-    document.addEventListener('selectionchange', updatePopup);
-
-    return () => {
-      document.removeEventListener('selectionchange', updatePopup);
-    };
-  }, [updatePopup]);
-
-  useEffect(() => {
-    return mergeRegister(
-      editor.registerUpdateListener(() => {
-        updatePopup();
-      }),
-      editor.registerRootListener(() => {
-        if (editor.getRootElement() === null) {
-          setIsText(false);
-        }
-      }),
+    const unregisterCommand = editor.registerCommand(
+      ON_SELECTION_CHANGE,
+      $handleSelectionChange,
+      NORMAL_PRIORITY,
     );
-  }, [editor, updatePopup]);
 
-  if (!isText) {
-    return null;
-  }
+    return unregisterCommand;
+  }, [editor, $handleSelectionChange]);
+
+  useEffect(() => {
+    if (!show && isPointerReleased) {
+      editor.getEditorState().read(() => {
+        $handleSelectionChange();
+      });
+    }
+  }, [isPointerReleased, $handleSelectionChange, editor]);
 
   return createPortal(
-    <TextFormatFloatingToolbar
-      editor={editor}
-      isLink={isLink}
-      isBold={isBold}
-      isCode={isCode}
-      isItalic={isItalic}
-      anchorElem={anchorElem}
-      isSubscript={isSubscript}
-      isUnderline={isUnderline}
-      isSuperscript={isSuperscript}
-      isStrikethrough={isStrikethrough}
-      setIsLinkEditMode={setIsLinkEditMode}
-    />,
-    anchorElem,
+    <div
+      ref={ref}
+      aria-hidden={!show}
+      style={{
+        position: 'absolute',
+        top: coords?.y,
+        left: coords?.x,
+        visibility: show ? 'visible' : 'hidden',
+        opacity: show ? 1 : 0,
+      }}
+    >
+      <FloatingMenu editor={editor} shouldShow={show} />
+    </div>,
+    element ?? DEFAULT_DOM_ELEMENT,
   );
 }
 
-export default function FloatingTextFormatToolbarPlugin({
-  anchorElem = document.body,
-  setIsLinkEditMode,
-}: {
-  anchorElem?: HTMLElement;
-  setIsLinkEditMode: Dispatch<boolean>;
-}): JSX.Element | null {
-  const [editor] = useLexicalComposerContext();
-
-  return useFloatingTextFormatToolbar(editor, anchorElem, setIsLinkEditMode);
-}
+export type FloatingMenuState = {
+  isBold: boolean;
+  isCode: boolean;
+  isItalic: boolean;
+  isUnderline: boolean;
+  isStrikethrough: boolean;
+};

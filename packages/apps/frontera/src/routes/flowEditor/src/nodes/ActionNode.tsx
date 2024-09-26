@@ -1,5 +1,6 @@
-import { useState, ReactElement } from 'react';
+import { useMemo, useState, ReactElement } from 'react';
 
+import { FlowActionType } from '@store/Flows/types.ts';
 import { NodeProps, useReactFlow } from '@xyflow/react';
 
 import { Input } from '@ui/form/Input';
@@ -8,7 +9,7 @@ import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
-import { Textarea } from '@ui/form/Textarea/Textarea';
+import { Editor } from '@ui/form/Editor/Editor.tsx';
 import { MailReply } from '@ui/media/icons/MailReply';
 import { Hourglass01 } from '@ui/media/icons/Hourglass01';
 import {
@@ -21,15 +22,15 @@ import {
 import { Handle } from '../components';
 
 const iconMap: Record<string, ReactElement> = {
-  SendEmail: <Mail01 className='text-inherit' />,
-  ReplyToEmail: <MailReply className='text-inherit' />,
-  Wait: <Hourglass01 className='text-inherit' />,
+  [FlowActionType.EMAIL_NEW]: <Mail01 className='text-inherit' />,
+  [FlowActionType.EMAIL_REPLY]: <MailReply className='text-inherit' />,
+  WAIT: <Hourglass01 className='text-inherit' />,
 };
 
 const colorMap: Record<string, string> = {
-  SendEmail: 'blue',
-  ReplyToEmail: 'blue',
-  Wait: 'gray',
+  [FlowActionType.EMAIL_NEW]: 'blue',
+  [FlowActionType.EMAIL_REPLY]: 'blue',
+  WAIT: 'gray',
 };
 
 export const ActionNode = ({
@@ -39,7 +40,8 @@ export const ActionNode = ({
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const { setNodes } = useReactFlow();
 
-  const color = colorMap?.[data.stepType];
+  const color = colorMap?.[data.action];
+  const placeholder = useMemo(() => getRandomEmailPrompt(), []);
 
   const handleEmailDataChange = ({
     newValue,
@@ -75,14 +77,14 @@ export const ActionNode = ({
             <div
               className={`size-6 mr-2 bg-${color}-50 text-${color}-500 border border-${color}-100  rounded flex items-center justify-center`}
             >
-              {iconMap?.[data.stepType]}
+              {iconMap?.[data.action]}
             </div>
 
             <span className='truncate font-medium'>
               {data.subject ? (
                 data.subject
-              ) : data.content ? (
-                data.content
+              ) : data.bodyTemplate ? (
+                data.bodyTemplate
               ) : (
                 <span className='text-gray-400 font-normal'>
                   Write an email that wows them
@@ -103,7 +105,6 @@ export const ActionNode = ({
         <Modal open={isEditorOpen} onOpenChange={setIsEditorOpen}>
           <ModalPortal>
             <ModalOverlay className='z-50'>
-              {/* width and height of A4 */}
               <ModalContent className='w-full h-full flex justify-center max-w-full top-0'>
                 <div className='w-[570px]'>
                   <div className='flex justify-between mt-4'>
@@ -118,8 +119,10 @@ export const ActionNode = ({
                   </div>
 
                   <Input
+                    size='lg'
                     variant='unstyled'
                     placeholder='Subject'
+                    className='font-medium'
                     value={data?.subject ?? ''}
                     onChange={(e) =>
                       handleEmailDataChange({
@@ -129,15 +132,18 @@ export const ActionNode = ({
                     }
                   />
 
-                  <Textarea
-                    value={data?.bodyTemplate ?? ''}
-                    onChange={(e) =>
+                  <Editor
+                    placeholder={placeholder}
+                    className='mb-10 text-base'
+                    dataTest='flow-email-editor'
+                    namespace='flow-email-editor'
+                    onChange={(e) => {
                       handleEmailDataChange({
-                        newValue: e.target.value,
+                        newValue: e,
                         property: 'bodyTemplate',
-                      })
-                    }
-                  />
+                      });
+                    }}
+                  ></Editor>
                 </div>
               </ModalContent>
             </ModalOverlay>
@@ -149,3 +155,28 @@ export const ActionNode = ({
     </>
   );
 };
+
+const emailPrompts = [
+  "Write something they'll want to share with their boss",
+  'Craft an email that makes them say "Wow!"',
+  "Compose an email they'll quote in their presentation",
+  "Make them feel like they've discovered hidden treasure",
+  'Write an email that makes them rethink their strategy',
+  "Write something they can't get from a Google search",
+  'Compose the email that ends their decision paralysis',
+  "Write an email they can't ignore",
+  'Turn this blank canvas into a sales masterpiece',
+  'Write something that makes them feel stupid for not replying',
+  'Write something that makes them say, "Yes, this is what we need!"',
+  "Show them what they're missing—start typing...",
+  'Type an email that helps them win',
+  "Write something they'll remember",
+  'Make your email impossible to ignore',
+  'Start an email that stands out',
+];
+
+function getRandomEmailPrompt(): string {
+  const randomIndex = Math.floor(Math.random() * emailPrompts.length);
+
+  return emailPrompts[randomIndex];
+}

@@ -318,3 +318,18 @@
   height: 40px;
   width: 40px;
 }
+
+.lexical-editor {
+  ul,ol {
+    padding-left: 18px;
+  }
+  ul li {
+    list-style: disc;
+  }
+
+  ol li {
+    list-style: decimal;
+  }
+
+
+}

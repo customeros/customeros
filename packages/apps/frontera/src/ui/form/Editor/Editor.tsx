@@ -9,7 +9,9 @@ import React, {
 } from 'react';
 
 import { twMerge } from 'tailwind-merge';
+import { TRANSFORMERS } from '@lexical/markdown';
 import { cva, VariantProps } from 'class-variance-authority';
+import { ListPlugin } from '@lexical/react/LexicalListPlugin';
 import { HistoryPlugin } from '@lexical/react/LexicalHistoryPlugin';
 import { $insertNodes, $nodesOfType, LexicalEditor } from 'lexical';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
@@ -20,6 +22,7 @@ import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { $generateNodesFromDOM, $generateHtmlFromNodes } from '@lexical/html';
+import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import {
   LexicalComposer,
   InitialConfigType,
@@ -27,6 +30,7 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
+import TextNodeTransformer from '@ui/form/Editor/nodes/TextTransformar.ts';
 
 import { nodes } from './nodes/nodes';
 import { HashtagNode } from './nodes/HashtagNode';
@@ -34,9 +38,20 @@ import MentionsPlugin from './plugins/MentionsPlugin';
 import AutoLinkPlugin from './plugins/AutoLinkPlugin';
 import HashtagsPlugin from './plugins/HashtagsPlugin';
 import FloatingLinkEditorPlugin from './plugins/FloatingLinkEditorPlugin';
-import FloatingTextFormatToolbarPlugin from './plugins/FloatingTextFormatToolbarPlugin';
+import { FloatingMenuPlugin } from './plugins/FloatingTextFormatToolbarPlugin';
 
-const theme: EditorThemeClasses = {};
+const theme: EditorThemeClasses = {
+  text: {
+    bold: 'editor-textBold',
+    code: 'editor-textCode',
+    italic: 'editor-textItalic',
+    strikethrough: 'editor-textStrikethrough',
+    subscript: 'editor-textSubscript',
+    superscript: 'editor-textSuperscript',
+    underline: 'editor-textUnderline',
+    underlineStrikethrough: 'editor-textUnderlineStrikethrough',
+  },
+};
 
 const onError = (error: Error) => {
   console.error(error);
@@ -157,13 +172,18 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
     }, []);
 
     return (
-      <div className='relative w-full h-full'>
+      <div className='relative w-full h-full lexical-editor'>
         <LexicalComposer initialConfig={initialConfig}>
           <EditorRefPlugin editorRef={editor} />
           <CheckListPlugin />
           <AutoLinkPlugin />
           <HistoryPlugin />
           <AutoFocusPlugin />
+          <TextNodeTransformer />
+          <ListPlugin />
+
+          <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+
           <MentionsPlugin
             options={mentionsOptions}
             onSearch={onMentionsSearch}
@@ -180,10 +200,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
                 isLinkEditMode={isLinkEditMode}
                 setIsLinkEditMode={setIsLinkEditMode}
               />
-              <FloatingTextFormatToolbarPlugin
-                anchorElem={floatingAnchorElem}
-                setIsLinkEditMode={setIsLinkEditMode}
-              />
+              <FloatingMenuPlugin element={floatingAnchorElem} />
             </>
           )}
           <EditorPlugin
