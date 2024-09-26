@@ -73,9 +73,15 @@ export class ContactsStore implements GroupStore<Contact> {
     return compute(arr);
   }
 
-  archive = (ids: string[]) => {
+  delete = (ids: string[]) => {
     ids.forEach((id) => {
       this.remove(id);
+    });
+  };
+
+  archive = (ids: string[]) => {
+    ids.forEach((id) => {
+      this.softDelete(id);
     });
   };
 
@@ -326,6 +332,41 @@ export class ContactsStore implements GroupStore<Contact> {
       });
 
       await this.service.deleteContact({ contactId: id });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.sync({ action: 'DELETE', ids: [id] });
+      });
+    }
+  }
+
+  async softDelete(id: string) {
+    try {
+      runInAction(() => {
+        const organizationId = this.value.get(id)?.organizationId;
+
+        if (organizationId) {
+          const organization =
+            this.root.organizations.value.get(organizationId);
+
+          organization?.update(
+            (v: Organization) => {
+              v.contacts.content = v.contacts.content.filter(
+                (c) => c.id !== id,
+              );
+
+              return v;
+            },
+            { mutate: false },
+          );
+        }
+        this.value.delete(id);
+      });
+
+      await this.service.archiveContact({ contactId: id });
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;

@@ -164,7 +164,7 @@ export const ContactCard = observer(
     const handleDelete = (e: MouseEvent) => {
       e.stopPropagation();
       e.preventDefault();
-      store.contacts.remove(id);
+      store.contacts.softDelete(id);
       onClose();
     };
 
