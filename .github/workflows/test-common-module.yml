@@ -1,4 +1,4 @@
-name: customer-os-api
+name: test-common-module
 
 on:
   push:
