@@ -2,6 +2,8 @@ package service
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -18,9 +20,9 @@ const minMinutesBetweenEmails = int(5)
 const maxMinutesBetweenEmails = int(10)
 
 type FlowExecutionService interface {
-	GetFlowActionExecutionsForContact(ctx context.Context, flowId, contactId string) ([]*entity.FlowActionExecutionEntity, error)
+	GetFlowActionExecutions(ctx context.Context, flowId, contactId string) ([]*entity.FlowActionExecutionEntity, error)
 
-	ScheduleFlowForContact(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string) error
+	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string) error
 }
 
 type flowExecutionService struct {
@@ -33,13 +35,13 @@ func NewFlowExecutionService(services *Services) FlowExecutionService {
 	}
 }
 
-func (s *flowExecutionService) GetFlowActionExecutionsForContact(ctx context.Context, flowId, contactId string) ([]*entity.FlowActionExecutionEntity, error) {
+func (s *flowExecutionService) GetFlowActionExecutions(ctx context.Context, flowId, entityId string) ([]*entity.FlowActionExecutionEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetForContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	//get executions for contact
-	nodes, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetByContact(ctx, flowId, contactId)
+	nodes, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetByContact(ctx, flowId, entityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -53,96 +55,89 @@ func (s *flowExecutionService) GetFlowActionExecutionsForContact(ctx context.Con
 	return entities, nil
 }
 
-func (s *flowExecutionService) ScheduleFlowForContact(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ScheduleFlowForContact")
+func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ScheduleFlow")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	flowExecutions, err := s.GetFlowActionExecutionsForContact(ctx, flowId, contactId)
+	now := utils.Now()
+
+	flowExecutions, err := s.GetFlowActionExecutions(ctx, flowId, entityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	var currentActionExecutionAt time.Time
-	var nextAction *entity.FlowActionEntity
-	nextActionDelay := 0 * time.Minute
-
 	if len(flowExecutions) == 0 {
-		currentActionExecutionAt = utils.Now()
-
-		actionList, err := s.services.FlowService.FlowActionGetList(ctx, []string{flowId})
+		startAction, err := s.services.FlowService.FlowActionGetStart(ctx, flowId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
-		if len(*actionList) > 0 {
-			nextAction = &(*actionList)[0]
+
+		nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, startAction.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
 		}
+
+		for _, nextAction := range nextActions {
+
+			scheduleAt := now.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
+
+			err := s.scheduleNextAction(ctx, tx, flowId, entityId, scheduleAt, *nextAction)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+		}
+
 	} else {
+		lastActionExecution := flowExecutions[len(flowExecutions)-1]
+		lastActionExecutedAt := *lastActionExecution.ExecutedAt
 
-		// Get the last executed action
-		currentActionExecution := flowExecutions[len(flowExecutions)-1]
-		currentActionExecutionAt = *currentActionExecution.ExecutedAt
-
-		currentFlowAction, err := s.services.FlowService.FlowActionGetById(ctx, currentActionExecution.ActionId)
+		lastAction, err := s.services.FlowService.FlowActionGetById(ctx, lastActionExecution.ActionId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		flowActionList, err := s.services.FlowService.FlowActionGetList(ctx, []string{flowId})
+		nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, lastAction.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
 		}
 
-		for i, action := range *flowActionList {
-			if action.Id == currentFlowAction.Id && i+1 < len(*flowActionList) {
-				// We found the next action, now handle it
+		for _, nextAction := range nextActions {
 
-				//TODO
-				//actionEntity := (*flowActionList)[i+1]
+			scheduleAt := lastActionExecutedAt.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
 
-				//if actionEntity.ActionType == entity.FlowActionTypeWait {
-				//	nextActionDelay += time.Duration(actionEntity.ActionData.Wait.Minutes) * time.Minute
-				//} else {
-				//	nextAction = &actionEntity
-				//	break
-				//}
+			err := s.scheduleNextAction(ctx, tx, flowId, entityId, scheduleAt, *nextAction)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
 			}
 		}
 	}
 
-	scheduleAt := currentActionExecutionAt.Add(nextActionDelay)
-	if nextAction != nil {
-		err := s.scheduleNextActionForContact(ctx, tx, flowId, contactId, scheduleAt, *nextAction)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
-
 	return nil
 }
 
-func (s *flowExecutionService) scheduleNextActionForContact(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleNextActionForContact")
+func (s *flowExecutionService) scheduleNextAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleNextAction")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	//switch nextAction.ActionType {
-	//case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
-	//	return s.ScheduleEmailAction(ctx, tx, flowId, contactId, scheduleAt, nextAction)
-	//default:
-	//	tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.ActionType))
-	//	return errors.New("Unsupported action type")
-	//}
-
-	return nil
+	switch nextAction.Data.Action {
+	case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
+		return s.ScheduleEmailAction(ctx, tx, flowId, entityId, scheduleAt, nextAction)
+	default:
+		tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.Data.Action))
+		return errors.New("Unsupported action type")
+	}
 }
 
-func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
+func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ScheduleEmailAction")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -150,7 +145,7 @@ func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4
 	tenant := common.GetTenantFromContext(ctx)
 
 	// 1. Get the mailbox for contact or associate the best available mailbox
-	flowExecutionSettings, err := s.getMailboxForContact(ctx, flowId, contactId)
+	flowExecutionSettings, err := s.getMailboxForContact(ctx, flowId, entityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -192,7 +187,7 @@ func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4
 		flowExecutionSettings = &entity.FlowExecutionSettingsEntity{
 			Id:       id,
 			FlowId:   flowId,
-			EntityId: contactId,
+			EntityId: entityId,
 			Mailbox:  fastestMailbox,
 		}
 
@@ -211,7 +206,7 @@ func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4
 		return err
 	}
 
-	err = s.StoreNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, contactId, flowExecutionSettings.Mailbox, *actualScheduleAt)
+	err = s.StoreNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, entityId, flowExecutionSettings.Mailbox, *actualScheduleAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

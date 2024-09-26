@@ -28,6 +28,16 @@ type Flow implements MetadataInterface {
 
     status: FlowStatus!
     contacts: [FlowContact!]! @goField(forceResolver: true)
+
+    statistics: FlowStatistics! @goField(forceResolver: true)
+}
+
+type FlowStatistics {
+    total: Int64!
+    scheduled: Int64!
+    inProgress: Int64!
+    paused: Int64!
+    completed: Int64!
 }
 
 input FlowMergeInput {
@@ -50,6 +60,11 @@ type FlowContact implements MetadataInterface {
     metadata:               Metadata!
 
     contact: Contact! @goField(forceResolver: true)
+
+    status: FlowContactStatus!
+
+    scheduledAction: String
+    scheduledAt: Time
 }
 
 #FlowActionSender
@@ -102,4 +117,11 @@ enum FlowActionStatus {
     ACTIVE
     PAUSED
     ARCHIVED
+}
+
+enum FlowContactStatus {
+    SCHEDULED
+    IN_PROGRESS
+    PAUSED
+    COMPLETED
 }
