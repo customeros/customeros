@@ -1,0 +1,84 @@
+name: customer-os-api
+
+on:
+  push:
+    branches: [ "otter" ]
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
+      - packages/server/events-processing-proto/**
+      - .github/workflows/test-common-module.yml
+  pull_request:
+    paths:
+      - packages/server/customer-os-common-module/**
+      - packages/server/customer-os-postgres-repository/**
+      - packages/server/customer-os-neo4j-repository/**
+      - packages/server/events-processing-proto/**
+      - .github/workflows/test-common-module.yml
+  release:
+    types: [ created, edited ]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+defaults:
+  run:
+    working-directory: ./packages/server/customer-os-common-module
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Go Cache
+        id: go-cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/go-build
+            ~/go/pkg/mod
+            ~/go/bin
+          key: ${{ runner.os }}-go-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-
+
+      - name: Build
+        if: steps.go-cache.outputs.cache-hit != 'true'
+        run: make all
+
+      - name: Configure Test Folders
+        id: test-folders
+        run: |
+          test_folders=$(go list ./... | grep -v /gen | grep -v /test | paste -sd "," -)
+          echo "{name}={test_folders}" >> $GITHUB_OUTPUT
+
+      - name: Test
+        run: gotestsum --junitfile unit-tests.xml -- -coverprofile=cover.out -coverpkg=${{ steps.test-folders.outputs.test_folders }} ./...
+
+      - name: Test Report
+        uses: mikepenz/action-junit-report@v4
+        if: always()    # run this step even if previous step failed
+        with:
+          report_paths: ./packages/server/customer-os-common-module/unit-tests.xml    # Path to test results
+          include_passed: true
+          annotate_only: true
+          detailed_summary: true
+
+      - name: Compute Code Coverage
+        id: compute_code_coverage
+        run: |
+          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "|Filename|Function|Coverage|" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|--------|" >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' >> $GITHUB_STEP_SUMMARY
+          go tool cover -func=cover.out | sed -r 's/[[:space:]]+/|/g' | sed -r 's/$/|/g' | sed -r 's/^/|/g' | tail -n 1 > test-coverage.txt
+          coverage=$(cat test-coverage.txt | awk -F'|' '{gsub(/%/, "", $(NF-1)); print $(NF-1)}')
+          echo "computed_coverage=$coverage" >> $GITHUB_OUTPUT
