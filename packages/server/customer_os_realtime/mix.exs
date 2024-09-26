@@ -48,8 +48,7 @@ defmodule CustomerOsRealtime.MixProject do
       {:credo, "~> 1.6", only: [:dev, :test], runtime: false},
       {:delta, "~> 0.2.0"},
       {:spear, "~> 1.4.0"},
-      {:castore, "~> 1.0"},
-      {:dotenv_parser, "~> 2.0"}
+      {:castore, "~> 1.0"}
     ]
   end
 

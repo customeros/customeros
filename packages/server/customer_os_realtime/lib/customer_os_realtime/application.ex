@@ -22,8 +22,10 @@ defmodule CustomerOsRealtime.Application do
       CustomerOsRealtime.StoreManager
     ]
 
+    env = Application.get_env(:customer_os_realtime, :app_env, :prod)
+
     children =
-      if Mix.env() != :test do
+      if env != :test do
         children ++
           [
             CustomerOsRealtime.EventStoreClient,
