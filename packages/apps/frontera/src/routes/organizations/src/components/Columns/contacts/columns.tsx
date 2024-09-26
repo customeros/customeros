@@ -537,7 +537,7 @@ const columns: Record<string, Column> = {
     maxSize: 600,
     enableResizing: true,
     cell: (_props) => {
-      return <div className='text-gray-400'>Unknown</div>;
+      return <div className='text-gray-400'>None</div>;
     },
     header: (props) => (
       <THead<HTMLInputElement>
