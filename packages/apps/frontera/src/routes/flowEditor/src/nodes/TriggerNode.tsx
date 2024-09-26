@@ -108,6 +108,7 @@ export const TriggerViewportPortal = observer(
                 }px)`,
                 position: 'absolute',
                 pointerEvents: 'all',
+                zIndex: 50000,
               }}
             >
               <DropdownCommandMenu />

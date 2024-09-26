@@ -108,6 +108,11 @@ export class FlowsStore implements GroupStore<Flow> {
       runInAction(() => {
         serverId = flow_Merge?.metadata.id;
         newFlow.setId(serverId);
+        newFlow.value = {
+          ...newFlow.value,
+          nodes: flow_Merge?.nodes,
+          edges: flow_Merge?.edges,
+        };
         this.value.set(serverId, newFlow);
         this.value.delete(tempId);
 
