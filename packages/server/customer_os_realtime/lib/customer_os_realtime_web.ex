@@ -56,6 +56,17 @@ defmodule CustomerOsRealtimeWeb do
     end
   end
 
+  def html do
+    quote do
+      import Phoenix.HTML
+      import Phoenix.HTML.Form
+
+      use Phoenix.Component
+
+      alias CustomerOsRealtimeWeb.Router.Helpers, as: Routes
+    end
+  end
+
   @doc """
   When used, dispatch to the appropriate controller/view/etc.
   """
