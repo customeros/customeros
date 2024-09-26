@@ -302,7 +302,7 @@ export class LinkedinAutomationService {
   > {
     const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
-      userAgent: this.userAgent,
+      userAgent: this.userAgent, // Optionally randomize user-agent if needed
     });
 
     await context.addCookies(this.cookies);
@@ -329,15 +329,76 @@ export class LinkedinAutomationService {
       let hasMoreResults = true;
       let lastScrollHeight = 0;
 
+      const getRandomDelay = (min: number, max: number) =>
+        Math.floor(Math.random() * (max - min + 1)) + min;
+
+      // Helper function to calculate a random scroll height within the browser's context
+      const getRandomScrollHeight = async () => {
+        return await page.evaluate(() => {
+          return (
+            Math.floor(Math.random() * window.innerHeight * 0.5) +
+            window.innerHeight * 0.5
+          );
+        });
+      };
+
+      const smoothScroll = async (
+        distance: number,
+        direction: "up" | "down"
+      ) => {
+        let scrolled = 0;
+        const step = distance / 30; // Divide the distance into smaller steps
+
+        while (scrolled < distance) {
+          await page.evaluate(
+            ({ scrollStep, direction }) => {
+              window.scrollBy(0, direction === "up" ? -scrollStep : scrollStep);
+            },
+            { scrollStep: step, direction }
+          );
+
+          scrolled += step;
+          await page.waitForTimeout(getRandomDelay(0, 200)); // Wait a bit between steps
+        }
+      };
+
       // Loop until we have collected all connections or no more results can be loaded
       while (hasMoreResults && results.length < totalConnections) {
-        // Scroll to the bottom of the page to load more results
-        await page.evaluate(() => {
-          window.scrollBy(0, window.innerHeight);
-        });
+        // Smooth scroll in the chosen direction by a random distance
+        const upDistance = await getRandomScrollHeight();
+        const downDistance = await getRandomScrollHeight();
+        const totalScrollHeight = await page.evaluate(
+          () => document.body.scrollHeight
+        );
+        await smoothScroll(downDistance, "down");
+        await page.waitForTimeout(getRandomDelay(1506, 5210));
+        await smoothScroll(upDistance, "up");
+        if (Math.random() > 0.8) {
+          await smoothScroll(upDistance, "up");
+          await page.waitForTimeout(getRandomDelay(1006, 2010));
+        }
+        if (Math.random() > 0.9) {
+          await smoothScroll(downDistance, "up");
+          if (Math.random() > 0.8) {
+            const x = Math.floor(Math.random() * 100) + 50; // Random x-axis position
+            const y = Math.floor(Math.random() * 100) + 50; // Random y-axis position
+            await page.mouse.move(x, y, { steps: 30 });
+            await page.waitForTimeout(getRandomDelay(1000, 3000)); // Random small pause
+          } else {
+            await page.waitForTimeout(getRandomDelay(1506, 5210));
+          }
+        }
+        await page.waitForTimeout(getRandomDelay(2506, 6210));
+        await smoothScroll(totalScrollHeight, "down");
+        await page.waitForTimeout(getRandomDelay(1506, 5431));
 
-        // Wait for a short period to allow more profiles to load
-        await page.waitForTimeout(5000);
+        // Randomly simulate user interaction, such as a click or mouse movement (not too frequently)
+        if (Math.random() > 0.8) {
+          const x = Math.floor(Math.random() * 100) + 50; // Random x-axis position
+          const y = Math.floor(Math.random() * 100) + 50; // Random y-axis position
+          await page.mouse.move(x, y, { steps: 30 });
+          await page.waitForTimeout(getRandomDelay(1000, 3000)); // Random small pause
+        }
 
         // Check if the "Show more results" button is visible, click if present
         const showMoreResultsButton = page.locator(
@@ -346,7 +407,7 @@ export class LinkedinAutomationService {
 
         if (await showMoreResultsButton.isVisible()) {
           await showMoreResultsButton.click();
-          await page.waitForTimeout(5000); // Give time for new results to load
+          await page.waitForTimeout(getRandomDelay(2120, 5300)); // Give time for new results to load
         }
 
         // Get newly loaded profile links
@@ -426,7 +487,10 @@ export class LinkedinAutomationService {
         const showMoreResultsButton = page.locator(
           'button:has-text("Show more results")'
         );
+
         if (await showMoreResultsButton.isVisible()) {
+          console.log("am gasit aici butonul.");
+
           await showMoreResultsButton.click();
           await page.waitForTimeout(5000); // Give time for new results to load
         }
