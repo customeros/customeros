@@ -673,7 +673,7 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
-				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, "techFindWorkEmailWithBetterContactRequestedAt", utils.NowPtr())
+				err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
 				if err != nil {
 					tracing.TraceErr(span, err)
 				}
@@ -912,15 +912,15 @@ func (s *contactService) EnrichContacts() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // Cancel context on exit
 
-	s.enrichContactsByEmail(ctx)
+	s.enrichContacts(ctx)
 }
 
-func (s *contactService) enrichContactsByEmail(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichContactsByEmail")
+func (s *contactService) enrichContacts(ctx context.Context) {
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichContacts")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 100
+	limit := 20
 
 	for {
 		select {
@@ -933,8 +933,8 @@ func (s *contactService) enrichContactsByEmail(ctx context.Context) {
 
 		minutesFromLastContactUpdate := 2
 		minutesFromLastContactEnrichAttempt := 1 * 24 * 60 // 1 day
-		minutesFromLastFailure := 7 * 24 * 60              // 7 days
-		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrichByEmail(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, minutesFromLastFailure, limit)
+		minutesFromLastFailure := 10 * 24 * 60             // 10 days
+		records, err := s.commonServices.Neo4jRepositories.ContactReadRepository.GetContactsToEnrich(ctx, minutesFromLastContactUpdate, minutesFromLastContactEnrichAttempt, minutesFromLastFailure, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting socials: %v", err)
@@ -963,6 +963,12 @@ func (s *contactService) enrichContactsByEmail(ctx context.Context) {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())
+			}
+			// increment enrich attempts
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichAttempts))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
 			}
 		}
 

@@ -18,6 +18,7 @@ const (
 	ContactPropertyFindWorkEmailWithBetterContactRequestedAt ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
 	ContactPropertyFindWorkEmailWithBetterContactCompletedAt ContactProperty = "techFindWorkEmailWithBetterContactCompletedAt"
 	ContactPropertyEnrichRequestedAt                         ContactProperty = "techEnrichRequestedAt"
+	ContactPropertyEnrichAttempts                            ContactProperty = "techEnrichAttempts"
 	ContactPropertyPrefix                                    ContactProperty = "prefix"
 	ContactPropertyName                                      ContactProperty = "name"
 	ContactPropertyFirstName                                 ContactProperty = "firstName"
@@ -71,6 +72,7 @@ type ContactEnrichDetails struct {
 	EnrichedAt                *time.Time
 	EnrichedFailedAt          *time.Time
 	EnrichedScrapinRecordId   string
+	EnrichAttempts            int64
 }
 
 type ContactEntities []ContactEntity
