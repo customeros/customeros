@@ -15,6 +15,18 @@ export const ChangeFlowStatus = observer(() => {
   const handleSelect = (flowStatus: FlowStatus) => () => {
     if (!context.ids?.[0]) return;
 
+    if (flowStatus === FlowStatus.Active) {
+      store.ui.commandMenu.setType('StartFlow');
+
+      return;
+    }
+
+    if (flowStatus === FlowStatus.Paused) {
+      store.ui.commandMenu.setType('StopFlow');
+
+      return;
+    }
+
     match(context.entity)
       .with('Flow', () => {
         entity?.update((value) => {

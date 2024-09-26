@@ -1,6 +1,5 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 
-import { Play } from '@ui/media/icons/Play.tsx';
 import { Button } from '@ui/form/Button/Button.tsx';
 // import { Users01 } from '@ui/media/icons/Users01.tsx';
 // import { PieChart03 } from '@ui/media/icons/PieChart03.tsx';
@@ -15,7 +14,11 @@ import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
 
+import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { User01 } from '@ui/media/icons/User01.tsx';
+
+import { FlowStatusMenu } from './components';
 
 import '@xyflow/react/dist/style.css';
 
@@ -26,6 +29,16 @@ export const Header = observer(() => {
   const { getEdges, getNodes } = useReactFlow();
 
   const flow = store.flows.value.get(id) as FlowStore;
+
+  useEffect(() => {
+    if (!store.ui.commandMenu.isOpen) {
+      store.ui.commandMenu.setType('FlowCommands');
+      store.ui.commandMenu.setContext({
+        entity: 'Flow',
+        ids: [id],
+      });
+    }
+  }, [store.ui.commandMenu.isOpen, id]);
 
   useUnmount(() => {
     const nodes = getNodes();
@@ -60,34 +73,26 @@ export const Header = observer(() => {
           </span>
           <ChevronRight className='size-4 mx-1 text-gray-500' />
           <span className='mr-2'>{flow?.value?.name || 'Unnamed'}</span>
-          {/*<Tag*/}
-          {/*  size='md'*/}
-          {/*  variant='outline'*/}
-          {/*  colorScheme='gray'*/}
-          {/*  onClick={() => {}}*/}
-          {/*  className='bg-transparent py-0.5 cursor-pointer text-gray-500'*/}
-          {/*>*/}
-          {/*  <TagLeftIcon>*/}
-          {/*    <Users01 />*/}
-          {/*  </TagLeftIcon>*/}
-          {/*  <TagLabel>4 contacts</TagLabel>*/}
-          {/*</Tag>*/}
+
+          <Button
+            size='xxs'
+            variant='outline'
+            colorScheme='gray'
+            onClick={handleSave}
+            leftIcon={<User01 />}
+            className='font-medium'
+          >
+            {flow?.value?.contacts?.length}
+          </Button>
         </div>
         <div className='flex gap-2'>
-          <Button
-            size='xs'
-            isDisabled
-            variant='outline'
-            leftIcon={<Play />}
-            colorScheme='primary'
-          >
-            Start flow
-          </Button>
+          <FlowStatusMenu id={id} />
           <Button
             size='xs'
             variant='outline'
             colorScheme='gray'
             onClick={handleSave}
+            leftIcon={<Check />}
           >
             Save
           </Button>

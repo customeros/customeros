@@ -10,5 +10,9 @@ export type FlowContactAddMutation = {
   flowContact_Add: {
     __typename?: 'FlowContact';
     metadata: { __typename?: 'Metadata'; id: string };
+    contact: {
+      __typename?: 'Contact';
+      metadata: { __typename?: 'Metadata'; id: string };
+    };
   };
 };

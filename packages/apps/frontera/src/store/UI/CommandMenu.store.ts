@@ -43,6 +43,8 @@ export type CommandMenuType =
   | 'ChangeFlowStatus'
   | 'FlowsBulkCommands'
   | 'FlowHub'
+  | 'StartFlow'
+  | 'StopFlow'
   | 'EditContactFlow'
   | 'UnlinkContactFromFlow'
   | 'ConfirmBulkFlowEdit'

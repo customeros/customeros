@@ -1,25 +1,15 @@
-import { useMemo, useState, ReactElement } from 'react';
+import { useState, ReactElement } from 'react';
 
 import { htmlToText } from 'html-to-text';
 import { FlowActionType } from '@store/Flows/types.ts';
 import { NodeProps, useReactFlow } from '@xyflow/react';
 
-import { Input } from '@ui/form/Input';
-import { Check } from '@ui/media/icons/Check';
-import { Button } from '@ui/form/Button/Button';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
-import { Editor } from '@ui/form/Editor/Editor.tsx';
 import { MailReply } from '@ui/media/icons/MailReply';
-import {
-  Modal,
-  ModalPortal,
-  ModalContent,
-  ModalOverlay,
-} from '@ui/overlay/Modal';
 
-import { Handle } from '../components';
+import { Handle, EmailEditorModal } from '../components';
 
 const iconMap: Record<string, ReactElement> = {
   [FlowActionType.EMAIL_NEW]: <Mail01 className='text-inherit' />,
@@ -45,14 +35,13 @@ export const ActionNode = ({
   const { setNodes } = useReactFlow();
 
   const color = colorMap?.[data.action];
-  const placeholder = useMemo(() => getRandomEmailPrompt(), []);
 
   const handleEmailDataChange = ({
-    newValue,
-    property,
+    subject,
+    bodyTemplate,
   }: {
-    newValue: string;
-    property: 'subject' | 'bodyTemplate';
+    subject: string;
+    bodyTemplate: string;
   }) => {
     setNodes((nds) =>
       nds.map((node) => {
@@ -61,7 +50,8 @@ export const ActionNode = ({
             ...node,
             data: {
               ...node.data,
-              [property]: newValue,
+              subject,
+              bodyTemplate,
             },
           };
         }
@@ -110,84 +100,15 @@ export const ActionNode = ({
             className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
           />
         </div>
-        <Modal open={isEditorOpen} onOpenChange={setIsEditorOpen}>
-          <ModalPortal>
-            <ModalOverlay className='z-50'>
-              <ModalContent className='w-full h-full flex justify-center max-w-full top-0'>
-                <div className='w-[570px]'>
-                  <div className='flex justify-between mt-4'>
-                    <div className=''></div>
-                    <Button
-                      variant='ghost'
-                      leftIcon={<Check />}
-                      onClick={() => setIsEditorOpen(false)}
-                    >
-                      Done
-                    </Button>
-                  </div>
-
-                  <Input
-                    size='lg'
-                    variant='unstyled'
-                    placeholder='Subject'
-                    className='font-medium'
-                    value={data?.subject ?? ''}
-                    onChange={(e) =>
-                      handleEmailDataChange({
-                        newValue: e.target.value,
-                        property: 'subject',
-                      })
-                    }
-                  />
-
-                  <Editor
-                    placeholder={placeholder}
-                    className='mb-10 text-base'
-                    dataTest='flow-email-editor'
-                    namespace='flow-email-editor'
-                    defaultHtmlValue={
-                      (data?.bodyTemplate as string) ?? undefined
-                    }
-                    onChange={(e) => {
-                      handleEmailDataChange({
-                        newValue: e,
-                        property: 'bodyTemplate',
-                      });
-                    }}
-                  ></Editor>
-                </div>
-              </ModalContent>
-            </ModalOverlay>
-          </ModalPortal>
-        </Modal>
+        <EmailEditorModal
+          data={data}
+          isEditorOpen={isEditorOpen}
+          setIsEditorOpen={setIsEditorOpen}
+          handleEmailDataChange={handleEmailDataChange}
+        />
         <Handle type='target' />
         <Handle type='source' />
       </div>
     </>
   );
 };
-
-const emailPrompts = [
-  "Write something they'll want to share with their boss",
-  'Craft an email that makes them say "Wow!"',
-  "Compose an email they'll quote in their presentation",
-  "Make them feel like they've discovered hidden treasure",
-  'Write an email that makes them rethink their strategy',
-  "Write something they can't get from a Google search",
-  'Compose the email that ends their decision paralysis',
-  "Write an email they can't ignore",
-  'Turn this blank canvas into a sales masterpiece',
-  'Write something that makes them feel stupid for not replying',
-  'Write something that makes them say, "Yes, this is what we need!"',
-  "Show them what they're missing—start typing...",
-  'Type an email that helps them win',
-  "Write something they'll remember",
-  'Make your email impossible to ignore',
-  'Start an email that stands out',
-];
-
-function getRandomEmailPrompt(): string {
-  const randomIndex = Math.floor(Math.random() * emailPrompts.length);
-
-  return emailPrompts[randomIndex];
-}

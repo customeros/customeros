@@ -3,5 +3,10 @@ mutation flowContactAdd($flowId: ID!, $contactId: ID!) {
     metadata {
       id
     }
+    contact {
+      metadata {
+          id
+      }
+    }
   }
 }
