@@ -1,5 +1,6 @@
 import { useMemo, useState, ReactElement } from 'react';
 
+import { htmlToText } from 'html-to-text';
 import { FlowActionType } from '@store/Flows/types.ts';
 import { NodeProps, useReactFlow } from '@xyflow/react';
 
@@ -11,7 +12,6 @@ import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { Editor } from '@ui/form/Editor/Editor.tsx';
 import { MailReply } from '@ui/media/icons/MailReply';
-import { Hourglass01 } from '@ui/media/icons/Hourglass01';
 import {
   Modal,
   ModalPortal,
@@ -24,19 +24,23 @@ import { Handle } from '../components';
 const iconMap: Record<string, ReactElement> = {
   [FlowActionType.EMAIL_NEW]: <Mail01 className='text-inherit' />,
   [FlowActionType.EMAIL_REPLY]: <MailReply className='text-inherit' />,
-  WAIT: <Hourglass01 className='text-inherit' />,
 };
 
 const colorMap: Record<string, string> = {
   [FlowActionType.EMAIL_NEW]: 'blue',
   [FlowActionType.EMAIL_REPLY]: 'blue',
-  WAIT: 'gray',
 };
 
 export const ActionNode = ({
   id,
   data,
-}: NodeProps & { data: Record<string, string | number> }) => {
+}: NodeProps & {
+  data: {
+    subject: string;
+    bodyTemplate: string;
+    action: FlowActionType;
+  };
+}) => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const { setNodes } = useReactFlow();
 
@@ -67,6 +71,10 @@ export const ActionNode = ({
     );
   };
 
+  const getBodyTemplate = () => {
+    return htmlToText(data?.bodyTemplate);
+  };
+
   return (
     <>
       <div
@@ -84,7 +92,7 @@ export const ActionNode = ({
               {data.subject ? (
                 data.subject
               ) : data.bodyTemplate ? (
-                data.bodyTemplate
+                getBodyTemplate()
               ) : (
                 <span className='text-gray-400 font-normal'>
                   Write an email that wows them
@@ -137,6 +145,9 @@ export const ActionNode = ({
                     className='mb-10 text-base'
                     dataTest='flow-email-editor'
                     namespace='flow-email-editor'
+                    defaultHtmlValue={
+                      (data?.bodyTemplate as string) ?? undefined
+                    }
                     onChange={(e) => {
                       handleEmailDataChange({
                         newValue: e,
