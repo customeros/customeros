@@ -8,12 +8,12 @@ export class LinkedinService {
 
   constructor(
     private browserConfig: BrowserConfig,
-    private proxyHeader: string,
+    private proxyHeader: string
   ) {
     this.linkedinAutomationService = new LinkedinAutomationService(
       JSON.parse(this.browserConfig.cookies ?? "{}"),
       this.browserConfig.userAgent as string,
-      this.proxyHeader,
+      this.proxyHeader
     );
   }
 
@@ -32,7 +32,7 @@ export class LinkedinService {
       await this.linkedinAutomationService.sendConenctionInvite(
         profileUrl,
         message,
-        { dryRun },
+        { dryRun }
       );
 
       logger.info("Connection invite sent.", {
@@ -47,15 +47,13 @@ export class LinkedinService {
     }
   }
 
-  async scrapeConnections(payload?: { lastPageVisited?: number }) {
+  async scrapeConnections() {
     try {
       logger.info("Scraping connections...", {
         source: "LinkedinService",
       });
 
-      const result = await this.linkedinAutomationService.getConnections(
-        payload?.lastPageVisited,
-      );
+      const result = await this.linkedinAutomationService.getConnectionsNew();
 
       logger.info("Connections scraped.", {
         source: "LinkedinService",
@@ -63,6 +61,33 @@ export class LinkedinService {
       return result;
     } catch (err) {
       logger.info("Failed to scrape connections", {
+        source: "LinkedinService",
+      });
+      throw LinkedinService.handleError(err);
+    }
+  }
+
+  async scrapeCompanyPeople(payload: unknown) {
+    const { companyName, dryRun } = payload as {
+      companyName: string;
+      dryRun?: boolean;
+    };
+
+    try {
+      logger.info("Scraping company people...", {
+        source: "LinkedinService",
+      });
+
+      const result = await this.linkedinAutomationService.getCompanyPeople(
+        companyName
+      );
+
+      logger.info("Company people scraped.", {
+        source: "LinkedinService",
+      });
+      return result;
+    } catch (err) {
+      logger.info("Failed to scrape company people", {
         source: "LinkedinService",
       });
       throw LinkedinService.handleError(err);
@@ -84,7 +109,7 @@ export class LinkedinService {
       await this.linkedinAutomationService.sendMessageToConnection(
         profileUrl,
         message,
-        { dryRun },
+        { dryRun }
       );
 
       logger.info("Message sent", {

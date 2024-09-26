@@ -6,16 +6,16 @@ import { ErrorParser } from "@/util/error";
 import { BrowserAutomationRunService } from "@/application/services/browser-automation-run-service";
 import { BrowserAutomationRunsRepository } from "@/infrastructure/persistance/postgresql/repositories";
 
-export class ConnectionsController {
+export class CompanyController {
   private browserAutomationRunService = new BrowserAutomationRunService(
-    new BrowserAutomationRunsRepository()
+    new BrowserAutomationRunsRepository(),
   );
 
   constructor() {
-    this.scrapeConnections = this.scrapeConnections.bind(this);
+    this.scrapeCompanyPeople = this.scrapeCompanyPeople.bind(this);
   }
 
-  async scrapeConnections(req: Request, res: Response) {
+  async scrapeCompanyPeople(req: Request, res: Response) {
     const validationErrors = validationResult(req);
 
     if (!validationErrors.isEmpty()) {
@@ -38,10 +38,10 @@ export class ConnectionsController {
         {
           browserConfigId: res.locals.browserConfig.id,
           tenant: res.locals.tenantName,
-          type: "FIND_CONNECTIONS",
+          type: "FIND_COMPANY_PEOPLE",
           userId: res.locals.user.id,
           payload: JSON.stringify(req.body),
-        }
+        },
       );
 
       res.send({
@@ -51,14 +51,14 @@ export class ConnectionsController {
       });
     } catch (err) {
       const error = ErrorParser.parse(err);
-      logger.error("Error in ConnectController", {
+      logger.error("Error in CompanyController", {
         error: error.message,
         details: error.details,
-        source: "ConnectionsController",
+        source: "CompanyController",
       });
       res.status(500).send({
         success: false,
-        message: "Failed to get connections",
+        message: "Failed to get company people",
         error: error.message,
       });
     }

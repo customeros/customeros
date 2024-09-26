@@ -297,6 +297,177 @@ export class LinkedinAutomationService {
     }
   }
 
+  async getConnectionsNew(): Promise<
+    [results: string[], error: StandardError | null]
+  > {
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
+    const context = await browser.newContext({
+      userAgent: this.userAgent,
+    });
+
+    await context.addCookies(this.cookies);
+    const page = await context.newPage();
+
+    let results: string[] = [];
+    let error: StandardError | null = null;
+
+    try {
+      await page.goto(
+        `https://www.linkedin.com/mynetwork/invite-connect/connections/`,
+        { timeout: 60 * 1000 }
+      );
+
+      const totalConnectionsText = await page
+        .locator("header.mn-connections__header")
+        .innerText();
+
+      const totalConnections = parseInt(
+        totalConnectionsText.split(" ")?.[0],
+        10
+      );
+
+      let hasMoreResults = true;
+      let lastScrollHeight = 0;
+
+      // Loop until we have collected all connections or no more results can be loaded
+      while (hasMoreResults && results.length < totalConnections) {
+        // Scroll to the bottom of the page to load more results
+        await page.evaluate(() => {
+          window.scrollBy(0, window.innerHeight);
+        });
+
+        // Wait for a short period to allow more profiles to load
+        await page.waitForTimeout(5000);
+
+        // Check if the "Show more results" button is visible, click if present
+        const showMoreResultsButton = page.locator(
+          'button:has-text("Show more results")'
+        );
+
+        if (await showMoreResultsButton.isVisible()) {
+          await showMoreResultsButton.click();
+          await page.waitForTimeout(5000); // Give time for new results to load
+        }
+
+        // Get newly loaded profile links
+        const newProfileUrls = await page
+          .locator("a.mn-connection-card__link")
+          .evaluateAll((links) => {
+            return links.map((link) => {
+              const url = link.getAttribute("href")?.split("?")?.[0] ?? "";
+              return `https://www.linkedin.com${url}`;
+            });
+          });
+
+        // Add new profile URLs to the list, avoiding duplicates
+        results.push(...newProfileUrls.filter((url) => !results.includes(url)));
+
+        // If we've collected all profiles, stop scrolling
+        if (results.length >= totalConnections) {
+          hasMoreResults = false;
+          break;
+        }
+
+        // Alternatively, check if we can scroll more, if not, stop.
+        const currentScrollHeight = await page.evaluate(
+          () => document.body.scrollHeight
+        );
+        if (currentScrollHeight === lastScrollHeight) {
+          hasMoreResults = false;
+        } else {
+          lastScrollHeight = currentScrollHeight;
+        }
+      }
+    } catch (err) {
+      error = LinkedinAutomationService.handleError(err);
+    } finally {
+      await page.close();
+      return [results, error];
+    }
+  }
+
+  async getCompanyPeople(companyName: string) {
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
+    const context = await browser.newContext({
+      userAgent: this.userAgent,
+    });
+
+    await context.addCookies(this.cookies);
+    const page = await context.newPage();
+
+    try {
+      await page.goto(
+        `https://www.linkedin.com/company/${companyName}/people/`,
+        { timeout: 60 * 1000 }
+      );
+
+      const totalContactsText = await page
+        .locator("h2.text-heading-xlarge")
+        .first()
+        .innerText();
+
+      const totalContacts = parseInt(totalContactsText.replace(/\D/g, ""), 10);
+
+      const profileUrls: string[] = [];
+      let hasMoreResults = true;
+      let lastScrollHeight = 0;
+
+      // Loop until we have collected all contacts or no more results can be loaded
+      while (hasMoreResults && profileUrls.length < totalContacts) {
+        // Scroll to the bottom of the page to load more results
+        await page.evaluate(() => {
+          window.scrollBy(0, window.innerHeight);
+        });
+
+        // Wait for a short period to allow more profiles to load
+        await page.waitForTimeout(5000);
+
+        // Check if the "Show more results" button is visible, click if present
+        const showMoreResultsButton = page.locator(
+          'button:has-text("Show more results")'
+        );
+        if (await showMoreResultsButton.isVisible()) {
+          await showMoreResultsButton.click();
+          await page.waitForTimeout(5000); // Give time for new results to load
+        }
+
+        // Get newly loaded profile links
+        const newProfileUrls = await page
+          .locator('a.app-aware-link[aria-label*="View"][href*="/in/"]')
+          .evaluateAll((links) => {
+            return links.map(
+              (link) => link.getAttribute("href")?.split("?")?.[0] ?? ""
+            );
+          });
+
+        // Add new profile URLs to the list, avoiding duplicates
+        profileUrls.push(
+          ...newProfileUrls.filter((url) => !profileUrls.includes(url))
+        );
+
+        // If we've collected all profiles, stop scrolling
+        if (profileUrls.length >= totalContacts) {
+          hasMoreResults = false;
+          break;
+        }
+
+        // Alternatively, check if we can scroll more, if not, stop.
+        const currentScrollHeight = await page.evaluate(
+          () => document.body.scrollHeight
+        );
+        if (currentScrollHeight === lastScrollHeight) {
+          hasMoreResults = false;
+        } else {
+          lastScrollHeight = currentScrollHeight;
+        }
+      }
+
+      return profileUrls;
+    } catch (err) {
+      LinkedinAutomationService.handleError(err);
+    }
+  }
+
   private static handleError(err: unknown): StandardError {
     const error = ErrorParser.parse(err);
 

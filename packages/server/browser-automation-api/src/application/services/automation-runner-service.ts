@@ -16,33 +16,34 @@ export class AutomationRunnerService {
     private runsRepository: BrowserAutomationRunsRepository,
     private resultsRepository: BrowserAutomationRunResultsRepository,
     private errorsRepository: BrowserAutomationRunErrorsRepository,
-    private configRepository: BrowserConfigsRepository,
+    private configRepository: BrowserConfigsRepository
   ) {}
 
   async runAutomation(browserAutomationRun: BrowserAutomationRun) {
     try {
-      const linkedinService =
-        await this.linkedinServiceFactory.createForRun(browserAutomationRun);
+      const linkedinService = await this.linkedinServiceFactory.createForRun(
+        browserAutomationRun
+      );
 
       browserAutomationRun.start();
       await this.runsRepository.updateById(browserAutomationRun.toDTO());
 
       let result;
       let errorValue;
-      let retryPayload;
 
       const payload = BrowserAutomationRun.parsePayload(
-        browserAutomationRun.payload,
+        browserAutomationRun.payload
       );
 
       switch (browserAutomationRun.type) {
         case "FIND_CONNECTIONS":
-          const [res, err, lastPageVisited] =
-            await linkedinService.scrapeConnections(payload);
+          const [res, err] = await linkedinService.scrapeConnections();
           result = res;
           errorValue = err;
-          retryPayload = lastPageVisited;
 
+          break;
+        case "FIND_COMPANY_PEOPLE":
+          result = await linkedinService.scrapeCompanyPeople(payload);
           break;
         case "SEND_CONNECTION_REQUEST":
           result = await linkedinService.sendInvite(payload);
@@ -59,7 +60,7 @@ export class AutomationRunnerService {
       }
 
       if (errorValue) {
-        browserAutomationRun.retry({ lastPageVisited: retryPayload });
+        browserAutomationRun.retry();
 
         await this.errorsRepository.insert({
           runId: browserAutomationRun.id,
