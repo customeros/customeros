@@ -23,6 +23,12 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 		Nodes:  entity.Nodes,
 		Edges:  entity.Edges,
 		Status: entity.Status,
+		Statistics: &model.FlowStatistics{
+			Total:        entity.Total,
+			Pending:      entity.Pending,
+			Completed:    entity.Completed,
+			GoalAchieved: entity.GoalAchieved,
+		},
 	}
 }
 
@@ -38,7 +44,6 @@ func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowCo
 	if entity == nil {
 		return nil
 	}
-	action := "Email 1"
 	return &model.FlowContact{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
@@ -48,9 +53,9 @@ func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowCo
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Status:          "WIP",
-		ScheduledAction: &action,
-		ScheduledAt:     utils.NowPtr(),
+		Status:          entity.Status,
+		ScheduledAction: entity.ScheduledAction,
+		ScheduledAt:     entity.ScheduledAt,
 	}
 }
 

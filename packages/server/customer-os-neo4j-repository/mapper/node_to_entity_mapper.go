@@ -1155,13 +1155,17 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	domain := entity.FlowEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Name:      utils.GetStringPropOrEmpty(props, "name"),
-		Nodes:     utils.GetStringPropOrEmpty(props, "nodes"),
-		Edges:     utils.GetStringPropOrEmpty(props, "edges"),
-		Status:    entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Id:           utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:    utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:    utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		Name:         utils.GetStringPropOrEmpty(props, "name"),
+		Nodes:        utils.GetStringPropOrEmpty(props, "nodes"),
+		Edges:        utils.GetStringPropOrEmpty(props, "edges"),
+		Status:       entity.GetFlowStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Total:        utils.GetInt64PropOrZero(props, "total"),
+		Pending:      utils.GetInt64PropOrZero(props, "pending"),
+		Completed:    utils.GetInt64PropOrZero(props, "completed"),
+		GoalAchieved: utils.GetInt64PropOrZero(props, "goalAchieved"),
 	}
 	return &domain
 }
@@ -1176,6 +1180,7 @@ func MapDbNodeToFlowContactEntity(node *dbtype.Node) *entity.FlowContactEntity {
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		ContactId: utils.GetStringPropOrEmpty(props, "contactId"),
+		Status:    entity.GetFlowContactStatus(utils.GetStringPropOrEmpty(props, "status")),
 	}
 	return &e
 }

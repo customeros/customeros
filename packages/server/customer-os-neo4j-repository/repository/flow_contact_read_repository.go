@@ -4,16 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type FlowContactReadRepository interface {
 	GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error)
+	CountWithStatus(ctx context.Context, flowId string, status entity.FlowContactStatus) (int64, error)
 	Identify(ctx context.Context, flowId, contactId string) (*neo4j.Node, error)
 	GetById(ctx context.Context, id string) (*neo4j.Node, error)
 }
@@ -71,6 +74,40 @@ func (r flowContactReadRepositoryImpl) GetList(ctx context.Context, flowIds []st
 		return nil, nil
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r flowContactReadRepositoryImpl) CountWithStatus(ctx context.Context, flowId string, status entity.FlowContactStatus) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowContactReadRepository.CountWithStatus")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fc:FlowContact_%s {status: $status}) return count(fc)`, tenant, tenant)
+	params := map[string]any{
+		"tenant": tenant,
+		"flowId": flowId,
+		"status": status,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	dbRecord, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return queryResult.Single(ctx)
+		}
+	})
+	if err != nil {
+		return 0, err
+	}
+	organizationsCount := dbRecord.(*db.Record).Values[0].(int64)
+	span.LogFields(log.Int64("result", organizationsCount))
+	return organizationsCount, nil
 }
 
 func (r flowContactReadRepositoryImpl) Identify(ctx context.Context, flowId, contactId string) (*neo4j.Node, error) {

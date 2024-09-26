@@ -29,15 +29,14 @@ type Flow implements MetadataInterface {
     status: FlowStatus!
     contacts: [FlowContact!]! @goField(forceResolver: true)
 
-    statistics: FlowStatistics! @goField(forceResolver: true)
+    statistics: FlowStatistics!
 }
 
 type FlowStatistics {
     total: Int64!
-    scheduled: Int64!
-    inProgress: Int64!
-    paused: Int64!
+    pending: Int64!
     completed: Int64!
+    goalAchieved: Int64!
 }
 
 input FlowMergeInput {

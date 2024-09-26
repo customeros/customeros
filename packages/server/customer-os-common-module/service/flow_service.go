@@ -668,6 +668,7 @@ func (s *flowService) FlowContactAdd(ctx context.Context, flowId, contactId stri
 
 		toStore := neo4jentity.FlowContactEntity{
 			ContactId: contactId,
+			Status:    neo4jentity.FlowContactStatusPending,
 		}
 		toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, common.GetTenantFromContext(ctx), model.NodeLabelFlowContact)
 		if err != nil {

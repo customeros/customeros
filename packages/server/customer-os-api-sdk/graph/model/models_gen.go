@@ -1196,11 +1196,10 @@ type FlowMergeInput struct {
 }
 
 type FlowStatistics struct {
-	Total      int64 `json:"total"`
-	Scheduled  int64 `json:"scheduled"`
-	InProgress int64 `json:"inProgress"`
-	Paused     int64 `json:"paused"`
-	Completed  int64 `json:"completed"`
+	Total        int64 `json:"total"`
+	Pending      int64 `json:"pending"`
+	Completed    int64 `json:"completed"`
+	GoalAchieved int64 `json:"goalAchieved"`
 }
 
 type GCliAttributeKeyValuePair struct {
