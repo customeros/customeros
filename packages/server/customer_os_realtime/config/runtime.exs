@@ -7,10 +7,6 @@ import Config
 # any compile-time configuration in here, as it won't be applied.
 # The block below contains prod specific runtime configuration.
 
-if Config.config_env() == :dev do
-  DotenvParser.load_file(".env")
-end
-
 # ## Using releases
 #
 # If you use `mix release`, you need to explicitly enable the server
@@ -22,6 +18,17 @@ end
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
   config :customer_os_realtime, CustomerOsRealtimeWeb.Endpoint, server: true
+end
+
+if config_env() == :dev do
+  ".env"
+  |> File.stream!()
+  |> Stream.map(&String.trim/1)
+  |> Stream.filter(&(&1 != "" && !String.starts_with?(&1, "#")))
+  |> Enum.each(fn line ->
+    [key, value] = String.split(line, "=", parts: 2)
+    System.put_env(key, value)
+  end)
 end
 
 if config_env() == :prod do
