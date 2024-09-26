@@ -78,6 +78,26 @@ export class FlowsStore implements GroupStore<Flow> {
 
   async invalidate() {
     this.isLoading = true;
+
+    try {
+      const { flows } = await this.service.getFlows();
+
+      runInAction(() => {
+        this.load(flows);
+      });
+      runInAction(() => {
+        this.isBootstrapped = true;
+        this.totalElements = flows.length;
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      runInAction(() => {
+        this.isLoading = false;
+      });
+    }
   }
 
   async create(

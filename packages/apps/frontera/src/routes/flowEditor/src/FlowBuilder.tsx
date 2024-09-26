@@ -26,7 +26,7 @@ const edgeTypes = {
   baseEdge: BasicEdge,
 };
 
-export const MarketingFlowBuilder = observer(() => {
+export const FlowBuilder = observer(() => {
   const store = useStore();
   const id = useParams().id as string;
 

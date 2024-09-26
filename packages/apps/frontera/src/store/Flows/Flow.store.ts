@@ -13,7 +13,14 @@ import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
 import { FlowNodeType, FlowActionType } from '@store/Flows/types.ts';
 
-import { Flow, DataSource, FlowStatus } from '@graphql/types';
+import { uuidv4 } from '@utils/generateUuid.ts';
+import {
+  Flow,
+  Contact,
+  DataSource,
+  FlowStatus,
+  FlowContact,
+} from '@graphql/types';
 
 export class FlowStore implements Store<Flow> {
   value: Flow = getDefaultValue();
@@ -58,14 +65,7 @@ export class FlowStore implements Store<Flow> {
         });
       })
       .with(['name', ...P.array()], () => {
-        this.service.mergeFlow({
-          input: {
-            id: this.id,
-            name: this.value.name,
-            nodes: JSON.stringify(this.value.nodes),
-            edges: JSON.stringify(this.value.edges),
-          },
-        });
+        this.updateFlow({ nodes: this.value.nodes, edges: this.value.edges });
       });
   }
 
@@ -75,7 +75,7 @@ export class FlowStore implements Store<Flow> {
     } catch (error) {
       console.error('Error parsing nodes:', error);
 
-      return initialNodes; // Return an initial array as a fallback
+      return initialNodes;
     }
   }
 
@@ -85,7 +85,7 @@ export class FlowStore implements Store<Flow> {
     } catch (error) {
       console.error('Error parsing edges:', error);
 
-      return initialEdges; // Return an initial array as a fallback
+      return initialEdges;
     }
   }
 
@@ -105,10 +105,6 @@ export class FlowStore implements Store<Flow> {
       runInAction(() => {
         this.value.nodes = flow_Merge?.nodes ?? '[]';
         this.value.edges = flow_Merge?.edges ?? '[]';
-        this.root.ui.toastSuccess(
-          'Flow updated successfully',
-          'update-flow-success',
-        );
       });
     } catch (e) {
       runInAction(() => {
@@ -152,7 +148,7 @@ export class FlowStore implements Store<Flow> {
         await contactStore.deleteFlowContact();
       }
 
-      await this.service.addContact({
+      const { flowContact_Add } = await this.service.addContact({
         contactId,
         flowId: this.id,
       });
@@ -166,6 +162,31 @@ export class FlowStore implements Store<Flow> {
           },
           { mutate: false },
         );
+
+        this.value.contacts = [
+          ...this.value.contacts,
+          {
+            metadata: {
+              id: flowContact_Add?.metadata?.id,
+              source: DataSource.Openline,
+              appSource: DataSource.Openline,
+              created: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+              sourceOfTruth: DataSource.Openline,
+            },
+            contact: {
+              id: contactId,
+              metadata: {
+                id: contactId,
+                source: DataSource.Openline,
+                appSource: DataSource.Openline,
+                created: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+                sourceOfTruth: DataSource.Openline,
+              },
+            } as Contact,
+          },
+        ];
         this.root.ui.toastSuccess(
           `Contact added to '${this.value.name}'`,
           'link-contact-to-flows-success',
@@ -217,11 +238,38 @@ export class FlowStore implements Store<Flow> {
 
           return e;
         });
+
+        this.value.contacts = [
+          ...this.value.contacts,
+          ...(contactStores || []).map((cs) => ({
+            metadata: {
+              id: uuidv4(),
+              source: DataSource.Openline,
+              appSource: DataSource.Openline,
+              created: new Date().toISOString(),
+              lastUpdated: new Date().toISOString(),
+              sourceOfTruth: DataSource.Openline,
+            },
+            contact: {
+              id: cs?.id,
+              metadata: {
+                id: cs?.id,
+                source: DataSource.Openline,
+                appSource: DataSource.Openline,
+                created: new Date().toISOString(),
+                lastUpdated: new Date().toISOString(),
+                sourceOfTruth: DataSource.Openline,
+              },
+            },
+          })),
+        ] as FlowContact[];
+
         this.root.ui.toastSuccess(
           `${contactIds.length} contacts added to '${this.value.name}'`,
           'link-contacts-to-flows-success',
         );
         this.root.contacts.sync({ action: 'INVALIDATE', ids: contactIds });
+        this.root.flows.sync({ action: 'INVALIDATE', ids: [this.id] });
       });
     } catch (e) {
       runInAction(() => {
