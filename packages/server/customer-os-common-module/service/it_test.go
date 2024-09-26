@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
@@ -49,6 +50,15 @@ func prepareClient() {
 	appLogger.InitLogger()
 
 	CommonServices = InitServices(&config.GlobalConfig{}, postgresGormDB, driver, "neo4j", nil)
+}
+
+func initContext() context.Context {
+	ctx := context.Background()
+
+	customCtx := &common.CustomContext{}
+	customCtx.Tenant = tenantName
+
+	return common.WithCustomContext(ctx, customCtx)
 }
 
 func tearDownTestCase(ctx context.Context) func(tb testing.TB) {
