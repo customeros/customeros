@@ -14,7 +14,7 @@ import (
 )
 
 type FlowActionWriteRepository interface {
-	Merge(ctx context.Context, entity *entity.FlowActionEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowActionEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, id string) error
 }
 
@@ -27,7 +27,7 @@ func NewFlowActionWriteRepository(driver *neo4j.DriverWithContext, database stri
 	return &flowActionWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, input *entity.FlowActionEntity) (*dbtype.Node, error) {
+func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, input *entity.FlowActionEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -113,18 +113,31 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, input *entity
 	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 	defer session.Close(ctx)
 
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	})
-	if err != nil {
-		return nil, err
-	}
+	if tx == nil {
+		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+		defer session.Close(ctx)
 
-	return result.(*dbtype.Node), nil
+		queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			qr, err := tx.Run(ctx, cypher, params)
+			if err != nil {
+				return nil, err
+			}
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return queryResult.(*neo4j.Node), nil
+	} else {
+		queryResult, err := (*tx).Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}
 }
 
 func (r *flowActionWriteRepositoryImpl) Delete(ctx context.Context, id string) error {

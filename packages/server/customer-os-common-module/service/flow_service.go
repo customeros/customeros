@@ -156,51 +156,18 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	toStore := &neo4jentity.FlowEntity{}
-	var err error
-
 	tenant := common.GetTenantFromContext(ctx)
-
-	if input.Id == "" {
-		toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlow)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		toStore.Status = neo4jentity.FlowStatusInactive
-	} else {
-		toStore, err = s.FlowGetById(ctx, input.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		if toStore == nil {
-			tracing.TraceErr(span, errors.New("flow not found"))
-			return nil, errors.New("flow not found")
-		}
-	}
-
-	toStore.Name = input.Name
-	toStore.Nodes = input.Nodes
-	toStore.Edges = input.Edges
-
-	_, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, toStore)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	var err error
 
 	//unmarshal the Nodes and Edges
 	var nodesMap []map[string]interface{}
-	err = json.Unmarshal([]byte(toStore.Nodes), &nodesMap)
+	err = json.Unmarshal([]byte(input.Nodes), &nodesMap)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	var edgesMap []map[string]interface{}
-	err = json.Unmarshal([]byte(toStore.Edges), &edgesMap)
+	err = json.Unmarshal([]byte(input.Edges), &edgesMap)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -212,136 +179,181 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 		visited: make(map[string]bool),
 	}
 
-	//populate the nodes
-	if nodesMap != nil && len(nodesMap) > 0 {
-		for _, v := range nodesMap {
+	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
+	defer session.Close(ctx)
 
-			e := neo4jentity.FlowActionEntity{}
+	flowEntity, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-			if v["internalId"] != nil {
-				e.Id = v["internalId"].(string)
+		toStore := &neo4jentity.FlowEntity{}
+
+		if input.Id == "" {
+			toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlow)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
 			}
 
-			if v["id"] != nil {
-				e.ExternalId = v["id"].(string)
+			toStore.Status = neo4jentity.FlowStatusInactive
+		} else {
+			toStore, err = s.FlowGetById(ctx, input.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
 			}
 
-			if v["type"] != nil {
-				e.Type = v["type"].(string)
+			if toStore == nil {
+				tracing.TraceErr(span, errors.New("flow not found"))
+				return nil, errors.New("flow not found")
 			}
+		}
 
-			if v["data"] != nil {
+		toStore.Name = input.Name
+		toStore.Nodes = input.Nodes
+		toStore.Edges = input.Edges
 
-				for k, v2 := range v["data"].(map[string]interface{}) {
-					if v2 != nil {
-						if k == "action" {
-							e.Data.Action = neo4jentity.GetFlowActionType(v2.(string))
-						} else if k == "waitBefore" {
-							e.Data.WaitBefore = int64(v2.(float64))
-						} else if k == "subject" {
-							t := v2.(string)
-							e.Data.Subject = &t
-						} else if k == "bodyTemplate" {
-							t := v2.(string)
-							e.Data.BodyTemplate = &t
-						} else if k == "messageTemplate" {
-							t := v2.(string)
-							e.Data.MessageTemplate = &t
-						}
-					}
+		_, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, &tx, toStore)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		//populate the nodes
+		if nodesMap != nil && len(nodesMap) > 0 {
+			for _, v := range nodesMap {
+
+				e := neo4jentity.FlowActionEntity{}
+
+				if v["internalId"] != nil {
+					e.Id = v["internalId"].(string)
 				}
 
-				//exclude nodes not supported
-				if e.Data.Action == neo4jentity.FlowActionTypeFlowStart ||
-					e.Data.Action == neo4jentity.FlowActionTypeFlowEnd ||
-					e.Data.Action == neo4jentity.FlowActionTypeEmailNew ||
-					e.Data.Action == neo4jentity.FlowActionTypeEmailReply ||
-					e.Data.Action == neo4jentity.FlowActionTypeLinkedinConnectionRequest ||
-					e.Data.Action == neo4jentity.FlowActionTypeLinkedinMessage {
+				if v["id"] != nil {
+					e.ExternalId = v["id"].(string)
+				}
 
-					if e.Id == "" {
-						e.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowAction)
+				if v["type"] != nil {
+					e.Type = v["type"].(string)
+				}
+
+				if v["data"] != nil {
+
+					for k, v2 := range v["data"].(map[string]interface{}) {
+						if v2 != nil {
+							if k == "action" {
+								e.Data.Action = neo4jentity.GetFlowActionType(v2.(string))
+							} else if k == "waitBefore" {
+								e.Data.WaitBefore = int64(v2.(float64))
+							} else if k == "subject" {
+								t := v2.(string)
+								e.Data.Subject = &t
+							} else if k == "bodyTemplate" {
+								t := v2.(string)
+								e.Data.BodyTemplate = &t
+							} else if k == "messageTemplate" {
+								t := v2.(string)
+								e.Data.MessageTemplate = &t
+							}
+						}
+					}
+
+					//exclude nodes not supported
+					if e.Data.Action == neo4jentity.FlowActionTypeFlowStart ||
+						e.Data.Action == neo4jentity.FlowActionTypeFlowEnd ||
+						e.Data.Action == neo4jentity.FlowActionTypeEmailNew ||
+						e.Data.Action == neo4jentity.FlowActionTypeEmailReply ||
+						e.Data.Action == neo4jentity.FlowActionTypeLinkedinConnectionRequest ||
+						e.Data.Action == neo4jentity.FlowActionTypeLinkedinMessage {
+
+						if e.Id == "" {
+							e.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelFlowAction)
+							if err != nil {
+								tracing.TraceErr(span, err)
+								return nil, err
+							}
+						}
+
+						storedNode, err := s.services.Neo4jRepositories.FlowActionWriteRepository.Merge(ctx, &tx, &e)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							return nil, err
 						}
-					}
+						stored := mapper.MapDbNodeToFlowActionEntity(storedNode)
 
-					//todo use transaction
-					storedNode, err := s.services.Neo4jRepositories.FlowActionWriteRepository.Merge(ctx, &e)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return nil, err
-					}
-					stored := mapper.MapDbNodeToFlowActionEntity(storedNode)
+						if stored.Data.Action == neo4jentity.FlowActionTypeFlowStart {
+							err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+								FromEntityId:   toStore.Id,
+								FromEntityType: model.FLOW,
+								Relationship:   model.HAS,
+								ToEntityId:     stored.Id,
+								ToEntityType:   model.FLOW_ACTION,
+							})
+							if err != nil {
+								tracing.TraceErr(span, err)
+								return nil, err
+							}
+						}
 
-					if stored.Data.Action == neo4jentity.FlowActionTypeFlowStart {
-						err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, repository.LinkDetails{
-							FromEntityId:   toStore.Id,
-							FromEntityType: model.FLOW,
-							Relationship:   model.HAS,
-							ToEntityId:     stored.Id,
-							ToEntityType:   model.FLOW_ACTION,
-						})
+						v["internalId"] = stored.Id
+
+						jsoned, err := json.Marshal(&v)
 						if err != nil {
 							tracing.TraceErr(span, err)
 							return nil, err
 						}
+
+						stored.Json = string(jsoned)
+
+						_, err = s.services.Neo4jRepositories.FlowActionWriteRepository.Merge(ctx, &tx, stored)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							return nil, err
+						}
+
+						graph.nodes[stored.ExternalId] = *stored
 					}
-
-					v["internalId"] = stored.Id
-
-					jsoned, err := json.Marshal(&v)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return nil, err
-					}
-
-					stored.Json = string(jsoned)
-
-					_, err = s.services.Neo4jRepositories.FlowActionWriteRepository.Merge(ctx, stored)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return nil, err
-					}
-
-					graph.nodes[stored.ExternalId] = *stored
 				}
 			}
 		}
-	}
 
-	// Populate the edges (adjacency list)
-	for _, v := range edgesMap {
-		source := v["source"].(string)
-		target := v["target"].(string)
+		// Populate the edges (adjacency list)
+		for _, v := range edgesMap {
+			source := v["source"].(string)
+			target := v["target"].(string)
 
-		if source != "" && target != "" {
-			graph.edges[source] = append(graph.edges[source], target)
+			if source != "" && target != "" {
+				graph.edges[source] = append(graph.edges[source], target)
+			}
 		}
-	}
 
-	//get the start nodes and traverse the graph
-	err = s.TraverseInputGraph(ctx, graph)
+		//get the start nodes and traverse the graph
+		err = s.TraverseInputGraph(ctx, &tx, graph)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		nodes, err := json.Marshal(&nodesMap)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		toStore.Nodes = string(nodes)
+		_, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, &tx, toStore)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return toStore, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	nodes, err := json.Marshal(&nodesMap)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	toStore.Nodes = string(nodes)
-	_, err = s.services.Neo4jRepositories.FlowWriteRepository.Merge(ctx, nil, toStore)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	return toStore, nil
+	return flowEntity.(*neo4jentity.FlowEntity), nil
 }
 
 type GraphTraversalIterative struct {
@@ -361,7 +373,7 @@ func (s *flowService) FindStartNodes(graph *GraphTraversalIterative) []string {
 }
 
 // TraverseBFS traverses the graph iteratively using BFS (Breadth-First Search)
-func (s *flowService) TraverseInputGraph(ctx context.Context, graph *GraphTraversalIterative) error {
+func (s *flowService) TraverseInputGraph(ctx context.Context, tx *neo4j.ManagedTransaction, graph *GraphTraversalIterative) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.TraverseBFS")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -384,7 +396,7 @@ func (s *flowService) TraverseInputGraph(ctx context.Context, graph *GraphTraver
 		queue = append(queue, nextNodes...)
 
 		// Process the current node and its edges (relationship batch)
-		err := s.ProcessNode(ctx, graph, currentNode, nextNodes)
+		err := s.ProcessNode(ctx, tx, graph, currentNode, nextNodes)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -394,7 +406,7 @@ func (s *flowService) TraverseInputGraph(ctx context.Context, graph *GraphTraver
 	return nil
 }
 
-func (s *flowService) ProcessNode(ctx context.Context, graph *GraphTraversalIterative, nodeId string, batch []string) error {
+func (s *flowService) ProcessNode(ctx context.Context, tx *neo4j.ManagedTransaction, graph *GraphTraversalIterative, nodeId string, batch []string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.ProcessNode")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -421,7 +433,7 @@ func (s *flowService) ProcessNode(ctx context.Context, graph *GraphTraversalIter
 			return errors.New("internal ids not found")
 		}
 
-		err := s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, repository.LinkDetails{
+		err := s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, tx, tenant, repository.LinkDetails{
 			FromEntityId:   currentNodeInternalId,
 			FromEntityType: model.FLOW_ACTION,
 			Relationship:   model.NEXT,
