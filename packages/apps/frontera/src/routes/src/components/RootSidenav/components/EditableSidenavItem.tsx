@@ -95,7 +95,7 @@ export const EditableSideNavItem = observer(
                 }}
               >
                 <TextInput className='text-gray-500' />
-                Rename view
+                Rename
               </MenuItem>
               <MenuItem
                 onClick={(e) => {
@@ -111,7 +111,7 @@ export const EditableSideNavItem = observer(
                 }}
               >
                 <LayersTwo01 className='text-gray-500' />
-                Duplicate view
+                Save as...
               </MenuItem>
               <MenuItem
                 onClick={(e) => {

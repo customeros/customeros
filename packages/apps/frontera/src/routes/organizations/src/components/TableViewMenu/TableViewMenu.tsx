@@ -54,7 +54,7 @@ export const TableViewMenu = observer(() => {
       <MenuList align='end' side='bottom'>
         <MenuItem onClick={handleAddToMyViews}>
           <LayersTwo01 className='text-gray-500' />
-          Duplicate view...
+          Save as...
         </MenuItem>
         {tableType &&
           ![TableViewType.Invoices, TableViewType.Flow].includes(tableType) && (
