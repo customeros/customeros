@@ -11,13 +11,11 @@ import {
 } from '@hello-pangea/dnd';
 
 import { cn } from '@ui/utils/cn';
-import { Avatar } from '@ui/media/Avatar';
 import { DateTimeUtils } from '@utils/date';
 import { Clock } from '@ui/media/icons/Clock';
 import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
-import { Building06 } from '@ui/media/icons/Building06';
 import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
 import { InternalStage } from '@shared/types/__generated__/graphql.types';
 
@@ -129,7 +127,7 @@ export const KanbanCard = observer(
         {...provided?.dragHandleProps}
         onMouseEnter={() => onFocus(card.id)}
         className={cn(
-          'group/kanbanCard !cursor-pointer relative flex flex-col items-start px-3 pb-2 pt-2 mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
+          'group/kanbanCard  relative flex flex-col items-start px-3 pb-3 pt-[6px] mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
           {
             '!shadow-lg cursor-grabbing': snapshot?.isDragging,
             'pointer-events-none': noPointerEvents,
@@ -138,35 +136,24 @@ export const KanbanCard = observer(
         )}
       >
         <div className='flex flex-col w-full items-start gap-2'>
-          <div className='flex items-center gap-2 w-full justify-between'>
+          <div className='flex gap-2 w-full justify-between items-start'>
             <div className='flex gap-2 items-center'>
-              <Tooltip
-                label={
-                  logo
-                    ? organization?.value.name
-                    : "We're still loading this org…"
-                }
-              >
-                <div>
-                  <Avatar
-                    size='xs'
-                    variant='outlineSquare'
-                    src={logo || undefined}
-                    className='w-5 h-5 min-w-5'
-                    name={`${card.value?.name}`}
-                    style={{ cursor: logo ? 'pointer' : 'not-allowed' }}
-                    icon={<Building06 className='text-primary-500 size-3' />}
-                    onMouseUp={() => {
-                      logo &&
-                        navigate(
-                          `/organization/${card.value?.organization?.metadata.id}/`,
-                        );
-                    }}
-                  />
-                </div>
-              </Tooltip>
-
-              <OpportunityName opportunityId={card.id} />
+              <div className='flex flex-col'>
+                <OpportunityName opportunityId={card.id} />
+                <p
+                  className='text-sm text-gray-500 p-0 hover:text-gray-700 hover:cursor-pointer'
+                  onClick={() => {
+                    logo &&
+                      navigate(
+                        `/organization/${card.value?.organization?.metadata.id}/`,
+                      );
+                  }}
+                >
+                  {organization?.value.name
+                    ? organization.value.name
+                    : 'Organization loading...'}
+                </p>
+              </div>
             </div>
 
             <MoreMenu
@@ -200,7 +187,7 @@ export const KanbanCard = observer(
         </div>
         {(card.value.nextSteps || showNextSteps) && (
           <>
-            <Divider className='mt-1 mb-2' />
+            <Divider className='mt-3 mb-2' />
             <NextSteps
               opportunityId={card.id}
               textareaRef={nextStepsRef}
