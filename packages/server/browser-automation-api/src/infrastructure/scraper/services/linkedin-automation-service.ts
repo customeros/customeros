@@ -300,9 +300,7 @@ export class LinkedinAutomationService {
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]
   > {
-    const browser = await Browser.getFreshInstance(this.proxyConfig, {
-      debug: true,
-    });
+    const browser = await Browser.getFreshInstance(this.proxyConfig);
     const context = await browser.newContext({
       userAgent: this.userAgent, // Optionally randomize user-agent if needed
     });
