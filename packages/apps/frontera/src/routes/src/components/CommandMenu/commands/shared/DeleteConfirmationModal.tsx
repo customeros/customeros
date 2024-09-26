@@ -138,7 +138,7 @@ export const DeleteConfirmationModal = observer(() => {
     )
     .with(
       'TableViewDef',
-      () => `Archive ${(entity as TableViewDefStore)?.value.name}?`,
+      () => `Archive '${(entity as TableViewDefStore)?.value.name}' ?`,
     )
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
   const description = match(context.entity)

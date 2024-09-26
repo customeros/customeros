@@ -53,7 +53,7 @@ export const DuplicateView = observer(() => {
     <Command>
       <article className='relative w-full p-6 flex flex-col border-b border-b-gray-100'>
         <div className='flex items-center justify-between'>
-          <h1 className='text-base font-semibold'>Duplicate '{title}'</h1>
+          <h1 className='text-base font-semibold'>Save '{title}'</h1>
           <CommandCancelIconButton onClose={handleClose} />
         </div>
 
@@ -73,7 +73,7 @@ export const DuplicateView = observer(() => {
 
         <div>
           <label className='text-sm'>
-            <div className='mb-2  font-medium'>Duplicate to...</div>
+            <div className='mb-2  font-medium'>Save to...</div>
             <RadioGroup
               value={value}
               name='last-touchpoint-date-before'
@@ -105,7 +105,7 @@ export const DuplicateView = observer(() => {
               }
             }}
           >
-            Duplicate
+            Save view
           </Button>
         </div>
       </article>
