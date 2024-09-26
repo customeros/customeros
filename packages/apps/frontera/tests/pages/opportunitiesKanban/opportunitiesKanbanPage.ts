@@ -1,4 +1,4 @@
-import { Page, expect } from '@playwright/test';
+import { Page, expect, ElementHandle } from '@playwright/test';
 
 import {
   createResponsePromise,
@@ -23,16 +23,20 @@ export class OpportunitiesKanbanPage {
   private oppsKanbanHeaderWeightedArrEstimate =
     'span[data-test="opps-kanban-header-weighted-arr-estimate"]';
   private oppsFinderCount = 'span[data-test="opps-finder-count"]';
-  private kanbanColumnIdentified = 'div[data-test="kanban-column-Identified"]';
-  private kanbanColumnQualified = 'div[data-test="kanban-column-Qualified"]';
+  // private kanbanColumnIdentified = 'div[data-test="kanban-column-Identified"]';
+  // private kanbanColumnQualified = 'div[data-test="kanban-column-Qualified"]';
   private kanbanColumnQualifiedCards =
     'div[data-test="kanban-column-Qualified-cards"]';
+  // private kanbanColumnCommittedCards =
+  //   'div[data-test="kanban-column-Committed"]';
   private kanbanCards = 'div[data-test="opp-kanban-card"]';
   private oppKanbanCardDots = 'button[data-test="opp-kanban-card-dots"]';
   private addOppPlusIdentified = 'button[data-test="add-opp-plus-Identified"]';
+  private addOppPlusQualified = 'button[data-test="add-opp-plus-Qualified"]';
   private oppKanbanChooseOrganization =
     'input[data-test="opp-kanban-choose-organization"]';
   private kanbanClock = 'path[data-test="kanban-clock"]';
+  private oppKanbanIcon = 'div[data-test="opp-kanban-icon"]';
 
   async goToOpportunitiesKanban() {
     await clickLocatorsThatAreVisible(
@@ -134,62 +138,87 @@ export class OpportunitiesKanbanPage {
       .pressSequentially(organizationName);
     await this.page.locator(this.oppKanbanChooseOrganization).press('Enter');
     await Promise.all([responsePromise]);
+  }
 
+  async moveOpportunityCard(
+    organizationName: string,
+    destinationColumn?: string,
+  ) {
     const card = this.page.locator(
       `${this.kanbanCards}:has(input[value*="${organizationName}"])`,
-    );
-    const kanbanColumnQualifiedCards = this.page.locator(
-      this.kanbanColumnQualifiedCards,
     );
 
     await card.waitFor({ state: 'attached' });
 
-    //STARD DEBUGGING
-    // console.log('card visible: ', await card.isVisible());
-    // console.log(
-    //   'kanbanColumnQualifiedCards visible: ',
-    //   await kanbanColumnQualifiedCards.isVisible(),
-    // );
+    expect(
+      await card.isVisible(),
+      `Card '${organizationName}' should be visible`,
+    ).toBe(true);
 
-    // await clickLocatorsThatAreVisible(
-    //   this.page,
-    //   `${this.kanbanCards}:has(input[value*="${organizationName}"])`,
-    //   this.kanbanColumnQualifiedCards,
-    // );
+    const { cardsColumnXCenter, cardsColumnYCenter } =
+      await this.getCardsColumnCoordinates(destinationColumn);
 
-    //END DEBUGGING
-    // await this.page.screenshot({
-    //   path: 'before.png',
-    //   fullPage: true,
-    // });
+    await this.dragCardToColumn(
+      organizationName,
+      cardsColumnXCenter,
+      cardsColumnYCenter,
+    );
+  }
 
-    await this.page.waitForTimeout(5000);
-    // await card.dragTo(kanbanColumnQualifiedCards);
+  private async dragCardToColumn(
+    organizationName: string,
+    cardsColumnXCenter: number,
+    cardsColumnYCenter: number,
+  ) {
+    const cardElement: ElementHandle = await this.page.$(
+      `${this.kanbanCards}:has(input[value*="${organizationName}"])`,
+    );
 
-    // await this.page.screenshot({ path: 'screenshot.png' });
+    if (cardElement) {
+      const cardBoundingBox = await cardElement.boundingBox();
 
-    // console.log(
-    //   'clock styling before: ',
-    //   await this.page.locator(this.kanbanClock).getAttribute('style'),
-    // );
-    await this.page.locator(this.kanbanClock).hover();
-    // console.log('Hovered on the clock.');
-    await this.page.screenshot({ path: 'clock-hovered.png' });
-    await this.page.waitForTimeout(3000);
-    await this.page.mouse.down();
-    await this.page.waitForTimeout(3000);
-    await kanbanColumnQualifiedCards.hover();
-    // console.log(
-    //   'clock styling after: ',
-    //   await this.page.locator(this.kanbanClock).getAttribute('style'),
-    // );
-    await this.page.waitForTimeout(3000);
-    await this.page.mouse.up();
-    await this.page.waitForTimeout(3000);
+      if (cardBoundingBox) {
+        const { x, y, width, height } = cardBoundingBox;
 
-    // await this.page.screenshot({
-    //   path: 'after.png',
-    //   fullPage: true,
-    // });
+        const clickX = x + width / 2;
+        const clickY = y + height - 40;
+
+        await this.page.mouse.move(clickX, clickY);
+        await this.page.mouse.down();
+        await this.page.mouse.move(cardsColumnXCenter, cardsColumnYCenter, {
+          steps: 20,
+        });
+        await this.page.mouse.up();
+      } else {
+        process.stdout.write('Element is not visible or has no dimensions');
+      }
+    } else {
+      process.stdout.write('Element not found');
+    }
+    await this.page.waitForTimeout(1000);
+  }
+
+  private async getCardsColumnCoordinates(destinationColumn: string) {
+    const cardsColumnElement: ElementHandle = await this.page.$(
+      destinationColumn,
+    );
+    let cardsColumnXCenter: number, cardsColumnYCenter: number;
+
+    if (cardsColumnElement) {
+      const cardsColumnBoundingBox = await cardsColumnElement.boundingBox();
+
+      if (cardsColumnBoundingBox) {
+        const { x, y, width, height } = cardsColumnBoundingBox;
+
+        cardsColumnXCenter = x + width / 2;
+        cardsColumnYCenter = y + height / 2;
+      } else {
+        process.stdout.write('Element is not visible or has no dimensions');
+      }
+    } else {
+      process.stdout.write('Element not found');
+    }
+
+    return { cardsColumnXCenter, cardsColumnYCenter };
   }
 }
