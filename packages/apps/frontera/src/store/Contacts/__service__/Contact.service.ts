@@ -154,6 +154,15 @@ class ContactService {
     >(DELETE_CONTACT_MUTATION, payload);
   }
 
+  async archiveContact(
+    payload: ARCHIVE_CONTACT_PAYLOAD,
+  ): Promise<ARCHIVE_CONTACT_RESPONSE> {
+    return this.transport.graphql.request<
+      ARCHIVE_CONTACT_RESPONSE,
+      ARCHIVE_CONTACT_PAYLOAD
+    >(ARCHIVE_CONTACT_MUTATION, payload);
+  }
+
   async addTagsToContact(payload: ADD_TAGS_TO_CONTACT_PAYLOAD): Promise<void> {
     return this.transport.graphql.request<void, ADD_TAGS_TO_CONTACT_PAYLOAD>(
       ADD_TAGS_TO_CONTACT_MUTATION,
@@ -395,6 +404,24 @@ const DELETE_CONTACT_MUTATION = gql`
   mutation deleteContact($contactId: ID!) {
     contact_HardDelete(contactId: $contactId) {
       result
+    }
+  }
+`;
+
+type ARCHIVE_CONTACT_PAYLOAD = {
+  contactId: string;
+};
+
+type ARCHIVE_CONTACT_RESPONSE = {
+  contact_Hide: {
+    accepted: boolean;
+  };
+};
+
+const ARCHIVE_CONTACT_MUTATION = gql`
+  mutation archiveContact($contactId: ID!) {
+    contact_Hide(contactId: $contactId) {
+      accepted
     }
   }
 `;
