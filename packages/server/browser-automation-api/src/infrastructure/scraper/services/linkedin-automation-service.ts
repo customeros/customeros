@@ -300,7 +300,9 @@ export class LinkedinAutomationService {
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]
   > {
-    const browser = await Browser.getFreshInstance(this.proxyConfig);
+    const browser = await Browser.getFreshInstance(this.proxyConfig, {
+      debug: true,
+    });
     const context = await browser.newContext({
       userAgent: this.userAgent, // Optionally randomize user-agent if needed
     });
@@ -322,7 +324,7 @@ export class LinkedinAutomationService {
         .innerText();
 
       const totalConnections = parseInt(
-        totalConnectionsText.split(" ")?.[0],
+        totalConnectionsText.replace(/\D/g, ""),
         10
       );
 
@@ -380,10 +382,10 @@ export class LinkedinAutomationService {
         if (Math.random() > 0.9) {
           await smoothScroll(downDistance, "up");
           if (Math.random() > 0.8) {
-            const x = Math.floor(Math.random() * 100) + 50; // Random x-axis position
-            const y = Math.floor(Math.random() * 100) + 50; // Random y-axis position
+            const x = Math.floor(Math.random() * 100) + 50;
+            const y = Math.floor(Math.random() * 100) + 50;
             await page.mouse.move(x, y, { steps: 30 });
-            await page.waitForTimeout(getRandomDelay(1000, 3000)); // Random small pause
+            await page.waitForTimeout(getRandomDelay(1000, 3000));
           } else {
             await page.waitForTimeout(getRandomDelay(1506, 5210));
           }
@@ -394,18 +396,19 @@ export class LinkedinAutomationService {
 
         // Randomly simulate user interaction, such as a click or mouse movement (not too frequently)
         if (Math.random() > 0.8) {
-          const x = Math.floor(Math.random() * 100) + 50; // Random x-axis position
-          const y = Math.floor(Math.random() * 100) + 50; // Random y-axis position
+          const x = Math.floor(Math.random() * 100) + 50;
+          const y = Math.floor(Math.random() * 100) + 50;
           await page.mouse.move(x, y, { steps: 30 });
-          await page.waitForTimeout(getRandomDelay(1000, 3000)); // Random small pause
+          await page.waitForTimeout(getRandomDelay(1000, 3000));
         }
 
         // Check if the "Show more results" button is visible, click if present
         const showMoreResultsButton = page.locator(
-          'button:has-text("Show more results")'
+          "button.scaffold-finite-scroll__load-button"
         );
 
         if (await showMoreResultsButton.isVisible()) {
+          await showMoreResultsButton.scrollIntoViewIfNeeded();
           await showMoreResultsButton.click();
           await page.waitForTimeout(getRandomDelay(2120, 5300)); // Give time for new results to load
         }
@@ -425,6 +428,7 @@ export class LinkedinAutomationService {
 
         // If we've collected all profiles, stop scrolling
         if (results.length >= totalConnections) {
+          console.log("intru la break", results.length, totalConnections);
           hasMoreResults = false;
           break;
         }
@@ -442,6 +446,7 @@ export class LinkedinAutomationService {
     } catch (err) {
       error = LinkedinAutomationService.handleError(err);
     } finally {
+      await setTimeout(60000);
       await page.close();
       return [results, error];
     }
