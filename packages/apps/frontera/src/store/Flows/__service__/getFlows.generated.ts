@@ -11,8 +11,18 @@ export type GetFlowsQuery = {
     nodes: string;
     status: Types.FlowStatus;
     metadata: { __typename?: 'Metadata'; id: string };
+    statistics: {
+      __typename?: 'FlowStatistics';
+      total: any;
+      pending: any;
+      completed: any;
+      goalAchieved: any;
+    };
     contacts: Array<{
       __typename?: 'FlowContact';
+      status: Types.FlowContactStatus;
+      scheduledAction?: string | null;
+      scheduledAt?: any | null;
       metadata: { __typename?: 'Metadata'; id: string };
       contact: {
         __typename?: 'Contact';
