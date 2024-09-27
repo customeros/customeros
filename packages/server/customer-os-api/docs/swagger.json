@@ -12,7 +12,7 @@
     "host": "api.customeros.ai",
     "basePath": "/",
     "paths": {
-        "/customerbase/v1/organization": {
+        "/customerbase/v1/organizations": {
             "post": {
                 "security": [
                     {

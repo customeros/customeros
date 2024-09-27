@@ -15,7 +15,7 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
-        "/customerbase/v1/organization": {
+        "/customerbase/v1/organizations": {
             "post": {
                 "security": [
                     {
