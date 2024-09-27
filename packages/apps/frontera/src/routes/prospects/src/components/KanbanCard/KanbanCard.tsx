@@ -176,7 +176,10 @@ export const KanbanCard = observer(
               <Tooltip label='Time in stage'>
                 {cardStage === InternalStage.Open && (
                   <div className='flex items-center'>
-                    <Clock className='text-gray-500 size-3 mr-1' />
+                    <Clock
+                      dataTest='kanban-clock'
+                      className='text-gray-500 size-3 mr-1'
+                    />
                     <span className='text-nowrap text-xs items-center'>
                       {`${daysInStage} ${daysInStage === 1 ? 'day' : 'days'}`}
                     </span>
