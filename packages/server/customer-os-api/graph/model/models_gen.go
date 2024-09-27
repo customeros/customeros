@@ -5392,6 +5392,7 @@ const (
 	TableIDTypeOpportunitiesRecords           TableIDType = "OPPORTUNITIES_RECORDS"
 	TableIDTypeContracts                      TableIDType = "CONTRACTS"
 	TableIDTypeFlowSequences                  TableIDType = "FLOW_SEQUENCES"
+	TableIDTypeFlowContacts                   TableIDType = "FLOW_CONTACTS"
 )
 
 var AllTableIDType = []TableIDType{
@@ -5406,11 +5407,12 @@ var AllTableIDType = []TableIDType{
 	TableIDTypeOpportunitiesRecords,
 	TableIDTypeContracts,
 	TableIDTypeFlowSequences,
+	TableIDTypeFlowContacts,
 }
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts, TableIDTypeFlowSequences:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts, TableIDTypeFlowSequences, TableIDTypeFlowContacts:
 		return true
 	}
 	return false
