@@ -931,7 +931,7 @@ info:
   title: CustomerOS API
   version: "1.0"
 paths:
-  /customerbase/v1/organization:
+  /customerbase/v1/organizations:
     post:
       consumes:
       - application/json
