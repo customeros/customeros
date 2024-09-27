@@ -24,7 +24,7 @@ export const StepViewportPortal = observer(
             <div
               style={{
                 transform: `translate(calc(${positionAbsoluteX}px - 50%), ${
-                  positionAbsoluteY + 15
+                  positionAbsoluteY + 24 // 24 is desired spacing between dropdown and button
                 }px)`,
                 position: 'absolute',
                 pointerEvents: 'all',
