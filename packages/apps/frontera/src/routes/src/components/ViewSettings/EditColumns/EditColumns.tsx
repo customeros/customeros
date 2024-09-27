@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { match } from 'ts-pattern';
 import difference from 'lodash/difference';
 import { observer } from 'mobx-react-lite';
+import { useTableColumnOptionsMap } from '@finder/hooks/useTableColumnOptionsMap.tsx';
 import {
   Droppable,
   DragDropContext,
@@ -19,7 +20,6 @@ import {
   TableViewType,
   ColumnViewType,
 } from '@graphql/types';
-import { useTableColumnOptionsMap } from '@organizations/hooks/useTableColumnOptionsMap.tsx';
 
 import { ColumnItem, DraggableColumnItem } from './ColumnItem';
 

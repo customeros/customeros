@@ -1,9 +1,10 @@
+import { FilterType } from '@finder/components/Columns/organizations/filtersType';
+
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { FilterLines } from '@ui/media/icons/FilterLines';
 import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
-import { FilterType } from '@organizations/components/Columns/organizations/filtersType';
 import {
   FilterItem,
   ColumnView,

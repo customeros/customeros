@@ -1,6 +1,7 @@
 import { useParams } from 'react-router-dom';
 
 import { observer } from 'mobx-react-lite';
+import { relationshipOptions } from '@finder/components/Columns/organizations/Cells/relationship/util';
 
 import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
@@ -13,7 +14,6 @@ import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
 import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
-import { relationshipOptions } from '@organizations/components/Columns/organizations/Cells/relationship/util';
 
 const iconMap = {
   Customer: <ActivityHeart />,

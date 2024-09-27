@@ -25,10 +25,7 @@ export default defineConfig({
         __dirname,
         './src/routes/src/types/__generated__/graphql.types.ts',
       ),
-      '@organizations': path.resolve(
-        __dirname,
-        './src/routes/organizations/src',
-      ),
+      '@finder': path.resolve(__dirname, './src/routes/finder/src'),
       '@organization': path.resolve(__dirname, './src/routes/organization/src'),
       '@renewals': path.resolve(__dirname, './src/routes/renewals/src'),
       '@settings': path.resolve(__dirname, './src/routes/settings/src'),
