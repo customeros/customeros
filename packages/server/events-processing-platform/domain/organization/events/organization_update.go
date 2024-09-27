@@ -14,6 +14,7 @@ import (
 type OrganizationUpdateEvent struct {
 	Tenant             string                `json:"tenant" validate:"required"`
 	Source             string                `json:"source,omitempty"`
+	AppSource          string                `json:"appSource,omitempty"`
 	UpdatedAt          time.Time             `json:"updatedAt,omitempty"`
 	Name               string                `json:"name,omitempty"`
 	Hide               bool                  `json:"hide,omitempty"`
@@ -81,6 +82,7 @@ func NewOrganizationUpdateEvent(aggregate eventstore.Aggregate, organizationFiel
 		SlackChannelId:     organizationFields.OrganizationDataFields.SlackChannelId,
 		UpdatedAt:          updatedAt,
 		Source:             organizationFields.Source.Source,
+		AppSource:          organizationFields.Source.AppSource,
 		FieldsMask:         fieldsMask,
 		EnrichDomain:       enrichDomain,
 		EnrichSource:       enrichSource,

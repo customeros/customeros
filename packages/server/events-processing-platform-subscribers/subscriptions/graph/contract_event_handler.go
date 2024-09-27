@@ -350,8 +350,9 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
-
+	if eventData.AppSource != constants.AppSourceCustomerOsApi {
+		subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+	}
 	return nil
 }
 

@@ -9,6 +9,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
@@ -191,7 +192,9 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+	if eventData.AppSource != constants.AppSourceCustomerOsApi {
+		subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+	}
 
 	return nil
 }

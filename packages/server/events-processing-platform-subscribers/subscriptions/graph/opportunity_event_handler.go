@@ -428,8 +428,9 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
-
+	if eventData.AppSource != constants.AppSourceCustomerOsApi {
+		subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+	}
 	return nil
 }
 

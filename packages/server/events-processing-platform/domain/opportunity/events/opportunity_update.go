@@ -20,6 +20,7 @@ type OpportunityUpdateEvent struct {
 	OwnerUserId       string                     `json:"ownerUserId"`
 	InternalStage     string                     `json:"internalStage"`
 	Source            string                     `json:"source"`
+	AppSource         string                     `json:"appSource"`
 	ExternalSystem    commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	ExternalStage     string                     `json:"externalStage"`
 	ExternalType      string                     `json:"externalType"`
@@ -30,7 +31,7 @@ type OpportunityUpdateEvent struct {
 	LikelihoodRate    int64                      `json:"likelihoodRate"`
 }
 
-func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.OpportunityDataFields, source, appSource string, externalSystem commonmodel.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := OpportunityUpdateEvent{
 		Tenant:         aggregate.GetTenant(),
 		Name:           dataFields.Name,
@@ -41,6 +42,7 @@ func NewOpportunityUpdateEvent(aggregate eventstore.Aggregate, dataFields model.
 		OwnerUserId:    dataFields.OwnerUserId,
 		UpdatedAt:      updatedAt,
 		Source:         source,
+		AppSource:      appSource,
 		FieldsMask:     fieldsMask,
 		InternalStage:  string(dataFields.InternalStage.StringEnumValue()),
 		Currency:       dataFields.Currency,

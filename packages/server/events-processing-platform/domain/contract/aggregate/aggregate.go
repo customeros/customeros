@@ -215,6 +215,7 @@ func (a *ContractAggregate) updateContract(ctx context.Context, request *contrac
 		dataFields,
 		externalSystem,
 		source,
+		sourceFields.AppSource,
 		updatedAtNotNil,
 		fieldsMask,
 	)

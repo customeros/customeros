@@ -246,6 +246,7 @@ func TestContractEventHandler_OnUpdate_FrequencySet(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
+		"testApp",
 		now,
 		[]string{event.FieldMaskLengthInMonths, event.FieldMaskName, event.FieldMaskServiceStartedAt, event.FieldMaskSignedAt, event.FieldMaskEndedAt, event.FieldMaskContractURL})
 	require.Nil(t, err, "failed to create event")
@@ -327,6 +328,7 @@ func TestContractEventHandler_OnUpdate_FrequencyNotChanged(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
+		"testApp",
 		utils.Now(),
 		[]string{})
 	require.Nil(t, err)
@@ -388,6 +390,7 @@ func TestContractEventHandler_OnUpdate_FrequencyChanged(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
+		"testApp",
 		utils.Now(),
 		[]string{})
 	require.Nil(t, err)
@@ -453,6 +456,7 @@ func TestContractEventHandler_OnUpdate_FrequencyRemoved(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
+		"testApp",
 		utils.Now(),
 		[]string{event.FieldMaskLengthInMonths, event.FieldMaskName})
 	require.Nil(t, err)
@@ -564,6 +568,7 @@ func TestContractEventHandler_OnUpdate_ServiceStartDateChanged(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
+		"testApp",
 		utils.Now(),
 		[]string{})
 	require.Nil(t, err)
@@ -679,6 +684,7 @@ func TestContractEventHandler_OnUpdate_EndDateSet(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
+		"testApp",
 		now,
 		[]string{})
 	require.Nil(t, err, "failed to create event")
@@ -753,6 +759,7 @@ func TestContractEventHandler_OnUpdate_CurrentSourceOpenline_UpdateSourceNonOpen
 		},
 		commonmodel.ExternalSystem{},
 		"hubspot",
+		"testApp",
 		now,
 		[]string{})
 	require.Nil(t, err, "failed to create event")
@@ -946,6 +953,7 @@ func TestContractEventHandler_OnUpdate_SubsetOfFieldsSet(t *testing.T) {
 		},
 		commonmodel.ExternalSystem{},
 		constants.SourceOpenline,
+		"testApp",
 		now,
 		[]string{event.FieldMaskAutoRenew,
 			event.FieldMaskCanPayWithCard,
