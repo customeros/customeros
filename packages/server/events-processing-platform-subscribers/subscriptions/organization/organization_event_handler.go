@@ -326,6 +326,7 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 				LocationDetails: &locationpb.LocationDetails{
 					Country:       data.Location.Country,
 					CountryCodeA2: data.Location.CountryCodeA2,
+					CountryCodeA3: data.Location.CountryCodeA3,
 					Locality:      data.Location.Locality,
 					Region:        data.Location.Region,
 					PostalCode:    data.Location.PostalCode,

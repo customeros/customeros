@@ -3,6 +3,7 @@ package route
 import (
 	"context"
 	"encoding/json"
+	"github.com/biter777/countries"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -372,8 +373,24 @@ func combineData(scrapin *postgresEntity.ScrapInResponseBody, brandfetch *postgr
 
 	updateResponseWithScrapinData(&data, scrapin, domain)
 	updateResponseWithBrandfetchData(&data, brandfetch)
+	normalizeCountry(&data.Location)
 
 	return data
+}
+
+func normalizeCountry(data *model.EnrichOrganizationResponseDataLocation) {
+	countryFields := []string{data.CountryCodeA3, data.CountryCodeA2, data.Country}
+	for _, code := range countryFields {
+		if code != "" {
+			country := countries.ByName(code)
+			if country != countries.Unknown {
+				data.Country = country.String()
+				data.CountryCodeA2 = country.Alpha2()
+				data.CountryCodeA3 = country.Alpha3()
+				return
+			}
+		}
+	}
 }
 
 func updateResponseWithScrapinData(d *model.EnrichOrganizationResponseData, scrapin *postgresEntity.ScrapInResponseBody, domain string) {

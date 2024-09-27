@@ -43,6 +43,7 @@ type EnrichOrganizationResponseDataLocation struct {
 	IsHeadquarter *bool  `json:"isHeadquarter"`
 	Country       string `json:"country"`
 	CountryCodeA2 string `json:"countryCodeA2"`
+	CountryCodeA3 string `json:"countryCodeA3"`
 	Locality      string `json:"locality"`
 	Region        string `json:"region"`
 	PostalCode    string `json:"postalCode"`

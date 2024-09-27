@@ -245,6 +245,10 @@
         {
           "name": "Check location nodes labels",
           "query": "MATCH (t:Tenant)<-[:LOCATION_BELONGS_TO_TENANT]-(n:Location) WHERE size(labels(n)) <> 2 OR NOT 'Location_'+t.name in labels(n) return count(n)"
+        },
+        {
+          "name": "Country codes instead of names",
+          "query": "MATCH (l:Location) WHERE size(l.country) = 2 OR size(l.country) = 3 RETURN count(l)"
         }
       ]
     },
