@@ -139,7 +139,7 @@ func (a *OpportunityAggregate) updateOpportunity(ctx context.Context, request *o
 
 	fieldsMask := extractFieldsMask(request.FieldsMask)
 
-	updateEvent, err := events.NewOpportunityUpdateEvent(a, dataFields, sourceFields.Source, externalSystem, updatedAtNotNil, fieldsMask)
+	updateEvent, err := events.NewOpportunityUpdateEvent(a, dataFields, sourceFields.Source, sourceFields.AppSource, externalSystem, updatedAtNotNil, fieldsMask)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOpportunityUpdateEvent")

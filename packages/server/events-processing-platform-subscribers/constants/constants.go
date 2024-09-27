@@ -2,6 +2,7 @@ package constants
 
 const (
 	AppSourceEventProcessingPlatformSubscribers = "event-processing-platform-subscribers"
+	AppSourceCustomerOsApi                      = "customer-os-api"
 
 	ComponentSubscriptionGraph   = "subscriptionGraph"
 	ComponentSubscriptionInvoice = "subscriptionInvoice"

@@ -12,6 +12,7 @@ import (
 type ContactUpdateEvent struct {
 	Tenant          string                `json:"tenant" validate:"required"`
 	Source          string                `json:"source"`
+	AppSource       string                `json:"appSource"`
 	UpdatedAt       time.Time             `json:"updatedAt"`
 	FirstName       string                `json:"firstName"`
 	LastName        string                `json:"lastName"`
@@ -25,7 +26,7 @@ type ContactUpdateEvent struct {
 	FieldsMask      []string              `json:"fieldsMask,omitempty"`
 }
 
-func NewContactUpdateEvent(aggregate eventstore.Aggregate, source string, dataFields ContactDataFields, externalSystem cmnmod.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewContactUpdateEvent(aggregate eventstore.Aggregate, source, appSource string, dataFields ContactDataFields, externalSystem cmnmod.ExternalSystem, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := ContactUpdateEvent{
 		Tenant:          aggregate.GetTenant(),
 		FirstName:       dataFields.FirstName,

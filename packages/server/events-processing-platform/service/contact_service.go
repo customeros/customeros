@@ -85,7 +85,7 @@ func (s *contactService) UpsertContact(ctx context.Context, request *contactpb.U
 		evt, err = event.NewContactCreateEvent(agg, dataFields, sourceFields, externalSystem, createdAtNotNil, updatedAtNotNil)
 	} else {
 		fieldsMask := extractContactFieldsMask(request.FieldsMask)
-		evt, err = event.NewContactUpdateEvent(agg, sourceFields.Source, dataFields, externalSystem, updatedAtNotNil, fieldsMask)
+		evt, err = event.NewContactUpdateEvent(agg, sourceFields.Source, sourceFields.AppSource, dataFields, externalSystem, updatedAtNotNil, fieldsMask)
 	}
 
 	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{

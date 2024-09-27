@@ -278,6 +278,7 @@ func TestOpportunityEventHandler_OnUpdate(t *testing.T) {
 			MaxAmount: 40000,
 		},
 		constants.SourceOpenline,
+		"testApp",
 		commonmodel.ExternalSystem{},
 		now,
 		[]string{opportunityevent.FieldMaskName, opportunityevent.FieldMaskAmount, opportunityevent.FieldMaskMaxAmount})
@@ -329,6 +330,7 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 			Amount: 20000,
 		},
 		constants.SourceOpenline,
+		"testApp",
 		commonmodel.ExternalSystem{},
 		now,
 		[]string{"amount"})

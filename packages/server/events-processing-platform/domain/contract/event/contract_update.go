@@ -20,6 +20,7 @@ type ContractUpdateEvent struct {
 	EndedAt                *time.Time                 `json:"endedAt,omitempty"`
 	ExternalSystem         commonmodel.ExternalSystem `json:"externalSystem,omitempty"`
 	Source                 string                     `json:"source"`
+	AppSource              string                     `json:"appSource"`
 	InvoicingStartDate     *time.Time                 `json:"invoicingStartDate,omitempty"`
 	Currency               string                     `json:"currency,omitempty"`
 	BillingCycle           string                     `json:"billingCycle,omitempty"` //Deprecated: Use BillingCycleInMonths instead
@@ -50,7 +51,7 @@ type ContractUpdateEvent struct {
 	Approved               bool                       `json:"approved,omitempty"`
 }
 
-func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
+func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDataFields, externalSystem commonmodel.ExternalSystem, source, appSource string, updatedAt time.Time, fieldsMask []string) (eventstore.Event, error) {
 	eventData := ContractUpdateEvent{
 		Tenant:                 a.GetTenant(),
 		Name:                   dataFields.Name,
@@ -78,6 +79,7 @@ func NewContractUpdateEvent(a eventstore.Aggregate, dataFields model.ContractDat
 		DueDays:                dataFields.DueDays,
 		UpdatedAt:              updatedAt,
 		Source:                 source,
+		AppSource:              appSource,
 		FieldsMask:             fieldsMask,
 		LengthInMonths:         dataFields.LengthInMonths,
 		Approved:               dataFields.Approved,

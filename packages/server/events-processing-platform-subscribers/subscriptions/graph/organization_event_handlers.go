@@ -381,7 +381,9 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 		h.handleStageChange(ctx, eventData.Tenant, &beforeOrganizationEntity, &afterOrganizationEntity)
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	if eventData.AppSource != constants.AppSourceCustomerOsApi {
+		subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	}
 
 	return nil
 }

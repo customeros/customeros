@@ -523,7 +523,9 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	if eventData.Source.AppSource != constants.AppSourceCustomerOsApi {
+		subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	}
 
 	return nil
 }
