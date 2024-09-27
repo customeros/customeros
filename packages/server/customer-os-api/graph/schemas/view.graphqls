@@ -63,6 +63,7 @@ enum TableIdType {
     OPPORTUNITIES_RECORDS
     CONTRACTS
     FLOW_SEQUENCES
+    FLOW_CONTACTS
 }
 
 enum ColumnViewType {
