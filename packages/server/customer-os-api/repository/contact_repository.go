@@ -210,6 +210,7 @@ func (r *contactRepository) GetPaginatedContactsForOrganization(ctx context.Cont
 		queryResult, err = tx.Run(ctx, fmt.Sprintf(
 			"MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})<-[:ROLE_IN]-(:JobRole)<-[:WORKS_AS]-(c:Contact) "+
 				" %s "+
+				" WITH * WHERE c.hide IS NULL OR c.hide = false "+
 				" RETURN distinct(c) "+
 				" %s "+
 				" SKIP $skip LIMIT $limit", filterCypherStr, sort.SortingCypherFragment("c")),
