@@ -46,11 +46,9 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
     tableViewDef?.value?.columns
       .filter(
         (c) =>
-          ![
-            ColumnViewType.FlowSequenceContactCount,
-            ColumnViewType.FlowName,
-            ColumnViewType.ContactsSequences,
-          ].includes(c.columnType),
+          ![ColumnViewType.FlowName, ColumnViewType.ContactsSequences].includes(
+            c.columnType,
+          ),
       )
       .map((c) => ({
         ...c,

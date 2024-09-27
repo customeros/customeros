@@ -19,7 +19,19 @@ export const getFlowsColumnSortFn = (columnId: string) =>
 
       return value || null;
     })
-    .with(ColumnViewType.FlowSequenceContactCount, () => (row: FlowStore) => {
-      return row.value?.contacts?.length;
+    .with(ColumnViewType.FlowSequencePendingCount, () => (row: FlowStore) => {
+      return row.value?.statistics?.pending || null;
+    })
+    .with(ColumnViewType.FlowSequenceCompletedCount, () => (row: FlowStore) => {
+      return row.value?.statistics?.pending || null;
+    })
+    .with(
+      ColumnViewType.FlowSequenceGoalAchievedCount,
+      () => (row: FlowStore) => {
+        return row.value?.statistics?.goalAchieved || null;
+      },
+    )
+    .with(ColumnViewType.FlowSequenceTotalCount, () => (row: FlowStore) => {
+      return row.value?.statistics?.total || null;
     })
     .otherwise(() => (_row: FlowStore) => null);

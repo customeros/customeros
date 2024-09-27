@@ -343,13 +343,12 @@ export enum ColumnViewType {
   ContractsRenewalDate = 'CONTRACTS_RENEWAL_DATE',
   ContractsStatus = 'CONTRACTS_STATUS',
   FlowName = 'FLOW_NAME',
-  FlowSequenceContactCount = 'FLOW_SEQUENCE_CONTACT_COUNT',
+  FlowSequenceCompletedCount = 'FLOW_SEQUENCE_COMPLETED_COUNT',
+  FlowSequenceGoalAchievedCount = 'FLOW_SEQUENCE_GOAL_ACHIEVED_COUNT',
   FlowSequenceName = 'FLOW_SEQUENCE_NAME',
+  FlowSequencePendingCount = 'FLOW_SEQUENCE_PENDING_COUNT',
   FlowSequenceStatus = 'FLOW_SEQUENCE_STATUS',
-  FlowSequenceStatusInProgressCount = 'FLOW_SEQUENCE_STATUS_IN_PROGRESS_COUNT',
-  FlowSequenceStatusPendingCount = 'FLOW_SEQUENCE_STATUS_PENDING_COUNT',
-  FlowSequenceStatusSuccessfulCount = 'FLOW_SEQUENCE_STATUS_SUCCESSFUL_COUNT',
-  FlowSequenceStatusUnsuccessfulCount = 'FLOW_SEQUENCE_STATUS_UNSUCCESSFUL_COUNT',
+  FlowSequenceTotalCount = 'FLOW_SEQUENCE_TOTAL_COUNT',
   FlowStatus = 'FLOW_STATUS',
   InvoicesAmount = 'INVOICES_AMOUNT',
   InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
@@ -1311,7 +1310,10 @@ export type Email = {
    * **Required**
    */
   id: Scalars['ID']['output'];
-  /** Describes the type of email address (WORK, PERSONAL, etc). */
+  /**
+   * Describes the type of email address (WORK, PERSONAL, etc).
+   * @deprecated No longer supported
+   */
   label?: Maybe<EmailLabel>;
   organizations: Array<Organization>;
   /**
@@ -1324,6 +1326,7 @@ export type Email = {
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];
   users: Array<User>;
+  work?: Maybe<Scalars['Boolean']['output']>;
 };
 
 export enum EmailDeliverable {
@@ -1343,7 +1346,6 @@ export type EmailInput = {
    * **Required.**
    */
   email: Scalars['String']['input'];
-  /** Describes the type of email address (WORK, PERSONAL, etc). */
   label?: InputMaybe<EmailLabel>;
   /**
    * Identifies whether the email address is primary or not.
@@ -4819,6 +4821,7 @@ export enum TableIdType {
   ContactsForTargetOrganizations = 'CONTACTS_FOR_TARGET_ORGANIZATIONS',
   Contracts = 'CONTRACTS',
   Customers = 'CUSTOMERS',
+  FlowContacts = 'FLOW_CONTACTS',
   FlowSequences = 'FLOW_SEQUENCES',
   Opportunities = 'OPPORTUNITIES',
   OpportunitiesRecords = 'OPPORTUNITIES_RECORDS',
