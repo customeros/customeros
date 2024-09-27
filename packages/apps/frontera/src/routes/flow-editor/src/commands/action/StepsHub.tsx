@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types.ts';
-import { MarkerType, useReactFlow } from '@xyflow/react';
+import { MarkerType, useReactFlow, FitViewOptions } from '@xyflow/react';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Mail01 } from '@ui/media/icons/Mail01.tsx';
@@ -14,7 +14,7 @@ import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath.tsx';
 import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
 
-import { getLayoutedElements } from '../../controls/LayoutButton.tsx';
+import { useLayoutedElements } from '../../hooks';
 
 const elkOptions = {
   'elk.algorithm': 'layered',
@@ -24,8 +24,9 @@ const elkOptions = {
 };
 export const StepsHub = observer(() => {
   const { ui } = useStore();
+  const { getLayoutedElements } = useLayoutedElements();
 
-  const { setEdges, setNodes, getNodes, getEdges } = useReactFlow();
+  const { setEdges, setNodes, getNodes, getEdges, fitView } = useReactFlow();
 
   const handleAddNode = async (type: FlowActionType | 'WAIT') => {
     const nodes = getNodes();
@@ -47,7 +48,7 @@ export const StepsHub = observer(() => {
     const newNode = {
       id: `${type}-${nodes.length + 1}`,
       type: type === 'WAIT' ? 'wait' : 'action',
-      position: { x: 0, y: 0 }, // Initial position will be adjusted by ELK
+      position: { x: sourceNode.position.x, y: 0 }, // Initial position will be adjusted by ELK
       data: {
         action: type,
         ...typeBasedContent,
@@ -84,14 +85,24 @@ export const StepsHub = observer(() => {
     const updatedNodes = [...nodes, newNode];
     const newEdges = [...updatedEdges, edgeToNewNode, edgeFromNewNode];
 
-    // Use getLayoutedElements to calculate new positions
-    // @ts-expect-error fix type later
-    const { nodes: layoutedNodes, edges: layoutedEdges } =
-      await getLayoutedElements(updatedNodes, newEdges, elkOptions);
+    getLayoutedElements(updatedNodes, newEdges, elkOptions).then(
+      // @ts-expect-error not for poc
+      ({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+        setNodes(layoutedNodes);
+        setEdges(layoutedEdges);
+        window.requestAnimationFrame(() => {
+          const fitViewOptions: FitViewOptions = {
+            padding: 0.1,
+            maxZoom: 1,
+            minZoom: 1,
+            duration: 0,
+            nodes: layoutedNodes,
+          };
 
-    // Update the React Flow state
-    setNodes(layoutedNodes);
-    setEdges(layoutedEdges);
+          fitView(fitViewOptions);
+        });
+      },
+    );
   };
 
   const updateSelectedNode = (type: FlowActionType | 'WAIT') => {

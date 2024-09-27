@@ -34,7 +34,7 @@ export const TriggerNode = (
   return (
     <>
       <div
-        className={`aspect-[9/1] h-[56px] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group relative`}
+        className={`aspect-[9/1] h-[56px] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group relative cursor-pointer`}
       >
         {/*<div className='flex items-center text-gray-400 uppercase text-xs mb-1 absolute top-[-20px]'>*/}
         {/*  Trigger*/}
@@ -103,12 +103,15 @@ export const TriggerViewportPortal = observer(
           <ViewportPortal>
             <div
               style={{
-                transform: `translate(${positionAbsoluteX + 15}px,${
-                  positionAbsoluteY + 90
+                transform: `translate(calc(${positionAbsoluteX}px + 150px - 180px), ${
+                  positionAbsoluteY + 70
                 }px)`,
                 position: 'absolute',
                 pointerEvents: 'all',
                 zIndex: 50000,
+                width: '360px',
+                left: '0',
+                top: '0',
               }}
             >
               <DropdownCommandMenu />

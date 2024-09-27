@@ -15,6 +15,8 @@ import {
   useNodesState,
   useEdgesState,
   OnBeforeDelete,
+  FitViewOptions,
+  NodeMouseHandler,
 } from '@xyflow/react';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -87,7 +89,6 @@ export const FlowBuilder = observer(() => {
   const onEdgeMouseEnter = (_event: MouseEvent, edge: Edge) => {
     const edgeId = edge.id;
 
-    // Updates edge
     setEdges((prevElements) =>
       prevElements.map((element) =>
         element.id === edgeId
@@ -104,42 +105,6 @@ export const FlowBuilder = observer(() => {
     );
   };
 
-  // const onConnectEnd: OnConnectEnd = useCallback(
-  //   (event, connectionState) => {
-  //     // when a connection is dropped on the pane it's not valid
-  //     if (!connectionState.isValid) {
-  //       // we need to remove the wrapper bounds, in order to get the correct position
-  //       const id = Math.random();
-  //       const { clientX, clientY } =
-  //         'changedTouches' in event ? event.changedTouches[0] : event;
-  //       const newNode = {
-  //         id: `${id}-${nodes.length + 1}`,
-  //
-  //         position: screenToFlowPosition({
-  //           x: clientX,
-  //           y: clientY,
-  //         }),
-  //         data: { label: `Node ${id}` },
-  //         origin: [0.5, 0.0],
-  //         type: 'step',
-  //       };
-  //
-  //       //@ts-expect-error not important at this moment
-  //       setNodes((nds) => nds.concat(newNode));
-  //       setEdges((eds) =>
-  //         eds.concat({
-  //           id: `e${id}-${newNode.id}`,
-  //           target: newNode.id,
-  //           type: 'baseEdge',
-  //           source: connectionState.fromNode?.id ?? '',
-  //         }),
-  //       );
-  //     }
-  //   },
-  //   [screenToFlowPosition],
-  // );
-
-  // Keyboard shortcuts
   useKey(
     'Escape',
     () => {
@@ -167,11 +132,27 @@ export const FlowBuilder = observer(() => {
     return hasStartOrEndNode ? false : elements;
   };
 
+  const onOpenTriggerHub = (id: string) => {
+    ui.flowCommandMenu.setOpen(true);
+    ui.flowCommandMenu.setType('TriggersHub');
+
+    ui.flowCommandMenu.setContext({
+      ...ui.flowCommandMenu.context,
+      id,
+    });
+  };
+
+  const onOpenTriggerHubDropdown: NodeMouseHandler = (event, node) => {
+    event.preventDefault();
+    event.stopPropagation();
+    onOpenTriggerHub(node.id);
+  };
+
   return (
     <>
       <ReactFlow
         snapToGrid
-        maxZoom={1}
+        maxZoom={3}
         nodes={nodes}
         edges={edges}
         minZoom={0.1}
@@ -184,6 +165,7 @@ export const FlowBuilder = observer(() => {
         onBeforeDelete={onBeforeDelete}
         onEdgeMouseLeave={onEdgeMouseLeave}
         onEdgeMouseEnter={onEdgeMouseEnter}
+        onNodeClick={onOpenTriggerHubDropdown}
         zoomOnPinch={!ui.flowCommandMenu.isOpen}
         zoomOnScroll={!ui.flowCommandMenu.isOpen}
         defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
@@ -196,7 +178,18 @@ export const FlowBuilder = observer(() => {
           padding: 0.1,
           includeHiddenNodes: false,
           minZoom: 0.1,
-          maxZoom: 1,
+          maxZoom: 5,
+        }}
+        onInit={(instance) => {
+          const fitViewOptions: FitViewOptions = {
+            padding: 0.1,
+            maxZoom: 1,
+            minZoom: 1,
+            duration: 150,
+            nodes: nodes,
+          };
+
+          instance.fitView(fitViewOptions);
         }}
         // onConnectEnd={onConnectEnd}
         onNodesChange={(changes) => {

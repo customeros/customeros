@@ -94,7 +94,7 @@ export const BasicEdge: React.FC<
               />
             }
             className={cn(
-              'text-white bg-gray-300 hover:bg-gray-700 hover:text-white focus:bg-gray-700 focus:text-white rounded-full scale-50 hover:scale-100 transition-all ease-in-out ',
+              'text-white bg-gray-300 hover:bg-gray-700 hover:text-white focus:bg-gray-700 focus:text-white rounded-full scale-[0.3635] hover:scale-100 transition-all ease-in-out ',
               {
                 'text-transparent':
                   !data?.isHovered &&

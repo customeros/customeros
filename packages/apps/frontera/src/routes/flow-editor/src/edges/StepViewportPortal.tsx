@@ -23,12 +23,15 @@ export const StepViewportPortal = observer(
           <ViewportPortal>
             <div
               style={{
-                transform: `translate(${positionAbsoluteX / 2}px,${
+                transform: `translate(calc(${positionAbsoluteX}px - 50%), ${
                   positionAbsoluteY + 15
                 }px)`,
                 position: 'absolute',
                 pointerEvents: 'all',
                 zIndex: 50000,
+                width: '360px',
+                left: '0',
+                top: '0',
               }}
             >
               <DropdownCommandMenu />
