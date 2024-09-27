@@ -1,22 +1,16 @@
 import React, { useEffect } from 'react';
-
-import { Button } from '@ui/form/Button/Button.tsx';
-// import { Users01 } from '@ui/media/icons/Users01.tsx';
-// import { PieChart03 } from '@ui/media/icons/PieChart03.tsx';
-// import { Dataflow03 } from '@ui/media/icons/Dataflow03.tsx';
-import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
-// import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
-
 import { useParams, useNavigate } from 'react-router-dom';
 
-import { useUnmount } from 'usehooks-ts';
 import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
+import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { User01 } from '@ui/media/icons/User01.tsx';
+import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
 
 import { FlowStatusMenu } from './components';
 
@@ -27,6 +21,7 @@ export const Header = observer(() => {
   const store = useStore();
   const navigate = useNavigate();
   const { getEdges, getNodes } = useReactFlow();
+  const saveFlag = useFeatureIsOn('flow-editor-save-button_1');
 
   const flow = store.flows.value.get(id) as FlowStore;
 
@@ -39,16 +34,6 @@ export const Header = observer(() => {
       });
     }
   }, [store.ui.commandMenu.isOpen, id]);
-
-  useUnmount(() => {
-    const nodes = getNodes();
-    const edges = getEdges();
-
-    flow?.updateFlow({
-      nodes: JSON.stringify(nodes),
-      edges: JSON.stringify(edges),
-    });
-  });
 
   const handleSave = () => {
     const nodes = getNodes();
@@ -87,15 +72,17 @@ export const Header = observer(() => {
         </div>
         <div className='flex gap-2'>
           <FlowStatusMenu id={id} />
-          <Button
-            size='xs'
-            variant='outline'
-            colorScheme='gray'
-            onClick={handleSave}
-            leftIcon={<Check />}
-          >
-            Save
-          </Button>
+          {saveFlag && (
+            <Button
+              size='xs'
+              variant='outline'
+              colorScheme='gray'
+              onClick={handleSave}
+              leftIcon={<Check />}
+            >
+              Save
+            </Button>
+          )}
         </div>
       </div>
       {/*/!* HEADER L2 *!/*/}
