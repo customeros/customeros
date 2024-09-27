@@ -72,4 +72,8 @@ enum ComparisonOperator {
     IS_NONE_OF
     IS_NOT_EMPTY
     NOT_CONTAINS
+    """
+    Not supported yet
+    """
+    NOT_EQUAL
 }
