@@ -245,9 +245,8 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 		grpcClients: testMockedGrpcClient,
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
-	emailLabel := "emailLabel"
 	updateTime := utils.Now()
-	userLinkEmailEvent, err := event2.NewContactLinkEmailEvent(contactAggregate, emailId, emailLabel, true, updateTime)
+	userLinkEmailEvent, err := event2.NewContactLinkEmailEvent(contactAggregate, emailId, true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnEmailLinkToContact(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)

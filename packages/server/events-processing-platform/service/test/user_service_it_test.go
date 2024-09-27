@@ -172,7 +172,6 @@ func TestUserService_LinkEmail(t *testing.T) {
 		LoggedInUserId: userId,
 		EmailId:        emailId,
 		Primary:        true,
-		Label:          "work",
 	})
 	require.Nil(t, err)
 
@@ -194,7 +193,6 @@ func TestUserService_LinkEmail(t *testing.T) {
 
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, emailId, eventData.EmailId)
-	require.Equal(t, "work", eventData.Label)
 	require.True(t, eventData.Primary)
 }
 
@@ -218,7 +216,6 @@ func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
 		UserId:    userId,
 		EmailId:   emailId,
 		Primary:   false,
-		Label:     "work",
 		AppSource: events2.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
@@ -228,7 +225,6 @@ func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
 		UserId:    userId,
 		EmailId:   emailId,
 		Primary:   true,
-		Label:     "work",
 		AppSource: events2.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
@@ -253,7 +249,6 @@ func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
 
 	require.Equal(t, tenant, eventData.Tenant)
 	require.Equal(t, emailId, eventData.EmailId)
-	require.Equal(t, "work", eventData.Label)
 	require.False(t, eventData.Primary)
 }
 
