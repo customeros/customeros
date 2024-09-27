@@ -35,6 +35,7 @@ func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 		ID:            entity.Id,
 		Email:         utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
 		RawEmail:      utils.StringPtrNillable(entity.RawEmail),
+		Work:          entity.Work,
 		Label:         &label,
 		Primary:       entity.Primary,
 		Source:        MapDataSourceToModel(entity.Source),

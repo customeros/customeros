@@ -936,6 +936,7 @@ type Email struct {
 	Email                  *string                 `json:"email,omitempty"`
 	RawEmail               *string                 `json:"rawEmail,omitempty"`
 	EmailValidationDetails *EmailValidationDetails `json:"emailValidationDetails"`
+	Work                   *bool                   `json:"work,omitempty"`
 	// Describes the type of email address (WORK, PERSONAL, etc).
 	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.

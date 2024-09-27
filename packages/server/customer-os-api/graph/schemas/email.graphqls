@@ -42,9 +42,10 @@ type Email {
     """
     An email address assocaited with the contact in customerOS.
     """
-    email: String
-    rawEmail: String
+    email:      String
+    rawEmail:   String
     emailValidationDetails: EmailValidationDetails!
+    work:       Boolean
 
     """
     Describes the type of email address (WORK, PERSONAL, etc).

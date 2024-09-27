@@ -545,7 +545,8 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 									e.primaryDomain=$primaryDomain,
 									e.alternateEmail=$alternateEmail,
 									e.createdAt=$createdAt,
-									e.updatedAt=$updatedAt
+									e.updatedAt=$updatedAt,
+									e.work=$work
 							`, tenant)
 	ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"tenant":             tenant,
@@ -572,6 +573,7 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 		"isPrimaryDomain":    entity.IsPrimaryDomain,
 		"primaryDomain":      entity.PrimaryDomain,
 		"alternateEmail":     entity.AlternateEmail,
+		"work":               entity.Work,
 	})
 	return emailId
 }

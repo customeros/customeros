@@ -717,6 +717,7 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Email:         utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyEmail)),
 		RawEmail:      utils.GetStringPropOrEmpty(props, string(entity.EmailPropertyRawEmail)),
+		Work:          utils.GetBoolPropOrNil(props, string(entity.EmailPropertyWork)),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
