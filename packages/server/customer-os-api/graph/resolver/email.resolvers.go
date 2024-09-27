@@ -94,7 +94,6 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 			ContactId:      contactID,
 			EmailId:        emailId,
 			Primary:        utils.IfNotNilBool(input.Primary),
-			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 		})
@@ -200,7 +199,6 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 			UserId:         userID,
 			EmailId:        emailId,
 			Primary:        utils.IfNotNilBool(input.Primary),
-			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 		})
@@ -306,7 +304,6 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 			OrganizationId: organizationID,
 			EmailId:        emailId,
 			Primary:        utils.IfNotNilBool(input.Primary),
-			Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
 			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
 		})

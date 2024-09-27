@@ -422,7 +422,7 @@ func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Conte
 	}
 
 	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Label, eventData.Primary)
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Primary)
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}

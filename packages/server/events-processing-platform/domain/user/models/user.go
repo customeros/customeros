@@ -31,20 +31,19 @@ type UserPhoneNumber struct {
 }
 
 type UserEmail struct {
-	Primary bool   `json:"primary"`
-	Label   string `json:"label"`
+	Primary bool `json:"primary"`
 }
 
 func (u *User) String() string {
 	return fmt.Sprintf("User{ID: %s, Name: %s, FirstName: %s, LastName: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, PhoneNumbers: %v, Emails: %v}", u.ID, u.Name, u.FirstName, u.LastName, u.Source, u.CreatedAt, u.UpdatedAt, u.PhoneNumbers, u.Emails)
 }
 
-func (u *User) HasEmail(emailId, label string) bool {
+func (u *User) HasEmail(emailId string) bool {
 	if len(u.Emails) == 0 {
 		return false
 	}
-	if email, ok := u.Emails[emailId]; ok {
-		return email.Label == label
+	if _, ok := u.Emails[emailId]; ok {
+		return true
 	}
 	return false
 }

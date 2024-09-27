@@ -9,7 +9,6 @@ customer_contact_Create(
         appSource: $appSource
           email: {
                 email: "contact@abc.com",
-                label: WORK,
                 primary: true
           },
     }

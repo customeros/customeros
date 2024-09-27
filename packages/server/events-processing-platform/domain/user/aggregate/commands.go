@@ -210,7 +210,7 @@ func (a *UserAggregate) linkEmail(ctx context.Context, request *userpb.LinkEmail
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 
 	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
-		if a.User.HasEmail(request.EmailId, request.Label) {
+		if a.User.HasEmail(request.EmailId) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return nil
 		}
@@ -218,7 +218,7 @@ func (a *UserAggregate) linkEmail(ctx context.Context, request *userpb.LinkEmail
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := events.NewUserLinkEmailEvent(a, request.Tenant, request.EmailId, request.Label, request.Primary, updatedAtNotNil)
+	event, err := events.NewUserLinkEmailEvent(a, request.Tenant, request.EmailId, request.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewUserLinkEmailEvent")
@@ -262,7 +262,7 @@ func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId,
 	}
 
 	if email.Primary {
-		event, err := events.NewUserLinkEmailEvent(a, tenant, emailId, email.Label, false, updatedAtNotNil)
+		event, err := events.NewUserLinkEmailEvent(a, tenant, emailId, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewUserLinkEmailEvent")

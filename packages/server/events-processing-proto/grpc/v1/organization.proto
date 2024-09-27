@@ -150,7 +150,6 @@ message LinkEmailToOrganizationGrpcRequest {
   string organizationId = 2;
   string emailId = 3;
   bool primary = 4;
-  string label = 5;
   string loggedInUserId = 6;
   string appSource = 7;
 }

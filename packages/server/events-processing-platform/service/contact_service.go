@@ -192,13 +192,13 @@ func (s *contactService) LinkEmailToContact(ctx context.Context, request *contac
 	}
 
 	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
-		if agg.Contact.HasEmail(request.EmailId, request.Label, request.Primary) {
+		if agg.Contact.HasEmail(request.EmailId, request.Primary) {
 			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
 			return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 		}
 	}
 
-	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Label, request.Primary, time.Now())
+	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Primary, time.Now())
 
 	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,

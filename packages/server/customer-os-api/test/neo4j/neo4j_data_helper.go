@@ -339,18 +339,17 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 	return emailId.String()
 }
 
-func LinkEmail(ctx context.Context, driver *neo4j.DriverWithContext, entityId, emailId string, primary bool, label string) {
+func LinkEmail(ctx context.Context, driver *neo4j.DriverWithContext, entityId, emailId string, primary bool) {
 	query :=
 		`	MATCH (n {id:$entityId})--(t:Tenant) 
 			MATCH (e:Email {id: $emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
 		 	MERGE (e)<-[rel:HAS]-(n) 
-		 	ON CREATE SET rel.label=$label, rel.primary=$primary `
+		 	ON CREATE SET rel.primary=$primary `
 
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
 		"entityId": entityId,
 		"primary":  primary,
 		"emailId":  emailId,
-		"label":    label,
 	})
 }
 

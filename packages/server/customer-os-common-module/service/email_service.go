@@ -84,13 +84,13 @@ func (h *emailService) Merge(c context.Context, input neo4jentity.EmailEntity, l
 
 	if linkWith != nil && linkWith.Id != "" && linkWith.Type != "" && linkWith.Relationship != "" {
 		if linkWith.Type.String() == commonModel.CONTACT.String() {
-			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, tenant, linkWith.Id, emailId, "Work", true)
+			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, tenant, linkWith.Id, emailId, true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
 		} else if linkWith.Type.String() == commonModel.USER.String() {
-			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, linkWith.Id, emailId, "Work", true)
+			err := h.services.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, linkWith.Id, emailId, true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err

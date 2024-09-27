@@ -50,7 +50,7 @@ type Email {
     """
     Describes the type of email address (WORK, PERSONAL, etc).
     """
-    label: EmailLabel
+    label: EmailLabel @deprecated
 
     """
     Identifies whether the email address is primary or not.
@@ -109,10 +109,7 @@ input EmailInput {
     """
     email: String!
 
-    """
-    Describes the type of email address (WORK, PERSONAL, etc).
-    """
-    label: EmailLabel
+    label: EmailLabel @deprecated
 
     """
     Identifies whether the email address is primary or not.
@@ -143,7 +140,7 @@ input EmailRelationUpdateInput {
     """
     Describes the type of email address (WORK, PERSONAL, etc).
     """
-    label: EmailLabel
+    label: EmailLabel @deprecated
 
     """
     Identifies whether the email address is primary or not.

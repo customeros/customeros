@@ -163,16 +163,14 @@ type UserLinkEmailEvent struct {
 	Tenant    string    `json:"tenant" validate:"required"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	EmailId   string    `json:"emailId" validate:"required"`
-	Label     string    `json:"label"`
 	Primary   bool      `json:"primary"`
 }
 
-func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserLinkEmailEvent{
 		Tenant:    tenant,
 		UpdatedAt: updatedAt,
 		EmailId:   emailId,
-		Label:     label,
 		Primary:   primary,
 	}
 

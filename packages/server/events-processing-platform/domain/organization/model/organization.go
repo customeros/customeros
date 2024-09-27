@@ -132,8 +132,7 @@ type OrganizationPhoneNumber struct {
 }
 
 type OrganizationEmail struct {
-	Primary bool   `json:"primary"`
-	Label   string `json:"label"`
+	Primary bool `json:"primary"`
 }
 
 type ParentOrganization struct {

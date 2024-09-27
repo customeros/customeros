@@ -230,7 +230,7 @@ func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt even
 	}
 
 	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Label, eventData.Primary)
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Primary)
 
 	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 

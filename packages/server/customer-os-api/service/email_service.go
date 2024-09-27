@@ -134,7 +134,6 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType commonMode
 				ContactId:      entityId,
 				EmailId:        emailEntity.Id,
 				Primary:        utils.IfNotNilBool(input.Primary),
-				Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      constants.AppSourceCustomerOsApi,
 			})
@@ -163,7 +162,6 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType commonMode
 				OrganizationId: entityId,
 				EmailId:        emailEntity.Id,
 				Primary:        utils.IfNotNilBool(input.Primary),
-				Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      constants.AppSourceCustomerOsApi,
 			})
@@ -192,7 +190,6 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType commonMode
 				UserId:         entityId,
 				EmailId:        emailEntity.Id,
 				Primary:        utils.IfNotNilBool(input.Primary),
-				Label:          utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      constants.AppSourceCustomerOsApi,
 			})
@@ -312,7 +309,6 @@ func (s *emailService) CreateEmailAddressViaEvents(ctx context.Context, email, a
 func (s *emailService) addDbRelationshipToEmailEntity(relationship dbtype.Relationship, emailEntity *neo4jentity.EmailEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	emailEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
-	emailEntity.Label = utils.GetStringPropOrEmpty(props, "label")
 }
 
 func (s *emailService) Update(ctx context.Context, input model.EmailUpdateAddressInput) error {

@@ -428,7 +428,6 @@ func (a *ContactAggregate) onEmailLink(evt eventstore.Event) error {
 		a.Contact.Emails = make(map[string]ContactEmail)
 	}
 	a.Contact.Emails[eventData.EmailId] = ContactEmail{
-		Label:   eventData.Label,
 		Primary: eventData.Primary,
 	}
 	a.Contact.UpdatedAt = eventData.UpdatedAt

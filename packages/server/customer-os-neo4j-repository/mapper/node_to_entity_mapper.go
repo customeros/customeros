@@ -724,7 +724,6 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Label:         utils.GetStringPropOrEmpty(props, "label"),
 		IsValidSyntax: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsValidSyntax)),
 		IsCatchAll:    utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsCatchAll)),
 		Deliverable:   utils.GetStringPropOrNil(props, string(entity.EmailPropertyDeliverable)),

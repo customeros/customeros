@@ -5,7 +5,6 @@ query GetOrganizationById($organizationId: ID!){
         id
         email
         rawEmail
-        label
         primary
         source
     }

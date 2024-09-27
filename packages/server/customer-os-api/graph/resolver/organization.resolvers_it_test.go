@@ -739,14 +739,12 @@ func TestQueryResolver_Organization_WithEmails(t *testing.T) {
 	require.Equal(t, true, emailA.Primary)
 	require.Equal(t, "email1", *emailA.RawEmail)
 	require.Equal(t, "email1", *emailA.Email)
-	require.Equal(t, model.EmailLabelMain, *emailA.Label)
 
 	require.Equal(t, emailId2, emailB.ID)
 	require.NotNil(t, emailB.CreatedAt)
 	require.Equal(t, false, emailB.Primary)
 	require.Equal(t, "email2", *emailB.RawEmail)
 	require.Equal(t, "email2", *emailB.Email)
-	require.Equal(t, model.EmailLabelWork, *emailB.Label)
 }
 
 func TestQueryResolver_Organization_WithPhoneNumbers(t *testing.T) {

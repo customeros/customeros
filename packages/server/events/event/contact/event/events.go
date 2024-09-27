@@ -121,16 +121,14 @@ type ContactLinkEmailEvent struct {
 	Tenant    string    `json:"tenant" validate:"required"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	EmailId   string    `json:"emailId" validate:"required"`
-	Label     string    `json:"label"`
 	Primary   bool      `json:"primary"`
 }
 
-func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, emailId string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := ContactLinkEmailEvent{
 		Tenant:    aggregate.GetTenant(),
 		UpdatedAt: updatedAt,
 		EmailId:   emailId,
-		Label:     label,
 		Primary:   primary,
 	}
 
