@@ -16,6 +16,7 @@ export const CreateSequenceButton = observer(() => {
       size='xs'
       className='mr-1'
       leftIcon={<Plus />}
+      colorScheme='primary'
       data-test='add-new-flow'
       onClick={handleCreateSequence}
     >

@@ -39,11 +39,9 @@ export const FinderFilters = observer(
       tableViewDef?.value?.columns
         .filter(
           (c) =>
-            ![
-              ColumnViewType.FlowSequenceContactCount,
-              ColumnViewType.FlowName,
-              ColumnViewType.ContactsFlows,
-            ].includes(c.columnType),
+            ![ColumnViewType.FlowName, ColumnViewType.ContactsFlows].includes(
+              c.columnType,
+            ),
         )
         .map((c) => ({
           ...c,
