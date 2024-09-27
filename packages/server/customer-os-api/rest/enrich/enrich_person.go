@@ -25,7 +25,7 @@ import (
 
 const (
 	emailTypePersonal       = "personal"
-	emailTypeProfessional   = "professional"
+	emailTypeWork           = "work"
 	enrichPersonAcceptedUrl = "/enrich/v1/person/results"
 )
 
@@ -59,7 +59,7 @@ type EnrichPersonEmail struct {
 	Address     string  `json:"address" example:"john.doe@example.com"`
 	Deliverable *string `json:"deliverable,omitempty" example:"true"`
 	IsRisky     *bool   `json:"isRisky,omitempty" example:"false"`
-	Type        *string `json:"type,omitempty" example:"professional"`
+	Type        *string `json:"type,omitempty" example:"work"`
 }
 
 // EnrichPersonJob represents the job details of a person.
@@ -328,7 +328,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 				if emailValidationResult.Data.EmailData.IsFreeAccount {
 					emailRecord.Type = utils.StringPtr(emailTypePersonal)
 				} else {
-					emailRecord.Type = utils.StringPtr(emailTypeProfessional)
+					emailRecord.Type = utils.StringPtr(emailTypeWork)
 				}
 			}
 		}
@@ -518,7 +518,7 @@ func EnrichPersonCallback(services *service.Services) gin.HandlerFunc {
 				if emailValidationResult.Data.EmailData.IsFreeAccount {
 					email.Type = utils.StringPtr(emailTypePersonal)
 				} else {
-					email.Type = utils.StringPtr(emailTypeProfessional)
+					email.Type = utils.StringPtr(emailTypeWork)
 				}
 			}
 		}

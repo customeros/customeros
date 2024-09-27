@@ -30,6 +30,7 @@ const (
 	EmailPropertyIsPrimaryDomain       EmailProperty = "isPrimaryDomain"
 	EmailPropertyPrimaryDomain         EmailProperty = "primaryDomain"
 	EmailPropertyAlternateEmail        EmailProperty = "alternateEmail"
+	EmailPropertyWork                  EmailProperty = "work"
 )
 
 type EmailEntity struct {
@@ -38,6 +39,7 @@ type EmailEntity struct {
 	Email         string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`
 	RawEmail      string `neo4jDb:"property:rawEmail;lookupName:RAW_EMAIL;supportCaseSensitive:true"`
 	Label         string
+	Work          *bool
 	Primary       bool
 	Source        DataSource
 	SourceOfTruth DataSource
