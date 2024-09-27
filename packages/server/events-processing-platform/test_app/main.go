@@ -530,7 +530,6 @@ func testContactLinkWithEmail() {
 		ContactId: contactId,
 		EmailId:   emailId,
 		Primary:   true,
-		Label:     "work",
 		AppSource: appSource,
 	})
 	print(result)
@@ -574,7 +573,6 @@ func testOrganizationLinkWithEmail() {
 		OrganizationId: orgId,
 		EmailId:        emailId,
 		Primary:        true,
-		Label:          "work",
 	})
 	print(result)
 }
@@ -698,7 +696,6 @@ func testUserLinkWithEmail() {
 		LoggedInUserId: loggedInUserid,
 		EmailId:        emailId,
 		Primary:        true,
-		Label:          "work",
 		AppSource:      appSource,
 	})
 	if err != nil {
