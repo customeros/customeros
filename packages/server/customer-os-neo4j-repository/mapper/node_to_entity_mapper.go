@@ -708,6 +708,7 @@ func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity
 	return &bankAccount
 }
 
+// TODO RETURN NIL NOT EMPTY
 func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 	if node == nil {
 		return &entity.EmailEntity{}

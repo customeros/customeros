@@ -272,8 +272,12 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*ne
 	if err != nil {
 		return nil, err
 	}
-	var emailEntity = neo4jmapper.MapDbNodeToEmailEntity(emailNode)
-	return emailEntity, nil
+
+	if emailNode == nil {
+		return nil, nil
+	}
+
+	return neo4jmapper.MapDbNodeToEmailEntity(emailNode), nil
 }
 
 func (s *emailService) CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error) {
