@@ -142,7 +142,6 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 		ContactId: responseContact.Id,
 		EmailId:   responseEmail.Id,
 		Primary:   true,
-		Label:     "WORK",
 		AppSource: "event-processing-platform",
 	})
 	if err != nil {
@@ -161,7 +160,6 @@ func TestContactService_CreateContactWithEmail(t *testing.T) {
 	}
 	require.Equal(t, responseEmail.Id, linkEmailToContact.EmailId)
 	require.Equal(t, "ziggy", linkEmailToContact.Tenant)
-	require.Equal(t, "WORK", linkEmailToContact.Label)
 	require.Equal(t, true, linkEmailToContact.Primary)
 
 }

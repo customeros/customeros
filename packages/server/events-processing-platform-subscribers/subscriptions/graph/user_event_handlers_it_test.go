@@ -525,9 +525,8 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 		services: testDatabase.Services,
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
-	emailLabel := "emailLabel"
 	userLinkEmailTime := utils.Now()
-	userLinkEmailEvent, err := user_events.NewUserLinkEmailEvent(userAggregate, tenantName, emailId, emailLabel, true, userLinkEmailTime)
+	userLinkEmailEvent, err := user_events.NewUserLinkEmailEvent(userAggregate, tenantName, emailId, true, userLinkEmailTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnEmailLinkedToUser(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)
@@ -542,9 +541,8 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 	userEmailRelation, err := neo4jtest.GetRelationship(ctx, testDatabase.Driver, userId, emailId)
 	require.Nil(t, err)
 	userEmailRelationProps := utils.GetPropsFromRelationship(*userEmailRelation)
-	require.Equal(t, 3, len(userEmailRelationProps))
+	require.Equal(t, 2, len(userEmailRelationProps))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userEmailRelationProps, "primary"))
-	require.Equal(t, emailLabel, utils.GetStringPropOrEmpty(userEmailRelationProps, "label"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userEmailRelationProps, "syncedWithEventStore"))
 }
 
