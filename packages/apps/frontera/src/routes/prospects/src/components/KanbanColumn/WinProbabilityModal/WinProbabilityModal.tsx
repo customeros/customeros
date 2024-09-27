@@ -135,6 +135,7 @@ export const WinProbabilityModal = observer(
               className='w-full'
               onClick={handleSave}
               colorScheme='primary'
+              dataTest='win-rate-confirm'
             >
               Confirm
             </Button>

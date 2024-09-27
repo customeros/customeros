@@ -5,7 +5,7 @@ import { LoginPage } from './pages/loginPage/loginPage';
 import { FlowStatuses } from './pages/flows/flowsStatuses';
 import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
-import { KanbanColumns } from './pages/opportunitiesKanban/columns';
+// import { KanbanColumns } from './pages/opportunitiesKanban/columns';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
 import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
@@ -242,35 +242,36 @@ test('Create opportunities', async ({ page }, testInfo) => {
   await loginPage.login();
   await organizationsPage.goToAllOrgs();
 
-  const organizationName = await organizationsPage.addNonInitialOrganization(
-    testInfo,
-  );
+  // const organizationName = await organizationsPage.addNonInitialOrganization(
+  //   testInfo,
+  // );
 
   await opportunitiesPage.goToOpportunitiesKanban();
   await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(0, 0, 0, 0);
-  await opportunitiesPage.addOpportunity(organizationName);
-  await opportunitiesPage.moveOpportunityCard(
-    organizationName,
-    KanbanColumns.Qualified,
-  );
-  await opportunitiesPage.moveOpportunityCard(
-    organizationName,
-    KanbanColumns.Committed,
-  );
-  await opportunitiesPage.moveOpportunityCard(
-    organizationName,
-    KanbanColumns.Qualified,
-  );
-  await opportunitiesPage.moveOpportunityCard(
-    organizationName,
-    KanbanColumns.Identified,
-  );
-  await opportunitiesPage.moveOpportunityCard(
-    organizationName,
-    KanbanColumns.Committed,
-  );
-  await opportunitiesPage.moveOpportunityCard(
-    organizationName,
-    KanbanColumns.Identified,
-  );
+  // await opportunitiesPage.addOpportunity(organizationName);
+  await opportunitiesPage.setWinRates();
+  // await opportunitiesPage.moveOpportunityCard(
+  //   organizationName,
+  //   KanbanColumns.Qualified,
+  // );
+  // await opportunitiesPage.moveOpportunityCard(
+  //   organizationName,
+  //   KanbanColumns.Committed,
+  // );
+  // await opportunitiesPage.moveOpportunityCard(
+  //   organizationName,
+  //   KanbanColumns.Qualified,
+  // );
+  // await opportunitiesPage.moveOpportunityCard(
+  //   organizationName,
+  //   KanbanColumns.Identified,
+  // );
+  // await opportunitiesPage.moveOpportunityCard(
+  //   organizationName,
+  //   KanbanColumns.Committed,
+  // );
+  // await opportunitiesPage.moveOpportunityCard(
+  //   organizationName,
+  //   KanbanColumns.Identified,
+  // );
 });

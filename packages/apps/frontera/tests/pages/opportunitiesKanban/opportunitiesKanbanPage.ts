@@ -14,7 +14,7 @@ export class OpportunitiesKanbanPage {
 
   private sideNavItemOpportunitiesKanban =
     'button[data-test="side-nav-item-Opportunities"]';
-  private sideNavItemOpportunitiesSelected =
+  sideNavItemOpportunitiesSelected =
     'button[data-test="side-nav-item-Opportunities"] div[aria-selected="true"]';
   private oppsKanbanHeaderOppsCount =
     'span[data-test="opps-kanban-header-opps-count"]';
@@ -37,6 +37,16 @@ export class OpportunitiesKanbanPage {
     'input[data-test="opp-kanban-choose-organization"]';
   private kanbanClock = 'path[data-test="kanban-clock"]';
   private oppKanbanIcon = 'div[data-test="opp-kanban-icon"]';
+  private oppThreeDotsMenuIdentified =
+    'button[data-test="opp-three-dots-menu-Identified"]';
+  private oppThreeDotsMenuQualified =
+    'button[data-test="opp-three-dots-menu-Qualified"]';
+  private oppThreeDotsMenuCommitted =
+    'button[data-test="opp-three-dots-menu-Committed"]';
+  private oppThreeDotsMenuWinProb =
+    'div[role="menuitem"]:has-text("Set win probability")';
+  private winRate = 'span[role="slider"]';
+  private winRateConfirm = 'button[data-test="win-rate-confirm"]';
 
   async goToOpportunitiesKanban() {
     await clickLocatorsThatAreVisible(
@@ -220,5 +230,69 @@ export class OpportunitiesKanbanPage {
     }
 
     return { cardsColumnXCenter, cardsColumnYCenter };
+  }
+
+  async setWinRates() {
+    await clickLocatorsThatAreVisible(
+      this.page,
+      this.oppThreeDotsMenuIdentified,
+      this.oppThreeDotsMenuWinProb,
+    );
+
+    const winRateElement: ElementHandle = await this.page.$(this.winRate);
+
+    if (winRateElement) {
+      const winRateBoundingBox = await winRateElement.boundingBox();
+
+      if (winRateBoundingBox) {
+        const { x, y, width, height } = winRateBoundingBox;
+
+        const clickX = x + width / 2;
+        const clickY = y + height / 2;
+
+        await this.page.mouse.move(clickX, clickY);
+        await this.page.mouse.down();
+        await this.page.mouse.move(clickX + 40, clickY, {
+          steps: 400,
+        });
+        await this.page.mouse.up();
+      } else {
+        process.stdout.write('Element is not visible or has no dimensions');
+      }
+    } else {
+      process.stdout.write('Element not found');
+    }
+    await this.page.waitForTimeout(1000);
+    await this.page.waitForSelector(this.winRateConfirm, {
+      state: 'attached',
+    });
+    expect(await this.page.isEnabled(this.winRateConfirm)).toBe(true);
+    await this.page.locator(this.winRateConfirm).click();
+    await this.page.waitForTimeout(3000);
+    // await this.page.dispatchEvent(this.winRateConfirm, 'click');
+
+    // await this.clickConfirm();
+  }
+
+  private async clickConfirm() {
+    const button: ElementHandle = await this.page.$(this.winRateConfirm);
+
+    if (button) {
+      const box = await button.boundingBox();
+
+      if (box) {
+        const { x, y, width, height } = box;
+
+        const clickX = x + width / 2;
+        const clickY = y + height / 2;
+
+        // await this.page.mouse.click(x, y).finally(() => {
+        //   console.log(`Clicking confirm button on x: ${x} and y: ${y}`);
+        // });
+        await this.page.mouse.move(clickX, clickY);
+        await this.page.mouse.down();
+        await this.page.mouse.up();
+      }
+    }
   }
 }

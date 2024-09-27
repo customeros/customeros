@@ -134,7 +134,7 @@ export const EmptyState = observer(() => {
           <Button
             variant='outline'
             onClick={options.onClick}
-            data-test={options.dataTest}
+            dataTest={options.dataTest}
             className='mt-4 min-w-min text-sm bg-white'
           >
             {options.buttonLabel}

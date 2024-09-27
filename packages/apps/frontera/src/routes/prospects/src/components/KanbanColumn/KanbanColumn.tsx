@@ -191,7 +191,7 @@ export const KanbanColumn = observer(
                       variant='ghost'
                       icon={<DotsVertical />}
                       aria-label='Column options'
-                      dataTest={`three-dots-opp-plus-${column?.name}`}
+                      dataTest={`opp-three-dots-menu-${column?.name}`}
                     />
                   </MenuButton>
                   <MenuList>
