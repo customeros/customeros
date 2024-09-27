@@ -60,7 +60,7 @@ func (h *EmailEventHandler) OnEmailCreate(ctx context.Context, evt eventstore.Ev
 
 	if eventData.LinkWithType != nil && eventData.LinkWithId != nil {
 		if *eventData.LinkWithType == "CONTACT" {
-			err = h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, *eventData.LinkWithId, emailId, "Work", true)
+			err = h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, *eventData.LinkWithId, emailId, true)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err

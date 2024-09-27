@@ -14,7 +14,6 @@ func MapEmailInputToEntity(input *model.EmailInput) *neo4jentity.EmailEntity {
 	}
 	emailEntity := neo4jentity.EmailEntity{
 		RawEmail:      input.Email,
-		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:       utils.IfNotNilBool(input.Primary),
 		Source:        neo4jentity.DataSourceOpenline,
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
@@ -27,16 +26,11 @@ func MapEmailInputToEntity(input *model.EmailInput) *neo4jentity.EmailEntity {
 }
 
 func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
-	var label = model.EmailLabel(entity.Label)
-	if !label.IsValid() {
-		label = ""
-	}
 	return &model.Email{
 		ID:            entity.Id,
 		Email:         utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
 		RawEmail:      utils.StringPtrNillable(entity.RawEmail),
 		Work:          entity.Work,
-		Label:         &label,
 		Primary:       entity.Primary,
 		Source:        MapDataSourceToModel(entity.Source),
 		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
@@ -70,7 +64,6 @@ func MapEmailInputToLocalEntity(input *model.EmailInput) *neo4jentity.EmailEntit
 	}
 	emailEntity := neo4jentity.EmailEntity{
 		RawEmail:      input.Email,
-		Label:         utils.IfNotNilString(input.Label, func() string { return input.Label.String() }),
 		Primary:       utils.IfNotNilBool(input.Primary),
 		Source:        neo4jentity.DataSourceOpenline,
 		SourceOfTruth: neo4jentity.DataSourceOpenline,

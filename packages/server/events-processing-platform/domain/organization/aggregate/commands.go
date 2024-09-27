@@ -386,7 +386,7 @@ func (a *OrganizationAggregate) linkEmail(ctx context.Context, cmd *command.Link
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, cmd.EmailId, cmd.Label, cmd.Primary, updatedAtNotNil)
+	event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, cmd.EmailId, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
@@ -452,7 +452,7 @@ func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, emailId,
 	}
 
 	if email.Primary {
-		event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, emailId, email.Label, false, updatedAtNotNil)
+		event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, emailId, false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationLinkEmailEvent")

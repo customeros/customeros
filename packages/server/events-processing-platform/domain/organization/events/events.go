@@ -93,16 +93,14 @@ type OrganizationLinkEmailEvent struct {
 	Tenant    string    `json:"tenant" validate:"required"`
 	UpdatedAt time.Time `json:"updatedAt"`
 	EmailId   string    `json:"emailId" validate:"required"`
-	Label     string    `json:"label"`
 	Primary   bool      `json:"primary"`
 }
 
-func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId, label string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationLinkEmailEvent{
 		Tenant:    aggregate.GetTenant(),
 		UpdatedAt: updatedAt,
 		EmailId:   emailId,
-		Label:     label,
 		Primary:   primary,
 	}
 

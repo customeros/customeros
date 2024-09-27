@@ -202,7 +202,7 @@ func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventsto
 	}
 
 	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Label, eventData.Primary)
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Primary)
 
 	return err
 }

@@ -164,7 +164,6 @@ func (a *UserAggregate) onEmailLink(event eventstore.Event) error {
 		a.User.Emails = make(map[string]models.UserEmail)
 	}
 	a.User.Emails[eventData.EmailId] = models.UserEmail{
-		Label:   eventData.Label,
 		Primary: eventData.Primary,
 	}
 	a.User.UpdatedAt = eventData.UpdatedAt

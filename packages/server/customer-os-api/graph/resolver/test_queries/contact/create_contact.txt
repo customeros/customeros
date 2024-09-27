@@ -12,7 +12,6 @@ contact_Create(
       createdAt: "2023-01-02T03:04:05.000Z"
       email: {
             email: "contact@abc.com",
-            label: WORK,
             primary: true
       },
       phoneNumber: {

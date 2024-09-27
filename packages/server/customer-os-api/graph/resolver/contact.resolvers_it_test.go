@@ -176,11 +176,10 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, createdContactId, link.ContactId)
 			require.Equal(t, createdEmailId, link.EmailId)
 			require.Equal(t, true, link.Primary)
-			require.Equal(t, "WORK", link.Label)
 			require.Equal(t, tenantName, link.Tenant)
 			require.Equal(t, testUserId, link.LoggedInUserId)
 			calledLinkEmail = true
-			neo4jt.LinkEmail(ctx, driver, createdContactId, createdEmailId, link.Primary, link.Label)
+			neo4jt.LinkEmail(ctx, driver, createdContactId, createdEmailId, link.Primary)
 			return &contactgrpc.ContactIdGrpcResponse{
 				Id: createdContactId,
 			}, nil
@@ -291,7 +290,6 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 			require.Equal(t, createdContactId.String(), link.ContactId)
 			require.Equal(t, createdEmailId.String(), link.EmailId)
 			require.Equal(t, true, link.Primary)
-			require.Equal(t, "WORK", link.Label)
 			require.Equal(t, "openline", link.Tenant)
 			calledLinkEmailToContact = true
 			return &contactgrpc.ContactIdGrpcResponse{

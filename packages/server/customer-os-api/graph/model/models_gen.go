@@ -957,8 +957,7 @@ type Email struct {
 type EmailInput struct {
 	// An email address associated with the contact in customerOS.
 	// **Required.**
-	Email string `json:"email"`
-	// Describes the type of email address (WORK, PERSONAL, etc).
+	Email string      `json:"email"`
 	Label *EmailLabel `json:"label,omitempty"`
 	// Identifies whether the email address is primary or not.
 	// **Required.**

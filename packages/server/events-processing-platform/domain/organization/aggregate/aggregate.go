@@ -594,7 +594,6 @@ func (a *OrganizationAggregate) onEmailLink(event eventstore.Event) error {
 		a.Organization.Emails = make(map[string]model.OrganizationEmail)
 	}
 	a.Organization.Emails[eventData.EmailId] = model.OrganizationEmail{
-		Label:   eventData.Label,
 		Primary: eventData.Primary,
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt

@@ -49,9 +49,9 @@ type EmailWriteRepository interface {
 	UpdateEmail(ctx context.Context, tenant, emailId, rawEmail, source string) error
 	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
 	CleanEmailValidation(ctx context.Context, tenant, emailId string) error
-	LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool) error
-	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool) error
-	LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool) error
+	LinkWithContact(ctx context.Context, tenant, contactId, emailId string, primary bool) error
+	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId string, primary bool) error
+	LinkWithUser(ctx context.Context, tenant, userId, emailId string, primary bool) error
 }
 
 type emailWriteRepository struct {
@@ -212,7 +212,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, emailId, label string, primary bool) error {
+func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, contactId, emailId string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithContact")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -223,14 +223,12 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, cont
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
-			rel.label = $label,	
 			c.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
 		"emailId":   emailId,
-		"label":     label,
 		"primary":   primary,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -243,7 +241,7 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId, label string, primary bool) error {
+func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithOrganization")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -255,14 +253,12 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant,
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (org)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
-			rel.label = $label,	
 			org.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"emailId":        emailId,
-		"label":          label,
 		"primary":        primary,
 	}
 	span.LogFields(log.String("cypher", cypher))
@@ -275,7 +271,7 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant,
 	return err
 }
 
-func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId, label string, primary bool) error {
+func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId, emailId string, primary bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.LinkWithUser")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -287,14 +283,12 @@ func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId,
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (u)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
-			rel.label = $label,	
 			u.updatedAt = datetime(),
 			rel.syncedWithEventStore = true`
 	params := map[string]any{
 		"tenant":  tenant,
 		"userId":  userId,
 		"emailId": emailId,
-		"label":   label,
 		"primary": primary,
 	}
 	span.LogFields(log.String("cypher", cypher))

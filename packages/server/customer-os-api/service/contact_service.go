@@ -176,7 +176,6 @@ func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSo
 				ContactId:      contactId,
 				EmailId:        emailId,
 				Primary:        emailEntity.Primary,
-				Label:          emailEntity.Label,
 				AppSource:      appSource,
 			})
 		})
@@ -634,7 +633,6 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
 				Primary:   data.EmailEntity.Primary,
-				Label:     data.EmailEntity.Label,
 				ContactId: response.Id,
 				EmailId:   emailId.Id,
 				Tenant:    common.GetTenantFromContext(ctx),
