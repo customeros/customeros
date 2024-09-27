@@ -1,1 +1,1 @@
-export * from './FlowNameCell.tsx';
+export * from './FlowNameCell';

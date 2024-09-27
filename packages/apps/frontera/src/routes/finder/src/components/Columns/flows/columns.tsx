@@ -6,6 +6,7 @@ import { getColumnConfig } from '@finder/components/Columns/shared/util/getColum
 import {
   FlowNameCell,
   FlowStatusCell,
+  FlowStatisticsCell,
 } from '@finder/components/Columns/flows/Cells';
 
 import { Skeleton } from '@ui/feedback/Skeleton';
@@ -22,27 +23,6 @@ type Column = ColumnDefinition<ColumnDatum, any>;
 const columnHelper = createColumnHelper<ColumnDatum>();
 
 const columns: Record<string, Column> = {
-  // Todo uncomment when necessary, for now should stay hidden
-  // [ColumnViewType.FlowName]: columnHelper.accessor((row) => row, {
-  //   id: ColumnViewType.FlowName,
-  //   size: 150,
-  //   minSize: 150,
-  //   maxSize: 300,
-  //   enableResizing: true,
-  //   enableColumnFilter: false,
-  //   enableSorting: true,
-  //   header: (props) => (
-  //     <THead
-  //       title='Sequence'
-  //       filterWidth={250}
-  //       id={ColumnViewType.FlowName}
-  //       {...getTHeadProps(props)}
-  //     />
-  //   ),
-  //   cell: (props) => <TextCell text={props.row?.original?.value?.name ?? ''} />,
-  //   skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
-  // }),
-
   [ColumnViewType.FlowSequenceName]: columnHelper.accessor((row) => row, {
     id: ColumnViewType.FlowSequenceName,
     size: 150,
@@ -90,36 +70,10 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
 
-  // [ColumnViewType.FlowSequenceContactCount]: columnHelper.accessor(
-  //   (row) => row,
-  //   {
-  //     id: ColumnViewType.FlowSequenceContactCount,
-  //     size: 150,
-  //     minSize: 150,
-  //     maxSize: 300,
-  //     enableResizing: true,
-  //     enableColumnFilter: false,
-  //     enableSorting: true,
-  //     header: (props) => (
-  //       <THead
-  //         title='Contacts'
-  //         filterWidth={250}
-  //         id={ColumnViewType.FlowSequenceContactCount}
-  //         {...getTHeadProps(props)}
-  //       />
-  //     ),
-  //     cell: (props) => (
-  //       <TextCell
-  //         text={props.row?.original?.value?.contacts?.length?.toString() ?? ''}
-  //       />
-  //     ),
-  //     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
-  //   },
-  // ),
-  [ColumnViewType.FlowSequenceStatusInProgressCount]: columnHelper.accessor(
+  [ColumnViewType.FlowSequencePendingCount]: columnHelper.accessor(
     (row) => row,
     {
-      id: ColumnViewType.FlowSequenceStatusInProgressCount,
+      id: ColumnViewType.FlowSequencePendingCount,
       size: 150,
       minSize: 150,
       maxSize: 300,
@@ -130,24 +84,27 @@ const columns: Record<string, Column> = {
         <THead
           filterWidth={250}
           title='In Progress'
-          id={ColumnViewType.FlowSequenceStatusInProgressCount}
+          id={ColumnViewType.FlowSequencePendingCount}
           {...getTHeadProps(props)}
         />
       ),
-      cell: () => (
-        <TextCell
-          text={''}
-          unknownText='No data yet'
-          dataTest='flow-in-progress-in-flows-table'
-        />
-      ),
+      cell: (cell) => {
+        const statistics = cell.getValue()?.value?.statistics;
+
+        return (
+          <FlowStatisticsCell
+            total={statistics.total}
+            value={statistics.pending}
+          />
+        );
+      },
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),
-  [ColumnViewType.FlowSequenceStatusPendingCount]: columnHelper.accessor(
+  [ColumnViewType.FlowSequenceGoalAchievedCount]: columnHelper.accessor(
     (row) => row,
     {
-      id: ColumnViewType.FlowSequenceStatusPendingCount,
+      id: ColumnViewType.FlowSequenceGoalAchievedCount,
       size: 150,
       minSize: 150,
       maxSize: 300,
@@ -157,25 +114,57 @@ const columns: Record<string, Column> = {
       header: (props) => (
         <THead
           filterWidth={250}
-          title='Not Started'
-          id={ColumnViewType.FlowSequenceStatusPendingCount}
+          title='Goal Achieved'
+          id={ColumnViewType.FlowSequenceGoalAchievedCount}
           {...getTHeadProps(props)}
         />
       ),
-      cell: () => (
-        <TextCell
-          text={''}
-          unknownText='No data yet'
-          dataTest={'flow-not-started-in-flows-table'}
-        />
-      ),
+      cell: (cell) => {
+        const statistics = cell.getValue()?.value?.statistics;
+
+        return (
+          <FlowStatisticsCell
+            total={statistics.total}
+            value={statistics.goalAchieved}
+          />
+        );
+      },
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),
-  [ColumnViewType.FlowSequenceStatusSuccessfulCount]: columnHelper.accessor(
+  [ColumnViewType.FlowSequenceTotalCount]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowSequenceTotalCount,
+    size: 150,
+    minSize: 150,
+    maxSize: 300,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        title='Total '
+        filterWidth={250}
+        id={ColumnViewType.FlowSequenceTotalCount}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (e) => {
+      const total = e.getValue()?.value?.statistics?.total;
+
+      return (
+        <TextCell
+          text={`${total}`}
+          unknownText='No data yet'
+          dataTest='flow-completed-in-flows-table'
+        />
+      );
+    },
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+  [ColumnViewType.FlowSequenceCompletedCount]: columnHelper.accessor(
     (row) => row,
     {
-      id: ColumnViewType.FlowSequenceStatusSuccessfulCount,
+      id: ColumnViewType.FlowSequenceCompletedCount,
       size: 150,
       minSize: 150,
       maxSize: 300,
@@ -186,45 +175,20 @@ const columns: Record<string, Column> = {
         <THead
           filterWidth={250}
           title='Completed'
-          id={ColumnViewType.FlowSequenceStatusSuccessfulCount}
+          id={ColumnViewType.FlowSequenceCompletedCount}
           {...getTHeadProps(props)}
         />
       ),
-      cell: () => (
-        <TextCell
-          text={''}
-          unknownText='No data yet'
-          dataTest='flow-completed-in-flows-table'
-        />
-      ),
-      skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
-    },
-  ),
-  [ColumnViewType.FlowSequenceStatusUnsuccessfulCount]: columnHelper.accessor(
-    (row) => row,
-    {
-      id: ColumnViewType.FlowSequenceStatusUnsuccessfulCount,
-      size: 150,
-      minSize: 150,
-      maxSize: 300,
-      enableResizing: true,
-      enableColumnFilter: false,
-      enableSorting: true,
-      header: (props) => (
-        <THead
-          filterWidth={250}
-          title='Ended Early'
-          id={ColumnViewType.FlowSequenceStatusUnsuccessfulCount}
-          {...getTHeadProps(props)}
-        />
-      ),
-      cell: () => (
-        <TextCell
-          text={''}
-          unknownText='No data yet'
-          dataTest={'flow-ended-early-in-flows-table'}
-        />
-      ),
+      cell: (cell) => {
+        const statistics = cell.getValue()?.value?.statistics;
+
+        return (
+          <FlowStatisticsCell
+            total={statistics.total}
+            value={statistics.completed}
+          />
+        );
+      },
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),
