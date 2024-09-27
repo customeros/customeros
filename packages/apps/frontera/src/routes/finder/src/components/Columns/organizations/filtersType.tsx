@@ -22,7 +22,7 @@ export type FilterType = {
   filterName: string;
   filterAccesor: ColumnViewType;
   filterOperators: ComparisonOperator[];
-  filterType: 'text' | 'date' | 'number' | 'numbers' | 'list';
+  filterType: 'text' | 'date' | 'number' | 'list';
 };
 
 export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
@@ -156,7 +156,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     icon: <Users03 />,
   },
   [ColumnViewType.OrganizationsSocials]: {
-    filterType: 'numbers',
+    filterType: 'number',
     filterName: 'Employees',
     filterAccesor: ColumnViewType.OrganizationsSocials,
     filterOperators: [

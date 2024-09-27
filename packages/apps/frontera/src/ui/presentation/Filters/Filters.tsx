@@ -112,6 +112,7 @@ export const Filters = ({
           {availableFilters.map((filter: Partial<ColumnView & FilterType>) => {
             return (
               <MenuItem
+                className='group'
                 key={filter?.columnType}
                 onClick={() =>
                   onFilterSelect(filter, (property) =>
@@ -119,8 +120,10 @@ export const Filters = ({
                   )
                 }
               >
-                <div className='flex items-center justify-center gap-2'>
-                  {filter?.icon}
+                <div className='flex items-center justify-center gap-2 '>
+                  <span className='group-hover:text-gray-700 text-gray-500'>
+                    {filter?.icon}
+                  </span>
                   {filter?.filterName}
                 </div>
               </MenuItem>

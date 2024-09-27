@@ -3,6 +3,7 @@ import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 
 import { DateFilter } from './components/DateFilter';
 import { ClearFilter } from './components/ClearFilter';
+import { NumberFilter } from './components/NumberFilter';
 import { PropertyFilter } from './components/PropertyFilter';
 import { OperatorFilter } from './components/OperatorFilter';
 import { TextFilter } from './components/TextFilter/TextFilter';
@@ -56,6 +57,15 @@ export const Filter = ({
               value: string | [string | null, string | null],
             ) => void
           }
+        />
+      )}
+
+      {filterType === 'number' && (
+        <NumberFilter
+          filterName={filterName}
+          filterValue={filterValue}
+          operatorValue={operatorValue}
+          onChangeFilterValue={onChangeFilterValue}
         />
       )}
 
