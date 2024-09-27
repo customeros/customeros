@@ -33,6 +33,7 @@ type FlowService interface {
 
 	FlowContactGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowContactEntities, error)
 	FlowContactGetById(ctx context.Context, id string) (*neo4jentity.FlowContactEntity, error)
+	FlowContactGetByContactId(ctx context.Context, flowId, contactId string) (*neo4jentity.FlowContactEntity, error)
 	FlowContactAdd(ctx context.Context, flowId, contactId string) (*neo4jentity.FlowContactEntity, error)
 	FlowContactDelete(ctx context.Context, flowContactId string) error
 
@@ -628,6 +629,22 @@ func (s *flowService) FlowContactGetById(ctx context.Context, id string) (*neo4j
 	}
 
 	return mapper.MapDbNodeToFlowContactEntity(node), nil
+}
+
+func (s *flowService) FlowContactGetByContactId(ctx context.Context, flowId, contactId string) (*neo4jentity.FlowContactEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowContactGetByContactId")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.String("flowId", flowId), log.String("contactId", contactId))
+
+	identified, err := s.services.Neo4jRepositories.FlowContactReadRepository.Identify(ctx, flowId, contactId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return mapper.MapDbNodeToFlowContactEntity(identified), nil
 }
 
 // (fs:FlowSequence {id: $id})-[:HAS]->(:FlowSequenceContact)

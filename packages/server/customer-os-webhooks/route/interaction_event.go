@@ -7,14 +7,18 @@ import (
 	"errors"
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
+	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"io"
 	"net/http"
@@ -27,6 +31,10 @@ func AddInteractionEventRoutes(ctx context.Context, route *gin.Engine, services 
 		tracing.TracingEnhancer(ctx, "/sync/postmark-interaction-event"),
 		syncPostmarkInteractionEventHandler(services, cfg, log))
 }
+
+//pending - contacts in flow that are not in the other stages
+//completed - contacts that have received the email
+//goal achieved - contacts that have received the sign-up email (Welcome to Embedd - Product Tips)
 
 func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config.Config, log logger.Logger) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -95,6 +103,10 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: tenantByName,
+		})
+
 		n, err := services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantByName(ctx, tenantByName)
 		if err != nil {
 			span.LogFields(tracingLog.Bool("tenant.found", false))
@@ -159,6 +171,14 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 
 		if username == "" {
 			span.LogFields(tracingLog.Bool("mailbox.found", false))
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
+			return
+		}
+
+		err = processEmailForFlows(ctx, services, tenantByName, postmarkEmailWebhookData.FromFull.Email, participants, postmarkEmailWebhookData.Subject)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			log.Errorf("(SyncInteractionEvent) error processing email for flows: %s", err.Error())
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request body"})
 			return
 		}
@@ -322,4 +342,71 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 		Reference:         references,
 		Headers:           headers,
 	}, nil
+}
+
+// if the sender is a user in the system, it means that this is outbound communication
+// we mark the contacts that received this email as COMPLETED in the flows that they are in
+// this is a hack for now as we should identify the flow that the contact is in and mark the contact as COMPLETED only in that specific flow
+func processEmailForFlows(ctx context.Context, services *service.Services, tenant, fromEmailAddress string, participantsEmailAddresses []string, emailSubject string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InteractionEventService.processEmailForFlows")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	senderUser, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, fromEmailAddress)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	outbound := false
+	if senderUser != nil {
+		outbound = true
+	}
+
+	if outbound {
+		for _, p := range participantsEmailAddresses {
+			contactsWithEmailNodes, err := services.CommonServices.Neo4jRepositories.ContactReadRepository.GetContactsWithEmail(ctx, tenant, p)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			for _, contactNode := range contactsWithEmailNodes {
+				contactEntity := mapper.MapDbNodeToContactEntity(contactNode)
+
+				flowsWithContact, err := services.CommonServices.FlowService.FlowsGetListWithContact(ctx, []string{contactEntity.Id})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				for _, flow := range *flowsWithContact {
+					flowContact, err := services.CommonServices.FlowService.FlowContactGetByContactId(ctx, flow.Id, contactEntity.Id)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return err
+					}
+
+					if flowContact == nil {
+						continue
+					}
+
+					if emailSubject == "Welcome to Embedd - Product Tips" {
+						flowContact.Status = neo4jentity.FlowContactStatusGoalAchieved
+					} else {
+						flowContact.Status = neo4jentity.FlowContactStatusCompleted
+					}
+
+					_, err = services.CommonServices.Neo4jRepositories.FlowContactWriteRepository.Merge(ctx, flowContact)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return err
+					}
+				}
+
+			}
+		}
+	}
+
+	return nil
 }
