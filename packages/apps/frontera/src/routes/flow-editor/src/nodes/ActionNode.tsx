@@ -71,10 +71,10 @@ export const ActionNode = ({
       <div
         className={`aspect-[9/1] max-w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
       >
-        <div className='truncate  text-sm flex items-center '>
+        <div className='text-sm flex items-center justify-between '>
           <div className='truncate text-sm flex items-center'>
             <div
-              className={`size-6 mr-2 bg-${color}-50 text-${color}-500 border border-${color}-100  rounded flex items-center justify-center`}
+              className={`size-6 min-w-6 mr-2 bg-${color}-50 text-${color}-500 border border-${color}-100  rounded flex items-center justify-center`}
             >
               {iconMap?.[data.action]}
             </div>
@@ -93,7 +93,7 @@ export const ActionNode = ({
           </div>
 
           <IconButton
-            size='xs'
+            size='xxs'
             variant='ghost'
             aria-label='Edit'
             icon={<Edit03 />}

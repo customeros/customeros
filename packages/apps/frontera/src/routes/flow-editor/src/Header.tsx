@@ -1,23 +1,17 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
-import { Button } from '@ui/form/Button/Button.tsx';
-// import { Users01 } from '@ui/media/icons/Users01.tsx';
-// import { PieChart03 } from '@ui/media/icons/PieChart03.tsx';
-// import { Dataflow03 } from '@ui/media/icons/Dataflow03.tsx';
-import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
-// import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
-
 import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
-import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
+import { Button } from '@ui/form/Button/Button.tsx';
 import { User01 } from '@ui/media/icons/User01.tsx';
 import { ViewSettings } from '@shared/components/ViewSettings';
+import { ChevronRight } from '@ui/media/icons/ChevronRight.tsx';
 import { TableViewType } from '@shared/types/__generated__/graphql.types';
 
 import { FlowStatusMenu } from './components';
@@ -58,7 +52,7 @@ export const Header = observer(() => {
 
   return (
     <div>
-      <div className='bg-white pl-3 pr-4 h-10 border-b flex items-center justify-between'>
+      <div className='bg-white px-4 h-14 border-b flex items-center text-base font-bold justify-between'>
         <div className='flex items-center'>
           <div className='flex items-center gap-1 font-medium'>
             <span
@@ -107,18 +101,17 @@ export const Header = observer(() => {
           <ViewSettings type={TableViewType.Contacts} />
         ) : (
           <div className='flex gap-2'>
-            <FlowStatusMenu id={id} />
             {saveFlag && (
               <Button
                 size='xs'
                 variant='outline'
                 colorScheme='gray'
                 onClick={handleSave}
-                leftIcon={<Check />}
               >
                 Save
               </Button>
             )}
+            <FlowStatusMenu id={id} />
           </div>
         )}
       </div>

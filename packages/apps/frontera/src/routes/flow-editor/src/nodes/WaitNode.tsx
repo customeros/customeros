@@ -56,47 +56,50 @@ export const WaitNode = ({
 
   return (
     <div
-      className={`h-[56px] w-[150px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
+      className={`w-[150px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
     >
-      <div className='truncate  text-sm flex items-center '>
-        <div
-          className={`size-6 min-w-6 mr-2 bg-gray-50 text-gray-500 border-gray-100  rounded flex items-center justify-center`}
-        >
-          <Hourglass02 />
-        </div>
+      <div className='truncate text-sm flex items-center justify-between'>
+        <div className='flex items-center'>
+          <div
+            className={`size-6 min-w-6 mr-2 bg-gray-50 text-gray-500 border-gray-100  rounded flex items-center justify-center`}
+          >
+            <Hourglass02 />
+          </div>
 
-        {isFocused ? (
-          <div className='flex mr-1 items-baseline'>
-            <ResizableInput
-              min={0}
-              size='xs'
-              autoFocus
-              step={0.5}
-              type='number'
-              variant='unstyled'
-              value={data.waitDuration || 0}
-              onFocus={(e) => e.target.select()}
-              className=' min-w-2.5 min-h-0 max-h-4'
-              onChange={(e) => handleDurationChange(e.target.value)}
-            />
-            <span className='ml-1'>
+          {isFocused ? (
+            <div className='flex mr-1 items-baseline'>
+              <ResizableInput
+                min={0}
+                size='xs'
+                autoFocus
+                step={0.5}
+                type='number'
+                variant='unstyled'
+                value={data.waitDuration || 0}
+                onFocus={(e) => e.target.select()}
+                className=' min-w-2.5 min-h-0 max-h-4'
+                onChange={(e) => handleDurationChange(e.target.value)}
+              />
+              <span className='ml-1'>
+                {data.waitDuration === 1 ? 'day' : 'days'}
+              </span>
+            </div>
+          ) : (
+            <span className='truncate'>
+              {data.waitDuration || 0}{' '}
               {data.waitDuration === 1 ? 'day' : 'days'}
             </span>
-          </div>
-        ) : (
-          <span className='truncate'>
-            {data.waitDuration || 0} {data.waitDuration === 1 ? 'day' : 'days'}
-          </span>
-        )}
+          )}
+        </div>
 
         <IconButton
-          size='xs'
+          size='xxs'
           variant='ghost'
           aria-label='Edit'
           icon={<Edit03 />}
           onClick={() => setFocused(!isFocused)}
           className={cn(
-            'ml-2 w-0 group-hover:w-auto opacity-0 group-hover:opacity-100 pointer-events-all',
+            'ml-2  opacity-0 group-hover:opacity-100 pointer-events-all',
             {
               'opacity-0 group-hover:opacity-0': isFocused,
             },

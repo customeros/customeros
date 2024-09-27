@@ -69,33 +69,33 @@ export const getNodeWidth = (node: Node) => {
   if (node.type === 'trigger') {
     return {
       width: 300,
-      height: 56,
+      height: 48,
     };
   }
 
   if (node.type === 'control') {
     return {
       width: 131,
-      height: 56,
+      height: 48,
     };
   }
 
   if (node.type === 'wait') {
     return {
       width: 150,
-      height: 56,
+      height: 48,
     };
   }
 
   if (node.type === 'action') {
     return {
       width: 300,
-      height: 56,
+      height: 48,
     };
   }
 
   return {
     width: 200,
-    height: 75,
+    height: 48,
   };
 };

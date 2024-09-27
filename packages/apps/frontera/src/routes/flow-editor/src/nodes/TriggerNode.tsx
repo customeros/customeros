@@ -12,10 +12,6 @@ import { Lightning01 } from '@ui/media/icons/Lightning01.tsx';
 import { Handle } from '../components';
 import { DropdownCommandMenu } from '../commands/Commands.tsx';
 
-// const triggerEventMapper: Record<string, string> = {
-//   RecordAddedManually: 'added manually',
-// };
-
 export const TriggerNode = (
   props: NodeProps & { data: Record<string, string> },
 ) => {
@@ -34,13 +30,9 @@ export const TriggerNode = (
   return (
     <>
       <div
-        className={`aspect-[9/1] h-[56px] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group relative cursor-pointer`}
+        className={`aspect-[9/1] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group relative cursor-pointer`}
       >
-        {/*<div className='flex items-center text-gray-400 uppercase text-xs mb-1 absolute top-[-20px]'>*/}
-        {/*  Trigger*/}
-        {/*</div>*/}
-
-        <div className='truncate  text-sm flex items-center justify-between '>
+        <div className='flex items-center justify-between '>
           <div className='truncate text-sm flex items-center'>
             <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
               {props.data.entity && props.data?.triggerType ? (
@@ -65,7 +57,7 @@ export const TriggerNode = (
           </div>
 
           <IconButton
-            size='xs'
+            size='xxs'
             variant='ghost'
             aria-label='Edit'
             icon={<Edit03 />}
@@ -104,7 +96,7 @@ export const TriggerViewportPortal = observer(
             <div
               style={{
                 transform: `translate(calc(${positionAbsoluteX}px + 150px - 180px), ${
-                  positionAbsoluteY + 70
+                  positionAbsoluteY + 48 + 24 // 48 is height of the node, 24 is desired spacing
                 }px)`,
                 position: 'absolute',
                 pointerEvents: 'all',
