@@ -18,6 +18,7 @@ import (
 
 type FlowExecutionService interface {
 	ExecuteScheduledFlowActions()
+	ComputeFlowStatistics()
 }
 
 type flowExecutionService struct {
@@ -117,4 +118,72 @@ func (s *flowExecutionService) processActionExecution(ctx context.Context, sched
 	}
 
 	return nil
+}
+
+func (s *flowExecutionService) ComputeFlowStatistics() {
+	ctx, cancel := utils.GetContextWithTimeout(context.Background(), utils.HalfOfHourDuration)
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "FlowExecutionService.ComputeFlowStatistics")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	tenants, err := s.commonServices.TenantService.GetAllTenants(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return
+	}
+
+	for _, tenant := range tenants {
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: tenant.Name,
+		})
+
+		flows, err := s.commonServices.FlowService.FlowGetList(ctx)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return
+		}
+
+		for _, flow := range *flows {
+			ctx = common.WithCustomContext(ctx, &common.CustomContext{
+				Tenant: tenant.Name,
+			})
+
+			pending, err := s.commonServices.Neo4jRepositories.FlowContactReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowContactStatusPending)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "pending", pending)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			completed, err := s.commonServices.Neo4jRepositories.FlowContactReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowContactStatusCompleted)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "completed", completed)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			goalAchieved, err := s.commonServices.Neo4jRepositories.FlowContactReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowContactStatusGoalAchieved)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "goalAchieved", goalAchieved)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+		}
+
+	}
+
 }

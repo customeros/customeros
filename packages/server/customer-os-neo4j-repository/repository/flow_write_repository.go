@@ -39,25 +39,34 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 				f.updatedAt = $updatedAt,
 				f.nodes = $nodes,
 				f.edges = $edges,
-				f.status = $status
+				f.status = $status,
+				f.pending = $pending,
+				f.completed = $completed,
+				f.goalAchieved = $goalAchieved
 			ON CREATE SET
 				f.createdAt = $createdAt,
 				f.updatedAt = $updatedAt,
 				f.name = $name,
 				f.nodes = $nodes,
 				f.edges = $edges,
-				f.status = $status
+				f.status = $status,
+				f.pending = $pending,
+				f.completed = $completed,
+				f.goalAchieved = $goalAchieved
 			RETURN f`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
-		"tenant":    common.GetTenantFromContext(ctx),
-		"id":        entity.Id,
-		"name":      entity.Name,
-		"nodes":     entity.Nodes,
-		"edges":     entity.Edges,
-		"status":    entity.Status,
-		"createdAt": utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
+		"tenant":       common.GetTenantFromContext(ctx),
+		"id":           entity.Id,
+		"name":         entity.Name,
+		"nodes":        entity.Nodes,
+		"edges":        entity.Edges,
+		"status":       entity.Status,
+		"createdAt":    utils.TimeOrNow(entity.CreatedAt),
+		"updatedAt":    utils.TimeOrNow(entity.UpdatedAt),
+		"pending":      entity.Pending,
+		"completed":    entity.Completed,
+		"goalAchieved": entity.GoalAchieved,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

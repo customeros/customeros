@@ -20,6 +20,10 @@ func AddEmailRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, 
 		syncEnrowEmailResponse(cfg, services))
 }
 
+//pending - contacts in flow that are not in the other stages
+//completed - contacts that have received the email
+//goal achieved - contacts that have received the sign-up email (Welcome to Embedd - Product Tips)
+
 func syncEnrowEmailResponse(cfg *config.Config, services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "syncEnrowEmailResponse", c.Request.Header)

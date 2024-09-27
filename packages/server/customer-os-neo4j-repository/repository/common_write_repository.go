@@ -29,6 +29,7 @@ type CommonWriteRepository interface {
 	Unlink(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, details LinkDetails) error
 	Delete(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, id, label string) error
 	UpdateTimeProperty(ctx context.Context, tenant, nodeLabel, entityId, property string, value *time.Time) error
+	UpdateInt64Property(ctx context.Context, tenant, nodeLabel, entityId, property string, value int64) error
 	IncrementProperty(ctx context.Context, tenant, nodeLabel, entityId, property string) error
 }
 
@@ -198,6 +199,30 @@ func (r *commonWriteRepository) UpdateTimeProperty(ctx context.Context, tenant, 
 	params := map[string]any{
 		"entityId": entityId,
 		"value":    utils.TimePtrAsAny(value),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *commonWriteRepository) UpdateInt64Property(ctx context.Context, tenant, nodeLabel, entityId, property string, value int64) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateInt64Property")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.SetTag(tracing.SpanTagEntityId, entityId)
+
+	span.LogFields(log.String("property", string(property)), log.String("nodeLabel", nodeLabel), log.Object("value", value))
+
+	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id: $entityId}) SET n.%s = $value`, nodeLabel, nodeLabel, tenant, property)
+	params := map[string]any{
+		"entityId": entityId,
+		"value":    value,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

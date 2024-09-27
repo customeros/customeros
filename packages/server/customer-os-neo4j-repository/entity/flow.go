@@ -16,6 +16,13 @@ type FlowEntity struct {
 	Edges string
 
 	Status FlowStatus
+
+	// Statistics
+
+	Total        int64
+	Pending      int64
+	Completed    int64
+	GoalAchieved int64
 }
 
 type FlowEntities []FlowEntity
@@ -53,6 +60,10 @@ type FlowContactEntity struct {
 	UpdatedAt time.Time
 
 	ContactId string
+
+	Status          FlowContactStatus
+	ScheduledAction *string
+	ScheduledAt     *time.Time
 }
 
 type FlowContactEntities []FlowContactEntity
@@ -96,6 +107,21 @@ const (
 
 func GetFlowActionType(s string) FlowActionType {
 	return FlowActionType(s)
+}
+
+type FlowContactStatus string
+
+const (
+	FlowContactStatusPending      FlowContactStatus = "PENDING"
+	FlowContactStatusScheduled    FlowContactStatus = "SCHEDULED"
+	FlowContactStatusInProgress   FlowContactStatus = "IN_PROGRESS"
+	FlowContactStatusPaused       FlowContactStatus = "PAUSED"
+	FlowContactStatusCompleted    FlowContactStatus = "COMPLETED"
+	FlowContactStatusGoalAchieved FlowContactStatus = "GOAL_ACHIEVED"
+)
+
+func GetFlowContactStatus(s string) FlowContactStatus {
+	return FlowContactStatus(s)
 }
 
 type FlowExecutionSettingsEntity struct {

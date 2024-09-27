@@ -1178,11 +1178,11 @@ type FlowActionSenderMergeInput struct {
 }
 
 type FlowContact struct {
-	Metadata        *Metadata         `json:"metadata"`
-	Contact         *Contact          `json:"contact"`
-	Status          FlowContactStatus `json:"status"`
-	ScheduledAction *string           `json:"scheduledAction,omitempty"`
-	ScheduledAt     *time.Time        `json:"scheduledAt,omitempty"`
+	Metadata        *Metadata                `json:"metadata"`
+	Contact         *Contact                 `json:"contact"`
+	Status          entity.FlowContactStatus `json:"status"`
+	ScheduledAction *string                  `json:"scheduledAction,omitempty"`
+	ScheduledAt     *time.Time               `json:"scheduledAt,omitempty"`
 }
 
 func (FlowContact) IsMetadataInterface()        {}
@@ -1196,11 +1196,10 @@ type FlowMergeInput struct {
 }
 
 type FlowStatistics struct {
-	Total      int64 `json:"total"`
-	Scheduled  int64 `json:"scheduled"`
-	InProgress int64 `json:"inProgress"`
-	Paused     int64 `json:"paused"`
-	Completed  int64 `json:"completed"`
+	Total        int64 `json:"total"`
+	Pending      int64 `json:"pending"`
+	Completed    int64 `json:"completed"`
+	GoalAchieved int64 `json:"goalAchieved"`
 }
 
 type GCliAttributeKeyValuePair struct {
@@ -4314,51 +4313,6 @@ func (e *ExternalSystemType) UnmarshalGQL(v interface{}) error {
 }
 
 func (e ExternalSystemType) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type FlowContactStatus string
-
-const (
-	FlowContactStatusScheduled  FlowContactStatus = "SCHEDULED"
-	FlowContactStatusInProgress FlowContactStatus = "IN_PROGRESS"
-	FlowContactStatusPaused     FlowContactStatus = "PAUSED"
-	FlowContactStatusCompleted  FlowContactStatus = "COMPLETED"
-)
-
-var AllFlowContactStatus = []FlowContactStatus{
-	FlowContactStatusScheduled,
-	FlowContactStatusInProgress,
-	FlowContactStatusPaused,
-	FlowContactStatusCompleted,
-}
-
-func (e FlowContactStatus) IsValid() bool {
-	switch e {
-	case FlowContactStatusScheduled, FlowContactStatusInProgress, FlowContactStatusPaused, FlowContactStatusCompleted:
-		return true
-	}
-	return false
-}
-
-func (e FlowContactStatus) String() string {
-	return string(e)
-}
-
-func (e *FlowContactStatus) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = FlowContactStatus(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowContactStatus", str)
-	}
-	return nil
-}
-
-func (e FlowContactStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

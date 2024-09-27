@@ -26,6 +26,7 @@ const (
 	emailGroup                      = "email"
 	emailBulkValidationGroup        = "emailBulkValidation"
 	flowExecutionGroup              = "flowExecutionGroup"
+	flowStatisticsGroup             = "flowStatisticsGroup"
 )
 
 var jobLocks = struct {
@@ -50,6 +51,7 @@ var jobLocks = struct {
 		emailGroup:                      {},
 		emailBulkValidationGroup:        {},
 		flowExecutionGroup:              {},
+		flowStatisticsGroup:             {},
 	},
 }
 
@@ -253,6 +255,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 	//	cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
 	//}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowStatistics, func() {
+		lockAndRunJob(cont, flowStatisticsGroup, flowStatistics)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "flowStatistics", err.Error())
+	}
+
 	c.Start()
 
 	return c
@@ -382,4 +391,8 @@ func checkEnrowResult(cont *container.Container) {
 
 func flowExecution(cont *container.Container) {
 	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ExecuteScheduledFlowActions()
+}
+
+func flowStatistics(cont *container.Container) {
+	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ComputeFlowStatistics()
 }

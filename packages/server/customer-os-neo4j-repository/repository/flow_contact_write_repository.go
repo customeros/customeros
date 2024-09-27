@@ -37,11 +37,13 @@ func (r *flowContactWriteRepositoryImpl) Merge(ctx context.Context, entity *enti
 			MERGE (t)<-[:BELONGS_TO_TENANT]-(fc:FlowContact:FlowContact_%s {id: $id})
 			ON MATCH SET
 				fc.updatedAt = $updatedAt,
-				fc.contactId = $contactId
+				fc.contactId = $contactId,
+				fc.status = $status
 			ON CREATE SET
 				fc.createdAt = $createdAt,
 				fc.updatedAt = $updatedAt,
-				fc.contactId = $contactId
+				fc.contactId = $contactId,
+				fc.status = $status
 			RETURN fc`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
@@ -50,6 +52,7 @@ func (r *flowContactWriteRepositoryImpl) Merge(ctx context.Context, entity *enti
 		"createdAt": utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
 		"contactId": entity.ContactId,
+		"status":    entity.Status,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

@@ -51,6 +51,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleCheckScrubbyResult:                                    "0 0 */1 * * *",
 			CronScheduleCheckEnrowResults:                                     "0 0 */1 * * *",
 			CronScheduleFlowExecution:                                         "0 0 */1 * * *",
+			CronScheduleFlowStatistics:                                        "0 0 */1 * * *",
 		},
 	}
 
