@@ -1,4 +1,4 @@
-import { useState, ReactElement } from 'react';
+import { useMemo, useState, ReactElement } from 'react';
 
 import { htmlToText } from 'html-to-text';
 import { FlowActionType } from '@store/Flows/types.ts';
@@ -61,9 +61,10 @@ export const ActionNode = ({
     );
   };
 
-  const getBodyTemplate = () => {
-    return htmlToText(data?.bodyTemplate);
-  };
+  const parsedTemplate = useMemo(
+    () => htmlToText(data?.bodyTemplate).trim(),
+    [data?.bodyTemplate],
+  );
 
   return (
     <>
@@ -79,10 +80,10 @@ export const ActionNode = ({
             </div>
 
             <span className='truncate font-medium'>
-              {data.subject ? (
+              {data.subject?.length > 0 ? (
                 data.subject
-              ) : data.bodyTemplate ? (
-                getBodyTemplate()
+              ) : parsedTemplate?.length > 0 ? (
+                parsedTemplate
               ) : (
                 <span className='text-gray-400 font-normal'>
                   Write an email that wows them

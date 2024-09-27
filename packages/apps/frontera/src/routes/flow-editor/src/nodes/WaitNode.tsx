@@ -56,7 +56,7 @@ export const WaitNode = ({
 
   return (
     <div
-      className={`h-[56px] w-[150px] bg-white border-2 border-grayModern-300 p-3 rounded-lg group`}
+      className={`h-[56px] w-[150px] bg-white border border-grayModern-300 p-3 rounded-lg group`}
     >
       <div className='truncate  text-sm flex items-center '>
         <div

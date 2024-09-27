@@ -34,6 +34,8 @@ export const BasicEdge: React.FC<
 
     if (ui.flowCommandMenu.isOpen) {
       ui.flowCommandMenu.setOpen(false);
+
+      return;
     }
 
     ui.flowCommandMenu.setType('StepsHub');

@@ -9,6 +9,8 @@ import { PlusSquare } from '@ui/media/icons/PlusSquare';
 import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
 import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken';
 
+import { ContactAddedManuallySubItem } from './ContactTriggerSubItems.tsx';
+
 export const TriggersHub = observer(() => {
   const { ui } = useStore();
   const { setNodes } = useReactFlow();
@@ -21,7 +23,6 @@ export const TriggersHub = observer(() => {
             ...node,
             data: {
               ...node.data,
-
               triggerType: triggerType,
             },
           };
@@ -44,6 +45,8 @@ export const TriggersHub = observer(() => {
       >
         Record added manually...
       </CommandItem>
+
+      <ContactAddedManuallySubItem />
       <CommandItem disabled leftAccessory={<PlusSquare />}>
         <span className='text-gray-700'>Record created</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>

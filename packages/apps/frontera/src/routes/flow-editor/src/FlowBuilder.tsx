@@ -4,6 +4,7 @@ import React, { MouseEvent, useCallback } from 'react';
 import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { OnConnect } from '@xyflow/system';
+import { FlowActionType } from '@store/Flows/types.ts';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
 import {
   Edge,
@@ -13,6 +14,7 @@ import {
   MarkerType,
   useNodesState,
   useEdgesState,
+  OnBeforeDelete,
 } from '@xyflow/react';
 
 import { useStore } from '@shared/hooks/useStore';
@@ -152,9 +154,23 @@ export const FlowBuilder = observer(() => {
     return 'IS LOADING';
   }
 
+  const onBeforeDelete: OnBeforeDelete = async (elements) => {
+    const hasStartNode = elements.nodes.some(
+      (e) => e.data?.action === FlowActionType.FLOW_START,
+    );
+    const hasEndNode = elements.nodes.some(
+      (e) => e.data?.action === FlowActionType.FLOW_END,
+    );
+
+    const hasStartOrEndNode = hasStartNode || hasEndNode;
+
+    return hasStartOrEndNode ? false : elements;
+  };
+
   return (
     <>
       <ReactFlow
+        snapToGrid
         maxZoom={1}
         nodes={nodes}
         edges={edges}
@@ -163,11 +179,14 @@ export const FlowBuilder = observer(() => {
         onConnect={onConnect}
         nodeTypes={nodeTypes}
         edgeTypes={edgeTypes}
+        preventScrolling={false}
+        zoomActivationKeyCode={'91'}
+        onBeforeDelete={onBeforeDelete}
         onEdgeMouseLeave={onEdgeMouseLeave}
         onEdgeMouseEnter={onEdgeMouseEnter}
         zoomOnPinch={!ui.flowCommandMenu.isOpen}
         zoomOnScroll={!ui.flowCommandMenu.isOpen}
-        defaultViewport={{ zoom: 0.1, x: 50, y: 0 }}
+        defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
         onClick={() => {
           if (ui.flowCommandMenu.isOpen) {
             ui.flowCommandMenu.setOpen(false);

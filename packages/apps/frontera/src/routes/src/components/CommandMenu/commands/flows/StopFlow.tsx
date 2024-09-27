@@ -46,8 +46,8 @@ export const StopFlow = observer(() => {
         {/* todo remove when bottom part is integrated with BE */}
         <p className='text-sm mt-2'>
           You currently have {flow?.value?.contacts?.length}{' '}
-          {flow?.value?.contacts?.length === 1 ? 'contact' : 'contacts'}
-          active in this flow.
+          {flow?.value?.contacts?.length === 1 ? 'contact' : 'contacts'} active
+          in this flow.
         </p>
         {/* todo uncomment when be is ready */}
         {/*<div>*/}
