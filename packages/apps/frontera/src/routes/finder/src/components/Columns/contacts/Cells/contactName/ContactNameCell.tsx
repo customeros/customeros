@@ -4,6 +4,7 @@ import { useRef, useState, useEffect, KeyboardEvent } from 'react';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
+import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
@@ -12,10 +13,11 @@ import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 
 interface ContactNameCellProps {
   contactId: string;
+  canNavigate?: boolean;
 }
 
 export const ContactNameCell = observer(
-  ({ contactId }: ContactNameCellProps) => {
+  ({ contactId, canNavigate }: ContactNameCellProps) => {
     const contactNameInputRef = useRef<HTMLInputElement | null>(null);
     const store = useStore();
     const [isHovered, setIsHovered] = useState(false);
@@ -59,6 +61,8 @@ export const ContactNameCell = observer(
     };
 
     const handleNavigate = () => {
+      if (!canNavigate) return;
+
       const href = contactStore?.organizationId
         ? getHref(
             contactStore?.organizationId,
@@ -86,7 +90,10 @@ export const ContactNameCell = observer(
             role='button'
             onClick={handleNavigate}
             data-test={`contact-name-in-contacts-table`}
-            className='overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer'
+            className={cn(
+              'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer',
+              !canNavigate && 'cursor-default',
+            )}
           >
             {contactName}
           </p>
