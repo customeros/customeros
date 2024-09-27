@@ -181,16 +181,13 @@ export class FlowsStore implements GroupStore<Flow> {
             ids: [id],
           });
         });
-        this.root.ui.toastSuccess(
-          `Sequence archived`,
-          'archive-sequence-success',
-        );
+        this.root.ui.toastSuccess(`Flow archived`, 'archive-flow-success');
       }
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error).message;
         this.root.ui.toastError(
-          `We couldn't archive this sequence`,
+          `We couldn't archive this flow`,
           'archive-view-error',
         );
       });
