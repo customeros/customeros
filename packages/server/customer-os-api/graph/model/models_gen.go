@@ -3598,6 +3598,7 @@ const (
 	ComparisonOperatorIsNoneOf    ComparisonOperator = "IS_NONE_OF"
 	ComparisonOperatorIsNotEmpty  ComparisonOperator = "IS_NOT_EMPTY"
 	ComparisonOperatorNotContains ComparisonOperator = "NOT_CONTAINS"
+	ComparisonOperatorNotEqual    ComparisonOperator = "NOT_EQUAL"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
@@ -3615,11 +3616,12 @@ var AllComparisonOperator = []ComparisonOperator{
 	ComparisonOperatorIsNoneOf,
 	ComparisonOperatorIsNotEmpty,
 	ComparisonOperatorNotContains,
+	ComparisonOperatorNotEqual,
 }
 
 func (e ComparisonOperator) IsValid() bool {
 	switch e {
-	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween, ComparisonOperatorIsNull, ComparisonOperatorIsEmpty, ComparisonOperatorLt, ComparisonOperatorGt, ComparisonOperatorIsNoneOf, ComparisonOperatorIsNotEmpty, ComparisonOperatorNotContains:
+	case ComparisonOperatorEq, ComparisonOperatorContains, ComparisonOperatorStartsWith, ComparisonOperatorLte, ComparisonOperatorGte, ComparisonOperatorIn, ComparisonOperatorBetween, ComparisonOperatorIsNull, ComparisonOperatorIsEmpty, ComparisonOperatorLt, ComparisonOperatorGt, ComparisonOperatorIsNoneOf, ComparisonOperatorIsNotEmpty, ComparisonOperatorNotContains, ComparisonOperatorNotEqual:
 		return true
 	}
 	return false
