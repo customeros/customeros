@@ -162,7 +162,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.isPrimaryDomain = $isPrimaryDomain,
 					e.primaryDomain = $primaryDomain,
 					e.alternateEmail = $alternateEmail,
-					e.work = CASE WHEN e.work IS NULL THEN NOT e.isFreeAccount ELSE e.work END
+					e.work = CASE WHEN e.work IS NULL THEN NOT $isFreeAccount ELSE e.work END
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
 				MERGE (d:Domain {domain:$domain})
