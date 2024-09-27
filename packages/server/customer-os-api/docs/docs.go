@@ -1078,7 +1078,7 @@ const docTemplate = `{
                 },
                 "type": {
                     "type": "string",
-                    "example": "professional"
+                    "example": "work"
                 }
             }
         },
@@ -1444,6 +1444,11 @@ const docTemplate = `{
                     "description": "Message provides additional information about the action\nExample: Mailbox setup successful",
                     "type": "string",
                     "example": "Mailbox setup successful"
+                },
+                "password": {
+                    "description": "Password is the password for the mailbox\nRequired: false\nExample: SecurePassword123!",
+                    "type": "string",
+                    "example": "SecurePassword123!"
                 },
                 "status": {
                     "description": "Status indicates the result of the action\nExample: success",
