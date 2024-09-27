@@ -426,7 +426,6 @@ export class LinkedinAutomationService {
 
         // If we've collected all profiles, stop scrolling
         if (results.length >= totalConnections) {
-          console.log("intru la break", results.length, totalConnections);
           hasMoreResults = false;
           break;
         }

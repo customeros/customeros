@@ -75,7 +75,7 @@ interface TableProps<T extends object> {
   getRowId?: (row: T, index: number) => string;
   onResizeColumn?: OnChangeFn<ColumnSizingState>;
   onSelectionChange?: (selectedIds: string[]) => void;
-  tableRef: MutableRefObject<TableInstance<T> | null>;
+  tableRef?: MutableRefObject<TableInstance<T> | null>;
   onSelectedIndexChange?: (index: number | null) => void;
   onFocusedRowChange?: (index: number | null, selectedIds: string[]) => void;
   // REASON: Typing TValue is too exhaustive and has no benefit

@@ -1,4 +1,5 @@
 import { observer } from 'mobx-react-lite';
+import { EmailVerificationStatus } from '@finder/components/Columns/contacts/Filters/Email/utils.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { XCircle } from '@ui/media/icons/XCircle.tsx';
@@ -8,7 +9,6 @@ import { AlertCircle } from '@ui/media/icons/AlertCircle.tsx';
 import { ClockFastForward } from '@ui/media/icons/ClockFastForward.tsx';
 import { EmailDeliverable, EmailValidationDetails } from '@graphql/types';
 import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken.tsx';
-import { EmailVerificationStatus } from '@organizations/components/Columns/contacts/Filters/Email/utils.ts';
 
 interface Props {
   email: string;

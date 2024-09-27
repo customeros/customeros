@@ -28,7 +28,7 @@
       "@assets/*": ["src/assets/*"],
       "@store/*": ["src/store/*"],
       "@graphql/types": ["src/routes/src/types/__generated__/graphql.types.ts"],
-      "@organizations/*": ["src/routes/organizations/src/*"],
+      "@finder/*": ["src/routes/finder/src/*"],
       "@renewals/*": ["src/routes/renewals/src/*"],
       "@organization/*": ["src/routes/organization/src/*"],
       "@utils/*": ["src/utils/*"],

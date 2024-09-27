@@ -1,5 +1,6 @@
 import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 import { PaymentStatusSelect } from '@invoices/components/shared';
+import { InvoicePreviewCell } from '@finder/components/Columns/invoices/Cells';
 
 import { DateTimeUtils } from '@utils/date';
 import { ColumnViewType } from '@graphql/types';
@@ -7,7 +8,6 @@ import { Skeleton } from '@ui/feedback/Skeleton';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import { InvoicePreviewCell } from '@organizations/components/Columns/invoices/Cells';
 
 type ColumnDatum = InvoiceStore;
 

@@ -1,6 +1,5 @@
 import { atom, useRecoilState } from 'recoil';
-
-import { GetOrganizationsQueryVariables } from '@organizations/graphql/getOrganizations.generated';
+import { GetOrganizationsQueryVariables } from '@finder/graphql/getOrganizations.generated';
 
 interface OrganizationsMeta {
   getUsers: {
