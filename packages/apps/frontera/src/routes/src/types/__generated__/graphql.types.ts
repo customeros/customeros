@@ -323,6 +323,7 @@ export enum ColumnViewType {
   ContactsName = 'CONTACTS_NAME',
   ContactsOrganization = 'CONTACTS_ORGANIZATION',
   ContactsPersona = 'CONTACTS_PERSONA',
+  ContactsPersonalEmails = 'CONTACTS_PERSONAL_EMAILS',
   ContactsPhoneNumbers = 'CONTACTS_PHONE_NUMBERS',
   ContactsRegion = 'CONTACTS_REGION',
   ContactsSchools = 'CONTACTS_SCHOOLS',
@@ -1563,6 +1564,7 @@ export type Flow = MetadataInterface & {
   metadata: Metadata;
   name: Scalars['String']['output'];
   nodes: Scalars['String']['output'];
+  statistics: FlowStatistics;
   status: FlowStatus;
 };
 
@@ -1616,13 +1618,31 @@ export type FlowContact = MetadataInterface & {
   __typename?: 'FlowContact';
   contact: Contact;
   metadata: Metadata;
+  scheduledAction?: Maybe<Scalars['String']['output']>;
+  scheduledAt?: Maybe<Scalars['Time']['output']>;
+  status: FlowContactStatus;
 };
+
+export enum FlowContactStatus {
+  Completed = 'COMPLETED',
+  InProgress = 'IN_PROGRESS',
+  Paused = 'PAUSED',
+  Scheduled = 'SCHEDULED',
+}
 
 export type FlowMergeInput = {
   edges: Scalars['String']['input'];
   id?: InputMaybe<Scalars['ID']['input']>;
   name: Scalars['String']['input'];
   nodes: Scalars['String']['input'];
+};
+
+export type FlowStatistics = {
+  __typename?: 'FlowStatistics';
+  completed: Scalars['Int64']['output'];
+  goalAchieved: Scalars['Int64']['output'];
+  pending: Scalars['Int64']['output'];
+  total: Scalars['Int64']['output'];
 };
 
 export enum FlowStatus {

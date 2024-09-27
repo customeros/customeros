@@ -7,7 +7,16 @@ query getFlows {
     edges
     nodes
     status
+    statistics {
+      total
+      pending
+      completed
+      goalAchieved
+    }
     contacts {
+      status
+      scheduledAction
+      scheduledAt
       metadata {
         id
       }

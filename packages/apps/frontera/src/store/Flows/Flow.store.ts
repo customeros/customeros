@@ -20,6 +20,7 @@ import {
   DataSource,
   FlowStatus,
   FlowContact,
+  FlowContactStatus,
 } from '@graphql/types';
 
 export class FlowStore implements Store<Flow> {
@@ -166,6 +167,9 @@ export class FlowStore implements Store<Flow> {
         this.value.contacts = [
           ...this.value.contacts,
           {
+            status: FlowContactStatus.Scheduled,
+            scheduledAction: '',
+            scheduledAt: new Date().toISOString(),
             metadata: {
               id: flowContact_Add?.metadata?.id,
               source: DataSource.Openline,
@@ -250,6 +254,9 @@ export class FlowStore implements Store<Flow> {
               lastUpdated: new Date().toISOString(),
               sourceOfTruth: DataSource.Openline,
             },
+            status: FlowContactStatus.Scheduled,
+            scheduledAction: '',
+            scheduledAt: new Date().toISOString(),
             contact: {
               id: cs?.id,
               metadata: {
@@ -297,6 +304,12 @@ const getDefaultValue = (): Flow => ({
     created: new Date().toISOString(),
     lastUpdated: new Date().toISOString(),
     sourceOfTruth: DataSource.Openline,
+  },
+  statistics: {
+    total: 0,
+    pending: 0,
+    completed: 0,
+    goalAchieved: 0,
   },
   contacts: [],
   nodes: JSON.stringify(initialNodes),
