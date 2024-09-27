@@ -197,6 +197,13 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
 		}
 
+		// increment enrich attempts
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichAttempts))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
+		}
+
 		return nil
 	}
 
