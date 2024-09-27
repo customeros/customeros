@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { useLocalStorage } from 'usehooks-ts';
 
+import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar/Avatar';
 
 interface AvatarCellProps {
@@ -10,10 +11,11 @@ interface AvatarCellProps {
   name: string;
   icon?: string | null;
   logo?: string | null;
+  canNavigate?: boolean;
 }
 
 export const AvatarCell = memo(
-  ({ name, id, icon, logo }: AvatarCellProps) => {
+  ({ name, id, icon, logo, canNavigate }: AvatarCellProps) => {
     const navigate = useNavigate();
     const [tabs] = useLocalStorage<{
       [key: string]: string;
@@ -23,6 +25,8 @@ export const AvatarCell = memo(
     const fullName = name || 'Unnamed';
 
     const handleNavigate = () => {
+      if (!canNavigate) return;
+
       const lastPositionParams = tabs[id];
       const href = getHref(id, lastPositionParams);
 
@@ -39,7 +43,10 @@ export const AvatarCell = memo(
           src={src || undefined}
           variant='outlineCircle'
           onClick={handleNavigate}
-          className='text-gray-700 cursor-pointer focus:outline-none'
+          className={cn(
+            'text-gray-700 cursor-pointer focus:outline-none',
+            !canNavigate && 'cursor-default',
+          )}
         />
       </div>
     );

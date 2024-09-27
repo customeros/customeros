@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { ContactStore } from '@store/Contacts/Contact.store';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { CountryCell } from '@finder/components/Columns/Cells/country';
@@ -64,6 +62,7 @@ const columns: Record<string, Column> = {
           logo={logo}
           name={props.getValue().name}
           id={props.row.original.organizationId}
+          canNavigate={props.getValue()?.hasActiveOrganization}
         />
       );
     },
@@ -78,7 +77,12 @@ const columns: Record<string, Column> = {
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
-      return <ContactNameCell contactId={props.row.id} />;
+      return (
+        <ContactNameCell
+          contactId={props.row.id}
+          canNavigate={props.getValue()?.hasActiveOrganization}
+        />
+      );
     },
     header: (props) => (
       <THead<HTMLInputElement>

@@ -13,6 +13,7 @@ import { useReactFlow } from '@xyflow/react';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
+import { cn } from '@ui/utils/cn';
 import { Check } from '@ui/media/icons/Check.tsx';
 import { useStore } from '@shared/hooks/useStore';
 import { User01 } from '@ui/media/icons/User01.tsx';
@@ -33,7 +34,7 @@ export const Header = observer(() => {
 
   const flow = store.flows.value.get(id) as FlowStore;
   const showFinder = searchParams.get('show') === 'finder';
-  const contactsPreset = store.tableViewDefs.contactsPreset;
+  const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
 
   useEffect(() => {
     if (!store.ui.commandMenu.isOpen) {
@@ -57,28 +58,49 @@ export const Header = observer(() => {
 
   return (
     <div>
-      <div className='bg-white px-10 h-14 border-b flex items-center text-base font-bold justify-between'>
+      <div className='bg-white pl-3 pr-4 h-10 border-b flex items-center justify-between'>
         <div className='flex items-center'>
-          <span
-            role='button'
-            onClick={() => navigate(-1)}
-            className='font-medium text-gray-500'
-          >
-            Flows
-          </span>
-          <ChevronRight className='size-4 mx-1 text-gray-500' />
-          <span className='mr-2'>{flow?.value?.name || 'Unnamed'}</span>
-
-          <Button
-            size='xxs'
-            variant='outline'
-            colorScheme='gray'
-            leftIcon={<User01 />}
-            className='font-medium'
-            onClick={() => navigate(`?show=finder&preset=${contactsPreset}`)}
-          >
-            {flow?.value?.contacts?.length}
-          </Button>
+          <div className='flex items-center gap-1 font-medium'>
+            <span
+              role='button'
+              onClick={() => navigate(showFinder ? -2 : -1)}
+              className='font-medium text-gray-500 hover:text-gray-700'
+            >
+              Flows
+            </span>
+            <ChevronRight className='text-gray-400' />
+            <span
+              onClick={() => (showFinder ? navigate(-1) : null)}
+              className={cn({
+                'text-gray-500 cursor-pointer hover:text-gray-700': showFinder,
+              })}
+            >
+              {flow?.value?.name || 'Unnamed'}
+            </span>
+            {showFinder ? (
+              <>
+                <ChevronRight className='text-gray-400' />
+                <span className='font-medium cursor-default'>
+                  {`${flow?.value?.contacts?.length} ${
+                    flow?.value?.contacts?.length > 1 ? 'Contacts' : 'Contact'
+                  }`}
+                </span>
+              </>
+            ) : (
+              <Button
+                size='xxs'
+                className='ml-2'
+                variant='outline'
+                colorScheme='gray'
+                leftIcon={<User01 />}
+                onClick={() =>
+                  navigate(`?show=finder&preset=${flowContactsPreset}`)
+                }
+              >
+                {flow?.value?.contacts?.length}
+              </Button>
+            )}
+          </div>
         </div>
 
         {showFinder ? (

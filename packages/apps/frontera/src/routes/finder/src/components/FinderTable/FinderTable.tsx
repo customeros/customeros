@@ -1,5 +1,5 @@
-import { useSearchParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import { useKeyBindings } from 'rooks';
 import { inPlaceSort } from 'fast-sort';
@@ -30,9 +30,14 @@ import {
 } from '@finder/components/Columns/contracts';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Invoice, WorkflowType, TableViewType } from '@graphql/types';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
+import {
+  Invoice,
+  TableIdType,
+  WorkflowType,
+  TableViewType,
+} from '@graphql/types';
 
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
@@ -71,6 +76,7 @@ interface FinderTableProps {
 
 export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const store = useStore();
+  const params = useParams();
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const tableRef = useRef<TableInstance<FinderTableEntityTypes> | null>(null);
@@ -162,8 +168,18 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
     return arr;
   });
+
   const contactsData = store.contacts?.toComputedArray((arr) => {
     if (tableType !== TableViewType.Contacts) return arr;
+
+    if (tableViewDef?.value.tableId === TableIdType.FlowContacts) {
+      const currentFlowId = params?.id as string;
+
+      arr = arr.filter(
+        (v) =>
+          v.hasFlows && (currentFlowId ? v.getFlowById(currentFlowId) : true),
+      );
+    }
 
     const filters = getContactFilterFns(tableViewDef?.getFilters());
 

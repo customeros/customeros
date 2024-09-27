@@ -79,6 +79,10 @@ export class ContactStore implements Store<Contact>, ContractStore {
     return this.value.organizations.content[0]?.metadata?.id;
   }
 
+  get hasFlows() {
+    return this.value.flows?.length > 0;
+  }
+
   get flow(): FlowStore | undefined {
     if (!this.value.flows?.length) return undefined;
 
@@ -131,6 +135,16 @@ export class ContactStore implements Store<Contact>, ContractStore {
     this.value.tags = (this.value?.tags || []).filter(
       (id) => id.id !== personaId,
     );
+  }
+
+  get hasActiveOrganization() {
+    const org = this.root.organizations.value.get(this.organizationId);
+
+    return org && !org.value.hide;
+  }
+
+  getFlowById(flowId: string) {
+    return this.value.flows.find((flow) => flow.metadata.id === flowId);
   }
 
   private async save(operation: Operation) {
