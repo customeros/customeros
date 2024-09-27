@@ -549,11 +549,10 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 1, ColumnType: model.ColumnViewTypeFlowSequenceName.String(), Width: 100, Visible: true, Name: "Sequence", Filter: ""},
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeFlowName.String(), Width: 100, Visible: true, Name: "Flow", Filter: ""},
 				{ColumnId: 3, ColumnType: model.ColumnViewTypeFlowSequenceStatus.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeFlowSequenceContactCount.String(), Width: 100, Visible: true, Name: "Contacts", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowSequenceStatusPendingCount.String(), Width: 100, Visible: true, Name: "Pending", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeFlowSequenceStatusInProgressCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},
-				{ColumnId: 8, ColumnType: model.ColumnViewTypeFlowSequenceStatusSuccessfulCount.String(), Width: 100, Visible: true, Name: "Successful", Filter: ""},
-				{ColumnId: 9, ColumnType: model.ColumnViewTypeFlowSequenceStatusUnsuccessfulCount.String(), Width: 100, Visible: true, Name: "Unsuccessful", Filter: ""},
+				{ColumnId: 5, ColumnType: model.ColumnViewTypeFlowSequenceTotalCount.String(), Width: 100, Visible: true, Name: "Contacts", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowSequencePendingCount.String(), Width: 100, Visible: true, Name: "Pending", Filter: ""},
+				{ColumnId: 7, ColumnType: model.ColumnViewTypeFlowSequenceCompletedCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},
+				{ColumnId: 8, ColumnType: model.ColumnViewTypeFlowSequenceGoalAchievedCount.String(), Width: 100, Visible: true, Name: "Successful", Filter: ""},
 			},
 		}
 	}
