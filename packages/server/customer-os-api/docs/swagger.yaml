@@ -286,7 +286,7 @@ definitions:
         example: false
         type: boolean
       type:
-        example: professional
+        example: work
         type: string
     type: object
   restenrich.EnrichPersonGithub:
@@ -597,6 +597,13 @@ definitions:
           Message provides additional information about the action
           Example: Mailbox setup successful
         example: Mailbox setup successful
+        type: string
+      password:
+        description: |-
+          Password is the password for the mailbox
+          Required: false
+          Example: SecurePassword123!
+        example: SecurePassword123!
         type: string
       status:
         description: |-
