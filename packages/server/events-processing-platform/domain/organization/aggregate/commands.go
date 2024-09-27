@@ -2,6 +2,7 @@ package aggregate
 
 import (
 	"context"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"strings"
@@ -264,6 +265,11 @@ func (a *OrganizationAggregate) CreateOrganization(ctx context.Context, organiza
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.CreatedAt, utils.Now())
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(organizationFields.UpdatedAt, createdAtNotNil)
 	organizationFields.Source.SetDefaultValues()
+
+	if organizationFields.OrganizationDataFields.Relationship == "" && organizationFields.OrganizationDataFields.Stage == "" {
+		organizationFields.OrganizationDataFields.Stage = neo4jenum.Lead.String()
+		organizationFields.OrganizationDataFields.Relationship = neo4jenum.Prospect.String()
+	}
 
 	createEvent, err := organizationEvents.NewOrganizationCreateEvent(a, organizationFields, createdAtNotNil, updatedAtNotNil)
 	if err != nil {
