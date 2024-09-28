@@ -129,7 +129,7 @@
         },
         {
           "name": "Organizations not enriched",
-          "query": "MATCH (:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})--(d:Domain) WHERE o.enrichedAt IS NULL AND (o.techEnrichRequestedAt < datetime()-duration({hours:240}) OR o.techEnrichRequestedAt IS NULL) AND o.createdAt < datetime()-duration({minutes:60}) return count(o)"
+          "query": "MATCH (:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})--(d:Domain) WHERE o.enrichedAt IS NULL AND (o.techEnrichAttempts IS NULL OR o.techEnrichAttempts < 3) AND (o.techEnrichRequestedAt < datetime()-duration({hours:245}) OR o.techEnrichRequestedAt IS NULL) AND o.createdAt < datetime()-duration({minutes:60}) return count(o)"
         },
         {
           "name": "Organization ltv not updated",

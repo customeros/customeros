@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -152,6 +152,13 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	}
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
 		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
+	} else {
+		// increment enrich attempts
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichAttempts))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
+		}
 	}
 
 	return nil
@@ -233,7 +240,7 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 	return &enrichOrganizationApiResponse, nil
 }
 
-func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx context.Context, tenant, domain, enrichSource string, organizationEntity neo4jEntity.OrganizationEntity, data *enrichmentmodel.EnrichOrganizationResponseData) {
+func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx context.Context, tenant, domain, enrichSource string, organizationEntity neo4jentity.OrganizationEntity, data *enrichmentmodel.EnrichOrganizationResponseData) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromEnrichmentResponse")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "data", data)

@@ -271,7 +271,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrich(ctx, limit, delayFromPreviousAttemptInMinutes)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrichByDomain(ctx, limit, delayFromPreviousAttemptInMinutes)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
