@@ -233,7 +233,8 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailsForValidation")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
-	span.LogFields(log.Int("delayFromLastUpdateInMinutes", delayFromLastUpdateInMinutes),
+	span.LogFields(
+		log.Int("delayFromLastUpdateInMinutes", delayFromLastUpdateInMinutes),
 		log.Int("delayFromLastValidationAttemptInMinutes", delayFromLastValidationAttemptInMinutes),
 		log.Int("limit", limit))
 
@@ -241,7 +242,6 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 				WHERE
 					e.techValidatedAt IS NULL AND
 					e.rawEmail <> '' AND
-					(e.deliverable IS NULL OR e.deliverable = 'unknown') AND
 					(e.updatedAt < datetime() - duration({minutes: $delayFromLastUpdateInMinutes})) AND
 					(e.techValidationRequestedAt IS NULL OR e.techValidationRequestedAt < datetime() - duration({minutes: $delayFromLastValidationAttemptInMinutes}))
 				WITH t.name as tenant, e.id as emailId
@@ -249,12 +249,8 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
     			CASE 
         			WHEN e.techValidationRequestedAt IS NULL THEN 0 
         			ELSE 1 
-    			END,
-				CASE 
-        			WHEN e.appSource = 'customer-os-api' THEN 0 
-        			ELSE 1 
-    			END,
-				e.createdAt DESC, e.techValidationRequestedAt ASC
+    			END ASC,
+				e.techValidationRequestedAt ASC
 				LIMIT $limit
 				RETURN DISTINCT tenant, emailId`
 	params := map[string]any{
