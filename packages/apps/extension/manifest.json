@@ -17,7 +17,7 @@
     "48": "src/assets/customeros.png",
     "128": "src/assets/customeros.png"
   },
-  "browser_action": {
+  "action": {
     "default_icon": "src/assets/customeros.png"
   },
   "content_scripts": [

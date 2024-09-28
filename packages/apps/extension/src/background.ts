@@ -175,3 +175,14 @@ chrome.alarms.onAlarm.addListener((alarm) => {
     getCookiesFromLinkedInTab();
   }
 });
+
+function handleExtensionButtonClick() {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+    const currentTab = tabs[0];
+    if (!currentTab.url || !currentTab.url.includes('app.customeros.ai')) {
+      chrome.tabs.create({ url: 'https://app.customeros.ai/' });
+    }
+  });
+}
+
+chrome.action.onClicked.addListener(handleExtensionButtonClick);
