@@ -15,6 +15,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"net/http"
+	"strings"
 )
 
 func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
@@ -379,6 +380,10 @@ func combineData(scrapin *postgresEntity.ScrapInResponseBody, brandfetch *postgr
 }
 
 func normalizeCountry(data *model.EnrichOrganizationResponseDataLocation) {
+	// handle special cases
+	if strings.ToUpper(data.Country) == "OO" {
+		data.Country = ""
+	}
 	countryFields := []string{data.CountryCodeA3, data.CountryCodeA2, data.Country}
 	for _, code := range countryFields {
 		if code != "" {
