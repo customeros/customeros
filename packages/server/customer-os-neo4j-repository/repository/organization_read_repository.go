@@ -869,7 +869,7 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
 
-	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain)
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain)
 				WHERE 	org.enrichedAt IS NULL AND
 						org.hide = false AND
 						(org.techEnrichRequestedAt IS NULL OR org.techEnrichRequestedAt < datetime() - duration({minutes: $delayInMinutes}))
@@ -918,7 +918,7 @@ func (r *organizationReadRepository) GetOrganizationsForAdjustIndustry(ctx conte
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
 
-	cypher := `MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)
 				WHERE org.hide = false AND
 						org.industry <> '' AND
 						org.industry IS NOT NULL AND
