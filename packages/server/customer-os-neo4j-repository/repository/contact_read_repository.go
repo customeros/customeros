@@ -336,7 +336,7 @@ func (r *contactReadRepository) GetContactsToFindWorkEmailWithBetterContact(ctx 
 	span.LogFields(log.Int("minutesFromLastContactUpdate", minutesFromLastContactUpdate))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization)--(d:Domain), (t)--(ts:TenantSettings)
+	cypher := ` MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(j:JobRole)--(o:Organization)--(d:Domain), (t)--(ts:TenantSettings)
 				WHERE
 					ts.enrichContacts = true AND
 					not o.stage = 'LEAD' and not o.stage = 'UNQUALIFIED' AND
@@ -396,7 +396,7 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 	span.LogFields(log.Int("limit", limit))
 
 	minutesDelayFromUpdate := 2
-	cypher := ` MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
+	cypher := ` MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)
 				WHERE
 					c.techFindWorkEmailWithBetterContactRequestId IS NOT NULL AND
 					c.techFindWorkEmailWithBetterContactRequestId <> '' AND
@@ -447,7 +447,7 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 	span.LogFields(log.Int("minutesFromLastEnrichAttempt", minutesFromLastEnrichAttempt))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
+	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
 				(t)--(ts:TenantSettings)
 				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
 				WHERE
@@ -553,7 +553,7 @@ func (r *contactReadRepository) GetContactsWithEmailForNameUpdate(ctx context.Co
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
+	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:HAS]->(e:Email)
 				WHERE
 					(c.hide IS NULL OR c.hide = false) AND
 					c.enrichedAt IS NULL AND
