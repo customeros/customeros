@@ -2,15 +2,18 @@
   "manifest_version": 3,
   "name": "CustomerOS",
   "version": "1.0",
+  "description": "CustomerOS Extension",
   "permissions": [
     "cookies",
     "tabs",
     "storage",
     "scripting",
-    "alarms"
+    "alarms",
+    "sidePanel"
   ],
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "background.js",
+    "type": "module"
   },
   "icons": {
     "16": "src/assets/customeros.png",
@@ -18,7 +21,8 @@
     "128": "src/assets/customeros.png"
   },
   "action": {
-    "default_icon": "src/assets/customeros.png"
+    "default_icon": "src/assets/customeros.png",
+    "default_title": "Open CustomerOS"
   },
   "content_scripts": [
     {
@@ -32,6 +36,9 @@
       ]
     }
   ],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
   "host_permissions": [
     "https://app.customeros.ai/*",
     "https://bas.customeros.ai/*",

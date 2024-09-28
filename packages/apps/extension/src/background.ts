@@ -18,6 +18,20 @@ type data = {
   };
 };
 
+let sessionData: { email: string | null; apiKey: string | null } = { email: null, apiKey: null };
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  console.log("Received message in background:", message);
+  if (message.action === "COS_SESSION_DATA") {
+    sessionData = { email: message.email, apiKey: message.apiKey };
+    console.log("Session data updated in background:", sessionData);
+  } else if (message.action === "GET_SESSION_DATA") {
+    console.log("Sending session data from background:", sessionData);
+    sendResponse(sessionData);
+  }
+  return true; // Indicates that the response will be sent asynchronously
+});
+
 async function getCookiesFromLinkedInTab() {
   try {
     const customerOSTab = await new Promise<chrome.tabs.Tab>(
@@ -176,13 +190,41 @@ chrome.alarms.onAlarm.addListener((alarm) => {
   }
 });
 
-function handleExtensionButtonClick() {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-    const currentTab = tabs[0];
-    if (!currentTab.url || !currentTab.url.includes('app.customeros.ai')) {
-      chrome.tabs.create({ url: 'https://app.customeros.ai/' });
-    }
-  });
+async function handleExtensionButtonClick(tab: chrome.tabs.Tab) {
+  if (tab.url && tab.url.includes('linkedin.com')) {
+    // Open side panel for LinkedIn
+    await chrome.sidePanel.open({ tabId: tab.id });
+    await chrome.sidePanel.setOptions({
+      tabId: tab.id,
+      path: 'sidepanel.html',
+      enabled: true
+    });
+    console.log('Sidepanel opened for LinkedIn');
+  } else if (!tab.url || !tab.url.includes('app.customeros.ai')) {
+    // Open CustomerOS app in a new tab
+    await chrome.tabs.create({ url: 'https://app.customeros.ai/' });
+  }
 }
 
-chrome.action.onClicked.addListener(handleExtensionButtonClick);
+chrome.action.onClicked.addListener((tab) => handleExtensionButtonClick(tab));
+
+// Add this new listener for tab updates
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (changeInfo.status === 'complete') {
+    if (tab.url && tab.url.includes('linkedin.com')) {
+      chrome.sidePanel.setOptions({
+        tabId: tabId,
+        path: 'sidepanel.html',
+        enabled: true
+      });
+    } else {
+      chrome.sidePanel.setOptions({
+        tabId: tabId,
+        enabled: false
+      });
+    }
+  }
+});
+
+// Remove this line
+// chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });

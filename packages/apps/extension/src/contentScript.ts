@@ -1,4 +1,5 @@
 function sendSessionData() {
+  console.log("Attempting to send session data from content script");
   const request: IDBOpenDBRequest = indexedDB.open("customerDB", 2);
 
   request.onerror = function (event: Event) {
@@ -28,20 +29,18 @@ function sendSessionData() {
 
     getRequest.onsuccess = function (event: Event) {
       const sessionData = (event.target as IDBRequest).result;
+      console.log("Session data retrieved from IndexedDB:", sessionData);
 
       if (sessionData) {
         const email: string | null = sessionData.value.profile.email || null;
         const apiKey: string | null = sessionData.tenantApiKey || null;
 
-        if (email && apiKey) {
-          chrome.runtime.sendMessage({
-            action: "COS_SESSION_DATA",
-            email,
-            apiKey,
-          });
-        } else {
-          console.log("Session data is incomplete:", { email, apiKey });
-        }
+        console.log("Sending session data to background:", { email, apiKey });
+        chrome.runtime.sendMessage({
+          action: "COS_SESSION_DATA",
+          email,
+          apiKey,
+        });
       } else {
         console.log("No session data found in IndexedDB");
       }
@@ -57,3 +56,11 @@ function sendSessionData() {
 }
 
 sendSessionData();
+
+// Add a listener for messages from the background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === "GET_SESSION_DATA") {
+    console.log("Content script received GET_SESSION_DATA request");
+    sendSessionData();
+  }
+});
