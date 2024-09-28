@@ -37,6 +37,8 @@ npm-debug.log
 
 .vscode/
 .elixir_ls/
+.elixir-tools
+.lexical
 
 .env
 .env.local
