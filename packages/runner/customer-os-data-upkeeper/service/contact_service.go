@@ -637,6 +637,10 @@ func (s *contactService) findEmailsWithBetterContact(ctx context.Context) {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
+	// TODO re-enable job based on additional settings if needed.
+	// add billable event for better contact response
+	return
+
 	// Better contact is limited to 60 requests per minute
 	// https://bettercontact.notion.site/Documentation-API-e8e1b352a0d647ee9ff898609bf1a168
 	limit := 50
