@@ -1,4 +1,5 @@
 defmodule CustomerOsRealtimeWeb.EntityChannelMacro do
+  @moduledoc false
   defmacro __using__(entity_prefix) do
     quote do
       use Phoenix.Channel
