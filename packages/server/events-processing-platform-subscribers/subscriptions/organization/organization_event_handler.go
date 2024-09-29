@@ -203,8 +203,8 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 		}
 		defer response.Body.Close() // Ensures the body is closed only once
 
-		// Retry on 502 Bad Gateway
-		if response.StatusCode == http.StatusBadGateway {
+		// Retry on 502 and 400
+		if response.StatusCode == http.StatusBadGateway || response.StatusCode == http.StatusBadRequest {
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
@@ -212,14 +212,16 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 	}
 
 	if response == nil {
-		tracing.TraceErr(span, errors.New("response is nil"))
-		return nil, errors.New("response is nil")
+		tracing.TraceErr(span, errors.New("Enrich organization response is nil"))
+		return nil, errors.New("Enrich organization response is nil")
 	}
+
 	span.LogFields(log.Int("response.statusCode", response.StatusCode))
 
-	if response.StatusCode == http.StatusBadGateway {
-		tracing.TraceErr(span, errors.New("response status is 502"))
-		return nil, errors.New("response status is 502")
+	if response.StatusCode != http.StatusOK {
+		tracing.TraceErr(span, errors.New("response status is not 200"))
+		h.log.Errorf("Enrich organization API response status is : %d", response.StatusCode)
+		return nil, errors.New("response status is not 200")
 	}
 
 	body, err := io.ReadAll(response.Body)
