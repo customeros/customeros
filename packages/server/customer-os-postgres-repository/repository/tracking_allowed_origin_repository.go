@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
-	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
 
@@ -26,15 +25,18 @@ func (repo *trackingAllowedOriginRepositoryImpl) GetTenantForOrigin(ctx context.
 	span, _ := opentracing.StartSpanFromContext(ctx, "TrackingAllowedOriginRepository.GetTenantForOrigin")
 	defer span.Finish()
 	tracing.TagComponentPostgresRepository(span)
-	span.LogFields(log.String("origin", origin))
+	span.LogKV("origin", origin)
 
 	var result entity.TrackingAllowedOrigin
-	err := repo.gormDb.Model(&entity.TrackingAllowedOrigin{}).Find(&result, "origin = ?", origin).Error
+	err := repo.gormDb.Model(&entity.TrackingAllowedOrigin{}).
+		Where("origin = ? OR origin = ?", origin, origin+"/").
+		Order("created_at ASC").
+		First(&result).Error
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil
 		}
-		logrus.Errorf("error while getting import allowed organization: %v", err)
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	if result.Tenant == "" {

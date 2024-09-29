@@ -74,7 +74,7 @@ func NewEmailValidationService(config *config.Config, services *Services, log lo
 func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailWithMailSherpa")
 	defer span.Finish()
-	span.LogFields(log.String("email", email))
+	span.LogKV("email", email)
 
 	result := &model.ValidateEmailMailSherpaData{
 		Email: email,
