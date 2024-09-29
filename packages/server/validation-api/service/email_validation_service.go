@@ -174,6 +174,9 @@ func (s *emailValidationService) getDomainValidationWithTimeout(ctx context.Cont
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, MaxDurationCallMailSherpa)
 	defer cancel()
 
+	// Create a new independent background context for validation
+	validationCtx := context.Background()
+
 	domainValidation := postgresentity.CacheEmailValidationDomain{}
 	errChan := make(chan error, 1)
 	timeout := false
@@ -181,7 +184,7 @@ func (s *emailValidationService) getDomainValidationWithTimeout(ctx context.Cont
 	// Run getEmailValidation in a goroutine to handle timeout
 	go func() {
 		var err error
-		domainValidation, err = s.getDomainValidation(ctxWithTimeout, domain, email)
+		domainValidation, err = s.getDomainValidation(validationCtx, domain, email)
 		errChan <- err
 	}()
 
@@ -201,6 +204,7 @@ func (s *emailValidationService) getDomainValidationWithTimeout(ctx context.Cont
 func (s *emailValidationService) getDomainValidation(ctx context.Context, domain, email string) (postgresentity.CacheEmailValidationDomain, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getDomainValidation")
 	defer span.Finish()
+	span.LogKV("domain", domain, "email", email)
 
 	cacheDomain, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Get(ctx, domain)
 	if err != nil {
