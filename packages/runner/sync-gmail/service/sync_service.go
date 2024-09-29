@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"net/mail"
 	"strings"
@@ -99,36 +98,35 @@ func hasPersonalEmailProvider(providers []string, domain string) bool {
 	return false
 }
 
-func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, email string, now time.Time, source string) (string, error) {
+func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTransaction, tenant, email string, now time.Time, source string) (string, error) {
 	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.getEmailIdForEmail")
 	defer span.Finish()
 	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.LogFields(log.String("email", email))
+	span.LogKV("email", email)
 
-	fromEmailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, email)
+	emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, email)
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to retrieve email id"))
 		return "", fmt.Errorf("unable to retrieve email id for tenant: %v", err)
 	}
-	if fromEmailId != "" {
-		return fromEmailId, nil
+	if emailId != "" {
+		return emailId, nil
 	}
 
 	//if it's a personal email, we create just the email node in tenant
-	domain := utils.ExtractDomain(email)
+	domain := utils.ExtractDomainFromEmail(email)
 	if domain == "" {
 		err = errors.New("unable to extract domain from email: " + email)
-		tracing.TraceErr(span, err)
+		tracing.TraceErr(span, errors.Wrap(err, "unable to extract domain from email"))
 		return "", err
 	}
-	for _, personalEmailProvider := range s.services.Cache.GetPersonalEmailProviders() {
-		if domain == personalEmailProvider {
-			emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, source, AppSource)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
-				return "", err
-			}
-			return emailId, nil
+	if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
+		emailId, err = s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, source, AppSource)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
+			return "", err
 		}
+		return emailId, nil
 	}
 
 	var domainNode *neo4j.Node
@@ -206,7 +204,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		}
 	}
 
-	emailId, err := s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, source, AppSource)
+	emailId, err = s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, source, AppSource)
 	if err != nil {
 		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
 	}
