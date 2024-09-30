@@ -533,6 +533,7 @@ const CONTACTS_QUERY = gql`
             isFreeAccount
             smtpSuccess
           }
+          work
         }
 
         socials {

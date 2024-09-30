@@ -25,7 +25,7 @@ export const useColumnSizing = (
       let columnSettings = columnCache.get(columnId);
 
       if (!columnSettings) {
-        columnSettings = tableColumns.find((e) => e.id === columnId) || {};
+        columnSettings = tableColumns?.find((e) => e.id === columnId) || {};
         columnCache.set(columnId, columnSettings);
       }
 
