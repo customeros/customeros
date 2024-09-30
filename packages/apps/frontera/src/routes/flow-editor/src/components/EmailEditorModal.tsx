@@ -63,9 +63,7 @@ export const EmailEditorModal = observer(
               <div className='w-[570px]'>
                 <div className='flex justify-between mt-4 mb-[68px]'>
                   <div className='flex items-center text-sm'>
-                    <span role='button' onClick={() => setIsEditorOpen(false)}>
-                      {flow}
-                    </span>
+                    <span>{flow}</span>
                     <ChevronRight className='size-3 mx-1 text-gray-400' />
                     <span className='mr-2 cursor-default'>
                       {data.action === FlowActionType.EMAIL_NEW

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { NodeProps, useReactFlow } from '@xyflow/react';
 
@@ -15,7 +15,7 @@ export const WaitNode = ({
   data,
 }: NodeProps & { data: Record<string, string | number> }) => {
   const [isFocused, setFocused] = useState(false);
-  const { setNodes } = useReactFlow();
+  const { setNodes, getNode } = useReactFlow();
 
   const handleDurationChange = (newValue: string) => {
     setNodes((nds) => {
@@ -34,10 +34,8 @@ export const WaitNode = ({
         return node;
       });
 
-      // Find the index of the current node
       const currentNodeIndex = updatedNodes.findIndex((node) => node.id === id);
 
-      // If there's a next node, update its waitBefore property
       if (currentNodeIndex < updatedNodes.length - 1) {
         const nextNode = updatedNodes[currentNodeIndex + 1];
 
@@ -53,6 +51,14 @@ export const WaitNode = ({
       return updatedNodes;
     });
   };
+
+  const selected = getNode(id)?.selected;
+
+  useEffect(() => {
+    if (isFocused && !selected) {
+      setFocused(false);
+    }
+  }, [selected]);
 
   return (
     <div
@@ -97,7 +103,7 @@ export const WaitNode = ({
           variant='ghost'
           aria-label='Edit'
           icon={<Edit03 />}
-          onClick={() => setFocused(!isFocused)}
+          onClick={() => setFocused(true)}
           className={cn(
             'ml-2  opacity-0 group-hover:opacity-100 pointer-events-all',
             {
