@@ -95,7 +95,9 @@ export const Header = observer(
                   <ChevronRight className='text-gray-400' />
                   <span className='font-medium cursor-default'>
                     {`${flow?.value?.contacts?.length} ${
-                      flow?.value?.contacts?.length > 1 ? 'Contacts' : 'Contact'
+                      flow?.value?.contacts?.length === 1
+                        ? 'Contact'
+                        : 'Contacts'
                     }`}
                   </span>
                 </>
@@ -123,24 +125,20 @@ export const Header = observer(
               )}
             </div>
           </div>
-
-          {showFinder ? (
-            <ViewSettings type={TableViewType.Contacts} />
-          ) : (
-            <div className='flex gap-2'>
-              {saveFlag && hasChanges && (
-                <Button
-                  size='xs'
-                  variant='outline'
-                  colorScheme='gray'
-                  onClick={handleSave}
-                >
-                  Save
-                </Button>
-              )}
-              <FlowStatusMenu id={id} />
-            </div>
-          )}
+          <div className='flex gap-2'>
+            {showFinder && <ViewSettings type={TableViewType.Contacts} />}
+            {!showFinder && saveFlag && hasChanges && (
+              <Button
+                size='xs'
+                variant='outline'
+                colorScheme='gray'
+                onClick={handleSave}
+              >
+                Save
+              </Button>
+            )}
+            <FlowStatusMenu id={id} />
+          </div>
         </div>
       </div>
     );
