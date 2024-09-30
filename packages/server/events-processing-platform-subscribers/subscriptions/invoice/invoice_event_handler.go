@@ -1257,13 +1257,13 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 	invoiceNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetInvoice"))
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.GetInvoice")
+		return nil
 	}
 	if invoiceNode != nil {
 		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
-		return errors.New("invoiceNode is nil")
+		return nil
 	}
 
 	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || invoiceEntity.Status != neo4jenum.InvoiceStatusOverdue {
