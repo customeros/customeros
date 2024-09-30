@@ -24,6 +24,7 @@ erl_crash.dump
 
 # Ignore package tarball (built via "mix hex.build").
 customer_os_realtime-*.tar
+realtime-*.tar
 
 # Ignore assets that are produced by build tools.
 /priv/static/assets/
