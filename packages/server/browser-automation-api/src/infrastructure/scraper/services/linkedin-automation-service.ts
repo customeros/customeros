@@ -1,3 +1,4 @@
+import { randomUUID } from "crypto";
 import { setTimeout } from "timers/promises";
 import { setTimeout as setTimeoutSync } from "timers";
 
@@ -444,6 +445,8 @@ export class LinkedinAutomationService {
       error = LinkedinAutomationService.handleError(err);
     } finally {
       await setTimeout(60000);
+
+      await page.screenshot({ path: `get-connections-${randomUUID()}.png` });
       await page.close();
       return [results, error];
     }

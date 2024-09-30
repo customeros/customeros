@@ -2,4 +2,4 @@
 set -eu
 
 cd -P -- "$(dirname -- "$0")"
-PHX_SERVER=true exec ./customer_os_realtime start
+PHX_SERVER=true exec ./realtime start
