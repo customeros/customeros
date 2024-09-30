@@ -447,18 +447,21 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 	span.LogFields(log.Int("minutesFromLastEnrichAttempt", minutesFromLastEnrichAttempt))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
+	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
 				(t)--(ts:TenantSettings)
-				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
-				WHERE
+				WHERE 
+					t.active = true AND
 					ts.enrichContacts = true AND
 					c.enrichedAt IS NULL AND
 					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < 3) AND
-					e.isRoleAccount = false AND
-					(e.isPrimaryDomain = true OR e.isPrimaryDomain IS NULL) AND
 					(c.enrichFailedAt IS NULL OR c.enrichFailedAt < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND
 					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt}))
+				WITH *
+				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
+				WHERE
+					e.isRoleAccount = false AND
+					(e.isPrimaryDomain = true OR e.isPrimaryDomain IS NULL)
 				WITH t,c,e
 				OPTIONAL MATCH (c)--(j:JobRole)--(o:Organization)
 				WHERE
