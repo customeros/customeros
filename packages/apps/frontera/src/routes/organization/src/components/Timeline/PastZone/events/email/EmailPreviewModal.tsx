@@ -87,9 +87,11 @@ export const EmailPreviewModal = ({
   const [isSending, setIsSending] = useState(false);
   const { to, cc, bcc } = getEmailParticipantsByType(event?.sentTo || []);
 
-  const from = getEmailParticipantsNameAndEmail(event?.sentBy || [], 'value');
+  const fromParticipants = event?.sentBy || [];
+  const from = getEmailParticipantsNameAndEmail(fromParticipants, 'value');
   const defaultValues: ComposeEmailDtoI = new ComposeEmailDto({
-    to: from,
+    from: from,
+    to: getEmailParticipantsNameAndEmail(to, 'value'),
     cc: getEmailParticipantsNameAndEmail(cc, 'value'),
     bcc: getEmailParticipantsNameAndEmail(bcc, 'value'),
     subject: `Re: ${subject}`,
