@@ -32,6 +32,7 @@ type InvoiceGrpcServiceClient interface {
 	RequestFillInvoice(ctx context.Context, in *RequestFillInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	PermanentlyDeleteInitializedInvoice(ctx context.Context, in *PermanentlyDeleteInitializedInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 	VoidInvoice(ctx context.Context, in *VoidInvoiceRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
+	RemindInvoiceNotification(ctx context.Context, in *RemindInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error)
 }
 
 type invoiceGrpcServiceClient struct {
@@ -132,6 +133,15 @@ func (c *invoiceGrpcServiceClient) VoidInvoice(ctx context.Context, in *VoidInvo
 	return out, nil
 }
 
+func (c *invoiceGrpcServiceClient) RemindInvoiceNotification(ctx context.Context, in *RemindInvoiceNotificationRequest, opts ...grpc.CallOption) (*InvoiceIdResponse, error) {
+	out := new(InvoiceIdResponse)
+	err := c.cc.Invoke(ctx, "/InvoiceGrpcService/RemindInvoiceNotification", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // InvoiceGrpcServiceServer is the server API for InvoiceGrpcService service.
 // All implementations should embed UnimplementedInvoiceGrpcServiceServer
 // for forward compatibility
@@ -146,6 +156,7 @@ type InvoiceGrpcServiceServer interface {
 	RequestFillInvoice(context.Context, *RequestFillInvoiceRequest) (*InvoiceIdResponse, error)
 	PermanentlyDeleteInitializedInvoice(context.Context, *PermanentlyDeleteInitializedInvoiceRequest) (*InvoiceIdResponse, error)
 	VoidInvoice(context.Context, *VoidInvoiceRequest) (*InvoiceIdResponse, error)
+	RemindInvoiceNotification(context.Context, *RemindInvoiceNotificationRequest) (*InvoiceIdResponse, error)
 }
 
 // UnimplementedInvoiceGrpcServiceServer should be embedded to have forward compatible implementations.
@@ -181,6 +192,9 @@ func (UnimplementedInvoiceGrpcServiceServer) PermanentlyDeleteInitializedInvoice
 }
 func (UnimplementedInvoiceGrpcServiceServer) VoidInvoice(context.Context, *VoidInvoiceRequest) (*InvoiceIdResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method VoidInvoice not implemented")
+}
+func (UnimplementedInvoiceGrpcServiceServer) RemindInvoiceNotification(context.Context, *RemindInvoiceNotificationRequest) (*InvoiceIdResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method RemindInvoiceNotification not implemented")
 }
 
 // UnsafeInvoiceGrpcServiceServer may be embedded to opt out of forward compatibility for this service.
@@ -374,6 +388,24 @@ func _InvoiceGrpcService_VoidInvoice_Handler(srv interface{}, ctx context.Contex
 	return interceptor(ctx, in, info, handler)
 }
 
+func _InvoiceGrpcService_RemindInvoiceNotification_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemindInvoiceNotificationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(InvoiceGrpcServiceServer).RemindInvoiceNotification(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/InvoiceGrpcService/RemindInvoiceNotification",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(InvoiceGrpcServiceServer).RemindInvoiceNotification(ctx, req.(*RemindInvoiceNotificationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // InvoiceGrpcService_ServiceDesc is the grpc.ServiceDesc for InvoiceGrpcService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -420,6 +452,10 @@ var InvoiceGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "VoidInvoice",
 			Handler:    _InvoiceGrpcService_VoidInvoice_Handler,
+		},
+		{
+			MethodName: "RemindInvoiceNotification",
+			Handler:    _InvoiceGrpcService_RemindInvoiceNotification_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

@@ -8,16 +8,17 @@ import (
 )
 
 const (
-	InvoiceCreateForContractV1 = "V1_INVOICE_CREATE_FOR_CONTRACT"
-	InvoiceFillRequestedV1     = "V1_INVOICE_FILL_REQUESTED"
-	InvoiceFillV1              = "V1_INVOICE_FILL"
-	InvoicePdfRequestedV1      = "V1_INVOICE_PDF_REQUESTED"
-	InvoicePdfGeneratedV1      = "V1_INVOICE_PDF_GENERATED"
-	InvoiceUpdateV1            = "V1_INVOICE_UPDATE"
-	InvoicePaidV1              = "V1_INVOICE_PAID"
-	InvoicePayNotificationV1   = "V1_INVOICE_PAY_NOTIFICATION"
-	InvoiceDeleteV1            = "V1_INVOICE_DELETE"
-	InvoiceVoidV1              = "V1_INVOICE_VOID"
+	InvoiceCreateForContractV1  = "V1_INVOICE_CREATE_FOR_CONTRACT"
+	InvoiceFillRequestedV1      = "V1_INVOICE_FILL_REQUESTED"
+	InvoiceFillV1               = "V1_INVOICE_FILL"
+	InvoicePdfRequestedV1       = "V1_INVOICE_PDF_REQUESTED"
+	InvoicePdfGeneratedV1       = "V1_INVOICE_PDF_GENERATED"
+	InvoiceUpdateV1             = "V1_INVOICE_UPDATE"
+	InvoicePaidV1               = "V1_INVOICE_PAID"
+	InvoicePayNotificationV1    = "V1_INVOICE_PAY_NOTIFICATION"
+	InvoiceRemindNotificationV1 = "V1_INVOICE_REMIND_NOTIFICATION"
+	InvoiceDeleteV1             = "V1_INVOICE_DELETE"
+	InvoiceVoidV1               = "V1_INVOICE_VOID"
 	// Deprecated
 	InvoicePayV1 = "V1_INVOICE_PAY"
 )
