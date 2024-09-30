@@ -1,7 +1,8 @@
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types.ts';
-import { MarkerType, useReactFlow, FitViewOptions } from '@xyflow/react';
+import { Node, MarkerType, useReactFlow, FitViewOptions } from '@xyflow/react';
 
+import { cn } from '@ui/utils/cn.ts';
 import { useStore } from '@shared/hooks/useStore';
 import { Mail01 } from '@ui/media/icons/Mail01.tsx';
 import { Star06 } from '@ui/media/icons/Star06.tsx';
@@ -23,11 +24,36 @@ const elkOptions = {
   'elk.spacing.nodeNode': '80',
   'elk.direction': 'DOWN',
 };
+
 export const StepsHub = observer(() => {
   const { ui } = useStore();
   const { getLayoutedElements } = useLayoutedElements();
 
   const { setEdges, setNodes, getNodes, getEdges, fitView } = useReactFlow();
+
+  const findPreviousEmailNode = (
+    nodes: Node[],
+    currentNodeId: string,
+  ): Node | null => {
+    const currentNodeIndex = nodes.findIndex(
+      (node) => node.id === currentNodeId,
+    );
+
+    for (let i = currentNodeIndex; i >= 0; i--) {
+      if (nodes[i].data.action === FlowActionType.EMAIL_NEW) {
+        return nodes[i];
+      }
+    }
+
+    return null;
+  };
+
+  const hasEmailNodeBeforeCurrent = (
+    nodes: Node[],
+    currentNodeId: string,
+  ): boolean => {
+    return findPreviousEmailNode(nodes, currentNodeId) !== null;
+  };
 
   const handleAddNode = async (type: FlowActionType | 'WAIT') => {
     const nodes = getNodes();
@@ -42,10 +68,26 @@ export const StepsHub = observer(() => {
 
     if (!sourceNode || !targetNode) return;
 
-    const typeBasedContent =
-      type === 'WAIT' ? { subject: '', bodyTemplate: '' } : { waitDuration: 1 };
+    let typeBasedContent: {
+      subject?: string;
+      bodyTemplate?: string;
+      waitDuration?: number;
+    } = {};
 
-    // Create the new node
+    if (type === 'WAIT') {
+      typeBasedContent = { waitDuration: 1 };
+    } else if (type === FlowActionType.EMAIL_REPLY) {
+      const prevEmailNode = findPreviousEmailNode(nodes, sourceNode.id);
+      const prevSubject = prevEmailNode?.data?.subject || '';
+
+      typeBasedContent = {
+        subject: `RE: ${prevSubject}`,
+        bodyTemplate: '',
+      };
+    } else {
+      typeBasedContent = { subject: '', bodyTemplate: '' };
+    }
+
     const newNode = {
       id: `${type}-${nodes.length + 1}`,
       type: type === 'WAIT' ? 'wait' : 'action',
@@ -56,7 +98,6 @@ export const StepsHub = observer(() => {
       },
     };
 
-    // Create two new edges
     const edgeToNewNode = {
       id: `e${ui.flowCommandMenu.context.meta?.source}-${newNode.id}`,
       source: ui.flowCommandMenu.context.meta?.source,
@@ -73,7 +114,6 @@ export const StepsHub = observer(() => {
       markerEnd: { type: MarkerType.Arrow },
     };
 
-    // Remove the old edge
     const updatedEdges = edges.filter(
       (e) =>
         !(
@@ -82,12 +122,12 @@ export const StepsHub = observer(() => {
         ),
     );
 
-    // Add the new node and edges
     const updatedNodes = [...nodes, newNode];
     const newEdges = [...updatedEdges, edgeToNewNode, edgeFromNewNode];
 
     getLayoutedElements(updatedNodes, newEdges, elkOptions).then(
-      // @ts-expect-error not for poc
+      // Use getLayoutedElements to calculate new positions
+      // @ts-expect-error fix type later
       ({ nodes: layoutedNodes, edges: layoutedEdges }) => {
         setNodes(layoutedNodes);
         setEdges(layoutedEdges);
@@ -112,6 +152,12 @@ export const StepsHub = observer(() => {
     ui.flowCommandMenu.reset();
   };
 
+  const currentNodeId = ui.flowCommandMenu.context.meta?.source;
+
+  const canReplyToEmail = currentNodeId
+    ? hasEmailNodeBeforeCurrent(getNodes(), currentNodeId)
+    : false;
+
   return (
     <>
       <CommandItem
@@ -124,8 +170,12 @@ export const StepsHub = observer(() => {
         Send email
       </CommandItem>
       <CommandItem
+        disabled={!canReplyToEmail}
         leftAccessory={<MailReply />}
         keywords={keywords.reply_to_previous_email}
+        className={cn({
+          hidden: !canReplyToEmail,
+        })}
         onSelect={() => {
           updateSelectedNode(FlowActionType.EMAIL_REPLY);
         }}
