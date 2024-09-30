@@ -129,6 +129,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "sendPayInvoiceNotifications", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendRemindInvoiceNotification, func() {
+		lockAndRunJob(cont, invoiceGroup, sendRemindInvoiceNotifications)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendRemindInvoiceNotifications", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshLastTouchpoint, func() {
 		lockAndRunJob(cont, refreshLastTouchpointGroup, refreshLastTouchpoint)
 	})
@@ -351,6 +358,10 @@ func adjustInvoiceStatus(cont *container.Container) {
 
 func sendPayInvoiceNotifications(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendPayNotifications()
+}
+
+func sendRemindInvoiceNotifications(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendRemindNotifications()
 }
 
 func refreshLastTouchpoint(cont *container.Container) {
