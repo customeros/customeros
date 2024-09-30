@@ -5,13 +5,12 @@ import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
+import { MarkerType } from '@xyflow/react';
 import { Transport } from '@store/transport';
-import { Edge, MarkerType } from '@xyflow/react';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
-import { FlowNodeType, FlowActionType } from '@store/Flows/types.ts';
 
 import { uuidv4 } from '@utils/generateUuid.ts';
 import {
@@ -329,26 +328,40 @@ const getDefaultValue = (): Flow => ({
 });
 const initialNodes = [
   {
+    $H: 497,
+    data: { action: 'FLOW_START', entity: null, triggerType: null },
+    height: 48,
     id: 'tn-1',
-    type: FlowNodeType.Trigger,
-    position: { x: 250, y: 100 },
-    data: {
-      action: FlowActionType.FLOW_START,
-      entity: null,
-      triggerType: null,
-    },
+    internalId: '00370d94-5f6d-4d00-a1c0-3147413da9fb',
+    measured: { height: 48, width: 300 },
+    position: { x: 12, y: 12 },
+    properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },
+    sourcePosition: 'bottom',
+    targetPosition: 'top',
+    type: 'trigger',
+    width: 300,
+    x: 12,
+    y: 12,
   },
   {
+    $H: 499,
+    data: { action: 'FLOW_END' },
+    height: 48,
     id: 'tn-2',
-    type: FlowNodeType.Control,
-    position: { x: 315, y: 300 },
-    data: {
-      action: FlowActionType.FLOW_END,
-    },
+    internalId: 'ba2070b8-79ad-4f59-8b5a-c4dd77c8cff5',
+    measured: { height: 48, width: 131 },
+    position: { x: 96.5, y: 160 },
+    properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },
+    sourcePosition: 'bottom',
+    targetPosition: 'top',
+    type: 'control',
+    width: 131,
+    x: 96.5,
+    y: 160,
   },
 ];
 
-const initialEdges: Edge[] = [
+const initialEdges = [
   {
     id: 'e1-2',
     source: 'tn-1',
@@ -357,11 +370,18 @@ const initialEdges: Edge[] = [
     selectable: true,
     focusable: true,
     interactionWidth: 60,
-    markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 60,
-      height: 60,
-    },
+    markerEnd: { type: MarkerType.Arrow, width: 60, height: 60 },
     type: 'baseEdge',
+    data: { isHovered: false },
+    sections: [
+      {
+        id: 'e1-2_s0',
+        startPoint: { x: 162, y: 60 },
+        endPoint: { x: 162, y: 160 },
+        incomingShape: 'tn-1',
+        outgoingShape: 'tn-2',
+      },
+    ],
+    container: 'root',
   },
 ];

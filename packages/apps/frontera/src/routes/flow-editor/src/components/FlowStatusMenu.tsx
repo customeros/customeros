@@ -41,13 +41,13 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
     <>
       <Menu>
         <MenuButton
-          className='text-success-500'
+          className='text-success-500 h-full'
           data-test='flow-editor-status-change-button'
         >
           <Tag
             variant='outline'
             colorScheme='success'
-            className='h-full rounded-md px-2'
+            className='h-full rounded-md px-2 py-1'
           >
             <TagLeftIcon>
               <div>
