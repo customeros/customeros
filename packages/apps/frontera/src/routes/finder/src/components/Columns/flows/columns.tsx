@@ -1,7 +1,6 @@
 import { FlowStore } from '@store/Flows/Flow.store.ts';
 import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { StatusFilter } from '@finder/components/Columns/flows/Filters';
-import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
 import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig';
 import {
   FlowNameCell,
@@ -132,35 +131,35 @@ const columns: Record<string, Column> = {
       skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
     },
   ),
-  [ColumnViewType.FlowSequenceTotalCount]: columnHelper.accessor((row) => row, {
-    id: ColumnViewType.FlowSequenceTotalCount,
-    size: 150,
-    minSize: 150,
-    maxSize: 300,
-    enableResizing: true,
-    enableColumnFilter: false,
-    enableSorting: true,
-    header: (props) => (
-      <THead
-        title='Total '
-        filterWidth={250}
-        id={ColumnViewType.FlowSequenceTotalCount}
-        {...getTHeadProps(props)}
-      />
-    ),
-    cell: (e) => {
-      const total = e.getValue()?.value?.statistics?.total;
-
-      return (
-        <TextCell
-          text={`${total}`}
-          unknownText='No data yet'
-          dataTest='flow-completed-in-flows-table'
-        />
-      );
-    },
-    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
-  }),
+  // [ColumnViewType.FlowSequenceTotalCount]: columnHelper.accessor((row) => row, {
+  //   id: ColumnViewType.FlowSequenceTotalCount,
+  //   size: 150,
+  //   minSize: 150,
+  //   maxSize: 300,
+  //   enableResizing: true,
+  //   enableColumnFilter: false,
+  //   enableSorting: true,
+  //   header: (props) => (
+  //     <THead
+  //       title='Total '
+  //       filterWidth={250}
+  //       id={ColumnViewType.FlowSequenceTotalCount}
+  //       {...getTHeadProps(props)}
+  //     />
+  //   ),
+  //   cell: (e) => {
+  //     const total = e.getValue()?.value?.statistics?.total;
+  //
+  //     return (
+  //       <TextCell
+  //         text={`${total}`}
+  //         unknownText='No data yet'
+  //         dataTest='flow-completed-in-flows-table'
+  //       />
+  //     );
+  //   },
+  //   skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  // }),
   [ColumnViewType.FlowSequenceCompletedCount]: columnHelper.accessor(
     (row) => row,
     {

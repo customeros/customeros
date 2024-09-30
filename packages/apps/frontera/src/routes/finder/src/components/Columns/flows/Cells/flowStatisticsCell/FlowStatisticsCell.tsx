@@ -17,12 +17,12 @@ export const FlowStatisticsCell = observer(
       );
     }
 
-    const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
+    // const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
 
     return (
       <div className='flex items-center space-x-1 '>
         <span>{value}</span>
-        <span>({percentage}%)</span>
+        {/*<span>({percentage}%)</span>*/}
       </div>
     );
   },
