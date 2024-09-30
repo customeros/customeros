@@ -14,7 +14,6 @@ import { ButtonGroup } from '@ui/form/ButtonGroup';
 import { OrganizationStage } from '@graphql/types';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { useModKey } from '@shared/hooks/useModKey';
-import { CommandKbd } from '@ui/overlay/CommandMenu';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { TableInstance } from '@ui/presentation/Table';
 import { isUserPlatformMac } from '@utils/getUserPlatform.ts';
@@ -239,13 +238,7 @@ export const OrganizationTableActions = observer(
               <Tooltip
                 className='p-1.5'
                 label={
-                  <div className='flex items-center text-sm'>
-                    Open command menu
-                    <CommandKbd className='bg-gray-600 text-gray-25 mx-1' />
-                    <div className='bg-gray-600 text-xs min-h-5 min-w-5 rounded-sm flex justify-center items-center'>
-                      K
-                    </div>
-                  </div>
+                  <div className='flex items-center text-sm'>Unselect all</div>
                 }
               >
                 <div className='bg-gray-700 px-3 py-2 rounded-s-lg'>
