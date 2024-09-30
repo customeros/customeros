@@ -214,7 +214,7 @@ export const ContactAvatarHeader = observer(() => {
               onClick={handleSubmit}
               loadingText='Creating contact'
               isLoading={store.contacts.isLoading}
-              spinner={
+              rightSpinner={
                 <Spinner
                   size='sm'
                   label='loading'

@@ -87,7 +87,7 @@ export const ConfirmDeleteDialog = ({
                   isLoading={isLoading}
                   loadingText={loadingButtonLabel}
                   colorScheme={colorScheme || 'error'}
-                  spinner={
+                  rightSpinner={
                     <Spinner
                       size={'sm'}
                       label='deleting'

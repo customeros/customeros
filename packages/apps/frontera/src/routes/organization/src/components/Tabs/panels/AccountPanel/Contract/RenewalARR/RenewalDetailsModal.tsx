@@ -227,7 +227,7 @@ const RenewalDetailsForm = ({
               variant='outline'
               colorScheme='primary'
               className='ml-3 w-full'
-              spinner={
+              rightSpinner={
                 <Spinner
                   label='Updating...'
                   className='text-primary-500 fill-primary-700 size-4'
