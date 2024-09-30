@@ -14,6 +14,7 @@ import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath.tsx';
 import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
 
+import { keywords } from './keywords.ts';
 import { useLayoutedElements } from '../../hooks';
 
 const elkOptions = {
@@ -115,7 +116,7 @@ export const StepsHub = observer(() => {
     <>
       <CommandItem
         leftAccessory={<Mail01 />}
-        keywords={['send', 'email']}
+        keywords={keywords.send_email}
         onSelect={() => {
           updateSelectedNode(FlowActionType.EMAIL_NEW);
         }}
@@ -124,7 +125,7 @@ export const StepsHub = observer(() => {
       </CommandItem>
       <CommandItem
         leftAccessory={<MailReply />}
-        keywords={['reply', 'to', 'previous', 'email']}
+        keywords={keywords.reply_to_previous_email}
         onSelect={() => {
           updateSelectedNode(FlowActionType.EMAIL_REPLY);
         }}
@@ -132,7 +133,7 @@ export const StepsHub = observer(() => {
         Reply to previous email
       </CommandItem>
       <CommandItem
-        keywords={['wait', 'delay']}
+        keywords={keywords.wait}
         leftAccessory={<Hourglass02 />}
         onSelect={() => {
           updateSelectedNode('WAIT');
@@ -140,31 +141,59 @@ export const StepsHub = observer(() => {
       >
         Wait
       </CommandItem>
-      <CommandItem disabled leftAccessory={<LinkedinOutline />}>
+      <CommandItem
+        disabled
+        leftAccessory={<LinkedinOutline />}
+        keywords={keywords.send_linkedin_message}
+      >
         <span className='text-gray-700'>Send LinkedIn message</span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<PlusSquare />}>
+      <CommandItem
+        disabled
+        leftAccessory={<PlusSquare />}
+        keywords={keywords.create_record}
+      >
         <span className='text-gray-700'>Create record</span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<RefreshCw01 />}>
+      <CommandItem
+        disabled
+        leftAccessory={<RefreshCw01 />}
+        keywords={keywords.update_record}
+      >
         <span className='text-gray-700'>Update record</span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<Star06 />}>
+      <CommandItem
+        disabled
+        leftAccessory={<Star06 />}
+        keywords={keywords.enrich_record}
+      >
         <span className='text-gray-700'>Enrich record</span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<Star06 />}>
+      <CommandItem
+        disabled
+        leftAccessory={<Star06 />}
+        keywords={keywords.verify_record_property}
+      >
         <span className='text-gray-700'>Verify record property</span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<ArrowIfPath />}>
+      <CommandItem
+        disabled
+        keywords={keywords.conditions}
+        leftAccessory={<ArrowIfPath />}
+      >
         <span className='text-gray-700'>Conditions</span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<ClipboardCheck />}>
+      <CommandItem
+        disabled
+        keywords={keywords.create_to_do}
+        leftAccessory={<ClipboardCheck />}
+      >
         <span className='text-gray-700'>Create to-do</span>
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>

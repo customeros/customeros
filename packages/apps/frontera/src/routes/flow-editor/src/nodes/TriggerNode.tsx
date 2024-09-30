@@ -94,6 +94,7 @@ export const TriggerViewportPortal = observer(
         {ui.flowCommandMenu?.isOpen && id === ui.flowCommandMenu.context.id && (
           <ViewportPortal>
             <div
+              className='border border-gray-200 rounded-lg shadow-lg'
               style={{
                 transform: `translate(calc(${positionAbsoluteX}px + 150px - 180px), ${
                   positionAbsoluteY + 48 + 24 // 48 is height of the node, 24 is desired spacing
