@@ -57,6 +57,7 @@ type InvoiceService interface {
 	GenerateCycleInvoices()
 	GenerateOffCycleInvoices()
 	SendPayNotifications()
+	SendRemindNotifications()
 	GenerateInvoicePaymentLinks()
 	CleanupInvoices()
 	GenerateNextPreviewInvoices()
@@ -327,6 +328,75 @@ func (s *invoiceService) SendPayNotifications() {
 		}
 		//sleep for async processing, then check again
 		time.Sleep(5 * time.Second)
+	}
+}
+
+func (s *invoiceService) SendRemindNotifications() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "InvoiceService.SendRemindNotifications")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	if s.eventsProcessingClient == nil {
+		err := errors.New("eventsProcessingClient is nil")
+		tracing.TraceErr(span, err)
+		s.log.Error(err.Error())
+		return
+	}
+
+	referenceTime := utils.Now()
+	limit := 100
+	overdueDays := 15
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.repositories.Neo4jRepositories.InvoiceReadRepository.GetInvoicesForRemindNotifications(ctx, referenceTime, overdueDays, limit)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("Error getting invoices for pay notifications: %v", err)
+			return
+		}
+
+		// no invoices found
+		if len(records) == 0 {
+			return
+		}
+
+		//process records
+		for _, record := range records {
+			invoice := neo4jmapper.MapDbNodeToInvoiceEntity(record.Node)
+
+			grpcRequest := invoicepb.RemindInvoiceNotificationRequest{
+				Tenant:    record.Tenant,
+				AppSource: constants.AppSourceDataUpkeeper,
+				InvoiceId: invoice.Id,
+			}
+			_, err = CallEventsPlatformGRPCWithRetry[*invoicepb.InvoiceIdResponse](func() (*invoicepb.InvoiceIdResponse, error) {
+				return s.eventsProcessingClient.InvoiceClient.RemindInvoiceNotification(ctx, &grpcRequest)
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error sending pay notification for invoice %s: %s", invoice.Id, err.Error())
+			}
+
+			// mark invoicing started
+			err = s.repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelInvoice, invoice.Id, string(neo4jentity.InvoicePropertyRemindInvoiceNotificationRequestedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error marking remind notification requested for invoice %s: %s", invoice.Id, err.Error())
+			}
+		}
+		//sleep for async processing, then check again
+		time.Sleep(1 * time.Second)
 	}
 }
 

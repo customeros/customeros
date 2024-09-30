@@ -21,6 +21,7 @@ type InvoiceReadRepository interface {
 	CountInvoices(ctx context.Context, tenant, filterString string, filterParams map[string]interface{}) (int64, error)
 	GetPaginatedInvoices(ctx context.Context, tenant string, skip, limit int, filterCypher string, filterParams map[string]interface{}, sorting *utils.Cypher) (*utils.DbNodesWithTotalCount, error)
 	GetInvoicesForPayNotifications(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time) ([]*utils.DbNodeAndTenant, error)
+	GetInvoicesForRemindNotifications(ctx context.Context, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error)
 	CountNonDryRunInvoicesForContract(ctx context.Context, tenant, contractId string) (int, error)
 	GetInvoicesForPaymentLinkRequest(ctx context.Context, minutesFromLastUpdate, lookbackWindow int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
 	GetPreviousCycleInvoice(ctx context.Context, tenant, contractId string) (*dbtype.Node, error)
@@ -277,6 +278,54 @@ func (r *invoiceReadRepository) GetInvoicesForPayNotifications(ctx context.Conte
 		"now":            utils.Now(),
 		"ignoredStatuses": []string{
 			neo4jenum.InvoiceStatusPaid.String(), neo4jenum.InvoiceStatusInitialized.String(), neo4jenum.InvoiceStatusNone.String(), neo4jenum.InvoiceStatusVoid.String(), neo4jenum.InvoiceStatusEmpty.String(),
+		},
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsAsDbNodeAndTenant(ctx, queryResult, err)
+
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
+	return result.([]*utils.DbNodeAndTenant), err
+}
+
+func (r *invoiceReadRepository) GetInvoicesForRemindNotifications(ctx context.Context, referenceTime time.Time, overdueDays, limit int) ([]*utils.DbNodeAndTenant, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetInvoicesForRemindNotifications")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Object("referenceTime", referenceTime), log.Int("overdueDays", overdueDays), log.Int("limit", limit))
+
+	cypher := `MATCH (i:Invoice)-[:INVOICE_BELONGS_TO_TENANT]->(t:Tenant)--(ts:TenantSettings)
+			WHERE 
+				ts.enableInvoiceReminders = true AND
+				i.dryRun = false AND
+				i.totalAmount > 0 AND
+				i.status IN $acceptedStatuses AND
+				i.customerEmail IS NOT NULL AND
+				i.customerEmail <> '' AND	
+				date(i.dueDate) < date($referenceTime)-duration({days:overdueDays}) AND
+				i.lastRemindInvoiceNotificationSentAt IS NULL AND
+				(i.techRemindInvoiceNotificationRequestedAt IS NULL OR i.techRemindInvoiceNotificationRequestedAt + duration({hours: 12}) < $referenceTime)
+			RETURN distinct(i), t.name limit $limit`
+	params := map[string]any{
+		"referenceTime": referenceTime,
+		"overdueDays":   overdueDays,
+		"limit":         limit,
+		"acceptedStatuses": []string{
+			neo4jenum.InvoiceStatusOverdue.String(),
 		},
 	}
 	span.LogFields(log.String("query", cypher))
