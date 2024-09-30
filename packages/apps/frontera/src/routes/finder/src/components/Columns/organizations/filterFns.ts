@@ -276,9 +276,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         }
 
         if (operator === ComparisonOperator.Between) {
-          const filterValue = filter?.value?.map(Number) as number[];
-
           return employees >= filterValue[0] && employees <= filterValue[1];
+        }
+
+        if (operator === ComparisonOperator.Eq) {
+          return employees === Number(filterValue);
         }
 
         return true;

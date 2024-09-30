@@ -65,7 +65,11 @@ export const Filter = ({
           filterName={filterName}
           filterValue={filterValue}
           operatorValue={operatorValue}
-          onChangeFilterValue={onChangeFilterValue}
+          onChangeFilterValue={
+            onChangeFilterValue as (
+              value: string | [string | null | number, string | null | number],
+            ) => void
+          }
         />
       )}
 

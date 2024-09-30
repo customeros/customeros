@@ -142,14 +142,14 @@ export const FinderFilters = observer(
             ColumnView & FilterType
           >[]
         }
-        onFilterSelect={(filter, getFilterOperators) =>
+        onFilterSelect={(filter, getFilterOperators) => {
           tableViewDef?.appendFilter({
             property: filter?.filterAccesor || '',
             value: undefined,
             active: false,
             operation: getFilterOperators(filter?.filterAccesor ?? '')[0] || '',
-          })
-        }
+          });
+        }}
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         onChangeFilterValue={(value: string | any, filter: FilterItem) => {
           if (Array.isArray(value) && value.length === 0) {
@@ -162,9 +162,9 @@ export const FinderFilters = observer(
             });
           } else {
             tableViewDef?.setFilter({
-              ...filter,
+              ...selectedFilter,
               value: value,
-              property: filter.property,
+              property: selectedFilter.property,
               active: true,
             });
           }

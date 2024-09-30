@@ -21,8 +21,16 @@ interface FiltersProps {
   handleFilterSearch: (value: string) => void;
   availableFilters: Partial<ColumnView & FilterType>[];
   filterTypes: Partial<Record<ColumnViewType, FilterType>>;
-  onChangeOperator: (operator: string, filter: FilterItem) => void;
-  onChangeFilterValue: (value: string | Date, filter: FilterItem) => void;
+  onChangeOperator: (
+    operator: string,
+    filter: FilterItem,
+    index: number,
+  ) => void;
+  onChangeFilterValue: (
+    value: string | Date,
+    filter: FilterItem,
+    index: number,
+  ) => void;
   onFilterSelect: (
     filter: Partial<ColumnView & FilterType>,
     getFilterOperators: (prop: string) => ComparisonOperator[],
@@ -66,7 +74,7 @@ export const Filters = ({
 
   return (
     <div className='flex gap-2 flex-wrap'>
-      {filters.map((f) => (
+      {filters.map((f, idx) => (
         <Filter
           key={f.property}
           filterValue={f.value}
@@ -75,8 +83,8 @@ export const Filters = ({
           operators={getFilterOperators(f.property)}
           filterType={getFilterTypes(f.property) || ''}
           operatorValue={f.operation || ComparisonOperator.Between}
-          onChangeOperator={(operator) => onChangeOperator(operator, f)}
-          onChangeFilterValue={(value) => onChangeFilterValue(value, f)}
+          onChangeOperator={(operator) => onChangeOperator(operator, f, idx)}
+          onChangeFilterValue={(value) => onChangeFilterValue(value, f, idx)}
         />
       ))}
       <Menu>
