@@ -5,6 +5,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { User01 } from '@ui/media/icons/User01.tsx';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
 
+import { keywords } from './keywords.ts';
+
 export const ContactAddedManuallySubItem = observer(() => {
   const { ui } = useStore();
   const { setNodes } = useReactFlow();
@@ -32,8 +34,9 @@ export const ContactAddedManuallySubItem = observer(() => {
     <>
       <CommandSubItem
         icon={<User01 />}
-        leftLabel={'Contact'}
-        rightLabel={'added manually'}
+        rightLabel={'Contact'}
+        leftLabel={'Record added manually'}
+        keywords={keywords.record_added_manually}
         onSelectAction={() => {
           updateSelectedNode();
           ui.flowCommandMenu.setOpen(false);

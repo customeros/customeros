@@ -426,6 +426,7 @@ export enum ComparisonOperator {
   Lt = 'LT',
   Lte = 'LTE',
   NotContains = 'NOT_CONTAINS',
+  NotEqual = 'NOT_EQUAL',
   StartsWith = 'STARTS_WITH',
 }
 

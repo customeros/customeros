@@ -33,6 +33,7 @@ export const RecordAddedManually = observer(() => {
     <>
       <CommandItem
         leftAccessory={<User01 />}
+        keywords={keywords.contact}
         onSelect={() => {
           updateSelectedNode('CONTACT');
           ui.flowCommandMenu.setOpen(false);
@@ -41,14 +42,27 @@ export const RecordAddedManually = observer(() => {
       >
         Contact
       </CommandItem>
-      <CommandItem disabled leftAccessory={<Building07 />}>
+      <CommandItem
+        disabled
+        leftAccessory={<Building07 />}
+        keywords={keywords.organization}
+      >
         <span className='text-gray-700'>Organization</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>{' '}
-      <CommandItem disabled leftAccessory={<CoinsStacked01 />}>
+      <CommandItem
+        disabled
+        keywords={keywords.opportunity}
+        leftAccessory={<CoinsStacked01 />}
+      >
         <span className='text-gray-700'>Opportunity</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
     </>
   );
 });
+const keywords = {
+  contact: ['contact', 'people'],
+  organization: ['organization', 'company'],
+  opportunity: ['opportunity', 'deal'],
+};
