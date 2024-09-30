@@ -7,6 +7,7 @@ import { FlowStore } from '@store/Flows/Flow.store.ts';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
 import { cn } from '@ui/utils/cn';
+import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
 import { Button } from '@ui/form/Button/Button.tsx';
 import { User01 } from '@ui/media/icons/User01.tsx';
@@ -27,6 +28,7 @@ export const Header = observer(() => {
   const saveFlag = useFeatureIsOn('flow-editor-save-button_1');
 
   const flow = store.flows.value.get(id) as FlowStore;
+  const contactsStore = store.contacts;
   const showFinder = searchParams.get('show') === 'finder';
   const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
 
@@ -69,7 +71,9 @@ export const Header = observer(() => {
                 'text-gray-500 cursor-pointer hover:text-gray-700': showFinder,
               })}
             >
-              {flow?.value?.name || 'Unnamed'}
+              {store.flows.isLoading
+                ? 'Loading flow…'
+                : flow?.value?.name || 'Unnamed'}
             </span>
             {showFinder ? (
               <>
@@ -82,13 +86,21 @@ export const Header = observer(() => {
               </>
             ) : (
               <Button
-                size='xxs'
+                size='xs'
                 className='ml-2'
                 variant='outline'
                 colorScheme='gray'
                 leftIcon={<User01 />}
+                isLoading={contactsStore.isLoading || store.flows.isLoading}
                 onClick={() =>
                   navigate(`?show=finder&preset=${flowContactsPreset}`)
+                }
+                leftSpinner={
+                  <Spinner
+                    size='sm'
+                    label='adding'
+                    className='text-gray-300 fill-gray-400'
+                  />
                 }
               >
                 {flow?.value?.contacts?.length}

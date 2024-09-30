@@ -162,7 +162,7 @@ export const CreateNewOrganizationModal = observer(
                 onClick={handleSubmit}
                 isLoading={organizations.isLoading}
                 loadingText='Creating organization'
-                spinner={
+                rightSpinner={
                   <Spinner
                     size='sm'
                     label='loading'

@@ -112,7 +112,15 @@ function FloatingLinkEditor({
     }
 
     return true;
-  }, [anchorElem, editor, setIsLinkEditMode, isLinkEditMode, linkUrl]);
+  }, [
+    anchorElem,
+    editor,
+    editorRef,
+    setIsLinkEditMode,
+    isLink,
+    isLinkEditMode,
+    linkUrl,
+  ]);
 
   useEffect(() => {
     const scrollerElem = anchorElem.parentElement;
@@ -227,7 +235,7 @@ function FloatingLinkEditor({
       {isLink && (
         <div
           data-side='bottom'
-          className='flex items-center gap-2 bg-white min-w-[auto] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-50'
+          className='flex items-center gap-2 bg-white min-w-[auto] max-w-[800px] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-50'
         >
           {isLinkEditMode ? (
             <>
@@ -296,9 +304,7 @@ function FloatingLinkEditor({
                 onClick={() => {
                   editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
                 }}
-              >
-                trash
-              </IconButton>
+              />
             </>
           )}
         </div>
@@ -316,6 +322,7 @@ function useFloatingLinkEditorToolbar(
 ): JSX.Element | null {
   const [activeEditor, setActiveEditor] = useState(editor);
   const [isLink, setIsLink] = useState(false);
+  const [isUserTyping, setIsUserTyping] = useState(false);
 
   useEffect(() => {
     function $updateToolbar() {
@@ -334,6 +341,7 @@ function useFloatingLinkEditorToolbar(
 
           return;
         }
+
         const badNode = selection
           .getNodes()
           .filter((node) => !$isLineBreakNode(node))
@@ -349,13 +357,39 @@ function useFloatingLinkEditorToolbar(
             );
           });
 
-        if (!badNode) {
+        if (!badNode && isUserTyping) {
           setIsLink(true);
         } else {
           setIsLink(false);
         }
       }
     }
+
+    function onKeyDown(event: KeyboardEvent) {
+      if (
+        event.key !== 'Meta' &&
+        event.key !== 'Shift' &&
+        event.key !== 'Alt' &&
+        event.key !== 'Control'
+      ) {
+        setIsUserTyping(true);
+      }
+    }
+
+    function onKeyUp(event: KeyboardEvent) {
+      if (
+        event.key !== 'Meta' &&
+        event.key !== 'Shift' &&
+        event.key !== 'Alt' &&
+        event.key !== 'Control'
+      ) {
+        // Reset the typing state after a short delay
+        setTimeout(() => setIsUserTyping(false), 500);
+      }
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    document.addEventListener('keyup', onKeyUp);
 
     return mergeRegister(
       editor.registerUpdateListener(({ editorState }) => {
@@ -382,10 +416,14 @@ function useFloatingLinkEditorToolbar(
             const node = getSelectedNode(selection);
             const linkNode = $findMatchingParent(node, $isLinkNode);
 
-            if ($isLinkNode(linkNode) && (payload.metaKey || payload.ctrlKey)) {
-              window.open(linkNode.getURL(), '_blank');
+            if ($isLinkNode(linkNode)) {
+              setIsLink(true);
 
-              return true;
+              if (payload.metaKey || payload.ctrlKey) {
+                window.open(linkNode.getURL(), '_blank');
+
+                return true;
+              }
             }
           }
 
@@ -393,8 +431,12 @@ function useFloatingLinkEditorToolbar(
         },
         COMMAND_PRIORITY_LOW,
       ),
+      () => {
+        document.removeEventListener('keydown', onKeyDown);
+        document.removeEventListener('keyup', onKeyUp);
+      },
     );
-  }, [editor]);
+  }, [editor, isUserTyping]);
 
   return createPortal(
     <FloatingLinkEditor
