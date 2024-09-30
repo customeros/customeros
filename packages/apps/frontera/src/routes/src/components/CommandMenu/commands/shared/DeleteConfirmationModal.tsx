@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
@@ -9,7 +9,6 @@ import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
-import { TableIdType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import {
@@ -22,6 +21,7 @@ export const DeleteConfirmationModal = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const navigate = useNavigate();
+  const location = useLocation();
 
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -83,7 +83,13 @@ export const DeleteConfirmationModal = observer(() => {
         context.callback?.();
       })
       .with('Flow', () => {
-        store.flows.archive(context.ids?.[0]);
+        store.flows.archive(context.ids?.[0], {
+          onSuccess: () => {
+            if (location.pathname.includes('flow-editor')) {
+              navigate(`/finder?preset=${store.tableViewDefs.flowsPreset}`);
+            }
+          },
+        });
         context.callback?.();
       })
       .with('Flows', () => {
@@ -93,12 +99,9 @@ export const DeleteConfirmationModal = observer(() => {
       .with('TableViewDef', () => {
         store.tableViewDefs.archive(context.ids?.[0], {
           onSuccess: () => {
-            const allOrgsViewId = store.tableViewDefs
-              ?.toArray()
-              .find((e) => e.value.tableId === TableIdType.Organizations)
-              ?.value.id;
-
-            navigate(`/finder?preset=${allOrgsViewId}`);
+            navigate(
+              `/finder?preset=${store.tableViewDefs.organizationsPreset}`,
+            );
           },
         });
       })
@@ -143,17 +146,21 @@ export const DeleteConfirmationModal = observer(() => {
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
   const description = match(context.entity)
     .with(
-      'Flows',
-      () =>
-        `Archiving these flows will remove all contacts currently enrolled to it`,
+      'Flow',
+      () => `Archiving this flow will end all active contacts currently in it`, // todo update contacts to dynamic value when we'll be able to get different record types
     )
     .with(
-      'Flow',
+      'Flows',
       () =>
-        `Archiving this flow will remove all contacts currently enrolled to it`,
+        `Archiving these flows will end all active contacts currently in it`, // todo update contacts to dynamic value when we'll be able to get different record types
     )
-
     .otherwise(() => null);
+
+  const confirmButtonLabel = match(context.entity)
+    .with('Flows', () => `Archive flows`)
+    .with('Flow', () => `Archive flow`)
+
+    .otherwise(() => 'Archive');
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -185,7 +192,7 @@ export const DeleteConfirmationModal = observer(() => {
               }
             }}
           >
-            Archive
+            {confirmButtonLabel}
           </Button>
         </div>
       </article>
