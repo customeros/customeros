@@ -1118,8 +1118,7 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return nil
 	}
 
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || invoiceEntity.Status != neo4jenum.InvoiceStatusOverdue {
-		tracing.TraceErr(span, errors.New("remind invoice notification requested for not applicable invoice"))
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
 		return nil
 	}
 
@@ -1223,11 +1222,13 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 		return nil
 	}
 
+	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntity)
+
 	// Request was successful
-	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyLastRemindInvoiceNotificationSentAt), utils.NowPtr())
+	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "UpdateTimeProperty"))
-		h.log.Errorf("Error setting invoice remind notification sent at for invoice %s: %s", invoiceId, err.Error())
+		tracing.TraceErr(span, errors.Wrap(err, "SetPayInvoiceNotificationSentAt"))
+		h.log.Errorf("Error setting invoice pay notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
 
@@ -1256,7 +1257,7 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 	invoiceNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetInvoice"))
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetInvoice")
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.GetInvoice")
 	}
 	if invoiceNode != nil {
 		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
@@ -1265,7 +1266,8 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 		return errors.New("invoiceNode is nil")
 	}
 
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || invoiceEntity.Status != neo4jenum.InvoiceStatusOverdue {
+		tracing.TraceErr(span, errors.New("remind invoice notification requested for not applicable invoice"))
 		return nil
 	}
 
@@ -1278,7 +1280,7 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 	contractNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetContractForInvoice")
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.GetContractForInvoice")
 	}
 	if contractNode != nil {
 		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
@@ -1356,7 +1358,7 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 
 	err = h.appendInvoiceFileToEmailAsAttachment(ctx, eventData.Tenant, invoiceEntity, &postmarkEmail)
 	if err != nil {
-		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendInvoiceFileToEmailAsAttachment")
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.AppendInvoiceFileToEmailAsAttachment")
 		tracing.TraceErr(span, wrappedErr)
 		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
 		return wrappedErr
@@ -1364,7 +1366,7 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 
 	err = h.appendProviderLogoToEmail(ctx, eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
 	if err != nil {
-		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendProviderLogoToEmail")
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.AppendProviderLogoToEmail")
 		tracing.TraceErr(span, wrappedErr)
 		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
 		return wrappedErr
@@ -1372,7 +1374,7 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 
 	err = h.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendCustomerOSLogoToEmail"))
+		tracing.TraceErr(span, errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.AppendCustomerOSLogoToEmail"))
 		h.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
@@ -1380,19 +1382,17 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 	err = h.services.PostmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
 
 	if err != nil {
-		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.SendNotification")
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoiceRemindNotificationV1.SendNotification")
 		tracing.TraceErr(span, wrappedErr)
-		h.log.Errorf("Error sending invoice pay request notification for invoice %s: %s", invoiceId, err.Error())
+		h.log.Errorf("Error sending invoice remind request notification for invoice %s: %s", invoiceId, err.Error())
 		return nil
 	}
 
-	h.createInvoiceAction(ctx, eventData.Tenant, invoiceEntity)
-
 	// Request was successful
-	err = h.services.CommonServices.Neo4jRepositories.InvoiceWriteRepository.SetPayInvoiceNotificationSentAt(ctx, eventData.Tenant, invoiceId)
+	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyLastRemindInvoiceNotificationSentAt), utils.NowPtr())
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "SetPayInvoiceNotificationSentAt"))
-		h.log.Errorf("Error setting invoice pay notification sent at for invoice %s: %s", invoiceId, err.Error())
+		tracing.TraceErr(span, errors.Wrap(err, "UpdateTimeProperty"))
+		h.log.Errorf("Error setting invoice remind notification sent at for invoice %s: %s", invoiceId, err.Error())
 		return err
 	}
 
