@@ -31,7 +31,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsCity]: 'City',
   [ColumnViewType.ContactsPersona]: 'Persona',
   [ColumnViewType.ContactsLastInteraction]: 'Last Interaction',
-  [ColumnViewType.ContactsEmails]: 'Email',
+  [ColumnViewType.ContactsEmails]: 'Work Email',
   [ColumnViewType.ContactsPhoneNumbers]: 'Mobile Number',
   [ColumnViewType.ContactsAvatar]: 'Avatar',
   [ColumnViewType.ContactsLanguages]: 'Languages',
@@ -43,10 +43,10 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsCountry]: 'Country',
   [ColumnViewType.ContactsSkills]: 'Skills',
   [ColumnViewType.ContactsLinkedinFollowerCount]: 'Linkedin Followers',
-  [ColumnViewType.ContactsConnections]: 'Connected To',
+  [ColumnViewType.ContactsConnections]: 'LinkedIn Connections',
   [ColumnViewType.ContactsRegion]: 'Region',
-  [ColumnViewType.ContactsSequences]: 'Current Flow',
   [ColumnViewType.ContactsFlows]: 'Current Flow',
+  [ColumnViewType.ContactsPersonalEmails]: 'Personal Email',
 };
 
 export const invoicesHelperTextMap: Record<
@@ -163,8 +163,8 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsSchools]: 'E.g. Stanford University',
   [ColumnViewType.ContactsExperience]: 'E.g. 4 yrs',
   [ColumnViewType.ContactsRegion]: 'E.g. California',
-  [ColumnViewType.ContactsSequences]: 'E.g. Aerospace CTO',
   [ColumnViewType.ContactsFlows]: 'E.g. Education',
+  [ColumnViewType.ContactsPersonalEmails]: 'E.g. steph@convoy.com',
 };
 
 export const contractsMap: Record<string, string> = {

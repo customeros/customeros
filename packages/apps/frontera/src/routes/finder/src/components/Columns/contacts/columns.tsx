@@ -12,6 +12,7 @@ import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
 import {
   User,
+  Email,
   Social,
   JobRole,
   TableViewDef,
@@ -139,7 +140,9 @@ const columns: Record<string, Column> = {
     enableColumnFilter: true,
     enableSorting: false,
     cell: (props) => {
-      const email = props.getValue()?.[0]?.email;
+      const email = props
+        .getValue()
+        ?.find((email: Email) => email.work === true)?.email;
       const validationDetails = props.getValue()?.[0]?.emailValidationDetails;
 
       return (
@@ -152,7 +155,7 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        title='Email'
+        title='Work Email'
         filterWidth='15rem'
         id={ColumnViewType.ContactsEmails}
         renderFilter={(initialFocusRef) => (
@@ -166,6 +169,46 @@ const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
   }),
+  [ColumnViewType.ContactsPersonalEmails]: columnHelper.accessor(
+    'value.emails',
+    {
+      id: ColumnViewType.ContactsPersonalEmails,
+      minSize: 200,
+      maxSize: 650,
+      enableResizing: true,
+      enableColumnFilter: true,
+      enableSorting: false,
+      cell: (props) => {
+        const email = props
+          .getValue()
+          ?.find((email: Email) => email.work === false)?.email;
+        const validationDetails = props.getValue()?.[0]?.emailValidationDetails;
+
+        return (
+          <EmailCell
+            email={email}
+            contactId={props.row.id}
+            validationDetails={validationDetails}
+          />
+        );
+      },
+      header: (props) => (
+        <THead<HTMLInputElement>
+          filterWidth='15rem'
+          title='Personal Email'
+          id={ColumnViewType.ContactsPersonalEmails}
+          renderFilter={(initialFocusRef) => (
+            <EmailFilter
+              initialFocusRef={initialFocusRef}
+              property={ColumnViewType.ContactsPersonalEmails}
+            />
+          )}
+          {...getTHeadProps<ContactStore>(props)}
+        />
+      ),
+      skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
+    },
+  ),
   [ColumnViewType.ContactsPhoneNumbers]: columnHelper.accessor(
     'value.phoneNumbers',
     {
@@ -575,7 +618,7 @@ const columns: Record<string, Column> = {
       },
       header: (props) => (
         <THead<HTMLInputElement>
-          title='Connected To'
+          title='LinkedIn Connections'
           id={ColumnViewType.ContactsConnections}
           renderFilter={(initialFocusRef) => (
             <ConnectedToFilter initialFocusRef={initialFocusRef} />
