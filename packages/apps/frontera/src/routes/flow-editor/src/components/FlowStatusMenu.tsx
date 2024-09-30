@@ -59,8 +59,8 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
         </MenuButton>
         <MenuList align='end' side='bottom' className='p-0'>
           <MenuItem
-            className='flex items-center text-base'
-            data-test='contract-menu-delete-contract'
+            className='flex items-center '
+            data-test='stop-flow-menu-button'
             onClick={() => store.ui.commandMenu.toggle('StopFlow')}
           >
             <StopCircle className='mr-1 text-gray-500' />

@@ -66,7 +66,7 @@ export const GeneralViewsSection = observer(
 
     return (
       <CollapsibleSection
-        title='Explore'
+        title='Records'
         isOpen={preferences.isViewsOpen}
         onToggle={() => togglePreference('isViewsOpen')}
       >

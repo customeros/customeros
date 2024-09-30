@@ -90,7 +90,10 @@ export class FlowStore implements Store<Flow> {
     }
   }
 
-  public async updateFlow({ nodes, edges }: { nodes: string; edges: string }) {
+  public async updateFlow(
+    { nodes, edges }: { nodes: string; edges: string },
+    options?: { onSuccess: () => void },
+  ) {
     this.isLoading = true;
 
     try {
@@ -106,6 +109,15 @@ export class FlowStore implements Store<Flow> {
       runInAction(() => {
         this.value.nodes = flow_Merge?.nodes ?? '[]';
         this.value.edges = flow_Merge?.edges ?? '[]';
+
+        this.root.ui.toastSuccess(
+          `${this.value.name} saved`,
+          `update-flow-success-${this.id}`,
+        );
+
+        if (options?.onSuccess) {
+          options.onSuccess();
+        }
       });
     } catch (e) {
       runInAction(() => {
