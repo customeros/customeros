@@ -324,16 +324,36 @@ export class OrganizationsStore extends SyncableGroup<
   }
 
   updateTags = (ids: string[], tags: Tag[]) => {
+    const tagIdsToUpdate = new Set(tags.map((tag) => tag.id));
+
+    const shouldRemoveTags = ids.every((id) => {
+      const organization = this.value.get(id);
+
+      if (!organization) return false;
+
+      const organizationTagIds = new Set(
+        (organization.value.tags ?? []).map((tag) => tag.id),
+      );
+
+      return Array.from(tagIdsToUpdate).every((tagId) =>
+        organizationTagIds.has(tagId),
+      );
+    });
+
     ids.forEach((id) => {
       this.value.get(id)?.update((organization) => {
-        const organizationTagIds = new Set(
-          (organization.tags ?? []).map((tag) => tag.id),
-        );
-        const filteredTags = tags.filter(
-          (tag) => !organizationTagIds.has(tag.id),
-        );
+        if (shouldRemoveTags) {
+          organization.tags = organization.tags?.filter(
+            (existingTag) => !tagIdsToUpdate.has(existingTag.id),
+          );
+        } else {
+          const existingTagIds = new Set(
+            organization.tags?.map((tag) => tag.id) ?? [],
+          );
+          const newTags = tags.filter((tag) => !existingTagIds.has(tag.id));
 
-        organization.tags = [...(organization.tags ?? []), ...filteredTags];
+          organization.tags = [...(organization.tags ?? []), ...newTags];
+        }
 
         return organization;
       });
