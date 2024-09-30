@@ -90,7 +90,7 @@ export const WinProbabilityModal = observer(
     return (
       <Modal open={open} onOpenChange={onToggle}>
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent data-test='win-rate-modal'>
           <ModalHeader>
             <p className='text-md font-semibold mb-1'>
               Set win probability for stage {columnName}
@@ -119,7 +119,10 @@ export const WinProbabilityModal = observer(
               value={[stageLikelihoodRate]}
               onValueChange={handleSetProbability}
             >
-              <RangeSliderTrack className='bg-gray-400 h-0.5'>
+              <RangeSliderTrack
+                dataTest='slider-bar'
+                className='bg-gray-400 h-0.5'
+              >
                 <RangeSliderFilledTrack className='bg-gray-500' />
               </RangeSliderTrack>
               <RangeSliderThumb className='ring-1 shadow-md cursor-pointer ring-gray-400' />

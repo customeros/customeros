@@ -5,7 +5,8 @@ import { LoginPage } from './pages/loginPage/loginPage';
 import { FlowStatuses } from './pages/flows/flowsStatuses';
 import { ContactsPage } from './pages/contacts/contactsPage';
 import { CustomersPage } from './pages/customers/customersPage';
-// import { KanbanColumns } from './pages/opportunitiesKanban/columns';
+import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
+import { KanbanColumns } from './pages/opportunitiesKanban/columns';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
 import { OrganizationAboutPage } from './pages/organization/organizationAboutPage';
 import { OrganizationsCmdKPage } from './pages/organizations/organizationsCmdKPage';
@@ -242,36 +243,70 @@ test('Create opportunities', async ({ page }, testInfo) => {
   await loginPage.login();
   await organizationsPage.goToAllOrgs();
 
-  // const organizationName = await organizationsPage.addNonInitialOrganization(
-  //   testInfo,
-  // );
+  const organizationName = await organizationsPage.addNonInitialOrganization(
+    testInfo,
+  );
 
   await opportunitiesPage.goToOpportunitiesKanban();
   await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(0, 0, 0, 0);
-  // await opportunitiesPage.addOpportunity(organizationName);
-  await opportunitiesPage.setWinRates();
-  // await opportunitiesPage.moveOpportunityCard(
-  //   organizationName,
-  //   KanbanColumns.Qualified,
-  // );
-  // await opportunitiesPage.moveOpportunityCard(
-  //   organizationName,
-  //   KanbanColumns.Committed,
-  // );
-  // await opportunitiesPage.moveOpportunityCard(
-  //   organizationName,
-  //   KanbanColumns.Qualified,
-  // );
-  // await opportunitiesPage.moveOpportunityCard(
-  //   organizationName,
-  //   KanbanColumns.Identified,
-  // );
-  // await opportunitiesPage.moveOpportunityCard(
-  //   organizationName,
-  //   KanbanColumns.Committed,
-  // );
-  // await opportunitiesPage.moveOpportunityCard(
-  //   organizationName,
-  //   KanbanColumns.Identified,
-  // );
+  await opportunitiesPage.addOpportunity(organizationName);
+
+  const opportunityName = await opportunitiesPage.updateOpportunityName(
+    organizationName,
+  );
+
+  await opportunitiesPage.setOpportunityArrEstimate(opportunityName);
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0);
+  await opportunitiesPage.setWinRates(WinRatesFor.Identified, 10);
+  await opportunitiesPage.setWinRates(WinRatesFor.Qualified, 30);
+  await opportunitiesPage.setWinRates(WinRatesFor.Committed, 55);
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Qualified,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 1.5);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Identified,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Committed,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 2.75);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Identified,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Won,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 5);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Identified,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Lost,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0);
+
+  await opportunitiesPage.moveOpportunityCard(
+    opportunityName,
+    KanbanColumns.Identified,
+  );
+  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
 });

@@ -35,9 +35,9 @@ export const OpportunityName = observer(
         onBlur={handleBlur}
         onChange={handleChange}
         placeholder='Unnamed opportunity'
+        dataTest={`opp-kanban-card-opportunity-name`}
         onClick={(e) => (e.target as HTMLInputElement).select()}
         className='font-medium line-clamp-1 max-w-[178px] text-ellipsis'
-        dataTest={`opp-kanban-card-opportunity-name-${opportunity?.value.name}`}
       />
     );
   },

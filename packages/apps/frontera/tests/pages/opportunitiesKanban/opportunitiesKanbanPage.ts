@@ -1,6 +1,8 @@
+import { randomUUID } from 'crypto';
 import { Page, expect, ElementHandle } from '@playwright/test';
 
 import {
+  createRequestPromise,
   createResponsePromise,
   clickLocatorsThatAreVisible,
 } from '../../helper';
@@ -37,16 +39,15 @@ export class OpportunitiesKanbanPage {
     'input[data-test="opp-kanban-choose-organization"]';
   private kanbanClock = 'path[data-test="kanban-clock"]';
   private oppKanbanIcon = 'div[data-test="opp-kanban-icon"]';
-  private oppThreeDotsMenuIdentified =
-    'button[data-test="opp-three-dots-menu-Identified"]';
-  private oppThreeDotsMenuQualified =
-    'button[data-test="opp-three-dots-menu-Qualified"]';
-  private oppThreeDotsMenuCommitted =
-    'button[data-test="opp-three-dots-menu-Committed"]';
   private oppThreeDotsMenuWinProb =
     'div[role="menuitem"]:has-text("Set win probability")';
-  private winRate = 'span[role="slider"]';
+  private winRateSlider = 'span[role="slider"]';
+  private winRateSliderBar = 'span[data-test="slider-bar"]';
   private winRateConfirm = 'button[data-test="win-rate-confirm"]';
+  private winRateModal = 'div[data-test="win-rate-modal"]';
+  private oppKanbanCardOpportunityName =
+    'input[data-test="opp-kanban-card-opportunity-name"]';
+  private cardArrEstimate = 'input[data-test="card-arr-estimate"]';
 
   async goToOpportunitiesKanban() {
     await clickLocatorsThatAreVisible(
@@ -104,10 +105,10 @@ export class OpportunitiesKanbanPage {
         .toBe(expectedArrEstimate.toString()),
       expect
         .soft(
-          trimmedWeightedArrEstimate,
+          parseFloat(trimmedWeightedArrEstimate).toFixed(2),
           `Expected to have ${expectedWeightedArrEstimate} Weighted Arr Estimate and found ${trimmedWeightedArrEstimate}.`,
         )
-        .toBe(expectedWeightedArrEstimate.toString()),
+        .toBe(expectedWeightedArrEstimate.toFixed(2)),
     ]);
   }
 
@@ -151,37 +152,38 @@ export class OpportunitiesKanbanPage {
   }
 
   async moveOpportunityCard(
-    organizationName: string,
+    opportunityName: string,
     destinationColumn?: string,
   ) {
     const card = this.page.locator(
-      `${this.kanbanCards}:has(input[value*="${organizationName}"])`,
+      `${this.kanbanCards}:has(input[value*="${opportunityName}"])`,
     );
 
     await card.waitFor({ state: 'attached' });
+    await card.scrollIntoViewIfNeeded();
 
     expect(
       await card.isVisible(),
-      `Card '${organizationName}' should be visible`,
+      `Card '${opportunityName}' should be visible`,
     ).toBe(true);
 
     const { cardsColumnXCenter, cardsColumnYCenter } =
       await this.getCardsColumnCoordinates(destinationColumn);
 
     await this.dragCardToColumn(
-      organizationName,
+      opportunityName,
       cardsColumnXCenter,
       cardsColumnYCenter,
     );
   }
 
   private async dragCardToColumn(
-    organizationName: string,
+    opportunityName: string,
     cardsColumnXCenter: number,
     cardsColumnYCenter: number,
   ) {
     const cardElement: ElementHandle = await this.page.$(
-      `${this.kanbanCards}:has(input[value*="${organizationName}"])`,
+      `${this.kanbanCards}:has(input[value*="${opportunityName}"])`,
     );
 
     if (cardElement) {
@@ -232,27 +234,54 @@ export class OpportunitiesKanbanPage {
     return { cardsColumnXCenter, cardsColumnYCenter };
   }
 
-  async setWinRates() {
+  async setWinRates(winRateColumn: string, number: number) {
     await clickLocatorsThatAreVisible(
       this.page,
-      this.oppThreeDotsMenuIdentified,
+      winRateColumn,
       this.oppThreeDotsMenuWinProb,
     );
+    await this.page.waitForSelector(`${this.winRateModal}[data-state="open"]`, {
+      state: 'attached',
+    });
 
-    const winRateElement: ElementHandle = await this.page.$(this.winRate);
+    let widthPercentage: number | null = null;
 
-    if (winRateElement) {
-      const winRateBoundingBox = await winRateElement.boundingBox();
+    const winRateSliderBarElement: ElementHandle = await this.page.$(
+      this.winRateSliderBar,
+    );
 
-      if (winRateBoundingBox) {
-        const { x, y, width, height } = winRateBoundingBox;
+    if (winRateSliderBarElement) {
+      const winRateSliderBarBoundingBox =
+        await winRateSliderBarElement.boundingBox();
 
-        const clickX = x + width / 2;
+      if (winRateSliderBarBoundingBox) {
+        const { width } = winRateSliderBarBoundingBox;
+
+        widthPercentage = (width * number) / 100;
+      } else {
+        process.stdout.write('Element is not visible or has no dimensions');
+      }
+    } else {
+      process.stdout.write('Element not found');
+    }
+
+    const winRateSliderElement: ElementHandle = await this.page.$(
+      this.winRateSlider,
+    );
+
+    if (winRateSliderElement) {
+      const winRateSliderBoundingBox = await winRateSliderElement.boundingBox();
+
+      if (winRateSliderBoundingBox) {
+        const { x, y, width, height } = winRateSliderBoundingBox;
+
+        const clickXSource = x + width / 2;
+        const clickXDestination = x + widthPercentage;
         const clickY = y + height / 2;
 
-        await this.page.mouse.move(clickX, clickY);
+        await this.page.mouse.move(clickXSource, clickY);
         await this.page.mouse.down();
-        await this.page.mouse.move(clickX + 40, clickY, {
+        await this.page.mouse.move(clickXDestination, clickY, {
           steps: 400,
         });
         await this.page.mouse.up();
@@ -286,13 +315,65 @@ export class OpportunitiesKanbanPage {
         const clickX = x + width / 2;
         const clickY = y + height / 2;
 
-        // await this.page.mouse.click(x, y).finally(() => {
-        //   console.log(`Clicking confirm button on x: ${x} and y: ${y}`);
-        // });
         await this.page.mouse.move(clickX, clickY);
         await this.page.mouse.down();
         await this.page.mouse.up();
       }
     }
+  }
+
+  async updateOpportunityName(organizationName: string) {
+    const card = this.page.locator(
+      `${this.kanbanCards}:has(p:text("${organizationName}"))`,
+    );
+
+    await card.waitFor({ state: 'attached' });
+
+    expect(
+      await card.isVisible(),
+      `Card '${organizationName}' should be visible`,
+    ).toBe(true);
+
+    const opportunityName = randomUUID();
+
+    const requestPromise = createRequestPromise(
+      this.page,
+      'name',
+      opportunityName,
+    );
+
+    const responsePromise = createResponsePromise(
+      this.page,
+      'opportunity_Update?.id',
+      undefined,
+    );
+
+    const nameInput = card.locator(this.oppKanbanCardOpportunityName);
+
+    await nameInput.dblclick();
+    await nameInput.pressSequentially(opportunityName, { delay: 200 });
+
+    await Promise.all([requestPromise, responsePromise]);
+
+    return opportunityName;
+  }
+
+  async setOpportunityArrEstimate(opportunityName: string) {
+    const card = this.page.locator(
+      `[data-test="opp-kanban-card"]:has(input[data-test="opp-kanban-card-opportunity-name"][value^="${opportunityName}"])`,
+    );
+
+    await card.waitFor({ state: 'attached' });
+
+    expect(
+      await card.isVisible(),
+      `Card '${opportunityName}' should be visible`,
+    ).toBe(true);
+
+    const arrEstimateInput = card.locator('[data-test="card-arr-estimate"]');
+
+    await arrEstimateInput.dblclick();
+    await arrEstimateInput.pressSequentially('5');
+    await arrEstimateInput.press('Tab');
   }
 }
