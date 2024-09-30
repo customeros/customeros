@@ -71,7 +71,7 @@ export const Header = observer(() => {
                 'text-gray-500 cursor-pointer hover:text-gray-700': showFinder,
               })}
             >
-              {store.flows.isLoading
+              {!store.flows.isBootstrapped
                 ? 'Loading flow…'
                 : flow?.value?.name || 'Unnamed'}
             </span>

@@ -24,6 +24,7 @@ import { useStore } from '@shared/hooks/useStore';
 import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
 import { Toolbar } from './controls/Toolbar.tsx';
+import { FlowBuilderSkeleton } from './components';
 
 import '@xyflow/react/dist/style.css';
 const edgeTypes = {
@@ -116,7 +117,7 @@ export const FlowBuilder = observer(() => {
   );
 
   if (!store.flows.isBootstrapped) {
-    return 'IS LOADING';
+    return <FlowBuilderSkeleton />;
   }
 
   const onBeforeDelete: OnBeforeDelete = async (elements) => {
