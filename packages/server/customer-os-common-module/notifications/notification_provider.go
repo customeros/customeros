@@ -20,6 +20,8 @@ const (
 	WorkflowFailedWebhook                   = "failed-webhook"
 	WorkflowReminderNotificationEmail       = "reminder-notification-email"
 	WorkflowReminderInAppNotification       = "reminder-in-app-notification"
+	WorkflowInvoiceRemindWithPaymentLink    = "invoice-remind"
+	WorkflowInvoiceRemindNoPaymentLink      = "invoice-remind-nolink"
 )
 
 var REQUIRED_TEMPLATE_VALUES = map[string][]string{

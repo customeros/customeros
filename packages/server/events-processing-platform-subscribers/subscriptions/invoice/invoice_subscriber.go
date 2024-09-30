@@ -129,6 +129,8 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		return s.invoiceEventHandler.onInvoicePaidV1(ctx, evt)
 	case invoice.InvoicePayNotificationV1:
 		return s.invoiceEventHandler.onInvoicePayNotificationV1(ctx, evt)
+	case invoice.InvoiceRemindNotificationV1:
+		return s.invoiceEventHandler.onInvoiceRemindNotificationV1(ctx, evt)
 	default:
 		return nil
 	}

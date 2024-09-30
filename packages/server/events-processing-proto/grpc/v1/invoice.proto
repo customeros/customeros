@@ -148,6 +148,13 @@ message PermanentlyDeleteInitializedInvoiceRequest {
   string appSource = 4;
 }
 
+message RemindInvoiceNotificationRequest {
+  string tenant = 1;
+  string invoiceId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
 message VoidInvoiceRequest {
   string tenant = 1;
   string invoiceId = 2;
@@ -177,4 +184,5 @@ service InvoiceGrpcService {
   rpc RequestFillInvoice(RequestFillInvoiceRequest) returns (InvoiceIdResponse);
   rpc PermanentlyDeleteInitializedInvoice(PermanentlyDeleteInitializedInvoiceRequest) returns (InvoiceIdResponse);
   rpc VoidInvoice(VoidInvoiceRequest) returns (InvoiceIdResponse);
+  rpc RemindInvoiceNotification(RemindInvoiceNotificationRequest) returns (InvoiceIdResponse);
 }

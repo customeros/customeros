@@ -1109,16 +1109,17 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 	invoiceNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "GetInvoice"))
-		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetInvoice")
+		return nil
 	}
 	if invoiceNode != nil {
 		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
 	} else {
 		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
-		return errors.New("invoiceNode is nil")
+		return nil
 	}
 
-	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) || invoiceEntity.Status != neo4jenum.InvoiceStatusOverdue {
+		tracing.TraceErr(span, errors.New("remind invoice notification requested for not applicable invoice"))
 		return nil
 	}
 
@@ -1188,6 +1189,169 @@ func (h *InvoiceEventHandler) onInvoicePayNotificationV1(ctx context.Context, ev
 			"{{paymentLink}}":      paymentLink,
 		},
 		Attachments: []service.PostmarkEmailAttachment{},
+	}
+
+	err = h.appendInvoiceFileToEmailAsAttachment(ctx, eventData.Tenant, invoiceEntity, &postmarkEmail)
+	if err != nil {
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendInvoiceFileToEmailAsAttachment")
+		tracing.TraceErr(span, wrappedErr)
+		h.log.Errorf("Error appending invoice file to email attachment for invoice %s: %s", invoiceId, err.Error())
+		return wrappedErr
+	}
+
+	err = h.appendProviderLogoToEmail(ctx, eventData.Tenant, invoiceEntity.Provider.LogoRepositoryFileId, &postmarkEmail)
+	if err != nil {
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendProviderLogoToEmail")
+		tracing.TraceErr(span, wrappedErr)
+		h.log.Errorf("Error appending provider logo to email for invoice %s: %s", invoiceId, err.Error())
+		return wrappedErr
+	}
+
+	err = h.appendCustomerOSLogoToEmail(ctx, &postmarkEmail)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.AppendCustomerOSLogoToEmail"))
+		h.log.Errorf("Error appending customeros logo to email for invoice %s: %s", invoiceId, err.Error())
+		return nil
+	}
+
+	err = h.services.PostmarkProvider.SendNotification(ctx, postmarkEmail, eventData.Tenant)
+
+	if err != nil {
+		wrappedErr := errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.SendNotification")
+		tracing.TraceErr(span, wrappedErr)
+		h.log.Errorf("Error sending invoice pay request notification for invoice %s: %s", invoiceId, err.Error())
+		return nil
+	}
+
+	// Request was successful
+	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelInvoice, invoiceEntity.Id, string(neo4jentity.InvoicePropertyLastRemindInvoiceNotificationSentAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "UpdateTimeProperty"))
+		h.log.Errorf("Error setting invoice remind notification sent at for invoice %s: %s", invoiceId, err.Error())
+		return err
+	}
+
+	return nil
+}
+
+func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceEventHandler.onInvoiceRemindNotificationV1")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData invoice.InvoiceRemindNotificationEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	tracing.LogObjectAsJson(span, "eventData", eventData)
+	invoiceId := invoice.GetInvoiceObjectID(evt.GetAggregateID(), eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, invoiceId)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+
+	var invoiceEntity neo4jentity.InvoiceEntity
+	var contractEntity neo4jentity.ContractEntity
+
+	//load invoice
+	invoiceNode, err := h.services.CommonServices.Neo4jRepositories.InvoiceReadRepository.GetInvoiceById(ctx, eventData.Tenant, invoiceId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "GetInvoice"))
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetInvoice")
+	}
+	if invoiceNode != nil {
+		invoiceEntity = *neo4jmapper.MapDbNodeToInvoiceEntity(invoiceNode)
+	} else {
+		tracing.TraceErr(span, errors.New("invoiceNode is nil"))
+		return errors.New("invoiceNode is nil")
+	}
+
+	if invoiceEntity.DryRun || invoiceEntity.TotalAmount == float64(0) {
+		return nil
+	}
+
+	if invoiceEntity.Provider.Email == "" {
+		h.log.Warnf("Provider email address is empty for invoice %s", invoiceId)
+		return nil
+	}
+
+	// load contract
+	contractNode, err := h.services.CommonServices.Neo4jRepositories.ContractReadRepository.GetContractForInvoice(ctx, eventData.Tenant, invoiceEntity.Id)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "GetContractForInvoice"))
+		return errors.Wrap(err, "InvoiceSubscriber.onInvoicePayNotificationV1.GetContractForInvoice")
+	}
+	if contractNode != nil {
+		contractEntity = *neo4jmapper.MapDbNodeToContractEntity(contractNode)
+	} else {
+		tracing.TraceErr(span, errors.New("contractNode is nil"))
+		return errors.New("contractNode is nil")
+	}
+
+	if contractEntity.InvoiceEmail == "" || !isValidEmailSyntax(contractEntity.InvoiceEmail) {
+		tracing.TraceErr(span, errors.New("contractEntity.InvoiceEmail is empty or invalid"))
+		return errors.New("contractEntity.InvoiceEmail is empty or invalid")
+	}
+
+	//load tenant billing profile from neo4j
+	tenantBillingProfileEntity, err := h.loadTenantBillingProfile(ctx, eventData.Tenant, false)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "loadTenantBillingProfile"))
+		return err
+	}
+	tenantSettingsDbNode, err := h.services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantSettings(ctx, eventData.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "GetTenantSettings"))
+		return err
+	}
+	tenantSettingsEntity := neo4jmapper.MapDbNodeToTenantSettingsEntity(tenantSettingsDbNode)
+
+	workflowId := ""
+	if invoiceEntity.PaymentDetails.PaymentLink == "" {
+		workflowId = notifications.WorkflowInvoiceRemindNoPaymentLink
+	} else {
+		workflowId = notifications.WorkflowInvoiceRemindWithPaymentLink
+	}
+
+	cc := contractEntity.InvoiceEmailCC
+	cc = utils.RemoveEmpties(cc)
+	cc = utils.RemoveDuplicates(cc)
+
+	bcc := utils.AddToListIfNotExists(contractEntity.InvoiceEmailBCC, tenantBillingProfileEntity.SendInvoicesBcc)
+	bcc = utils.RemoveEmpties(bcc)
+	bcc = utils.RemoveDuplicates(bcc)
+
+	paymentLink := ""
+	// prepare payment link for email only if invoice payment link was generated
+	if invoiceEntity.PaymentDetails.PaymentLink != "" {
+		paymentLink = h.cfg.Services.CustomerOsApi.ApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
+	}
+
+	postmarkEmail := service.PostmarkEmail{
+		WorkflowId:    workflowId,
+		MessageStream: service.PostmarkMessageStreamInvoice,
+		From:          invoiceEntity.Provider.Email,
+		To:            contractEntity.InvoiceEmail,
+		CC:            cc,
+		BCC:           bcc,
+		Subject:       fmt.Sprintf(notifications.WorkflowInvoiceReadySubject, invoiceEntity.Number),
+		TemplateData: map[string]string{
+			"{{organizationName}}": invoiceEntity.Customer.Name,
+			"{{invoiceNumber}}":    invoiceEntity.Number,
+			"{{currencySymbol}}":   invoiceEntity.Currency.Symbol(),
+			"{{amtDue}}":           fmt.Sprintf("%.2f", invoiceEntity.TotalAmount),
+			"{{paymentLink}}":      paymentLink,
+		},
+		Attachments: []service.PostmarkEmailAttachment{},
+	}
+
+	if tenantSettingsEntity.StripeCustomerPortalLink != "" {
+		postmarkEmail.TemplateData["{{stripeFooterHtml}}"] = fmt.Sprintf(`PS: If you pay by card you can manage your billing details <a href="%s">here</a>.`, tenantSettingsEntity.StripeCustomerPortalLink)
+		postmarkEmail.TemplateData["{{stripeFooterTxt}}"] = `PS: If you pay by card you can manage your billing details here.`
+		postmarkEmail.TemplateData["{{stripeFooterLink}}"] = tenantSettingsEntity.StripeCustomerPortalLink
+	} else {
+		postmarkEmail.TemplateData["{{stripeFooterHtml}}"] = ""
+		postmarkEmail.TemplateData["{{stripeFooterTxt}}"] = ""
+		postmarkEmail.TemplateData["{{stripeFooterLink}}"] = ""
 	}
 
 	err = h.appendInvoiceFileToEmailAsAttachment(ctx, eventData.Tenant, invoiceEntity, &postmarkEmail)
