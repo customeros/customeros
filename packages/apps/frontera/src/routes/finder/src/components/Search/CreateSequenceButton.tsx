@@ -17,7 +17,7 @@ export const CreateSequenceButton = observer(() => {
       className='mr-1'
       leftIcon={<Plus />}
       colorScheme='primary'
-      data-test='add-new-flow'
+      dataTest='add-new-flow'
       onClick={handleCreateSequence}
     >
       New flow

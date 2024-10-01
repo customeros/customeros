@@ -84,7 +84,7 @@ export const PeoplePanel = observer(() => {
               variant='outline'
               loadingText='Adding'
               onClick={handleAddContact}
-              data-test='org-people-add-someone'
+              dataTest='org-people-add-someone'
               isDisabled={store.contacts.isLoading}
               rightSpinner={
                 <Spinner
