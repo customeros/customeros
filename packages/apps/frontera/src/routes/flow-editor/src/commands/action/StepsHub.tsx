@@ -70,6 +70,7 @@ export const StepsHub = observer(() => {
 
     let typeBasedContent: {
       subject?: string;
+      replyTo?: string;
       bodyTemplate?: string;
       waitDuration?: number;
     } = {};
@@ -81,6 +82,7 @@ export const StepsHub = observer(() => {
       const prevSubject = prevEmailNode?.data?.subject || '';
 
       typeBasedContent = {
+        replyTo: prevEmailNode?.id,
         subject: `RE: ${prevSubject}`,
         bodyTemplate: '',
       };
