@@ -91,7 +91,7 @@ export class FlowStore implements Store<Flow> {
 
   public async updateFlow(
     { nodes, edges }: { nodes: string; edges: string },
-    options?: { onSuccess: () => void },
+    options?: { onError: () => void },
   ) {
     this.isLoading = true;
 
@@ -113,13 +113,12 @@ export class FlowStore implements Store<Flow> {
           `${this.value.name} saved`,
           `update-flow-success-${this.id}`,
         );
-
-        if (options?.onSuccess) {
-          options.onSuccess();
-        }
       });
     } catch (e) {
       runInAction(() => {
+        if (options?.onError) {
+          options.onError();
+        }
         this.root.ui.toastError(
           "We couldn't update the flow",
           'update-flow-error',

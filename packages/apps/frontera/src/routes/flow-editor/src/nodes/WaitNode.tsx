@@ -80,8 +80,9 @@ export const WaitNode = ({
                 autoFocus
                 step={0.5}
                 type='number'
+                placeholder={'0'}
                 variant='unstyled'
-                value={data.waitDuration || 0}
+                value={data.waitDuration || ''}
                 onFocus={(e) => e.target.select()}
                 className=' min-w-2.5 min-h-0 max-h-4'
                 onChange={(e) => handleDurationChange(e.target.value)}

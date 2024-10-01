@@ -26,7 +26,7 @@ export const FlowEditor = () => {
       <div className='flex h-full flex-col'>
         <Header
           hasChanges={hasNewChanges}
-          onResetHasChanges={() => setHasNewChanges(false)}
+          onToggleHasChanges={setHasNewChanges}
         />
         {showFinder ? (
           <FinderTable isSidePanelOpen={false} />

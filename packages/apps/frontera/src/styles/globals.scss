@@ -298,6 +298,10 @@
     width: 100%;
   }
 }
+.react-flow {
+  --xy-edge-stroke-default: #D0D5DD;
+}
+
 .react-flow__edge.react-flow__edge-baseEdge {
   ----xy-edge-stroke-default: #D0D5DD;
   --xy-edge-stroke-selected-default: #9E77ED;
