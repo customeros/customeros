@@ -83,7 +83,7 @@ export const ChangeFlowStatus = observer(() => {
           onSelect={handleSelect(FlowStatus.Paused)}
           rightAccessory={status === FlowStatus.Paused ? <Check /> : null}
         >
-          Paused
+          Stopped
         </CommandItem>
         <CommandItem
           key={FlowStatus.Inactive}
