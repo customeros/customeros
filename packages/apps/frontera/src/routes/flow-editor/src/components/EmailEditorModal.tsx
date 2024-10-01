@@ -88,6 +88,7 @@ export const EmailEditorModal = observer(
                   placeholder='Subject'
                   className='font-medium text-lg'
                   onChange={(e) => setSubject(e.target.value)}
+                  disabled={data.action === FlowActionType.EMAIL_REPLY}
                 />
 
                 <Editor
