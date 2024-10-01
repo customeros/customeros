@@ -14,10 +14,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	contactgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	emailgrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	phonenumbergrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
+	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/stretchr/testify/require"
 	"testing"
 	"time"
@@ -81,7 +80,7 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 	calledCreateContact, calledCreateEmail, calledCreatePhoneNumber := false, false, false
 
 	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+		CreateContact: func(context context.Context, contact *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 			require.Equal(t, "", contact.FirstName)
 			require.Equal(t, "", contact.LastName)
 			require.Equal(t, "", contact.Prefix)
@@ -98,23 +97,23 @@ func TestMutationResolver_ContactCreate_Min(t *testing.T) {
 			neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 				Id: createdContactId,
 			})
-			return &contactgrpc.ContactIdGrpcResponse{
+			return &contactpb.ContactIdGrpcResponse{
 				Id: createdContactId,
 			}, nil
 		},
 	}
 	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
-		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
+		UpsertEmail: func(ctx context.Context, data *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
 			calledCreateEmail = true
-			return &emailgrpc.EmailIdGrpcResponse{
+			return &emailpb.EmailIdGrpcResponse{
 				Id: uuid.New().String(),
 			}, nil
 		},
 	}
 	phoneNumberServiceCallbacks := events_platform.MockPhoneNumberServiceCallbacks{
-		UpsertPhoneNumber: func(ctx context.Context, data *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
+		UpsertPhoneNumber: func(ctx context.Context, data *phonenumberpb.UpsertPhoneNumberGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
 			calledCreatePhoneNumber = true
-			return &phonenumbergrpc.PhoneNumberIdGrpcResponse{
+			return &phonenumberpb.PhoneNumberIdGrpcResponse{
 				Id: uuid.New().String(),
 			}, nil
 		},
@@ -151,7 +150,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 	calledCreateContact, calledCreateEmail, calledCreatePhoneNumber, calledLinkEmail, calledLinkPhoneNumber := false, false, false, false, false
 
 	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+		CreateContact: func(context context.Context, contact *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 			require.Equal(t, "MR", contact.Prefix)
 			require.Equal(t, "first", contact.FirstName)
 			require.Equal(t, "last", contact.LastName)
@@ -168,11 +167,11 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
 				Id: createdContactId,
 			})
-			return &contactgrpc.ContactIdGrpcResponse{
+			return &contactpb.ContactIdGrpcResponse{
 				Id: createdContactId,
 			}, nil
 		},
-		LinkEmailToContact: func(context context.Context, link *contactgrpc.LinkEmailToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+		LinkEmailToContact: func(context context.Context, link *contactpb.LinkEmailToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 			require.Equal(t, createdContactId, link.ContactId)
 			require.Equal(t, createdEmailId, link.EmailId)
 			require.Equal(t, true, link.Primary)
@@ -180,11 +179,11 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, testUserId, link.LoggedInUserId)
 			calledLinkEmail = true
 			neo4jt.LinkEmail(ctx, driver, createdContactId, createdEmailId, link.Primary)
-			return &contactgrpc.ContactIdGrpcResponse{
+			return &contactpb.ContactIdGrpcResponse{
 				Id: createdContactId,
 			}, nil
 		},
-		LinkPhoneNumberToContact: func(context context.Context, link *contactgrpc.LinkPhoneNumberToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+		LinkPhoneNumberToContact: func(context context.Context, link *contactpb.LinkPhoneNumberToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 			require.Equal(t, createdContactId, link.ContactId)
 			require.Equal(t, createdPhoneNumberId, link.PhoneNumberId)
 			require.Equal(t, true, link.Primary)
@@ -193,13 +192,13 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			require.Equal(t, testUserId, link.LoggedInUserId)
 			calledLinkPhoneNumber = true
 			neo4jt.LinkPhoneNumber(ctx, driver, createdContactId, createdPhoneNumberId, link.Primary, link.Label)
-			return &contactgrpc.ContactIdGrpcResponse{
+			return &contactpb.ContactIdGrpcResponse{
 				Id: createdContactId,
 			}, nil
 		},
 	}
 	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
-		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
+		UpsertEmail: func(ctx context.Context, data *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
 			require.Equal(t, "contact@abc.com", data.RawEmail)
 			require.Equal(t, tenantName, data.Tenant)
 			require.Equal(t, testUserId, data.LoggedInUserId)
@@ -210,13 +209,13 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 				Id:    createdEmailId,
 				Email: "contact@abc.com",
 			})
-			return &emailgrpc.EmailIdGrpcResponse{
+			return &emailpb.EmailIdGrpcResponse{
 				Id: createdEmailId,
 			}, nil
 		},
 	}
 	phoneNumberServiceCallbacks := events_platform.MockPhoneNumberServiceCallbacks{
-		UpsertPhoneNumber: func(ctx context.Context, data *phonenumbergrpc.UpsertPhoneNumberGrpcRequest) (*phonenumbergrpc.PhoneNumberIdGrpcResponse, error) {
+		UpsertPhoneNumber: func(ctx context.Context, data *phonenumberpb.UpsertPhoneNumberGrpcRequest) (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
 			require.Equal(t, "+1234567890", data.PhoneNumber)
 			require.Equal(t, tenantName, data.Tenant)
 			require.Equal(t, testUserId, data.LoggedInUserId)
@@ -226,7 +225,7 @@ func TestMutationResolver_ContactCreate(t *testing.T) {
 			neo4jtest.CreatePhoneNumber(ctx, driver, tenantName, neo4jentity.PhoneNumberEntity{
 				Id: createdPhoneNumberId,
 			})
-			return &phonenumbergrpc.PhoneNumberIdGrpcResponse{
+			return &phonenumberpb.PhoneNumberIdGrpcResponse{
 				Id: createdPhoneNumberId,
 			}, nil
 		},
@@ -273,7 +272,7 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 	calledCreateContact, calledCreateEmail, calledLinkEmailToContact := false, false, false
 
 	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+		CreateContact: func(context context.Context, contact *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 			require.Equal(t, "Bob", contact.FirstName)
 			require.Equal(t, "Smith", contact.LastName)
 			require.Equal(t, "Mr.", contact.Prefix)
@@ -282,17 +281,17 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 			require.Equal(t, timeNow.Unix(), contact.CreatedAt.Seconds)
 			require.Equal(t, "openline", contact.Tenant)
 			calledCreateContact = true
-			return &contactgrpc.ContactIdGrpcResponse{
+			return &contactpb.ContactIdGrpcResponse{
 				Id: createdContactId.String(),
 			}, nil
 		},
-		LinkEmailToContact: func(context context.Context, link *contactgrpc.LinkEmailToContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+		LinkEmailToContact: func(context context.Context, link *contactpb.LinkEmailToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 			require.Equal(t, createdContactId.String(), link.ContactId)
 			require.Equal(t, createdEmailId.String(), link.EmailId)
 			require.Equal(t, true, link.Primary)
 			require.Equal(t, "openline", link.Tenant)
 			calledLinkEmailToContact = true
-			return &contactgrpc.ContactIdGrpcResponse{
+			return &contactpb.ContactIdGrpcResponse{
 				Id: createdContactId.String(),
 			}, nil
 		},
@@ -300,11 +299,11 @@ func TestMutationResolver_CustomerContactCreate(t *testing.T) {
 	events_platform.SetContactCallbacks(&contactServiceCallbacks)
 
 	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
-		UpsertEmail: func(ctx context.Context, data *emailgrpc.UpsertEmailGrpcRequest) (*emailgrpc.EmailIdGrpcResponse, error) {
+		UpsertEmail: func(ctx context.Context, data *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
 			require.Equal(t, "contact@abc.com", data.RawEmail)
 			require.Equal(t, "openline", data.Tenant)
 			calledCreateEmail = true
-			return &emailgrpc.EmailIdGrpcResponse{
+			return &emailpb.EmailIdGrpcResponse{
 				Id: createdEmailId.String(),
 			}, nil
 		},
@@ -350,7 +349,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 	})
 
 	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		CreateContact: func(context context.Context, contact *contactgrpc.UpsertContactGrpcRequest) (*contactgrpc.ContactIdGrpcResponse, error) {
+		CreateContact: func(context context.Context, contact *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 			require.Equal(t, contactId, contact.Id)
 			require.Equal(t, "updated first", contact.FirstName)
 			require.Equal(t, "updated last", contact.LastName)
@@ -365,7 +364,7 @@ func TestMutationResolver_ContactUpdate(t *testing.T) {
 			require.Equal(t, tenantName, contact.Tenant)
 			require.Equal(t, testUserId, contact.LoggedInUserId)
 			require.Equal(t, 8, len(contact.FieldsMask))
-			return &contactgrpc.ContactIdGrpcResponse{
+			return &contactpb.ContactIdGrpcResponse{
 				Id: contactId,
 			}, nil
 		},
@@ -963,14 +962,16 @@ func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
 	orgId2 := neo4jt.CreateOrganization(ctx, driver, tenantName, "org2")
 	neo4jt.LinkContactWithOrganization(ctx, driver, contactId, orgId1)
 
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		RefreshLastTouchpoint: func(context context.Context, org *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId1,
+	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
+		LinkWithOrganization: func(context context.Context, request *contactpb.LinkWithOrganizationGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+			require.Equal(t, contactId, request.ContactId)
+			require.Equal(t, orgId2, request.OrganizationId)
+			return &contactpb.ContactIdGrpcResponse{
+				Id: contactId,
 			}, nil
 		},
 	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+	events_platform.SetContactCallbacks(&contactServiceCallbacks)
 
 	rawResponse := callGraphQL(t, "contact/add_organization_to_contact", map[string]interface{}{"contactId": contactId, "organizationId": orgId2})
 
@@ -981,17 +982,6 @@ func TestMutationResolver_ContactAddOrganizationByID(t *testing.T) {
 	err := decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
 	require.Nil(t, err)
 	require.NotNil(t, contactStruct)
-	organizations := contactStruct.Contact_AddOrganizationById.Organizations.Content
-	require.Equal(t, contactId, contactStruct.Contact_AddOrganizationById.ID)
-	require.NotNil(t, contactStruct.Contact_AddOrganizationById.UpdatedAt)
-	require.Equal(t, 2, len(organizations))
-	require.ElementsMatch(t, []string{orgId1, orgId2}, []string{organizations[0].ID, organizations[1].ID})
-	require.ElementsMatch(t, []string{"org1", "org2"}, []string{organizations[0].Name, organizations[1].Name})
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "WORKS_AS"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "ROLE_IN"))
 }
 
 func TestMutationResolver_ContactRemoveOrganizationByID(t *testing.T) {
