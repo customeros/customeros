@@ -747,24 +747,9 @@ func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	if input.RemoveExisting != nil && *input.RemoveExisting {
-		organizationEntitiesPtr, err := r.Services.OrganizationService.GetSubsidiariesOfForOrganizations(ctx, []string{input.SubsidiaryID})
-		if err != nil {
-			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to fetch parent organizations of subsidiary"))
-			graphql.AddErrorf(ctx, "failed to fetch parent organizations of subsidiary %s", input.SubsidiaryID)
-			return nil, nil
-		}
-		for _, parentOrgEntity := range *organizationEntitiesPtr {
-			err = r.Services.OrganizationService.RemoveSubsidiary(ctx, parentOrgEntity.ID, input.SubsidiaryID)
-			if err != nil {
-				tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to remove subsidiary"))
-				graphql.AddErrorf(ctx, "failed to remove subsidiary %s from organization %s", input.SubsidiaryID, parentOrgEntity.ID)
-				return nil, nil
-			}
-		}
-	}
+	removeExisting := input.RemoveExisting != nil && *input.RemoveExisting == true
 
-	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubsidiaryID, utils.IfNotNilString(input.Type))
+	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubsidiaryID, utils.IfNotNilString(input.Type), removeExisting)
 	if err != nil {
 		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to add subsidiary"))
 		graphql.AddErrorf(ctx, "failed to add subsidiary %s to organization %s", input.SubsidiaryID, input.OrganizationID)
