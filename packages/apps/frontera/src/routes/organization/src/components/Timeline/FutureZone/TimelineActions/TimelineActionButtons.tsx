@@ -158,7 +158,7 @@ export const TimelineActionButtons = observer(
             variant='outline'
             className='rounded-3xl'
             onClick={handleLogEntry}
-            data-test='timeline-log-button'
+            dataTest='timeline-log-button'
             leftIcon={<MessageChatSquare color='inherit' />}
             colorScheme={activeEditor === 'log-entry' ? 'primary' : 'gray'}
           >
@@ -168,7 +168,7 @@ export const TimelineActionButtons = observer(
             size='xs'
             variant='outline'
             className='rounded-3xl'
-            data-test='timeline-reminder-button'
+            dataTest='timeline-reminder-button'
             leftIcon={<AlarmClockPlus color='inherit' />}
             colorScheme={openedEditor === 'reminder' ? 'primary' : 'gray'}
             onClick={() => {

@@ -41,7 +41,7 @@ export const MissingPermissionsPrompt: FC<{
         <Button
           variant='outline'
           colorScheme='gray'
-          data-test='timeline-email-permission-prompt'
+          dataTest='timeline-email-permission-prompt'
           onClick={() => {
             navigate('/settings?tab=oauth');
           }}
