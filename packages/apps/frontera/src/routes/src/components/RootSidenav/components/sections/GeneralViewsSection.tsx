@@ -15,6 +15,7 @@ import { Preferences } from '@shared/components/RootSidenav/hooks';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01.tsx';
 import { RootSidenavItem } from '@shared/components/RootSidenav/components/RootSidenavItem';
 
+import { SidenavItem } from '../SidenavItem';
 import { CollapsibleSection } from '../CollapsibleSection';
 
 interface GeneralViewsSectionProps {
@@ -174,9 +175,8 @@ export const GeneralViewsSection = observer(
                 />
               )}
             />
-            <RootSidenavItem
+            <SidenavItem
               label='Flows'
-              id={flowSequencesView?.value?.id}
               dataTest={`side-nav-item-all-flows`}
               onClick={() =>
                 handleItemClick(`finder?preset=${flowSequencesView?.value?.id}`)
