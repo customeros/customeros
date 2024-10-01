@@ -8,5 +8,6 @@ const (
 	WorkflowInvoicePaidSubject                     = "Paid Invoice %s from %s"
 	WorkflowInvoicePaymentReceivedSubject          = "Payment Received for Invoice %s from %s"
 	WorkflowInvoiceReadySubject                    = "New invoice %s"
+	WorkflowInvoiceRemindSubject                   = "Follow-Up: Overdue Invoice %s"
 	WorkflowReminderNotificationSubject            = "Reminder, %s"
 )
