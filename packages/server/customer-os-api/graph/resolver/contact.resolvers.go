@@ -306,13 +306,13 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
-	span.LogFields(log.String("request.organizationID", organizationID))
+	span.LogKV("request.organizationID", organizationID)
 
 	// Check organization exists
 	_, err := r.Services.OrganizationService.GetById(ctx, organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Organization not found with id %s", organizationID)
+		graphql.AddErrorf(ctx, "Organization with id %s not found", organizationID)
 		return nil, err
 	}
 
@@ -323,13 +323,12 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 	if err == nil && contactId != "" {
 		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contactId, commonModel.NodeLabelContact, span)
 
-		updatedContact, err := r.Services.ContactService.AddOrganization(ctx, contactId, organizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
+		err = r.Services.ContactService.LinkToOrganization(ctx, contactId, organizationID, constants.AppSourceCustomerOsApi)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", organizationID, contactId)
 			return nil, err
 		}
-		return mapper.MapEntityToContact(updatedContact), nil
 	}
 
 	contactEntity, err := r.Services.ContactService.GetById(ctx, contactId)
@@ -581,13 +580,22 @@ func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input
 	span.LogFields(log.String("request.contactID", input.ContactID), log.String("request.organizationID", input.OrganizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	updatedContact, err := r.Services.ContactService.AddOrganization(ctx, input.ContactID, input.OrganizationID, string(neo4jentity.DataSourceOpenline), constants.AppSourceCustomerOsApi)
+	err := r.Services.ContactService.LinkToOrganization(ctx, input.ContactID, input.OrganizationID, constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to add organization %s to contact %s", input.OrganizationID, input.ContactID)
 		return nil, err
 	}
-	return mapper.MapEntityToContact(updatedContact), nil
+	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
+	if err != nil || contactEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("contact %s not found", input.ContactID)
+		}
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Contact %s not found", input.ContactID)
+		return nil, nil
+	}
+	return mapper.MapEntityToContact(contactEntity), nil
 }
 
 // ContactRemoveOrganizationByID is the resolver for the contact_RemoveOrganizationById field.
