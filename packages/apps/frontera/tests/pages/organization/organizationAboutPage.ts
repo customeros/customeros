@@ -55,7 +55,7 @@ export class OrganizationAboutPage {
 
     await this.page
       .locator(this.orgAboutWww)
-      .pressSequentially('www.qweasdzxc123ads.com', { delay: 500 });
+      .pressSequentially('www.qweasdzxc123ads.com', { delay: 1000 });
 
     await Promise.all([requestPromise, responsePromise]);
   }
