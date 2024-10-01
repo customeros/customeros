@@ -59,7 +59,11 @@ export const HtmlContentRenderer = ({
           delete domNode.attribs.style;
         }
 
-        if (domNode.children.length === 0 && domNode.name !== 'img') {
+        if (
+          domNode.children.length === 0 &&
+          domNode.name !== 'img' &&
+          domNode.name !== 'br'
+        ) {
           return <React.Fragment />;
         }
 
@@ -98,6 +102,10 @@ export const HtmlContentRenderer = ({
           case 'img': {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             return <ImageAttachment {...(domNode.attribs as any)} />;
+          }
+
+          case 'br': {
+            return <br />;
           }
           default:
             return React.createElement(domNode.name, newAttribs, children);
