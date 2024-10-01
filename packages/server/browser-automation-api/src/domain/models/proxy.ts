@@ -30,7 +30,7 @@ export class Proxy {
 
   static async create(
     values: ProxyPoolPayload,
-    proxyPoolRepository: ProxyPoolRepository,
+    proxyPoolRepository: ProxyPoolRepository
   ) {
     try {
       return await proxyPoolRepository.insert(values);
@@ -41,7 +41,7 @@ export class Proxy {
 
   static async update(
     values: ProxyPoolPayload,
-    proxyPoolRepository: ProxyPoolRepository,
+    proxyPoolRepository: ProxyPoolRepository
   ) {
     try {
       return await proxyPoolRepository.updateById(values);
@@ -57,6 +57,7 @@ export class Proxy {
         username: values.username,
         password: values.password,
       },
+      enableArgs: ["--js-flags='--max-old-space-size=4096'"],
     });
   }
 

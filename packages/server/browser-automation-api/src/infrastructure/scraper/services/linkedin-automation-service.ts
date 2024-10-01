@@ -1,10 +1,10 @@
-import { randomUUID } from "crypto";
 import { setTimeout } from "timers/promises";
 import { setTimeout as setTimeoutSync } from "timers";
 
 import { Browser } from "../browser";
 import { logger } from "@/infrastructure";
 import { ErrorParser, StandardError } from "@/util/error";
+import { randomUUID } from "crypto";
 
 const Selectors = {
   profileNameHeading: "h1.text-heading-xlarge",
@@ -301,12 +301,15 @@ export class LinkedinAutomationService {
   async getConnectionsNew(): Promise<
     [results: string[], error: StandardError | null]
   > {
-    const browser = await Browser.getFreshInstance(this.proxyConfig);
+    const browser = await Browser.getFreshInstance(this.proxyConfig, {
+      debugBrowserCat: true,
+    });
     const context = await browser.newContext({
       userAgent: this.userAgent, // Optionally randomize user-agent if needed
     });
 
     await context.addCookies(this.cookies);
+    await context.tracing.start({ screenshots: true, snapshots: true });
     const page = await context.newPage();
 
     let results: string[] = [];
@@ -406,8 +409,10 @@ export class LinkedinAutomationService {
           "button.scaffold-finite-scroll__load-button"
         );
 
+        await showMoreResultsButton.waitFor();
+        await showMoreResultsButton.scrollIntoViewIfNeeded();
+
         if (await showMoreResultsButton.isVisible()) {
-          await showMoreResultsButton.scrollIntoViewIfNeeded();
           await showMoreResultsButton.click();
           await page.waitForTimeout(getRandomDelay(2120, 5300)); // Give time for new results to load
         }
@@ -442,11 +447,10 @@ export class LinkedinAutomationService {
         }
       }
     } catch (err) {
+      await page.screenshot({ path: `error-${randomUUID()}.png` });
       error = LinkedinAutomationService.handleError(err);
     } finally {
-      await setTimeout(60000);
-
-      await page.screenshot({ path: `get-connections-${randomUUID()}.png` });
+      await context.tracing.stop({ path: "trace.zip" });
       await page.close();
       return [results, error];
     }
