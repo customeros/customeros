@@ -597,7 +597,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 9, ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeContactsRegion.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 12, ColumnType: model.ColumnViewTypeFlowContactStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 12, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	}

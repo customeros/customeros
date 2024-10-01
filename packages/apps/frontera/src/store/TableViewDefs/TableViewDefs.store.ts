@@ -183,7 +183,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
   get flowsPreset() {
     return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.FlowSequences && t.value.isPreset,
+      (t) => t.value.tableId === TableIdType.FlowActions && t.value.isPreset,
     )?.value.id;
   }
 
