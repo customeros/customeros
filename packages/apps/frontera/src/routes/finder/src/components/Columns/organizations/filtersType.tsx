@@ -78,11 +78,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterType: 'date',
     filterName: 'Renewal Date',
     filterAccesor: ColumnViewType.OrganizationsRenewalDate,
-    filterOperators: [
-      ComparisonOperator.Lt,
-      ComparisonOperator.Gt,
-      ComparisonOperator.Between,
-    ],
+    filterOperators: [ComparisonOperator.Gt, ComparisonOperator.Lt],
     icon: <Calendar />,
   },
   [ColumnViewType.OrganizationsForecastArr]: {

@@ -92,7 +92,11 @@ export const FinderFilters = observer(
           return true;
         }) ?? [];
 
-    const handleChangeOperator = (operation: string, filter: FilterItem) => {
+    const handleChangeOperator = (
+      operation: string,
+      filter: FilterItem,
+      index: number,
+    ) => {
       const selectedOperation =
         operation === ComparisonOperator.IsEmpty ||
         operation === ComparisonOperator.IsNotEmpty ||
@@ -100,29 +104,38 @@ export const FinderFilters = observer(
           ? true
           : false;
 
-      tableViewDef?.setFilter({
-        ...filter,
-        operation: (operation as ComparisonOperator) || '',
-        property: filter.property,
-        active: selectedOperation,
-        includeEmpty: operation === ComparisonOperator.IsEmpty ? true : false,
-      });
+      tableViewDef?.setFilter(
+        {
+          ...filter,
+          operation: (operation as ComparisonOperator) || '',
+          property: filter.property,
+          active: selectedOperation,
+          includeEmpty: operation === ComparisonOperator.IsEmpty ? true : false,
+        },
+        index,
+      );
 
       if (ComparisonOperator.Lt === operation) {
-        tableViewDef?.setFilter({
-          ...filter,
-          value: [null, filter.value[0]],
-          property: filter.property,
-          operation: (operation as ComparisonOperator) || '',
-        });
-      } else {
-        if (ComparisonOperator.Gt === operation) {
-          tableViewDef?.setFilter({
+        tableViewDef?.setFilter(
+          {
             ...filter,
-            value: [filter.value[1], null],
+            value: [null, filter.value[0]],
             property: filter.property,
             operation: (operation as ComparisonOperator) || '',
-          });
+          },
+          index,
+        );
+      } else {
+        if (ComparisonOperator.Gt === operation) {
+          tableViewDef?.setFilter(
+            {
+              ...filter,
+              value: [filter.value[1], null],
+              property: filter.property,
+              operation: (operation as ComparisonOperator) || '',
+            },
+            index,
+          );
         }
       }
     };
@@ -134,8 +147,8 @@ export const FinderFilters = observer(
         filterSearch={search ?? ''}
         handleFilterSearch={(value) => setSearch(value)}
         onClearFilter={(filter) => tableViewDef?.removeFilter(filter.property)}
-        onChangeOperator={(operation: string, filter) => {
-          handleChangeOperator(operation, filter);
+        onChangeOperator={(operation: string, filter, index: number) => {
+          handleChangeOperator(operation, filter, index);
         }}
         availableFilters={
           availableFilters.filter((filter) => filter !== null) as Partial<
@@ -150,23 +163,33 @@ export const FinderFilters = observer(
             operation: getFilterOperators(filter?.filterAccesor ?? '')[0] || '',
           });
         }}
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        onChangeFilterValue={(value: string | any, filter: FilterItem) => {
+        onChangeFilterValue={(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          value: string | any,
+          filter: FilterItem,
+          index: number,
+        ) => {
           if (Array.isArray(value) && value.length === 0) {
-            tableViewDef?.setFilter({
-              ...filter,
-              property: filter.property,
-              active: false,
-              operation: filter.operation,
-              value: null,
-            });
+            tableViewDef?.setFilter(
+              {
+                ...filter,
+                property: filter.property,
+                active: false,
+                operation: filter.operation,
+                value: null,
+              },
+              index,
+            );
           } else {
-            tableViewDef?.setFilter({
-              ...selectedFilter,
-              value: value,
-              property: selectedFilter.property,
-              active: true,
-            });
+            tableViewDef?.setFilter(
+              {
+                ...filter,
+                value: value,
+                property: filter.property,
+                active: true,
+              },
+              index,
+            );
           }
         }}
       />

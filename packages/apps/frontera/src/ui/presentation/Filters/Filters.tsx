@@ -76,8 +76,8 @@ export const Filters = ({
     <div className='flex gap-2 flex-wrap'>
       {filters.map((f, idx) => (
         <Filter
-          key={f.property}
           filterValue={f.value}
+          key={`${f.property}-${idx}`}
           onClearFilter={() => onClearFilter(f)}
           filterName={handleFilterName(f.property)}
           operators={getFilterOperators(f.property)}

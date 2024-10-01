@@ -224,7 +224,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
     });
   }
 
-  setFilter(filter: FilterItem) {
+  setFilter(filter: FilterItem, index: number) {
     this.update((value) => {
       const draft = this.getFilters();
 
@@ -234,16 +234,13 @@ export class TableViewDefStore implements Store<TableViewDef> {
         return value;
       }
 
-      const existingFilterIndex = (draft.AND as Filter[])?.findIndex(
-        (f) => f.filter?.property === filter.property,
-      );
-
-      if (existingFilterIndex !== -1) {
-        draft.AND[existingFilterIndex].filter = filter;
-        value.filters = JSON.stringify(draft);
+      if (draft.AND && draft.AND[index]) {
+        draft.AND[index].filter = filter;
       } else {
-        this.appendFilter({ ...filter, active: true });
+        draft.AND?.push({ filter });
       }
+
+      value.filters = JSON.stringify(draft);
 
       return value;
     });
