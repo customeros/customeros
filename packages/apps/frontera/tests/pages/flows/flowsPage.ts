@@ -24,6 +24,7 @@ export class FlowsPage {
   createNewFlowName = 'input[data-test="create-new-flow-name"]';
   cancelCreateNewFlow = 'button[data-test="cancel-create-new-flow"]';
   confirmCreateNewFlow = 'button[data-test="confirm-create-new-flow"]';
+
   flowNameInFlowsTable = 'div[data-test="flow-name-in-flows-table"]';
   flowEndedEarlyInFlowTable =
     'div[data-test="flow-ended-early-in-flows-table"]';
@@ -35,6 +36,7 @@ export class FlowsPage {
   flowInProgressInFlowsTable =
     'div[data-test="flow-in-progress-in-flows-table"]';
   flowCompletedInFlowsTable = 'div[data-test="flow-completed-in-flows-table"]';
+
   private flowsActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';

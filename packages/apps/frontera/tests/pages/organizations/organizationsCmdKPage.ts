@@ -10,11 +10,11 @@ import { ContractsPage } from '../contracts/contractsPage';
 import { CustomersPage } from '../customers/customersPage';
 import { CustomerMapPage } from '../customer-map/customerMapPage';
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
-import { OpportunitiesPage } from '../opportunities/opportunitiesPage';
 import {
   ensureLocatorIsVisible,
   clickLocatorThatIsVisible,
 } from '../../helper';
+import { OpportunitiesKanbanPage } from '../opportunitiesKanban/opportunitiesKanbanPage';
 
 export class OrganizationsCmdKPage {
   private page: Page;
@@ -286,7 +286,7 @@ export class OrganizationsCmdKPage {
   }
 
   async verifyNavigationToOpportunities(page: Page) {
-    const opportunitiesPage = new OpportunitiesPage(page);
+    const opportunitiesPage = new OpportunitiesKanbanPage(page);
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(

@@ -115,7 +115,7 @@ export const GeneralViewsSection = observer(
             <RootSidenavItem
               label='Opportunities'
               id={opportunitiesView?.value?.id}
-              dataTest={`side-nav-item-all-opportunities`}
+              dataTest={`side-nav-item-opportunities`}
               onClick={() =>
                 handleItemClick(`finder?preset=${opportunitiesView?.value?.id}`)
               }

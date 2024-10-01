@@ -3,6 +3,7 @@ import { chromium } from '@playwright/test';
 import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { ContactsPage } from './pages/contacts/contactsPage';
+import { OpportunitiesPage } from './pages/opportunities/opportunitiesPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
 
 async function globalSetup() {
@@ -13,6 +14,7 @@ async function globalSetup() {
   const organizationsPage = new OrganizationsPage(page);
   const contactsPage = new ContactsPage(page);
   const flowsPage = new FlowsPage(page);
+  const opportunitiesPage = new OpportunitiesPage(page);
 
   await loginPage.login();
 
@@ -64,6 +66,24 @@ async function globalSetup() {
   if (isSelectAllFlowsClicked) {
     await flowsPage.archiveOrgs();
     await flowsPage.confirmArchiveOrgs();
+    await new Promise((resolve) => setTimeout(resolve, 1500));
+  }
+
+  // Archive opportunities
+  await opportunitiesPage.goToOpportunities();
+
+  let isSelectAllOpportunitiesClicked = false;
+
+  try {
+    isSelectAllOpportunitiesClicked =
+      await opportunitiesPage.selectAllOpportunities(); // Returns true if successful
+  } catch (error) {
+    console.warn('Select All Flows button not found or visible:', error);
+  }
+
+  if (isSelectAllOpportunitiesClicked) {
+    await opportunitiesPage.archiveOrgs();
+    await opportunitiesPage.confirmArchiveOrgs();
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
 

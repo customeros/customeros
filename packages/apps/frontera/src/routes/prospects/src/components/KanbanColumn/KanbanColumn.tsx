@@ -143,6 +143,7 @@ export const KanbanColumn = observer(
       <div
         onMouseEnter={() => setIsHover(true)}
         onMouseLeave={() => setIsHover(false)}
+        data-test={`kanban-column-${column?.name}`}
         className='flex flex-col flex-shrink-0 w-72 bg-gray-100 rounded h-full'
       >
         <div className='flex items-center justify-between p-3 pb-0 bg-gray-100 rounded-t-[4px]'>
@@ -174,6 +175,7 @@ export const KanbanColumn = observer(
                     icon={<Plus />}
                     onClick={handleCreateDraft}
                     aria-label='Add new opportunity'
+                    dataTest={`add-opp-plus-${column?.name}`}
                     className={cn(
                       isHover ? 'opacity-100' : 'opacity-0',
                       canEdit && 'mr-2',
@@ -189,6 +191,7 @@ export const KanbanColumn = observer(
                       variant='ghost'
                       icon={<DotsVertical />}
                       aria-label='Column options'
+                      dataTest={`opp-three-dots-menu-${column?.name}`}
                     />
                   </MenuButton>
                   <MenuList>
@@ -204,7 +207,10 @@ export const KanbanColumn = observer(
                 </Menu>
               )}
             </div>
-            <span className={cn('w-full text-sm font-medium text-gray-500')}>
+            <span
+              data-test={`card-sum-length-${column?.name}`}
+              className={cn('w-full text-sm font-medium text-gray-500')}
+            >
               {`${totalSum} • ${cards.length}`}
             </span>
           </div>
@@ -233,6 +239,7 @@ export const KanbanColumn = observer(
           ) => (
             <div
               ref={dropProvided.innerRef}
+              data-test={`kanban-column-${column?.name}-cards`}
               className={cn('flex flex-col pb-2 p-3 overflow-auto', {
                 'bg-gray-100': dropSnapshot?.isDraggingOver,
               })}

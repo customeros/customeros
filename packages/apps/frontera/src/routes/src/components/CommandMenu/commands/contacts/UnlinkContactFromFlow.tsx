@@ -80,7 +80,7 @@ export const UnlinkContactFromFlow = observer(() => {
             colorScheme='primary'
             ref={confirmButtonRef}
             onClick={handleConfirm}
-            data-test='org-actions-confirm-archive'
+            dataTest='org-actions-confirm-archive'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();

@@ -25,6 +25,7 @@ export const RangeSlider = forwardRef<HTMLSpanElement, RangeSliderProps>(
   },
 );
 interface RangeSliderGenericProps {
+  dataTest?: string;
   className?: string;
   children?: React.ReactNode;
 }
@@ -32,9 +33,11 @@ interface RangeSliderGenericProps {
 export const RangeSliderTrack = ({
   children,
   className,
+  dataTest,
 }: RangeSliderGenericProps) => {
   return (
     <RadixSlider.Track
+      data-test={dataTest}
       className={twMerge('relative grow rounded-full', className)}
     >
       {children}

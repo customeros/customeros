@@ -63,7 +63,7 @@ export const RootSidenavItem = observer(
       <Button
         size='sm'
         variant='ghost'
-        data-test={dataTest}
+        dataTest={dataTest}
         onClick={handleClick}
         colorScheme='grayModern'
         leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
