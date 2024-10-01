@@ -105,7 +105,7 @@ export const Header = observer(
                 </>
               ) : (
                 <Button
-                  size='xs'
+                  size='xxs'
                   className='ml-2'
                   variant='outline'
                   colorScheme='gray'
