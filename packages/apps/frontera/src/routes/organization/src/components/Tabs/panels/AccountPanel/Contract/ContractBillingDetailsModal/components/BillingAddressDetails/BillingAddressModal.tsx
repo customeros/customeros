@@ -195,7 +195,7 @@ export const BillingAddressModal = observer(
                 colorScheme='primary'
                 className='ml-3 w-full'
                 loadingText='Saving...'
-                data-test='billing-address-save'
+                dataTest='billing-address-save'
                 onClick={handleSaveAddressChanges}
               >
                 Save

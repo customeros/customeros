@@ -330,7 +330,7 @@ export const ContractDetailsModal = observer(
               className='ml-3 w-full'
               loadingText='Saving...'
               onClick={handleApplyChanges}
-              data-test='contract-details-save-draft'
+              dataTest='contract-details-save-draft'
             >
               {contractStore?.value?.contractStatus === ContractStatus.Draft
                 ? 'Save draft'
