@@ -188,7 +188,7 @@ export const FlowBuilder = observer(
               padding: 0.1,
               maxZoom: 1,
               minZoom: 1,
-              duration: 150,
+              duration: 0,
               nodes: nodes,
             };
 
