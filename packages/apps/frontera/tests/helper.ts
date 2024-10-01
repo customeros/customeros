@@ -184,7 +184,7 @@ export function createRequestPromise(
 
       return false;
     },
-    { timeout: 15000 },
+    { timeout: 30000 },
   );
 }
 
