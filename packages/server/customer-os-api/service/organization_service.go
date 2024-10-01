@@ -43,7 +43,7 @@ type OrganizationService interface {
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetSubsidiariesForOrganizations(ctx context.Context, parentOrganizationIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetSubsidiariesOfForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error)
-	AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string) error
+	AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string, removeExisting bool) error
 	RemoveSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId string) error
 	ReplaceOwner(ctx context.Context, organizationId, userId string) (*neo4jentity.OrganizationEntity, error)
 	RemoveOwner(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error)
@@ -383,11 +383,15 @@ func (s *organizationService) GetSubsidiariesForOrganizations(ctx context.Contex
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string) error {
+func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizationId, subsidiaryOrganizationId, subsidiaryType string, removeExisting bool) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddSubsidiary")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("parentOrganizationId", parentOrganizationId), log.String("subsidiaryOrganizationId", subsidiaryOrganizationId), log.String("subsidiaryType", subsidiaryType))
+	span.LogFields(
+		log.String("parentOrganizationId", parentOrganizationId),
+		log.String("subsidiaryOrganizationId", subsidiaryOrganizationId),
+		log.String("subsidiaryType", subsidiaryType),
+		log.Bool("removeExisting", removeExisting))
 
 	parentExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), parentOrganizationId, model2.NodeLabelOrganization)
 	if err != nil {
@@ -415,19 +419,21 @@ func (s *organizationService) AddSubsidiary(ctx context.Context, parentOrganizat
 		return err
 	}
 
-	// fetch existing subsidiaries of the parent organization
-	existingSubsidiaries, err := s.GetSubsidiariesForOrganizations(ctx, []string{parentOrganizationId})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error fetching existing subsidiaries: {%v}", err.Error())
-		return err
-	}
-	for _, subsidiary := range *existingSubsidiaries {
-		if subsidiary.ID != subsidiaryOrganizationId {
-			err = s.RemoveSubsidiary(ctx, parentOrganizationId, subsidiary.ID)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				s.log.Errorf("error removing existing subsidiary: {%v}", err.Error())
+	if removeExisting {
+		// fetch existing subsidiaries of the parent organization
+		existingSubsidiaries, err := s.GetSubsidiariesForOrganizations(ctx, []string{parentOrganizationId})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			s.log.Errorf("error fetching existing subsidiaries: {%v}", err.Error())
+			return err
+		}
+		for _, subsidiary := range *existingSubsidiaries {
+			if subsidiary.ID != subsidiaryOrganizationId {
+				err = s.RemoveSubsidiary(ctx, parentOrganizationId, subsidiary.ID)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					s.log.Errorf("error removing existing subsidiary: {%v}", err.Error())
+				}
 			}
 		}
 	}
