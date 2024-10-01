@@ -575,7 +575,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 
 		scrapIn, err := s.commonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow(ctx, orpanContact.FieldStr1, entity.ScrapInFlowPersonProfile)
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "EnrichDetailsScrapInRepository.GetLatestByParam1AndFlow"))
 			return
 		}
 
