@@ -7,7 +7,7 @@ import { ColumnViewType } from '@graphql/types';
 export const getFlowsColumnSortFn = (columnId: string) =>
   match(columnId)
     .with(
-      ColumnViewType.FlowSequenceStatus,
+      ColumnViewType.FlowStatus,
       () => (row: FlowStore) =>
         row?.value?.status
           ? flowOptions.find((e) => e.value === row.value.status)?.label
@@ -19,19 +19,16 @@ export const getFlowsColumnSortFn = (columnId: string) =>
 
       return value || null;
     })
-    .with(ColumnViewType.FlowSequencePendingCount, () => (row: FlowStore) => {
+    .with(ColumnViewType.FlowPendingCount, () => (row: FlowStore) => {
       return row.value?.statistics?.pending || null;
     })
-    .with(ColumnViewType.FlowSequenceCompletedCount, () => (row: FlowStore) => {
+    .with(ColumnViewType.FlowCompletedCount, () => (row: FlowStore) => {
       return row.value?.statistics?.pending || null;
     })
-    .with(
-      ColumnViewType.FlowSequenceGoalAchievedCount,
-      () => (row: FlowStore) => {
-        return row.value?.statistics?.goalAchieved || null;
-      },
-    )
-    .with(ColumnViewType.FlowSequenceTotalCount, () => (row: FlowStore) => {
+    .with(ColumnViewType.FlowGoalAchievedCount, () => (row: FlowStore) => {
+      return row.value?.statistics?.goalAchieved || null;
+    })
+    .with(ColumnViewType.FlowTotalCount, () => (row: FlowStore) => {
       return row.value?.statistics?.total || null;
     })
     .otherwise(() => (_row: FlowStore) => null);

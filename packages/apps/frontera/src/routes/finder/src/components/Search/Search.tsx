@@ -127,7 +127,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
   };
 
   const allowCreation =
-    ![TableIdType.Contracts, TableIdType.FlowSequences].includes(
+    ![TableIdType.Contracts, TableIdType.FlowActions].includes(
       tableViewDef?.value?.tableId as TableIdType,
     ) &&
     totalResults === 0 &&
@@ -217,7 +217,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
 
       <TableViewsToggleNavigation />
 
-      {tableViewDef?.value.tableId === TableIdType.FlowSequences && (
+      {tableViewDef?.value.tableId === TableIdType.FlowActions && (
         <CreateSequenceButton />
       )}
 
@@ -236,7 +236,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
           />
         )}
 
-      {tableViewDef?.value.tableId !== TableIdType.FlowSequences && (
+      {tableViewDef?.value.tableId !== TableIdType.FlowActions && (
         <TableViewMenu />
       )}
       <span ref={measureRef} className={`z-[-1] absolute h-0 invisible flex`}>
