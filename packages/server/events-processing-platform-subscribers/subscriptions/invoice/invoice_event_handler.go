@@ -1348,7 +1348,7 @@ func (h *InvoiceEventHandler) onInvoiceRemindNotificationV1(ctx context.Context,
 		To:            contractEntity.InvoiceEmail,
 		CC:            cc,
 		BCC:           bcc,
-		Subject:       fmt.Sprintf(notifications.WorkflowInvoiceReadySubject, invoiceEntity.Number),
+		Subject:       fmt.Sprintf(notifications.WorkflowInvoiceRemindSubject, invoiceEntity.Number),
 		TemplateData: map[string]string{
 			"{{organizationName}}": invoiceEntity.Customer.Name,
 			"{{invoiceNumber}}":    invoiceEntity.Number,
