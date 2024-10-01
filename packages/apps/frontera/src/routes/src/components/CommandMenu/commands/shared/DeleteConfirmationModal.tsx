@@ -46,8 +46,8 @@ export const DeleteConfirmationModal = observer(() => {
     .otherwise(() => undefined);
 
   const handleClose = () => {
-    store.ui.commandMenu.toggle('DeleteConfirmationModal');
-    store.ui.commandMenu.clearCallback();
+    store.ui.commandMenu.setOpen(false);
+    store.ui.commandMenu.setType('GlobalHub');
   };
 
   const handleConfirm = () => {
@@ -105,7 +105,9 @@ export const DeleteConfirmationModal = observer(() => {
           },
         });
       })
-      .otherwise(() => {});
+      .otherwise(() => {
+        store.ui.commandMenu.reset();
+      });
 
     handleClose();
   };
