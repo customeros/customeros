@@ -147,7 +147,7 @@ export const TimelineActionButtons = observer(
             variant='outline'
             onClick={handleEmail}
             className='rounded-3xl'
-            data-test='timeline-email-button'
+            dataTest='timeline-email-button'
             leftIcon={<Mail01 color='inherit' />}
             colorScheme={openedEditor === 'email' ? 'primary' : 'gray'}
           >
