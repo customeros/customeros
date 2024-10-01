@@ -7,7 +7,7 @@ import { Switch } from '@ui/form/Switch';
 import { Spinner } from '@ui/feedback/Spinner';
 import { useStore } from '@shared/hooks/useStore';
 
-import { UsersLinked, LinkedInSettings } from './components';
+import { UsersLinked } from './components';
 
 export const AuthPanel = observer(() => {
   const store = useStore();
@@ -92,7 +92,7 @@ export const AuthPanel = observer(() => {
         </div>
       </article>
 
-      <LinkedInSettings />
+      {/* <LinkedInSettings /> */}
     </>
   );
 });
