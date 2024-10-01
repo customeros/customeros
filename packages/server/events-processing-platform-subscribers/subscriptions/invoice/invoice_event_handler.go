@@ -737,10 +737,23 @@ func (h *InvoiceEventHandler) generateInvoicePDFV1(ctx context.Context, evt even
 	}
 
 	//convert the temp to pdf
-	pdfBytes, err := ConvertInvoiceHtmlToPdf(ctx, h.services.FileStoreApiService, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, dataForPdf)
-	if err != nil {
+	// Max attempts
+	maxAttempts := 3
+	var pdfBytes *[]byte
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		// Try to convert the temp to pdf
+		pdfBytes, err = ConvertInvoiceHtmlToPdf(ctx, h.services.FileStoreApiService, h.cfg.Subscriptions.InvoiceSubscription.PdfConverterUrl, tmpInvoiceFile, dataForPdf)
+		if err == nil {
+			// Success, no need to retry
+			break
+		}
+		// Log the error and trace on failure
 		tracing.TraceErr(span, errors.Wrap(err, "ConvertInvoiceHtmlToPdf"))
-		return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")
+		if attempt == maxAttempts {
+			// Return the error if it's the last attempt
+			return errors.Wrap(err, "ConvertInvoiceHtmlToPdf")
+		}
 	}
 
 	if pdfBytes == nil {
