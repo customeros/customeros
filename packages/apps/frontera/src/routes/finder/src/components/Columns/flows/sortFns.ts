@@ -20,15 +20,15 @@ export const getFlowsColumnSortFn = (columnId: string) =>
       return value || null;
     })
     .with(ColumnViewType.FlowPendingCount, () => (row: FlowStore) => {
-      return row.value?.statistics?.pending || null;
+      return row.value?.statistics?.pending ?? null;
     })
     .with(ColumnViewType.FlowCompletedCount, () => (row: FlowStore) => {
-      return row.value?.statistics?.pending || null;
+      return row.value?.statistics?.completed ?? null;
     })
     .with(ColumnViewType.FlowGoalAchievedCount, () => (row: FlowStore) => {
-      return row.value?.statistics?.goalAchieved || null;
+      return row.value?.statistics?.goalAchieved ?? null;
     })
     .with(ColumnViewType.FlowTotalCount, () => (row: FlowStore) => {
-      return row.value?.statistics?.total || null;
+      return row.value?.statistics?.total ?? null;
     })
     .otherwise(() => (_row: FlowStore) => null);

@@ -8,8 +8,8 @@ interface FlowStatisticsCellProps {
 }
 
 export const FlowStatisticsCell = observer(
-  ({ total, value }: FlowStatisticsCellProps) => {
-    if (value === undefined || total === undefined) {
+  ({ value }: FlowStatisticsCellProps) => {
+    if (typeof value !== 'number') {
       return (
         <div className='text-gray-400' data-test={FlowStatisticsCell}>
           No data yet
