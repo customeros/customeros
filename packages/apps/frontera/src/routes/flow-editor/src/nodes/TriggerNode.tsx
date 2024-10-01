@@ -89,9 +89,14 @@ export const TriggerViewportPortal = observer(
   }) => {
     const { ui } = useStore();
 
+    const showTriggerDropdown =
+      ui.flowCommandMenu?.isOpen &&
+      id === ui.flowCommandMenu.context.id &&
+      ui.flowCommandMenu.context.entity === 'Trigger';
+
     return (
       <>
-        {ui.flowCommandMenu?.isOpen && id === ui.flowCommandMenu.context.id && (
+        {showTriggerDropdown && (
           <ViewportPortal>
             <div
               className='border border-gray-200 rounded-lg shadow-lg'
