@@ -3451,13 +3451,14 @@ const (
 	ColumnViewTypeContractsOwner                     ColumnViewType = "CONTRACTS_OWNER"
 	ColumnViewTypeContractsHealth                    ColumnViewType = "CONTRACTS_HEALTH"
 	ColumnViewTypeFlowName                           ColumnViewType = "FLOW_NAME"
+	ColumnViewTypeFlowTotalCount                     ColumnViewType = "FLOW_TOTAL_COUNT"
+	ColumnViewTypeFlowPendingCount                   ColumnViewType = "FLOW_PENDING_COUNT"
+	ColumnViewTypeFlowCompletedCount                 ColumnViewType = "FLOW_COMPLETED_COUNT"
+	ColumnViewTypeFlowGoalAchievedCount              ColumnViewType = "FLOW_GOAL_ACHIEVED_COUNT"
 	ColumnViewTypeFlowStatus                         ColumnViewType = "FLOW_STATUS"
-	ColumnViewTypeFlowSequenceName                   ColumnViewType = "FLOW_SEQUENCE_NAME"
-	ColumnViewTypeFlowSequenceStatus                 ColumnViewType = "FLOW_SEQUENCE_STATUS"
-	ColumnViewTypeFlowSequenceTotalCount             ColumnViewType = "FLOW_SEQUENCE_TOTAL_COUNT"
-	ColumnViewTypeFlowSequencePendingCount           ColumnViewType = "FLOW_SEQUENCE_PENDING_COUNT"
-	ColumnViewTypeFlowSequenceCompletedCount         ColumnViewType = "FLOW_SEQUENCE_COMPLETED_COUNT"
-	ColumnViewTypeFlowSequenceGoalAchievedCount      ColumnViewType = "FLOW_SEQUENCE_GOAL_ACHIEVED_COUNT"
+	ColumnViewTypeFlowActionName                     ColumnViewType = "FLOW_ACTION_NAME"
+	ColumnViewTypeFlowActionStatus                   ColumnViewType = "FLOW_ACTION_STATUS"
+	ColumnViewTypeFlowContactStatus                  ColumnViewType = "FLOW_CONTACT_STATUS"
 )
 
 var AllColumnViewType = []ColumnViewType{
@@ -3541,13 +3542,14 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeContractsOwner,
 	ColumnViewTypeContractsHealth,
 	ColumnViewTypeFlowName,
+	ColumnViewTypeFlowTotalCount,
+	ColumnViewTypeFlowPendingCount,
+	ColumnViewTypeFlowCompletedCount,
+	ColumnViewTypeFlowGoalAchievedCount,
 	ColumnViewTypeFlowStatus,
-	ColumnViewTypeFlowSequenceName,
-	ColumnViewTypeFlowSequenceStatus,
-	ColumnViewTypeFlowSequenceTotalCount,
-	ColumnViewTypeFlowSequencePendingCount,
-	ColumnViewTypeFlowSequenceCompletedCount,
-	ColumnViewTypeFlowSequenceGoalAchievedCount,
+	ColumnViewTypeFlowActionName,
+	ColumnViewTypeFlowActionStatus,
+	ColumnViewTypeFlowContactStatus,
 }
 
 func (e ColumnViewType) IsValid() bool {
@@ -5392,7 +5394,7 @@ const (
 	TableIDTypeOpportunities                  TableIDType = "OPPORTUNITIES"
 	TableIDTypeOpportunitiesRecords           TableIDType = "OPPORTUNITIES_RECORDS"
 	TableIDTypeContracts                      TableIDType = "CONTRACTS"
-	TableIDTypeFlowSequences                  TableIDType = "FLOW_SEQUENCES"
+	TableIDTypeFlowActions                    TableIDType = "FLOW_ACTIONS"
 	TableIDTypeFlowContacts                   TableIDType = "FLOW_CONTACTS"
 )
 
@@ -5407,13 +5409,13 @@ var AllTableIDType = []TableIDType{
 	TableIDTypeOpportunities,
 	TableIDTypeOpportunitiesRecords,
 	TableIDTypeContracts,
-	TableIDTypeFlowSequences,
+	TableIDTypeFlowActions,
 	TableIDTypeFlowContacts,
 }
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts, TableIDTypeFlowSequences, TableIDTypeFlowContacts:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts, TableIDTypeFlowActions, TableIDTypeFlowContacts:
 		return true
 	}
 	return false

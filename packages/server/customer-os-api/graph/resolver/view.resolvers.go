@@ -299,7 +299,7 @@ func (r *queryResolver) TableViewDefs(ctx context.Context) ([]*model.TableViewDe
 		if def.TableType == model.TableViewTypeContracts.String() && def.TableId == model.TableIDTypeContracts.String() {
 			contractsFound = true
 		}
-		if def.TableType == model.TableViewTypeFlow.String() && def.TableId == model.TableIDTypeFlowSequences.String() {
+		if def.TableType == model.TableViewTypeFlow.String() && def.TableId == model.TableIDTypeFlowActions.String() {
 			flowSequencesFound = true
 		}
 		if def.TableType == model.TableViewTypeContacts.String() && def.TableId == model.TableIDTypeFlowContacts.String() {
