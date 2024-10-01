@@ -41,7 +41,7 @@ type ContactService interface {
 	Merge(ctx context.Context, primaryContactId, mergedContactId string) error
 	GetContactsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.ContactEntities, error)
 	GetContactsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.ContactEntities, error)
-	AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*neo4jentity.ContactEntity, error)
+	LinkToOrganization(ctx context.Context, contactId, organizationId, appSource string) error
 	RemoveOrganization(ctx context.Context, contactId, organizationId string) (*neo4jentity.ContactEntity, error)
 	RemoveLocation(ctx context.Context, contactId string, locationId string) error
 	CustomerContactCreate(ctx context.Context, entity *CustomerContactCreateData) (*model.CustomerContact, error)
@@ -509,18 +509,28 @@ func (s *contactService) Merge(ctx context.Context, primaryContactId, mergedCont
 	return err
 }
 
-func (s *contactService) AddOrganization(ctx context.Context, contactId, organizationId, source, appSource string) (*neo4jentity.ContactEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.AddOrganization")
+func (s *contactService) LinkToOrganization(ctx context.Context, contactId, organizationId, appSource string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.LinkToOrganization")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("contactId", contactId), log.String("organizationId", organizationId))
+	span.LogKV("contactId", contactId, "organizationId", organizationId)
 
-	contactNodePtr, err := s.repositories.ContactRepository.AddOrganization(ctx, common.GetTenantFromContext(ctx), contactId, organizationId, source, appSource)
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+		return s.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			ContactId:      contactId,
+			OrganizationId: organizationId,
+			AppSource:      appSource,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		})
+	})
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, errors.Wrap(err, "Failed to link contact with organization"))
+		s.log.Errorf("Failed to link contact with organization: %s", err.Error())
 	}
-	s.services.OrganizationService.UpdateLastTouchpoint(ctx, organizationId)
-	return neo4jmapper.MapDbNodeToContactEntity(contactNodePtr), nil
+
+	return err
 }
 
 func (s *contactService) RemoveOrganization(ctx context.Context, contactId, organizationId string) (*neo4jentity.ContactEntity, error) {
