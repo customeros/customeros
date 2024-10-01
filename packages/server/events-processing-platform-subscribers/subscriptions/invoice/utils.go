@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"html/template"
@@ -103,10 +104,12 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, p
 	// invoice html file
 	invoiceHtmlFile, err := utils.GetFileByName(tmpFile.Name())
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "getFileByName"))
 		return nil, errors.Wrap(err, "getFileByName")
 	}
 	err = addMultipartFile(writer, invoiceHtmlFile, "index.html")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addMultipartFile index.html"))
 		return nil, errors.Wrap(err, "addMultipartFile index.html")
 	}
 
@@ -114,6 +117,7 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, p
 	if providerLogoRepositoryFileId, ok := invoiceData["ProviderLogoRepositoryFileId"].(string); ok && providerLogoRepositoryFileId != "" {
 		file, metadata, err := downloadProviderLogoAsTempFile(fsc, invoiceData["Tenant"].(string), providerLogoRepositoryFileId, span)
 		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "downloadProviderLogoAsTempFile"))
 			return nil, errors.Wrap(err, "downloadProviderLogoAsTempFile")
 		}
 
@@ -121,65 +125,79 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, p
 
 		err = addMultipartFile(writer, file, "provider-logo"+fileExtension)
 		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "addMultipartFile provider-logo"+fileExtension))
 			return nil, errors.Wrap(err, "addMultipartFile provider-logo"+fileExtension)
 		}
 	}
 
 	err = addResourceFile(writer, resourcesPath, "/index.css", "index.css")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile index.css"))
 		return nil, errors.Wrap(err, "addResourceFile index.css")
 	}
 
 	err = addResourceFile(writer, resourcesPath, "/style.css", "style.css")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile style.css"))
 		return nil, errors.Wrap(err, "addResourceFile style.css")
 	}
 
 	err = addResourceFile(writer, resourcesPath, "/fonts.css", "fonts.css")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile fonts.css"))
 		return nil, errors.Wrap(err, "addResourceFile fonts.css")
 	}
 
 	//images
 	err = addResourceFile(writer, resourcesPath, "/customer-os.png", "customer-os.png")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile customer-os.png"))
 		return nil, errors.Wrap(err, "addResourceFile customer-os.png")
 	}
 	err = addResourceFile(writer, resourcesPath, "/preview-stamp.png", "preview-stamp.png")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile preview-stamp.png"))
 		return nil, errors.Wrap(err, "addResourceFile preview-stamp.png")
 	}
 	err = addResourceFile(writer, resourcesPath, "/line11681-7w4.svg", "line11681-7w4.svg")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile line11681-7w4.svg"))
 		return nil, errors.Wrap(err, "addResourceFile line11681-7w4.svg")
 	}
 	err = addResourceFile(writer, resourcesPath, "/line21681-3s8.svg", "line21681-3s8.svg")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile line21681-3s8.svg"))
 		return nil, errors.Wrap(err, "addResourceFile line21681-3s8.svg")
 	}
 	err = addResourceFile(writer, resourcesPath, "/line31681-nvh.svg", "line31681-nvh.svg")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addResourceFile line31681-nvh.svg"))
 		return nil, errors.Wrap(err, "addResourceFile line31681-nvh.svg")
 	}
 
 	err = addMultipartValue(writer, "8.6", "paperWidth")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue paperWidth"))
 		return nil, errors.Wrap(err, "addMultipartValue paperWidth")
 	}
 	err = addMultipartValue(writer, "0", "marginTop")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginTop"))
 		return nil, errors.Wrap(err, "addMultipartValue marginTop")
 	}
 	err = addMultipartValue(writer, "0", "marginBottom")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginBottom"))
 		return nil, errors.Wrap(err, "addMultipartValue marginBottom")
 	}
 	err = addMultipartValue(writer, "0", "marginLeft")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginLeft"))
 		return nil, errors.Wrap(err, "addMultipartValue marginLeft")
 	}
 	err = addMultipartValue(writer, "0", "marginRight")
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "addMultipartValue marginRight"))
 		return nil, errors.Wrap(err, "addMultipartValue marginRight")
 	}
 
@@ -188,6 +206,7 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, p
 	// Create HTTP request
 	req, err := http.NewRequest("POST", url, body)
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "http.NewRequest"))
 		return nil, errors.Wrap(err, "http.NewRequest")
 	}
 	req.Header.Set("Content-Type", writer.FormDataContentType())
@@ -196,19 +215,23 @@ func ConvertInvoiceHtmlToPdf(ctx context.Context, fsc fsc.FileStoreApiService, p
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "client.Do"))
 		return nil, errors.Wrap(err, "client.Do")
 	}
 	defer resp.Body.Close()
 
 	// Check if the request was successful
 	if resp.StatusCode != http.StatusOK {
-		return nil, errors.New("Error: Unexpected status code")
+		span.LogFields(log.String("status_code", resp.Status))
+		tracing.TraceErr(span, errors.Errorf("Error: Unexpected status code %v", resp.StatusCode))
+		return nil, errors.Errorf("Error: Unexpected status code %v", resp.StatusCode)
 	}
 
 	// Read the response body
-	pdfBytes, err := ioutil.ReadAll(resp.Body)
+	pdfBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return nil, errors.Wrap(err, "ioutil.ReadAll")
+		tracing.TraceErr(span, errors.Wrap(err, "io.ReadAll"))
+		return nil, errors.Wrap(err, "io.ReadAll")
 	}
 
 	return &pdfBytes, nil
