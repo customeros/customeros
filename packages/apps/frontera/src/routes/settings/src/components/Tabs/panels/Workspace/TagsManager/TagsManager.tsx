@@ -139,6 +139,8 @@ export const TagsManager = observer(() => {
       ? `Deleting this tag will remove it from ${totalTagCount} contact or organization.`
       : 'Deleting this tag will not affect any contacts or organizations, as it is not currently added to any';
 
+  const tags = store.tags.toArray().length;
+
   return (
     <>
       <div className='px-6 pb-4 max-w-[500px] h-full overflow-y-auto  border-r border-gray-200'>
@@ -151,22 +153,25 @@ export const TagsManager = observer(() => {
           </div>
           <p className='mb-4 text-sm'>Manage your workspace tags</p>
 
-          <div className='mb-4'>
-            <InputGroup className='gap-2'>
-              <LeftElement>
-                <SearchSm />
-              </LeftElement>
-              <Input
-                size='xs'
-                className='w-full'
-                variant='unstyled'
-                placeholder='Search tags...'
-                onChange={(e) => {
-                  setSearchTerm(e.target.value.toLowerCase());
-                }}
-              />
-            </InputGroup>
-          </div>
+          {tags > 0 && (
+            <div className='mb-4'>
+              <InputGroup className='gap-2'>
+                <LeftElement>
+                  <SearchSm />
+                </LeftElement>
+                <Input
+                  size='xs'
+                  className='w-full'
+                  variant='unstyled'
+                  placeholder='Search tags...'
+                  onChange={(e) => {
+                    setSearchTerm(e.target.value.toLowerCase());
+                  }}
+                />
+              </InputGroup>
+            </div>
+          )}
+
           {showNewTagInput && (
             <div className='border border-gray-200 rounded-md mb-1'>
               <Input
