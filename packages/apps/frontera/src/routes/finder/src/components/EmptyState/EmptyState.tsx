@@ -91,7 +91,7 @@ export const EmptyState = observer(() => {
             navigate(`/finder?preset=${allOrgsView}`);
           },
         };
-      case TableIdType.FlowSequences:
+      case TableIdType.FlowActions:
         return {
           title: 'No flows yet',
           description:

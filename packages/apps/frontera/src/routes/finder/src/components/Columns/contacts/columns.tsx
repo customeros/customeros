@@ -25,6 +25,7 @@ import { AvatarCell } from './Cells/avatar';
 import { EmailFilter } from './Filters/Email';
 import { ContactsTagsCell } from './Cells/tags';
 import { FlowsFilter } from './Filters/FlowsFilter';
+import { FlowStatusCell } from './Cells/flowStatus';
 import { ContactLinkedInCell } from './Cells/socials';
 import { ContactNameCell } from './Cells/contactName';
 import { ContactAvatarHeader } from './Headers/Avatar';
@@ -33,6 +34,7 @@ import { ConnectedUsers } from './Cells/connectedUsers';
 import { SocialsFilter } from '../shared/Filters/Socials';
 import { OrganizationCell } from '../shared/Cells/organization';
 import { getColumnConfig } from '../shared/util/getColumnConfig';
+import { ContactFlowStatusFilter } from './Filters/FlowStatusFilter';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
 import { NumericValueFilter } from '../shared/Filters/NumericValueFilter';
 import { LocationFilter } from '../shared/Filters/LocationFilter/LocationFilter';
@@ -680,6 +682,28 @@ const columns: Record<string, Column> = {
             initialFocusRef={initialFocusRef}
           />
         )}
+        {...getTHeadProps<ContactStore>(props)}
+      />
+    ),
+    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
+  }),
+  [ColumnViewType.ContactsFlowStatus]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.ContactsFlowStatus,
+    minSize: 170,
+    maxSize: 600,
+    enableResizing: true,
+    enableColumnFilter: true,
+    enableSorting: true,
+    cell: (props) => {
+      const value = props.getValue()?.flowContact?.value?.status;
+
+      return <FlowStatusCell value={value} />;
+    },
+    header: (props) => (
+      <THead<HTMLInputElement>
+        title='Flow status'
+        id={ColumnViewType.ContactsFlowStatus}
+        renderFilter={() => <ContactFlowStatusFilter />}
         {...getTHeadProps<ContactStore>(props)}
       />
     ),

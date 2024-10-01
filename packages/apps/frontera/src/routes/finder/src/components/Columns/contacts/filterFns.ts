@@ -345,6 +345,19 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         );
       },
     )
+    .with(
+      { property: ColumnViewType.ContactsFlowStatus },
+      (filter) => (row: ContactStore) => {
+        if (!filter.active) return true;
+
+        const filterValues = filter.value;
+        const currentFlowStatus = row.flowContact?.value?.status;
+
+        if (!currentFlowStatus) return false;
+
+        return filterValues.includes(currentFlowStatus);
+      },
+    )
 
     .otherwise(() => noop);
 };
