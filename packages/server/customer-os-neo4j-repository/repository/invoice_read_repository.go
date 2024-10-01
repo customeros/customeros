@@ -316,7 +316,7 @@ func (r *invoiceReadRepository) GetInvoicesForRemindNotifications(ctx context.Co
 				i.status IN $acceptedStatuses AND
 				i.customerEmail IS NOT NULL AND
 				i.customerEmail <> '' AND	
-				date(i.dueDate) < date($referenceTime)-duration({days:overdueDays}) AND
+				date(i.dueDate) < date($referenceTime)-duration({days:$overdueDays}) AND
 				i.lastRemindInvoiceNotificationSentAt IS NULL AND
 				(i.techRemindInvoiceNotificationRequestedAt IS NULL OR i.techRemindInvoiceNotificationRequestedAt + duration({hours: 12}) < $referenceTime)
 			RETURN distinct(i), t.name limit $limit`
