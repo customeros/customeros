@@ -215,8 +215,7 @@ export const opportunitiesHelperTextMap: Record<string, string> = {
 
 export const flowsMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'Flow',
-  [ColumnViewType.FlowActionName]: 'Flow',
-  [ColumnViewType.FlowStatus]: 'Status',
+  [ColumnViewType.FlowActionName]: 'Status', // This is the actual status of the flow - Wrong naming of enum -> to be refactored
   [ColumnViewType.FlowTotalCount]: 'Total',
   [ColumnViewType.FlowCompletedCount]: 'Completed',
   [ColumnViewType.FlowPendingCount]: 'In Progress',
@@ -225,7 +224,6 @@ export const flowsMap: Record<string, string> = {
 export const flowsHelperTextMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'E.g. Aerospace CTO',
   [ColumnViewType.FlowActionName]: 'E.g. Education',
-  [ColumnViewType.FlowStatus]: 'E.g. Active',
   [ColumnViewType.FlowPendingCount]: 'E.g. 34 (27%)',
   [ColumnViewType.FlowCompletedCount]: 'E.g. 78 (62%)',
   [ColumnViewType.FlowTotalCount]: 'E.g. 125',

@@ -575,8 +575,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeFlowName.String(), Width: 100, Visible: true, Name: "Flow", Filter: ""},
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeFlowActionName.String(), Width: 100, Visible: true, Name: "Action", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeFlowActionStatus.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
+				{ColumnId: 1, ColumnType: model.ColumnViewTypeFlowActionName.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
 				{ColumnId: 5, ColumnType: model.ColumnViewTypeFlowTotalCount.String(), Width: 100, Visible: true, Name: "Contacts", Filter: ""},
 				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowPendingCount.String(), Width: 100, Visible: true, Name: "Pending", Filter: ""},
 				{ColumnId: 7, ColumnType: model.ColumnViewTypeFlowCompletedCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},

@@ -7,7 +7,7 @@ import { ColumnViewType } from '@graphql/types';
 export const getFlowsColumnSortFn = (columnId: string) =>
   match(columnId)
     .with(
-      ColumnViewType.FlowStatus,
+      ColumnViewType.FlowActionName,
       () => (row: FlowStore) =>
         row?.value?.status
           ? flowOptions.find((e) => e.value === row.value.status)?.label

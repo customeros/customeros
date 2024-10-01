@@ -11,7 +11,7 @@ import { FlowStatus, ColumnViewType, ComparisonOperator } from '@graphql/types';
 import { FilterHeader } from '../../../shared/Filters/abstract';
 
 const defaultFilter: FilterItem = {
-  property: ColumnViewType.FlowStatus,
+  property: ColumnViewType.FlowActionName,
   value: [],
   active: false,
   caseSensitive: false,
