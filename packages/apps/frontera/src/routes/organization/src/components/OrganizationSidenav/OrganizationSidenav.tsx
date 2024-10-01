@@ -79,12 +79,12 @@ export const OrganizationSidenav = observer(() => {
 
         <div className='flex flex-col line-clamp-1'>
           {parentOrg && (
-            <a
-              href={`/organization/${parentOrgId}?tab=about`}
-              className='text-xs text-gray-600 truncate no-underline '
+            <span
+              onClick={() => navigate(`/organization/${parentOrgId}?tab=about`)}
+              className='text-xs text-gray-600 truncate no-underline cursor-pointer'
             >
               {parentOrgName}
-            </a>
+            </span>
           )}
           <Tooltip label={organization?.value.name ?? ''}>
             <span className='max-w-150px  font-semibold text-gray-700 truncate whitespace-nowrap '>
