@@ -26,7 +26,7 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
-	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -64,7 +64,24 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData event2.ContactRequestEnrich
+	var eventData contactevent.ContactRequestEnrich
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
+	return h.enrichContact(ctx, eventData.Tenant, contactId, "")
+}
+
+func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialAddedToContact")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData contactevent.ContactAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -73,7 +90,11 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	return h.enrichContact(ctx, eventData.Tenant, contactId, "")
+	if strings.Contains(eventData.Url, ".linkedin.com") || strings.Contains(eventData.Url, "/linkedin.com") {
+		return h.enrichContact(ctx, eventData.Tenant, contactId, eventData.Url)
+	}
+
+	return nil
 }
 
 func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contactId, linkedInUrl string) error {
@@ -111,9 +132,22 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 		return nil
 	}
 
-	// if linkedin url not available get email
 	emailAddress, firstName, lastName, domain := "", "", "", ""
 	if linkedInUrl == "" {
+		socialDbNodes, err := h.services.CommonServices.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, model.CONTACT, []string{contactId})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
+			h.log.Errorf("Error getting social profiles for contact: %s", err.Error())
+		} else {
+			for _, socialDbNode := range socialDbNodes {
+				socialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode.Node)
+				if strings.Contains(socialEntity.Url, ".linkedin.com") || strings.Contains(socialEntity.Url, "/linkedin.com") {
+					linkedInUrl = socialEntity.Url
+					break
+				}
+			}
+		}
+
 		// get email from contact
 		emailAddress, err = h.getContactEmail(ctx, tenant, contactId)
 		if err != nil {
@@ -370,15 +404,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	// add organization
-	organizationNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContactId(ctx, tenant, contact.Id)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByContactId"))
-		h.log.Errorf("Error getting organization by contact id: %s", err.Error())
-		return err
-	}
-
-	if organizationNode == nil && scrapinContactResponse.Company != nil {
+	if scrapinContactResponse.Company != nil {
 		domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 		span.LogFields(log.String("extractedDomainFromWebsite", domain))
 		if domain != "" {
@@ -445,27 +471,6 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 				return err
 			}
 		}
-	}
-
-	return nil
-}
-
-func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialAddedToContact")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
-
-	var eventData event2.ContactAddSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
-	if strings.Contains(eventData.Url, ".linkedin.com") || strings.Contains(eventData.Url, "/linkedin.com") {
-		return h.enrichContact(ctx, eventData.Tenant, contactId, eventData.Url)
 	}
 
 	return nil
