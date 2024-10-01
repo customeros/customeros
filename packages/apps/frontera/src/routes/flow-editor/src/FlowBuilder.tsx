@@ -69,7 +69,6 @@ export const FlowBuilder = observer(
     const onEdgeMouseLeave = (_event: MouseEvent, edge: Edge) => {
       const edgeId = edge.id;
 
-      // Updates edge
       setEdges((prevElements) =>
         prevElements.map((element) =>
           element.id === edgeId
@@ -160,18 +159,17 @@ export const FlowBuilder = observer(
           nodes={nodes}
           edges={edges}
           minZoom={0.1}
-          fitView={false}
+          fitView={true}
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
-          preventScrolling={false}
-          zoomActivationKeyCode={'91'}
           onBeforeDelete={onBeforeDelete}
           onEdgeMouseLeave={onEdgeMouseLeave}
           onEdgeMouseEnter={onEdgeMouseEnter}
           zoomOnPinch={!ui.flowCommandMenu.isOpen}
           zoomOnScroll={!ui.flowCommandMenu.isOpen}
           defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
+          preventScrolling={!ui.flowCommandMenu.isOpen}
           onClick={() => {
             if (ui.flowCommandMenu.isOpen) {
               ui.flowCommandMenu.setOpen(false);

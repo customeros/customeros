@@ -22,10 +22,10 @@ import '@xyflow/react/dist/style.css';
 export const Header = observer(
   ({
     hasChanges,
-    onResetHasChanges,
+    onToggleHasChanges,
   }: {
     hasChanges: boolean;
-    onResetHasChanges: () => void;
+    onToggleHasChanges: (status: boolean) => void;
   }) => {
     const id = useParams().id as string;
     const store = useStore();
@@ -53,14 +53,16 @@ export const Header = observer(
       const nodes = getNodes();
       const edges = getEdges();
 
+      onToggleHasChanges(false);
+
       flow?.updateFlow(
         {
           nodes: JSON.stringify(nodes),
           edges: JSON.stringify(edges),
         },
         {
-          onSuccess: () => {
-            onResetHasChanges();
+          onError: () => {
+            onToggleHasChanges(true);
           },
         },
       );
