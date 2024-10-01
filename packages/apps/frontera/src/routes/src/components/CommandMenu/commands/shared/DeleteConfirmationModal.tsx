@@ -47,7 +47,7 @@ export const DeleteConfirmationModal = observer(() => {
 
   const handleClose = () => {
     store.ui.commandMenu.setOpen(false);
-    store.ui.commandMenu.setType('OpportunityHub');
+    store.ui.commandMenu.setType('GlobalHub');
   };
 
   const handleConfirm = () => {
