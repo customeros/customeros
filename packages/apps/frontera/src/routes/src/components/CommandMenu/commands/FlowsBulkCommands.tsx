@@ -9,6 +9,7 @@ import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 import { flowKeywords } from '@shared/components/CommandMenu/commands/flows/keywords';
 import { organizationKeywords } from '@shared/components/CommandMenu/commands/organization';
+import { UpdateStatusSubItemGroup } from '@shared/components/CommandMenu/commands/flows/UpdateStatusSubItemGroup.tsx';
 
 export const FlowsBulkCommands = observer(() => {
   const store = useStore();
@@ -36,6 +37,8 @@ export const FlowsBulkCommands = observer(() => {
         >
           Change flow status...
         </CommandItem>
+        <UpdateStatusSubItemGroup />
+
         <CommandItem
           leftAccessory={<Archive />}
           keywords={organizationKeywords.archive_org}

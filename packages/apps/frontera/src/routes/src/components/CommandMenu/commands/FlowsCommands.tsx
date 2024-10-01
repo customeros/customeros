@@ -9,6 +9,7 @@ import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
 import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 import { flowKeywords } from '@shared/components/CommandMenu/commands/flows/keywords.ts';
+import { UpdateStatusSubItemGroup } from '@shared/components/CommandMenu/commands/flows/UpdateStatusSubItemGroup.tsx';
 
 export const FlowsCommands = observer(() => {
   const store = useStore();
@@ -66,6 +67,7 @@ export const FlowsCommands = observer(() => {
         >
           Change flow status...
         </CommandItem>
+        <UpdateStatusSubItemGroup />
         <CommandItem
           leftAccessory={<Archive />}
           keywords={flowKeywords.archive_flow}
