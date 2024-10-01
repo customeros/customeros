@@ -46,8 +46,30 @@ export const DeleteConfirmationModal = observer(() => {
     .otherwise(() => undefined);
 
   const handleClose = () => {
-    store.ui.commandMenu.toggle('DeleteConfirmationModal');
-    store.ui.commandMenu.clearCallback();
+    store.ui.commandMenu.setOpen(false);
+
+    match(context.entity)
+      .with('Organization', () => {
+        store.ui.commandMenu.setType('OrganizationCommands');
+      })
+      .with('Organizations', () => {
+        store.ui.commandMenu.setType('OrganizationBulkCommands');
+      })
+      .with('Contact', () => {
+        store.ui.commandMenu.setType('ContactHub');
+      })
+      .with('Opportunity', () => {
+        store.ui.commandMenu.setType('OpportunityCommands');
+      })
+      .with('Opportunities', () => {
+        store.ui.commandMenu.setType('OpportunityCommands');
+      })
+      .with('Flow', () => {
+        store.ui.commandMenu.setType('FlowCommands');
+      })
+      .with('Flows', () => {
+        store.ui.commandMenu.setType('FlowsBulkCommands');
+      });
   };
 
   const handleConfirm = () => {
@@ -63,23 +85,37 @@ export const DeleteConfirmationModal = observer(() => {
 
         store.organizations.hide(context.ids as string[]);
         store.opportunities.value.delete(oppotunityIdOfOrgSelected[0]);
+        store.ui.commandMenu.setType('OrganizationHub');
+        store.ui.commandMenu.clearCallback();
 
         context.callback?.();
       })
       .with('Organizations', () => {
         store.organizations.hide(context.ids as string[]);
+        store.ui.commandMenu.setType('OrganizationHub');
+        store.ui.commandMenu.clearCallback();
+
         context.callback?.();
       })
       .with('Contact', () => {
         store.contacts.archive(context.ids);
+        store.ui.commandMenu.setType('ContactHub');
+        store.ui.commandMenu.clearCallback();
+
         context.callback?.();
       })
       .with('Opportunity', () => {
         store.opportunities.archive(context.ids?.[0]);
+        store.ui.commandMenu.setType('OpportunityHub');
+        store.ui.commandMenu.clearCallback();
+
         context.callback?.();
       })
       .with('Opportunities', () => {
         store.opportunities.archiveMany(context.ids);
+        store.ui.commandMenu.setType('OpportunityHub');
+        store.ui.commandMenu.clearCallback();
+
         context.callback?.();
       })
       .with('Flow', () => {
@@ -90,10 +126,16 @@ export const DeleteConfirmationModal = observer(() => {
             }
           },
         });
+        store.ui.commandMenu.setType('FlowHub');
+        store.ui.commandMenu.clearCallback();
+
         context.callback?.();
       })
       .with('Flows', () => {
         store.flows.archiveMany(context.ids);
+        store.ui.commandMenu.setType('FlowHub');
+        store.ui.commandMenu.clearCallback();
+
         context.callback?.();
       })
       .with('TableViewDef', () => {
@@ -107,7 +149,7 @@ export const DeleteConfirmationModal = observer(() => {
       })
       .otherwise(() => {});
 
-    handleClose();
+    store.ui.commandMenu.setOpen(false);
   };
 
   const title = match(context.entity)
