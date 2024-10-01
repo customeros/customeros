@@ -50,7 +50,7 @@ export const useKeyboardNavigation = (
   );
   useSequentialShortcut(
     'G',
-    'Q',
+    'F',
     () => {
       if (!presets.flowSequencesPreset) return;
       navigate(`/finder?preset=${presets.flowSequencesPreset}`);
