@@ -14,7 +14,7 @@ export const CreateSequenceButton = observer(() => {
   return (
     <Button
       size='xs'
-      className='mr-1'
+      className='mr-3'
       leftIcon={<Plus />}
       colorScheme='primary'
       dataTest='add-new-flow'

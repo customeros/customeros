@@ -235,7 +235,10 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
             onClick={handleToogleFlow}
           />
         )}
-      <TableViewMenu />
+
+      {tableViewDef?.value.tableId !== TableIdType.FlowSequences && (
+        <TableViewMenu />
+      )}
       <span ref={measureRef} className={`z-[-1] absolute h-0 invisible flex`}>
         <div className='ml-2'>
           <SearchBarFilterData />
