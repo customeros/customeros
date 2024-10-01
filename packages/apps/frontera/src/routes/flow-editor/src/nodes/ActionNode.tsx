@@ -56,6 +56,16 @@ export const ActionNode = ({
           };
         }
 
+        if (node.data?.replyTo === id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              subject: `RE: ${subject}`,
+            },
+          };
+        }
+
         return node;
       }),
     );
