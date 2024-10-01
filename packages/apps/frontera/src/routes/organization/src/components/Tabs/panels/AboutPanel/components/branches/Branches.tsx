@@ -40,7 +40,10 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
                   if (!findOrg) return;
                   setTimeout(() => {
                     organization.update((org) => {
-                      org.subsidiaries = [{ organization: findOrg.value }];
+                      org.subsidiaries = [
+                        ...org.subsidiaries,
+                        { organization: findOrg.value },
+                      ];
 
                       return org;
                     });
