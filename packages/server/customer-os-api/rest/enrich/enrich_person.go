@@ -77,8 +77,8 @@ type EnrichPersonJob struct {
 // EnrichPersonJobDuration represents the duration of a person's job.
 // @Description Job duration of a person.
 type EnrichPersonJobDuration struct {
-	StartMonth int  `json:"startMonth" example:"1"`
-	StartYear  int  `json:"startYear" example:"2020"`
+	StartMonth *int `json:"startMonth,omitempty" example:"1"`
+	StartYear  *int `json:"startYear,omitempty" example:"2020"`
 	EndMonth   *int `json:"endMonth,omitempty" example:"12"`
 	EndYear    *int `json:"endYear,omitempty" example:"2023"`
 }
@@ -654,10 +654,10 @@ func mapPersonScrapInData(source *postgresentity.ScrapInResponseBody) *EnrichPer
 			CompanyLinkedin: position.LinkedInUrl,
 			IsCurrent:       position.StartEndDate.End == nil,
 			//Seniority:       position.Seniority, // TODO will be implemented later after clarifications
-			Duration: EnrichPersonJobDuration{
-				StartMonth: position.StartEndDate.Start.Month,
-				StartYear:  position.StartEndDate.Start.Year,
-			},
+		}
+		if position.StartEndDate.Start != nil {
+			enrichPersonJob.Duration.StartMonth = &position.StartEndDate.Start.Month
+			enrichPersonJob.Duration.StartYear = &position.StartEndDate.Start.Year
 		}
 		if position.StartEndDate.End != nil {
 			enrichPersonJob.Duration.EndMonth = &position.StartEndDate.End.Month

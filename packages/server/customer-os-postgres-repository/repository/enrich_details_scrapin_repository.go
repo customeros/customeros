@@ -54,12 +54,15 @@ func (r enrichDetailsScrapInRepository) GetLatestByParam1AndFlow(ctx context.Con
 	var data entity.EnrichDetailsScrapIn
 	err := r.db.Where("param1 = ? AND flow = ?", param, flow).Order("created_at desc").First(&data).Error
 	if err != nil {
+		span.LogFields(tracingLog.Bool("result.found", false))
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, nil // Return nil if no record found
 		}
+		tracing.TraceErr(span, err)
 		return nil, err // Return other errors as usual
 	}
 
+	span.LogFields(tracingLog.Bool("result.found", true))
 	return &data, nil
 }
 
