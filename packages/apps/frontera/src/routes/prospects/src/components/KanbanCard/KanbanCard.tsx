@@ -125,6 +125,7 @@ export const KanbanCard = observer(
         ref={mergedRef}
         {...provided?.draggableProps}
         {...provided?.dragHandleProps}
+        data-test='opp-kanban-card'
         onMouseEnter={() => onFocus(card.id)}
         className={cn(
           'group/kanbanCard  relative flex flex-col items-start px-3 pb-3 pt-[6px] mb-2 bg-white rounded-lg border border-gray-200 shadow-xs hover:shadow-lg focus:border-primary-500 transition-all duration-200 ease-in-out',
@@ -175,7 +176,10 @@ export const KanbanCard = observer(
               <Tooltip label='Time in stage'>
                 {cardStage === InternalStage.Open && (
                   <div className='flex items-center'>
-                    <Clock className='text-gray-500 size-3 mr-1' />
+                    <Clock
+                      dataTest='kanban-clock'
+                      className='text-gray-500 size-3 mr-1'
+                    />
                     <span className='text-nowrap text-xs items-center'>
                       {`${daysInStage} ${daysInStage === 1 ? 'day' : 'days'}`}
                     </span>

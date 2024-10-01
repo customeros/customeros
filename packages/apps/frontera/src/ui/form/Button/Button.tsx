@@ -1,4 +1,4 @@
-import { forwardRef, cloneElement } from 'react';
+import React, { forwardRef, cloneElement } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -31,6 +31,7 @@ export interface ButtonProps
     VariantProps<typeof solidButton>,
     VariantProps<typeof buttonSize> {
   asChild?: boolean;
+  dataTest?: string;
   isLoading?: boolean;
   isDisabled?: boolean;
   loadingText?: string;
@@ -56,6 +57,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       isLoading = false,
       isDisabled = false,
       size = 'sm',
+      dataTest,
       ...props
     },
     ref,
@@ -79,6 +81,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         {...props}
+        data-test={dataTest}
         style={{ outline: 'none' }}
         disabled={isLoading || isDisabled}
         className={twMerge(

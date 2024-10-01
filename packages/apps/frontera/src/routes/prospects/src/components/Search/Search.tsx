@@ -58,7 +58,10 @@ export const Search = observer(() => {
       <InputGroup className='relative w-full bg-transparent hover:border-transparent focus-within:border-transparent focus-within:hover:border-transparent gap-1'>
         <LeftElement className='ml-2 flex items-center gap-1'>
           <SearchSm className='size-5' />
-          <span className='text-nowrap font-medium'>
+          <span
+            data-test='opps-finder-count'
+            className='text-nowrap font-medium'
+          >
             {store.ui.searchCount} opportunities:
           </span>
         </LeftElement>

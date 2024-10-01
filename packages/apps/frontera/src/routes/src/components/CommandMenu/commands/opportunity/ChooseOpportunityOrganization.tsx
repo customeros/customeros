@@ -83,6 +83,7 @@ export const ChooseOpportunityOrganization = observer(() => {
         label='Organization'
         onValueChange={handleSearch}
         placeholder='Choose organization'
+        dataTest='opp-kanban-choose-organization'
       />
 
       <Command.List>
