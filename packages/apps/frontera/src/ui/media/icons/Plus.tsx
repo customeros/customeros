@@ -14,11 +14,11 @@ export const Plus = ({ className, ...props }: IconProps) => (
     className={twMerge('inline-block size-4', className)}
   >
     <path
-      strokeWidth='2'
       d='M12 5V19M5 12H19'
       stroke='currentColor'
       strokeLinecap='round'
       strokeLinejoin='round'
+      strokeWidth={props?.strokeWidth || 2}
     />
   </svg>
 );
