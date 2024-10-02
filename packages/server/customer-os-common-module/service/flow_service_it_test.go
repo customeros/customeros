@@ -8,48 +8,33 @@ import (
 	"testing"
 )
 
-const tenantName = "openline"
-
 const (
-	f1 = `
+	ONE_EMAIL_FLOW = `
 [
    {
-      "id":"start-1",
+      "id":"start",
+      "internalId":"internal-start",
       "type":"trigger",
       "data":{
          "action":"FLOW_START",
-         "entity":"CONTACT"
+         "entity":"CONTACT",
+		 "triggerType":"RecordAddedManually"
       }
    },
    {
-      "id":"linkedin-1",
-      "type":"action",
-      "data":{
-         "action":"LINKEDIN_CONNECTION_REQUEST",
-         "messageTemplate":"Here would be the body of the email"
-      }
-   },
-   {
-      "id":"email-1",
+      "id":"email",
+      "internalId":"internal-email",
       "type":"action",
       "data":{
          "action":"EMAIL_NEW",
-         "waitBefore":120,
+         "waitBefore":0,
          "subject":"Nice subject here",
          "bodyTemplate":"Here would be the body of the email"
       }
    },
    {
-      "id":"email-2",
-      "type":"action",
-      "data":{
-         "action":"EMAIL_REPLY",
-         "waitBefore":120,
-         "bodyTemplate":"Here would be the body of the email"
-      }
-   },
-   {
       "id":"end",
+      "internalId":"internal-end",
       "type":"trigger",
       "data":{
          "action":"FLOW_END"
@@ -57,26 +42,14 @@ const (
    }
 ]`
 
-	e1 = `
+	ONE_EMAIL_FLOW_EDGES = `
 [
    {
-      "source":"start-1",
-      "target":"email-1"
+      "source":"start",
+      "target":"email"
    },
    {
-      "source":"start-1",
-      "target":"linkedin-1"
-   },
-   {
-      "source":"email-1",
-      "target":"email-2"
-   },
-   {
-      "source":"email-2",
-      "target":"end"
-   },
-   {
-      "source":"linkedin-1",
+      "source":"email",
       "target":"end"
    }
 ]`
@@ -90,12 +63,12 @@ func TestFlowService_FlowMerge1(t *testing.T) {
 
 	_, err := CommonServices.FlowService.FlowMerge(ctx, &neo4jentity.FlowEntity{
 		Name:  "flow1",
-		Nodes: f1,
-		Edges: e1,
+		Nodes: ONE_EMAIL_FLOW,
+		Edges: ONE_EMAIL_FLOW_EDGES,
 	})
 	require.NoError(t, err)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelTenant))
-	require.Equal(t, 5, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelFlowAction))
-	require.Equal(t, 5, neo4jtest.GetCountOfRelationships(ctx, driver, model.NEXT.String()))
+	require.Equal(t, 3, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelFlowAction))
+	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, model.NEXT.String()))
 }

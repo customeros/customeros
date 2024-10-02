@@ -244,6 +244,12 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 						if v2 != nil {
 							if k == "action" {
 								e.Data.Action = neo4jentity.GetFlowActionType(v2.(string))
+							} else if k == "entity" {
+								t := v2.(string)
+								e.Data.Entity = &t
+							} else if k == "triggerType" {
+								t := v2.(string)
+								e.Data.TriggerType = &t
 							} else if k == "waitBefore" {
 								e.Data.WaitBefore = int64(v2.(float64))
 							} else if k == "subject" {
@@ -281,16 +287,23 @@ func (s *flowService) FlowMerge(ctx context.Context, input *neo4jentity.FlowEnti
 							tracing.TraceErr(span, err)
 							return nil, err
 						}
+
+						err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+							FromEntityId:   toStore.Id,
+							FromEntityType: model.FLOW,
+							Relationship:   model.HAS,
+							ToEntityId:     e.Id,
+							ToEntityType:   model.FLOW_ACTION,
+						})
+						if err != nil {
+							tracing.TraceErr(span, err)
+							return nil, err
+						}
+
 						stored := mapper.MapDbNodeToFlowActionEntity(storedNode)
 
 						if stored.Data.Action == neo4jentity.FlowActionTypeFlowStart {
-							err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
-								FromEntityId:   toStore.Id,
-								FromEntityType: model.FLOW,
-								Relationship:   model.HAS,
-								ToEntityId:     stored.Id,
-								ToEntityType:   model.FLOW_ACTION,
-							})
+							err = err
 							if err != nil {
 								tracing.TraceErr(span, err)
 								return nil, err
@@ -488,7 +501,7 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 		//	}
 		//
 		//	for _, v := range *flowContactList {
-		//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, v.ContactId)
+		//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, v.ContactId, model.CONTACT)
 		//		if err != nil {
 		//			tracing.TraceErr(span, err)
 		//			return nil, err

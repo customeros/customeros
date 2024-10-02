@@ -103,7 +103,7 @@ func (s *flowExecutionService) processActionExecution(ctx context.Context, sched
 			return nil, err
 		}
 
-		err = s.commonServices.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, scheduledActionExecution.ContactId)
+		err = s.commonServices.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, model.GetEntityType(scheduledActionExecution.EntityType))
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -178,6 +178,12 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				return
 			}
 			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "goalAchieved", goalAchieved)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", pending+completed+goalAchieved)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return

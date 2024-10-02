@@ -1128,6 +1128,7 @@ type Flow struct {
 	Description string          `json:"description"`
 	Nodes       string          `json:"nodes"`
 	Edges       string          `json:"edges"`
+	Actions     []*FlowAction   `json:"actions"`
 	Status      FlowStatus      `json:"status"`
 	Contacts    []*FlowContact  `json:"contacts"`
 	Statistics  *FlowStatistics `json:"statistics"`
@@ -1135,6 +1136,15 @@ type Flow struct {
 
 func (Flow) IsMetadataInterface()        {}
 func (this Flow) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowAction struct {
+	Metadata *Metadata           `json:"metadata"`
+	JSON     string              `json:"json"`
+	Senders  []*FlowActionSender `json:"senders"`
+}
+
+func (FlowAction) IsMetadataInterface()        {}
+func (this FlowAction) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowActionInputData struct {
 	Wait                      *FlowActionInputDataWait                      `json:"wait,omitempty"`
@@ -4365,22 +4375,26 @@ func (e FlowActionStatus) MarshalGQL(w io.Writer) {
 type FlowContactStatus string
 
 const (
-	FlowContactStatusScheduled  FlowContactStatus = "SCHEDULED"
-	FlowContactStatusInProgress FlowContactStatus = "IN_PROGRESS"
-	FlowContactStatusPaused     FlowContactStatus = "PAUSED"
-	FlowContactStatusCompleted  FlowContactStatus = "COMPLETED"
+	FlowContactStatusPending      FlowContactStatus = "PENDING"
+	FlowContactStatusScheduled    FlowContactStatus = "SCHEDULED"
+	FlowContactStatusInProgress   FlowContactStatus = "IN_PROGRESS"
+	FlowContactStatusPaused       FlowContactStatus = "PAUSED"
+	FlowContactStatusCompleted    FlowContactStatus = "COMPLETED"
+	FlowContactStatusGoalAchieved FlowContactStatus = "GOAL_ACHIEVED"
 )
 
 var AllFlowContactStatus = []FlowContactStatus{
+	FlowContactStatusPending,
 	FlowContactStatusScheduled,
 	FlowContactStatusInProgress,
 	FlowContactStatusPaused,
 	FlowContactStatusCompleted,
+	FlowContactStatusGoalAchieved,
 }
 
 func (e FlowContactStatus) IsValid() bool {
 	switch e {
-	case FlowContactStatusScheduled, FlowContactStatusInProgress, FlowContactStatusPaused, FlowContactStatusCompleted:
+	case FlowContactStatusPending, FlowContactStatusScheduled, FlowContactStatusInProgress, FlowContactStatusPaused, FlowContactStatusCompleted, FlowContactStatusGoalAchieved:
 		return true
 	}
 	return false

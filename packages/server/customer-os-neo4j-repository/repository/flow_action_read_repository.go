@@ -160,7 +160,8 @@ func (r flowActionReadRepositoryImpl) GetNext(ctx context.Context, actionId stri
 	tenant := common.GetTenantFromContext(ctx)
 
 	params := map[string]any{
-		"tenant": tenant,
+		"tenant":   tenant,
+		"actionId": actionId,
 	}
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:FlowAction_%s {id: $actionId})-[:NEXT]->(fa:FlowAction_%s) RETURN fa`, tenant, tenant)
@@ -183,7 +184,7 @@ func (r flowActionReadRepositoryImpl) GetNext(ctx context.Context, actionId stri
 		return nil, err
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
-	if len(result.([]*utils.DbNodeAndId)) == 0 {
+	if len(result.([]*dbtype.Node)) == 0 {
 		return nil, nil
 	}
 	return result.([]*dbtype.Node), err

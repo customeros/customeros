@@ -19,8 +19,9 @@ type TenantSettingsMailboxRepository interface {
 	GetAll(ctx context.Context, tenant string) ([]*entity.TenantSettingsMailbox, error)
 	GetByMailbox(ctx context.Context, tenant, mailbox string) (*entity.TenantSettingsMailbox, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.TenantSettingsMailbox, error)
-	SaveMailbox(ctx context.Context, tenant, domain, mailboxEmail, mailboxPassword string) error
 	GetAllByDomain(ctx context.Context, tenant, domain string) ([]entity.TenantSettingsMailbox, error)
+
+	Merge(ctx context.Context, tenant string, mailbox *entity.TenantSettingsMailbox) error
 }
 
 func NewTenantSettingsMailboxRepository(db *gorm.DB) TenantSettingsMailboxRepository {
@@ -106,53 +107,6 @@ func (r *tenantSettingsMailboxRepository) GetById(ctx context.Context, tenant, i
 	return &result, nil
 }
 
-func (r *tenantSettingsMailboxRepository) SaveMailbox(ctx context.Context, tenant, domain, mailboxEmail, mailboxPassword string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.SaveMailbox")
-	defer span.Finish()
-	tracing.TagComponentPostgresRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.LogKV("mailboxEmail", mailboxEmail)
-
-	// Check if the mailbox already exists
-	var mailbox entity.TenantSettingsMailbox
-	err := r.gormDb.
-		Where("tenant = ? AND mailbox_username = ?", tenant, mailboxEmail).
-		First(&mailbox).Error
-
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if errors.Is(err, gorm.ErrRecordNotFound) {
-		// If not found, create a new mailbox
-		mailbox = entity.TenantSettingsMailbox{
-			Tenant:          tenant,
-			MailboxUsername: mailboxEmail,
-			MailboxPassword: mailboxPassword,
-			Domain:          domain,
-		}
-
-		err = r.gormDb.Create(&mailbox).Error
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	} else {
-		// If found, update the existing mailbox
-		mailbox.MailboxPassword = mailboxPassword
-		mailbox.UpdatedAt = utils.Now()
-
-		err = r.gormDb.Save(&mailbox).Error
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, tenant, domain string) ([]entity.TenantSettingsMailbox, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAllByDomain")
 	defer span.Finish()
@@ -172,4 +126,56 @@ func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, te
 	}
 
 	return result, nil
+}
+
+func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tenant string, input *entity.TenantSettingsMailbox) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.Merge")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	span.LogFields(tracingLog.Object("mailbox", input))
+
+	// Check if the mailbox already exists
+	var mailbox entity.TenantSettingsMailbox
+	err := r.gormDb.
+		Where("tenant = ? AND mailbox_username = ?", tenant, input.MailboxUsername).
+		First(&mailbox).Error
+
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// If not found, create a new mailbox
+		mailbox = entity.TenantSettingsMailbox{
+			Tenant:                  tenant,
+			MailboxUsername:         input.MailboxUsername,
+			MailboxPassword:         input.MailboxPassword,
+			Domain:                  input.Domain,
+			MinMinutesBetweenEmails: input.MinMinutesBetweenEmails,
+			MaxMinutesBetweenEmails: input.MaxMinutesBetweenEmails,
+		}
+
+		err = r.gormDb.Create(&mailbox).Error
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	} else {
+		// If found, update the existing mailbox
+		mailbox.MailboxPassword = input.MailboxPassword
+		mailbox.MinMinutesBetweenEmails = input.MinMinutesBetweenEmails
+		mailbox.MaxMinutesBetweenEmails = input.MaxMinutesBetweenEmails
+		mailbox.UpdatedAt = utils.Now()
+
+		err = r.gormDb.Save(&mailbox).Error
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+	}
+
+	return nil
 }

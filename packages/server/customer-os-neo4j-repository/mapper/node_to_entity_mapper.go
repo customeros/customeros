@@ -1212,6 +1212,8 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	e := entity.FlowActionEntity{
 		Id:         utils.GetStringPropOrEmpty(props, "id"),
 		ExternalId: utils.GetStringPropOrEmpty(props, "externalId"),
+		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:  utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Json:       utils.GetStringPropOrEmpty(props, "json"),
 		Type:       utils.GetStringPropOrEmpty(props, "type"),
 	}
@@ -1221,6 +1223,7 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	e.Data.WaitBefore = utils.GetInt64PropOrZero(props, "waitBefore")
 
 	e.Data.Entity = utils.GetStringPropOrNil(props, "data_entity")
+	e.Data.TriggerType = utils.GetStringPropOrNil(props, "data_triggerType")
 	e.Data.Subject = utils.GetStringPropOrNil(props, "data_subject")
 	e.Data.BodyTemplate = utils.GetStringPropOrNil(props, "data_bodyTemplate")
 	e.Data.MessageTemplate = utils.GetStringPropOrNil(props, "data_messageTemplate")
@@ -1240,6 +1243,7 @@ func MapDbNodeToFlowExecutionSettingsEntity(node *dbtype.Node) *entity.FlowExecu
 		FlowId:    utils.GetStringPropOrEmpty(props, "flowId"),
 		EntityId:  utils.GetStringPropOrEmpty(props, "entityId"),
 		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
+		UserId:    utils.GetStringPropOrNil(props, "userId"),
 	}
 	return &e
 }
@@ -1254,7 +1258,8 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		FlowId:      utils.GetStringPropOrEmpty(props, "flowId"),
-		ContactId:   utils.GetStringPropOrEmpty(props, "contactId"),
+		EntityId:    utils.GetStringPropOrEmpty(props, "entityId"),
+		EntityType:  utils.GetStringPropOrEmpty(props, "entityType"),
 		ActionId:    utils.GetStringPropOrEmpty(props, "actionId"),
 		ScheduledAt: utils.GetTimePropOrNow(props, "scheduledAt"),
 		ExecutedAt:  utils.GetTimePropOrNil(props, "executedAt"),
@@ -1262,13 +1267,14 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		Error:       utils.GetStringPropOrNil(props, "error"),
 
 		Mailbox: utils.GetStringPropOrNil(props, "mailbox"),
+		UserId:  utils.GetStringPropOrNil(props, "userId"),
 
 		Subject: utils.GetStringPropOrNil(props, "subject"),
-		Body:    utils.GetStringPropOrNil(props, "subject"),
-		From:    utils.GetStringPropOrNil(props, "subject"),
-		To:      utils.GetListStringPropOrEmpty(props, "subject"),
-		Cc:      utils.GetListStringPropOrEmpty(props, "subject"),
-		Bcc:     utils.GetListStringPropOrEmpty(props, "subject"),
+		Body:    utils.GetStringPropOrNil(props, "body"),
+		From:    utils.GetStringPropOrNil(props, "from"),
+		To:      utils.GetListStringPropOrEmpty(props, "to"),
+		Cc:      utils.GetListStringPropOrEmpty(props, "cc"),
+		Bcc:     utils.GetListStringPropOrEmpty(props, "bcc"),
 	}
 	return &e
 }

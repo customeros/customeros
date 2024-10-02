@@ -12,9 +12,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
+// Actions is the resolver for the actions field.
+func (r *flowResolver) Actions(ctx context.Context, obj *model.Flow) ([]*model.FlowAction, error) {
+	panic(fmt.Errorf("not implemented: Actions - actions"))
+}
+
 // Contacts is the resolver for the contacts field.
 func (r *flowResolver) Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error) {
 	panic(fmt.Errorf("not implemented: Contacts - contacts"))
+}
+
+// Senders is the resolver for the senders field.
+func (r *flowActionResolver) Senders(ctx context.Context, obj *model.FlowAction) ([]*model.FlowActionSender, error) {
+	panic(fmt.Errorf("not implemented: Senders - senders"))
 }
 
 // User is the resolver for the user field.
@@ -58,7 +68,7 @@ func (r *mutationResolver) FlowContactDeleteBulk(ctx context.Context, id []strin
 }
 
 // FlowSenderMerge is the resolver for the flowSender_Merge field.
-func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowID string, input model.FlowActionSenderMergeInput) (*model.FlowActionSender, error) {
+func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowActionID string, input model.FlowActionSenderMergeInput) (*model.FlowActionSender, error) {
 	panic(fmt.Errorf("not implemented: FlowSenderMerge - flowSender_Merge"))
 }
 
@@ -80,6 +90,9 @@ func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
 // Flow returns generated.FlowResolver implementation.
 func (r *Resolver) Flow() generated.FlowResolver { return &flowResolver{r} }
 
+// FlowAction returns generated.FlowActionResolver implementation.
+func (r *Resolver) FlowAction() generated.FlowActionResolver { return &flowActionResolver{r} }
+
 // FlowActionSender returns generated.FlowActionSenderResolver implementation.
 func (r *Resolver) FlowActionSender() generated.FlowActionSenderResolver {
 	return &flowActionSenderResolver{r}
@@ -89,6 +102,7 @@ func (r *Resolver) FlowActionSender() generated.FlowActionSenderResolver {
 func (r *Resolver) FlowContact() generated.FlowContactResolver { return &flowContactResolver{r} }
 
 type flowResolver struct{ *Resolver }
+type flowActionResolver struct{ *Resolver }
 type flowActionSenderResolver struct{ *Resolver }
 type flowContactResolver struct{ *Resolver }
 
