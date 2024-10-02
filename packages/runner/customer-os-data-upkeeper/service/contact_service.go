@@ -754,6 +754,9 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 		return
 	}
 
+	// TODO alexb add billable event for better contact response
+	// TODO alexb also handle phone numbers and add billable events for phone numbers
+
 	for _, record := range records {
 
 		detailsBetterContact, err := s.commonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.GetByRequestId(ctx, record.FieldStr1)
@@ -788,19 +791,11 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 		}
 
 		if len(betterContactResponse.Data) > 0 && betterContactResponse.Data[0].ContactEmailAddress != "" {
-
-			emailIdIfExists, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, record.Tenant, betterContactResponse.Data[0].ContactEmailAddress)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return
-			}
-
 			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 			_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
 				contact := model.CONTACT.String()
 				return s.commonServices.GrpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
 					Tenant:       record.Tenant,
-					Id:           emailIdIfExists,
 					RawEmail:     betterContactResponse.Data[0].ContactEmailAddress,
 					LinkWithType: &contact,
 					LinkWithId:   &record.ContactId,

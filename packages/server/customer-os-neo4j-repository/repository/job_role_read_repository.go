@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type JobRoleReadRepository interface {
@@ -15,6 +16,7 @@ type JobRoleReadRepository interface {
 	GetAllForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string) ([]*dbtype.Node, error)
 	GetAllForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
 	GetAllForUsers(ctx context.Context, tenant string, userIds []string) ([]*utils.DbNodeAndId, error)
+	ExistsForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (bool, error)
 }
 
 type jobRoleReadRepository struct {
@@ -173,4 +175,37 @@ func (r *jobRoleReadRepository) GetAllForOrganizations(ctx context.Context, tena
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r *jobRoleReadRepository) ExistsForContactAndOrganization(ctx context.Context, tenant, contactId, organizationId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleRepository.ExistsForContactAndOrganization")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	cypher := `MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			  			(o:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}),
+			  			(c)-[:WORKS_AS]->(r:JobRole)-[:ROLE_IN]->(o) 
+				RETURN r`
+	params := map[string]interface{}{
+		"contactId":      contactId,
+		"organizationId": organizationId,
+		"tenant":         tenant,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return false, err
+	}
+	return len(records.([]*neo4j.Record)) > 0, err
 }
