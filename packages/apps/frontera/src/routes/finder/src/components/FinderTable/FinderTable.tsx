@@ -691,7 +691,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
         }}
       />
       {isSidePanelOpen && <SidePanel />}
-      {store.ui.contactPreviewCardOpen && <ContactPreviewCard />}
+      {store.ui.contactPreviewCardOpen && !store.ui.isSearching && (
+        <ContactPreviewCard />
+      )}
       <ConfirmDeleteDialog
         onClose={reset}
         hideCloseButton
