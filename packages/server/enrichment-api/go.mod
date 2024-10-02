@@ -11,6 +11,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
 require (
+	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/forPelevin/gomoji v1.2.0
 	github.com/gin-contrib/cors v1.7.2
@@ -36,7 +37,6 @@ require (
 	github.com/andybalholm/cascadia v1.3.2 // indirect
 	github.com/araddon/dateparse v0.0.0-20210429162001-6b43995a97de // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/biter777/countries v1.7.5 // indirect
 	github.com/bytedance/sonic v1.12.1 // indirect
 	github.com/bytedance/sonic/loader v0.2.0 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
@@ -104,7 +104,7 @@ require (
 	golang.org/x/text v0.18.0 // indirect
 	google.golang.org/api v0.199.0 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240903143218-8af14fe29dc1 // indirect
-	google.golang.org/grpc v1.67.0 // indirect
+	google.golang.org/grpc v1.67.1 // indirect
 	google.golang.org/protobuf v1.34.2 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 	gorm.io/driver/postgres v1.5.9 // indirect
