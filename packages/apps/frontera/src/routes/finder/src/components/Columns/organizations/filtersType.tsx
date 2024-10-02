@@ -1,3 +1,4 @@
+import { Cake } from '@ui/media/icons/Cake';
 import { Key01 } from '@ui/media/icons/Key01';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Hash02 } from '@ui/media/icons/Hash02';
@@ -5,10 +6,12 @@ import { Globe01 } from '@ui/media/icons/Globe01';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Trophy01 } from '@ui/media/icons/Trophy01';
 import { Calendar } from '@ui/media/icons/Calendar';
+import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Calculator } from '@ui/media/icons/Calculator';
 import { Building05 } from '@ui/media/icons/Building05';
+import { test } from '@shared/components/Providers/StoreProvider';
 import { ArrowCircleDownRight } from '@ui/media/icons/ArrowCircleDownRight';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
@@ -16,14 +19,20 @@ import {
   ColumnViewType,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
-
 export type FilterType = {
+  options?: any[];
   icon: JSX.Element;
   filterName: string;
   filterAccesor: ColumnViewType;
   filterOperators: ComparisonOperator[];
   filterType: 'text' | 'date' | 'number' | 'list';
 };
+
+import { type RootStore } from '@store/root';
+
+// const getFilterTypes=(store:RootStore)=>{
+
+// }
 
 export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
   [ColumnViewType.OrganizationsName]: {
@@ -37,6 +46,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
       ComparisonOperator.IsNotEmpty,
     ],
     icon: <Building07 />,
+    options: test.organizations.toArray(),
   },
   [ColumnViewType.OrganizationsWebsite]: {
     filterType: 'text',
@@ -51,7 +61,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     icon: <Globe01 />,
   },
   [ColumnViewType.OrganizationsRelationship]: {
-    filterType: 'text',
+    filterType: 'list',
     filterName: 'Relationship',
     filterAccesor: ColumnViewType.OrganizationsRelationship,
     filterOperators: [
@@ -61,6 +71,18 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
       ComparisonOperator.IsNotEmpty,
     ],
     icon: <AlignHorizontalCentre02 />,
+  },
+  [ColumnViewType.OrganizationsRenewalLikelihood]: {
+    filterType: 'list',
+    filterName: 'Health',
+    filterAccesor: ColumnViewType.OrganizationsRenewalLikelihood,
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
+    icon: <Activity />,
   },
   [ColumnViewType.OrganizationsOnboardingStatus]: {
     filterType: 'text',
@@ -106,7 +128,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     icon: <Key01 />,
   },
   [ColumnViewType.OrganizationsLeadSource]: {
-    filterType: 'text',
+    filterType: 'list',
     filterName: 'Source',
     filterAccesor: ColumnViewType.OrganizationsLeadSource,
     filterOperators: [
@@ -121,23 +143,20 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterType: 'date',
     filterName: 'Created Date',
     filterAccesor: ColumnViewType.OrganizationsCreatedDate,
-    filterOperators: [
-      ComparisonOperator.Lt,
-      ComparisonOperator.Gt,
-      ComparisonOperator.Between,
-    ],
+    filterOperators: [ComparisonOperator.Lt, ComparisonOperator.Gt],
     icon: <Calendar />,
   },
   [ColumnViewType.OrganizationsYearFounded]: {
-    filterType: 'date',
+    filterType: 'number',
     filterName: 'Founded',
-    filterAccesor: ColumnViewType.OrganizationsCreatedDate,
+    filterAccesor: ColumnViewType.OrganizationsYearFounded,
     filterOperators: [
       ComparisonOperator.Lt,
       ComparisonOperator.Gt,
-      ComparisonOperator.Between,
+      ComparisonOperator.Eq,
+      ComparisonOperator.NotEqual,
     ],
-    icon: <Calendar />,
+    icon: <Cake />,
   },
   [ColumnViewType.OrganizationsEmployeeCount]: {
     filterType: 'number',
@@ -146,8 +165,8 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterOperators: [
       ComparisonOperator.Lt,
       ComparisonOperator.Gt,
-      ComparisonOperator.Between,
       ComparisonOperator.Eq,
+      ComparisonOperator.NotEqual,
     ],
     icon: <Users03 />,
   },
@@ -158,19 +177,20 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterOperators: [
       ComparisonOperator.Lt,
       ComparisonOperator.Gt,
-      ComparisonOperator.Between,
       ComparisonOperator.Eq,
+      ComparisonOperator.NotEqual,
     ],
     icon: <Calendar />,
   },
-  [ColumnViewType.OrganizationsLastTouchpointDate]: {
+  [ColumnViewType.OrganizationsLastTouchpoint]: {
     filterType: 'date',
     filterName: 'Last touchpoint',
-    filterAccesor: ColumnViewType.OrganizationsLastTouchpointDate,
+    filterAccesor: ColumnViewType.OrganizationsLastTouchpoint,
     filterOperators: [
-      ComparisonOperator.Lt,
-      ComparisonOperator.Gt,
-      ComparisonOperator.Between,
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
     ],
     icon: <Calendar />,
   },
@@ -178,11 +198,14 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterType: 'date',
     filterName: 'Churn date',
     filterAccesor: ColumnViewType.OrganizationsChurnDate,
-    filterOperators: [
-      ComparisonOperator.Lt,
-      ComparisonOperator.Gt,
-      ComparisonOperator.Between,
-    ],
+    filterOperators: [ComparisonOperator.Lt, ComparisonOperator.Gt],
+    icon: <Calendar />,
+  },
+  [ColumnViewType.OrganizationsLastTouchpointDate]: {
+    filterType: 'date',
+    filterName: 'Last interacted',
+    filterAccesor: ColumnViewType.OrganizationsLastTouchpointDate,
+    filterOperators: [ComparisonOperator.Lt, ComparisonOperator.Gt],
     icon: <Calendar />,
   },
   [ColumnViewType.OrganizationsLtv]: {
@@ -192,13 +215,13 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterOperators: [
       ComparisonOperator.Lt,
       ComparisonOperator.Gt,
-      ComparisonOperator.Between,
+      ComparisonOperator.NotEqual,
       ComparisonOperator.Eq,
     ],
     icon: <CurrencyDollarCircle />,
   },
   [ColumnViewType.OrganizationsIndustry]: {
-    filterType: 'text',
+    filterType: 'list',
     filterName: 'Industry',
     filterAccesor: ColumnViewType.OrganizationsIndustry,
     filterOperators: [
@@ -216,13 +239,13 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     filterOperators: [
       ComparisonOperator.Lt,
       ComparisonOperator.Gt,
-      ComparisonOperator.Between,
+      ComparisonOperator.NotEqual,
       ComparisonOperator.Eq,
     ],
     icon: <Hash02 />,
   },
   [ColumnViewType.OrganizationsTags]: {
-    filterType: 'text',
+    filterType: 'list',
     filterName: 'Tags',
     filterAccesor: ColumnViewType.OrganizationsTags,
     filterOperators: [
@@ -234,7 +257,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     icon: <Tag01 />,
   },
   [ColumnViewType.OrganizationsIsPublic]: {
-    filterType: 'text',
+    filterType: 'list',
     filterName: 'Ownership type',
     filterAccesor: ColumnViewType.OrganizationsIsPublic,
     filterOperators: [
@@ -246,7 +269,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     icon: <Key01 />,
   },
   [ColumnViewType.OrganizationsStage]: {
-    filterType: 'text',
+    filterType: 'list',
     filterName: 'Stage',
     filterAccesor: ColumnViewType.OrganizationsStage,
     filterOperators: [
@@ -258,10 +281,15 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
     icon: <Columns03 />,
   },
   [ColumnViewType.OrganizationsCity]: {
-    filterType: 'text',
-    filterName: 'City',
+    filterType: 'list',
+    filterName: 'Country',
     filterAccesor: ColumnViewType.OrganizationsCity,
-    filterOperators: [ComparisonOperator.Contains, ComparisonOperator.IsEmpty],
+    filterOperators: [
+      ComparisonOperator.Contains,
+      ComparisonOperator.IsEmpty,
+      ComparisonOperator.NotContains,
+      ComparisonOperator.IsNotEmpty,
+    ],
     icon: <Building07 />,
   },
 };

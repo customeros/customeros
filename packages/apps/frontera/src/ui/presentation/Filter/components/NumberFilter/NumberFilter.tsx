@@ -83,31 +83,15 @@ export const NumberFilter = ({
       open={isOpen}
       onOpenChange={(value) => setIsOpen(value)}
     >
-      <PopoverTrigger asChild>
+      <PopoverTrigger>
         <Button
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
-          className='rounded-none text-gray-700 bg-white font-normal '
+          className='rounded-none text-gray-700 bg-white font-normal border-l-0'
         >
           <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
-            {operatorValue === ComparisonOperator.Between
-              ? Array.isArray(filterValue)
-                ? `${formatNumberWithCommas(
-                    filterValue[0],
-                  )}-${formatNumberWithCommas(filterValue[1])}`
-                : '...'
-              : operatorValue === ComparisonOperator.Lt
-              ? Array.isArray(filterValue) && filterValue[0]
-                ? formatNumberWithCommas(filterValue[0])
-                : '...'
-              : operatorValue === ComparisonOperator.Gt
-              ? Array.isArray(filterValue) && filterValue[1]
-                ? formatNumberWithCommas(filterValue[1])
-                : '...'
-              : filterValue
-              ? formatNumberWithCommas(filterValue)
-              : '...'}
+            {formatNumberWithCommas(filterValue) || '...'}
           </span>
         </Button>
       </PopoverTrigger>

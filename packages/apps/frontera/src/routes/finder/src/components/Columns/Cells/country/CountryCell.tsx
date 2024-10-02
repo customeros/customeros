@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+
 import { observer } from 'mobx-react-lite';
 import { ContactsStore } from '@store/Contacts/Contacts.store';
 import { OrganizationsStore } from '@store/Organizations/Organizations.store';
@@ -10,7 +12,7 @@ interface ContactNameCellProps {
   type?: 'contact' | 'organization';
 }
 
-export const CountryCell = observer(({ id, type }: ContactNameCellProps) => {
+const LazyCountryCell = observer(({ id, type }: ContactNameCellProps) => {
   const { organizations, contacts } = useStore();
   const store: ContactsStore | OrganizationsStore =
     type === 'contact' ? contacts : organizations;
@@ -31,3 +33,9 @@ export const CountryCell = observer(({ id, type }: ContactNameCellProps) => {
     </div>
   );
 });
+
+export const CountryCell = ({ id, type }: ContactNameCellProps) => (
+  <Suspense fallback={null}>
+    <LazyCountryCell id={id} type={type} />
+  </Suspense>
+);

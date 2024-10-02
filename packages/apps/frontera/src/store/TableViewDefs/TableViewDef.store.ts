@@ -224,7 +224,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
     });
   }
 
-  setFilter(filter: FilterItem, index: number) {
+  setFilterv2(filter: FilterItem, index: number) {
     this.update((value) => {
       const draft = this.getFilters();
 
@@ -241,6 +241,30 @@ export class TableViewDefStore implements Store<TableViewDef> {
       }
 
       value.filters = JSON.stringify(draft);
+
+      return value;
+    });
+  }
+
+  setFilter(filter: FilterItem) {
+    this.update((value) => {
+      const draft = this.getFilters();
+
+      if (!draft) {
+        this.appendFilter({ ...filter, active: true });
+
+        return value;
+      }
+      const foundIndex = (draft.AND as Filter[])?.findIndex(
+        (f) => f.filter?.property === filter.property,
+      );
+
+      if (foundIndex !== -1) {
+        draft.AND[foundIndex].filter = filter;
+        value.filters = JSON.stringify(draft);
+      } else {
+        this.appendFilter({ ...filter, active: true });
+      }
 
       return value;
     });

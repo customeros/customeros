@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { toJS } from 'mobx';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { useTableColumnOptionsMap } from '@finder/hooks/useTableColumnOptionsMap';
@@ -104,7 +105,7 @@ export const FinderFilters = observer(
           ? true
           : false;
 
-      tableViewDef?.setFilter(
+      tableViewDef?.setFilterv2(
         {
           ...filter,
           operation: (operation as ComparisonOperator) || '',
@@ -116,7 +117,7 @@ export const FinderFilters = observer(
       );
 
       if (ComparisonOperator.Lt === operation) {
-        tableViewDef?.setFilter(
+        tableViewDef?.setFilterv2(
           {
             ...filter,
             value: [null, filter.value[0]],
@@ -127,7 +128,7 @@ export const FinderFilters = observer(
         );
       } else {
         if (ComparisonOperator.Gt === operation) {
-          tableViewDef?.setFilter(
+          tableViewDef?.setFilterv2(
             {
               ...filter,
               value: [filter.value[1], null],
@@ -170,7 +171,7 @@ export const FinderFilters = observer(
           index: number,
         ) => {
           if (Array.isArray(value) && value.length === 0) {
-            tableViewDef?.setFilter(
+            tableViewDef?.setFilterv2(
               {
                 ...filter,
                 property: filter.property,
@@ -181,7 +182,7 @@ export const FinderFilters = observer(
               index,
             );
           } else {
-            tableViewDef?.setFilter(
+            tableViewDef?.setFilterv2(
               {
                 ...filter,
                 value: value,
