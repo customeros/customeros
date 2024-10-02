@@ -11,7 +11,7 @@ import {
 
 import { handleOperatorName } from '../../utils/utils';
 
-interface ValueFilterProps {
+interface TextFilterProps {
   filterName: string;
   filterValue: string;
   operatorValue: string;
@@ -23,7 +23,7 @@ export const TextFilter = ({
   operatorValue,
   onChangeFilterValue,
   filterValue,
-}: ValueFilterProps) => {
+}: TextFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(filterValue);
 

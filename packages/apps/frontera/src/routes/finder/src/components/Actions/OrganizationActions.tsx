@@ -233,7 +233,7 @@ export const OrganizationTableActions = observer(
     return (
       <>
         {selectCount > 0 && !isCommandMenuOpen && (
-          <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[32px] *:border-none'>
+          <ButtonGroup className='flex items-center translate-x-[-50%] justify-center bottom-[42px] *:border-none'>
             {selectCount && (
               <Tooltip
                 className='p-1.5'

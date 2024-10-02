@@ -21,8 +21,16 @@ interface FiltersProps {
   handleFilterSearch: (value: string) => void;
   availableFilters: Partial<ColumnView & FilterType>[];
   filterTypes: Partial<Record<ColumnViewType, FilterType>>;
-  onChangeOperator: (operator: string, filter: FilterItem) => void;
-  onChangeFilterValue: (value: string | Date, filter: FilterItem) => void;
+  onChangeOperator: (
+    operator: string,
+    filter: FilterItem,
+    index: number,
+  ) => void;
+  onChangeFilterValue: (
+    value: string | Date,
+    filter: FilterItem,
+    index: number,
+  ) => void;
   onFilterSelect: (
     filter: Partial<ColumnView & FilterType>,
     getFilterOperators: (prop: string) => ComparisonOperator[],
@@ -66,17 +74,17 @@ export const Filters = ({
 
   return (
     <div className='flex gap-2 flex-wrap'>
-      {filters.map((f) => (
+      {filters.map((f, idx) => (
         <Filter
-          key={f.property}
           filterValue={f.value}
+          key={`${f.property}-${idx}`}
           onClearFilter={() => onClearFilter(f)}
           filterName={handleFilterName(f.property)}
           operators={getFilterOperators(f.property)}
           filterType={getFilterTypes(f.property) || ''}
           operatorValue={f.operation || ComparisonOperator.Between}
-          onChangeOperator={(operator) => onChangeOperator(operator, f)}
-          onChangeFilterValue={(value) => onChangeFilterValue(value, f)}
+          onChangeOperator={(operator) => onChangeOperator(operator, f, idx)}
+          onChangeFilterValue={(value) => onChangeFilterValue(value, f, idx)}
         />
       ))}
       <Menu>
@@ -112,6 +120,7 @@ export const Filters = ({
           {availableFilters.map((filter: Partial<ColumnView & FilterType>) => {
             return (
               <MenuItem
+                className='group'
                 key={filter?.columnType}
                 onClick={() =>
                   onFilterSelect(filter, (property) =>
@@ -119,8 +128,10 @@ export const Filters = ({
                   )
                 }
               >
-                <div className='flex items-center justify-center gap-2'>
-                  {filter?.icon}
+                <div className='flex items-center justify-center gap-2 '>
+                  <span className='group-hover:text-gray-700 text-gray-500'>
+                    {filter?.icon}
+                  </span>
                   {filter?.filterName}
                 </div>
               </MenuItem>
