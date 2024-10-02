@@ -55,9 +55,14 @@ export const FlowBuilder = observer(
             {
               ...params,
               type: 'baseEdge',
-
               data: edgeData,
-              markerEnd: { type: MarkerType.Arrow },
+              markerEnd: {
+                type: MarkerType.Arrow,
+                width: 12,
+                height: 12,
+                strokeWidth: 2,
+                color: '#D0D5DD',
+              },
             },
             eds,
           ),

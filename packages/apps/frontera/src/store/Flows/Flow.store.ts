@@ -369,7 +369,11 @@ const initialEdges = [
     selectable: true,
     focusable: true,
     interactionWidth: 60,
-    markerEnd: { type: MarkerType.Arrow, width: 60, height: 60 },
+    markerEnd: {
+      type: MarkerType.Arrow,
+      width: 20,
+      height: 20,
+    },
     type: 'baseEdge',
     data: { isHovered: false },
     sections: [

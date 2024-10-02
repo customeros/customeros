@@ -334,6 +334,10 @@
   ol li {
     list-style: decimal;
   }
-
-
 }
+
+.react-flow__marker polyline {
+  stroke: var(--xy-edge-stroke-default) !important;
+  stroke-width: 1.5px !important;
+}
+

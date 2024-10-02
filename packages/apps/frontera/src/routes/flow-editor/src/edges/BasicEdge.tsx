@@ -5,7 +5,6 @@ import { observer } from 'mobx-react-lite';
 import {
   BaseEdge,
   EdgeProps,
-  MarkerType,
   useReactFlow,
   getSmoothStepPath,
   EdgeLabelRenderer,
@@ -60,12 +59,7 @@ export const BasicEdge: React.FC<
 
   return (
     <>
-      <BaseEdge
-        {...props}
-        path={edgePath}
-        interactionWidth={80}
-        markerEnd={MarkerType.ArrowClosed}
-      />
+      <BaseEdge {...props} path={edgePath} />
 
       <EdgeLabelRenderer>
         <div
