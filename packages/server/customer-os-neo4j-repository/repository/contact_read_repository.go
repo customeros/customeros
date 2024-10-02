@@ -403,7 +403,10 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 					c.techFindWorkEmailWithBetterContactRequestedAt IS NOT NULL AND 
 					c.techFindWorkEmailWithBetterContactCompletedAt is null AND
 					c.techFindWorkEmailWithBetterContactRequestedAt < datetime() - duration({minutes: $minutesDelay})
-				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId ORDER BY c.techFindWorkEmailWithBetterContactRequestedAt asc
+				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId 
+				ORDER BY
+					CASE WHEN c.techUpdateWithWorkEmailRequestedAt IS NULL THEN 0 ELSE 1 END ASC, 
+					c.techUpdateWithWorkEmailRequestedAt ASC
 				LIMIT $limit`
 	params := map[string]any{
 		"limit":        limit,
