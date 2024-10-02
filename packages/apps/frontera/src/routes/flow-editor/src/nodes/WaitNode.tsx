@@ -66,10 +66,8 @@ export const WaitNode = ({
     >
       <div className='truncate text-sm flex items-center justify-between'>
         <div className='flex items-center'>
-          <div
-            className={`size-6 min-w-6 mr-2 bg-gray-50 text-gray-500 border-gray-100  rounded flex items-center justify-center`}
-          >
-            <Hourglass02 />
+          <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
+            <Hourglass02 className='text-gray-500' />
           </div>
 
           {isFocused ? (
