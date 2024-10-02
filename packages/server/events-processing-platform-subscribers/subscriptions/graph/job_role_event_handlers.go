@@ -34,7 +34,7 @@ func (h *JobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstor
 	}
 
 	eventId := eventstore.GetAggregateWithTenantAndIdObjectID(evt.AggregateID, aggregate.JobRoleAggregateType, eventData.Tenant)
-	data := neo4jrepository.JobRoleCreateFields{
+	data := neo4jrepository.JobRoleFields{
 		Description: utils.IfNotNilString(eventData.Description),
 		JobTitle:    eventData.JobTitle,
 		StartedAt:   eventData.StartedAt,
