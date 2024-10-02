@@ -319,8 +319,6 @@
 .react-flow__controls-button {
   border-right: 8px;
   padding: 8px;
-  height: 40px;
-  width: 40px;
 }
 
 .lexical-editor {
@@ -335,9 +333,19 @@
     list-style: decimal;
   }
 }
-
+.react-flow__controls {
+  box-shadow: none;
+}
 .react-flow__marker polyline {
   stroke: var(--xy-edge-stroke-default) !important;
   stroke-width: 1.5px !important;
 }
 
+.react-flow__controls-button svg{
+  fill: transparent;
+  max-width: unset;
+  max-height: unset;
+}
+.react-flow__controls-button:disabled {
+  pointer-events: unset;
+}

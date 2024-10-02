@@ -22,7 +22,7 @@ import { useStore } from '@shared/hooks/useStore';
 
 import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
-import { Toolbar } from './controls/Toolbar.tsx';
+import { FlowBuilderToolbar } from './components';
 
 import '@xyflow/react/dist/style.css';
 const edgeTypes = {
@@ -160,7 +160,7 @@ export const FlowBuilder = observer(
       <>
         <ReactFlow
           snapToGrid
-          maxZoom={3}
+          maxZoom={5}
           nodes={nodes}
           edges={edges}
           minZoom={0.1}
@@ -233,7 +233,7 @@ export const FlowBuilder = observer(
           }}
         >
           <Background />
-          <Toolbar />
+          <FlowBuilderToolbar />
         </ReactFlow>
       </>
     );
