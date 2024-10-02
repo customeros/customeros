@@ -4,8 +4,8 @@ import { observer } from 'mobx-react-lite';
 import { FlowStatus } from '@graphql/types';
 import { Check } from '@ui/media/icons/Check';
 import { useStore } from '@shared/hooks/useStore';
-import { Activity } from '@ui/media/icons/Activity';
 import { CommandSubItem } from '@ui/overlay/CommandMenu';
+import { Columns03 } from '@ui/media/icons/Columns03.tsx';
 
 import { flowKeywords } from './keywords';
 
@@ -69,9 +69,9 @@ export const UpdateStatusSubItemGroup = observer(() => {
     <>
       <CommandSubItem
         rightLabel='Live'
-        icon={<Activity />}
+        icon={<Columns03 />}
         leftLabel='Change flow status'
-        keywords={flowKeywords.status_update}
+        keywords={[...flowKeywords.status_update, 'live']}
         rightAccessory={isSelected() === FlowStatus.Active ? <Check /> : null}
         onSelectAction={() => {
           handleUpdateStatus(FlowStatus.Active);
@@ -79,10 +79,10 @@ export const UpdateStatusSubItemGroup = observer(() => {
       />
 
       <CommandSubItem
-        icon={<Activity />}
+        icon={<Columns03 />}
         rightLabel='Stopped'
         leftLabel='Change flow status'
-        keywords={flowKeywords.status_update}
+        keywords={[...flowKeywords.status_update, 'stopped', 'paused']}
         rightAccessory={isSelected() === FlowStatus.Paused ? <Check /> : null}
         onSelectAction={() => {
           handleUpdateStatus(FlowStatus.Paused);
@@ -90,10 +90,10 @@ export const UpdateStatusSubItemGroup = observer(() => {
       />
 
       <CommandSubItem
-        icon={<Activity />}
+        icon={<Columns03 />}
         rightLabel='Not started'
         leftLabel='Change flow status'
-        keywords={flowKeywords.status_update}
+        keywords={[...flowKeywords.status_update, 'not started']}
         rightAccessory={isSelected() === FlowStatus.Inactive ? <Check /> : null}
         onSelectAction={() => {
           handleUpdateStatus(FlowStatus.Inactive);
