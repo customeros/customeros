@@ -102,8 +102,8 @@ func (s *interactionSessionService) Create(ctx context.Context, newInteractionSe
 
 	//TODO EDI
 	//for _, v := range newInteractionSession.AttendedBy {
-	//	if v.ContactId != nil {
-	//		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.ContactId)
+	//	if v.EntityId != nil {
+	//		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.EntityId)
 	//	}
 	//	if v.Email != nil {
 	//		s.services.OrganizationService.UpdateLastTouchpointByEmail(ctx, *v.Email)

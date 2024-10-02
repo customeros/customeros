@@ -668,7 +668,7 @@ func (s *contactService) RemoveLocation(ctx context.Context, contactId string, l
 	panic("implement me")
 	//_, err := s.grpcClients.ContactClient.UnlinkLocationFromContact(context.Background(), &contact_grpc_service.UnlinkLocationFromContactGrpcRequest{
 	//	Tenant:     common.GetTenantFromContext(ctx),
-	//	ContactId:  contactId,
+	//	EntityId:  contactId,
 	//	LocationId: locationId,
 	//})
 }

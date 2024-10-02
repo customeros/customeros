@@ -40,6 +40,31 @@ func MapEntitiesToFlows(entities *neo4jentity.FlowEntities) []*model.Flow {
 	return mapped
 }
 
+func MapEntityToFlowAction(entity *neo4jentity.FlowActionEntity) *model.FlowAction {
+	if entity == nil {
+		return nil
+	}
+	return &model.FlowAction{
+		Metadata: &model.Metadata{
+			ID:            entity.Id,
+			Created:       entity.CreatedAt,
+			LastUpdated:   entity.UpdatedAt,
+			Source:        model.DataSourceOpenline,
+			SourceOfTruth: model.DataSourceOpenline,
+			AppSource:     "",
+		},
+		JSON: entity.Json,
+	}
+}
+
+func MapEntitiesToFlowActions(entities *neo4jentity.FlowActionEntities) []*model.FlowAction {
+	var mapped []*model.FlowAction
+	for _, entity := range *entities {
+		mapped = append(mapped, MapEntityToFlowAction(&entity))
+	}
+	return mapped
+}
+
 func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowContact {
 	if entity == nil {
 		return nil

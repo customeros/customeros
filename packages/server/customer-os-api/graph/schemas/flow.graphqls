@@ -13,7 +13,7 @@ extend type Mutation {
     flowContact_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     #low priority to implement
-    flowSender_Merge(flowId: ID!, input: FlowActionSenderMergeInput!): FlowActionSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowSender_Merge(flowActionId: ID!, input: FlowActionSenderMergeInput!): FlowActionSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -25,6 +25,8 @@ type Flow implements MetadataInterface {
 
     nodes: String!
     edges: String!
+
+    actions: [FlowAction!]! @goField(forceResolver: true)
 
     status: FlowStatus!
     contacts: [FlowContact!]! @goField(forceResolver: true)
@@ -54,7 +56,14 @@ enum FlowStatus {
     ARCHIVED
 }
 
-#FlowContact
+type FlowAction implements MetadataInterface {
+    metadata:               Metadata!
+
+    json: String!
+
+    senders: [FlowActionSender!]! @goField(forceResolver: true)
+}
+
 type FlowContact implements MetadataInterface {
     metadata:               Metadata!
 
@@ -66,7 +75,6 @@ type FlowContact implements MetadataInterface {
     scheduledAt: Time
 }
 
-#FlowActionSender
 type FlowActionSender implements MetadataInterface {
     metadata: Metadata!
 
@@ -119,8 +127,10 @@ enum FlowActionStatus {
 }
 
 enum FlowContactStatus {
+    PENDING
     SCHEDULED
     IN_PROGRESS
     PAUSED
     COMPLETED
+    GOAL_ACHIEVED
 }

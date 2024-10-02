@@ -26,6 +26,8 @@ var (
 	CommonServices *Services
 )
 
+const tenantName = "openline"
+
 func TestMain(m *testing.M) {
 	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
 	defer func(dbContainer testcontainers.Container, driver neo4j.DriverWithContext, ctx context.Context) {

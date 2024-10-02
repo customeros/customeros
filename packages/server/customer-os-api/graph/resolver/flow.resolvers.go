@@ -6,8 +6,6 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -19,6 +17,21 @@ import (
 	opentracing "github.com/opentracing/opentracing-go"
 )
 
+// Actions is the resolver for the actions field.
+func (r *flowResolver) Actions(ctx context.Context, obj *model.Flow) ([]*model.FlowAction, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Actions", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := dataloader.For(ctx).GetFlowActionsForFlow(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		graphql.AddErrorf(ctx, "Failed to get flow actions")
+		return nil, nil
+	}
+	return mapper.MapEntitiesToFlowActions(entities), nil
+}
+
 // Contacts is the resolver for the contacts field.
 func (r *flowResolver) Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Contacts", graphql.GetOperationContext(ctx))
@@ -28,10 +41,25 @@ func (r *flowResolver) Contacts(ctx context.Context, obj *model.Flow) ([]*model.
 	entities, err := dataloader.For(ctx).GetFlowContactsForFlow(ctx, obj.Metadata.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
-		graphql.AddErrorf(ctx, "Failed to get flow sequence steps")
+		graphql.AddErrorf(ctx, "Failed to get flow contacts")
 		return nil, nil
 	}
 	return mapper.MapEntitiesToFlowContacts(entities), nil
+}
+
+// Senders is the resolver for the senders field.
+func (r *flowActionResolver) Senders(ctx context.Context, obj *model.FlowAction) ([]*model.FlowActionSender, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Senders", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := dataloader.For(ctx).GetFlowActionSendersForFlowAction(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		graphql.AddErrorf(ctx, "Failed to get flow action senders")
+		return nil, nil
+	}
+	return mapper.MapEntitiesToFlowActionSenders(entities), nil
 }
 
 // User is the resolver for the user field.
@@ -178,13 +206,33 @@ func (r *mutationResolver) FlowContactDeleteBulk(ctx context.Context, id []strin
 }
 
 // FlowSenderMerge is the resolver for the flowSender_Merge field.
-func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowID string, input model.FlowActionSenderMergeInput) (*model.FlowActionSender, error) {
-	panic(fmt.Errorf("not implemented: FlowSenderMerge - flowSender_Merge"))
+func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowActionID string, input model.FlowActionSenderMergeInput) (*model.FlowActionSender, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSenderMerge", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowActionSenderMerge(ctx, flowActionID, mapper.MapFlowActionSenderMergeInputToEntity(input))
+	if err != nil || entity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlowActionSender(entity), nil
 }
 
 // FlowSenderDelete is the resolver for the flowSender_Delete field.
 func (r *mutationResolver) FlowSenderDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: FlowSenderDelete - flowSender_Delete"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowSenderDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	err := r.Services.CommonServices.FlowService.FlowActionSenderDelete(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return &model.Result{Result: false}, err
+	}
+	return &model.Result{Result: true}, nil
 }
 
 // Flows is the resolver for the flows field.
@@ -226,6 +274,9 @@ func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
 // Flow returns generated.FlowResolver implementation.
 func (r *Resolver) Flow() generated.FlowResolver { return &flowResolver{r} }
 
+// FlowAction returns generated.FlowActionResolver implementation.
+func (r *Resolver) FlowAction() generated.FlowActionResolver { return &flowActionResolver{r} }
+
 // FlowActionSender returns generated.FlowActionSenderResolver implementation.
 func (r *Resolver) FlowActionSender() generated.FlowActionSenderResolver {
 	return &flowActionSenderResolver{r}
@@ -235,5 +286,6 @@ func (r *Resolver) FlowActionSender() generated.FlowActionSenderResolver {
 func (r *Resolver) FlowContact() generated.FlowContactResolver { return &flowContactResolver{r} }
 
 type flowResolver struct{ *Resolver }
+type flowActionResolver struct{ *Resolver }
 type flowActionSenderResolver struct{ *Resolver }
 type flowContactResolver struct{ *Resolver }

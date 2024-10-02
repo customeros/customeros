@@ -31,9 +31,14 @@ type FlowActionEntity struct {
 	DataLoaderKey
 	Id         string
 	ExternalId string
-	Type       string
-	Data       struct {
-		Entity *string // CONTACT / ORGANIZATION / etc
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
+
+	Type string
+	Data struct {
+		//FLOW_START properties
+		Entity      *string // CONTACT / ORGANIZATION / etc
+		TriggerType *string
 
 		WaitBefore int64 // in minutes
 
@@ -129,10 +134,12 @@ type FlowExecutionSettingsEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	FlowId   string
-	EntityId string
+	FlowId     string
+	EntityId   string
+	EntityType string
 
 	Mailbox *string
+	UserId  *string
 }
 
 type FlowActionExecutionEntity struct {
@@ -140,14 +147,19 @@ type FlowActionExecutionEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	FlowId    string
-	ActionId  string
-	ContactId string
+	FlowId     string
+	ActionId   string
+	EntityId   string
+	EntityType string
 
 	// Scheduling Info
 	ScheduledAt time.Time
 	ExecutedAt  *time.Time
 	Status      FlowActionExecutionStatus
+
+	//Config
+	Mailbox *string
+	UserId  *string
 
 	// Execution details for email
 	Subject *string
@@ -156,7 +168,6 @@ type FlowActionExecutionEntity struct {
 	To      []string
 	Cc      []string
 	Bcc     []string
-	Mailbox *string
 
 	// Additional metadata
 	Error *string // If execution fails, store the error message
@@ -165,9 +176,10 @@ type FlowActionExecutionEntity struct {
 type FlowActionExecutionStatus string
 
 const (
-	FlowActionExecutionStatusPending FlowActionExecutionStatus = "PENDING"
-	FlowActionExecutionStatusSuccess FlowActionExecutionStatus = "SUCCESS"
-	FlowActionExecutionStatusError   FlowActionExecutionStatus = "ERROR"
+	FlowActionExecutionStatusScheduled     FlowActionExecutionStatus = "SCHEDULED"
+	FlowActionExecutionStatusSuccess       FlowActionExecutionStatus = "SUCCESS"
+	FlowActionExecutionStatusTechError     FlowActionExecutionStatus = "TECH_ERROR"
+	FlowActionExecutionStatusBusinessError FlowActionExecutionStatus = "BUSINESS_ERROR"
 )
 
 func GetFlowActionExecutionStatus(s string) FlowActionExecutionStatus {
