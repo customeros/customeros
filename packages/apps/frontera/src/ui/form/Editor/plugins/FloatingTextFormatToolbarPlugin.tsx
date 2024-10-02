@@ -1,27 +1,40 @@
 import { createPortal } from 'react-dom';
-import { useRef, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, MouseEvent, useCallback } from 'react';
 
 import { computePosition } from '@floating-ui/dom';
+import { $setBlocksType } from '@lexical/selection';
+import { $isLinkNode, $toggleLink } from '@lexical/link';
+import { $isQuoteNode, $createQuoteNode } from '@lexical/rich-text';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
+  createCommand,
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
+  $createParagraphNode,
   COMMAND_PRIORITY_NORMAL as NORMAL_PRIORITY,
   SELECTION_CHANGE_COMMAND as ON_SELECTION_CHANGE,
 } from 'lexical';
 
 import { cn } from '@ui/utils/cn.ts';
+import { Input } from '@ui/form/Input';
+import { X } from '@ui/media/icons/X.tsx';
 import { IconButton } from '@ui/form/IconButton';
-import { Code01 } from '@ui/media/icons/Code01.tsx';
+import { Check } from '@ui/media/icons/Check.tsx';
 import { Bold01 } from '@ui/media/icons/Bold01.tsx';
+import { Link01 } from '@ui/media/icons/Link01.tsx';
 import { Italic01 } from '@ui/media/icons/Italic01.tsx';
-import { Underline01 } from '@ui/media/icons/Underline01.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { BlockQuote } from '@ui/media/icons/BlockQuote.tsx';
+import { FloatingToolbarButton } from '@ui/form/Editor/components';
 import { Strikethrough01 } from '@ui/media/icons/Strikethrough01.tsx';
 
 import { usePointerInteractions } from './../utils/usePointerInteractions.tsx';
 
 const DEFAULT_DOM_ELEMENT = document.body;
+export const TOGGLE_BLOCKQUOTE_COMMAND = createCommand(
+  'TOGGLE_BLOCKQUOTE_COMMAND',
+);
 
 type FloatingMenuCoords = { x: number; y: number } | undefined;
 
@@ -35,92 +48,197 @@ export type FloatingMenuPluginProps = {
 };
 
 export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
-  const [state, setState] = useState<FloatingMenuState>({
-    isBold: false,
-    isCode: false,
-    isItalic: false,
-    isStrikethrough: false,
-    isUnderline: false,
-  });
+  const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [isLink, setIsLink] = useState(false);
+  const [isBlockquote, setIsBlockquote] = useState(false);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [showLinkInput, setShowLinkInput] = useState(false);
+  const [linkUrl, setLinkUrl] = useState('');
+  const linkInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const unregisterListener = editor.registerUpdateListener(
-      ({ editorState }) => {
-        editorState.read(() => {
-          const selection = $getSelection();
+    return editor.registerCommand(
+      TOGGLE_BLOCKQUOTE_COMMAND,
+      () => {
+        const selection = $getSelection();
 
-          if (!$isRangeSelection(selection)) return;
-          setState({
-            isBold: selection.hasFormat('bold'),
-            isCode: selection.hasFormat('code'),
-            isItalic: selection.hasFormat('italic'),
-            isStrikethrough: selection.hasFormat('strikethrough'),
-            isUnderline: selection.hasFormat('underline'),
-          });
-        });
+        if ($isRangeSelection(selection)) {
+          if (isBlockquote) {
+            $setBlocksType(selection, $createParagraphNode);
+          } else {
+            $setBlocksType(selection, $createQuoteNode);
+          }
+
+          return true;
+        }
+
+        return false;
       },
+      0,
     );
+  }, [editor, isBlockquote]);
 
-    return unregisterListener;
+  // Function to handle link toggling
+  const toggleLink = useCallback(() => {
+    if (!isLink) {
+      setShowLinkInput(true);
+      setTimeout(() => linkInputRef?.current?.focus(), 0);
+    } else {
+      editor.update(() => {
+        const selection = $getSelection();
+
+        if ($isRangeSelection(selection)) {
+          $toggleLink(null);
+        }
+      });
+    }
+  }, [editor, isLink]);
+
+  const handleLinkSubmit = useCallback(
+    (e: MouseEvent) => {
+      e.preventDefault();
+      editor.update(() => {
+        const selection = $getSelection();
+
+        if ($isRangeSelection(selection)) {
+          $toggleLink(linkUrl);
+        }
+      });
+      setShowLinkInput(false);
+      setLinkUrl('');
+    },
+    [editor, linkUrl],
+  );
+
+  const handleLinkCancel = useCallback(() => {
+    setShowLinkInput(false);
+    setLinkUrl('');
+  }, []);
+
+  // Update button states
+  useEffect(() => {
+    return editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        const selection = $getSelection();
+
+        if ($isRangeSelection(selection)) {
+          setIsStrikethrough(selection.hasFormat('strikethrough'));
+          setIsBold(selection.hasFormat('bold'));
+          setIsItalic(selection.hasFormat('italic'));
+          setIsLink(
+            selection
+              .getNodes()
+              .some(
+                (node) =>
+                  $isLinkNode(node) ||
+                  ($isLinkNode(node.getParent()) &&
+                    node?.getParent()?.isInline()),
+              ),
+          );
+          setIsBlockquote(
+            selection
+              .getNodes()
+              .some(
+                (node) =>
+                  $isQuoteNode(node) ||
+                  ($isQuoteNode(node.getParent()) &&
+                    node?.getParent()?.isInline()),
+              ),
+          );
+        }
+      });
+    });
   }, [editor]);
 
   return (
-    <div className='flex items-center justify-between bg-white border-[1px] border-gray-200 rounded-md '>
-      <IconButton
-        variant='ghost'
-        icon={<Bold01 />}
-        aria-label='Format text as bold'
-        className={cn('rounded-r-none', {
-          'bg-gray-100': state.isBold,
-        })}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-        }}
-      />
-      <IconButton
-        variant='ghost'
-        icon={<Italic01 />}
-        aria-label='Format text as italics'
-        className={cn('rounded-none', {
-          'bg-gray-100': state.isItalic,
-        })}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-        }}
-      />
-      <IconButton
-        variant='ghost'
-        icon={<Underline01 />}
-        aria-label='Format text to underlined'
-        className={cn('rounded-none', {
-          'bg-gray-100': state.isUnderline,
-        })}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'underline');
-        }}
-      />
-      <IconButton
-        variant='ghost'
-        icon={<Strikethrough01 />}
-        aria-label='Format text with a strikethrough'
-        className={cn('rounded-none', {
-          'bg-gray-100': state.isStrikethrough,
-        })}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
-        }}
-      />
-      <IconButton
-        variant='ghost'
-        icon={<Code01 />}
-        aria-label='Format text with inline code'
-        className={cn('rounded-l-none', {
-          'bg-gray-100': state.isCode,
-        })}
-        onClick={() => {
-          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'code');
-        }}
-      />
+    <div className='flex items-center justify-between bg-gray-700 text-gray-25 border-[1px] border-gray-200 rounded-md p-1'>
+      {showLinkInput ? (
+        <>
+          <Input
+            type='url'
+            value={linkUrl}
+            ref={linkInputRef}
+            variant='unstyled'
+            placeholder='Enter URL'
+            onChange={(e) => setLinkUrl(e.target.value)}
+            className='border-none rounded px-2 py-0 min-h-[auto] text-sm text-gray-25'
+          />
+          <IconButton
+            size='xs'
+            variant='ghost'
+            aria-label={'Add link'}
+            onClick={handleLinkSubmit}
+            icon={<Check className='text-inherit' />}
+            className={cn(
+              'rounded-sm text-gray-25 hover:text-inherit focus:text-inherit hover:bg-gray-600 focus:bg-gray-600 focus:text-white hover:text-white',
+            )}
+          />
+          <IconButton
+            size='xs'
+            variant='ghost'
+            aria-label={'Add link'}
+            onClick={handleLinkCancel}
+            icon={<X className='text-inherit' />}
+            className={cn(
+              'rounded-sm text-gray-25 hover:text-inherit focus:text-inherit hover:bg-gray-600 focus:bg-gray-600 focus:text-white hover:text-white',
+            )}
+          />
+        </>
+      ) : (
+        <>
+          <Tooltip label='Underline'>
+            <FloatingToolbarButton
+              active={isBold}
+              label='Format text to bold'
+              icon={<Bold01 className='text-inherit' />}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+              }}
+            />
+          </Tooltip>
+          <Tooltip label='Strikethrough'>
+            <FloatingToolbarButton
+              active={isItalic}
+              label='Format text with a italic'
+              icon={<Italic01 className='text-inherit' />}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+              }}
+            />
+          </Tooltip>
+
+          <Tooltip label='Strikethrough'>
+            <FloatingToolbarButton
+              active={isStrikethrough}
+              label='Format text with a strikethrough'
+              icon={<Strikethrough01 className='text-inherit' />}
+              onClick={() => {
+                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+              }}
+            />
+          </Tooltip>
+
+          <Tooltip label='Insert or remove link'>
+            <FloatingToolbarButton
+              active={isLink}
+              onClick={toggleLink}
+              label='Insert or remove link'
+              icon={<Link01 className='text-inherit' />}
+            />
+          </Tooltip>
+          <Tooltip label='Block quote'>
+            <FloatingToolbarButton
+              active={isBlockquote}
+              label='Format text with block quote'
+              icon={<BlockQuote className='text-inherit' />}
+              onClick={() => {
+                editor.dispatchCommand(TOGGLE_BLOCKQUOTE_COMMAND, undefined);
+              }}
+            />
+          </Tooltip>
+        </>
+      )}
     </div>
   );
 }

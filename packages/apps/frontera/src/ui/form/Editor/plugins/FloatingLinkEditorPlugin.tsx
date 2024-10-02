@@ -18,6 +18,7 @@ import {
   $isLineBreakNode,
   $isRangeSelection,
   KEY_ESCAPE_COMMAND,
+  FORMAT_TEXT_COMMAND,
   COMMAND_PRIORITY_LOW,
   COMMAND_PRIORITY_HIGH,
   SELECTION_CHANGE_COMMAND,
@@ -30,6 +31,8 @@ import { Edit01 } from '@ui/media/icons/Edit01';
 import { XClose } from '@ui/media/icons/XClose';
 import { IconButton } from '@ui/form/IconButton';
 import { Trash01 } from '@ui/media/icons/Trash01';
+import { Bold01 } from '@ui/media/icons/Bold01.tsx';
+import { FloatingToolbarButton } from '@ui/form/Editor/components';
 
 import { sanitizeUrl } from '../utils/url';
 import { getSelectedNode } from '../utils/getSelectedNode';
@@ -205,7 +208,7 @@ function FloatingLinkEditor({
 
   const handleLinkSubmission = () => {
     if (lastSelection !== null) {
-      if (linkUrl !== '') {
+      if (editedLinkUrl !== '') {
         editor.dispatchCommand(TOGGLE_LINK_COMMAND, sanitizeUrl(editedLinkUrl));
         editor.update(() => {
           const selection = $getSelection();
@@ -231,11 +234,19 @@ function FloatingLinkEditor({
   };
 
   return createPortal(
-    <div ref={editorRef} className='absolute top-0 left-0 z-50'>
-      {isLink && (
+    <div
+      ref={editorRef}
+      style={{ pointerEvents: 'auto' }}
+      className='absolute top-0 left-0 z-[99999] pointer-events-auto'
+    >
+      {(isLink || isLinkEditMode) && (
         <div
           data-side='bottom'
-          className='flex items-center gap-2 bg-white min-w-[auto] max-w-[800px] py-1.5 px-[6px] shadow-lg border rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade z-50'
+          onMouseDown={(e) => {
+            e.preventDefault();
+            e.preventDefault();
+          }}
+          className='bg-gray-700 flex items-center gap-2 min-w-[400px] max-w-[800px] py-1.5 px-[6px] shadow-lg  rounded-md data-[side=top]:animate-slideDownAndFade data-[side=right]:animate-slideLeftAndFade data-[side=bottom]:animate-slideUpAndFade data-[side=left]:animate-slideRightAndFade'
         >
           {isLinkEditMode ? (
             <>
@@ -243,7 +254,7 @@ function FloatingLinkEditor({
                 ref={inputRef}
                 variant='unstyled'
                 value={editedLinkUrl}
-                className='leading-none min-h-0 link-input'
+                className='leading-none min-h-0 pointer-events-auto text-gray-25'
                 onKeyDown={(event) => {
                   monitorInputInteraction(event);
                 }}
@@ -251,25 +262,19 @@ function FloatingLinkEditor({
                   setEditedLinkUrl(event.target.value);
                 }}
               />
-              <IconButton
-                size='xs'
-                tabIndex={0}
-                variant='ghost'
-                icon={<XClose />}
-                aria-label='cancel'
+              <FloatingToolbarButton
+                label='Cancel'
+                icon={<XClose className='text-gray-500' />}
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   setIsLinkEditMode(false);
                 }}
               />
 
-              <IconButton
-                size='xs'
-                tabIndex={0}
-                variant='ghost'
-                icon={<Check />}
-                aria-label='confirm'
+              <FloatingToolbarButton
+                label='Confirm'
                 onClick={handleLinkSubmission}
+                icon={<Check className='text-gray-500' />}
                 onMouseDown={(event) => event.preventDefault()}
               />
             </>
@@ -288,9 +293,13 @@ function FloatingLinkEditor({
                 variant='ghost'
                 aria-label='edit'
                 icon={<Edit01 />}
+                className='pointer-events-auto'
                 onMouseDown={(event) => event.preventDefault()}
-                onClick={() => {
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   setEditedLinkUrl(linkUrl);
+                  setIsLink(true);
                   setIsLinkEditMode(true);
                 }}
               />
@@ -300,6 +309,7 @@ function FloatingLinkEditor({
                 variant='ghost'
                 icon={<Trash01 />}
                 aria-label='delete'
+                className='pointer-events-auto'
                 onMouseDown={(event) => event.preventDefault()}
                 onClick={() => {
                   editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
