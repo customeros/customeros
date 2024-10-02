@@ -30,6 +30,7 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
+import { LinkPastePlugin } from '@ui/form/Editor/plugins/PastePlugin';
 import TextNodeTransformer from '@ui/form/Editor/nodes/TextTransformar.ts';
 
 import { nodes } from './nodes/nodes';
@@ -188,6 +189,8 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
             options={mentionsOptions}
             onSearch={onMentionsSearch}
           />
+          <LinkPastePlugin />
+
           <HashtagsPlugin
             options={hashtagsOptions}
             onCreate={onHashtagCreate}
