@@ -77,13 +77,13 @@ message LinkWithOrganizationGrpcRequest {
   string organizationId = 3;
   string loggedInUserId = 4;
   SourceFields sourceFields = 5;
-  google.protobuf.Timestamp  startedAt = 6;
-  google.protobuf.Timestamp  endedAt = 7;
+  google.protobuf.Timestamp startedAt = 6;
+  google.protobuf.Timestamp endedAt = 7;
   string jobTitle = 8;
   bool primary = 9;
   string description = 10;
-  google.protobuf.Timestamp  createdAt = 11;
-  google.protobuf.Timestamp  updatedAt = 12;
+  google.protobuf.Timestamp createdAt = 11;
+  google.protobuf.Timestamp updatedAt = 12;
   string appSource = 13;
 }
 
