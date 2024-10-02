@@ -172,7 +172,7 @@ type ContactLinkWithOrganizationEvent struct {
 	OrganizationId string        `json:"organizationId" validate:"required"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
-	StartedAt      *time.Time    `json:"startedAt"`
+	StartedAt      *time.Time    `json:"startedAt,omitempty"`
 	EndedAt        *time.Time    `json:"endedAt,omitempty"`
 	JobTitle       string        `json:"jobTitle"`
 	Description    string        `json:"description"`

@@ -445,10 +445,17 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			}
 
 			positionName := ""
+			var positionStartedAt, positionEndedAt *time.Time
 			if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
 				for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
 					if position.Title != "" && position.CompanyName != "" && position.CompanyName == scrapinContactResponse.Company.Name {
 						positionName = position.Title
+						if position.StartEndDate.Start != nil {
+							positionStartedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.Start.Year, position.StartEndDate.Start.Month))
+						}
+						if position.StartEndDate.End != nil {
+							positionEndedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.End.Year, position.StartEndDate.End.Month))
+						}
 						break
 					}
 				}
@@ -463,6 +470,8 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 					ContactId:      contact.Id,
 					OrganizationId: organizationId,
 					JobTitle:       positionName,
+					StartedAt:      utils.ConvertTimeToTimestampPtr(positionStartedAt),
+					EndedAt:        utils.ConvertTimeToTimestampPtr(positionEndedAt),
 				})
 			})
 			if err != nil {
