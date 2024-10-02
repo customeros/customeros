@@ -11,7 +11,6 @@ import { Columns03 } from '@ui/media/icons/Columns03';
 import { Building07 } from '@ui/media/icons/Building07';
 import { Calculator } from '@ui/media/icons/Calculator';
 import { Building05 } from '@ui/media/icons/Building05';
-import { test } from '@shared/components/Providers/StoreProvider';
 import { ArrowCircleDownRight } from '@ui/media/icons/ArrowCircleDownRight';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
@@ -20,7 +19,7 @@ import {
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
 export type FilterType = {
-  options?: any[];
+  // options?: any[];
   icon: JSX.Element;
   filterName: string;
   filterAccesor: ColumnViewType;
@@ -28,7 +27,7 @@ export type FilterType = {
   filterType: 'text' | 'date' | 'number' | 'list';
 };
 
-import { type RootStore } from '@store/root';
+// import { type RootStore } from '@store/root';
 
 // const getFilterTypes=(store:RootStore)=>{
 
@@ -46,7 +45,7 @@ export const filterTypes: Partial<Record<ColumnViewType, FilterType>> = {
       ComparisonOperator.IsNotEmpty,
     ],
     icon: <Building07 />,
-    options: test.organizations.toArray(),
+    // options: test.organizations.toArray(),
   },
   [ColumnViewType.OrganizationsWebsite]: {
     filterType: 'text',
