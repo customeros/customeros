@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -26,11 +27,13 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	pkgerrors "github.com/pkg/errors"
 )
 
 // Tags is the resolver for the tags field.
@@ -722,15 +725,208 @@ func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID st
 	}, nil
 }
 
-// ContactFindEmail is the resolver for the contact_FindEmail field.
-func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactFindEmail", graphql.GetOperationContext(ctx))
+// ContactFindWorkEmail is the resolver for the contact_FindWorkEmail field.
+func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID string, organizationID *string, domain *string, findMobileNumber *bool) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactFindWorkEmail", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.organizationID", organizationID))
+	span.LogKV("request.contactID", contactID)
+	if organizationID != nil {
+		span.LogKV("request.organizationID", *organizationID)
+	}
+	if domain != nil {
+		span.LogKV("request.domain", *domain)
+	}
+	if findMobileNumber != nil {
+		span.LogFields(log.Bool("request.findMobileNumber", *findMobileNumber))
+	}
 
-	// not suppported
-	return "", nil
+	contactEntity, err := r.Services.ContactService.GetById(ctx, contactID)
+	if err != nil || contactEntity == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Contact with id %s not found", contactID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	// if organizationID is provided, check contact is linked to the organization
+	var organizationEntity *neo4jentity.OrganizationEntity
+	orgDomain := ""
+	orgName := ""
+	if organizationID != nil {
+		_, err := r.Services.Repositories.Neo4jRepositories.JobRoleReadRepository.ExistsForContactAndOrganization(ctx, common.GetTenantFromContext(ctx), contactID, *organizationID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Contact %s does not belong to organization %s", contactID, *organizationID)
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+		organizationEntity, err = r.Services.OrganizationService.GetById(ctx, *organizationID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Organization with id %s not found", *organizationID)
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+		domains, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{organizationEntity.ID})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to get domains for organization %s", *organizationID)
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+		if len(*domains) > 0 {
+			orgName = organizationEntity.Name
+			orgDomain = (*domains)[0].Domain
+		}
+	}
+
+	if orgDomain == "" && organizationEntity == nil {
+		paginatedResult, err := r.Services.OrganizationService.GetOrganizationsForContact(ctx, contactID, 1, 1000, nil, nil)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to get organizations for contact %s", contactID)
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+		if len(*paginatedResult.Rows.(*neo4jentity.OrganizationEntities)) > 0 {
+			for _, orgEntity := range *paginatedResult.Rows.(*neo4jentity.OrganizationEntities) {
+				domains, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{orgEntity.ID})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					graphql.AddErrorf(ctx, "Failed to get domains for organization %s", orgEntity.ID)
+					return &model.ActionResponse{Accepted: false}, nil
+				}
+				if len(*domains) > 0 {
+					orgName = orgEntity.Name
+					orgDomain = (*domains)[0].Domain
+					break
+				}
+			}
+		}
+	}
+
+	if orgDomain == "" && domain != nil {
+		orgDomain = *domain
+	}
+
+	socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(ctx, common.GetTenantFromContext(ctx), commonModel.CONTACT, []string{contactID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", contactID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	linkedInUrl := ""
+	for _, social := range *socials {
+		if strings.Contains(social.Url, "linkedin.com") {
+			linkedInUrl = social.Url
+			break
+		}
+	}
+
+	// Call events platform to find work email
+	firstName, lastName := contactEntity.DeriveFirstAndLastNames()
+
+	enrichmentResponse, err := r.Services.EnrichmentService.CallApiFindWorkEmail(ctx, firstName, lastName, orgName, orgDomain, linkedInUrl, findMobileNumber != nil && *findMobileNumber)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to find work email for contact %s", contactID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	if enrichmentResponse == nil {
+		tracing.TraceErr(span, errors.New("enrichment response is nil"))
+		graphql.AddErrorf(ctx, "Failed to find work email for contact %s", contactID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	emails := []string{}
+	phoneNumbers := []string{}
+	if enrichmentResponse.Data != nil {
+		for _, item := range enrichmentResponse.Data.Data {
+			if item.ContactEmailAddress != "" {
+				emails = append(emails, item.ContactEmailAddress)
+			}
+			if item.ContactPhoneNumber != nil && fmt.Sprintf("%v", item.ContactPhoneNumber) != "" {
+				phoneNumbers = append(phoneNumbers, fmt.Sprintf("%v", item.ContactPhoneNumber))
+			}
+		}
+	} else {
+		// mark contact as requested data from better contact
+		err = r.Services.Repositories.Neo4jRepositories.ContactWriteRepository.UpdateAnyProperty(ctx, common.GetTenantFromContext(ctx), contactID, neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedId, enrichmentResponse.BetterContactRequestId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonModel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonModel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt))
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	phoneNumberEntities, err := r.Services.PhoneNumberService.GetAllForEntityTypeByIds(ctx, commonModel.CONTACT, []string{contactID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	currentPhoneNumbers := []string{}
+	for _, phoneNumberEntity := range *phoneNumberEntities {
+		currentPhoneNumbers = append(currentPhoneNumbers, phoneNumberEntity.RawPhoneNumber)
+		currentPhoneNumbers = append(currentPhoneNumbers, phoneNumberEntity.E164)
+	}
+
+	emailEntities, err := r.Services.EmailService.GetAllForEntityTypeByIds(ctx, commonModel.CONTACT, []string{contactID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	currentEmails := []string{}
+	for _, emailEntity := range *emailEntities {
+		currentEmails = append(currentEmails, emailEntity.RawEmail)
+		currentEmails = append(currentEmails, emailEntity.Email)
+	}
+
+	// create emails that are not already linked to contact
+	emailFound := false
+	for _, email := range emails {
+		if !utils.Contains(currentEmails, email) {
+			_, err = r.EmailMergeToContact(ctx, contactID, model.EmailInput{
+				Email: email,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			} else {
+				emailFound = true
+			}
+		}
+	}
+
+	// create phone numbers that are not already linked to contact
+	phoneFound := false
+	for _, phoneNumber := range phoneNumbers {
+		if !utils.Contains(currentPhoneNumbers, phoneNumber) {
+			_, err = r.PhoneNumberMergeToContact(ctx, contactID, model.PhoneNumberInput{
+				PhoneNumber: phoneNumber,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+			} else {
+				phoneFound = true
+			}
+		}
+	}
+
+	if emailFound {
+		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonEmailFound, enrichmentResponse.Data.Id,
+			fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emails[0], linkedInUrl, firstName, lastName))
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+		}
+	}
+	if phoneFound {
+		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonPhoneFound, enrichmentResponse.Data.Id,
+			fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, firstName, lastName))
+		if err != nil {
+			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
+		}
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
 }
 
 // Contact is the resolver for the contact field.
