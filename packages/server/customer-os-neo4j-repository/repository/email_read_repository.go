@@ -188,7 +188,7 @@ func (r *emailReadRepository) GetFirstByEmail(ctx context.Context, tenant, email
 }
 
 func (r *emailReadRepository) GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.GetFirstByEmail")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetAllEmailNodesForLinkedEntityIds")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
