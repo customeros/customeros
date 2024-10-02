@@ -76,10 +76,10 @@ export class FlowsPage {
     await this.page.keyboard.press('Enter');
 
     await Promise.all([requestPromise, responsePromise]);
-    await this.page.waitForSelector(
-      `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${flowName}")`,
-      { timeout: 30000 },
-    );
+    // await this.page.waitForSelector(
+    //   `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${flowName}")`,
+    //   { timeout: 30000 },
+    // );
 
     return flowName;
   }

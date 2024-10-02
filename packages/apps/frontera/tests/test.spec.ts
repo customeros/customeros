@@ -1,5 +1,6 @@
 // import { test } from '@playwright/test';
 import { test } from './videoFixture';
+import { FlowPage } from './pages/flows/flowPage';
 import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { FlowStatuses } from './pages/flows/flowsStatuses';
@@ -200,6 +201,7 @@ test('CmdK global menu', async ({ page }, testInfo) => {
 test('Assign contact to flow', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const flowsPage = new FlowsPage(page);
+  const flowPage = new FlowPage(page);
   const organizationsPage = new OrganizationsPage(page);
   const organizationPeoplePage = new OrganizationPeoplePage(page);
   const organizationSideNavPage = new OrganizationSideNavPage(page);
@@ -211,6 +213,7 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
 
   const flowName = await flowsPage.addFlow();
 
+  await flowPage.checkNewFlowEntry(flowName);
   await flowsPage.checkNewFlowEntry(flowName, FlowStatuses.NotStarted);
   await flowsPage.checkFlowStatuses(flowName, FlowStatuses.Live);
 
