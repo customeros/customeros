@@ -1,4 +1,4 @@
-import { useMemo, useState, ReactElement } from 'react';
+import { useMemo, ReactElement } from 'react';
 
 import { htmlToText } from 'html-to-text';
 import { FlowActionType } from '@store/Flows/types.ts';
@@ -27,11 +27,11 @@ export const ActionNode = ({
 }: NodeProps & {
   data: {
     subject: string;
+    isEditing?: boolean;
     bodyTemplate: string;
     action: FlowActionType;
   };
 }) => {
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const { setNodes } = useReactFlow();
 
   const color = colorMap?.[data.action];
@@ -52,6 +52,7 @@ export const ActionNode = ({
               ...node.data,
               subject,
               bodyTemplate,
+              isEditing: false,
             },
           };
         }
@@ -75,6 +76,16 @@ export const ActionNode = ({
     () => htmlToText(data?.bodyTemplate).trim(),
     [data?.bodyTemplate],
   );
+
+  const toggleEditing = () => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, isEditing: true } }
+          : node,
+      ),
+    );
+  };
 
   return (
     <>
@@ -107,15 +118,23 @@ export const ActionNode = ({
             variant='ghost'
             aria-label='Edit'
             icon={<Edit03 />}
-            onClick={() => setIsEditorOpen(true)}
+            onClick={toggleEditing}
             className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
           />
         </div>
         <EmailEditorModal
           data={data}
-          isEditorOpen={isEditorOpen}
-          setIsEditorOpen={setIsEditorOpen}
+          isEditorOpen={data.isEditing || false}
           handleEmailDataChange={handleEmailDataChange}
+          setIsEditorOpen={(isOpen: boolean) => {
+            setNodes((nds) =>
+              nds.map((node) =>
+                node.id === id
+                  ? { ...node, data: { ...node.data, isEditing: isOpen } }
+                  : node,
+              ),
+            );
+          }}
         />
         <Handle type='target' />
         <Handle type='source' />
