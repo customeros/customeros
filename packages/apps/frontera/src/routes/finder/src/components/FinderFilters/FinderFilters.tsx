@@ -16,7 +16,10 @@ import {
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
 
-import { FilterType, filterTypes } from '../Columns/organizations/filtersType';
+import {
+  FilterType,
+  getFilterTypes,
+} from '../Columns/organizations/filtersType';
 
 export const FinderFilters = observer(
   ({ tableId, type }: { type: TableViewType; tableId: TableIdType }) => {
@@ -25,6 +28,7 @@ export const FinderFilters = observer(
     const [searchParams] = useSearchParams();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [optionsMap, helperTextMap] = useTableColumnOptionsMap(type as any);
+    const filterTypes = getFilterTypes(store);
 
     const preset = match(tableId)
       .with(
@@ -146,7 +150,9 @@ export const FinderFilters = observer(
         filters={flattenedFilters}
         filterSearch={search ?? ''}
         handleFilterSearch={(value) => setSearch(value)}
-        onClearFilter={(filter) => tableViewDef?.removeFilter(filter.property)}
+        onClearFilter={(filter, idx) =>
+          tableViewDef?.removeFilter(filter.property, idx)
+        }
         onChangeOperator={(operation: string, filter, index: number) => {
           handleChangeOperator(operation, filter, index);
         }}
@@ -176,7 +182,7 @@ export const FinderFilters = observer(
                 property: filter.property,
                 active: false,
                 operation: filter.operation,
-                value: null,
+                value: value,
               },
               index,
             );

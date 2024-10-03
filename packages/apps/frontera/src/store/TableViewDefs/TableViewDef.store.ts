@@ -180,14 +180,18 @@ export class TableViewDefStore implements Store<TableViewDef> {
     });
   }
 
-  removeFilter(id: string) {
+  removeFilter(id: string, index?: number) {
     this.update((value) => {
       const draft = this.getFilters();
 
       if (draft) {
-        draft.AND = (draft.AND as Filter[])?.filter(
-          (f) => f.filter?.property !== id,
-        );
+        if (index !== undefined) {
+          draft.AND.splice(index, 1);
+        } else {
+          draft.AND = (draft.AND as Filter[])?.filter(
+            (f) => f.filter?.property !== id,
+          );
+        }
         value.filters = JSON.stringify(draft);
       }
 

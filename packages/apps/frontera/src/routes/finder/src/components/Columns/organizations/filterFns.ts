@@ -1,4 +1,5 @@
 import { match } from 'ts-pattern';
+import { isBefore } from 'date-fns';
 import { FilterItem } from '@store/types';
 import { isAfter } from 'date-fns/isAfter';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
@@ -56,122 +57,95 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsCreatedDate },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        return isAfter(
-          new Date(row.value.metadata.created),
-          new Date(filterValue),
-        );
+        const value = row.value.metadata.created;
+
+        return filterTypeDate(filter, value);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsName },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value?.toLowerCase();
-        const filterOperator = filter?.operation;
 
         const values = row.value.name.toLowerCase();
 
-        if (
-          filter.includeEmpty &&
-          filterOperator === ComparisonOperator.IsEmpty
-        ) {
-          return !values;
-        }
-
-        if (filterOperator === ComparisonOperator.IsNotEmpty) {
-          return values;
-        }
-
-        if (filterOperator === ComparisonOperator.NotContains) {
-          return !values.includes(filterValue);
-        }
-
-        {
-          return values.includes(filterValue);
-        }
+        return filterTypeText(filter, values);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsWebsite },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
+        const value = row.value.website || '';
 
-        const websiteUrl = row.value.website || '';
-        const filterText = filter.value || '';
-
-        if (filter.includeEmpty && websiteUrl === '') return true;
-
-        if (filterText === '') {
-          return !filter.includeEmpty;
-        }
-
-        return websiteUrl.toLowerCase().includes(filterText.toLowerCase());
+        return filterTypeText(filter, value);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsRelationship },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        return filterValue.includes(row.value.relationship);
+        const values = row.value.relationship;
+
+        if (!values) return false;
+
+        return filterTypeList(
+          filter,
+          Array.isArray(values) ? values : [values],
+        );
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsStage },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
+        const values = row.value.stage;
 
-        return filterValue.includes(row.value.stage);
+        if (!values) return false;
+
+        return filterTypeList(
+          filter,
+          Array.isArray(values) ? values : [values],
+        );
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsForecastArr },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const forecastValue =
           row.value?.accountDetails?.renewalSummary?.arrForecast;
 
         if (!forecastValue) return false;
 
-        return (
-          forecastValue >= filterValue[0] && forecastValue <= filterValue[1]
-        );
+        return filterTypeNumber(filter, forecastValue);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsRenewalDate },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const nextRenewalDate =
           row.value?.accountDetails?.renewalSummary?.nextRenewalDate?.split(
             'T',
           )[0];
 
-        if (!filterValue) return true;
-        if (filterValue?.[1] === null)
-          return filterValue?.[0] <= nextRenewalDate;
-        if (filterValue?.[0] === null)
-          return filterValue?.[1] >= nextRenewalDate;
-
-        return (
-          filterValue[0] <= nextRenewalDate && filterValue[1] >= nextRenewalDate
-        );
+        return filterTypeDate(filter, nextRenewalDate);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsOnboardingStatus },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
+        const values = row.value.accountDetails?.onboarding?.status;
 
-        return filterValue.includes(
-          row.value.accountDetails?.onboarding?.status,
+        if (!values) return false;
+
+        return filterTypeList(
+          filter,
+          Array.isArray(values) ? values : [values],
         );
       },
     )
@@ -179,10 +153,14 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsRenewalLikelihood },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
+        const values =
+          row.value.accountDetails?.renewalSummary?.renewalLikelihood;
 
-        return filterValue.includes(
-          row.value.accountDetails?.renewalSummary?.renewalLikelihood,
+        if (!values) return false;
+
+        return filterTypeList(
+          filter,
+          Array.isArray(values) ? values : [values],
         );
       },
     )
@@ -190,205 +168,160 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.OrganizationsOwner },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        if (filterValue === '__EMPTY__' && !row.value.owner) {
-          return true;
-        }
+        const values = row.value.owner?.id;
 
-        return filterValue.includes(row.value.owner?.id);
+        if (!values) return false;
+
+        return filterTypeList(
+          filter,
+          Array.isArray(values) ? values : [values],
+        );
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsLastTouchpoint },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const lastTouchpoint = row?.value?.lastTouchpoint?.lastTouchPointType;
-        const lastTouchpointAt = row?.value?.lastTouchpoint?.lastTouchPointAt;
 
-        const isIncluded = filterValue?.types.length
-          ? filterValue?.types?.includes(lastTouchpoint)
-          : false;
+        if (!lastTouchpoint) return false;
 
-        const isAfterDate = isAfter(
-          new Date(lastTouchpointAt),
-          new Date(filterValue?.after),
+        return filterTypeList(
+          filter,
+          Array.isArray(lastTouchpoint) ? lastTouchpoint : [lastTouchpoint],
         );
-
-        return isIncluded && isAfterDate;
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsChurnDate },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const churned = row?.value?.accountDetails?.churned;
 
         if (!churned) return false;
 
-        return isAfter(new Date(churned), new Date(filterValue));
+        return filterTypeDate(filter, churned);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsSocials },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
         const linkedInUrl = row.value.socialMedia?.find((v) =>
           v.url.includes('linkedin'),
         )?.url;
 
-        if (!filterValue && filter.active && !filter.includeEmpty) return true;
-        if (!linkedInUrl && filter.includeEmpty) return true;
-        if (!filterValue || !linkedInUrl) return false;
-
-        return linkedInUrl && linkedInUrl.includes(filterValue);
+        return filterTypeText(filter, linkedInUrl);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsLastTouchpointDate },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const lastTouchpointAt = row?.value?.lastTouchpoint?.lastTouchPointAt;
 
-        return isAfter(new Date(lastTouchpointAt), new Date(filterValue));
+        return filterTypeDate(filter, lastTouchpointAt);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsEmployeeCount },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        const operator = filter.operation;
-        const employees = row.value.employees;
+        const employees = row.value?.employees;
 
-        if (operator === ComparisonOperator.Lt) {
-          return employees < Number(filterValue);
-        }
+        return filterTypeNumber(filter, employees);
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsContactCount },
+      (filter) => (row: OrganizationStore) => {
+        if (!filter.active) return true;
+        const contactsCount = row.value.contacts.content.length;
 
-        if (operator === ComparisonOperator.Gt) {
-          return employees > Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Between) {
-          return employees >= filterValue[0] && employees <= filterValue[1];
-        }
-
-        if (operator === ComparisonOperator.Eq) {
-          return employees === Number(filterValue);
-        }
-
-        return true;
+        return filterTypeNumber(filter, contactsCount);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsLinkedinFollowerCount },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        const operator = filter.operation;
         const followers = row.value.socialMedia.find((e: Social) =>
           e?.url?.includes('linkedin'),
         )?.followersCount;
 
-        if (operator === ComparisonOperator.Lt) {
-          return followers < Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Gt) {
-          return followers > Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Between) {
-          const filterValue = filter?.value?.map(Number) as number[];
-
-          return followers >= filterValue[0] && followers <= filterValue[1];
-        }
-
-        return true;
+        return filterTypeNumber(filter, followers);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsLeadSource },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        return filterValue.includes(row.value.leadSource);
+        const value = row.value.leadSource;
+
+        if (!value) return false;
+
+        return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsIndustry },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
+        const value = row.value.industry;
 
-        if (!filterValue) return false;
+        if (!value) return false;
 
-        return filterValue.includes(row.value.industry);
+        return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsLtv },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const ltv = row.value.accountDetails?.ltv;
 
         if (!ltv) return false;
 
-        if (filterValue.length !== 2) return ltv >= filterValue[0];
-
-        return ltv >= filterValue[0] && ltv <= filterValue[1];
+        return filterTypeNumber(filter, ltv);
       },
     )
+
     .with({ property: ColumnViewType.OrganizationsCity }, (filter) => {
-      // Early exit if filter is not active
-      if (!filter.active) return () => true;
-
-      const filterValue = filter.value;
-      const includeEmpty = filter.includeEmpty;
-
       return (row: OrganizationStore) => {
+        if (!filter.active) return true;
         const locations = row.value.locations;
         const country = locations?.[0]?.countryCodeA2;
 
-        if (!country) {
-          return includeEmpty;
-        }
+        if (!country) return false;
 
-        if (!filterValue.length) {
-          return !includeEmpty;
-        }
-
-        return filterValue.includes(country);
+        return filterTypeList(
+          filter,
+          Array.isArray(country) ? country : [country],
+        );
       };
     })
     .with(
       { property: ColumnViewType.OrganizationsIsPublic },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        const isPublic = row.value.public;
+        const isPublic = row.value.public === true ? 'Public' : 'Private';
 
-        if (filterValue.includes('public') && isPublic) return true;
-
-        return filterValue.includes('private') && !isPublic;
+        return filterTypeList(
+          filter,
+          Array.isArray(isPublic) ? isPublic.map(String) : [String(isPublic)],
+        );
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsYearFounded },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
-        const operator = filter.operation;
 
         const yearFounded = row.value.yearFounded;
         const currentYear = new Date().getFullYear();
@@ -396,38 +329,85 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         if (!yearFounded) return false;
 
-        if (operator === ComparisonOperator.Lt) {
-          return age < Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Gt) {
-          return age > Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Between) {
-          const filterValue = filter?.value?.map(Number) as number[];
-
-          return age >= filterValue[0] && age <= filterValue[1];
-        }
-
-        return true;
+        return filterTypeNumber(filter, age);
       },
     )
     .with(
       { property: ColumnViewType.OrganizationsTags },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
-        const tags = row.value.tags?.map((l: Tag) => l.name);
+        const values = row.value.tags?.map((l: Tag) => l.id);
 
-        if (!filter.value?.length) return true;
+        if (!values) return false;
 
-        if (!tags?.length) return false;
-
-        return filter.value.some((f: string) => tags.includes(f));
+        return filterTypeList(
+          filter,
+          Array.isArray(values) ? values : [values],
+        );
       },
     )
 
     .otherwise(() => noop);
+};
+
+const filterTypeText = (filter: FilterItem, value: string | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.IsEmpty, () => !value)
+    .with(ComparisonOperator.IsNotEmpty, () => value)
+    .with(ComparisonOperator.NotContains, () => !value?.includes(filterValue))
+    .with(ComparisonOperator.Contains, () => value?.includes(filterValue))
+    .otherwise(() => false);
+};
+
+const filterTypeNumber = (filter: FilterItem, value: number | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  if (!value) return false;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.Lt, () => value < Number(filterValue))
+    .with(ComparisonOperator.Gt, () => value > Number(filterValue))
+    .with(ComparisonOperator.Eq, () => value === Number(filterValue))
+    .with(ComparisonOperator.NotEqual, () => value !== Number(filterValue))
+    .otherwise(() => true);
+};
+
+const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.IsEmpty, () => !value?.length)
+    .with(ComparisonOperator.IsNotEmpty, () => value?.length)
+    .with(
+      ComparisonOperator.NotContains,
+      () => !value?.some((v) => filterValue?.includes(v)),
+    )
+    .with(ComparisonOperator.Contains, () =>
+      value?.some((v) => filterValue?.includes(v)),
+    )
+    .otherwise(() => false);
+};
+
+const filterTypeDate = (filter: FilterItem, value: string | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  if (!value) return false;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.Lt, () =>
+      isBefore(new Date(value), new Date(filterValue)),
+    )
+    .with(ComparisonOperator.Gt, () =>
+      isAfter(new Date(value), new Date(filterValue)),
+    )
+
+    .otherwise(() => true);
 };
 
 export const getOrganizationFilterFns = (filters: Filter | null) => {

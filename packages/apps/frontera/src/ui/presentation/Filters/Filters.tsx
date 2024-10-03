@@ -17,9 +17,9 @@ import { Filter } from '../Filter/Filter';
 interface FiltersProps {
   filterSearch: string;
   filters: FilterItem[];
-  onClearFilter: (filter: FilterItem) => void;
   handleFilterSearch: (value: string) => void;
   availableFilters: Partial<ColumnView & FilterType>[];
+  onClearFilter: (filter: FilterItem, idx: number) => void;
   filterTypes: Partial<Record<ColumnViewType, FilterType>>;
   onChangeOperator: (
     operator: string,
@@ -27,7 +27,7 @@ interface FiltersProps {
     index: number,
   ) => void;
   onChangeFilterValue: (
-    value: string | Date,
+    value: string | Date | string[],
     filter: FilterItem,
     index: number,
   ) => void;
@@ -72,16 +72,25 @@ export const Filters = ({
     return filterType?.filterType;
   };
 
+  const getFilterOptions = (property: string) => {
+    const filterType = Object.values(filterTypes).find(
+      (type) => type.filterAccesor === property,
+    );
+
+    return filterType?.options;
+  };
+
   return (
     <div className='flex gap-2 flex-wrap'>
       {filters.map((f, idx) => (
         <Filter
           filterValue={f.value}
           key={`${f.property}-${idx}`}
-          onClearFilter={() => onClearFilter(f)}
           filterName={handleFilterName(f.property)}
           operators={getFilterOperators(f.property)}
+          onClearFilter={() => onClearFilter(f, idx)}
           filterType={getFilterTypes(f.property) || ''}
+          listFilterOptions={getFilterOptions(f.property) || []}
           operatorValue={f.operation || ComparisonOperator.Between}
           onChangeOperator={(operator) => onChangeOperator(operator, f, idx)}
           onChangeFilterValue={(value) => onChangeFilterValue(value, f, idx)}

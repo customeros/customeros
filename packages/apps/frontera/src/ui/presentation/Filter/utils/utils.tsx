@@ -16,10 +16,17 @@ import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 export const handleOperatorName = (
   operator: ComparisonOperator,
   type?: string,
+  plural?: boolean,
 ) => {
   return match(operator)
     .with(ComparisonOperator.Between, () => 'between')
-    .with(ComparisonOperator.Contains, () => 'contains')
+    .with(ComparisonOperator.Contains, () =>
+      type === 'list' && !plural
+        ? 'is'
+        : plural && type === 'list'
+        ? 'is any of'
+        : 'contains',
+    )
     .with(ComparisonOperator.Eq, () => 'equals')
     .with(ComparisonOperator.Gt, () =>
       type === 'date' ? 'after' : 'more than',
@@ -34,7 +41,13 @@ export const handleOperatorName = (
     .with(ComparisonOperator.Lte, () => 'less than or equal to')
     .with(ComparisonOperator.StartsWith, () => 'starts with')
     .with(ComparisonOperator.IsNotEmpty, () => 'is not empty')
-    .with(ComparisonOperator.NotContains, () => 'does not contain')
+    .with(ComparisonOperator.NotContains, () =>
+      type === 'list' && !plural
+        ? 'is not'
+        : plural && type === 'list'
+        ? 'is none of'
+        : 'does not contain',
+    )
     .with(ComparisonOperator.NotEqual, () => 'not equal to')
     .otherwise(() => 'unknown');
 };
@@ -84,5 +97,28 @@ export const handleOperatorIcon = (
     .with(ComparisonOperator.NotEqual, () => (
       <EqualNot className='text-gray-500 group-hover:text-gray-700' />
     ))
+    .otherwise(() => 'unknown');
+};
+
+export const handlePropertyPlural = (property: string, selection: string[]) => {
+  return match(property)
+    .with('Health', () => (selection.length === 1 ? 'health' : 'health'))
+    .with('Relationship', () =>
+      selection.length === 1 ? 'relationship' : 'relationships',
+    )
+    .with('Owner', () => (selection.length === 1 ? 'owner' : 'owners'))
+    .with('Industry', () =>
+      selection.length === 1 ? 'industry' : 'industries',
+    )
+    .with('Tags', () => (selection.length === 1 ? 'tag' : 'tags'))
+    .with('Stage', () => (selection.length === 1 ? 'stage' : 'stages'))
+    .with('Source', () => (selection.length === 1 ? 'source' : 'sources'))
+    .with('Onboarding status', () =>
+      selection.length === 1 ? 'onboarding status' : 'onboarding statuses',
+    )
+    .with('Last touchpoint', () =>
+      selection.length === 1 ? 'last touchpoint' : 'last touchpoints',
+    )
+    .with('Country', () => (selection.length === 1 ? 'country' : 'countries'))
     .otherwise(() => 'unknown');
 };

@@ -9,10 +9,12 @@ interface OperatorFilterProps {
   type: string;
   value: string;
   operators: string[];
+  isOperatorPlural?: boolean;
   onSelect: (operator: string) => void;
 }
 
 export const OperatorFilter = ({
+  isOperatorPlural,
   operators,
   onSelect,
   value,
@@ -53,7 +55,11 @@ export const OperatorFilter = ({
             className='rounded-none font-normal bg-white text-gray-500'
           >
             {value
-              ? handleOperatorName(value as ComparisonOperator, type)
+              ? handleOperatorName(
+                  value as ComparisonOperator,
+                  type,
+                  isOperatorPlural,
+                )
               : defaultOperator}
           </Button>
         )}
@@ -69,7 +75,11 @@ export const OperatorFilter = ({
               <span>
                 {handleOperatorIcon(operator as ComparisonOperator, type)}
               </span>
-              {handleOperatorName(operator as ComparisonOperator, type)}
+              {handleOperatorName(
+                operator as ComparisonOperator,
+                type,
+                isOperatorPlural,
+              )}
             </div>
           </MenuItem>
         ))}

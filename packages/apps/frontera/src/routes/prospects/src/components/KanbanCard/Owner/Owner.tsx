@@ -2,7 +2,6 @@ import { useRef, useState, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
-import { cn } from '@ui/utils/cn';
 import { Combobox } from '@ui/form/Combobox';
 import { Check } from '@ui/media/icons/Check';
 import { SelectOption } from '@ui/utils/types';
@@ -67,7 +66,7 @@ export const Owner = observer(({ ownerId, opportunityId }: OwnerProps) => {
               name={_user?.name ?? 'Unnamed'}
               src={_user?.value?.profilePhotoUrl ?? ''}
               icon={<User01 className='text-gray-500 size-3' />}
-              className={cn('w-5 h-5 min-w-5 mr-2', 'border border-gray-200')}
+              className={'w-5 h-5 min-w-5 mr-2 border border-gray-200'}
             />
             <span className='flex-1'>{children}</span>
             {user?.id === _user?.id && <Check />}

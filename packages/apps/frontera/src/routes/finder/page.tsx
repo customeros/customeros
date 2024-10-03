@@ -8,6 +8,7 @@ import { FinderTable } from '@finder/components/FinderTable';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { FinderFilters } from '@finder/components/FinderFilters/FinderFilters';
 
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { useDisclosure } from '@ui/utils/hooks/useDisclosure';
 import { ViewSettings } from '@shared/components/ViewSettings';
@@ -63,10 +64,18 @@ export const FinderPage = observer(() => {
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               type={tableType || (TableViewType.Organizations as any)}
             />
-
-            {tableViewType && (
-              <ViewSettings tableId={tableId} type={tableViewType} />
-            )}
+            <div className='flex items-center gap-2'>
+              <Button
+                size='xs'
+                variant='ghost'
+                onClick={() => tableViewDef?.removeFilters()}
+              >
+                Clear
+              </Button>
+              {tableViewType && (
+                <ViewSettings tableId={tableId} type={tableViewType} />
+              )}
+            </div>
           </div>
         )}
         <FinderTable isSidePanelOpen={open} />
