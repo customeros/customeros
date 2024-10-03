@@ -432,6 +432,7 @@ export class OrganizationStore extends Syncable<Organization> {
         this.root.organizations.value.get(subsidiaryId)?.update(
           (org: Organization) => {
             org.parentCompanies.push({
+              ...org.parentCompanies,
               organization: this.value,
             });
 

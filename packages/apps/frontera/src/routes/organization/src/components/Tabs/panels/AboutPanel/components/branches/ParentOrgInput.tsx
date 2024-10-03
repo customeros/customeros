@@ -58,6 +58,7 @@ export const ParentOrgInput = observer(
             if (!organization) return org;
 
             org.subsidiaries = [
+              ...org.subsidiaries,
               {
                 organization: {
                   id: organization?.value?.metadata?.id,
