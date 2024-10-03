@@ -61,7 +61,7 @@ export class OrganizationsPage {
   }
 
   async addInitialOrganization() {
-    return await this.addOrganization(this.allOrgsAddOrg);
+    return await this.addOrganization(this.createOrganizationFromTable);
   }
 
   async addNonInitialOrganization(testInfo: TestInfo) {
@@ -364,7 +364,11 @@ export class OrganizationsPage {
       if (isVisible) {
         await allOrgsSelectAllOrgs.click();
 
-        return true;
+        const isAllOrgsSelectAllOrgs = await allOrgsSelectAllOrgs.getAttribute(
+          'data-state',
+        );
+
+        return isAllOrgsSelectAllOrgs === 'checked';
       }
     } catch (error) {
       if (error.name === 'TimeoutError') {
