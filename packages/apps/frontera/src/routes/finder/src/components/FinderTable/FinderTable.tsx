@@ -52,6 +52,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     tableType,
     currentPreset: preset,
   });
+
   const data = computeFinderData(store, {
     sorting,
     tableViewDef,

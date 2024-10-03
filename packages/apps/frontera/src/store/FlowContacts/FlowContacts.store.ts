@@ -28,7 +28,7 @@ export class FlowContactsStore implements GroupStore<FlowContact> {
     makeAutoObservable(this);
     makeAutoSyncableGroup(this, {
       channelName: 'FlowContacts',
-      getItemId: (item) => item?.metadata?.id,
+      getItemId: (item) => item?.contact?.metadata?.id,
       ItemStore: FlowContactStore,
     });
     this.service = FlowContactsService.getInstance(transport);
