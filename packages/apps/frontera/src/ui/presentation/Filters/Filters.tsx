@@ -1,3 +1,5 @@
+import { useRef, useState, useEffect } from 'react';
+
 import { FilterType } from '@finder/components/Columns/organizations/filtersType';
 
 import { Input } from '@ui/form/Input';
@@ -48,6 +50,9 @@ export const Filters = ({
   onChangeOperator,
   onFilterSelect,
 }: FiltersProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
   const handleFilterName = (property: string) => {
     const filterType = Object.values(filterTypes).find(
       (type) => type.filterAccesor === property,
@@ -80,6 +85,14 @@ export const Filters = ({
     return filterType?.options;
   };
 
+  useEffect(() => {
+    setTimeout(() => {
+      if (isOpen) {
+        inputRef.current?.focus();
+      }
+    }, 100);
+  }, [isOpen]);
+
   return (
     <div className='flex gap-2 flex-wrap'>
       {filters.map((f, idx) => (
@@ -96,7 +109,7 @@ export const Filters = ({
           onChangeFilterValue={(value) => onChangeFilterValue(value, f, idx)}
         />
       ))}
-      <Menu>
+      <Menu open={isOpen} onOpenChange={(v) => setIsOpen(v)}>
         <MenuButton asChild>
           {filters.length ? (
             <IconButton
@@ -120,6 +133,7 @@ export const Filters = ({
         <MenuList align='start' side='bottom'>
           <Input
             size='sm'
+            ref={inputRef}
             variant='unstyled'
             className='px-2.5'
             value={filterSearch}
