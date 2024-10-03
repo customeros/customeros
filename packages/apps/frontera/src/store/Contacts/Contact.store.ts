@@ -18,11 +18,7 @@ import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
 import { ContactService } from './__service__/Contact.service.ts';
 
-interface ContractStore {
-  get name(): string;
-}
-
-export class ContactStore implements Store<Contact>, ContractStore {
+export class ContactStore implements Store<Contact> {
   value: Contact;
   version = 0;
   isLoading = false;
@@ -121,6 +117,10 @@ export class ContactStore implements Store<Contact>, ContractStore {
     if (!this.value.locations?.[0]?.countryCodeA2) return undefined;
 
     return countryMap.get(this.value.locations[0].countryCodeA2.toLowerCase());
+  }
+
+  get organization() {
+    return this.root.organizations.value.get(this.organizationId)?.value;
   }
 
   setId(id: string) {

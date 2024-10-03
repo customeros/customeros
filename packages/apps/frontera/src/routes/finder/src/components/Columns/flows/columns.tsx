@@ -1,6 +1,9 @@
 import { FlowStore } from '@store/Flows/Flow.store.ts';
-import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { StatusFilter } from '@finder/components/Columns/flows/Filters';
+import {
+  ColumnDef,
+  ColumnDef as ColumnDefinition,
+} from '@tanstack/react-table';
 import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig';
 import {
   FlowNameCell,
@@ -185,5 +188,8 @@ const columns: Record<string, Column> = {
   }),
 };
 
-export const getFlowColumnsConfig = (tableViewDef?: Array<TableViewDef>[0]) =>
+export const getFlowColumnsConfig = (
+  tableViewDef?: Array<TableViewDef>[0],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): ColumnDef<ColumnDatum, any>[] =>
   getColumnConfig<ColumnDatum>(columns, tableViewDef);

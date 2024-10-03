@@ -5,7 +5,8 @@ import { TableViewDef } from '@graphql/types';
 export function getColumnConfig<Datum>(
   columns: Record<string, ColumnDef<Datum>>,
   tableViewDef?: Array<TableViewDef>[0],
-) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): ColumnDef<Datum, any>[] {
   if (!tableViewDef) return [];
 
   return (tableViewDef.columns ?? []).reduce((acc, curr) => {

@@ -1,13 +1,14 @@
-import React from 'react';
-
-import { Store } from '@store/store.ts';
-import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { DateFilter } from '@finder/components/Columns/contracts/Filters';
+import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell';
 import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
 import { StageFilter } from '@finder/components/Columns/opportunities/Filter';
 import { OwnerFilter } from '@finder/components/Columns/shared/Filters/Owner';
 import { ForecastFilter } from '@finder/components/Columns/shared/Filters/Forecast';
+import {
+  ColumnDef,
+  ColumnDef as ColumnDefinition,
+} from '@tanstack/react-table';
 import { OrganizationCell } from '@finder/components/Columns/shared/Cells/organization';
 import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig.ts';
 import { SearchTextFilter } from '@finder/components/Columns/shared/Filters/SearchTextFilter';
@@ -16,12 +17,12 @@ import { NumericValueFilter } from '@finder/components/Columns/shared/Filters/Nu
 import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
+import { TableViewDef, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
-import { Opportunity, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { OwnerCell, StageCell, ArrEstimateCell } from './Cells';
 
-type ColumnDatum = Store<Opportunity>;
+type ColumnDatum = OpportunityStore;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -56,7 +57,7 @@ export const columns: Record<string, Column> = {
             property={ColumnViewType.OpportunitiesName}
           />
         )}
-        {...getTHeadProps<Store<Opportunity>>(props)}
+        {...getTHeadProps<OpportunityStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
@@ -92,7 +93,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OpportunitiesOrganization}
             />
           )}
-          {...getTHeadProps<Store<Opportunity>>(props)}
+          {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -112,7 +113,7 @@ export const columns: Record<string, Column> = {
           title='Stage'
           renderFilter={() => <StageFilter />}
           id={ColumnViewType.OpportunitiesStage}
-          {...getTHeadProps<Store<Opportunity>>(props)}
+          {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
       cell: (props) => {
@@ -145,7 +146,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OpportunitiesEstimatedArr}
             />
           )}
-          {...getTHeadProps<Store<Opportunity>>(props)}
+          {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
       skeleton: () => (
@@ -182,7 +183,7 @@ export const columns: Record<string, Column> = {
             property={ColumnViewType.OpportunitiesOwner}
           />
         )}
-        {...getTHeadProps<Store<Opportunity>>(props)}
+        {...getTHeadProps<OpportunityStore>(props)}
       />
     ),
     skeleton: () => (
@@ -222,7 +223,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OpportunitiesTimeInStage}
             />
           )}
-          {...getTHeadProps<Store<Opportunity>>(props)}
+          {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -249,7 +250,7 @@ export const columns: Record<string, Column> = {
           renderFilter={() => (
             <DateFilter property={ColumnViewType.OpportunitiesCreatedDate} />
           )}
-          {...getTHeadProps<Store<Opportunity>>(props)}
+          {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
       skeleton: () => (
@@ -286,7 +287,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OpportunitiesNextStep}
             />
           )}
-          {...getTHeadProps<Store<Opportunity>>(props)}
+          {...getTHeadProps<OpportunityStore>(props)}
         />
       ),
       skeleton: () => (
@@ -301,4 +302,6 @@ export const columns: Record<string, Column> = {
 
 export const getOpportunityColumnsConfig = (
   tableViewDef?: Array<TableViewDef>[0],
-) => getColumnConfig<ColumnDatum>(columns, tableViewDef);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): ColumnDef<ColumnDatum, any>[] =>
+  getColumnConfig<ColumnDatum>(columns, tableViewDef);

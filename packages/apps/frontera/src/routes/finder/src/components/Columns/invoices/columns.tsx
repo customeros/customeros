@@ -1,6 +1,9 @@
 import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 import { PaymentStatusSelect } from '@invoices/components/shared';
-import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
+import {
+  ColumnDef,
+  ColumnDef as ColumnDefinition,
+} from '@tanstack/react-table';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell/DateCell.tsx';
 import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig.ts';
 
@@ -266,4 +269,6 @@ const columns: Record<string, Column> = {
 
 export const getInvoiceColumnsConfig = (
   tableViewDef?: Array<TableViewDef>[0],
-) => getColumnConfig<ColumnDatum>(columns, tableViewDef);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): ColumnDef<ColumnDatum, any>[] =>
+  getColumnConfig<ColumnDatum>(columns, tableViewDef);
