@@ -154,6 +154,7 @@ export const ContactAvatarHeader = observer(() => {
                   if (e.key === 'Escape') {
                     setIsOpen(false);
                   }
+                  e.stopPropagation();
                 }}
               />
               {validation.linkedin && (
