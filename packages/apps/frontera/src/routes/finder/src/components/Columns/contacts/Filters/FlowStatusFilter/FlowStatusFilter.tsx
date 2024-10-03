@@ -16,12 +16,13 @@ import {
 import { FilterHeader } from '../../../shared/Filters/abstract';
 
 const optionsDict = {
+  // Temporary - Should be replaced with correct enum
+  PENDING: 'Pending',
+  [FlowContactStatus.Scheduled]: 'Scheduled',
   [FlowContactStatus.InProgress]: 'In Progress',
   [FlowContactStatus.Paused]: 'Paused',
   [FlowContactStatus.Completed]: 'Completed',
-  [FlowContactStatus.Scheduled]: 'Scheduled',
-  // Temporary - Should be replaced with correct enums
-  PENDING: 'Pending',
+  // Temporary - Should be replaced with correct enum
   GOAL_ACHIEVED: 'Goal achieved',
 };
 const options = Object.entries(optionsDict);
