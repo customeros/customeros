@@ -96,6 +96,7 @@ const columns: Record<string, Column> = {
         <FlowStatisticsCell
           total={statistics.total}
           value={statistics.pending}
+          dataTest={'flow-in-progress'}
         />
       );
     },
@@ -123,6 +124,7 @@ const columns: Record<string, Column> = {
       return (
         <FlowStatisticsCell
           total={statistics.total}
+          dataTest='flow-goal-achieved'
           value={statistics.goalAchieved}
         />
       );
@@ -180,6 +182,7 @@ const columns: Record<string, Column> = {
       return (
         <FlowStatisticsCell
           total={statistics.total}
+          dataTest='flow-completed'
           value={statistics.completed}
         />
       );

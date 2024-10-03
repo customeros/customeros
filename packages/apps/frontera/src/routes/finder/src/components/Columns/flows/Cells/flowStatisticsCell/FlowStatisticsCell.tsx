@@ -5,13 +5,14 @@ import { observer } from 'mobx-react-lite';
 interface FlowStatisticsCellProps {
   value?: number;
   total?: number;
+  dataTest?: string;
 }
 
 export const FlowStatisticsCell = observer(
-  ({ value }: FlowStatisticsCellProps) => {
+  ({ value, dataTest }: FlowStatisticsCellProps) => {
     if (typeof value !== 'number') {
       return (
-        <div className='text-gray-400' data-test={FlowStatisticsCell}>
+        <div data-test={dataTest} className='text-gray-400'>
           No data yet
         </div>
       );
@@ -21,7 +22,7 @@ export const FlowStatisticsCell = observer(
 
     return (
       <div className='flex items-center space-x-1 '>
-        <span>{value}</span>
+        <span data-test={`${dataTest}-in-flows-table`}>{value}</span>
         {/*<span>({percentage}%)</span>*/}
       </div>
     );

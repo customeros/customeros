@@ -75,7 +75,7 @@ export const Header = observer(
             <div className='flex items-center gap-1 font-medium'>
               <span
                 role='button'
-                data-test='go-to-flows'
+                data-test='navigate-to-flows'
                 onClick={() => navigate(showFinder ? -2 : -1)}
                 className='font-medium text-gray-500 hover:text-gray-700'
               >
@@ -137,6 +137,7 @@ export const Header = observer(
                 size='xs'
                 variant='outline'
                 colorScheme='gray'
+                dataTest='save-flow'
                 onClick={handleSave}
               >
                 Save
