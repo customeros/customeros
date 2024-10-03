@@ -59,7 +59,10 @@ export const EmailEditorModal = observer(
       <Modal open={isEditorOpen} onOpenChange={setIsEditorOpen}>
         <ModalPortal>
           <ModalOverlay className='z-50'>
-            <ModalContent className='w-full h-full flex justify-center max-w-full top-0 cursor-default'>
+            <ModalContent
+              onKeyDown={(e) => e.stopPropagation()}
+              className='w-full h-full flex justify-center max-w-full top-0 cursor-default overflow-y-auto'
+            >
               <div className='w-[570px]'>
                 <div className='flex justify-between mt-4 mb-[68px]'>
                   <div className='flex items-center text-sm'>
