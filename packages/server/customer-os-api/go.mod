@@ -154,7 +154,7 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
-	github.com/smartystreets/smartystreets-go-sdk v1.19.5 // indirect
+	github.com/smartystreets/smartystreets-go-sdk v1.19.7 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
 	github.com/tklauser/numcpus v0.6.1 // indirect
