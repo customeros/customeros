@@ -390,7 +390,7 @@ export class OrganizationsCmdKPage {
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
-      'KeyQ',
+      'KeyF',
       flowsPage.sideNavItemAllFlowsSelected,
     );
 

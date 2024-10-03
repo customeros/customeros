@@ -28,6 +28,7 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
         variant='outline'
         leftIcon={<Play />}
         colorScheme='primary'
+        dataTest='start-flow'
         onClick={() => {
           store.ui.commandMenu.toggle('StartFlow');
         }}

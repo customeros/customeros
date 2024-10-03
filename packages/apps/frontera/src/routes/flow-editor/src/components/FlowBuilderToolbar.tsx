@@ -112,6 +112,7 @@ export const FlowBuilderToolbar = () => {
         <div>
           <ControlButton
             onClick={onLayout}
+            data-test='flow-tidy-up'
             className='rounded-r-lg h-[36px] w-[36px] hover:bg-gray-50 focus:bg-gray-50'
           >
             <AlignHorizontalCentre02 className='size-4 text-gray-500' />
