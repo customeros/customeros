@@ -143,7 +143,7 @@ export const OrganizationTableActions = observer(
         });
       } else {
         store.ui.commandMenu.setContext({
-          ids: selection,
+          ids: [focusedId || ''],
           entity: 'Organization',
           property: property,
         });
