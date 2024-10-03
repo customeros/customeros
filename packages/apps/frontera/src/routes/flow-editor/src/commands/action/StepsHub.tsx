@@ -16,7 +16,7 @@ import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
 
 import { keywords } from './keywords.ts';
-import { useLayoutedElements } from '../../hooks';
+import { useUndoRedo, useLayoutedElements } from '../../hooks';
 
 const elkOptions = {
   'elk.algorithm': 'layered',
@@ -28,6 +28,7 @@ const elkOptions = {
 export const StepsHub = observer(() => {
   const { ui } = useStore();
   const { getLayoutedElements } = useLayoutedElements();
+  const { takeSnapshot } = useUndoRedo();
 
   const { setEdges, setNodes, getNodes, getEdges, fitView } = useReactFlow();
 
@@ -56,6 +57,8 @@ export const StepsHub = observer(() => {
   };
 
   const handleAddNode = async (type: FlowActionType | 'WAIT') => {
+    takeSnapshot();
+
     const nodes = getNodes();
     const edges = getEdges();
 
