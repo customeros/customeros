@@ -36,7 +36,7 @@ export const FlowBuilder = observer(
 
     const flow = store.flows.value.get(id) as FlowStore;
 
-    const [nodes, _setNodes, onNodesChange] = useNodesState(flow?.parsedNodes);
+    const [nodes, setNodes, onNodesChange] = useNodesState(flow?.parsedNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(flow?.parsedEdges);
 
     // const { screenToFlowPosition } = useReactFlow();
@@ -227,6 +227,30 @@ export const FlowBuilder = observer(
               )
             ) {
               onHasNewChanges();
+            }
+          }}
+          onNodeDoubleClick={(_event, node) => {
+            if (node.type === 'wait' || node.type === 'action') {
+              setNodes((nds) =>
+                nds.map((n) =>
+                  n.id === node.id
+                    ? { ...n, data: { ...n.data, isEditing: true } }
+                    : n,
+                ),
+              );
+
+              return;
+            }
+
+            if (node.type === 'trigger') {
+              ui.flowCommandMenu.setOpen(true);
+              ui.flowCommandMenu.setType('TriggersHub');
+              ui.flowCommandMenu.setContext({
+                id: node.id,
+                entity: 'Trigger',
+              });
+
+              return;
             }
           }}
         >
