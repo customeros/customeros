@@ -91,6 +91,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
         onKeyDown={(e) => {
           if (onKeyDown) {
             onKeyDown(e);
+            e.stopPropagation();
 
             return;
           }
