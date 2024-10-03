@@ -84,23 +84,26 @@ export const DeleteConfirmationModal = observer(() => {
         );
 
         store.organizations.hide(context.ids as string[]);
+
         store.opportunities.value.delete(oppotunityIdOfOrgSelected[0]);
         store.ui.commandMenu.setType('OrganizationHub');
-        store.ui.commandMenu.clearCallback();
-
+        store.ui.commandMenu.clearContextIds();
+        store.ui.commandMenu.clearContext();
         context.callback?.();
       })
       .with('Organizations', () => {
         store.organizations.hide(context.ids as string[]);
         store.ui.commandMenu.setType('OrganizationHub');
-        store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContextIds();
+        store.ui.commandMenu.clearContext();
 
         context.callback?.();
       })
       .with('Contact', () => {
         store.contacts.archive(context.ids);
         store.ui.commandMenu.setType('ContactHub');
-        store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContextIds();
+        store.ui.commandMenu.clearContext();
 
         context.callback?.();
       })
@@ -108,6 +111,7 @@ export const DeleteConfirmationModal = observer(() => {
         store.opportunities.archive(context.ids?.[0]);
         store.ui.commandMenu.setType('OpportunityHub');
         store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
 
         context.callback?.();
       })
@@ -115,6 +119,7 @@ export const DeleteConfirmationModal = observer(() => {
         store.opportunities.archiveMany(context.ids);
         store.ui.commandMenu.setType('OpportunityHub');
         store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
 
         context.callback?.();
       })
@@ -128,6 +133,7 @@ export const DeleteConfirmationModal = observer(() => {
         });
         store.ui.commandMenu.setType('FlowHub');
         store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
 
         context.callback?.();
       })
@@ -135,6 +141,7 @@ export const DeleteConfirmationModal = observer(() => {
         store.flows.archiveMany(context.ids);
         store.ui.commandMenu.setType('FlowHub');
         store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
 
         context.callback?.();
       })
