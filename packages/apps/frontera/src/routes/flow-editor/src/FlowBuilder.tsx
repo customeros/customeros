@@ -173,6 +173,9 @@ export const FlowBuilder = observer(
           zoomOnScroll={!ui.flowCommandMenu.isOpen}
           defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
           preventScrolling={!ui.flowCommandMenu.isOpen}
+          proOptions={{
+            hideAttribution: true,
+          }}
           onClick={() => {
             if (ui.flowCommandMenu.isOpen) {
               ui.flowCommandMenu.setOpen(false);
