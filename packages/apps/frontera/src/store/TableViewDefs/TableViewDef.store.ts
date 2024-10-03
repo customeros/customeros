@@ -168,14 +168,6 @@ export class TableViewDefStore implements Store<TableViewDef> {
     this.update((value) => {
       let draft = this.getFilters() as Filter;
 
-      if (
-        draft &&
-        draft?.AND?.findIndex((f) => f.filter?.property === filter.property) !==
-          -1
-      ) {
-        return value;
-      }
-
       if (draft) {
         (draft as Filter).AND?.push({ filter });
       } else {
@@ -188,14 +180,18 @@ export class TableViewDefStore implements Store<TableViewDef> {
     });
   }
 
-  removeFilter(id: string) {
+  removeFilter(id: string, index?: number) {
     this.update((value) => {
       const draft = this.getFilters();
 
       if (draft) {
-        draft.AND = (draft.AND as Filter[])?.filter(
-          (f) => f.filter?.property !== id,
-        );
+        if (index !== undefined) {
+          draft.AND.splice(index, 1);
+        } else {
+          draft.AND = (draft.AND as Filter[])?.filter(
+            (f) => f.filter?.property !== id,
+          );
+        }
         value.filters = JSON.stringify(draft);
       }
 
@@ -232,7 +228,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
     });
   }
 
-  setFilter(filter: FilterItem) {
+  setFilterv2(filter: FilterItem, index: number) {
     this.update((value) => {
       const draft = this.getFilters();
 
@@ -242,6 +238,27 @@ export class TableViewDefStore implements Store<TableViewDef> {
         return value;
       }
 
+      if (draft.AND && draft.AND[index]) {
+        draft.AND[index].filter = filter;
+      } else {
+        draft.AND?.push({ filter });
+      }
+
+      value.filters = JSON.stringify(draft);
+
+      return value;
+    });
+  }
+
+  setFilter(filter: FilterItem) {
+    this.update((value) => {
+      const draft = this.getFilters();
+
+      if (!draft) {
+        this.appendFilter({ ...filter, active: true });
+
+        return value;
+      }
       const foundIndex = (draft.AND as Filter[])?.findIndex(
         (f) => f.filter?.property === filter.property,
       );

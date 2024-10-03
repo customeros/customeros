@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 
 import { format } from 'date-fns';
 
+import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
 import { DatePicker } from '@ui/form/DatePicker';
 import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
@@ -25,8 +26,6 @@ export const DateFilter = ({
   filterName,
 }: DateValueFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
 
   useEffect(() => {
     if (!filterValue) {
@@ -38,45 +37,53 @@ export const DateFilter = ({
     }
   }, [filterName]);
 
-  const handleStartDateChange = (date: Date | null) => {
-    if (!date) return;
-    const formattedDate = format(date, 'yyyy-MM-dd');
-
-    setStartDate(date);
-    onChangeFilterValue([formattedDate, filterValue ? filterValue[1] : null]);
-  };
-
-  const handleEndDateChange = (date: Date | null) => {
-    if (!date) return;
-    const formattedDate = format(date, 'yyyy-MM-dd');
-
-    setEndDate(date);
-    onChangeFilterValue([filterValue ? filterValue[0] : null, formattedDate]);
-    setIsOpen(false);
-  };
-
-  const handleSingleDateChange = (date: Date | null) => {
+  const handleDateChange = (date: Date | Date[] | null) => {
     if (!date) return;
 
-    const formattedDate = format(date, 'yyyy-MM-dd');
+    if (Array.isArray(date)) {
+      const [start, end] = date;
+      const formattedStartDate = start ? format(start, 'yyyy-MM-dd') : null;
+      const formattedEndDate = end ? format(end, 'yyyy-MM-dd') : null;
 
-    if (operatorValue === ComparisonOperator.Lt) {
-      onChangeFilterValue([null, formattedDate]);
-    } else if (operatorValue === ComparisonOperator.Gt) {
-      onChangeFilterValue([formattedDate, null]);
+      onChangeFilterValue([formattedStartDate, formattedEndDate]);
     } else {
-      onChangeFilterValue(formattedDate);
+      const formattedDate = format(date, 'yyyy-MM-dd');
+
+      if (operatorValue === ComparisonOperator.Lt) {
+        onChangeFilterValue([null, formattedDate]);
+      } else if (operatorValue === ComparisonOperator.Gt) {
+        onChangeFilterValue([formattedDate, null]);
+      } else {
+        onChangeFilterValue(formattedDate);
+      }
     }
     setIsOpen(false);
   };
 
-  const selectedValue =
-    filterValue &&
-    (ComparisonOperator.Lt === operatorValue
-      ? filterValue[1]
+  const selectedValue = () => {
+    const currentYear = new Date().getFullYear();
+
+    const formatDate = (date: string | null) => {
+      if (!date) return '...';
+      const dateObj = new Date(date);
+      const year = dateObj.getFullYear();
+
+      return DateTimeUtils.format(
+        dateObj.toString(),
+        year === currentYear
+          ? DateTimeUtils.dateDayAndMonth
+          : DateTimeUtils.date,
+      );
+    };
+
+    return ComparisonOperator.Lt === operatorValue
+      ? formatDate(filterValue?.[1])
       : ComparisonOperator.Gt === operatorValue
-      ? filterValue[0]
-      : `${filterValue[0]} - ${filterValue[1]}`);
+      ? formatDate(filterValue?.[0])
+      : ComparisonOperator.Between === operatorValue
+      ? `${formatDate(filterValue?.[0])} - ${formatDate(filterValue?.[1])}`
+      : '';
+  };
 
   return (
     <Popover
@@ -92,7 +99,7 @@ export const DateFilter = ({
           className='border-l-0 rounded-none text-gray-700 bg-white font-normal'
         >
           <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
-            {selectedValue || '...'}
+            {selectedValue()}
           </span>
         </Button>
       </PopoverTrigger>
@@ -101,47 +108,20 @@ export const DateFilter = ({
         align='start'
         className='py-1 min-w-[254px]'
       >
-        {operatorValue === ComparisonOperator.Between ? (
-          <div className='flex  space-y-2'>
-            <div>
-              <span>Start Date</span>
-              <DatePicker
-                value={startDate || new Date(Date.now())}
-                onChange={(date) =>
-                  handleStartDateChange(date instanceof Date ? date : null)
-                }
-              />
-            </div>
-
-            <div>
-              <span>End Date</span>
-              <DatePicker
-                value={endDate ? new Date(endDate) : new Date(Date.now())}
-                onChange={(date) =>
-                  handleEndDateChange(date instanceof Date ? date : null)
-                }
-              />
-            </div>
-          </div>
-        ) : (
-          <DatePicker
-            defaultValue={new Date(Date.now())}
-            onChange={(date) => {
-              if (date instanceof Date) {
-                handleSingleDateChange(date);
-              }
-            }}
-            value={
-              filterValue !== undefined
-                ? new Date(
-                    filterValue?.[0] === null
-                      ? (filterValue?.[1] as string)
-                      : (filterValue?.[0] as string),
-                  )
-                : new Date(Date.now())
-            }
-          />
-        )}
+        <DatePicker
+          selectRange={ComparisonOperator.Between === operatorValue}
+          onChange={(value) => handleDateChange(value as Date | Date[] | null)}
+          value={
+            ComparisonOperator.Lt === operatorValue
+              ? filterValue?.[1]
+              : ComparisonOperator.Gt === operatorValue
+              ? filterValue?.[0]
+              : [
+                  new Date(filterValue?.[0] || Date.now()),
+                  new Date(filterValue?.[1] || Date.now()),
+                ]
+          }
+        />
       </PopoverContent>
     </Popover>
   );

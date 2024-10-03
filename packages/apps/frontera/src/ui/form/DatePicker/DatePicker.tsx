@@ -12,12 +12,50 @@ export const DatePicker = forwardRef(
     ) => {
       if (!value) return onChange?.(null, event);
 
-      const date = new Date(value as string | number | Date);
-      const normalizedDate = new Date(
-        Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
-      );
+      if (Array.isArray(value)) {
+        const [startDate, endDate] = value;
+        const normalizedStartDate = new Date(
+          Date.UTC(
+            (startDate instanceof Date
+              ? startDate
+              : new Date(startDate || new Date())
+            ).getFullYear(),
+            (startDate instanceof Date
+              ? startDate
+              : new Date(startDate || new Date())
+            ).getMonth(),
+            (startDate instanceof Date
+              ? startDate
+              : new Date(startDate || new Date())
+            ).getDate(),
+          ),
+        );
+        const normalizedEndDate = new Date(
+          Date.UTC(
+            (endDate instanceof Date
+              ? endDate
+              : new Date(endDate || new Date())
+            ).getFullYear(),
+            (endDate instanceof Date
+              ? endDate
+              : new Date(endDate || new Date())
+            ).getMonth(),
+            (endDate instanceof Date
+              ? endDate
+              : new Date(endDate || new Date())
+            ).getDate(),
+          ),
+        );
 
-      onChange?.(normalizedDate, event);
+        onChange?.([normalizedStartDate, normalizedEndDate], event);
+      } else {
+        const date = new Date(value as string | number | Date);
+        const normalizedDate = new Date(
+          Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()),
+        );
+
+        onChange?.(normalizedDate, event);
+      }
     };
 
     return (

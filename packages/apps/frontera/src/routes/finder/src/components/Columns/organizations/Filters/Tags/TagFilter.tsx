@@ -68,7 +68,7 @@ export const TagFilter = observer(
       .filter((e) => !!e?.length)
       .sort((a, b) => a.localeCompare(b));
 
-    const isAllChecked = filter.value.length === options?.length;
+    const isAllChecked = filter.value?.length === options?.length;
 
     const handleSelectAll = () => {
       let nextValue: string[] = [];
@@ -129,7 +129,7 @@ export const TagFilter = observer(
           {options
             .filter((e) =>
               searchValue?.length
-                ? e.trim().toLowerCase().includes(searchValue)
+                ? e.trim().toLowerCase()?.includes(searchValue)
                 : true,
             )
             ?.map((e) => (
@@ -138,7 +138,7 @@ export const TagFilter = observer(
                 className='mt-2 '
                 key={`option-${e}`}
                 onChange={() => handleChange(e)}
-                isChecked={filter.value.includes(e) ?? false}
+                isChecked={filter.value?.includes(e) ?? false}
                 labelProps={{
                   className: 'text-sm mt-2 line-clamp-1 w-[150px]',
                 }}
