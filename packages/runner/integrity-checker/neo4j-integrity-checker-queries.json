@@ -214,6 +214,14 @@
         {
           "name": "Emails not validated",
           "query": "MATCH (t:Tenant {active:true})--(e:Email) WHERE e.rawEmail <> '' AND e.techValidatedAt IS NULL AND e.updatedAt < datetime() - duration({minutes:60}) RETURN count(e)"
+        },
+        {
+          "name": "Duplicate emails by clean email",
+          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.rawEmail <> '' AND e.rawEmail IS NOT NULL WITH t, e.rawEmail AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
+        },
+        {
+          "name": "Duplicate emails by raw email",
+          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.email <> '' AND e.email IS NOT NULL WITH t, e.email AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
         }
       ]
     },
@@ -227,6 +235,14 @@
         {
           "name": "Cross tenants phone number link",
           "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+        },
+        {
+          "name": "Duplicate phone numbers by e164",
+          "query": "MATCH (t:Tenant)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber) where p.e164 <> '' AND p.e164 IS NOT NULL WITH t, p.e164 AS phone, COUNT(p) AS phoneCount WHERE phoneCount > 1 RETURN count(phone)"
+        },
+        {
+          "name": "Duplicate phone numbers by raw phone number",
+          "query": "MATCH (t:Tenant)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber) where p.rawPhoneNumber <> '' AND p.rawPhoneNumber IS NOT NULL WITH t, p.rawPhoneNumber AS phone, COUNT(p) AS phoneCount WHERE phoneCount > 1 RETURN count(phone)"
         }
       ]
     },
