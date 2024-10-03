@@ -689,7 +689,6 @@ func (h *ServiceLineItemEventHandler) OnPause(ctx context.Context, evt eventstor
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while pausing service line item %s: %s", serviceLineItemId, err.Error())
-		return err
 	}
 
 	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
@@ -715,7 +714,6 @@ func (h *ServiceLineItemEventHandler) OnResume(ctx context.Context, evt eventsto
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error while resuming service line item %s: %s", serviceLineItemId, err.Error())
-		return err
 	}
 
 	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
