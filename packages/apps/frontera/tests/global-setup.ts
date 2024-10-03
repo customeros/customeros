@@ -3,8 +3,10 @@ import { chromium } from '@playwright/test';
 import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
 import { ContactsPage } from './pages/contacts/contactsPage';
+import { WinRatesFor } from './pages/opportunitiesKanban/winRates';
 import { OpportunitiesPage } from './pages/opportunities/opportunitiesPage';
 import { OrganizationsPage } from './pages/organizations/organizationsPage';
+import { OpportunitiesKanbanPage } from './pages/opportunitiesKanban/opportunitiesKanbanPage';
 
 async function globalSetup() {
   const browser = await chromium.launch();
@@ -15,6 +17,7 @@ async function globalSetup() {
   const contactsPage = new ContactsPage(page);
   const flowsPage = new FlowsPage(page);
   const opportunitiesPage = new OpportunitiesPage(page);
+  const opportunitiesKanbanPage = new OpportunitiesKanbanPage(page);
 
   await loginPage.login();
 
@@ -86,6 +89,12 @@ async function globalSetup() {
     await opportunitiesPage.confirmArchiveOrgs();
     await new Promise((resolve) => setTimeout(resolve, 1500));
   }
+
+  // Reset opportunities win rate
+  await opportunitiesKanbanPage.goToOpportunitiesKanban();
+  await opportunitiesKanbanPage.setWinRates(WinRatesFor.Identified, -100);
+  await opportunitiesKanbanPage.setWinRates(WinRatesFor.Qualified, -100);
+  await opportunitiesKanbanPage.setWinRates(WinRatesFor.Committed, -100);
 
   // Create initial organization
   await organizationsPage.goToAllOrgs();

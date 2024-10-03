@@ -242,7 +242,7 @@ test('Assign contact to flow', async ({ page }, testInfo) => {
 test('Create opportunities', async ({ page }, testInfo) => {
   const loginPage = new LoginPage(page);
   const organizationsPage = new OrganizationsPage(page);
-  const opportunitiesPage = new OpportunitiesKanbanPage(page);
+  const opportunitiesKanbanPage = new OpportunitiesKanbanPage(page);
 
   await loginPage.login();
   await organizationsPage.goToAllOrgs();
@@ -251,156 +251,286 @@ test('Create opportunities', async ({ page }, testInfo) => {
     testInfo,
   );
 
-  await opportunitiesPage.goToOpportunitiesKanban();
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(0, 0, 0, 0);
-  await opportunitiesPage.addOpportunity(organizationName);
+  await opportunitiesKanbanPage.goToOpportunitiesKanban();
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    0,
+    0,
+    0,
+    0,
+  );
+  await opportunitiesKanbanPage.addOpportunity(organizationName);
 
-  const opportunityName = await opportunitiesPage.updateOpportunityName(
+  const opportunityName = await opportunitiesKanbanPage.updateOpportunityName(
     organizationName,
   );
 
-  await opportunitiesPage.setOpportunityArrEstimate(opportunityName);
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0);
-  await opportunitiesPage.setWinRates(WinRatesFor.Identified, 10);
-  await opportunitiesPage.setWinRates(WinRatesFor.Qualified, 30);
-  await opportunitiesPage.setWinRates(WinRatesFor.Committed, 55);
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+  await opportunitiesKanbanPage.setOpportunityArrEstimate(opportunityName);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0,
+  );
+  await opportunitiesKanbanPage.setWinRates(WinRatesFor.Identified, 10);
+  await opportunitiesKanbanPage.setWinRates(WinRatesFor.Qualified, 30);
+  await opportunitiesKanbanPage.setWinRates(WinRatesFor.Committed, 55);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Qualified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 1.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    1.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Identified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Committed,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 2.75);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    2.75,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Identified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Won,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Identified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Lost,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Identified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Qualified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 1.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    1.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Committed,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 2.75);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    2.75,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Qualified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 1.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    1.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Won,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Qualified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 1.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    1.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Lost,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Qualified,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 1.5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    1.5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Committed,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 2.75);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    2.75,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Won,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Committed,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 2.75);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    2.75,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Lost,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Committed,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 2.75);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    2.75,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Won,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    5,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Lost,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 0);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    0,
+  );
 
-  await opportunitiesPage.moveOpportunityCard(
+  await opportunitiesKanbanPage.moveOpportunityCard(
     opportunityName,
     KanbanColumns.Won,
   );
-  await opportunitiesPage.checkOpportunitiesKanbanHeaderValues(1, 1, 5, 5);
+  await opportunitiesKanbanPage.checkOpportunitiesKanbanHeaderValues(
+    1,
+    1,
+    5,
+    5,
+  );
 });
