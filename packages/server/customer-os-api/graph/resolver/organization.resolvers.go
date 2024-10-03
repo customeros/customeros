@@ -435,7 +435,8 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 		SlackChannelId:     utils.IfNotNilString(input.SlackChannelID),
 		IcpFit:             utils.IfNotNilBool(input.IcpFit),
 		SourceFields: &commonpb.SourceFields{
-			Source: string(neo4jentity.DataSourceOpenline),
+			Source:    string(neo4jentity.DataSourceOpenline),
+			AppSource: utils.IfNotNilString(constants.AppSourceCustomerOsApi),
 		},
 	}
 	// set stage if updated
