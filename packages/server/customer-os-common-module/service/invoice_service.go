@@ -35,6 +35,7 @@ type InvoiceService interface {
 	VoidInvoice(ctx context.Context, invoiceId, appSource string) error
 
 	FillCycleInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
+	// Deprecated: Method should be re-worked. DO NOT ENABLE IN PROD
 	FillOffCyclePrepaidInvoice(ctx context.Context, invoiceEntity *neo4jentity.InvoiceEntity, sliEntities neo4jentity.ServiceLineItemEntities) (*neo4jentity.InvoiceEntity, []*invoicepb.InvoiceLine, error)
 }
 type invoiceService struct {
@@ -694,6 +695,11 @@ func (h *invoiceService) FillCycleInvoice(ctx context.Context, invoiceEntity *ne
 	reasonForSliExcludedFromInvoicing := map[string]string{}
 
 	for _, sliEntity := range sliEntities {
+		// skip paused subscriptions
+		if sliEntity.Paused {
+			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "SLI is paused"
+			continue
+		}
 		// skip for now usage SLIs
 		if sliEntity.Billed == neo4jenum.BilledTypeUsage {
 			reasonForSliExcludedFromInvoicing[sliEntity.ID] = "Billed type is Usage"
