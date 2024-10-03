@@ -498,6 +498,7 @@ func (s *contactService) processLinkedInUrl(ctx context.Context, tenant, linkedi
 	if len(contactsWithLinkedin) == 0 {
 		contactInput := cosModel.ContactInput{
 			SocialURL: &linkedinProfileUrl,
+			AppSource: utils.StringPtr(constants.AppSourceDataUpkeeper),
 		}
 
 		contactId, err := s.customerOSApiClient.CreateContact(tenant, "", contactInput)
