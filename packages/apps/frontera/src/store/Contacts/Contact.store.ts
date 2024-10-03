@@ -88,12 +88,6 @@ export class ContactStore implements Store<Contact> {
   }
 
   get flowContact(): FlowContactStore | undefined {
-    // const fcId = this.flow?.value.contacts?.find(
-    //   (fc) => fc.contact.metadata.id === this.id,
-    // )?.metadata.id;
-
-    // if (!fcId) return undefined;
-
     return this.root.flowContacts.value.get(this.id) as FlowContactStore;
   }
 
