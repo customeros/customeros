@@ -2601,6 +2601,7 @@ type ServiceLineItem struct {
 	CreatedBy      *User             `json:"createdBy,omitempty"`
 	ExternalLinks  []*ExternalSystem `json:"externalLinks"`
 	Closed         bool              `json:"closed"`
+	Paused         bool              `json:"paused"`
 }
 
 func (ServiceLineItem) IsMetadataInterface()        {}

@@ -7,18 +7,21 @@ package resolver
 import (
 	"context"
 	"errors"
-
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commontracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
-	opentracing "github.com/opentracing/opentracing-go"
+	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -170,6 +173,80 @@ func (r *mutationResolver) ContractLineItemClose(ctx context.Context, input mode
 		return input.ID, nil
 	}
 	return input.ID, nil
+}
+
+// ContractLineItemPause is the resolver for the contractLineItem_Pause field.
+func (r *mutationResolver) ContractLineItemPause(ctx context.Context, id string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemPause", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.id", id)
+
+	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "contract line item %s not found", id)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	if serviceLineItemEntity == nil || serviceLineItemEntity.ID == "" {
+		graphql.AddErrorf(ctx, "contract line item %s not found", id)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+		return r.Clients.ServiceLineItemClient.PauseServiceLineItem(ctx, &servicelineitempb.PauseServiceLineItemGrpcRequest{
+			Id:             id,
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to pause contract line item")
+		r.log.Errorf("failed to pause contract line item %s", err.Error())
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
+}
+
+// ContractLineItemResume is the resolver for the contractLineItem_Resume field.
+func (r *mutationResolver) ContractLineItemResume(ctx context.Context, id string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContractLineItemResume", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.id", id)
+
+	serviceLineItemEntity, err := r.Services.CommonServices.ServiceLineItemService.GetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "contract line item %s not found", id)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+	if serviceLineItemEntity == nil || serviceLineItemEntity.ID == "" {
+		graphql.AddErrorf(ctx, "contract line item %s not found", id)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	ctx = commontracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*servicelineitempb.ServiceLineItemIdGrpcResponse](func() (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+		return r.Clients.ServiceLineItemClient.ResumeServiceLineItem(ctx, &servicelineitempb.ResumeServiceLineItemGrpcRequest{
+			Id:             id,
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to resume contract line item")
+		r.log.Errorf("failed to resume contract line item %s", err.Error())
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
 }
 
 // ServiceLineItemDelete is the resolver for the serviceLineItem_Delete field.

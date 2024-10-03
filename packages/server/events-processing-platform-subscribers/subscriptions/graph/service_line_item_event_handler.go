@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -19,7 +20,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
@@ -664,6 +664,58 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 		}
 		// Update contract LTV
 		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contract.Id)
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+
+	return nil
+}
+
+func (h *ServiceLineItemEventHandler) OnPause(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnPause")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ServiceLineItemPauseEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
+	tracing.TagTenant(span, eventData.Tenant)
+	tracing.TagEntity(span, serviceLineItemId)
+
+	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), true)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while pausing service line item %s: %s", serviceLineItemId, err.Error())
+		return err
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+
+	return nil
+}
+
+func (h *ServiceLineItemEventHandler) OnResume(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ServiceLineItemEventHandler.OnResume")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ServiceLineItemResumeEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	serviceLineItemId := aggregate.GetServiceLineItemObjectID(evt.GetAggregateID(), eventData.Tenant)
+	tracing.TagTenant(span, eventData.Tenant)
+	tracing.TagEntity(span, serviceLineItemId)
+
+	err := h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateBoolProperty(ctx, eventData.Tenant, commonmodel.NodeLabelServiceLineItem, serviceLineItemId, string(neo4jentity.SLIPropertyPaused), false)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("Error while resuming service line item %s: %s", serviceLineItemId, err.Error())
+		return err
 	}
 
 	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)

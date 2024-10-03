@@ -32,6 +32,16 @@ func (r *mutationResolver) ContractLineItemClose(ctx context.Context, input mode
 	panic(fmt.Errorf("not implemented: ContractLineItemClose - contractLineItem_Close"))
 }
 
+// ContractLineItemPause is the resolver for the contractLineItem_Pause field.
+func (r *mutationResolver) ContractLineItemPause(ctx context.Context, id string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContractLineItemPause - contractLineItem_Pause"))
+}
+
+// ContractLineItemResume is the resolver for the contractLineItem_Resume field.
+func (r *mutationResolver) ContractLineItemResume(ctx context.Context, id string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContractLineItemResume - contractLineItem_Resume"))
+}
+
 // ServiceLineItemDelete is the resolver for the serviceLineItem_Delete field.
 func (r *mutationResolver) ServiceLineItemDelete(ctx context.Context, id string) (*model.DeleteResponse, error) {
 	panic(fmt.Errorf("not implemented: ServiceLineItemDelete - serviceLineItem_Delete"))

@@ -53,6 +53,10 @@ func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, reques
 		return nil, a.CreateServiceLineItem(ctx, r)
 	case *servicelineitempb.UpdateServiceLineItemGrpcRequest:
 		return nil, a.UpdateServiceLineItem(ctx, r)
+	case *servicelineitempb.PauseServiceLineItemGrpcRequest:
+		return nil, a.PauseServiceLineItem(ctx, r)
+	case *servicelineitempb.ResumeServiceLineItemGrpcRequest:
+		return nil, a.ResumeServiceLineItem(ctx, r)
 	default:
 		return nil, nil
 	}
@@ -273,6 +277,52 @@ func (a *ServiceLineItemAggregate) DeleteServiceLineItem(ctx context.Context, r 
 	return a.Apply(deleteEvent)
 }
 
+func (a *ServiceLineItemAggregate) PauseServiceLineItem(ctx context.Context, r *servicelineitempb.PauseServiceLineItemGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.PauseServiceLineItem")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	pauseEvent, err := event.NewServiceLineItemPauseEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewServiceLineItemPauseEvent")
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&pauseEvent, span, eventstore.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.GetLoggedInUserId(),
+		App:    r.GetAppSource(),
+	})
+
+	return a.Apply(pauseEvent)
+}
+
+func (a *ServiceLineItemAggregate) ResumeServiceLineItem(ctx context.Context, r *servicelineitempb.ResumeServiceLineItemGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.ResumeServiceLineItem")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	resumeEvent, err := event.NewServiceLineItemResumeEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewServiceLineItemResumeEvent")
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&resumeEvent, span, eventstore.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.GetLoggedInUserId(),
+		App:    r.GetAppSource(),
+	})
+
+	return a.Apply(resumeEvent)
+}
+
 func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ServiceLineItemCreateV1:
@@ -283,6 +333,9 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 		return a.onDelete()
 	case event.ServiceLineItemCloseV1:
 		return a.onClose(evt)
+	case event.ServiceLineItemPauseV1,
+		event.ServiceLineItemResumeV1:
+		return nil
 	default:
 		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil

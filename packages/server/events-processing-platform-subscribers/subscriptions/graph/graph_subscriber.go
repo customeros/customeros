@@ -412,6 +412,10 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.serviceLineItemEventHandler.OnDeleteV1(ctx, evt)
 	case servicelineitemevent.ServiceLineItemCloseV1:
 		return s.serviceLineItemEventHandler.OnClose(ctx, evt)
+	case servicelineitemevent.ServiceLineItemPauseV1:
+		return s.serviceLineItemEventHandler.OnPause(ctx, evt)
+	case servicelineitemevent.ServiceLineItemResumeV1:
+		return s.serviceLineItemEventHandler.OnResume(ctx, evt)
 
 	case masterplanevent.MasterPlanCreateV1:
 		return s.masterPlanEventHandler.OnCreate(ctx, evt)

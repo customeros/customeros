@@ -6,6 +6,8 @@ extend type Mutation {
     contractLineItem_NewVersion(input: ServiceLineItemNewVersionInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
     contractLineItem_Update(input: ServiceLineItemUpdateInput!): ServiceLineItem! @hasRole(roles: [ADMIN, USER]) @hasTenant
     contractLineItem_Close(input: ServiceLineItemCloseInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Pause(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    contractLineItem_Resume(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     serviceLineItem_Delete(id: ID!): DeleteResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     serviceLineItem_BulkUpdate(input: ServiceLineItemBulkUpdateInput!): [ID!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -25,6 +27,7 @@ type ServiceLineItem implements MetadataInterface {
     createdBy:          User @goField(forceResolver: true)
     externalLinks:      [ExternalSystem!]! @goField(forceResolver: true)
     closed:             Boolean!
+    paused:             Boolean!
 }
 
 input ServiceLineItemInput {
