@@ -17,10 +17,8 @@ import {
 import { Filter } from '../Filter/Filter';
 
 interface FiltersProps {
-  filterSearch: string;
   filters: FilterItem[];
-  handleFilterSearch: (value: string) => void;
-  availableFilters: Partial<ColumnView & FilterType>[];
+  columns: ColumnView[];
   onClearFilter: (filter: FilterItem, idx: number) => void;
   filterTypes: Partial<Record<ColumnViewType, FilterType>>;
   setFilters: (
@@ -37,13 +35,12 @@ export const Filters = ({
   filters,
   filterTypes,
   onClearFilter,
-  filterSearch,
-  handleFilterSearch,
-  availableFilters,
+  columns,
   setFilters,
   onFilterSelect,
 }: FiltersProps) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [search, setSearch] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFilterName = (property: string) => {
@@ -163,6 +160,24 @@ export const Filters = ({
     }
   };
 
+  const availableFilters = columns
+    .map((column) => {
+      const filterType = filterTypes[column.columnType];
+
+      if (filterType) {
+        return {
+          ...filterType,
+          columnType: column.columnType,
+        };
+      }
+
+      return null;
+    })
+    .filter(Boolean)
+    .filter((f) =>
+      f?.filterName.toLowerCase().includes(search || ''.toLowerCase()),
+    );
+
   return (
     <div className='flex gap-2 flex-wrap'>
       {filters.map((f, idx) => (
@@ -209,28 +224,30 @@ export const Filters = ({
           <Input
             size='sm'
             ref={inputRef}
+            value={search}
             variant='unstyled'
             className='px-2.5'
-            value={filterSearch}
             placeholder='Filter by'
-            onChange={(e) => handleFilterSearch(e.target.value)}
+            onChange={(e) => setSearch(e.target.value)}
           />
-          {availableFilters.map((filter: Partial<ColumnView & FilterType>) => {
+          {availableFilters.map((filter) => {
+            if (filter === null) return null;
+
             return (
               <MenuItem
                 className='group'
-                key={filter?.columnType}
+                key={filter.columnType}
                 onClick={() =>
                   onFilterSelect(filter, (property) =>
-                    getFilterOperators(filter?.filterAccesor ?? property),
+                    getFilterOperators(filter.filterAccesor ?? property),
                   )
                 }
               >
                 <div className='flex items-center justify-center gap-2 '>
                   <span className='group-hover:text-gray-700 text-gray-500'>
-                    {filter?.icon}
+                    {filter.icon}
                   </span>
-                  {filter?.filterName}
+                  {filter.filterName}
                 </div>
               </MenuItem>
             );
