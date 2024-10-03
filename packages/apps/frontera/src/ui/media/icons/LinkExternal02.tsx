@@ -14,7 +14,7 @@ export const LinkExternal02 = ({ className, ...props }: IconProps) => (
     className={twMerge('inline-block size-4', className)}
   >
     <path
-      strokeWidth='2'
+      strokeWidth='inherit'
       stroke='currentColor'
       strokeLinecap='round'
       strokeLinejoin='round'

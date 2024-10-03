@@ -1,10 +1,11 @@
 import { createPortal } from 'react-dom';
-import { useRef, useState, useEffect, MouseEvent, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react';
 
 import { computePosition } from '@floating-ui/dom';
 import { $setBlocksType } from '@lexical/selection';
+import { $findMatchingParent } from '@lexical/utils';
+import { $createQuoteNode } from '@lexical/rich-text';
 import { $isLinkNode, $toggleLink } from '@lexical/link';
-import { $isQuoteNode, $createQuoteNode } from '@lexical/rich-text';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
@@ -28,6 +29,7 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { BlockQuote } from '@ui/media/icons/BlockQuote.tsx';
 import { FloatingToolbarButton } from '@ui/form/Editor/components';
 import { Strikethrough01 } from '@ui/media/icons/Strikethrough01.tsx';
+import { $isExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode.tsx';
 
 import { usePointerInteractions } from './../utils/usePointerInteractions.tsx';
 
@@ -47,7 +49,10 @@ export type FloatingMenuPluginProps = {
   element?: HTMLElement;
 };
 
-export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
+export function FloatingMenu({
+  editor,
+  shouldShow,
+}: FloatingMenuComponentProps) {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isLink, setIsLink] = useState(false);
   const [isBlockquote, setIsBlockquote] = useState(false);
@@ -56,6 +61,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
   const [showLinkInput, setShowLinkInput] = useState(false);
   const [linkUrl, setLinkUrl] = useState('');
   const linkInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     return editor.registerCommand(
@@ -79,7 +85,6 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
     );
   }, [editor, isBlockquote]);
 
-  // Function to handle link toggling
   const toggleLink = useCallback(() => {
     if (!isLink) {
       setShowLinkInput(true);
@@ -95,28 +100,41 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
     }
   }, [editor, isLink]);
 
-  const handleLinkSubmit = useCallback(
-    (e: MouseEvent) => {
-      e.preventDefault();
-      editor.update(() => {
-        const selection = $getSelection();
+  const handleLinkSubmit = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection();
 
-        if ($isRangeSelection(selection)) {
-          $toggleLink(linkUrl);
-        }
-      });
-      setShowLinkInput(false);
-      setLinkUrl('');
-    },
-    [editor, linkUrl],
-  );
+      if ($isRangeSelection(selection)) {
+        $toggleLink(linkUrl);
+      }
+    });
+    setShowLinkInput(false);
+    setLinkUrl('');
+  }, [editor, linkUrl]);
 
   const handleLinkCancel = useCallback(() => {
     setShowLinkInput(false);
     setLinkUrl('');
   }, []);
 
-  // Update button states
+  const handleKeyDown = useCallback(
+    (e: KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleLinkSubmit();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        handleLinkCancel();
+      }
+    },
+    [handleLinkSubmit, handleLinkCancel],
+  );
+
+  useEffect(() => {
+    if (!shouldShow) {
+      setShowLinkInput(false);
+    }
+  }, [shouldShow]);
   useEffect(() => {
     return editor.registerUpdateListener(({ editorState }) => {
       editorState.read(() => {
@@ -141,9 +159,8 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
               .getNodes()
               .some(
                 (node) =>
-                  $isQuoteNode(node) ||
-                  ($isQuoteNode(node.getParent()) &&
-                    node?.getParent()?.isInline()),
+                  $isExtendedQuoteNode(node) ||
+                  $isExtendedQuoteNode(node.getParent()),
               ),
           );
         }
@@ -152,7 +169,10 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
   }, [editor]);
 
   return (
-    <div className='flex items-center justify-between bg-gray-700 text-gray-25 border-[1px] border-gray-200 rounded-md p-1'>
+    <div
+      ref={menuRef}
+      className='flex items-center justify-between bg-gray-700 text-gray-25 border-[1px] border-gray-200 rounded-md p-1'
+    >
       {showLinkInput ? (
         <>
           <Input
@@ -161,6 +181,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
             ref={linkInputRef}
             variant='unstyled'
             placeholder='Enter URL'
+            onKeyDown={handleKeyDown}
             onChange={(e) => setLinkUrl(e.target.value)}
             className='border-none rounded px-2 py-0 min-h-[auto] text-sm text-gray-25'
           />
@@ -177,7 +198,7 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
           <IconButton
             size='xs'
             variant='ghost'
-            aria-label={'Add link'}
+            aria-label={'Cancel link'}
             onClick={handleLinkCancel}
             icon={<X className='text-inherit' />}
             className={cn(
@@ -187,50 +208,48 @@ export function FloatingMenu({ editor }: FloatingMenuComponentProps) {
         </>
       ) : (
         <>
-          <Tooltip label='Underline'>
+          <Tooltip label='Bold'>
             <FloatingToolbarButton
               active={isBold}
-              label='Format text to bold'
+              aria-label='Format text to bold'
               icon={<Bold01 className='text-inherit' />}
               onClick={() => {
                 editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
               }}
             />
           </Tooltip>
-          <Tooltip label='Strikethrough'>
+          <Tooltip label='Italic'>
             <FloatingToolbarButton
               active={isItalic}
-              label='Format text with a italic'
+              aria-label='Format text with italic'
               icon={<Italic01 className='text-inherit' />}
               onClick={() => {
                 editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
               }}
             />
           </Tooltip>
-
           <Tooltip label='Strikethrough'>
             <FloatingToolbarButton
               active={isStrikethrough}
-              label='Format text with a strikethrough'
+              aria-label='Format text with a strikethrough'
               icon={<Strikethrough01 className='text-inherit' />}
               onClick={() => {
                 editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
               }}
             />
           </Tooltip>
-
           <Tooltip label='Insert or remove link'>
             <FloatingToolbarButton
               active={isLink}
               onClick={toggleLink}
-              label='Insert or remove link'
+              aria-label='Insert or remove link'
               icon={<Link01 className='text-inherit' />}
             />
           </Tooltip>
           <Tooltip label='Block quote'>
             <FloatingToolbarButton
               active={isBlockquote}
-              label='Format text with block quote'
+              aria-label='Format text with block quote'
               icon={<BlockQuote className='text-inherit' />}
               onClick={() => {
                 editor.dispatchCommand(TOGGLE_BLOCKQUOTE_COMMAND, undefined);
@@ -279,6 +298,13 @@ export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
     const selection = $getSelection();
 
     if ($isRangeSelection(selection) && !selection.anchor.is(selection.focus)) {
+      const node = selection.getNodes()[0];
+      const linkNode = $findMatchingParent(node, $isLinkNode);
+
+      if ($isLinkNode(linkNode)) {
+        return false;
+      }
+
       calculatePosition();
     } else {
       setCoords(undefined);
@@ -322,11 +348,3 @@ export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
     element ?? DEFAULT_DOM_ELEMENT,
   );
 }
-
-export type FloatingMenuState = {
-  isBold: boolean;
-  isCode: boolean;
-  isItalic: boolean;
-  isUnderline: boolean;
-  isStrikethrough: boolean;
-};

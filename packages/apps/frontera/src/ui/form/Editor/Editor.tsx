@@ -52,6 +52,12 @@ const theme: EditorThemeClasses = {
     underline: 'editor-textUnderline',
     underlineStrikethrough: 'editor-textUnderlineStrikethrough',
   },
+  blockquote: {
+    css: `
+      border-left: 2px solid #D0D5DD;
+      padding-left: 12px;
+    `,
+  },
 };
 
 const onError = (error: Error) => {
@@ -120,7 +126,6 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
     const hasLoadedDefaultHtmlValue = useRef(false);
     const [floatingAnchorElem, setFloatingAnchorElem] =
       useState<HTMLDivElement>();
-    const [isLinkEditMode, setIsLinkEditMode] = useState<boolean>(false);
 
     const initialConfig: InitialConfigType = {
       namespace,
@@ -198,11 +203,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
           />
           {floatingAnchorElem && (
             <>
-              <FloatingLinkEditorPlugin
-                anchorElem={floatingAnchorElem}
-                isLinkEditMode={isLinkEditMode}
-                setIsLinkEditMode={setIsLinkEditMode}
-              />
+              <FloatingLinkEditorPlugin anchorElem={floatingAnchorElem} />
               <FloatingMenuPlugin element={floatingAnchorElem} />
             </>
           )}
