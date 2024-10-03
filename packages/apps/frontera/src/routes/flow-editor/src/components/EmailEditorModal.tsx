@@ -56,7 +56,7 @@ export const EmailEditorModal = observer(
     };
 
     return (
-      <Modal open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+      <Modal open={isEditorOpen}>
         <ModalPortal>
           <ModalOverlay className='z-50'>
             <ModalContent
