@@ -9,7 +9,8 @@ import (
 type SLIProperty string
 
 const (
-	SLIPropertyPaused SLIProperty = "paused"
+	SLIPropertyUpdatedAt SLIProperty = "updatedAt"
+	SLIPropertyPaused    SLIProperty = "paused"
 )
 
 type ServiceLineItemEntity struct {

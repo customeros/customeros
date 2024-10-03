@@ -221,7 +221,7 @@ func (r *commonWriteRepository) UpdateInt64Property(ctx context.Context, tenant,
 
 	span.LogFields(log.String("property", string(property)), log.String("nodeLabel", nodeLabel), log.Object("value", value))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id: $entityId}) SET n.%s = $value`, nodeLabel, nodeLabel, tenant, property)
+	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id: $entityId}) SET n.%s = $value, n.updatedAt=datetime()`, nodeLabel, nodeLabel, tenant, property)
 	params := map[string]any{
 		"entityId": entityId,
 		"value":    value,
@@ -244,7 +244,7 @@ func (r *commonWriteRepository) UpdateBoolProperty(ctx context.Context, tenant, 
 	tracing.TagEntity(span, entityId)
 	span.LogFields(log.String("property", property), log.String("nodeLabel", nodeLabel), log.Object("value", value))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id: $entityId}) SET n.%s = $value`, nodeLabel, nodeLabel, tenant, property)
+	cypher := fmt.Sprintf(`MATCH (n:%s:%s_%s {id: $entityId}) SET n.%s = $value, n.updatedAt=datetime()`, nodeLabel, nodeLabel, tenant, property)
 	params := map[string]any{
 		"entityId": entityId,
 		"value":    value,
@@ -269,7 +269,8 @@ func (r *commonWriteRepository) IncrementProperty(ctx context.Context, tenant, n
 	span.LogFields(log.String("property", property), log.String("nodeLabel", nodeLabel))
 
 	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id: $entityId}) 
-			SET n.%s = case WHEN n.%s IS NULL THEN 1 ELSE n.%s+1 END`, nodeLabel, tenant, property, property, property)
+			SET n.%s = case WHEN n.%s IS NULL THEN 1 ELSE n.%s+1 END,
+				n.updatedAt=datetime()`, nodeLabel, tenant, property, property, property)
 	params := map[string]any{
 		"entityId": entityId,
 	}
@@ -292,7 +293,7 @@ func (r *commonWriteRepository) RemoveProperty(ctx context.Context, tenant, node
 
 	span.LogFields(log.String("property", property), log.String("nodeLabel", nodeLabel))
 
-	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id: $entityId}) REMOVE n.%s`, nodeLabel, tenant, property)
+	cypher := fmt.Sprintf(`MATCH (n:%s_%s {id: $entityId}) REMOVE n.%s SET n.updatedAt=datetime()`, nodeLabel, tenant, property)
 	params := map[string]any{
 		"entityId": entityId,
 	}
