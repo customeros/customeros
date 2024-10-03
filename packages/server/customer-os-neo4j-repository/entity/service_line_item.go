@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type SLIProperty string
+
+const (
+	SLIPropertyPaused SLIProperty = "paused"
+)
+
 type ServiceLineItemEntity struct {
 	ID               string
 	Name             string
@@ -26,6 +32,7 @@ type ServiceLineItemEntity struct {
 	AppSource        string
 	ParentID         string
 	VatRate          float64
+	Paused           bool
 
 	DataLoaderKey
 }

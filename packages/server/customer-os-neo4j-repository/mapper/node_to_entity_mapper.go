@@ -586,6 +586,7 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineIt
 		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
 		Canceled:      utils.GetBoolPropOrFalse(props, "isCanceled"),
 		VatRate:       utils.GetFloatPropOrZero(props, "vatRate"),
+		Paused:        utils.GetBoolPropOrFalse(props, string(entity.SLIPropertyPaused)),
 	}
 	return &serviceLineItem
 }

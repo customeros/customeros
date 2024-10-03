@@ -169,3 +169,51 @@ func (s *serviceLineItemService) checkSLINotEnded(ctx context.Context, tenant, i
 
 	return sliAggregate.ServiceLineItem.EndedAt != nil, nil
 }
+
+func (s *serviceLineItemService) PauseServiceLineItem(ctx context.Context, request *servicelineitempb.PauseServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.PauseServiceLineItem")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate service line item ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(PauseServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the updated service line item
+	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
+}
+
+func (s *serviceLineItemService) ResumeServiceLineItem(ctx context.Context, request *servicelineitempb.ResumeServiceLineItemGrpcRequest) (*servicelineitempb.ServiceLineItemIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ServiceLineItemService.ResumeServiceLineItem")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate service line item ID
+	if request.Id == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return sliaggregate.NewServiceLineItemAggregateWithTenantAndID(request.Tenant, request.Id)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(ResumeServiceLineItem) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	// Return the ID of the updated service line item
+	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
+}
