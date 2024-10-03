@@ -1,74 +1,29 @@
 import { useRef, useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
+import { match } from 'ts-pattern';
 import { useKeyBindings } from 'rooks';
-import { inPlaceSort } from 'fast-sort';
 import { observer } from 'mobx-react-lite';
-import { ColumnDef } from '@tanstack/react-table';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
-import { InvoiceStore } from '@store/Invoices/Invoice.store';
-import { ContactStore } from '@store/Contacts/Contact.store';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
-import { ContractStore } from '@store/Contracts/Contract.store';
 import { useColumnSizing } from '@finder/hooks/useColumnSizing';
 import { useTableActions } from '@invoices/hooks/useTableActions';
-import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
-import { OrganizationStore } from '@store/Organizations/Organization.store';
-import { getFlowsFilterFns } from '@finder/components/Columns/flows/filterFns.ts';
-import { getFlowsColumnSortFn } from '@finder/components/Columns/flows/sortFns.ts';
-import { getFlowColumnsConfig } from '@finder/components/Columns/flows/columns.tsx';
-import { getOpportunitiesSortFn } from '@finder/components/Columns/opportunities/sortFns';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
-import {
-  getOpportunityFilterFns,
-  getOpportunityColumnsConfig,
-} from '@finder/components/Columns/opportunities';
-import {
-  getContractSortFn,
-  getContractFilterFns,
-  getContractColumnsConfig,
-} from '@finder/components/Columns/contracts';
 
 import { useStore } from '@shared/hooks/useStore';
+import { Invoice, TableViewType } from '@graphql/types';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
-import {
-  Invoice,
-  TableIdType,
-  WorkflowType,
-  TableViewType,
-} from '@graphql/types';
 
 import { SidePanel } from '../SidePanel';
 import { EmptyState } from '../EmptyState/EmptyState';
-import { getColumnSortFn } from '../Columns/invoices/sortFns';
-import { getInvoiceFilterFns } from '../Columns/invoices/filterFns';
-import { getInvoiceColumnsConfig } from '../Columns/invoices/columns';
-import { getFlowFilterFns } from '../Columns/organizations/flowFilters';
+import { computeFinderData } from './computeFinderData';
+import { computeFinderColumns } from './computeFinderColumns';
 import { ContactPreviewCard } from '../ContactPreviewCard/ContactPreviewCard';
-import {
-  getContactSortFn,
-  getContactFilterFns,
-  getContactColumnsConfig,
-} from '../Columns/contacts';
 import {
   ContactTableActions,
   OrganizationTableActions,
   FlowSequencesTableActions,
 } from '../Actions';
-import {
-  getOrganizationSortFn,
-  getOrganizationFilterFns,
-  getOrganizationColumnsConfig,
-} from '../Columns/organizations';
-
-export type FinderTableEntityTypes =
-  | OrganizationStore
-  | ContactStore
-  | InvoiceStore
-  | ContractStore
-  | OpportunityStore
-  | FlowStore;
 
 interface FinderTableProps {
   isSidePanelOpen: boolean;
@@ -79,7 +34,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const params = useParams();
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
-  const tableRef = useRef<TableInstance<FinderTableEntityTypes> | null>(null);
+  const tableRef = useRef<TableInstance<object> | null>(null);
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
   ]);
@@ -92,275 +47,20 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
 
   const tableType =
     tableViewDef?.value?.tableType || TableViewType.Organizations;
-  const getWorkFlow = store.workFlows
-    .toArray()
-    .filter((wf) => wf.value.type === WorkflowType.IdealCustomerProfile);
 
-  const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
-  const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
-  const flowFiltersStatus = store.ui.isFilteringICP;
+  const columns = computeFinderColumns(store, {
+    tableType,
+    currentPreset: preset,
+  });
+  const data = computeFinderData(store, {
+    sorting,
+    tableViewDef,
+    urlParams: params,
+    searchTerm: searchTerm ?? '',
+  });
 
-  const contactColumns = getContactColumnsConfig(tableViewDef?.value);
-  const contractColumns = getContractColumnsConfig(tableViewDef?.value);
-  const organizationColumns = getOrganizationColumnsConfig(tableViewDef?.value);
-  const invoiceColumns = getInvoiceColumnsConfig(tableViewDef?.value);
-  const opportunityColumns = getOpportunityColumnsConfig(tableViewDef?.value);
-  const flowSequenceColumns = getFlowColumnsConfig(tableViewDef?.value);
-
-  const tableColumns = (
-    tableType === TableViewType.Organizations
-      ? organizationColumns
-      : tableType === TableViewType.Contacts
-      ? contactColumns
-      : tableType === TableViewType.Contracts
-      ? contractColumns
-      : tableType === TableViewType.Opportunities
-      ? opportunityColumns
-      : tableType === TableViewType.Flow
-      ? flowSequenceColumns
-      : invoiceColumns
-  ) as ColumnDef<FinderTableEntityTypes>[];
   const isCommandMenuPrompted = store.ui.commandMenu.isOpen;
-
-  const removeAccents = (str: string) => {
-    return str
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
-  };
-
-  const handleColumnSizing = useColumnSizing(tableColumns, tableViewDef);
-
-  const organizationsData = store.organizations?.toComputedArray((arr) => {
-    if (tableType !== TableViewType.Organizations) return arr;
-
-    const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
-    const flowFilters = getFlowFilterFns(workFlow?.getFilters());
-
-    if (flowFilters.length && flowFiltersStatus) {
-      arr = arr.filter((v) => !flowFilters.every((fn) => fn(v)));
-    }
-
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      const normalizedSearchTerm = removeAccents(searchTerm);
-
-      arr = arr.filter((entity) => {
-        const name = entity.value?.name || '';
-
-        return removeAccents(name).includes(normalizedSearchTerm);
-      });
-    }
-
-    if (tableType) {
-      const columnId = sorting[0]?.id;
-      const isDesc = sorting[0]?.desc;
-
-      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getOrganizationSortFn(columnId),
-      );
-
-      return computed;
-    }
-
-    return arr;
-  });
-
-  const contactsData = store.contacts?.toComputedArray((arr) => {
-    if (tableType !== TableViewType.Contacts) return arr;
-
-    if (tableViewDef?.value.tableId === TableIdType.FlowContacts) {
-      const currentFlowId = params?.id as string;
-
-      arr = arr.filter(
-        (v) =>
-          v.hasFlows && (currentFlowId ? v.getFlowById(currentFlowId) : true),
-      );
-    }
-
-    const filters = getContactFilterFns(tableViewDef?.getFilters());
-
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      const normalizedSearchTerm = removeAccents(searchTerm);
-
-      arr = arr.filter((entity) => {
-        const name = entity.value?.name || '';
-        const org = entity.value?.organizations.content?.[0]?.name || '';
-        const email = entity.value?.emails?.[0]?.email || '';
-
-        return (
-          removeAccents(name).includes(normalizedSearchTerm) ||
-          removeAccents(org).includes(normalizedSearchTerm) ||
-          removeAccents(email).includes(normalizedSearchTerm)
-        );
-      });
-    }
-
-    if (tableType) {
-      const columnId = sorting[0]?.id;
-      const isDesc = sorting[0]?.desc;
-
-      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getContactSortFn(columnId),
-      );
-
-      return computed;
-    }
-
-    return arr;
-  });
-
-  const contractsData = store.contracts?.toComputedArray((arr) => {
-    if (tableType !== TableViewType.Contracts) return arr;
-
-    const filters = getContractFilterFns(tableViewDef?.getFilters());
-
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      const normalizedSearchTerm = removeAccents(searchTerm);
-
-      arr = arr.filter((entity) => {
-        const name = entity.value?.contractName || '';
-
-        return removeAccents(name).includes(normalizedSearchTerm);
-      });
-    }
-
-    if (tableType) {
-      const columnId = sorting[0]?.id;
-      const isDesc = sorting[0]?.desc;
-
-      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getContractSortFn(columnId),
-      );
-
-      return computed;
-    }
-
-    return arr;
-  });
-
-  const invoicesData = store.invoices.toComputedArray((arr) => {
-    if (tableType !== TableViewType.Invoices) return arr;
-    const filters = getInvoiceFilterFns(tableViewDef?.getFilters());
-
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      arr = arr.filter((entity) =>
-        entity.contract?.contractName
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase() as string),
-      );
-    }
-
-    if (tableType) {
-      const columnId = sorting[0]?.id;
-      const isDesc = sorting[0]?.desc;
-
-      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getColumnSortFn(columnId),
-      );
-
-      return computed;
-    }
-
-    return arr;
-  });
-
-  const flowsData = store.flows.toComputedArray((arr) => {
-    if (tableType !== TableViewType.Flow) return arr;
-
-    const filters = getFlowsFilterFns(tableViewDef?.getFilters());
-
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      arr = arr.filter((entity) =>
-        entity.value?.name
-          ?.toLowerCase()
-          .includes(searchTerm?.toLowerCase() as string),
-      );
-    }
-
-    if (tableType) {
-      const columnId = sorting[0]?.id;
-      const isDesc = sorting[0]?.desc;
-
-      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getFlowsColumnSortFn(columnId),
-      );
-
-      return computed;
-    }
-
-    return arr.filter((e) => e.value.status !== 'ARCHIVED');
-  });
-
-  const opportunityData = store.opportunities.toComputedArray((arr) => {
-    if (tableType !== TableViewType.Opportunities) return arr;
-    arr = arr.filter((opp) => opp.value.internalType === 'NBO');
-
-    const filters = getOpportunityFilterFns(tableViewDef?.getFilters());
-
-    if (filters) {
-      arr = arr.filter((v) => filters.every((fn) => fn(v)));
-    }
-
-    if (searchTerm) {
-      const normalizedSearchTerm = removeAccents(searchTerm);
-
-      arr = arr.filter((entity) => {
-        const name = entity.value?.name || '';
-        const org = entity.organization?.value.name || '';
-        const email = entity.owner?.name || '';
-
-        return (
-          removeAccents(name).includes(normalizedSearchTerm) ||
-          removeAccents(org).includes(normalizedSearchTerm) ||
-          removeAccents(email).includes(normalizedSearchTerm)
-        );
-      });
-    }
-
-    if (tableType) {
-      const columnId = sorting[0]?.id;
-      const isDesc = sorting[0]?.desc;
-
-      const computed = inPlaceSort(arr)?.[isDesc ? 'desc' : 'asc'](
-        getOpportunitiesSortFn(columnId),
-      );
-
-      return computed;
-    }
-
-    return arr;
-  });
-
-  const dataMap = {
-    [TableViewType.Organizations]: organizationsData,
-    [TableViewType.Contacts]: contactsData,
-    [TableViewType.Contracts]: contractsData,
-    [TableViewType.Opportunities]: opportunityData,
-    [TableViewType.Invoices]: invoicesData,
-    [TableViewType.Flow]: flowsData,
-  };
-
-  const data = dataMap[tableType];
+  const handleColumnSizing = useColumnSizing(columns, tableViewDef);
 
   const onSelectionChange = (selectedIds: string[]) => {
     if (selectedIds.length > 0 && !isCommandMenuPrompted) {
@@ -460,11 +160,17 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const isSearching =
     store.ui.isSearching === tableViewDef?.value?.tableType?.toLowerCase();
 
-  const targetInvoice: Invoice = data?.find(
-    (i) => i.value.metadata?.id === targetId,
-  )?.value as Invoice;
-  const targetInvoiceNumber = targetInvoice?.invoiceNumber || '';
-  const targetInvoiceEmail = targetInvoice?.customer?.email || '';
+  const [targetInvoiceNumber, targetInvoiceEmail] = match(tableType)
+    .with(TableViewType.Invoices, () => {
+      const invoice = data?.find((i) => i.value.metadata?.id === targetId)
+        ?.value as Invoice;
+
+      const targetInvoiceNumber = invoice?.invoiceNumber || '';
+      const targetInvoiceEmail = invoice?.customer?.email || '';
+
+      return [targetInvoiceNumber, targetInvoiceEmail];
+    })
+    .otherwise(() => ['', '']);
 
   const handleSetFocused = (index: number | null, selectedIds: string[]) => {
     if (isCommandMenuPrompted) return;
@@ -547,6 +253,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       store.ui.setContactPreviewCardOpen(false);
     };
   }, []);
+
   useKeyBindings(
     {
       Escape: () => {
@@ -562,34 +269,42 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     },
   );
 
-  if (
-    (tableViewDef?.value.tableType === TableViewType.Organizations &&
-      store.organizations?.toArray().length === 0 &&
-      !store.organizations.isLoading) ||
-    (tableViewDef?.value.tableType === TableViewType.Contacts &&
-      store.contacts?.toArray().length === 0 &&
-      !store.contacts.isLoading) ||
-    (tableViewDef?.value.tableType === TableViewType.Invoices &&
-      store.invoices?.toArray().length === 0 &&
-      !store.invoices.isLoading) ||
-    (tableViewDef?.value.tableType === TableViewType.Flow &&
-      store.flows?.toArray().length === 0 &&
-      !store.flows.isLoading) ||
-    (tableViewDef?.value.tableType === TableViewType.Contracts &&
-      store.contracts?.toArray().length === 0 &&
-      !store.contracts.isLoading)
-  ) {
+  const checkIfEmpty = () => {
+    return match(tableType)
+      .with(
+        TableViewType.Organizations,
+        () => store.organizations?.totalElements === 0,
+      )
+      .with(TableViewType.Contacts, () => store.contacts?.totalElements === 0)
+      .with(TableViewType.Invoices, () => store.invoices?.totalElements === 0)
+      .with(TableViewType.Contracts, () => store.contracts?.totalElements === 0)
+      .with(TableViewType.Flow, () => store.flows?.totalElements === 0)
+      .otherwise(() => false);
+  };
+
+  const checkIfLoading = () => {
+    return match(tableType)
+      .with(TableViewType.Organizations, () => store.organizations?.isLoading)
+      .with(TableViewType.Contacts, () => store.contacts?.isLoading)
+      .with(TableViewType.Invoices, () => store.invoices?.isLoading)
+      .with(TableViewType.Contracts, () => store.contracts?.isLoading)
+      .with(TableViewType.Flow, () => store.flows?.isLoading)
+      .otherwise(() => false);
+  };
+
+  if (checkIfEmpty() && checkIfLoading()) {
     return <EmptyState />;
   }
 
   return (
     <div className='flex'>
-      <Table<FinderTableEntityTypes>
+      {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
+      <Table<any>
         data={data}
         manualFiltering
         sorting={sorting}
+        columns={columns}
         tableRef={tableRef}
-        columns={tableColumns}
         getRowId={(row) => row.id}
         enableColumnResizing={true}
         onSortingChange={setSorting}
@@ -624,9 +339,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Organizations) {
             return (
               <OrganizationTableActions
+                table={table}
                 selection={selectedIds}
                 isCommandMenuOpen={isCommandMenuPrompted}
-                table={table as TableInstance<OrganizationStore>}
                 focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isEditing &&
@@ -641,9 +356,9 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Contacts) {
             return (
               <ContactTableActions
+                table={table}
                 selection={selectedIds}
                 isCommandMenuOpen={isCommandMenuPrompted}
-                table={table as TableInstance<ContactStore>}
                 focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isSearching &&
@@ -658,8 +373,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Opportunities) {
             return (
               <OpportunitiesTableActions
+                table={table}
                 selection={selectedIds}
-                table={table as TableInstance<ContactStore>}
                 focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isSearching &&
@@ -674,8 +389,8 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
           if (tableType === TableViewType.Flow) {
             return (
               <FlowSequencesTableActions
+                table={table}
                 selection={selectedIds}
-                table={table as TableInstance<ContactStore>}
                 focusedId={focusRow !== null ? data?.[focusRow]?.id : null}
                 enableKeyboardShortcuts={
                   !isSearching &&
@@ -694,15 +409,17 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
       {store.ui.contactPreviewCardOpen && !store.ui.isSearching && (
         <ContactPreviewCard />
       )}
-      <ConfirmDeleteDialog
-        onClose={reset}
-        hideCloseButton
-        isOpen={isConfirming}
-        onConfirm={onConfirm}
-        confirmButtonLabel='Void invoice'
-        label={`Void invoice ${targetInvoiceNumber}`}
-        description={`Voiding this invoice will send an email notification to ${targetInvoiceEmail}`}
-      />
+      {tableType === TableViewType.Invoices && (
+        <ConfirmDeleteDialog
+          onClose={reset}
+          hideCloseButton
+          isOpen={isConfirming}
+          onConfirm={onConfirm}
+          confirmButtonLabel='Void invoice'
+          label={`Void invoice ${targetInvoiceNumber}`}
+          description={`Voiding this invoice will send an email notification to ${targetInvoiceEmail}`}
+        />
+      )}
     </div>
   );
 });

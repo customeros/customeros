@@ -3,7 +3,7 @@ import { InvoiceStore } from '@store/Invoices/Invoice.store.ts';
 
 import { InvoiceStatus, ColumnViewType } from '@graphql/types';
 
-export const getColumnSortFn = (columnId: string) =>
+export const getInvoicesSortFn = (columnId: string) =>
   match(columnId)
     .with(
       ColumnViewType.InvoicesInvoiceStatus,
