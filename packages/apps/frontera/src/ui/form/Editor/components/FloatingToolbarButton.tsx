@@ -19,9 +19,9 @@ export const FloatingToolbarButton = ({
       variant='ghost'
       onClick={onClick}
       className={cn(
-        'rounded-sm text-gray-25 hover:text-inherit focus:text-inherit hover:bg-gray-600 focus:bg-gray-600 focus:text-white hover:text-white',
+        'rounded-sm text-gray-100 hover:text-inherit focus:text-inherit hover:bg-gray-600 focus:bg-gray-600 focus:text-gray-100 hover:text-gray-100',
         {
-          'bg-gray-600 text-gray-25': active,
+          'bg-gray-600 text-gray-100': active,
         },
       )}
     />

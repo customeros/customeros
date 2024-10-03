@@ -105,7 +105,11 @@ export const StepsHub = observer(() => {
       source: ui.flowCommandMenu.context.meta?.source,
       target: newNode.id,
       type: 'baseEdge',
-      markerEnd: { type: MarkerType.Arrow },
+      markerEnd: {
+        type: MarkerType.Arrow,
+        width: 20,
+        height: 20,
+      },
     };
 
     const edgeFromNewNode = {
@@ -113,7 +117,11 @@ export const StepsHub = observer(() => {
       source: newNode.id,
       target: ui.flowCommandMenu.context.meta?.target,
       type: 'baseEdge',
-      markerEnd: { type: MarkerType.Arrow },
+      markerEnd: {
+        type: MarkerType.Arrow,
+        width: 20,
+        height: 20,
+      },
     };
 
     const updatedEdges = edges.filter(

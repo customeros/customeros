@@ -77,16 +77,17 @@ function FloatingLinkEditor({
       return;
     }
 
-    const rootElement = editor.getRootElement();
+    const domSelection = getSelection();
+    const domRange =
+      domSelection?.rangeCount !== 0 && domSelection?.getRangeAt(0);
 
     if (
       selection !== null &&
+      !!domRange &&
       nativeSelection !== null &&
-      rootElement !== null &&
-      rootElement.contains(nativeSelection.anchorNode) &&
       editor.isEditable()
     ) {
-      computePosition(anchorElem, editorElem, {
+      computePosition(domRange, editorElem, {
         placement: 'top-start',
         middleware: [offset(4), flip(), shift()],
       }).then(({ x, y }) => {
@@ -277,7 +278,7 @@ function FloatingLinkEditor({
 
           <FloatingToolbarButton
             aria-label='Open link'
-            icon={<LinkExternal02 className='text-gray-500 stroke-1' />}
+            icon={<LinkExternal02 className='text-inherit' />}
             onClick={() => {
               const link = getExternalUrl(sanitizeUrl(linkUrl));
 
@@ -286,7 +287,7 @@ function FloatingLinkEditor({
           />
           <FloatingToolbarButton
             aria-label='Delete link'
-            icon={<Trash01 className='text-gray-500' />}
+            icon={<Trash01 className='text-inherit' />}
             onClick={() => {
               editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
               setIsLink(false);

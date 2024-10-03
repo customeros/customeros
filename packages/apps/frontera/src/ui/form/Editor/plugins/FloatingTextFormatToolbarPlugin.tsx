@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react';
 
@@ -17,17 +18,18 @@ import {
   SELECTION_CHANGE_COMMAND as ON_SELECTION_CHANGE,
 } from 'lexical';
 
-import { cn } from '@ui/utils/cn.ts';
 import { Input } from '@ui/form/Input';
-import { X } from '@ui/media/icons/X.tsx';
-import { IconButton } from '@ui/form/IconButton';
-import { Check } from '@ui/media/icons/Check.tsx';
+import { Divider } from '@ui/presentation/Divider';
 import { Bold01 } from '@ui/media/icons/Bold01.tsx';
 import { Link01 } from '@ui/media/icons/Link01.tsx';
+import { Trash01 } from '@ui/media/icons/Trash01.tsx';
 import { Italic01 } from '@ui/media/icons/Italic01.tsx';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { getExternalUrl } from '@utils/getExternalLink.ts';
+import { sanitizeUrl } from '@ui/form/Editor/utils/url.ts';
 import { BlockQuote } from '@ui/media/icons/BlockQuote.tsx';
 import { FloatingToolbarButton } from '@ui/form/Editor/components';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02.tsx';
 import { Strikethrough01 } from '@ui/media/icons/Strikethrough01.tsx';
 import { $isExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode.tsx';
 
@@ -185,25 +187,21 @@ export function FloatingMenu({
             onChange={(e) => setLinkUrl(e.target.value)}
             className='border-none rounded px-2 py-0 min-h-[auto] text-sm text-gray-25'
           />
-          <IconButton
-            size='xs'
-            variant='ghost'
-            aria-label={'Add link'}
-            onClick={handleLinkSubmit}
-            icon={<Check className='text-inherit' />}
-            className={cn(
-              'rounded-sm text-gray-25 hover:text-inherit focus:text-inherit hover:bg-gray-600 focus:bg-gray-600 focus:text-white hover:text-white',
-            )}
+          <Divider className='w-[1px] h-3 border-b-0 border-l-[1px] border-gray-500 mx-2' />
+
+          <FloatingToolbarButton
+            aria-label='Open link'
+            icon={<LinkExternal02 className='text-inherit' />}
+            onClick={() => {
+              const link = getExternalUrl(sanitizeUrl(linkUrl));
+
+              window.open(link, '_blank', 'noopener,noreferrer');
+            }}
           />
-          <IconButton
-            size='xs'
-            variant='ghost'
-            aria-label={'Cancel link'}
+          <FloatingToolbarButton
+            aria-label='Cancel'
             onClick={handleLinkCancel}
-            icon={<X className='text-inherit' />}
-            className={cn(
-              'rounded-sm text-gray-25 hover:text-inherit focus:text-inherit hover:bg-gray-600 focus:bg-gray-600 focus:text-white hover:text-white',
-            )}
+            icon={<Trash01 className='text-inherit' />}
           />
         </>
       ) : (
