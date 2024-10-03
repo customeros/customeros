@@ -13,7 +13,6 @@ import {
   ColumnView,
   TableIdType,
   ColumnViewType,
-  ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
 
 import {
@@ -96,54 +95,6 @@ export const FinderFilters = observer(
           return true;
         }) ?? [];
 
-    const handleChangeOperator = (
-      operation: string,
-      filter: FilterItem,
-      index: number,
-    ) => {
-      const selectedOperation =
-        operation === ComparisonOperator.IsEmpty ||
-        operation === ComparisonOperator.IsNotEmpty ||
-        filter.value
-          ? true
-          : false;
-
-      tableViewDef?.setFilterv2(
-        {
-          ...filter,
-          operation: (operation as ComparisonOperator) || '',
-          property: filter.property,
-          active: selectedOperation,
-          includeEmpty: operation === ComparisonOperator.IsEmpty ? true : false,
-        },
-        index,
-      );
-
-      if (ComparisonOperator.Lt === operation) {
-        tableViewDef?.setFilterv2(
-          {
-            ...filter,
-            value: [null, filter.value[0]],
-            property: filter.property,
-            operation: (operation as ComparisonOperator) || '',
-          },
-          index,
-        );
-      } else {
-        if (ComparisonOperator.Gt === operation) {
-          tableViewDef?.setFilterv2(
-            {
-              ...filter,
-              value: [filter.value[1], null],
-              property: filter.property,
-              operation: (operation as ComparisonOperator) || '',
-            },
-            index,
-          );
-        }
-      }
-    };
-
     return (
       <Filters
         filterTypes={filterTypes}
@@ -153,8 +104,8 @@ export const FinderFilters = observer(
         onClearFilter={(filter, idx) =>
           tableViewDef?.removeFilter(filter.property, idx)
         }
-        onChangeOperator={(operation: string, filter, index: number) => {
-          handleChangeOperator(operation, filter, index);
+        setFilters={(filter: FilterItem, index: number) => {
+          tableViewDef?.setFilterv2(filter, index);
         }}
         availableFilters={
           availableFilters.filter((filter) => filter !== null) as Partial<
@@ -168,35 +119,6 @@ export const FinderFilters = observer(
             active: false,
             operation: getFilterOperators(filter?.filterAccesor ?? '')[0] || '',
           });
-        }}
-        onChangeFilterValue={(
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          value: string | any,
-          filter: FilterItem,
-          index: number,
-        ) => {
-          if (Array.isArray(value) && value.length === 0) {
-            tableViewDef?.setFilterv2(
-              {
-                ...filter,
-                property: filter.property,
-                active: false,
-                operation: filter.operation,
-                value: value,
-              },
-              index,
-            );
-          } else {
-            tableViewDef?.setFilterv2(
-              {
-                ...filter,
-                value: value,
-                property: filter.property,
-                active: true,
-              },
-              index,
-            );
-          }
         }}
       />
     );

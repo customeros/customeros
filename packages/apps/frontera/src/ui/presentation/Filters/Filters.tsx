@@ -23,14 +23,8 @@ interface FiltersProps {
   availableFilters: Partial<ColumnView & FilterType>[];
   onClearFilter: (filter: FilterItem, idx: number) => void;
   filterTypes: Partial<Record<ColumnViewType, FilterType>>;
-  onChangeOperator: (
-    operator: string,
-    filter: FilterItem,
-    index: number,
-  ) => void;
-  onChangeFilterValue: (
-    value: string | Date | string[],
-    filter: FilterItem,
+  setFilters: (
+    filter: FilterItem & { active?: boolean },
     index: number,
   ) => void;
   onFilterSelect: (
@@ -43,11 +37,10 @@ export const Filters = ({
   filters,
   filterTypes,
   onClearFilter,
-  onChangeFilterValue,
   filterSearch,
   handleFilterSearch,
   availableFilters,
-  onChangeOperator,
+  setFilters,
   onFilterSelect,
 }: FiltersProps) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -93,6 +86,83 @@ export const Filters = ({
     }, 100);
   }, [isOpen]);
 
+  const handleChangeOperator = (
+    operation: string,
+    filter: FilterItem,
+    index: number,
+  ) => {
+    const selectedOperation =
+      operation === ComparisonOperator.IsEmpty ||
+      operation === ComparisonOperator.IsNotEmpty ||
+      filter.value
+        ? true
+        : false;
+
+    setFilters(
+      {
+        ...filter,
+        operation: (operation as ComparisonOperator) || '',
+        property: filter.property,
+        active: selectedOperation,
+        includeEmpty: operation === ComparisonOperator.IsEmpty ? true : false,
+      },
+      index,
+    );
+
+    if (ComparisonOperator.Lt === operation) {
+      setFilters(
+        {
+          ...filter,
+          value: [null, filter.value[0]],
+          property: filter.property,
+          operation: (operation as ComparisonOperator) || '',
+        },
+        index,
+      );
+    } else {
+      if (ComparisonOperator.Gt === operation) {
+        setFilters(
+          {
+            ...filter,
+            value: [filter.value[1], null],
+            property: filter.property,
+            operation: (operation as ComparisonOperator) || '',
+          },
+          index,
+        );
+      }
+    }
+  };
+
+  const handleChangeFilterValue = (
+    value: string | Date | string[],
+    filter: FilterItem,
+    index: number,
+  ) => {
+    if (Array.isArray(value) && value.length === 0) {
+      setFilters(
+        {
+          ...filter,
+          property: filter.property,
+          active: false,
+          operation: filter.operation,
+          value: value,
+        },
+        index,
+      );
+    } else {
+      setFilters(
+        {
+          ...filter,
+          value: value,
+          property: filter.property,
+          active: true,
+        },
+        index,
+      );
+    }
+  };
+
   return (
     <div className='flex gap-2 flex-wrap'>
       {filters.map((f, idx) => (
@@ -105,8 +175,12 @@ export const Filters = ({
           filterType={getFilterTypes(f.property) || ''}
           listFilterOptions={getFilterOptions(f.property) || []}
           operatorValue={f.operation || ComparisonOperator.Between}
-          onChangeOperator={(operator) => onChangeOperator(operator, f, idx)}
-          onChangeFilterValue={(value) => onChangeFilterValue(value, f, idx)}
+          onChangeFilterValue={(value) =>
+            handleChangeFilterValue(value, f, idx)
+          }
+          onChangeOperator={(operator) =>
+            handleChangeOperator(operator, f, idx)
+          }
         />
       ))}
       <Menu open={isOpen} onOpenChange={(v) => setIsOpen(v)}>
@@ -123,6 +197,7 @@ export const Filters = ({
           ) : (
             <Button
               size='xs'
+              variant='ghost'
               colorScheme='grayModern'
               leftIcon={<FilterLines />}
             >
