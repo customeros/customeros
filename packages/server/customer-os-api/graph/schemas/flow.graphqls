@@ -1,6 +1,7 @@
 extend type Query {
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailboxes: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_mailboxes: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -133,4 +134,21 @@ enum FlowParticipantStatus {
     PAUSED
     COMPLETED
     GOAL_ACHIEVED
+}
+
+type EmailVariableEntity {
+    type: EmailVariableEntityType!
+    variables: [EmailVariableName!]!
+}
+
+enum EmailVariableEntityType {
+    CONTACT
+}
+
+enum EmailVariableName {
+    CONTACT_FIRST_NAME
+    CONTACT_LAST_NAME
+    CONTACT_FULL_NAME
+    CONTACT_EMAIL
+    ORGANIZATION_NAME
 }

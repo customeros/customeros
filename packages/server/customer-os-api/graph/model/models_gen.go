@@ -1017,6 +1017,11 @@ type EmailValidationDetails struct {
 	IsDeliverable     *bool             `json:"isDeliverable,omitempty"`
 }
 
+type EmailVariableEntity struct {
+	Type      EmailVariableEntityType `json:"type"`
+	Variables []EmailVariableName     `json:"variables"`
+}
+
 type EntityTemplate struct {
 	ID                   string                   `json:"id"`
 	Version              int                      `json:"version"`
@@ -4176,6 +4181,92 @@ func (e *EmailLabel) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EmailLabel) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EmailVariableEntityType string
+
+const (
+	EmailVariableEntityTypeContact EmailVariableEntityType = "CONTACT"
+)
+
+var AllEmailVariableEntityType = []EmailVariableEntityType{
+	EmailVariableEntityTypeContact,
+}
+
+func (e EmailVariableEntityType) IsValid() bool {
+	switch e {
+	case EmailVariableEntityTypeContact:
+		return true
+	}
+	return false
+}
+
+func (e EmailVariableEntityType) String() string {
+	return string(e)
+}
+
+func (e *EmailVariableEntityType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailVariableEntityType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailVariableEntityType", str)
+	}
+	return nil
+}
+
+func (e EmailVariableEntityType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EmailVariableName string
+
+const (
+	EmailVariableNameContactFirstName EmailVariableName = "CONTACT_FIRST_NAME"
+	EmailVariableNameContactLastName  EmailVariableName = "CONTACT_LAST_NAME"
+	EmailVariableNameContactFullName  EmailVariableName = "CONTACT_FULL_NAME"
+	EmailVariableNameContactEmail     EmailVariableName = "CONTACT_EMAIL"
+	EmailVariableNameOrganizationName EmailVariableName = "ORGANIZATION_NAME"
+)
+
+var AllEmailVariableName = []EmailVariableName{
+	EmailVariableNameContactFirstName,
+	EmailVariableNameContactLastName,
+	EmailVariableNameContactFullName,
+	EmailVariableNameContactEmail,
+	EmailVariableNameOrganizationName,
+}
+
+func (e EmailVariableName) IsValid() bool {
+	switch e {
+	case EmailVariableNameContactFirstName, EmailVariableNameContactLastName, EmailVariableNameContactFullName, EmailVariableNameContactEmail, EmailVariableNameOrganizationName:
+		return true
+	}
+	return false
+}
+
+func (e EmailVariableName) String() string {
+	return string(e)
+}
+
+func (e *EmailVariableName) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailVariableName(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailVariableName", str)
+	}
+	return nil
+}
+
+func (e EmailVariableName) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
