@@ -18,6 +18,7 @@ const (
 	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
+	OrganizationEmailUnlinkV1     = "V1_ORGANIZATION_EMAIL_UNLINK"
 	//Deprecated
 	OrganizationLocationLinkV1 = "V1_ORGANIZATION_LOCATION_LINK"
 	OrganizationLinkDomainV1   = "V1_ORGANIZATION_LINK_DOMAIN"

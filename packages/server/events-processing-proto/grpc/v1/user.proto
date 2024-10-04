@@ -54,6 +54,14 @@ message LinkEmailToUserGrpcRequest {
   string email = 8;
 }
 
+message UnLinkEmailFromUserGrpcRequest {
+  string tenant = 1;
+  string userId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  string email = 5;
+}
+
 message AddRoleGrpcRequest {
   string userId = 1;
   string tenant = 2;
@@ -80,6 +88,7 @@ service userGrpcService {
   rpc LinkJobRoleToUser(LinkJobRoleToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkPhoneNumberToUser(LinkPhoneNumberToUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc LinkEmailToUser(LinkEmailToUserGrpcRequest) returns (UserIdGrpcResponse);
+  rpc UnLinkEmailFromUser(UnLinkEmailFromUserGrpcRequest) returns (UserIdGrpcResponse);
   rpc AddRole(AddRoleGrpcRequest) returns (UserIdGrpcResponse);
   rpc RemoveRole(RemoveRoleGrpcRequest) returns (UserIdGrpcResponse);
 }

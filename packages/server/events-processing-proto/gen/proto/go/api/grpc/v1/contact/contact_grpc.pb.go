@@ -27,6 +27,7 @@ type ContactGrpcServiceClient interface {
 	UpsertContact(ctx context.Context, in *UpsertContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(ctx context.Context, in *LinkPhoneNumberToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkEmailToContact(ctx context.Context, in *LinkEmailToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
+	UnLinkEmailFromContact(ctx context.Context, in *UnLinkEmailFromContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(ctx context.Context, in *LinkLocationToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(ctx context.Context, in *LinkWithOrganizationGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error)
 	AddSocial(ctx context.Context, in *ContactAddSocialGrpcRequest, opts ...grpc.CallOption) (*social.SocialIdGrpcResponse, error)
@@ -68,6 +69,15 @@ func (c *contactGrpcServiceClient) LinkPhoneNumberToContact(ctx context.Context,
 func (c *contactGrpcServiceClient) LinkEmailToContact(ctx context.Context, in *LinkEmailToContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
 	out := new(ContactIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/contactGrpcService/LinkEmailToContact", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *contactGrpcServiceClient) UnLinkEmailFromContact(ctx context.Context, in *UnLinkEmailFromContactGrpcRequest, opts ...grpc.CallOption) (*ContactIdGrpcResponse, error) {
+	out := new(ContactIdGrpcResponse)
+	err := c.cc.Invoke(ctx, "/contactGrpcService/UnLinkEmailFromContact", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -171,6 +181,7 @@ type ContactGrpcServiceServer interface {
 	UpsertContact(context.Context, *UpsertContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact(context.Context, *LinkPhoneNumberToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error)
+	UnLinkEmailFromContact(context.Context, *UnLinkEmailFromContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error)
 	LinkWithOrganization(context.Context, *LinkWithOrganizationGrpcRequest) (*ContactIdGrpcResponse, error)
 	AddSocial(context.Context, *ContactAddSocialGrpcRequest) (*social.SocialIdGrpcResponse, error)
@@ -195,6 +206,9 @@ func (UnimplementedContactGrpcServiceServer) LinkPhoneNumberToContact(context.Co
 }
 func (UnimplementedContactGrpcServiceServer) LinkEmailToContact(context.Context, *LinkEmailToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToContact not implemented")
+}
+func (UnimplementedContactGrpcServiceServer) UnLinkEmailFromContact(context.Context, *UnLinkEmailFromContactGrpcRequest) (*ContactIdGrpcResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UnLinkEmailFromContact not implemented")
 }
 func (UnimplementedContactGrpcServiceServer) LinkLocationToContact(context.Context, *LinkLocationToContactGrpcRequest) (*ContactIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkLocationToContact not implemented")
@@ -288,6 +302,24 @@ func _ContactGrpcService_LinkEmailToContact_Handler(srv interface{}, ctx context
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(ContactGrpcServiceServer).LinkEmailToContact(ctx, req.(*LinkEmailToContactGrpcRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ContactGrpcService_UnLinkEmailFromContact_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UnLinkEmailFromContactGrpcRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ContactGrpcServiceServer).UnLinkEmailFromContact(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/contactGrpcService/UnLinkEmailFromContact",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ContactGrpcServiceServer).UnLinkEmailFromContact(ctx, req.(*UnLinkEmailFromContactGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -490,6 +522,10 @@ var ContactGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkEmailToContact",
 			Handler:    _ContactGrpcService_LinkEmailToContact_Handler,
+		},
+		{
+			MethodName: "UnLinkEmailFromContact",
+			Handler:    _ContactGrpcService_UnLinkEmailFromContact_Handler,
 		},
 		{
 			MethodName: "LinkLocationToContact",

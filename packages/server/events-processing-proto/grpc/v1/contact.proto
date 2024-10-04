@@ -64,6 +64,14 @@ message LinkEmailToContactGrpcRequest {
   string email = 8;
 }
 
+message UnLinkEmailFromContactGrpcRequest {
+  string tenant = 1;
+  string contactId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  string email = 5;
+}
+
 message LinkLocationToContactGrpcRequest {
   string tenant = 1;
   string contactId = 2;
@@ -158,6 +166,7 @@ service contactGrpcService {
   rpc UpsertContact(UpsertContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc UnLinkEmailFromContact(UnLinkEmailFromContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkWithOrganization(LinkWithOrganizationGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddSocial(ContactAddSocialGrpcRequest) returns (SocialIdGrpcResponse);
