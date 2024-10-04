@@ -1562,6 +1562,7 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
+  actions: Array<FlowAction>;
   contacts: Array<FlowContact>;
   description: Scalars['String']['output'];
   edges: Scalars['String']['output'];
@@ -1570,6 +1571,13 @@ export type Flow = MetadataInterface & {
   nodes: Scalars['String']['output'];
   statistics: FlowStatistics;
   status: FlowStatus;
+};
+
+export type FlowAction = MetadataInterface & {
+  __typename?: 'FlowAction';
+  json: Scalars['String']['output'];
+  metadata: Metadata;
+  senders: Array<FlowActionSender>;
 };
 
 export type FlowActionInputData = {
@@ -1624,15 +1632,8 @@ export type FlowContact = MetadataInterface & {
   metadata: Metadata;
   scheduledAction?: Maybe<Scalars['String']['output']>;
   scheduledAt?: Maybe<Scalars['Time']['output']>;
-  status: FlowContactStatus;
+  status: FlowParticipantStatus;
 };
-
-export enum FlowContactStatus {
-  Completed = 'COMPLETED',
-  InProgress = 'IN_PROGRESS',
-  Paused = 'PAUSED',
-  Scheduled = 'SCHEDULED',
-}
 
 export type FlowMergeInput = {
   edges: Scalars['String']['input'];
@@ -1640,6 +1641,15 @@ export type FlowMergeInput = {
   name: Scalars['String']['input'];
   nodes: Scalars['String']['input'];
 };
+
+export enum FlowParticipantStatus {
+  Completed = 'COMPLETED',
+  GoalAchieved = 'GOAL_ACHIEVED',
+  InProgress = 'IN_PROGRESS',
+  Paused = 'PAUSED',
+  Pending = 'PENDING',
+  Scheduled = 'SCHEDULED',
+}
 
 export type FlowStatistics = {
   __typename?: 'FlowStatistics';
@@ -2382,8 +2392,7 @@ export type Mutation = {
   contact_Archive: Result;
   contact_Create: Scalars['ID']['output'];
   contact_CreateForOrganization: Contact;
-  /** @deprecated Decommissioned */
-  contact_FindEmail: Scalars['String']['output'];
+  contact_FindWorkEmail: ActionResponse;
   contact_HardDelete: Result;
   contact_Hide: ActionResponse;
   contact_Merge: Contact;
@@ -2396,6 +2405,8 @@ export type Mutation = {
   contractLineItem_Close: Scalars['ID']['output'];
   contractLineItem_Create: ServiceLineItem;
   contractLineItem_NewVersion: ServiceLineItem;
+  contractLineItem_Pause: ActionResponse;
+  contractLineItem_Resume: ActionResponse;
   contractLineItem_Update: ServiceLineItem;
   contract_AddAttachment: Contract;
   contract_Create: Contract;
@@ -2635,9 +2646,11 @@ export type MutationContact_CreateForOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-export type MutationContact_FindEmailArgs = {
+export type MutationContact_FindWorkEmailArgs = {
   contactId: Scalars['ID']['input'];
-  organizationId: Scalars['ID']['input'];
+  domain?: InputMaybe<Scalars['String']['input']>;
+  findMobileNumber?: InputMaybe<Scalars['Boolean']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type MutationContact_HardDeleteArgs = {
@@ -2689,6 +2702,14 @@ export type MutationContractLineItem_CreateArgs = {
 
 export type MutationContractLineItem_NewVersionArgs = {
   input: ServiceLineItemNewVersionInput;
+};
+
+export type MutationContractLineItem_PauseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationContractLineItem_ResumeArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationContractLineItem_UpdateArgs = {
@@ -2896,7 +2917,7 @@ export type MutationFlowSender_DeleteArgs = {
 };
 
 export type MutationFlowSender_MergeArgs = {
-  flowId: Scalars['ID']['input'];
+  flowActionId: Scalars['ID']['input'];
   input: FlowActionSenderMergeInput;
 };
 
@@ -4665,6 +4686,7 @@ export type ServiceLineItem = MetadataInterface & {
   externalLinks: Array<ExternalSystem>;
   metadata: Metadata;
   parentId: Scalars['ID']['output'];
+  paused: Scalars['Boolean']['output'];
   price: Scalars['Float']['output'];
   quantity: Scalars['Int64']['output'];
   serviceEnded?: Maybe<Scalars['Time']['output']>;

@@ -8,7 +8,7 @@ import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
 import { FlowContactsService } from '@store/FlowContacts/__service__';
 
-import { DataSource, FlowContact, FlowContactStatus } from '@graphql/types';
+import { DataSource, FlowContact, FlowParticipantStatus } from '@graphql/types';
 
 export class FlowContactStore implements Store<FlowContact> {
   value: FlowContact = getDefaultValue();
@@ -111,7 +111,7 @@ const getDefaultValue = (): FlowContact => ({
     lastUpdated: new Date().toISOString(),
     sourceOfTruth: DataSource.Openline,
   },
-  status: FlowContactStatus.Scheduled,
+  status: FlowParticipantStatus.Scheduled,
   scheduledAction: '',
   scheduledAt: new Date().toISOString(),
   contact: {

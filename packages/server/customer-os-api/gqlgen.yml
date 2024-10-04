@@ -74,9 +74,9 @@ models:
   FlowActionStatus:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowActionStatus
-  FlowContactStatus:
+  FlowParticipantStatus:
     model:
-      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowContactStatus
+      - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowParticipantStatus
   FlowActionType:
     model:
       - github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity.FlowActionType

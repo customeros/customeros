@@ -1188,11 +1188,11 @@ type FlowActionSenderMergeInput struct {
 }
 
 type FlowContact struct {
-	Metadata        *Metadata         `json:"metadata"`
-	Contact         *Contact          `json:"contact"`
-	Status          FlowContactStatus `json:"status"`
-	ScheduledAction *string           `json:"scheduledAction,omitempty"`
-	ScheduledAt     *time.Time        `json:"scheduledAt,omitempty"`
+	Metadata        *Metadata             `json:"metadata"`
+	Contact         *Contact              `json:"contact"`
+	Status          FlowParticipantStatus `json:"status"`
+	ScheduledAction *string               `json:"scheduledAction,omitempty"`
+	ScheduledAt     *time.Time            `json:"scheduledAt,omitempty"`
 }
 
 func (FlowContact) IsMetadataInterface()        {}
@@ -4373,52 +4373,52 @@ func (e FlowActionStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type FlowContactStatus string
+type FlowParticipantStatus string
 
 const (
-	FlowContactStatusPending      FlowContactStatus = "PENDING"
-	FlowContactStatusScheduled    FlowContactStatus = "SCHEDULED"
-	FlowContactStatusInProgress   FlowContactStatus = "IN_PROGRESS"
-	FlowContactStatusPaused       FlowContactStatus = "PAUSED"
-	FlowContactStatusCompleted    FlowContactStatus = "COMPLETED"
-	FlowContactStatusGoalAchieved FlowContactStatus = "GOAL_ACHIEVED"
+	FlowParticipantStatusPending      FlowParticipantStatus = "PENDING"
+	FlowParticipantStatusScheduled    FlowParticipantStatus = "SCHEDULED"
+	FlowParticipantStatusInProgress   FlowParticipantStatus = "IN_PROGRESS"
+	FlowParticipantStatusPaused       FlowParticipantStatus = "PAUSED"
+	FlowParticipantStatusCompleted    FlowParticipantStatus = "COMPLETED"
+	FlowParticipantStatusGoalAchieved FlowParticipantStatus = "GOAL_ACHIEVED"
 )
 
-var AllFlowContactStatus = []FlowContactStatus{
-	FlowContactStatusPending,
-	FlowContactStatusScheduled,
-	FlowContactStatusInProgress,
-	FlowContactStatusPaused,
-	FlowContactStatusCompleted,
-	FlowContactStatusGoalAchieved,
+var AllFlowParticipantStatus = []FlowParticipantStatus{
+	FlowParticipantStatusPending,
+	FlowParticipantStatusScheduled,
+	FlowParticipantStatusInProgress,
+	FlowParticipantStatusPaused,
+	FlowParticipantStatusCompleted,
+	FlowParticipantStatusGoalAchieved,
 }
 
-func (e FlowContactStatus) IsValid() bool {
+func (e FlowParticipantStatus) IsValid() bool {
 	switch e {
-	case FlowContactStatusPending, FlowContactStatusScheduled, FlowContactStatusInProgress, FlowContactStatusPaused, FlowContactStatusCompleted, FlowContactStatusGoalAchieved:
+	case FlowParticipantStatusPending, FlowParticipantStatusScheduled, FlowParticipantStatusInProgress, FlowParticipantStatusPaused, FlowParticipantStatusCompleted, FlowParticipantStatusGoalAchieved:
 		return true
 	}
 	return false
 }
 
-func (e FlowContactStatus) String() string {
+func (e FlowParticipantStatus) String() string {
 	return string(e)
 }
 
-func (e *FlowContactStatus) UnmarshalGQL(v interface{}) error {
+func (e *FlowParticipantStatus) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = FlowContactStatus(str)
+	*e = FlowParticipantStatus(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowContactStatus", str)
+		return fmt.Errorf("%s is not a valid FlowParticipantStatus", str)
 	}
 	return nil
 }
 
-func (e FlowContactStatus) MarshalGQL(w io.Writer) {
+func (e FlowParticipantStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
