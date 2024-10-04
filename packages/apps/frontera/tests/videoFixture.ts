@@ -1,6 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { chromium, test as base, BrowserContext } from '@playwright/test';
+import {
+  chromium,
+  TestInfo,
+  test as base,
+  BrowserContext,
+} from '@playwright/test';
 
 type VideoFixture = {
   context: BrowserContext;
@@ -30,31 +35,45 @@ export const test = base.extend<TestFixtures & VideoFixture>({
 
     await page.close();
 
-    const video = page.video();
-
-    if (video) {
-      const videoPath = await video.path();
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const customVideoName = `${testInfo.title.replace(
-        /\s+/g,
-        '_',
-      )}_${timestamp}.webm`;
-      const newVideoPath = path.join('videos', customVideoName);
-
-      testInfo.attachments.push({
-        name: 'video',
-        path: newVideoPath,
-        contentType: 'video/webm',
-      });
-
-      await new Promise<void>((resolve) => {
-        fs.rename(videoPath, newVideoPath, (err) => {
-          if (err) console.error('Error renaming video:', err);
-          resolve();
-        });
-      });
-    }
+    await handleVideo(page, testInfo);
   },
 });
+
+async function handleVideo(
+  page: Awaited<ReturnType<BrowserContext['newPage']>>,
+  testInfo: TestInfo,
+) {
+  const video = page.video();
+
+  if (video && testInfo.status !== 'passed') {
+    const videoPath = await video.path();
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+    const customVideoName = `${testInfo.title.replace(
+      /\s+/g,
+      '_',
+    )}_${timestamp}.webm`;
+    const newVideoPath = path.join('videos', customVideoName);
+
+    testInfo.attachments.push({
+      name: 'video',
+      path: newVideoPath,
+      contentType: 'video/webm',
+    });
+
+    await new Promise<void>((resolve) => {
+      fs.rename(videoPath, newVideoPath, (err) => {
+        if (err) console.error('Error renaming video:', err);
+        resolve();
+      });
+    });
+  } else if (video) {
+    // Delete the video file if the test passed
+    const videoPath = await video.path();
+
+    fs.unlink(videoPath, (err) => {
+      if (err) console.error('Error deleting video:', err);
+    });
+  }
+}
 
 export { expect } from '@playwright/test';
