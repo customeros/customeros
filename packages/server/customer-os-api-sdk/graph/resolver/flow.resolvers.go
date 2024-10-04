@@ -82,9 +82,14 @@ func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: Flows - flows"))
 }
 
-// Mailboxes is the resolver for the mailboxes field.
-func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
+// FlowMailboxes is the resolver for the flow_mailboxes field.
+func (r *queryResolver) FlowMailboxes(ctx context.Context) ([]string, error) {
+	panic(fmt.Errorf("not implemented: FlowMailboxes - flow_mailboxes"))
+}
+
+// FlowEmailVariables is the resolver for the flow_emailVariables field.
+func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error) {
+	panic(fmt.Errorf("not implemented: FlowEmailVariables - flow_emailVariables"))
 }
 
 // Flow returns generated.FlowResolver implementation.
@@ -112,6 +117,12 @@ type flowContactResolver struct{ *Resolver }
 //   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
 //     it when you're done.
 //   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
+	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
+}
+func (r *queryResolver) EmailVariables(ctx context.Context) ([]model.EmailVariableName, error) {
+	panic(fmt.Errorf("not implemented: EmailVariables - emailVariables"))
+}
 func (r *flowResolver) Statistics(ctx context.Context, obj *model.Flow) (*model.FlowStatistics, error) {
 	panic(fmt.Errorf("not implemented: Statistics - statistics"))
 }

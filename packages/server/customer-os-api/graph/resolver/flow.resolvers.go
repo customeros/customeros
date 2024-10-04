@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -13,7 +14,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
@@ -252,8 +252,8 @@ func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 	return mapper.MapEntitiesToFlows(entities), nil
 }
 
-// Mailboxes is the resolver for the mailboxes field.
-func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
+// FlowMailboxes is the resolver for the flow_mailboxes field.
+func (r *queryResolver) FlowMailboxes(ctx context.Context) ([]string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Mailboxes", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -271,6 +271,27 @@ func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
 	}
 
 	return mailboxes, nil
+}
+
+// FlowEmailVariables is the resolver for the flow_emailVariables field.
+func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.EmailVariables", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	contactVariables := make([]model.EmailVariableName, 0)
+	contactVariables = append(contactVariables, model.EmailVariableNameContactFirstName)
+	contactVariables = append(contactVariables, model.EmailVariableNameContactLastName)
+	contactVariables = append(contactVariables, model.EmailVariableNameContactEmail)
+	contactVariables = append(contactVariables, model.EmailVariableNameOrganizationName)
+
+	emailVariables := make([]*model.EmailVariableEntity, 0)
+	emailVariables = append(emailVariables, &model.EmailVariableEntity{
+		Type:      model.EmailVariableEntityTypeContact,
+		Variables: contactVariables,
+	})
+
+	return emailVariables, nil
 }
 
 // Flow returns generated.FlowResolver implementation.
@@ -291,3 +312,34 @@ type flowResolver struct{ *Resolver }
 type flowActionResolver struct{ *Resolver }
 type flowActionSenderResolver struct{ *Resolver }
 type flowContactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//  - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//    it when you're done.
+//  - You have helper methods in this file. Move them out to keep these resolver files clean.
+/*
+	func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Mailboxes", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := r.Services.Repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx, common.GetTenantFromContext(ctx))
+	if err != nil || entities == nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+
+	mailboxes := make([]string, 0)
+	for _, entity := range entities {
+		mailboxes = append(mailboxes, entity.MailboxUsername)
+	}
+
+	return mailboxes, nil
+}
+func (r *queryResolver) EmailVariables(ctx context.Context) ([]model.EmailVariableName, error) {
+
+}
+*/

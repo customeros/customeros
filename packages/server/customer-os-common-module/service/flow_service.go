@@ -484,9 +484,9 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	flow := mapper.MapDbNodeToFlowEntity(node)
 
-	//if flow.Status == status {
-	//	return flow, nil
-	//}
+	if flow.Status == status {
+		return flow, nil
+	}
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
