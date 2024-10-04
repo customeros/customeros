@@ -11,13 +11,13 @@ import (
 	"reflect"
 )
 
-func (i *Loaders) GetFlowContactsForFlow(ctx context.Context, flowId string) (*neo4jentity.FlowContactEntities, error) {
+func (i *Loaders) GetFlowContactsForFlow(ctx context.Context, flowId string) (*neo4jentity.FlowParticipantEntities, error) {
 	thunk := i.FlowContactsForFlow.Load(ctx, dataloader.StringKey(flowId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
 	}
-	resultObj := result.(neo4jentity.FlowContactEntities)
+	resultObj := result.(neo4jentity.FlowParticipantEntities)
 	return &resultObj, nil
 }
 
@@ -59,7 +59,7 @@ func (b *flowBatcher) getFlowContactsForFlow(ctx context.Context, keys dataloade
 
 	ids, keyOrder := sortKeys(keys)
 
-	flowSequenceContactEntitiesPtr, err := b.flowService.FlowContactGetList(ctx, ids)
+	flowSequenceContactEntitiesPtr, err := b.flowService.FlowParticipantGetList(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -69,12 +69,12 @@ func (b *flowBatcher) getFlowContactsForFlow(ctx context.Context, keys dataloade
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	contactEntitiesBySequenceId := make(map[string]neo4jentity.FlowContactEntities)
+	contactEntitiesBySequenceId := make(map[string]neo4jentity.FlowParticipantEntities)
 	for _, val := range *flowSequenceContactEntitiesPtr {
 		if list, ok := contactEntitiesBySequenceId[val.DataloaderKey]; ok {
 			contactEntitiesBySequenceId[val.DataloaderKey] = append(list, val)
 		} else {
-			contactEntitiesBySequenceId[val.DataloaderKey] = neo4jentity.FlowContactEntities{val}
+			contactEntitiesBySequenceId[val.DataloaderKey] = neo4jentity.FlowParticipantEntities{val}
 		}
 	}
 
@@ -87,10 +87,10 @@ func (b *flowBatcher) getFlowContactsForFlow(ctx context.Context, keys dataloade
 		}
 	}
 	for _, ix := range keyOrder {
-		results[ix] = &dataloader.Result{Data: neo4jentity.FlowContactEntities{}, Error: nil}
+		results[ix] = &dataloader.Result{Data: neo4jentity.FlowParticipantEntities{}, Error: nil}
 	}
 
-	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowContactEntities{})); err != nil {
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowParticipantEntities{})); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}

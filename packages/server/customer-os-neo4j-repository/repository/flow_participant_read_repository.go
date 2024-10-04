@@ -14,24 +14,24 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type FlowContactReadRepository interface {
+type FlowParticipantReadRepository interface {
 	GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error)
-	CountWithStatus(ctx context.Context, flowId string, status entity.FlowContactStatus) (int64, error)
-	Identify(ctx context.Context, flowId, contactId string) (*neo4j.Node, error)
+	CountWithStatus(ctx context.Context, flowId string, status entity.FlowParticipantStatus) (int64, error)
+	IdentifyForContact(ctx context.Context, flowId, contactId string) (*neo4j.Node, error)
 	GetById(ctx context.Context, id string) (*neo4j.Node, error)
 }
 
-type flowContactReadRepositoryImpl struct {
+type flowParticipantReadRepositoryImpl struct {
 	driver   *neo4j.DriverWithContext
 	database string
 }
 
-func NewFlowContactReadRepository(driver *neo4j.DriverWithContext, database string) FlowContactReadRepository {
-	return &flowContactReadRepositoryImpl{driver: driver, database: database}
+func NewFlowParticipantReadRepository(driver *neo4j.DriverWithContext, database string) FlowParticipantReadRepository {
+	return &flowParticipantReadRepositoryImpl{driver: driver, database: database}
 }
 
-func (r flowContactReadRepositoryImpl) GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowContactReadRepository.GetList")
+func (r flowParticipantReadRepositoryImpl) GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.GetList")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -45,7 +45,7 @@ func (r flowContactReadRepositoryImpl) GetList(ctx context.Context, flowIds []st
 		"tenant": tenant,
 	}
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowContact_%s) `, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s) `, tenant, tenant)
 	if flowIds != nil && len(flowIds) > 0 {
 		cypher += "WHERE f.id in $flowIds "
 		params["flowIds"] = flowIds
@@ -76,14 +76,14 @@ func (r flowContactReadRepositoryImpl) GetList(ctx context.Context, flowIds []st
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r flowContactReadRepositoryImpl) CountWithStatus(ctx context.Context, flowId string, status entity.FlowContactStatus) (int64, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowContactReadRepository.CountWithStatus")
+func (r flowParticipantReadRepositoryImpl) CountWithStatus(ctx context.Context, flowId string, status entity.FlowParticipantStatus) (int64, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.CountWithStatus")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fc:FlowContact_%s {status: $status}) return count(fc)`, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fc:FlowParticipant_%s {status: $status}) return count(fc)`, tenant, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 		"flowId": flowId,
@@ -110,8 +110,8 @@ func (r flowContactReadRepositoryImpl) CountWithStatus(ctx context.Context, flow
 	return organizationsCount, nil
 }
 
-func (r flowContactReadRepositoryImpl) Identify(ctx context.Context, flowId, contactId string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowContactReadRepository.Identify")
+func (r flowParticipantReadRepositoryImpl) IdentifyForContact(ctx context.Context, flowId, contactId string) (*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.IdentifyForContact")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -119,7 +119,7 @@ func (r flowContactReadRepositoryImpl) Identify(ctx context.Context, flowId, con
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s { id: $flowId})-[:HAS]->(fc:FlowContact_%s)-[:HAS]->(c:Contact_%s {id: $contactId}) RETURN fc`, tenant, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s { id: $flowId})-[:HAS]->(fc:FlowParticipant_%s)-[:HAS]->(c:Contact_%s {id: $contactId}) RETURN fc`, tenant, tenant, tenant)
 	params := map[string]any{
 		"tenant":    tenant,
 		"flowId":    flowId,
@@ -148,8 +148,8 @@ func (r flowContactReadRepositoryImpl) Identify(ctx context.Context, flowId, con
 	return result.(*dbtype.Node), nil
 }
 
-func (r flowContactReadRepositoryImpl) GetById(ctx context.Context, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowContactReadRepository.GetById")
+func (r flowParticipantReadRepositoryImpl) GetById(ctx context.Context, id string) (*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantReadRepository.GetById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -157,7 +157,7 @@ func (r flowContactReadRepositoryImpl) GetById(ctx context.Context, id string) (
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowContact_%s {id: $id}) RETURN fc`, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s {id: $id}) RETURN fc`, tenant, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     id,

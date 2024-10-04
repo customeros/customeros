@@ -14,6 +14,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	opentracing "github.com/opentracing/opentracing-go"
 )
@@ -95,7 +96,7 @@ func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContac
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowContactGetById(ctx, obj.Metadata.ID)
+	entity, err := r.Services.CommonServices.FlowService.FlowParticipantById(ctx, obj.Metadata.ID)
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -144,11 +145,11 @@ func (r *mutationResolver) FlowChangeStatus(ctx context.Context, id string, stat
 
 // FlowContactAdd is the resolver for the flowContact_Add field.
 func (r *mutationResolver) FlowContactAdd(ctx context.Context, flowID string, contactID string) (*model.FlowContact, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowContactAdd", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantAdd", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowContactAdd(ctx, flowID, contactID)
+	entity, err := r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flowID, contactID, commonModel.CONTACT)
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -164,7 +165,7 @@ func (r *mutationResolver) FlowContactAddBulk(ctx context.Context, flowID string
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	for _, id := range contactID {
-		entity, err := r.Services.CommonServices.FlowService.FlowContactAdd(ctx, flowID, id)
+		entity, err := r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flowID, id, commonModel.CONTACT)
 		if err != nil || entity == nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")
@@ -176,11 +177,11 @@ func (r *mutationResolver) FlowContactAddBulk(ctx context.Context, flowID string
 
 // FlowContactDelete is the resolver for the flowContact_Delete field.
 func (r *mutationResolver) FlowContactDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowContactDelete", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.FlowParticipantDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	err := r.Services.CommonServices.FlowService.FlowContactDelete(ctx, id)
+	err := r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")
@@ -196,7 +197,7 @@ func (r *mutationResolver) FlowContactDeleteBulk(ctx context.Context, id []strin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
 	for _, id := range id {
-		err := r.Services.CommonServices.FlowService.FlowContactDelete(ctx, id)
+		err := r.Services.CommonServices.FlowService.FlowParticipantDelete(ctx, id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "")

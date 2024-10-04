@@ -6,21 +6,22 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"time"
 )
 
 const numberOfEmailsPerDay = 2
 
 type FlowExecutionService interface {
-	GetFlowActionExecutions(ctx context.Context, flowId, entityId string, entityType model.EntityType) ([]*entity.FlowActionExecutionEntity, error)
-
 	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string, entityType model.EntityType) error
+	ProcessActionExecution(ctx context.Context, scheduledActionExecution *entity.FlowActionExecutionEntity) error
 }
 
 type flowExecutionService struct {
@@ -33,26 +34,6 @@ func NewFlowExecutionService(services *Services) FlowExecutionService {
 	}
 }
 
-func (s *flowExecutionService) GetFlowActionExecutions(ctx context.Context, flowId, entityId string, entityType model.EntityType) ([]*entity.FlowActionExecutionEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetForContact")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	//get executions for contact
-	nodes, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetForEntity(ctx, flowId, entityId, entityType.String())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-
-	entities := make([]*entity.FlowActionExecutionEntity, 0)
-	for _, node := range nodes {
-		entities = append(entities, mapper.MapDbNodeToFlowActionExecutionEntity(node))
-	}
-
-	return entities, nil
-}
-
 func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ScheduleFlow")
 	defer span.Finish()
@@ -60,7 +41,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 
 	now := utils.Now()
 
-	flowExecutions, err := s.GetFlowActionExecutions(ctx, flowId, entityId, entityType)
+	flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -108,6 +89,36 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 
 		for _, nextAction := range nextActions {
 
+			//marking the flow as completed if the next action is FLOW_END
+			if nextAction.Data.Action == entity.FlowActionTypeFlowEnd {
+
+				var flowParticipant *entity.FlowParticipantEntity
+
+				//TODO support multiple entities
+				if entityType == model.CONTACT {
+					flowParticipant, err = s.services.FlowService.FlowParticipantByContactId(ctx, flowId, entityId)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return err
+					}
+				}
+
+				if flowParticipant == nil {
+					tracing.TraceErr(span, errors.New("Flow participant not found"))
+					return errors.New("Flow participant not found")
+				}
+
+				flowParticipant.Status = entity.FlowParticipantStatusCompleted
+
+				_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, tx, flowParticipant)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return err
+				}
+
+				return nil
+			}
+
 			scheduleAt := lastActionExecutedAt.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
 
 			err := s.scheduleNextAction(ctx, tx, flowId, entityId, entityType, scheduleAt, *nextAction)
@@ -121,6 +132,26 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 	return nil
 }
 
+func (s *flowExecutionService) getFlowActionExecutions(ctx context.Context, flowId, entityId string, entityType model.EntityType) ([]*entity.FlowActionExecutionEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetForContact")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	//get executions for contact
+	nodes, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetForEntity(ctx, flowId, entityId, entityType.String())
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	entities := make([]*entity.FlowActionExecutionEntity, 0)
+	for _, node := range nodes {
+		entities = append(entities, mapper.MapDbNodeToFlowActionExecutionEntity(node))
+	}
+
+	return entities, nil
+}
+
 func (s *flowExecutionService) scheduleNextAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleNextAction")
 	defer span.Finish()
@@ -128,15 +159,15 @@ func (s *flowExecutionService) scheduleNextAction(ctx context.Context, tx *neo4j
 
 	switch nextAction.Data.Action {
 	case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
-		return s.ScheduleEmailAction(ctx, tx, flowId, entityId, entityType, scheduleAt, nextAction)
+		return s.scheduleEmailAction(ctx, tx, flowId, entityId, entityType, scheduleAt, nextAction)
 	default:
 		tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.Data.Action))
 		return errors.New("Unsupported action type")
 	}
 }
 
-func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ScheduleEmailAction")
+func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleEmailAction")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -219,7 +250,7 @@ func (s *flowExecutionService) ScheduleEmailAction(ctx context.Context, tx *neo4
 		return err
 	}
 
-	err = s.StoreNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, entityId, entityType, flowExecutionSettings.Mailbox, *actualScheduleAt)
+	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, entityId, entityType, flowExecutionSettings.Mailbox, *actualScheduleAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -292,8 +323,8 @@ func (s *flowExecutionService) getFlowExecutionSettings(ctx context.Context, flo
 	return mapper.MapDbNodeToFlowExecutionSettingsEntity(node), nil
 }
 
-func (s *flowExecutionService) StoreNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId, entityId string, entityType model.EntityType, mailbox *string, executionTime time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.StoreNextActionExecutionEntity")
+func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId, entityId string, entityType model.EntityType, mailbox *string, executionTime time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.storeNextActionExecutionEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
@@ -318,6 +349,113 @@ func (s *flowExecutionService) StoreNextActionExecutionEntity(ctx context.Contex
 	}
 
 	_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, tx, &actionExecution)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, scheduledActionExecution *entity.FlowActionExecutionEntity) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ProcessActionExecution")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	span.LogFields(log.Object("scheduledActionExecution", scheduledActionExecution))
+
+	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
+	defer session.Close(ctx)
+
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		currentAction, err := s.services.FlowService.FlowActionGetById(ctx, scheduledActionExecution.ActionId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if currentAction == nil {
+			tracing.TraceErr(span, errors.New("Action not found"))
+			return nil, errors.New("Action not found")
+		}
+
+		if currentAction.Data.Action == entity.FlowActionTypeEmailNew {
+
+			mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, common.GetTenantFromContext(ctx), *scheduledActionExecution.Mailbox)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			if mailbox == nil {
+				//mark the execution as failed
+				tracing.TraceErr(span, errors.New("Mailbox not found"))
+				return nil, errors.New("Mailbox not found")
+			}
+
+			toEmail := ""
+
+			if model.GetEntityType(scheduledActionExecution.EntityType) == model.CONTACT {
+				emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, model.CONTACT, []string{scheduledActionExecution.EntityId})
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+
+				if emailNodes == nil || len(emailNodes) == 0 {
+					tracing.TraceErr(span, errors.New("Email not found"))
+					return nil, errors.New("Email not found")
+				}
+
+				for _, emailNode := range emailNodes {
+					emailEntity := mapper.MapDbNodeToEmailEntity(emailNode.Node)
+					if emailEntity != nil && emailEntity.Work != nil && *emailEntity.Work {
+						toEmail = emailEntity.RawEmail // TODO we should look for verified emails?
+						break
+					}
+				}
+			}
+
+			if toEmail == "" {
+				tracing.TraceErr(span, errors.New("Email not found"))
+				return nil, errors.New("Email not found")
+			}
+
+			_, err = s.services.MailService.SendMail(ctx, &tx, tenant, dto.MailRequest{
+				From:    *scheduledActionExecution.Mailbox,
+				To:      []string{toEmail},
+				Subject: currentAction.Data.Subject,
+				Content: *currentAction.Data.BodyTemplate,
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		}
+		//else if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailReply {
+		//	TODO reply to previous email
+		//}
+
+		scheduledActionExecution.Status = entity.FlowActionExecutionStatusSuccess
+
+		_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, &tx, scheduledActionExecution)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		err = s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, model.GetEntityType(scheduledActionExecution.EntityType))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

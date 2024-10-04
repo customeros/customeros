@@ -65,7 +65,7 @@ func MapEntitiesToFlowActions(entities *neo4jentity.FlowActionEntities) []*model
 	return mapped
 }
 
-func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowContact {
+func MapEntityToFlowContact(entity *neo4jentity.FlowParticipantEntity) *model.FlowContact {
 	if entity == nil {
 		return nil
 	}
@@ -84,7 +84,7 @@ func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowCo
 	}
 }
 
-func MapEntitiesToFlowContacts(entities *neo4jentity.FlowContactEntities) []*model.FlowContact {
+func MapEntitiesToFlowContacts(entities *neo4jentity.FlowParticipantEntities) []*model.FlowContact {
 	var mapped []*model.FlowContact
 	for _, entity := range *entities {
 		mapped = append(mapped, MapEntityToFlowContact(&entity))

@@ -381,7 +381,7 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 				}
 
 				for _, flow := range *flowsWithContact {
-					flowContact, err := services.CommonServices.FlowService.FlowContactGetByContactId(ctx, flow.Id, contactEntity.Id)
+					flowContact, err := services.CommonServices.FlowService.FlowParticipantGetByContactId(ctx, flow.Id, contactEntity.Id)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return err
@@ -392,12 +392,12 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 					}
 
 					if emailSubject == "Welcome to Embedd - Product Tips" {
-						flowContact.Status = neo4jentity.FlowContactStatusGoalAchieved
+						flowContact.Status = neo4jentity.FlowParticipantStatusGoalAchieved
 					} else {
-						flowContact.Status = neo4jentity.FlowContactStatusCompleted
+						flowContact.Status = neo4jentity.FlowParticipantStatusCompleted
 					}
 
-					_, err = services.CommonServices.Neo4jRepositories.FlowContactWriteRepository.Merge(ctx, flowContact)
+					_, err = services.CommonServices.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, flowContact)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return err
