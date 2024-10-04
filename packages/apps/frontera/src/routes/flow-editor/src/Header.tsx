@@ -1,6 +1,7 @@
 import React, { useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 
+import { useUnmount } from 'usehooks-ts';
 import { observer } from 'mobx-react-lite';
 import { useReactFlow } from '@xyflow/react';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
@@ -48,6 +49,18 @@ export const Header = observer(
         });
       }
     }, [store.ui.commandMenu.isOpen, id]);
+
+    useUnmount(() => {
+      if (saveFlag) {
+        const nodes = getNodes();
+        const edges = getEdges();
+
+        flow?.updateFlow({
+          nodes: JSON.stringify(nodes),
+          edges: JSON.stringify(edges),
+        });
+      }
+    });
 
     const handleSave = () => {
       const nodes = getNodes();
@@ -114,9 +127,11 @@ export const Header = observer(
                   leftIcon={<User01 />}
                   dataTest='flow-contacts'
                   isLoading={contactsStore.isLoading || store.flows.isLoading}
-                  onClick={() =>
-                    navigate(`?show=finder&preset=${flowContactsPreset}`)
-                  }
+                  onClick={() => {
+                    navigate(`?show=finder&preset=${flowContactsPreset}`);
+
+                    if (saveFlag) handleSave();
+                  }}
                   leftSpinner={
                     <Spinner
                       size='sm'
