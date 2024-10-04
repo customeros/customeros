@@ -1,24 +1,27 @@
 import { useParams } from 'react-router-dom';
-import React, { MouseEvent, useCallback } from 'react';
+import React, { useState, MouseEvent, useCallback } from 'react';
 
-import { useKey, useKeys } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { OnConnect } from '@xyflow/system';
 import { FlowActionType } from '@store/Flows/types.ts';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
 import {
   Edge,
+  Node,
   addEdge,
   ReactFlow,
   Background,
   MarkerType,
   OnNodeDrag,
+  NodeChange,
   useNodesState,
   useEdgesState,
   OnNodesDelete,
   OnEdgesDelete,
+  OnNodesChange,
   OnBeforeDelete,
   FitViewOptions,
+  applyNodeChanges,
   SelectionDragHandler,
 } from '@xyflow/react';
 
@@ -26,8 +29,9 @@ import { useStore } from '@shared/hooks/useStore';
 
 import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
-import { useUndoRedo } from './hooks';
-import { FlowBuilderToolbar } from './components';
+import { getHelperLines } from './utils';
+import { useUndoRedo, useKeyboardShortcuts } from './hooks';
+import { HelperLines, FlowBuilderToolbar } from './components';
 
 import '@xyflow/react/dist/style.css';
 const edgeTypes = {
@@ -39,11 +43,19 @@ export const FlowBuilder = observer(
     const store = useStore();
     const id = useParams().id as string;
 
+    useKeyboardShortcuts(id, store);
+
     const flow = store.flows.value.get(id) as FlowStore;
 
-    const [nodes, setNodes, onNodesChange] = useNodesState(flow?.parsedNodes);
+    const [nodes, setNodes] = useNodesState(flow?.parsedNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(flow?.parsedEdges);
     const { takeSnapshot } = useUndoRedo();
+    const [helperLineHorizontal, setHelperLineHorizontal] = useState<
+      number | undefined
+    >(undefined);
+    const [helperLineVertical, setHelperLineVertical] = useState<
+      number | undefined
+    >(undefined);
 
     // const { screenToFlowPosition } = useReactFlow();
     const { ui } = useStore();
@@ -52,18 +64,11 @@ export const FlowBuilder = observer(
       (params) => {
         takeSnapshot();
 
-        const edgeData = {
-          triggerType: 'time',
-          timeValue: 1,
-          timeUnit: 'days',
-        };
-
         setEdges((eds) =>
           addEdge(
             {
               ...params,
               type: 'baseEdge',
-              data: edgeData,
               markerEnd: {
                 type: MarkerType.Arrow,
                 width: 20,
@@ -115,38 +120,44 @@ export const FlowBuilder = observer(
       );
     };
 
-    useKeys(['Shift', 'S'], (e) => {
-      e.stopPropagation();
-      e.preventDefault();
+    const customApplyNodeChanges = useCallback(
+      (changes: NodeChange[], nodes: Node[]): Node[] => {
+        // reset the helper lines (clear existing lines, if any)
+        setHelperLineHorizontal(undefined);
+        setHelperLineVertical(undefined);
 
-      store.ui.commandMenu.setContext({
-        ids: [id || ''],
-        entity: 'Flow',
-      });
-      store.ui.commandMenu.setType('ChangeFlowStatus');
-      store.ui.commandMenu.setOpen(true);
-    });
+        // this will be true if it's a single node being dragged
+        // inside we calculate the helper lines and snap position for the position where the node is being moved to
+        if (
+          changes.length === 1 &&
+          changes[0].type === 'position' &&
+          changes[0].dragging &&
+          changes[0].position
+        ) {
+          const helperLines = getHelperLines(changes[0], nodes);
 
-    useKeys(['Shift', 'R'], (e) => {
-      e.stopPropagation();
-      e.preventDefault();
-      store.ui.commandMenu.setContext({
-        ids: [id || ''],
-        entity: 'Flow',
-        property: 'name',
-      });
-      store.ui.commandMenu.setType('RenameFlow');
-      store.ui.commandMenu.setOpen(true);
-    });
+          // if we have a helper line, we snap the node to the helper line position
+          // this is being done by manipulating the node position inside the change object
+          changes[0].position.x =
+            helperLines.snapPosition.x ?? changes[0].position.x;
+          changes[0].position.y =
+            helperLines.snapPosition.y ?? changes[0].position.y;
 
-    useKey(
-      'Escape',
-      () => {
-        ui.flowCommandMenu.setOpen(false);
+          // if helper lines are returned, we set them so that they can be displayed
+          setHelperLineHorizontal(helperLines.horizontal);
+          setHelperLineVertical(helperLines.vertical);
+        }
+
+        return applyNodeChanges(changes, nodes);
       },
-      {
-        when: ui.flowCommandMenu.isOpen,
+      [],
+    );
+
+    const onNodesChange: OnNodesChange = useCallback(
+      (changes) => {
+        setNodes((nodes) => customApplyNodeChanges(changes, nodes));
       },
+      [setNodes, customApplyNodeChanges],
     );
 
     const onBeforeDelete: OnBeforeDelete = async (elements) => {
@@ -285,6 +296,10 @@ export const FlowBuilder = observer(
             }
           }}
         >
+          <HelperLines
+            vertical={helperLineVertical}
+            horizontal={helperLineHorizontal}
+          />
           <Background />
           <FlowBuilderToolbar />
         </ReactFlow>
