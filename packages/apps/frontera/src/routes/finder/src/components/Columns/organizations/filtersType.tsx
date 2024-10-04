@@ -157,14 +157,14 @@ export const getFilterTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsRenewalDate]: {
       filterType: 'date',
-      filterName: 'Renewal Date',
+      filterName: 'Renewal date',
       filterAccesor: ColumnViewType.OrganizationsRenewalDate,
       filterOperators: [ComparisonOperator.Gt, ComparisonOperator.Lt],
       icon: <Calendar />,
     },
     [ColumnViewType.OrganizationsForecastArr]: {
       filterType: 'number',
-      filterName: 'Arr forecast',
+      filterName: 'ARR forecast',
       filterAccesor: ColumnViewType.OrganizationsForecastArr,
       filterOperators: [
         ComparisonOperator.Gt,
@@ -212,7 +212,7 @@ export const getFilterTypes = (store?: RootStore) => {
     },
     [ColumnViewType.OrganizationsCreatedDate]: {
       filterType: 'date',
-      filterName: 'Created Date',
+      filterName: 'Created date',
       filterAccesor: ColumnViewType.OrganizationsCreatedDate,
       filterOperators: [ComparisonOperator.Lt, ComparisonOperator.Gt],
       icon: <Calendar />,

@@ -80,7 +80,7 @@ export const TextFilter = ({
           onChange={handleInputChange}
           placeholder={`${filterName} ${handleOperatorName(
             operatorValue as ComparisonOperator,
-          )}`}
+          )}...`}
           onKeyDown={(e) => {
             if (e.key === 'Escape') {
               setIsOpen(false);

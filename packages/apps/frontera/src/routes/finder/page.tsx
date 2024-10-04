@@ -65,13 +65,16 @@ export const FinderPage = observer(() => {
               type={tableType || (TableViewType.Organizations as any)}
             />
             <div className='flex items-center gap-2'>
-              <Button
-                size='xs'
-                variant='ghost'
-                onClick={() => tableViewDef?.removeFilters()}
-              >
-                Clear
-              </Button>
+              {tableViewDef?.hasFilters() && (
+                <Button
+                  size='xs'
+                  variant='ghost'
+                  onClick={() => tableViewDef?.removeFilters()}
+                >
+                  Clear
+                </Button>
+              )}
+
               {tableViewType && (
                 <ViewSettings tableId={tableId} type={tableViewType} />
               )}

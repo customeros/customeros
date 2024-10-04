@@ -80,5 +80,4 @@ export const MenuLabel = forwardRef<
 export const MenuButton = DropdownMenuPrimitive.Trigger;
 MenuButton.defaultProps = {
   className: 'focus:outline-none',
-  asChild: true,
 };

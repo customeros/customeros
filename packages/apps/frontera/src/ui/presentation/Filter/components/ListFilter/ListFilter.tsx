@@ -1,13 +1,25 @@
-import { useRef, useState, useEffect } from 'react';
+import {
+  useRef,
+  useMemo,
+  useState,
+  useEffect,
+  useCallback,
+  ComponentType,
+} from 'react';
 
-import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
+import { Combobox } from '@ui/form/Combobox';
 import { Check } from '@ui/media/icons/Check';
 import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
-import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { components, OptionProps } from '@ui/form/Select/Select';
 import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ui/overlay/Popover/Popover';
 
 import { handleOperatorName, handlePropertyPlural } from '../../utils/utils';
 
@@ -21,13 +33,12 @@ interface ListFilterProps {
 
 export const ListFilter = ({
   onMultiSelectChange,
-  options,
+  options: _options,
   filterValue,
   filterName,
   operatorName,
 }: ListFilterProps) => {
-  const [selectedIds, setSelectedIds] = useState<string[]>(filterValue || []);
-  const [search, setSearch] = useState('');
+  const [selectedIds, setSelectedIds] = useState<string[]>(filterValue ?? []);
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -47,16 +58,19 @@ export const ListFilter = ({
     if (filterName === 'Ownership type') {
       newSelectedIds = [id];
     } else {
-      newSelectedIds = selectedIds?.includes(id)
-        ? selectedIds.filter((selectedId) => selectedId !== id)
-        : [...selectedIds, id];
+      if (selectedIds.includes(id)) {
+        newSelectedIds = selectedIds.filter((selectedId) => selectedId !== id);
+      } else {
+        newSelectedIds = [...selectedIds, id];
+      }
     }
 
     setSelectedIds(newSelectedIds);
+
     onMultiSelectChange(newSelectedIds);
   };
 
-  const filterValueLabels = options
+  const filterValueLabels = _options
     .filter((option) => selectedIds?.includes(option.id))
     .map((option) => option.label);
 
@@ -68,15 +82,79 @@ export const ListFilter = ({
     }, 100);
   }, [isOpen]);
 
+  const options = useMemo(
+    () => [..._options.filter((o) => o.label !== undefined)],
+    [_options.length],
+  );
+
+  const Option = useCallback(
+    ({ children, ...props }: OptionProps) => {
+      const data = props?.data as {
+        id: string;
+        label: string;
+        avatar?: string;
+      };
+
+      return (
+        <components.Option {...props}>
+          <div className='flex items-center gap-2'>
+            {filterName === 'Owner' && (
+              <Avatar
+                size='xxs'
+                textSize='xxs'
+                variant='outlineCircle'
+                src={data?.avatar ?? ''}
+                name={data?.label ?? ''}
+                icon={<User01 className='text-gray-500 size-3' />}
+              />
+            )}
+            <span className='flex-1'>{children}</span>
+            {selectedIds.includes(data?.id) && (
+              <Check className='text-primary-600' />
+            )}
+          </div>
+        </components.Option>
+      );
+    },
+    [selectedIds.length],
+  );
+
+  const CountryOption = useCallback(
+    ({ children, ...props }: OptionProps) => {
+      const country = props?.data as {
+        id: string;
+        label: string;
+        avatar?: string;
+      };
+
+      return (
+        <components.Option {...props}>
+          <div className='flex items-center gap-2'>
+            <span>{flags[country.id]}</span>
+            <span>{children}</span>
+            {selectedIds.includes(country.id) && (
+              <Check className='text-primary-600' />
+            )}
+          </div>
+        </components.Option>
+      );
+    },
+    [selectedIds.length],
+  );
+
   if (
     operatorName === ComparisonOperator.IsEmpty ||
     operatorName === ComparisonOperator.IsNotEmpty
   )
     return null;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Options: ComponentType<OptionProps<any, any, any>> =
+    filterName === 'Country' ? CountryOption : Option;
+
   return (
-    <Menu open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-      <MenuButton asChild>
+    <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+      <PopoverTrigger asChild>
         <Button
           size='xs'
           colorScheme='grayModern'
@@ -91,63 +169,31 @@ export const ListFilter = ({
               )}`
             : '...'}
         </Button>
-      </MenuButton>
-      <MenuList
-        align='start'
+      </PopoverTrigger>
+      <PopoverContent
         side='bottom'
-        className='max-h-[400px] overflow-auto'
+        align='start'
+        className='py-1 min-w-[254px]'
       >
-        <Input
+        <Combobox
           size='xs'
-          ref={inputRef}
-          variant='unstyled'
-          className='px-2.5'
-          onChange={(e) => setSearch(e.target.value)}
+          escapeClearsValue
+          options={options}
+          closeMenuOnSelect={false}
+          onChange={(value) => handleItemClick(value.id)}
+          components={{
+            Option: Options,
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') setIsOpen(false);
+          }}
           placeholder={`${filterName} ${handleOperatorName(
             operatorName as ComparisonOperator,
             'list',
-          )}`}
+            selectedIds.length > 1,
+          )}...`}
         />
-        {options
-          .filter((o) => o.label?.toLowerCase().includes(search?.toLowerCase()))
-          .map((option) => {
-            const flag = flags[option.id];
-
-            return (
-              <MenuItem
-                key={option.id}
-                onKeyDown={(e) => {
-                  e.stopPropagation();
-                }}
-                onClick={(e) => {
-                  e.preventDefault();
-                  handleItemClick(option.id);
-                }}
-              >
-                <div className='flex items-center justify-between w-full'>
-                  <div className='flex items-center gap-2'>
-                    {(option.avatar || filterName === 'Owner') && (
-                      <Avatar
-                        size='xxs'
-                        textSize='xxs'
-                        variant='outlineCircle'
-                        src={option.avatar ?? ''}
-                        name={option.label ?? 'Unnamed'}
-                        icon={<User01 className='text-gray-500 size-3' />}
-                      />
-                    )}
-                    {filterName === 'Country' && <span>{flag}</span>}
-                    <span>{option.label}</span>
-                  </div>
-
-                  {filterValueLabels.includes(option.label) && (
-                    <Check className='text-primary-600' />
-                  )}
-                </div>
-              </MenuItem>
-            );
-          })}
-      </MenuList>
-    </Menu>
+      </PopoverContent>
+    </Popover>
   );
 };
