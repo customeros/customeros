@@ -75,7 +75,7 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 
 			span.LogFields(tracingLog.Object("request", request))
 
-			interactionEventId, err := services.CommonServices.MailService.SendMail(ctx, tenant, conf.Service.PublicPath, request)
+			interactionEventId, err := services.CommonServices.MailService.SendMail(ctx, nil, tenant, request)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
