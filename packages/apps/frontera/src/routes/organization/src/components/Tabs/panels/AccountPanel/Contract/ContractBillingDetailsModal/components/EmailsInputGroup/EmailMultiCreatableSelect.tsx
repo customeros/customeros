@@ -43,14 +43,17 @@ export const EmailMultiCreatableSelect = forwardRef<
     onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void;
   }
 >(
-  ({
-    value,
-    onChange,
-    navigateAfterAddingToPeople,
-    isMulti,
-    onKeyDown,
-    ...rest
-  }) => {
+  (
+    {
+      value,
+      onChange,
+      navigateAfterAddingToPeople,
+      isMulti,
+      onKeyDown,
+      ...rest
+    },
+    ref,
+  ) => {
     const client = getGraphQLClient();
     const organizationId = useParams()?.id as string;
     const [existingContacts, setExistingContacts] = useState<
@@ -236,6 +239,8 @@ export const EmailMultiCreatableSelect = forwardRef<
         unstyled
         menuIsOpen
         cacheOptions
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ref={ref as any}
         isMulti={isMulti}
         defaultMenuIsOpen
         isClearable={false}
