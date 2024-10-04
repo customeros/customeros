@@ -11,7 +11,7 @@ import (
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"testing"
@@ -216,7 +216,7 @@ func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
 		UserId:    userId,
 		EmailId:   emailId,
 		Primary:   false,
-		AppSource: events2.AppSourceIntegrationApp,
+		AppSource: constants.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 	// Second grpc call
@@ -225,7 +225,7 @@ func TestUserService_LinkEmail_IgnoreDuplicates(t *testing.T) {
 		UserId:    userId,
 		EmailId:   emailId,
 		Primary:   true,
-		AppSource: events2.AppSourceIntegrationApp,
+		AppSource: constants.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 
@@ -321,7 +321,7 @@ func TestUserService_LinkPhoneNumber_IgnoreDuplicates(t *testing.T) {
 		PhoneNumberId: phoneNumberId,
 		Primary:       false,
 		Label:         "work",
-		AppSource:     events2.AppSourceIntegrationApp,
+		AppSource:     constants.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 	// Second grpc call same label different primary flag
@@ -331,7 +331,7 @@ func TestUserService_LinkPhoneNumber_IgnoreDuplicates(t *testing.T) {
 		PhoneNumberId: phoneNumberId,
 		Primary:       true,
 		Label:         "work",
-		AppSource:     events2.AppSourceIntegrationApp,
+		AppSource:     constants.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 	// Third grpc call different label
@@ -341,7 +341,7 @@ func TestUserService_LinkPhoneNumber_IgnoreDuplicates(t *testing.T) {
 		PhoneNumberId: phoneNumberId,
 		Primary:       true,
 		Label:         "home",
-		AppSource:     events2.AppSourceIntegrationApp,
+		AppSource:     constants.AppSourceIntegrationApp,
 	})
 	require.Nil(t, err)
 
