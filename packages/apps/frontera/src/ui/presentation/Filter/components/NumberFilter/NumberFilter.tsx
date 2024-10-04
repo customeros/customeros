@@ -33,13 +33,15 @@ export const NumberFilter = ({
 }: NumberFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(filterValue);
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    // Auto-open the popover when a filter is selected but no filter value is set.
     if (!filterValue && filterName) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setIsOpen(true);
       }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [filterName, filterValue]);
 
@@ -53,7 +55,14 @@ export const NumberFilter = ({
     const newValue = e.target.value;
 
     setInputValue(newValue);
-    onChangeFilterValue(newValue);
+
+    if (timeoutId) clearTimeout(timeoutId);
+
+    const newTimeoutId = setTimeout(() => {
+      onChangeFilterValue(newValue);
+    }, 300);
+
+    setTimeoutId(newTimeoutId);
   };
 
   return (

@@ -7,6 +7,8 @@ import {
   ComponentType,
 } from 'react';
 
+import debounce from 'lodash/debounce';
+
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
 import { Combobox } from '@ui/form/Combobox';
@@ -42,6 +44,11 @@ export const ListFilter = ({
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
+  const debouncedOnMultiSelectChange = useMemo(
+    () => debounce(onMultiSelectChange, 300),
+    [onMultiSelectChange],
+  );
+
   useEffect(() => {
     if (!filterValue) {
       if (filterName) {
@@ -67,7 +74,7 @@ export const ListFilter = ({
 
     setSelectedIds(newSelectedIds);
 
-    onMultiSelectChange(newSelectedIds);
+    debouncedOnMultiSelectChange(newSelectedIds);
   };
 
   const filterValueLabels = _options

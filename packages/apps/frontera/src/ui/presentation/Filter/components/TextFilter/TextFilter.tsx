@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -25,7 +25,18 @@ export const TextFilter = ({
   filterValue,
 }: TextFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(filterValue);
+  const [inputValue, setInputValue] = useState(() => filterValue);
+
+  const debouncedOnChangeFilterValue = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    return (value: string) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        onChangeFilterValue(value);
+      }, 300);
+    };
+  }, [onChangeFilterValue]);
 
   useEffect(() => {
     if (!filterValue) {
@@ -37,17 +48,28 @@ export const TextFilter = ({
     }
   }, [filterName]);
 
+  useEffect(() => {
+    if (!filterValue && filterName) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [filterName, filterValue]);
+
   if (
     operatorValue === ComparisonOperator.IsEmpty ||
     operatorValue === ComparisonOperator.IsNotEmpty
-  )
-    return;
+  ) {
+    return null;
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
 
     setInputValue(newValue);
-    onChangeFilterValue(newValue);
+    debouncedOnChangeFilterValue(newValue);
   };
 
   return (
@@ -61,9 +83,9 @@ export const TextFilter = ({
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
-          className='rounded-none text-gray-700 bg-white font-normal boreder-r-2'
+          className='rounded-none text-gray-700 bg-white font-normal border-r-2'
         >
-          <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
+          <span className='max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
             {filterValue ? filterValue : '...'}
           </span>
         </Button>
@@ -85,6 +107,7 @@ export const TextFilter = ({
             if (e.key === 'Escape') {
               setIsOpen(false);
             }
+            e.stopPropagation();
           }}
         />
       </PopoverContent>
