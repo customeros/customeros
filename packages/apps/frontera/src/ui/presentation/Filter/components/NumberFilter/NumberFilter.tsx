@@ -15,7 +15,7 @@ interface NumberFilterProps {
   filterName: string;
   filterValue: string;
   operatorValue: string;
-  onChangeFilterValue: (value: string | [number, number]) => void;
+  onChangeFilterValue: (value: string) => void;
 }
 
 const formatNumberWithCommas = (value: string | number | undefined): string => {
@@ -33,30 +33,21 @@ export const NumberFilter = ({
 }: NumberFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(filterValue);
-  const [minValue, setMinValue] = useState<number | string>('');
-  const [maxValue, setMaxValue] = useState<number | string>('');
 
   useEffect(() => {
-    if (!filterValue) {
-      if (filterName) {
-        setTimeout(() => {
-          setIsOpen(true);
-        }, 100);
-      }
+    // Auto-open the popover when a filter is selected but no filter value is set.
+    if (!filterValue && filterName) {
+      setTimeout(() => {
+        setIsOpen(true);
+      }, 100);
     }
-  }, [filterName]);
-
-  useEffect(() => {
-    if (operatorValue === ComparisonOperator.Between) {
-      onChangeFilterValue([Number(minValue), Number(maxValue)]);
-    }
-  }, [minValue, maxValue, operatorValue]);
+  }, [filterName, filterValue]);
 
   if (
     operatorValue === ComparisonOperator.IsEmpty ||
     operatorValue === ComparisonOperator.IsNotEmpty
   )
-    return;
+    return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -65,33 +56,23 @@ export const NumberFilter = ({
     onChangeFilterValue(newValue);
   };
 
-  const handleMinValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-
-    setMinValue(Number(newValue));
-  };
-
-  const handleMaxValueChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newValue = e.target.value;
-
-    setMaxValue(Number(newValue));
-  };
-
   return (
     <Popover
       modal={true}
       open={isOpen}
       onOpenChange={(value) => setIsOpen(value)}
     >
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
           className='rounded-none text-gray-700 bg-white font-normal border-l-0'
         >
-          <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
-            {formatNumberWithCommas(filterValue) || '...'}
+          <span className='max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
+            {(filterName !== 'Founded'
+              ? formatNumberWithCommas(filterValue)
+              : filterValue) || '...'}
           </span>
         </Button>
       </PopoverTrigger>
@@ -100,41 +81,21 @@ export const NumberFilter = ({
         align='start'
         className='py-1 min-w-[254px]'
       >
-        {ComparisonOperator.Between === operatorValue ? (
-          <>
-            <div className='flex items-center'>
-              <Input
-                size='sm'
-                type='number'
-                value={minValue}
-                placeholder='Min'
-                variant='unstyled'
-                onChange={handleMinValueChange}
-              />
-              <Input
-                size='sm'
-                type='number'
-                value={maxValue}
-                placeholder='Max'
-                variant='unstyled'
-                onChange={handleMaxValueChange}
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <Input
-              size='sm'
-              type='number'
-              variant='unstyled'
-              value={inputValue}
-              onChange={handleInputChange}
-              placeholder={`${filterName} ${handleOperatorName(
-                operatorValue as ComparisonOperator,
-              )}`}
-            />
-          </>
-        )}
+        <Input
+          size='sm'
+          type='number'
+          variant='unstyled'
+          value={inputValue}
+          onChange={handleInputChange}
+          placeholder={`${filterName} ${handleOperatorName(
+            operatorValue as ComparisonOperator,
+          )}...`}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false);
+            }
+          }}
+        />
       </PopoverContent>
     </Popover>
   );

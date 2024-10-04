@@ -2,11 +2,16 @@ import { useRef, useState, useEffect } from 'react';
 
 import { FilterType } from '@finder/components/Columns/organizations/filtersType';
 
-import { Input } from '@ui/form/Input';
+import { Combobox } from '@ui/form/Combobox';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { FilterLines } from '@ui/media/icons/FilterLines';
-import { Menu, MenuList, MenuItem, MenuButton } from '@ui/overlay/Menu/Menu';
+import { components, OptionProps } from '@ui/form/Select/Select';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@ui/overlay/Popover/Popover';
 import {
   FilterItem,
   ColumnView,
@@ -40,7 +45,6 @@ export const Filters = ({
   onFilterSelect,
 }: FiltersProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [search, setSearch] = useState<string>('');
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFilterName = (property: string) => {
@@ -76,18 +80,35 @@ export const Filters = ({
   };
 
   useEffect(() => {
-    setTimeout(() => {
-      if (isOpen) {
+    if (isOpen) {
+      setTimeout(() => {
         inputRef.current?.focus();
-      }
-    }, 100);
+      }, 100);
+    }
   }, [isOpen]);
+
+  // Add keydown event to open the filter list when 'f' is pressed
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'f') {
+        setIsOpen(true);
+        event.preventDefault();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const handleChangeOperator = (
     operation: string,
     filter: FilterItem,
     index: number,
   ) => {
+    const newValue = filter.value;
     const selectedOperation =
       operation === ComparisonOperator.IsEmpty ||
       operation === ComparisonOperator.IsNotEmpty ||
@@ -101,34 +122,11 @@ export const Filters = ({
         operation: (operation as ComparisonOperator) || '',
         property: filter.property,
         active: selectedOperation,
+        value: newValue,
         includeEmpty: operation === ComparisonOperator.IsEmpty ? true : false,
       },
       index,
     );
-
-    if (ComparisonOperator.Lt === operation) {
-      setFilters(
-        {
-          ...filter,
-          value: [null, filter.value[0]],
-          property: filter.property,
-          operation: (operation as ComparisonOperator) || '',
-        },
-        index,
-      );
-    } else {
-      if (ComparisonOperator.Gt === operation) {
-        setFilters(
-          {
-            ...filter,
-            value: [filter.value[1], null],
-            property: filter.property,
-            operation: (operation as ComparisonOperator) || '',
-          },
-          index,
-        );
-      }
-    }
   };
 
   const handleChangeFilterValue = (
@@ -173,10 +171,24 @@ export const Filters = ({
 
       return null;
     })
-    .filter(Boolean)
-    .filter((f) =>
-      f?.filterName.toLowerCase().includes(search || ''.toLowerCase()),
+    .filter(Boolean);
+
+  const Option = ({ children, ...props }: OptionProps) => {
+    const data = props?.data as {
+      label: string;
+      value: string;
+      icon: JSX.Element;
+    };
+
+    return (
+      <components.Option {...props}>
+        <div className='flex items-center gap-2'>
+          <span>{data.icon}</span>
+          {data.label}
+        </div>
+      </components.Option>
     );
+  };
 
   return (
     <div className='flex gap-2 flex-wrap'>
@@ -196,10 +208,15 @@ export const Filters = ({
           onChangeOperator={(operator) =>
             handleChangeOperator(operator, f, idx)
           }
+          icon={
+            availableFilters.find((filter) => filter?.columnType === f.property)
+              ?.icon || <></>
+          }
         />
       ))}
-      <Menu open={isOpen} onOpenChange={(v) => setIsOpen(v)}>
-        <MenuButton asChild>
+
+      <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
+        <PopoverTrigger asChild>
           {filters.length ? (
             <IconButton
               size='xs'
@@ -219,41 +236,43 @@ export const Filters = ({
               Filters
             </Button>
           )}
-        </MenuButton>
-        <MenuList align='start' side='bottom'>
-          <Input
-            size='sm'
-            ref={inputRef}
-            value={search}
-            variant='unstyled'
-            className='px-2.5'
-            placeholder='Filter by'
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          {availableFilters.map((filter) => {
-            if (filter === null) return null;
+        </PopoverTrigger>
+        <PopoverContent
+          side='bottom'
+          align='start'
+          className='py-1 min-w-[254px]'
+        >
+          <Combobox
+            size='xs'
+            escapeClearsValue
+            closeMenuOnSelect={false}
+            placeholder='Select filter...'
+            components={{
+              Option,
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Escape') setIsOpen(false);
+            }}
+            options={availableFilters.map((filter) => ({
+              label: filter?.filterName,
+              value: filter?.columnType,
+              icon: filter?.icon,
+            }))}
+            onChange={(selectedOption) => {
+              const selectedFilter = availableFilters.find(
+                (filter) => filter?.columnType === selectedOption?.value,
+              );
 
-            return (
-              <MenuItem
-                className='group'
-                key={filter.columnType}
-                onClick={() =>
-                  onFilterSelect(filter, (property) =>
-                    getFilterOperators(filter.filterAccesor ?? property),
-                  )
-                }
-              >
-                <div className='flex items-center justify-center gap-2 '>
-                  <span className='group-hover:text-gray-700 text-gray-500'>
-                    {filter.icon}
-                  </span>
-                  {filter.filterName}
-                </div>
-              </MenuItem>
-            );
-          })}
-        </MenuList>
-      </Menu>
+              if (selectedFilter) {
+                onFilterSelect(selectedFilter, (property) =>
+                  getFilterOperators(selectedFilter.filterAccesor || property),
+                );
+              }
+              setIsOpen(false);
+            }}
+          />
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };

@@ -26,8 +26,7 @@ export const Combobox = ({ size, isReadOnly, ...props }: ComboboxProps) => {
             isFocused,
             size,
           }),
-        option: ({ isFocused, isSelected }) =>
-          getOptionClassNames('', { isFocused, isSelected }),
+        option: ({ isFocused }) => getOptionClassNames('', { isFocused }),
         menuList: () =>
           getMenuListClassNames('p-0 border-none bg-transparent shadow-none'),
         menu: ({ menuPlacement }) =>

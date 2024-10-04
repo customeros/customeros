@@ -13,6 +13,7 @@ interface FilterProps {
   filterName: string;
   filterType: string;
   operators: string[];
+  icon: React.ReactElement;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   listFilterOptions: any[];
   onClearFilter: () => void;
@@ -32,10 +33,11 @@ export const Filter = ({
   filterValue,
   listFilterOptions,
   onClearFilter,
+  icon,
 }: FilterProps) => {
   return (
     <ButtonGroup className='flex items-center'>
-      <PropertyFilter name={filterName} />
+      <PropertyFilter icon={icon} name={filterName} />
       <OperatorFilter
         type={filterType}
         value={operatorValue}

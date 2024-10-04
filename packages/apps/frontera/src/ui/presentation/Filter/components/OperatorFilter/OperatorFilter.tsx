@@ -27,7 +27,7 @@ export const OperatorFilter = ({
 
   return (
     <Menu>
-      <MenuButton>
+      <MenuButton asChild>
         {type === 'number' ? (
           <IconButton
             size='xs'

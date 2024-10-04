@@ -89,7 +89,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const values = row.value.relationship;
 
-        if (!values) return false;
+        if (!values) return true;
 
         return filterTypeList(
           filter,
@@ -103,7 +103,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.stage;
 
-        if (!values) return false;
+        if (!values) return true;
 
         return filterTypeList(
           filter,
@@ -141,7 +141,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.accountDetails?.onboarding?.status;
 
-        if (!values) return false;
+        if (!values) return true;
 
         return filterTypeList(
           filter,
@@ -156,7 +156,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const values =
           row.value.accountDetails?.renewalSummary?.renewalLikelihood;
 
-        if (!values) return false;
+        if (!values) return true;
 
         return filterTypeList(
           filter,
@@ -171,7 +171,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const values = row.value.owner?.id;
 
-        if (!values) return false;
+        if (!values) return true;
 
         return filterTypeList(
           filter,
@@ -185,7 +185,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const lastTouchpoint = row?.value?.lastTouchpoint?.lastTouchPointType;
 
-        if (!lastTouchpoint) return false;
+        if (!lastTouchpoint) return true;
 
         return filterTypeList(
           filter,
@@ -263,7 +263,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const value = row.value.leadSource;
 
-        if (!value) return false;
+        if (!value) return true;
 
         return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
@@ -274,7 +274,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const value = row.value.industry;
 
-        if (!value) return false;
+        if (!value) return true;
 
         return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
@@ -297,7 +297,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const locations = row.value.locations;
         const country = locations?.[0]?.countryCodeA2;
 
-        if (!country) return false;
+        if (!country) return true;
 
         return filterTypeList(
           filter,
@@ -324,12 +324,10 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
 
         const yearFounded = row.value.yearFounded;
-        const currentYear = new Date().getFullYear();
-        const age = currentYear - yearFounded;
 
         if (!yearFounded) return false;
 
-        return filterTypeNumber(filter, age);
+        return filterTypeNumber(filter, yearFounded);
       },
     )
     .with(
@@ -338,7 +336,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.tags?.map((l: Tag) => l.id);
 
-        if (!values) return false;
+        if (!values) return true;
 
         return filterTypeList(
           filter,

@@ -91,7 +91,7 @@ export const DateFilter = ({
       open={isOpen}
       onOpenChange={(value) => setIsOpen(value)}
     >
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           size='xs'
           colorScheme='grayModern'
