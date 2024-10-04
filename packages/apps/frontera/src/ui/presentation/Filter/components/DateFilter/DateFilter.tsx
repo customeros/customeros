@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 
+import { debounce } from 'lodash';
 import { format } from 'date-fns';
 
 import { DateTimeUtils } from '@utils/date';
@@ -37,6 +38,13 @@ export const DateFilter = ({
     }
   }, [filterName]);
 
+  const debouncedOnChangeFilterValue = useCallback(
+    debounce((value: string | [string | null, string | null]) => {
+      onChangeFilterValue(value);
+    }, 300),
+    [onChangeFilterValue],
+  );
+
   const handleDateChange = (date: Date | Date[] | null) => {
     if (!date) return;
 
@@ -45,16 +53,16 @@ export const DateFilter = ({
       const formattedStartDate = start ? format(start, 'yyyy-MM-dd') : null;
       const formattedEndDate = end ? format(end, 'yyyy-MM-dd') : null;
 
-      onChangeFilterValue([formattedStartDate, formattedEndDate]);
+      debouncedOnChangeFilterValue([formattedStartDate, formattedEndDate]);
     } else {
       const formattedDate = format(date, 'yyyy-MM-dd');
 
       if (operatorValue === ComparisonOperator.Lt) {
-        onChangeFilterValue([null, formattedDate]);
+        debouncedOnChangeFilterValue([null, formattedDate]);
       } else if (operatorValue === ComparisonOperator.Gt) {
-        onChangeFilterValue([formattedDate, null]);
+        debouncedOnChangeFilterValue([formattedDate, null]);
       } else {
-        onChangeFilterValue(formattedDate);
+        debouncedOnChangeFilterValue(formattedDate);
       }
     }
     setIsOpen(false);

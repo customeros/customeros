@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useMemo, useState, useEffect } from 'react';
+
+import { debounce } from 'lodash';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -27,6 +29,11 @@ export const TextFilter = ({
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(filterValue);
 
+  const debouncedOnChangeFilterValue = useMemo(
+    () => debounce(onChangeFilterValue, 300),
+    [onChangeFilterValue],
+  );
+
   useEffect(() => {
     if (!filterValue) {
       if (filterName) {
@@ -37,17 +44,23 @@ export const TextFilter = ({
     }
   }, [filterName]);
 
+  useEffect(() => {
+    return () => {
+      debouncedOnChangeFilterValue.cancel();
+    };
+  }, [debouncedOnChangeFilterValue]);
+
   if (
     operatorValue === ComparisonOperator.IsEmpty ||
     operatorValue === ComparisonOperator.IsNotEmpty
   )
-    return;
+    return null;
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
 
     setInputValue(newValue);
-    onChangeFilterValue(newValue);
+    debouncedOnChangeFilterValue(newValue);
   };
 
   return (
@@ -85,6 +98,7 @@ export const TextFilter = ({
             if (e.key === 'Escape') {
               setIsOpen(false);
             }
+            e.stopPropagation();
           }}
         />
       </PopoverContent>

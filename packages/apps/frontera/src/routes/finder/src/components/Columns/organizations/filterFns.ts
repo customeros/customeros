@@ -89,7 +89,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const values = row.value.relationship;
 
-        if (!values) return true;
+        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -103,7 +103,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.stage;
 
-        if (!values) return true;
+        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -141,7 +141,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.accountDetails?.onboarding?.status;
 
-        if (!values) return true;
+        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -156,7 +156,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const values =
           row.value.accountDetails?.renewalSummary?.renewalLikelihood;
 
-        if (!values) return true;
+        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -171,7 +171,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const values = row.value.owner?.id;
 
-        if (!values) return true;
+        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -185,7 +185,8 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const lastTouchpoint = row?.value?.lastTouchpoint?.lastTouchPointType;
 
-        if (!lastTouchpoint) return true;
+        if (!lastTouchpoint)
+          return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -263,7 +264,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const value = row.value.leadSource;
 
-        if (!value) return true;
+        if (!value) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
@@ -274,7 +275,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const value = row.value.industry;
 
-        if (!value) return true;
+        if (!value) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
@@ -297,7 +298,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const locations = row.value.locations;
         const country = locations?.[0]?.countryCodeA2;
 
-        if (!country) return true;
+        if (!country) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -336,7 +337,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.tags?.map((l: Tag) => l.id);
 
-        if (!values) return true;
+        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
 
         return filterTypeList(
           filter,
@@ -383,10 +384,11 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
     .with(ComparisonOperator.IsNotEmpty, () => value?.length)
     .with(
       ComparisonOperator.NotContains,
-      () => !value?.some((v) => filterValue?.includes(v)),
+      () => value?.length && !value.some((v) => filterValue?.includes(v)),
     )
-    .with(ComparisonOperator.Contains, () =>
-      value?.some((v) => filterValue?.includes(v)),
+    .with(
+      ComparisonOperator.Contains,
+      () => value?.length && value.some((v) => filterValue?.includes(v)),
     )
     .otherwise(() => false);
 };

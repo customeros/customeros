@@ -1,4 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+
+import debounce from 'lodash/debounce';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -34,8 +36,14 @@ export const NumberFilter = ({
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(filterValue);
 
+  const debouncedOnChangeFilterValue = useCallback(
+    debounce((value: string) => {
+      onChangeFilterValue(value);
+    }, 300),
+    [onChangeFilterValue],
+  );
+
   useEffect(() => {
-    // Auto-open the popover when a filter is selected but no filter value is set.
     if (!filterValue && filterName) {
       setTimeout(() => {
         setIsOpen(true);
@@ -53,7 +61,7 @@ export const NumberFilter = ({
     const newValue = e.target.value;
 
     setInputValue(newValue);
-    onChangeFilterValue(newValue);
+    debouncedOnChangeFilterValue(newValue);
   };
 
   return (
