@@ -305,11 +305,10 @@ export class LinkedinAutomationService {
       debugBrowserCat: true,
     });
     const context = await browser.newContext({
-      userAgent: this.userAgent, // Optionally randomize user-agent if needed
+      userAgent: this.userAgent,
     });
 
     await context.addCookies(this.cookies);
-    await context.tracing.start({ screenshots: true, snapshots: true });
     const page = await context.newPage();
 
     let results: string[] = [];
@@ -336,7 +335,6 @@ export class LinkedinAutomationService {
       const getRandomDelay = (min: number, max: number) =>
         Math.floor(Math.random() * (max - min + 1)) + min;
 
-      // Helper function to calculate a random scroll height within the browser's context
       const getRandomScrollHeight = async () => {
         return await page.evaluate(() => {
           return (
@@ -366,14 +364,89 @@ export class LinkedinAutomationService {
         }
       };
 
+      const closeChatBubbles = async () => {
+        const activeChatBubbles = page.locator(
+          "div.msg-overlay-conversation-bubble--is-active"
+        );
+        const bubbleCount = await activeChatBubbles.count();
+
+        if (bubbleCount === 0) {
+          return;
+        }
+
+        const bubbles = await activeChatBubbles.all();
+
+        for (const bubble of bubbles) {
+          const chatOverlayHeader = bubble.locator(
+            "div.msg-overlay-bubble-header__badge-container"
+          );
+          await chatOverlayHeader.waitFor();
+          await chatOverlayHeader.click();
+          await page.waitForTimeout(getRandomDelay(1000, 3000));
+        }
+      };
+
+      const humanizedMouseMove = async (
+        startX: number,
+        startY: number,
+        endX: number,
+        endY: number,
+        steps = 30
+      ) => {
+        let curX = startX;
+        let curY = startY;
+
+        for (let i = 0; i < steps; i++) {
+          const progress = i / steps;
+          const deltaX =
+            (endX - startX) * (progress + Math.sin(progress * Math.PI) * 0.2); // Curve
+          const deltaY =
+            (endY - startY) * (progress + Math.cos(progress * Math.PI) * 0.2);
+
+          const jitterX = Math.random() * 2 - 1;
+          const jitterY = Math.random() * 2 - 1;
+
+          curX = startX + deltaX + jitterX;
+          curY = startY + deltaY + jitterY;
+
+          await page.mouse.move(curX, curY);
+          await page.waitForTimeout(getRandomDelay(10, 50)); // Vary speed
+        }
+
+        // Final move to the exact endpoint
+        await page.mouse.move(endX, endY);
+      };
+
+      const moveMouseNaturally = async () => {
+        const startX = Math.floor(Math.random() * 100) + 50;
+        const startY = Math.floor(Math.random() * 100) + 50;
+        const endX = Math.floor(Math.random() * 100) + 50;
+        const endY = Math.floor(Math.random() * 100) + 50;
+
+        // Randomly move the mouse across the page
+        await humanizedMouseMove(startX, startY, endX, endY, 30);
+
+        // Wait a random amount of time
+        await page.waitForTimeout(getRandomDelay(1000, 3000));
+
+        // Define the return position (close to top-left but avoiding the navbar)
+        const returnX = Math.floor(Math.random() * 50) + 10; // Small x value close to left
+        const returnY = Math.floor(Math.random() * 30) + 60; // Just below navbar (52px height)
+
+        // Move back to the top-left, avoiding the navbar
+        await humanizedMouseMove(endX, endY, returnX, returnY, 30);
+
+        // Wait after the final move
+        await page.waitForTimeout(getRandomDelay(1000, 3000));
+      };
+
       // Loop until we have collected all connections or no more results can be loaded
       while (hasMoreResults && results.length < totalConnections) {
-        // Smooth scroll in the chosen direction by a random distance
+        await closeChatBubbles();
+
         const upDistance = await getRandomScrollHeight();
         const downDistance = await getRandomScrollHeight();
-        const totalScrollHeight = await page.evaluate(
-          () => document.body.scrollHeight
-        );
+
         await smoothScroll(downDistance, "down");
         await page.waitForTimeout(getRandomDelay(1506, 5210));
         await smoothScroll(upDistance, "up");
@@ -381,27 +454,30 @@ export class LinkedinAutomationService {
           await smoothScroll(upDistance, "up");
           await page.waitForTimeout(getRandomDelay(1006, 2010));
         }
-        if (Math.random() > 0.9) {
+        if (Math.random() > 0.5) {
           await smoothScroll(downDistance, "up");
           if (Math.random() > 0.8) {
-            const x = Math.floor(Math.random() * 100) + 50;
-            const y = Math.floor(Math.random() * 100) + 50;
-            await page.mouse.move(x, y, { steps: 30 });
-            await page.waitForTimeout(getRandomDelay(1000, 3000));
+            await moveMouseNaturally();
           } else {
             await page.waitForTimeout(getRandomDelay(1506, 5210));
           }
         }
         await page.waitForTimeout(getRandomDelay(2506, 6210));
+        logger.info("Evaluate total scroll height", {
+          source: "LinkedinAutomationService",
+        });
+        const totalScrollHeight = await page.evaluate(
+          () => document.body.scrollHeight
+        );
+        logger.info("Scroll to bottom", {
+          source: "LinkedinAutomationService",
+        });
         await smoothScroll(totalScrollHeight, "down");
         await page.waitForTimeout(getRandomDelay(1506, 5431));
 
         // Randomly simulate user interaction, such as a click or mouse movement (not too frequently)
         if (Math.random() > 0.8) {
-          const x = Math.floor(Math.random() * 100) + 50;
-          const y = Math.floor(Math.random() * 100) + 50;
-          await page.mouse.move(x, y, { steps: 30 });
-          await page.waitForTimeout(getRandomDelay(1000, 3000));
+          await moveMouseNaturally();
         }
 
         // Check if the "Show more results" button is visible, click if present
@@ -413,11 +489,19 @@ export class LinkedinAutomationService {
         await showMoreResultsButton.scrollIntoViewIfNeeded();
 
         if (await showMoreResultsButton.isVisible()) {
+          logger.info("Click on 'Show more results' button", {
+            source: "LinkedinAutomationService",
+          });
+          await page.screenshot({ path: `./shots/click-${randomUUID()}.png` });
           await showMoreResultsButton.click();
           await page.waitForTimeout(getRandomDelay(2120, 5300)); // Give time for new results to load
         }
 
         // Get newly loaded profile links
+        logger.info("Evaluate all connection links", {
+          source: "LinkedinAutomationService",
+        });
+
         const newProfileUrls = await page
           .locator("a.mn-connection-card__link")
           .evaluateAll((links) => {
@@ -430,6 +514,13 @@ export class LinkedinAutomationService {
         // Add new profile URLs to the list, avoiding duplicates
         results.push(...newProfileUrls.filter((url) => !results.includes(url)));
 
+        logger.info(
+          `Collected ${results.length} connections out of ${totalConnections}`,
+          {
+            source: "LinkedinAutomationService",
+          }
+        );
+
         // If we've collected all profiles, stop scrolling
         if (results.length >= totalConnections) {
           hasMoreResults = false;
@@ -437,20 +528,25 @@ export class LinkedinAutomationService {
         }
 
         // Alternatively, check if we can scroll more, if not, stop.
+        logger.info("Evaluate scroll height", {
+          source: "LinkedinAutomationService",
+        });
         const currentScrollHeight = await page.evaluate(
           () => document.body.scrollHeight
         );
         if (currentScrollHeight === lastScrollHeight) {
+          logger.info("No more results", {
+            source: "LinkedinAutomationService",
+          });
           hasMoreResults = false;
         } else {
           lastScrollHeight = currentScrollHeight;
         }
       }
     } catch (err) {
-      await page.screenshot({ path: `error-${randomUUID()}.png` });
+      await page.screenshot({ path: `./shots/error-${randomUUID()}.png` });
       error = LinkedinAutomationService.handleError(err);
     } finally {
-      await context.tracing.stop({ path: "trace.zip" });
       await page.close();
       return [results, error];
     }

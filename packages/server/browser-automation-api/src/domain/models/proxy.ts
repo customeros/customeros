@@ -57,7 +57,7 @@ export class Proxy {
         username: values.username,
         password: values.password,
       },
-      enableArgs: ["--js-flags='--max-old-space-size=4096'"],
+      // enableArgs: ["--js-flags='--max-old-space-size=4096'"],
     });
   }
 
