@@ -14,7 +14,7 @@ export const ClearFilter = ({ onClearFilter }: ClearFilterProps) => {
       colorScheme='grayModern'
       aria-label='clear filter selected'
       icon={<X className='text-gray-500' />}
-      className=' bg-white border-[1px] border-grayModern-300 focus:outline-none'
+      className=' bg-white  border-grayModern-300 focus:outline-none'
     />
   );
 };

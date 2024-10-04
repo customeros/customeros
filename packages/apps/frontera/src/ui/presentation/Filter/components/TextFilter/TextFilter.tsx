@@ -56,12 +56,12 @@ export const TextFilter = ({
       open={isOpen}
       onOpenChange={(value) => setIsOpen(value)}
     >
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
-          className='rounded-none text-gray-700 bg-white font-normal border-l-0'
+          className='rounded-none text-gray-700 bg-white font-normal boreder-r-2'
         >
           <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
             {filterValue ? filterValue : '...'}
@@ -81,6 +81,11 @@ export const TextFilter = ({
           placeholder={`${filterName} ${handleOperatorName(
             operatorValue as ComparisonOperator,
           )}`}
+          onKeyDown={(e) => {
+            if (e.key === 'Escape') {
+              setIsOpen(false);
+            }
+          }}
         />
       </PopoverContent>
     </Popover>

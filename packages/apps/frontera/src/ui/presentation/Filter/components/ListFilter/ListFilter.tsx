@@ -76,7 +76,7 @@ export const ListFilter = ({
 
   return (
     <Menu open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
-      <MenuButton>
+      <MenuButton asChild>
         <Button
           size='xs'
           colorScheme='grayModern'
@@ -116,6 +116,9 @@ export const ListFilter = ({
             return (
               <MenuItem
                 key={option.id}
+                onKeyDown={(e) => {
+                  e.stopPropagation();
+                }}
                 onClick={(e) => {
                   e.preventDefault();
                   handleItemClick(option.id);
