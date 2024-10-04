@@ -14,6 +14,7 @@ const (
 	UserUpdateV1          = "V1_USER_UPDATE"
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
 	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
+	UserEmailUnlinkV1     = "V1_USER_EMAIL_UNLINK"
 	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
 	UserAddRoleV1         = "V1_USER_ADD_ROLE"
 	UserRemoveRoleV1      = "V1_USER_REMOVE_ROLE"

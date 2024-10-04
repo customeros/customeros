@@ -56,11 +56,11 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, cfg.Utils)
 
 	//GRPC services
-	services.ContactService = NewContactService(log, aggregateStore, cfg, &services)
+	services.ContactService = NewContactService(log, &services)
 	services.OrganizationService = NewOrganizationService(log, commandHandlers.Organization, aggregateStore, cfg, &services)
 	services.PhoneNumberService = NewPhoneNumberService(log, repositories.Neo4jRepositories, commandHandlers.PhoneNumber, &services)
 	services.EmailService = NewEmailService(log, repositories.Neo4jRepositories, &services)
-	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User)
+	services.UserService = NewUserService(log, aggregateStore, cfg, commandHandlers.User, &services)
 	services.LocationService = NewLocationService(log, commandHandlers.Location)
 	services.JobRoleService = NewJobRoleService(log, commandHandlers.JobRole)
 	services.LogEntryService = NewLogEntryService(log, commandHandlers.LogEntry)

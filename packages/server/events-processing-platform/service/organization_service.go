@@ -788,3 +788,21 @@ func (s *organizationService) AdjustIndustry(ctx context.Context, request *organ
 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
+
+func (s *organizationService) UnLinkEmailFromOrganization(ctx context.Context, request *organizationpb.UnLinkEmailFromOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.UnLinkEmailFromOrganization")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewOrganizationAggregateWithTenantAndID(request.Tenant, request.OrganizationId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UnLinkEmailFromOrganization.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.OrganizationId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
+}
