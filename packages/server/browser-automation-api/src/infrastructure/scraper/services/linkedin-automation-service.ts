@@ -304,6 +304,7 @@ export class LinkedinAutomationService {
     const browser = await Browser.getFreshInstance(this.proxyConfig, {
       debugBrowserCat: true,
     });
+
     const context = await browser.newContext({
       userAgent: this.userAgent,
     });
@@ -330,7 +331,7 @@ export class LinkedinAutomationService {
       );
 
       let hasMoreResults = true;
-      let lastScrollHeight = 0;
+      // let lastScrollHeight = 0;
 
       const getRandomDelay = (min: number, max: number) =>
         Math.floor(Math.random() * (max - min + 1)) + min;
@@ -505,8 +506,13 @@ export class LinkedinAutomationService {
         const newProfileUrls = await page
           .locator("a.mn-connection-card__link")
           .evaluateAll((links) => {
-            return links.map((link) => {
+            return links.map((link, idx, arr) => {
               const url = link.getAttribute("href")?.split("?")?.[0] ?? "";
+
+              if (idx !== 0 || idx !== arr.length - 1) {
+                link.parentElement?.parentElement?.parentElement?.parentElement?.remove();
+              }
+
               return `https://www.linkedin.com${url}`;
             });
           });
@@ -523,25 +529,28 @@ export class LinkedinAutomationService {
 
         // If we've collected all profiles, stop scrolling
         if (results.length >= totalConnections) {
+          logger.info("No more results", {
+            source: "LinkedinAutomationService",
+          });
           hasMoreResults = false;
           break;
         }
 
         // Alternatively, check if we can scroll more, if not, stop.
-        logger.info("Evaluate scroll height", {
-          source: "LinkedinAutomationService",
-        });
-        const currentScrollHeight = await page.evaluate(
-          () => document.body.scrollHeight
-        );
-        if (currentScrollHeight === lastScrollHeight) {
-          logger.info("No more results", {
-            source: "LinkedinAutomationService",
-          });
-          hasMoreResults = false;
-        } else {
-          lastScrollHeight = currentScrollHeight;
-        }
+        // logger.info("Evaluate scroll height", {
+        //   source: "LinkedinAutomationService",
+        // });
+        // const currentScrollHeight = await page.evaluate(
+        //   () => document.body.scrollHeight
+        // );
+        // if (currentScrollHeight === lastScrollHeight) {
+        //   logger.info("No more results", {
+        //     source: "LinkedinAutomationService",
+        //   });
+        //   hasMoreResults = false;
+        // } else {
+        //   lastScrollHeight = currentScrollHeight;
+        // }
       }
     } catch (err) {
       await page.screenshot({ path: `./shots/error-${randomUUID()}.png` });
