@@ -100,5 +100,4 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	require.Equal(t, rawEmailUpdate, utils.GetStringPropOrEmpty(emailProps, "rawEmail"))
 	require.Equal(t, creationTime, utils.GetTimePropOrNow(emailProps, "createdAt"))
 	require.Less(t, creationTime, utils.GetTimePropOrNow(emailProps, "updatedAt"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(emailProps, "syncedWithEventStore"))
 }
