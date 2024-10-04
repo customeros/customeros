@@ -12,16 +12,21 @@ import {
   ReactFlow,
   Background,
   MarkerType,
+  OnNodeDrag,
   useNodesState,
   useEdgesState,
+  OnNodesDelete,
+  OnEdgesDelete,
   OnBeforeDelete,
   FitViewOptions,
+  SelectionDragHandler,
 } from '@xyflow/react';
 
 import { useStore } from '@shared/hooks/useStore';
 
 import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
+import { useUndoRedo } from './hooks';
 import { FlowBuilderToolbar } from './components';
 
 import '@xyflow/react/dist/style.css';
@@ -38,12 +43,15 @@ export const FlowBuilder = observer(
 
     const [nodes, setNodes, onNodesChange] = useNodesState(flow?.parsedNodes);
     const [edges, setEdges, onEdgesChange] = useEdgesState(flow?.parsedEdges);
+    const { takeSnapshot } = useUndoRedo();
 
     // const { screenToFlowPosition } = useReactFlow();
     const { ui } = useStore();
 
     const onConnect: OnConnect = useCallback(
       (params) => {
+        takeSnapshot();
+
         const edgeData = {
           triggerType: 'time',
           timeValue: 1,
@@ -154,6 +162,22 @@ export const FlowBuilder = observer(
       return hasStartOrEndNode ? false : elements;
     };
 
+    const onNodeDragStart: OnNodeDrag = useCallback(() => {
+      takeSnapshot();
+    }, [takeSnapshot]);
+
+    const onSelectionDragStart: SelectionDragHandler = useCallback(() => {
+      takeSnapshot();
+    }, [takeSnapshot]);
+
+    const onNodesDelete: OnNodesDelete = useCallback(() => {
+      takeSnapshot();
+    }, [takeSnapshot]);
+
+    const onEdgesDelete: OnEdgesDelete = useCallback(() => {
+      takeSnapshot();
+    }, [takeSnapshot]);
+
     return (
       <>
         <ReactFlow
@@ -166,11 +190,15 @@ export const FlowBuilder = observer(
           onConnect={onConnect}
           nodeTypes={nodeTypes}
           edgeTypes={edgeTypes}
+          onNodesDelete={onNodesDelete}
+          onEdgesDelete={onEdgesDelete}
           onBeforeDelete={onBeforeDelete}
+          onNodeDragStart={onNodeDragStart}
           onEdgeMouseLeave={onEdgeMouseLeave}
           onEdgeMouseEnter={onEdgeMouseEnter}
           zoomOnPinch={!ui.flowCommandMenu.isOpen}
           zoomOnScroll={!ui.flowCommandMenu.isOpen}
+          onSelectionDragStart={onSelectionDragStart}
           defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
           preventScrolling={!ui.flowCommandMenu.isOpen}
           proOptions={{
