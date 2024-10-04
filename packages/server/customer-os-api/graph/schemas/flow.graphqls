@@ -69,7 +69,7 @@ type FlowContact implements MetadataInterface {
 
     contact: Contact! @goField(forceResolver: true)
 
-    status: FlowContactStatus!
+    status: FlowParticipantStatus!
 
     scheduledAction: String
     scheduledAt: Time
@@ -126,7 +126,7 @@ enum FlowActionStatus {
     ARCHIVED
 }
 
-enum FlowContactStatus {
+enum FlowParticipantStatus {
     PENDING
     SCHEDULED
     IN_PROGRESS

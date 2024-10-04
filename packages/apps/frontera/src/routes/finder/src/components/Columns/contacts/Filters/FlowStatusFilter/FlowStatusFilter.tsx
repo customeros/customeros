@@ -9,8 +9,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { Checkbox } from '@ui/form/Checkbox/Checkbox';
 import {
   ColumnViewType,
-  FlowContactStatus,
   ComparisonOperator,
+  FlowParticipantStatus,
 } from '@graphql/types';
 
 import { FilterHeader } from '../../../shared/Filters/abstract';
@@ -18,12 +18,11 @@ import { FilterHeader } from '../../../shared/Filters/abstract';
 const optionsDict = {
   // Temporary - Should be replaced with correct enum
   PENDING: 'Pending',
-  [FlowContactStatus.Scheduled]: 'Scheduled',
-  [FlowContactStatus.InProgress]: 'In Progress',
-  [FlowContactStatus.Paused]: 'Paused',
-  [FlowContactStatus.Completed]: 'Completed',
-  // Temporary - Should be replaced with correct enum
-  GOAL_ACHIEVED: 'Goal achieved',
+  [FlowParticipantStatus.Scheduled]: 'Scheduled',
+  [FlowParticipantStatus.InProgress]: 'In Progress',
+  [FlowParticipantStatus.Paused]: 'Paused',
+  [FlowParticipantStatus.Completed]: 'Completed',
+  [FlowParticipantStatus.GoalAchieved]: 'Goal achieved',
 };
 const options = Object.entries(optionsDict);
 

@@ -20,7 +20,7 @@ export type GetFlowsQuery = {
     };
     contacts: Array<{
       __typename?: 'FlowContact';
-      status: Types.FlowContactStatus;
+      status: Types.FlowParticipantStatus;
       scheduledAction?: string | null;
       scheduledAt?: any | null;
       metadata: { __typename?: 'Metadata'; id: string };
