@@ -15,7 +15,6 @@ import (
 )
 
 type SyncToEventStoreService interface {
-	SyncEmails(ctx context.Context, batchSize int)
 	SyncPhoneNumbers(ctx context.Context, batchSize int)
 	SyncLocations(ctx context.Context, batchSize int)
 	SyncContacts(ctx context.Context, batchSize int)
@@ -37,14 +36,6 @@ func NewSyncToEventStoreService(repositories *repository.Repositories, services 
 		grpcClients:  grpcClients,
 		log:          log,
 	}
-}
-
-func (s *syncToEventStoreService) SyncEmails(ctx context.Context, batchSize int) {
-	s.log.Info("start sync emails to eventstore")
-
-	completed, failed, _ := s.upsertEmailsIntoEventStore(ctx, batchSize)
-
-	s.log.Infof("completed {%d} and failed {%d} emails upserting to eventstore", completed, failed)
 }
 
 func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {

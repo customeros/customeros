@@ -116,18 +116,6 @@ func main() {
 
 	if cfg.SyncToEventStore.Enabled {
 		syncTasks := []func(){}
-		if cfg.SyncToEventStore.Emails.Enabled {
-			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
-				defer cancel()
-				services.SyncToEventStoreService.SyncEmails(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Emails.BatchSize))
-				select {
-				case <-ctxWithTimeout.Done():
-					appLogger.Error("Timeout reached for syncing emails to event store")
-				default:
-				}
-			})
-		}
 		if cfg.SyncToEventStore.PhoneNumbers.Enabled {
 			syncTasks = append(syncTasks, func() {
 				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())

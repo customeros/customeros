@@ -32,11 +32,7 @@ type Config struct {
 		BatchSize           int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`
 		Enabled             bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
 		TimeoutAfterTaskRun int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"30"`
-		Emails              struct {
-			Enabled   bool `env:"SYNC_TO_EVENT_STORE_EMAILS_ENABLED" envDefault:"true"`
-			BatchSize int  `env:"SYNC_TO_EVENT_STORE_EMAILS_BATCH_SIZE" envDefault:"-1"`
-		}
-		PhoneNumbers struct {
+		PhoneNumbers        struct {
 			Enabled   bool `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_ENABLED" envDefault:"true"`
 			BatchSize int  `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_BATCH_SIZE" envDefault:"-1"`
 		}
