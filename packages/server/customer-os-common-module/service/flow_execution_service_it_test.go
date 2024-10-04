@@ -77,13 +77,13 @@ func TestFlowExecutionService_FlowExecution_1(t *testing.T) {
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelContact))
 
-	_, err = CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactId1)
+	_, err = CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactId1, model.CONTACT)
 	require.NoError(t, err)
 
-	_, err = CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactI2)
+	_, err = CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactI2, model.CONTACT)
 	require.NoError(t, err)
 
-	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelFlowContact))
+	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelFlowParticipant))
 
 	//activate flow
 	_, err = CommonServices.FlowService.FlowChangeStatus(ctx, flow.Id, neo4jentity.FlowStatusActive)
