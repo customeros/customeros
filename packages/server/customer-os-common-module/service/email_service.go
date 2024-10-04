@@ -185,6 +185,7 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 
 	switch linkWith.Type.String() {
 	case commonModel.CONTACT.String():
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return s.services.GrpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 				Tenant:         tenant,
@@ -200,6 +201,7 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to contact"))
 		}
 	case commonModel.USER.String():
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 			return s.services.GrpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
 				Tenant:         tenant,
@@ -215,6 +217,7 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
 		}
 	case commonModel.ORGANIZATION.String():
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.services.GrpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
 				Tenant:         tenant,
@@ -262,15 +265,15 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 	}
 
 	switch linkWith.Type.String() {
+
 	case commonModel.CONTACT.String():
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.services.GrpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
+			return s.services.GrpcClients.ContactClient.UnLinkEmailFromContact(ctx, &contactpb.UnLinkEmailFromContactGrpcRequest{
 				Tenant:         tenant,
-				EmailId:        emailId,
 				ContactId:      linkWith.Id,
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      appSource,
-				Primary:        primary,
 				Email:          email,
 			})
 		})
@@ -278,14 +281,13 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to contact"))
 		}
 	case commonModel.USER.String():
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return s.services.GrpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
+			return s.services.GrpcClients.UserClient.UnLinkEmailFromUser(ctx, &userpb.UnLinkEmailFromUserGrpcRequest{
 				Tenant:         tenant,
-				EmailId:        emailId,
 				UserId:         linkWith.Id,
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      appSource,
-				Primary:        primary,
 				Email:          email,
 			})
 		})
@@ -293,14 +295,13 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
 		}
 	case commonModel.ORGANIZATION.String():
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
+			return s.services.GrpcClients.OrganizationClient.UnLinkEmailFromOrganization(ctx, &organizationpb.UnLinkEmailFromOrganizationGrpcRequest{
 				Tenant:         tenant,
-				EmailId:        emailId,
 				OrganizationId: linkWith.Id,
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      appSource,
-				Primary:        primary,
 				Email:          email,
 			})
 		})

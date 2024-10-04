@@ -223,6 +223,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
 	case contactevent.ContactEmailLinkV1:
 		return s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
+	case contactevent.ContactEmailUnlinkV1:
+		return s.contactEventHandler.OnEmailUnlinkFromContact(ctx, evt)
 	case contactevent.ContactLocationLinkV1:
 		return s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
 	case contactevent.ContactOrganizationLinkV1:
@@ -251,7 +253,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationPhoneNumberLinkV1:
 		return s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
 	case orgevents.OrganizationEmailLinkV1:
-		return s.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
+		return s.organizationEventHandler.OnEmailLinkToOrganization(ctx, evt)
+	case orgevents.OrganizationEmailUnlinkV1:
+		return s.organizationEventHandler.OnEmailUnlinkFromOrganization(ctx, evt)
 	case orgevents.OrganizationLocationLinkV1:
 		return s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
 	case orgevents.OrganizationLinkDomainV1:
@@ -323,6 +327,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
 	case userevents.UserEmailLinkV1:
 		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
+	case userevents.UserEmailUnlinkV1:
+		return s.userEventHandler.OnEmailUnlinkedFromUser(ctx, evt)
 	case userevents.UserJobRoleLinkV1:
 		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
 	case userevents.UserAddRoleV1:

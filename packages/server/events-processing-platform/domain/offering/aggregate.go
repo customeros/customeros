@@ -3,6 +3,7 @@ package offering
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	offeringpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/offering"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"

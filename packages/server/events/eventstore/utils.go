@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	baseEvent "github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
