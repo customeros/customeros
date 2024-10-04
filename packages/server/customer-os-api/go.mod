@@ -19,7 +19,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/validation-a
 replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-api => ../enrichment-api
 
 require (
-	github.com/99designs/gqlgen v0.17.54
+	github.com/99designs/gqlgen v0.17.55
 	github.com/caarlos0/env/v6 v6.10.1
 	github.com/customeros/mailsherpa v0.2.11
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
