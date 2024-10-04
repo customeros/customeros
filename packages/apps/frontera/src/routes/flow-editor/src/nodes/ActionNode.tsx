@@ -90,7 +90,7 @@ export const ActionNode = ({
   return (
     <>
       <div
-        className={`aspect-[9/1] max-w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
+        className={`aspect-[9/1] max-w-[300px] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
       >
         <div className='text-sm flex items-center justify-between '>
           <div className='truncate text-sm flex items-center'>
