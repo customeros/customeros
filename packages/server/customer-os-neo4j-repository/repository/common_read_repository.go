@@ -53,6 +53,7 @@ func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label str
 		id = uuid.New().String()
 		exists, err := r.ExistsById(ctx, tenant, id, label)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return "", err
 		}
 		if !exists {

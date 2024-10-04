@@ -526,7 +526,7 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 	}
 	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
 	userLinkEmailTime := utils.Now()
-	userLinkEmailEvent, err := user_events.NewUserLinkEmailEvent(userAggregate, tenantName, emailId, true, userLinkEmailTime)
+	userLinkEmailEvent, err := user_events.NewUserLinkEmailEvent(userAggregate, tenantName, emailId, "", true, userLinkEmailTime)
 	require.Nil(t, err)
 	err = userEventHandler.OnEmailLinkedToUser(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)

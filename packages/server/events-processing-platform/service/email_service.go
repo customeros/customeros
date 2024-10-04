@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 type emailService struct {
@@ -128,6 +129,29 @@ func (s *emailService) UpdateEmailValidation(ctx context.Context, request *email
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(UpdateEmailValidation.HandleGRPCRequest) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &emailpb.EmailIdGrpcResponse{Id: request.EmailId}, nil
+}
+
+func (s *emailService) UpsertEmailV2(ctx context.Context, request *emailpb.UpsertEmailRequest) (*emailpb.EmailIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "EmailService.UpsertEmailV2")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	span.LogFields(log.Object("request", request))
+
+	// Validate email ID is present
+	if request.EmailId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("emailId"))
+	}
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return email.NewEmailAggregateWithTenantAndID(request.Tenant, request.EmailId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UpsertEmailV2) tenant:%s, err: %s", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

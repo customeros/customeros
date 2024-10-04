@@ -28,13 +28,15 @@ type LinkEmailCommand struct {
 	eventstore.BaseCommand
 	EmailId string `json:"emailId" validate:"required"`
 	Primary bool
+	Email   string
 }
 
-func NewLinkEmailCommand(objectID, tenant, userId, emailId string, primary bool, appSource string) *LinkEmailCommand {
+func NewLinkEmailCommand(objectID, tenant, userId, emailId, email string, primary bool, appSource string) *LinkEmailCommand {
 	return &LinkEmailCommand{
 		BaseCommand: eventstore.NewBaseCommand(objectID, tenant, userId).WithAppSource(appSource),
 		EmailId:     emailId,
 		Primary:     primary,
+		Email:       email,
 	}
 }
 

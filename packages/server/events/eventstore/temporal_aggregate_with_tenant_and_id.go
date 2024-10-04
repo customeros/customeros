@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"strings"
 	"time"
 )
@@ -23,7 +22,7 @@ func NewCommonTempAggregateWithTenantAndId(aggregateType AggregateType, tenant, 
 		return nil
 	}
 	aggregate := NewCommonTempAggregate(aggregateType)
-	aggregate.SetID(fmt.Sprintf("%s-%s-%s", utils.StreamTempPrefix, tenant, id))
+	aggregate.SetID(fmt.Sprintf("%s-%s-%s", constants.StreamTempPrefix, tenant, id))
 	return aggregate
 }
 
@@ -73,7 +72,7 @@ func (a *CommonTenantIdTempAggregate) HandleGRPCRequest(ctx context.Context, req
 
 func (a *CommonTenantIdTempAggregate) PrepareStreamMetadata() esdb.StreamMetadata {
 	streamMetadata := esdb.StreamMetadata{}
-	streamMetadata.SetMaxCount(utils.StreamMetadataMaxCount)
-	streamMetadata.SetMaxAge(time.Duration(utils.StreamMetadataMaxAgeSeconds) * time.Second)
+	streamMetadata.SetMaxCount(constants.StreamMetadataMaxCount)
+	streamMetadata.SetMaxAge(time.Duration(constants.StreamMetadataMaxAgeSeconds) * time.Second)
 	return streamMetadata
 }

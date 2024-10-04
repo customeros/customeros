@@ -198,7 +198,7 @@ func (s *contactService) LinkEmailToContact(ctx context.Context, request *contac
 		}
 	}
 
-	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Primary, time.Now())
+	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Email, request.Primary, time.Now())
 
 	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,

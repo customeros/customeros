@@ -4,7 +4,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -41,7 +40,7 @@ func (a *MasterPlanAggregate) When(evt eventstore.Event) error {
 	case event.MasterPlanMilestoneReorderV1:
 		return a.onMasterPlanMilestoneReorder(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), utils.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
