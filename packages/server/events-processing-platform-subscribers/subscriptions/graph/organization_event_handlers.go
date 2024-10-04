@@ -4,7 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -12,28 +16,23 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
-	"strings"
-	"time"
-
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/model"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
+	"time"
 )
 
 type OrganizationEventHandler struct {
@@ -410,8 +409,8 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkedToOrganization")
+func (h *OrganizationEventHandler) OnEmailLinkToOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkToOrganization")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
@@ -425,6 +424,31 @@ func (h *OrganizationEventHandler) OnEmailLinkedToOrganization(ctx context.Conte
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Primary)
 	if err != nil {
 		tracing.TraceErr(span, err)
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+
+	return nil
+}
+
+func (h *OrganizationEventHandler) OnEmailUnlinkFromOrganization(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailUnlinkFromOrganization")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.OrganizationUnlinkEmailEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
+	tracing.TagTenant(span, eventData.Tenant)
+	tracing.TagEntity(span, organizationId)
+
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.UnlinkFromOrganization(ctx, eventData.Tenant, organizationId, eventData.Email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromOrganization"))
+		h.log.Errorf("Error while unlinking email %s from organization %s: %s", eventData.Email, organizationId, err.Error())
 	}
 
 	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)

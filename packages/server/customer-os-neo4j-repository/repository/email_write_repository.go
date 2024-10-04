@@ -52,6 +52,9 @@ type EmailWriteRepository interface {
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId string, primary bool) error
 	LinkWithOrganization(ctx context.Context, tenant, organizationId, emailId string, primary bool) error
 	LinkWithUser(ctx context.Context, tenant, userId, emailId string, primary bool) error
+	UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error
+	UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error
+	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
 }
 
 type emailWriteRepository struct {
@@ -331,6 +334,87 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 		"id":     emailId,
 		"tenant": tenant,
 	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromUser")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, usedId)
+	span.LogKV("email", email)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})-[rel:HAS]->(e:Email)
+				WHERE e.email = $email OR e.rawEmail = $email
+				DELETE rel`
+	params := map[string]any{
+		"tenant": tenant,
+		"userId": usedId,
+		"email":  email,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromContact")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, contactId)
+	span.LogKV("email", email)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})-[rel:HAS]->(e:Email)
+				WHERE e.email = $email OR e.rawEmail = $email
+				DELETE rel`
+	params := map[string]any{
+		"tenant":    tenant,
+		"contactId": contactId,
+		"email":     email,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UnlinkFromOrganization")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, organizationId)
+	span.LogKV("email", email)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})-[rel:HAS]->(e:Email)
+				WHERE e.email = $email OR e.rawEmail = $email
+				DELETE rel`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"email":          email,
+	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 

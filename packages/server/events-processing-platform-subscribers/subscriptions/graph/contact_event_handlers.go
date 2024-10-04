@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -14,7 +15,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
@@ -236,6 +236,31 @@ func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt even
 	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 
 	return err
+}
+
+func (h *ContactEventHandler) OnEmailUnlinkFromContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnEmailUnlinkFromContact")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.ContactUnlinkEmailEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	tracing.TagTenant(span, eventData.Tenant)
+	tracing.TagEntity(span, contactId)
+
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.UnlinkFromContact(ctx, eventData.Tenant, contactId, eventData.Email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromContact"))
+		h.log.Errorf("Error while unlinking email %s from contact %s: %s", eventData.Email, contactId, err.Error())
+	}
+
+	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
+
+	return nil
 }
 
 func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt eventstore.Event) error {
