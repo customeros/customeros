@@ -1,6 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
-
-import debounce from 'lodash/debounce';
+import { useState, useEffect } from 'react';
 
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
@@ -35,19 +33,15 @@ export const NumberFilter = ({
 }: NumberFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [inputValue, setInputValue] = useState(filterValue);
-
-  const debouncedOnChangeFilterValue = useCallback(
-    debounce((value: string) => {
-      onChangeFilterValue(value);
-    }, 300),
-    [onChangeFilterValue],
-  );
+  const [timeoutId, setTimeoutId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!filterValue && filterName) {
-      setTimeout(() => {
+      const timer = setTimeout(() => {
         setIsOpen(true);
       }, 100);
+
+      return () => clearTimeout(timer);
     }
   }, [filterName, filterValue]);
 
@@ -61,7 +55,14 @@ export const NumberFilter = ({
     const newValue = e.target.value;
 
     setInputValue(newValue);
-    debouncedOnChangeFilterValue(newValue);
+
+    if (timeoutId) clearTimeout(timeoutId);
+
+    const newTimeoutId = setTimeout(() => {
+      onChangeFilterValue(newValue);
+    }, 300);
+
+    setTimeoutId(newTimeoutId);
   };
 
   return (

@@ -1,7 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
 
-import { debounce } from 'lodash';
-
 import { Input } from '@ui/form/Input';
 import { Button } from '@ui/form/Button/Button';
 import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
@@ -27,12 +25,18 @@ export const TextFilter = ({
   filterValue,
 }: TextFilterProps) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [inputValue, setInputValue] = useState(filterValue);
+  const [inputValue, setInputValue] = useState(() => filterValue);
 
-  const debouncedOnChangeFilterValue = useMemo(
-    () => debounce(onChangeFilterValue, 300),
-    [onChangeFilterValue],
-  );
+  const debouncedOnChangeFilterValue = useMemo(() => {
+    let timeoutId: NodeJS.Timeout;
+
+    return (value: string) => {
+      clearTimeout(timeoutId);
+      timeoutId = setTimeout(() => {
+        onChangeFilterValue(value);
+      }, 300);
+    };
+  }, [onChangeFilterValue]);
 
   useEffect(() => {
     if (!filterValue) {
@@ -45,16 +49,21 @@ export const TextFilter = ({
   }, [filterName]);
 
   useEffect(() => {
-    return () => {
-      debouncedOnChangeFilterValue.cancel();
-    };
-  }, [debouncedOnChangeFilterValue]);
+    if (!filterValue && filterName) {
+      const timer = setTimeout(() => {
+        setIsOpen(true);
+      }, 100);
+
+      return () => clearTimeout(timer);
+    }
+  }, [filterName, filterValue]);
 
   if (
     operatorValue === ComparisonOperator.IsEmpty ||
     operatorValue === ComparisonOperator.IsNotEmpty
-  )
+  ) {
     return null;
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
@@ -74,9 +83,9 @@ export const TextFilter = ({
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
-          className='rounded-none text-gray-700 bg-white font-normal boreder-r-2'
+          className='rounded-none text-gray-700 bg-white font-normal border-r-2'
         >
-          <span className=' max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
+          <span className='max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
             {filterValue ? filterValue : '...'}
           </span>
         </Button>
