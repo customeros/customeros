@@ -10,6 +10,8 @@ replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-
 
 replace github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository => ../customer-os-neo4j-repository
 
+replace github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto => ../events-processing-proto
+
 require (
 	github.com/biter777/countries v1.7.5
 	github.com/caarlos0/env/v6 v6.10.1
