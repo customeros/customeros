@@ -100,7 +100,7 @@ export const EmailEditorModal = observer(
                   namespace='flow-email-editor'
                   defaultHtmlValue={bodyTemplate}
                   onChange={(e) => setBodyTemplate(e)}
-                  className='mb-10 text-base cursor-text'
+                  className='mb-10 text-base cursor-text email-editor'
                 ></Editor>
               </div>
             </ModalContent>
