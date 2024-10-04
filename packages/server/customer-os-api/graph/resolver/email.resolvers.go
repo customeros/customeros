@@ -6,7 +6,8 @@ package resolver
 
 import (
 	"context"
-	"fmt"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"strings"
 
 	"github.com/99designs/gqlgen/graphql"
@@ -135,7 +136,40 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 
 // EmailReplaceForContact is the resolver for the emailReplaceForContact field.
 func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID string, previousEmail *string, input model.EmailInput) (*model.Email, error) {
-	panic(fmt.Errorf("not implemented: EmailReplaceForContact - emailReplaceForContact"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailReplaceForContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contactID", contactID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		commonservice.EmailFields{
+			Email:     input.Email,
+			Primary:   utils.IfNotNilBool(input.Primary),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		}, &commonservice.LinkWith{
+			Type: commonModel.CONTACT,
+			Id:   contactID,
+		})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		return nil, err
+	}
+
+	if utils.IfNotNilString(emailId) == "" {
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		return nil, nil
+	}
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
+		return nil, nil
+	}
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailMergeToUser is the resolver for the emailMergeToUser field.
@@ -202,7 +236,40 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 
 // EmailReplaceForUser is the resolver for the emailReplaceForUser field.
 func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID string, previousEmail *string, input model.EmailInput) (*model.Email, error) {
-	panic(fmt.Errorf("not implemented: EmailReplaceForUser - emailReplaceForUser"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailReplaceForUser", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.userID", userID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		commonservice.EmailFields{
+			Email:     input.Email,
+			Primary:   utils.IfNotNilBool(input.Primary),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		}, &commonservice.LinkWith{
+			Type: commonModel.USER,
+			Id:   userID,
+		})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		return nil, err
+	}
+
+	if utils.IfNotNilString(emailId) == "" {
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		return nil, nil
+	}
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
+		return nil, nil
+	}
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailMergeToOrganization is the resolver for the emailMergeToOrganization field.
@@ -269,7 +336,40 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 
 // EmailReplaceForOrganization is the resolver for the emailReplaceForOrganization field.
 func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, organizationID string, previousEmail *string, input model.EmailInput) (*model.Email, error) {
-	panic(fmt.Errorf("not implemented: EmailReplaceForOrganization - emailReplaceForOrganization"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailReplaceForUser", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		commonservice.EmailFields{
+			Email:     input.Email,
+			Primary:   utils.IfNotNilBool(input.Primary),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		}, &commonservice.LinkWith{
+			Type: commonModel.ORGANIZATION,
+			Id:   organizationID,
+		})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		return nil, err
+	}
+
+	if utils.IfNotNilString(emailId) == "" {
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		return nil, nil
+	}
+
+	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
+		return nil, nil
+	}
+	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // EmailDelete is the resolver for the emailDelete field.

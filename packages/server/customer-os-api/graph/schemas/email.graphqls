@@ -121,7 +121,7 @@ input EmailInput {
     """
     primary: Boolean
 
-    appSource: String
+    appSource: String @deprecated
 }
 
 input EmailUpdateAddressInput {
