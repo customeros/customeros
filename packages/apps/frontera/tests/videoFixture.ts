@@ -34,7 +34,11 @@ export const test = base.extend<TestFixtures & VideoFixture>({
 
     if (video) {
       const videoPath = await video.path();
-      const customVideoName = `${testInfo.title.replace(/\s+/g, '_')}.webm`;
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const customVideoName = `${testInfo.title.replace(
+        /\s+/g,
+        '_',
+      )}_${timestamp}.webm`;
       const newVideoPath = path.join('videos', customVideoName);
 
       testInfo.attachments.push({
