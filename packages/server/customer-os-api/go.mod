@@ -36,7 +36,7 @@ require (
 	github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository v0.0.0-20240920114849-ff5ab459a427
 	github.com/openline-ai/openline-customer-os/packages/server/enrichment-api v0.0.0-20240809100739-f28b7cd9aa2e
 	github.com/openline-ai/openline-customer-os/packages/server/events v0.0.0-20240413132139-bfffc416fdeb
-	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20240920145110-37b66a416a6a
+	github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto v0.0.0-20241004122044-3a0040d9c64c
 	github.com/openline-ai/openline-customer-os/packages/server/validation-api v0.0.0-20240808154624-eddfcb0715b5
 	github.com/opentracing/opentracing-go v1.2.0
 	github.com/pkg/errors v0.9.1
