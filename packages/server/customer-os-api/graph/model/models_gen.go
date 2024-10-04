@@ -1188,11 +1188,11 @@ type FlowActionSenderMergeInput struct {
 }
 
 type FlowContact struct {
-	Metadata        *Metadata                `json:"metadata"`
-	Contact         *Contact                 `json:"contact"`
-	Status          entity.FlowContactStatus `json:"status"`
-	ScheduledAction *string                  `json:"scheduledAction,omitempty"`
-	ScheduledAt     *time.Time               `json:"scheduledAt,omitempty"`
+	Metadata        *Metadata                    `json:"metadata"`
+	Contact         *Contact                     `json:"contact"`
+	Status          entity.FlowParticipantStatus `json:"status"`
+	ScheduledAction *string                      `json:"scheduledAction,omitempty"`
+	ScheduledAt     *time.Time                   `json:"scheduledAt,omitempty"`
 }
 
 func (FlowContact) IsMetadataInterface()        {}

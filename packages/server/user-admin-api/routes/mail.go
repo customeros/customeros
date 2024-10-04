@@ -44,7 +44,6 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 			ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c, "mail/send", c.Request.Header)
 			defer span.Finish()
 
-			username := c.GetString(security.KEY_USER_EMAIL)
 			tenant := c.GetString(security.KEY_TENANT_NAME)
 
 			customCtx := &common.CustomContext{}
@@ -76,34 +75,10 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 
 			span.LogFields(tracingLog.Object("request", request))
 
-			uniqueInternalIdentifier := utils.GenerateRandomString(64)
-			request.UniqueInternalIdentifier = &uniqueInternalIdentifier
-
-			footer := `
-					<div>
-						<div style="font-size: 12px; font-weight: normal; font-family: Barlow, sans-serif; color: rgb(102, 112, 133); line-height: 32px;">
-							<img width="16px" src="https://customer-os.imgix.net/website/favicon.png" alt="CustomerOS" style="vertical-align: middle; margin-right: 5px; margin-bottom: 2px;" />
-							Sent from <a href="https://customeros.ai/?utm_content=timeline_email&utm_medium=email" style="text-decoration: underline; color: rgb(102, 112, 133);">CustomerOS</a>
-						</div>
-					</div>
-					`
-			request.Content += footer
-
-			// Append an image tag pointing to the spy endpoint to the request content
-			imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + conf.Service.PublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
-			request.Content += imgTag
-
-			replyMail, err := services.CommonServices.MailService.SendMail(ctx, request, &username)
+			interactionEventId, err := services.CommonServices.MailService.SendMail(ctx, nil, tenant, request)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
-				return
-			}
-
-			interactionEventId, err := services.CommonServices.MailService.SaveMail(ctx, request, replyMail, tenant, username, uniqueInternalIdentifier)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 				return
 			}
 

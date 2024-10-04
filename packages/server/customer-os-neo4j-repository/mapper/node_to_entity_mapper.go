@@ -1174,12 +1174,12 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	return &domain
 }
 
-func MapDbNodeToFlowContactEntity(node *dbtype.Node) *entity.FlowContactEntity {
+func MapDbNodeToFlowParticipantEntity(node *dbtype.Node) *entity.FlowParticipantEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowContactEntity{
+	e := entity.FlowParticipantEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),

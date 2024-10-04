@@ -24,7 +24,7 @@ const (
 	NOTE                EntityType = "NOTE"
 	FLOW                EntityType = "FLOW"
 	FLOW_ACTION         EntityType = "FLOW_ACTION"
-	FLOW_CONTACT        EntityType = "FLOW_CONTACT"
+	FLOW_PARTICIPANT    EntityType = "FLOW_PARTICIPANT"
 	FLOW_ACTION_SENDER  EntityType = "FLOW_ACTION_SENDER"
 )
 
@@ -72,8 +72,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelFlow
 	case FLOW_ACTION:
 		return NodeLabelFlowAction
-	case FLOW_CONTACT:
-		return NodeLabelFlowContact
+	case FLOW_PARTICIPANT:
+		return NodeLabelFlowParticipant
 	case FLOW_ACTION_SENDER:
 		return NodeLabelFlowActionSender
 	}

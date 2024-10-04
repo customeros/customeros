@@ -13,28 +13,28 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type FlowContactWriteRepository interface {
-	Merge(ctx context.Context, entity *entity.FlowContactEntity) (*dbtype.Node, error)
+type FlowParticipantWriteRepository interface {
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowParticipantEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, id string) error
 }
 
-type flowContactWriteRepositoryImpl struct {
+type flowParticipantWriteRepositoryImpl struct {
 	driver   *neo4j.DriverWithContext
 	database string
 }
 
-func NewFlowContactWriteRepository(driver *neo4j.DriverWithContext, database string) FlowContactWriteRepository {
-	return &flowContactWriteRepositoryImpl{driver: driver, database: database}
+func NewFlowParticipantWriteRepository(driver *neo4j.DriverWithContext, database string) FlowParticipantWriteRepository {
+	return &flowParticipantWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowContactWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.FlowContactEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowContactWriteRepository.Merge")
+func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowParticipantEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowParticipantWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:BELONGS_TO_TENANT]-(fc:FlowContact:FlowContact_%s {id: $id})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(fc:FlowParticipant:FlowParticipant_%s {id: $id})
 			ON MATCH SET
 				fc.updatedAt = $updatedAt,
 				fc.contactId = $contactId,
@@ -58,24 +58,34 @@ func (r *flowContactWriteRepositoryImpl) Merge(ctx context.Context, entity *enti
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
+	if tx == nil {
+		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+		defer session.Close(ctx)
 
-	result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+		queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			qr, err := tx.Run(ctx, cypher, params)
+			if err != nil {
+				return nil, err
+			}
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
 			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
-	})
-	if err != nil {
-		return nil, err
-	}
 
-	return result.(*dbtype.Node), nil
+		return queryResult.(*neo4j.Node), nil
+	} else {
+		queryResult, err := (*tx).Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	}
 }
 
-func (r *flowContactWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
+func (r *flowParticipantWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.Delete")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -84,7 +94,7 @@ func (r *flowContactWriteRepositoryImpl) Delete(ctx context.Context, id string) 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fc:FlowContact_%s {id:$id}) delete r, fc`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fc:FlowParticipant_%s {id:$id}) delete r, fc`, tenant)
 
 	params := map[string]any{
 		"tenant": tenant,

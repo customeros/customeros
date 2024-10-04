@@ -58,7 +58,7 @@ type FlowActionEntity struct {
 
 type FlowActionEntities []FlowActionEntity
 
-type FlowContactEntity struct {
+type FlowParticipantEntity struct {
 	DataLoaderKey
 	Id        string
 	CreatedAt time.Time
@@ -66,12 +66,12 @@ type FlowContactEntity struct {
 
 	ContactId string
 
-	Status          FlowContactStatus
+	Status          FlowParticipantStatus
 	ScheduledAction *string
 	ScheduledAt     *time.Time
 }
 
-type FlowContactEntities []FlowContactEntity
+type FlowParticipantEntities []FlowParticipantEntity
 
 type FlowActionSenderEntity struct {
 	DataLoaderKey
@@ -114,19 +114,19 @@ func GetFlowActionType(s string) FlowActionType {
 	return FlowActionType(s)
 }
 
-type FlowContactStatus string
+type FlowParticipantStatus string
 
 const (
-	FlowContactStatusPending      FlowContactStatus = "PENDING"
-	FlowContactStatusScheduled    FlowContactStatus = "SCHEDULED"
-	FlowContactStatusInProgress   FlowContactStatus = "IN_PROGRESS"
-	FlowContactStatusPaused       FlowContactStatus = "PAUSED"
-	FlowContactStatusCompleted    FlowContactStatus = "COMPLETED"
-	FlowContactStatusGoalAchieved FlowContactStatus = "GOAL_ACHIEVED"
+	FlowParticipantStatusPending      FlowParticipantStatus = "PENDING"
+	FlowParticipantStatusScheduled    FlowParticipantStatus = "SCHEDULED"
+	FlowParticipantStatusInProgress   FlowParticipantStatus = "IN_PROGRESS"
+	FlowParticipantStatusPaused       FlowParticipantStatus = "PAUSED"
+	FlowParticipantStatusCompleted    FlowParticipantStatus = "COMPLETED"
+	FlowParticipantStatusGoalAchieved FlowParticipantStatus = "GOAL_ACHIEVED"
 )
 
-func GetFlowContactStatus(s string) FlowContactStatus {
-	return FlowContactStatus(s)
+func GetFlowContactStatus(s string) FlowParticipantStatus {
+	return FlowParticipantStatus(s)
 }
 
 type FlowExecutionSettingsEntity struct {

@@ -14,7 +14,7 @@ type Config struct {
 	}
 	Service struct {
 		Port               string `env:"PORT,required"`
-		PublicPath         string `env:"COMMS_API_PUBLIC_PATH,required"`
+		PublicPath         string `env:"USER_ADMIN_API_PUBLIC_PATH,required"`
 		CorsUrl            string `env:"CORS_URL,required"`
 		ProviderTenantName string `env:"PROVIDER_TENANT_NAME,required"`
 		ProviderUsername   string `env:"PROVIDER_USERNAME,required"`
