@@ -8,8 +8,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -72,7 +72,7 @@ func (a *LocationAggregate) updateLocation(ctx context.Context, cmd *command.Ups
 
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, utils.Now())
 	if cmd.Source.Source == "" {
-		cmd.Source.Source = events2.SourceOpenline
+		cmd.Source.Source = constants.SourceOpenline
 	}
 
 	locationAddress := models.LocationAddress{}

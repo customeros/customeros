@@ -152,6 +152,7 @@ message LinkEmailToOrganizationGrpcRequest {
   bool primary = 4;
   string loggedInUserId = 6;
   string appSource = 7;
+  string email = 8;
 }
 
 message LinkEmailToBillingProfileGrpcRequest {

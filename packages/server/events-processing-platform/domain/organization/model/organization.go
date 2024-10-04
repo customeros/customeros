@@ -2,8 +2,8 @@ package model
 
 import (
 	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"reflect"
 	"time"
 
@@ -191,7 +191,7 @@ func (o *Organization) SkipUpdate(fields *OrganizationFields) bool {
 	if fields.ExternalSystem.Available() && !o.ContainsExternalSystem(fields.ExternalSystem.ExternalSystemId) {
 		return false
 	}
-	if o.Source.SourceOfTruth == events2.SourceOpenline && fields.ExternalSystem.Available() {
+	if o.Source.SourceOfTruth == constants.SourceOpenline && fields.ExternalSystem.Available() {
 		return true
 	}
 	return false

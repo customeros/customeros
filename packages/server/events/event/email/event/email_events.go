@@ -9,10 +9,13 @@ import (
 )
 
 const (
-	EmailCreateV1    = "V1_EMAIL_CREATE"
-	EmailUpdateV1    = "V1_EMAIL_UPDATE"
+	EmailUpsertV1    = "V1_EMAIL_UPSERT"
 	EmailValidateV1  = "V1_EMAIL_VALIDATE"
 	EmailValidatedV2 = "V2_EMAIL_VALIDATED"
+	// Deprecated
+	EmailCreateV1 = "V1_EMAIL_CREATE"
+	// Deprecated
+	EmailUpdateV1 = "V1_EMAIL_UPDATE"
 	//Deprecated
 	EmailValidatedV1 = "V1_EMAIL_VALIDATED"
 	//Deprecated

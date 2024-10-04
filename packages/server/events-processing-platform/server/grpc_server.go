@@ -2,7 +2,6 @@ package server
 
 import (
 	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"net"
 	"time"
 
@@ -45,7 +44,7 @@ const (
 )
 
 func (server *Server) NewEventProcessorGrpcServer() (func() error, *grpc.Server, error) {
-	l, err := net.Listen(utils.Tcp, server.Config.GRPC.Port)
+	l, err := net.Listen(constants.Tcp, server.Config.GRPC.Port)
 	if err != nil {
 		return nil, nil, errors.Wrap(err, "net.Listen")
 	}

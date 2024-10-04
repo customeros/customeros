@@ -81,8 +81,7 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 					e.sourceOfTruth = $sourceOfTruth,
 					e.appSource = $appSource,
 					e.createdAt = $createdAt,
-					e.updatedAt = datetime(),
-					e.syncedWithEventStore = true 
+					e.updatedAt = datetime() 
 		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e)`, tenant)
 	params := map[string]any{
 		"id":            emailId,
@@ -113,8 +112,7 @@ func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId,
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
 		 SET 	e.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE e.sourceOfTruth END,
 				e.updatedAt = datetime(),
-				e.rawEmail = $rawEmail,
-				e.syncedWithEventStore = true`, tenant)
+				e.rawEmail = $rawEmail`, tenant)
 	params := map[string]any{
 		"id":            emailId,
 		"tenant":        tenant,
@@ -223,8 +221,7 @@ func (r *emailWriteRepository) LinkWithContact(ctx context.Context, tenant, cont
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (c)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
-			c.updatedAt = datetime(),
-			rel.syncedWithEventStore = true`
+			c.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":    tenant,
 		"contactId": contactId,
@@ -253,8 +250,7 @@ func (r *emailWriteRepository) LinkWithOrganization(ctx context.Context, tenant,
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (org)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
-			org.updatedAt = datetime(),
-			rel.syncedWithEventStore = true`
+			org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -283,8 +279,7 @@ func (r *emailWriteRepository) LinkWithUser(ctx context.Context, tenant, userId,
 				(t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 		MERGE (u)-[rel:HAS]->(e)
 		SET	rel.primary = $primary,
-			u.updatedAt = datetime(),
-			rel.syncedWithEventStore = true`
+			u.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":  tenant,
 		"userId":  userId,

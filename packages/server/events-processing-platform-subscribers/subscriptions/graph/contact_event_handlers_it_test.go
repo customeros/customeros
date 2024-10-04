@@ -247,7 +247,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	updateTime := utils.Now()
-	userLinkEmailEvent, err := event2.NewContactLinkEmailEvent(contactAggregate, emailId, true, updateTime)
+	userLinkEmailEvent, err := event2.NewContactLinkEmailEvent(contactAggregate, emailId, "", true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnEmailLinkToContact(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)

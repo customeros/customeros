@@ -6,8 +6,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/models"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -118,7 +118,7 @@ func (a *PhoneNumberAggregate) When(event eventstore.Event) error {
 	case events.PhoneNumberValidatedV1:
 		return a.OnPhoneNumberValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -150,7 +150,7 @@ func (a *PhoneNumberAggregate) onPhoneNumberUpdate(event eventstore.Event) error
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.PhoneNumber.Source.SourceOfTruth = eventData.Source
 	}
 	a.PhoneNumber.UpdatedAt = eventData.UpdatedAt

@@ -7,10 +7,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	eventutils "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -259,7 +259,7 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 	case opportunityevent.OpportunityCloseLooseV1:
 		return a.onOpportunityCloseLoose(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), eventutils.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -340,11 +340,11 @@ func (a *OpportunityAggregate) onOpportunityUpdate(evt eventstore.Event) error {
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == eventutils.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 
-	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == eventutils.SourceOpenline {
+	if eventData.Source != a.Opportunity.Source.SourceOfTruth && a.Opportunity.Source.SourceOfTruth == constants.SourceOpenline {
 		// Update fields only if they are empty
 		if a.Opportunity.Name == "" && eventData.UpdateName() {
 			a.Opportunity.Name = eventData.Name
@@ -431,7 +431,7 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 	if eventData.UpdateAmount() {
 		a.Opportunity.Amount = eventData.Amount
 	}
-	if eventData.Source == eventutils.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Opportunity.Source.SourceOfTruth = eventData.Source
 	}
 	if eventData.OwnerUserId != "" {

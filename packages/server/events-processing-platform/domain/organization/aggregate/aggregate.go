@@ -4,8 +4,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -330,7 +330,7 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case organizationEvents.OrganizationAddLocationV1:
 		return a.onAddLocation(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		span, _ := opentracing.StartSpanFromContext(context.Background(), "OrganizationAggregate.When")
@@ -393,7 +393,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Organization.Source.SourceOfTruth = eventData.Source
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
@@ -401,7 +401,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	if !eventData.Hide {
 		a.Organization.Hide = false
 	}
-	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == events2.SourceOpenline {
+	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
 		if a.Organization.Name == "" && eventData.UpdateName() {
 			a.Organization.Name = eventData.Name
 		}

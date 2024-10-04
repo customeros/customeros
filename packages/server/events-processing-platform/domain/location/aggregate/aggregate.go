@@ -3,8 +3,8 @@ package aggregate
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/models"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -41,7 +41,7 @@ func (a *LocationAggregate) When(event eventstore.Event) error {
 	case events.LocationValidatedV1:
 		return a.OnLocationValidated(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -75,7 +75,7 @@ func (a *LocationAggregate) onLocationUpdate(event eventstore.Event) error {
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Location.Source.SourceOfTruth = eventData.Source
 	}
 	a.Location.UpdatedAt = eventData.UpdatedAt

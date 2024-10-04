@@ -3,7 +3,6 @@ package reminder
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"strings"
 )
@@ -34,7 +33,7 @@ func (a *ReminderAggregate) When(evt eventstore.Event) error {
 	case event.ReminderNotificationV1:
 		return nil
 	default:
-		if strings.HasPrefix(evt.GetEventType(), utils.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType

@@ -1,4 +1,4 @@
-package utils
+package constants
 
 const (
 	AppSourceEventProcessingPlatform            = "event-processing-platform"

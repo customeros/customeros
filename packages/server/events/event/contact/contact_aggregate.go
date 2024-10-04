@@ -4,10 +4,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -344,7 +344,7 @@ func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
-	if eventData.Source != a.Contact.Source.SourceOfTruth && a.Contact.Source.SourceOfTruth == events2.SourceOpenline {
+	if eventData.Source != a.Contact.Source.SourceOfTruth && a.Contact.Source.SourceOfTruth == constants.SourceOpenline {
 		if a.Contact.Name == "" {
 			a.Contact.Name = eventData.Name
 		}
@@ -377,7 +377,7 @@ func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
 		a.Contact.Username = eventData.Username
 	}
 	a.Contact.UpdatedAt = eventData.UpdatedAt
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Contact.Source.SourceOfTruth = eventData.Source
 	}
 
@@ -467,7 +467,7 @@ func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
 			CreatedAt: eventData.CreatedAt,
 		}
 	} else {
-		if eventData.SourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == events2.SourceOpenline {
+		if eventData.SourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
 			if jobRole.JobTitle == "" {
 				jobRole.JobTitle = eventData.JobTitle
 			}
