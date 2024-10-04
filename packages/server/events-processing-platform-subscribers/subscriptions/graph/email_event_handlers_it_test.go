@@ -92,7 +92,7 @@ func TestGraphEmailEventHandler_OnEmailUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	emailProps := utils.GetPropsFromNode(*email)
-	require.Equal(t, 6, len(emailProps))
+	require.Equal(t, 5, len(emailProps))
 	emailId = utils.GetStringPropOrEmpty(emailProps, "id")
 	require.NotNil(t, emailId)
 	require.Nil(t, utils.GetBoolPropOrNil(emailProps, "isRisky"))
