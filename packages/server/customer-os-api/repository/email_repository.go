@@ -128,6 +128,7 @@ func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType
 	}
 }
 
+// Deprecated
 func (r *emailRepository) DeleteById(ctx context.Context, tenant, emailId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.DeleteById")
 	defer span.Finish()

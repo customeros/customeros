@@ -55,6 +55,7 @@ type EmailWriteRepository interface {
 	UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error
 	UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error
 	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
+	DeleteEmail(ctx context.Context, tenant, emailId string) interface{}
 }
 
 type emailWriteRepository struct {
@@ -413,6 +414,27 @@ func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tenan
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"email":          email,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) DeleteEmail(ctx context.Context, tenant, emailId string) interface{} {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.DeleteEmail")
+	defer span.Finish()
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[r:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
+				DELETE r,e`
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     emailId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

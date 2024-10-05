@@ -34,6 +34,7 @@ type EmailService interface {
 	ReplaceEmail(ctx context.Context, tenant, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
 	LinkEmail(ctx context.Context, tenant, emailId, email, appSource string, primary bool, linkWith LinkWith) error
 	UnlinkEmail(ctx context.Context, tenant, email, appSource string, linkWith LinkWith) error
+	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -313,4 +314,56 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 	}
 
 	return err
+}
+
+func (s *emailService) DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DeleteOrphanEmail")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, emailId)
+	span.LogKV("appSource", appSource)
+
+	if tenant == "" {
+		tenant = common.GetTenantFromContext(ctx)
+	}
+
+	// check if email exists by id
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, emailId, commonModel.NodeLabelEmail)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email exists by id"))
+		return err
+	}
+	if !exists {
+		err = errors.Errorf("email with id %s not found", emailId)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// check if email is orphan
+	isOrphan, err := s.services.Neo4jRepositories.EmailReadRepository.IsOrphanEmail(ctx, tenant, emailId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email is orphan"))
+		return err
+	}
+	if !isOrphan {
+		err = errors.Errorf("email with id %s is not orphan", emailId)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
+		return s.services.GrpcClients.EmailClient.DeleteEmail(ctx, &emailpb.DeleteEmailRequest{
+			Tenant:         tenant,
+			EmailId:        emailId,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			AppSource:      appSource,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to delete email"))
+		return err
+	}
+
+	return nil
 }

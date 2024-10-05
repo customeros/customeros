@@ -255,6 +255,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanEmails, func() {
+		lockAndRunJob(cont, emailGroup, cleanEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
 		lockAndRunJob(cont, flowExecutionGroup, flowExecution)
 	})
@@ -398,6 +405,10 @@ func checkScrubbyResult(cont *container.Container) {
 
 func checkEnrowResult(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CheckEnrowRequestsWithoutResponse()
+}
+
+func cleanEmails(cont *container.Container) {
+	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CleanEmails()
 }
 
 func flowExecution(cont *container.Container) {
