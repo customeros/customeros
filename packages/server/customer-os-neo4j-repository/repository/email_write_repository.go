@@ -55,7 +55,7 @@ type EmailWriteRepository interface {
 	UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error
 	UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error
 	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
-	DeleteEmail(ctx context.Context, tenant, emailId string) interface{}
+	DeleteEmail(ctx context.Context, tenant, emailId string) error
 }
 
 type emailWriteRepository struct {
@@ -426,7 +426,7 @@ func (r *emailWriteRepository) UnlinkFromOrganization(ctx context.Context, tenan
 	return err
 }
 
-func (r *emailWriteRepository) DeleteEmail(ctx context.Context, tenant, emailId string) interface{} {
+func (r *emailWriteRepository) DeleteEmail(ctx context.Context, tenant, emailId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.DeleteEmail")
 	defer span.Finish()
 
