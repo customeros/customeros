@@ -52,7 +52,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.FRONTERA_DEV_IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v6.8.0
+        uses: docker/build-push-action@v6.9.0
         with:
           context: packages/apps/frontera/
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
@@ -90,7 +90,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.FRONTERA_PROD_IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v6.8.0
+        uses: docker/build-push-action@v6.9.0
         with:
           context: packages/apps/frontera/
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
@@ -130,7 +130,7 @@ jobs:
           images: ${{ env.REGISTRY }}/${{ env.MIDDLEWARE_IMAGE_NAME }}
 
       - name: Push Docker image
-        uses: docker/build-push-action@v6.8.0
+        uses: docker/build-push-action@v6.9.0
         with:
           context: packages/apps/frontera/middleware/
           push: ${{ github.ref_name == 'otter' || github.event_name == 'release' }}
