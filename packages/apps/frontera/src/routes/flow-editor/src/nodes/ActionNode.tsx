@@ -126,15 +126,6 @@ export const ActionNode = ({
           data={data}
           isEditorOpen={data.isEditing || false}
           handleEmailDataChange={handleEmailDataChange}
-          setIsEditorOpen={(isOpen: boolean) => {
-            setNodes((nds) =>
-              nds.map((node) =>
-                node.id === id
-                  ? { ...node, data: { ...node.data, isEditing: isOpen } }
-                  : node,
-              ),
-            );
-          }}
         />
         <Handle type='target' />
         <Handle type='source' />
