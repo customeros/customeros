@@ -16,14 +16,13 @@ export class AutomationRunnerService {
     private runsRepository: BrowserAutomationRunsRepository,
     private resultsRepository: BrowserAutomationRunResultsRepository,
     private errorsRepository: BrowserAutomationRunErrorsRepository,
-    private configRepository: BrowserConfigsRepository
+    private configRepository: BrowserConfigsRepository,
   ) {}
 
   async runAutomation(browserAutomationRun: BrowserAutomationRun) {
     try {
-      const linkedinService = await this.linkedinServiceFactory.createForRun(
-        browserAutomationRun
-      );
+      const linkedinService =
+        await this.linkedinServiceFactory.createForRun(browserAutomationRun);
 
       browserAutomationRun.start();
       await this.runsRepository.updateById(browserAutomationRun.toDTO());
@@ -32,7 +31,7 @@ export class AutomationRunnerService {
       let errorValue;
 
       const payload = BrowserAutomationRun.parsePayload(
-        browserAutomationRun.payload
+        browserAutomationRun.payload,
       );
 
       switch (browserAutomationRun.type) {
@@ -41,6 +40,9 @@ export class AutomationRunnerService {
           result = res;
           errorValue = err;
 
+          break;
+        case "DOWNLOAD_CONNECTIONS":
+          result = await linkedinService.downloadConnections();
           break;
         case "FIND_COMPANY_PEOPLE":
           result = await linkedinService.scrapeCompanyPeople(payload);

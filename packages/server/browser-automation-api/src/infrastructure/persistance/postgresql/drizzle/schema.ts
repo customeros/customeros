@@ -1234,6 +1234,7 @@ export const browserAutomationRunType = pgEnum("browser_automation_run_type", [
   "FIND_COMPANY_PEOPLE",
   "SEND_CONNECTION_REQUEST",
   "SEND_MESSAGE",
+  "DOWNLOAD_CONNECTIONS",
 ]);
 export const browserAutomationRunStatus = pgEnum(
   "browser_automation_run_status",

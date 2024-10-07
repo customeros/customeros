@@ -22,6 +22,10 @@ export class LinkedinRouter {
       "/connections",
       this.connectionsController.scrapeConnections,
     );
+    this.router.get(
+      "/all-connections",
+      this.connectionsController.downloadAllConnections,
+    );
     this.router.post(
       "/message",
       ...sendMessageValidators,
