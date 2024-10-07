@@ -26,6 +26,8 @@ type EmailReadRepository interface {
 	GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInMinutes, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error)
 	IsLinkedToEntityByEmailAddress(ctx context.Context, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error)
+	GetOrphanEmailNodes(ctx context.Context, limit, hoursFromLastUpdate int) ([]TenantAndEmailId, error)
+	IsOrphanEmail(ctx context.Context, tenant, emailId string) (bool, error)
 }
 
 type emailReadRepository struct {
@@ -331,4 +333,84 @@ func (r *emailReadRepository) IsLinkedToEntityByEmailAddress(ctx context.Context
 		return false, err
 	}
 	return len(result.([]*db.Record)) > 0, nil
+}
+
+func (r *emailReadRepository) GetOrphanEmailNodes(ctx context.Context, limit, hoursFromLastUpdate int) ([]TenantAndEmailId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetOrphanEmailNodes")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	span.LogFields(log.Int("limit", limit), log.Int("hoursFromLastUpdate", hoursFromLastUpdate))
+
+	cypher := `MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
+				WHERE e.updatedAt < datetime() - duration({hours: $hoursFromLastUpdate})
+				OPTIONAL MATCH (e)--(other) 
+				WHERE NOT (other:Tenant)
+				WITH t, e, other
+				WHERE other IS NULL     
+				RETURN DISTINCT t.name AS tenant, e.id AS emailId
+				LIMIT $limit`
+	params := map[string]any{
+		"hoursFromLastUpdate": hoursFromLastUpdate,
+		"limit":               limit,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	output := make([]TenantAndEmailId, 0)
+	for _, v := range records.([]*neo4j.Record) {
+		output = append(output,
+			TenantAndEmailId{
+				Tenant:  v.Values[0].(string),
+				EmailId: v.Values[1].(string),
+			})
+	}
+	span.LogFields(log.Int("result.count", len(output)))
+	return output, nil
+}
+
+func (r *emailReadRepository) IsOrphanEmail(ctx context.Context, tenant, emailId string) (bool, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.IsOrphanEmail")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, emailId)
+
+	cypher := `MATCH (:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
+				OPTIONAL MATCH (e)--(other) 
+				WHERE NOT (other:Tenant)
+				WITH e, other
+				WHERE other IS NOT NULL
+				RETURN count(other) = 0`
+	params := map[string]any{
+		"emailId": emailId,
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, map[string]any{})
+		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return false, err
+	}
+	return result.(bool), err
 }

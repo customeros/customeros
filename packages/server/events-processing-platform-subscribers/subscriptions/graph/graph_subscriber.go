@@ -209,6 +209,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
 	case emailevents.EmailValidatedV2:
 		return s.emailEventHandler.OnEmailValidatedV2(ctx, evt)
+	case emailevents.EmailDeleteV1:
+		return s.emailEventHandler.OnEmailDelete(ctx, evt)
 	case emailevents.EmailValidationFailedV1,
 		emailevents.EmailValidatedV1,
 		emailevents.EmailValidateV1,

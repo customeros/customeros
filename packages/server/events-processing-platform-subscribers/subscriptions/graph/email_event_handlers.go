@@ -4,13 +4,13 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -153,4 +153,27 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)
 
 	return err
+}
+
+func (h *EmailEventHandler) OnEmailDelete(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.OnEmailDelete")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData event.EmailDeleteEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	emailId := email.GetEmailObjectID(evt.AggregateID, eventData.Tenant)
+	tracing.TagTenant(span, eventData.Tenant)
+	tracing.TagEntity(span, emailId)
+
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.DeleteEmail(ctx, eventData.Tenant, emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		h.log.Errorf("failed to delete email: %v", err)
+	}
+
+	return nil
 }

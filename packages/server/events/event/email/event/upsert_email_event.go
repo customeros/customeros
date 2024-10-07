@@ -16,7 +16,7 @@ type EmailUpsertEvent struct {
 }
 
 func NewEmailUpsertEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source common.Source, createdAt time.Time) (eventstore.Event, error) {
-	eventData := EmailCreateEvent{
+	eventData := EmailUpsertEvent{
 		Tenant:       tenant,
 		RawEmail:     rawEmail,
 		SourceFields: source,
