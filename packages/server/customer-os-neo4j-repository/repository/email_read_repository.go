@@ -405,7 +405,7 @@ func (r *emailReadRepository) IsOrphanEmail(ctx context.Context, tenant, emailId
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, cypher, map[string]any{})
+		queryResult, err := tx.Run(ctx, cypher, params)
 		return utils.ExtractSingleRecordFirstValueAsType[bool](ctx, queryResult, err)
 	})
 	if err != nil {
