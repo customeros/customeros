@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -456,26 +457,18 @@ func (s *emailService) extractEmailAddresses(input string) []string {
 }
 
 func (s *emailService) createUserSourceAsEmailNode(tenant, userSource, externalSystem string) (string, error) {
-
 	ctx := context.Background()
 
-	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Neo4jDriver)
-	defer session.Close(ctx)
-
-	tx, err := session.BeginTransaction(ctx)
-
-	emailId, err := s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, userSource, externalSystem, AppSource)
+	emailId, err := s.services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
+		Email:     userSource,
+		AppSource: AppSource,
+		Source:    externalSystem,
+	}, nil)
 	if err != nil {
 		return "", fmt.Errorf("unable to create email: %v", err)
 	}
 
-	err = tx.Commit(ctx)
-	if err != nil {
-		logrus.Errorf("failed to commit transaction: %v", err)
-		return "", err
-	}
-
-	return emailId, nil
+	return *emailId, nil
 }
 
 type EmailRawData struct {

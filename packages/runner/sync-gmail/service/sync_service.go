@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/tracing"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
@@ -104,7 +105,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogKV("email", email)
 
-	emailId, err := s.repositories.EmailRepository.GetEmailId(ctx, tenant, email)
+	emailId, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to retrieve email id"))
 		return "", fmt.Errorf("unable to retrieve email id for tenant: %v", err)
@@ -121,11 +122,16 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		return "", err
 	}
 	if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
-		emailId, err = s.repositories.EmailRepository.CreateEmail(ctx, tx, tenant, email, source, AppSource)
+		emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
+			Email:     email,
+			Source:    source,
+			AppSource: AppSource,
+		}, nil)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
 			return "", err
 		}
+		emailId = utils.IfNotNilString(emailIdPtr)
 		return emailId, nil
 	}
 
@@ -204,8 +210,24 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		}
 	}
 
-	emailId, err = s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, source, AppSource)
+	emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
+		Email:     email,
+		Source:    source,
+		AppSource: AppSource,
+	}, nil)
 	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
+		return "", err
+	}
+	emailId = utils.IfNotNilString(emailIdPtr)
+	if emailId == "" {
+		tracing.TraceErr(span, errors.New("unable to create email"))
+		return "", errors.New("unable to create email")
+	}
+
+	_, err = s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, emailId, firstName, lastname, source, AppSource)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to create email linked to organization"))
 		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
 	}
 

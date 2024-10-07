@@ -9,7 +9,9 @@ import (
 )
 
 type DomainRepository interface {
+	//Deprecated
 	GetDomainInTx(ctx context.Context, tx neo4j.ManagedTransaction, domain string) (*dbtype.Node, error)
+	//Deprecated
 	CreateDomainInTx(ctx context.Context, tx neo4j.ManagedTransaction, domain, source, appSource string, now time.Time) (*dbtype.Node, error)
 }
 
