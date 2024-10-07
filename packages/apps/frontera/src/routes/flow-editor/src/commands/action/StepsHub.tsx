@@ -66,9 +66,15 @@ export const StepsHub = observer(() => {
     let typeBasedContent: {
       subject?: string;
       replyTo?: string;
+      waitBefore?: number;
+      waitStepId?: string;
+      nextStepId?: string;
       bodyTemplate?: string;
       waitDuration?: number;
     } = {};
+
+    const isEmailNode =
+      type === FlowActionType.EMAIL_NEW || type === FlowActionType.EMAIL_REPLY;
 
     if (type === 'WAIT') {
       typeBasedContent = { waitDuration: 1 };
@@ -80,44 +86,108 @@ export const StepsHub = observer(() => {
         replyTo: prevEmailNode?.id,
         subject: `RE: ${prevSubject}`,
         bodyTemplate: '',
+        waitBefore: 1,
       };
-    } else {
-      typeBasedContent = { subject: '', bodyTemplate: '' };
+    } else if (type === FlowActionType.EMAIL_NEW) {
+      typeBasedContent = { subject: '', bodyTemplate: '', waitBefore: 1 };
     }
 
     const newNode = {
       id: `${type}-${nodes.length + 1}`,
       type: type === 'WAIT' ? 'wait' : 'action',
-      position: { x: sourceNode.position.x, y: sourceNode.position.y + 10 },
+      position: { x: type === 'WAIT' ? 87 : 12, y: sourceNode.position.y + 10 },
       data: {
         action: type,
         ...typeBasedContent,
       },
     };
 
-    const edgeToNewNode = {
-      id: `e${ui.flowCommandMenu.context.meta?.source}-${newNode.id}`,
-      source: ui.flowCommandMenu.context.meta?.source,
-      target: newNode.id,
-      type: 'baseEdge',
-      markerEnd: {
-        type: MarkerType.Arrow,
-        width: 20,
-        height: 20,
-      },
-    };
+    let updatedNodes = [...nodes, newNode];
+    let newEdges = [];
 
-    const edgeFromNewNode = {
-      id: `e${newNode.id}-${ui.flowCommandMenu.context.meta?.target}`,
-      source: newNode.id,
-      target: ui.flowCommandMenu.context.meta?.target,
-      type: 'baseEdge',
-      markerEnd: {
-        type: MarkerType.Arrow,
-        width: 20,
-        height: 20,
-      },
-    };
+    if (isEmailNode) {
+      const waitNode = {
+        id: `WAIT-${nodes.length + 2}`,
+        type: 'wait',
+        position: {
+          x: 87,
+          y: sourceNode.position.y + 5,
+        },
+        data: {
+          action: 'WAIT',
+          waitDuration: 1,
+          nextStepId: newNode.id,
+        },
+      };
+
+      newNode.data.waitStepId = waitNode.id;
+
+      updatedNodes = [...nodes, waitNode, newNode];
+
+      const edgeToWaitNode = {
+        id: `e${ui.flowCommandMenu.context.meta?.source}-${waitNode.id}`,
+        source: ui.flowCommandMenu.context.meta?.source,
+        target: waitNode.id,
+        type: 'baseEdge',
+        markerEnd: {
+          type: MarkerType.Arrow,
+          width: 20,
+          height: 20,
+        },
+      };
+
+      const edgeWaitToNewNode = {
+        id: `e${waitNode.id}-${newNode.id}`,
+        source: waitNode.id,
+        target: newNode.id,
+        type: 'baseEdge',
+        markerEnd: {
+          type: MarkerType.Arrow,
+          width: 20,
+          height: 20,
+        },
+      };
+
+      const edgeFromNewNode = {
+        id: `e${newNode.id}-${ui.flowCommandMenu.context.meta?.target}`,
+        source: newNode.id,
+        target: ui.flowCommandMenu.context.meta?.target,
+        type: 'baseEdge',
+        markerEnd: {
+          type: MarkerType.Arrow,
+          width: 20,
+          height: 20,
+        },
+      };
+
+      newEdges = [edgeToWaitNode, edgeWaitToNewNode, edgeFromNewNode];
+    } else {
+      const edgeToNewNode = {
+        id: `e${ui.flowCommandMenu.context.meta?.source}-${newNode.id}`,
+        source: ui.flowCommandMenu.context.meta?.source,
+        target: newNode.id,
+        type: 'baseEdge',
+        markerEnd: {
+          type: MarkerType.Arrow,
+          width: 20,
+          height: 20,
+        },
+      };
+
+      const edgeFromNewNode = {
+        id: `e${newNode.id}-${ui.flowCommandMenu.context.meta?.target}`,
+        source: newNode.id,
+        target: ui.flowCommandMenu.context.meta?.target,
+        type: 'baseEdge',
+        markerEnd: {
+          type: MarkerType.Arrow,
+          width: 20,
+          height: 20,
+        },
+      };
+
+      newEdges = [edgeToNewNode, edgeFromNewNode];
+    }
 
     const updatedEdges = edges.filter(
       (e) =>
@@ -127,29 +197,8 @@ export const StepsHub = observer(() => {
         ),
     );
 
-    const updatedNodes = [...nodes, newNode];
-    const newEdges = [...updatedEdges, edgeToNewNode, edgeFromNewNode];
-
     setNodes(updatedNodes);
-    setEdges(newEdges);
-    // getLayoutedElements(updatedNodes, newEdges, elkOptions).then(
-    //   // Use getLayoutedElements to calculate new positions
-    //   // @ts-expect-error fix type later
-    //   ({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-    //
-    //     window.requestAnimationFrame(() => {
-    //       const fitViewOptions: FitViewOptions = {
-    //         padding: 0.1,
-    //         maxZoom: 1,
-    //         minZoom: 1,
-    //         duration: 0,
-    //         nodes: layoutedNodes,
-    //       };
-    //
-    //       fitView(fitViewOptions);
-    //     });
-    //   },
-    // );
+    setEdges([...updatedEdges, ...newEdges]);
   };
 
   const updateSelectedNode = (type: FlowActionType | 'WAIT') => {

@@ -14,6 +14,8 @@ import {
   MarkerType,
   OnNodeDrag,
   NodeChange,
+  getIncomers,
+  getOutgoers,
   useNodesState,
   useEdgesState,
   OnNodesDelete,
@@ -22,6 +24,7 @@ import {
   OnBeforeDelete,
   FitViewOptions,
   applyNodeChanges,
+  getConnectedEdges,
   SelectionDragHandler,
 } from '@xyflow/react';
 
@@ -181,9 +184,38 @@ export const FlowBuilder = observer(
       takeSnapshot();
     }, [takeSnapshot]);
 
-    const onNodesDelete: OnNodesDelete = useCallback(() => {
-      takeSnapshot();
-    }, [takeSnapshot]);
+    const onNodesDelete: OnNodesDelete = useCallback(
+      (deleted) => {
+        setEdges(
+          deleted.reduce((acc, node) => {
+            const incomers = getIncomers(node, nodes, edges);
+            const outgoers = getOutgoers(node, nodes, edges);
+            const connectedEdges = getConnectedEdges([node], edges);
+
+            const remainingEdges = acc.filter(
+              (edge) => !connectedEdges.includes(edge),
+            );
+
+            const createdEdges = incomers.flatMap(({ id: source }) =>
+              outgoers.map(({ id: target }) => ({
+                id: `${source}->${target}`,
+                source,
+                target,
+                type: 'baseEdge',
+                markerEnd: {
+                  type: MarkerType.Arrow,
+                  width: 20,
+                  height: 20,
+                },
+              })),
+            );
+
+            return [...remainingEdges, ...createdEdges];
+          }, edges),
+        );
+      },
+      [nodes, edges],
+    );
 
     const onEdgesDelete: OnEdgesDelete = useCallback(() => {
       takeSnapshot();
