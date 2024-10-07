@@ -112,7 +112,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 		FirstName: "owner",
 		LastName:  "user",
 	})
-	neo4jtest.CreateEmailForUser(ctx, testDatabase.Driver, tenantName, newOwnerUserId, neo4jentity.EmailEntity{
+	neo4jtest.CreateEmailForEntity(ctx, testDatabase.Driver, tenantName, newOwnerUserId, neo4jentity.EmailEntity{
 		Email: "owner.email@email.test",
 	})
 
@@ -120,7 +120,7 @@ func TestGraphOrganizationEventHandler_OnOrganizationUpdateOwner(t *testing.T) {
 		FirstName: "actor",
 		LastName:  "user",
 	})
-	neo4jtest.CreateEmailForUser(ctx, testDatabase.Driver, tenantName, actorUserId, neo4jentity.EmailEntity{
+	neo4jtest.CreateEmailForEntity(ctx, testDatabase.Driver, tenantName, actorUserId, neo4jentity.EmailEntity{
 		Email: "actor.email@email.test",
 	})
 	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
