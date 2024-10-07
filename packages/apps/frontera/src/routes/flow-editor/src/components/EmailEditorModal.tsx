@@ -17,9 +17,10 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal';
 
+import { useUndoRedo } from '../hooks';
+
 interface EmailEditorModalProps {
   isEditorOpen: boolean;
-  setIsEditorOpen: (isOpen: boolean) => void;
   data: { subject: string; bodyTemplate: string; action: FlowActionType };
   handleEmailDataChange: (args: {
     subject: string;
@@ -28,15 +29,11 @@ interface EmailEditorModalProps {
 }
 
 export const EmailEditorModal = observer(
-  ({
-    isEditorOpen,
-    setIsEditorOpen,
-    handleEmailDataChange,
-    data,
-  }: EmailEditorModalProps) => {
+  ({ isEditorOpen, handleEmailDataChange, data }: EmailEditorModalProps) => {
     const id = useParams().id as string;
     const [subject, setSubject] = useState(data?.subject ?? '');
     const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
+    const { takeSnapshot } = useUndoRedo();
 
     useEffect(() => {
       if (isEditorOpen) {
@@ -52,7 +49,9 @@ export const EmailEditorModal = observer(
     const handleSave = () => {
       handleEmailDataChange({ subject, bodyTemplate });
 
-      setIsEditorOpen(false);
+      setTimeout(() => {
+        takeSnapshot();
+      }, 0);
     };
 
     return (
