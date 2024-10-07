@@ -142,13 +142,14 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, common.GetTenantFromContext(ctx),
+		utils.IfNotNilString(previousEmail),
 		commonservice.EmailFields{
 			Email:     input.Email,
 			Primary:   utils.IfNotNilBool(input.Primary),
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
-		}, &commonservice.LinkWith{
+		}, commonservice.LinkWith{
 			Type: commonModel.CONTACT,
 			Id:   contactID,
 		})
@@ -242,13 +243,14 @@ func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID strin
 	span.LogFields(log.String("request.userID", userID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, common.GetTenantFromContext(ctx),
+		utils.IfNotNilString(previousEmail),
 		commonservice.EmailFields{
 			Email:     input.Email,
 			Primary:   utils.IfNotNilBool(input.Primary),
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
-		}, &commonservice.LinkWith{
+		}, commonservice.LinkWith{
 			Type: commonModel.USER,
 			Id:   userID,
 		})
@@ -342,13 +344,14 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, common.GetTenantFromContext(ctx),
+		utils.IfNotNilString(previousEmail),
 		commonservice.EmailFields{
 			Email:     input.Email,
 			Primary:   utils.IfNotNilBool(input.Primary),
 			Source:    neo4jentity.DataSourceOpenline.String(),
 			AppSource: constants.AppSourceCustomerOsApi,
-		}, &commonservice.LinkWith{
+		}, commonservice.LinkWith{
 			Type: commonModel.ORGANIZATION,
 			Id:   organizationID,
 		})
