@@ -93,7 +93,7 @@ export const TextFilter = ({
       <PopoverContent
         side='bottom'
         align='start'
-        className='py-1 min-w-[254px]'
+        className='py-1 min-w-[264px]'
       >
         <Input
           size='sm'

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
-import { debounce } from 'lodash';
 import { format } from 'date-fns';
+import { debounce } from 'lodash';
 
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
@@ -85,12 +85,10 @@ export const DateFilter = ({
     };
 
     return ComparisonOperator.Lt === operatorValue
-      ? formatDate(filterValue?.[1])
+      ? formatDate(filterValue?.[0])
       : ComparisonOperator.Gt === operatorValue
       ? formatDate(filterValue?.[0])
-      : ComparisonOperator.Between === operatorValue
-      ? `${formatDate(filterValue?.[0])} - ${formatDate(filterValue?.[1])}`
-      : '';
+      : '...';
   };
 
   return (
@@ -117,18 +115,8 @@ export const DateFilter = ({
         className='py-1 min-w-[254px]'
       >
         <DatePicker
-          selectRange={ComparisonOperator.Between === operatorValue}
+          value={filterValue?.[0]}
           onChange={(value) => handleDateChange(value as Date | Date[] | null)}
-          value={
-            ComparisonOperator.Lt === operatorValue
-              ? filterValue?.[1]
-              : ComparisonOperator.Gt === operatorValue
-              ? filterValue?.[0]
-              : [
-                  new Date(filterValue?.[0] || Date.now()),
-                  new Date(filterValue?.[1] || Date.now()),
-                ]
-          }
         />
       </PopoverContent>
     </Popover>
