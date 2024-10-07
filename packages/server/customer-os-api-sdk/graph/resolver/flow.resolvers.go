@@ -12,29 +12,24 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
-// Actions is the resolver for the actions field.
-func (r *flowResolver) Actions(ctx context.Context, obj *model.Flow) ([]*model.FlowAction, error) {
-	panic(fmt.Errorf("not implemented: Actions - actions"))
-}
-
 // Contacts is the resolver for the contacts field.
 func (r *flowResolver) Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error) {
 	panic(fmt.Errorf("not implemented: Contacts - contacts"))
 }
 
 // Senders is the resolver for the senders field.
-func (r *flowActionResolver) Senders(ctx context.Context, obj *model.FlowAction) ([]*model.FlowActionSender, error) {
+func (r *flowResolver) Senders(ctx context.Context, obj *model.Flow) ([]*model.FlowSender, error) {
 	panic(fmt.Errorf("not implemented: Senders - senders"))
-}
-
-// User is the resolver for the user field.
-func (r *flowActionSenderResolver) User(ctx context.Context, obj *model.FlowActionSender) (*model.User, error) {
-	panic(fmt.Errorf("not implemented: User - user"))
 }
 
 // Contact is the resolver for the contact field.
 func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContact) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: Contact - contact"))
+}
+
+// User is the resolver for the user field.
+func (r *flowSenderResolver) User(ctx context.Context, obj *model.FlowSender) (*model.User, error) {
+	panic(fmt.Errorf("not implemented: User - user"))
 }
 
 // FlowMerge is the resolver for the flow_Merge field.
@@ -68,7 +63,7 @@ func (r *mutationResolver) FlowContactDeleteBulk(ctx context.Context, id []strin
 }
 
 // FlowSenderMerge is the resolver for the flowSender_Merge field.
-func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowActionID string, input model.FlowActionSenderMergeInput) (*model.FlowActionSender, error) {
+func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowActionID string, input model.FlowSenderMergeInput) (*model.FlowSender, error) {
 	panic(fmt.Errorf("not implemented: FlowSenderMerge - flowSender_Merge"))
 }
 
@@ -82,11 +77,6 @@ func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: Flows - flows"))
 }
 
-// FlowMailboxes is the resolver for the flow_mailboxes field.
-func (r *queryResolver) FlowMailboxes(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented: FlowMailboxes - flow_mailboxes"))
-}
-
 // FlowEmailVariables is the resolver for the flow_emailVariables field.
 func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error) {
 	panic(fmt.Errorf("not implemented: FlowEmailVariables - flow_emailVariables"))
@@ -95,34 +85,12 @@ func (r *queryResolver) FlowEmailVariables(ctx context.Context) ([]*model.EmailV
 // Flow returns generated.FlowResolver implementation.
 func (r *Resolver) Flow() generated.FlowResolver { return &flowResolver{r} }
 
-// FlowAction returns generated.FlowActionResolver implementation.
-func (r *Resolver) FlowAction() generated.FlowActionResolver { return &flowActionResolver{r} }
-
-// FlowActionSender returns generated.FlowActionSenderResolver implementation.
-func (r *Resolver) FlowActionSender() generated.FlowActionSenderResolver {
-	return &flowActionSenderResolver{r}
-}
-
 // FlowContact returns generated.FlowContactResolver implementation.
 func (r *Resolver) FlowContact() generated.FlowContactResolver { return &flowContactResolver{r} }
 
-type flowResolver struct{ *Resolver }
-type flowActionResolver struct{ *Resolver }
-type flowActionSenderResolver struct{ *Resolver }
-type flowContactResolver struct{ *Resolver }
+// FlowSender returns generated.FlowSenderResolver implementation.
+func (r *Resolver) FlowSender() generated.FlowSenderResolver { return &flowSenderResolver{r} }
 
-// !!! WARNING !!!
-// The code below was going to be deleted when updating resolvers. It has been copied here so you have
-// one last chance to move it out of harms way if you want. There are two reasons this happens:
-//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
-//     it when you're done.
-//   - You have helper methods in this file. Move them out to keep these resolver files clean.
-func (r *queryResolver) Mailboxes(ctx context.Context) ([]string, error) {
-	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
-}
-func (r *queryResolver) EmailVariables(ctx context.Context) ([]model.EmailVariableName, error) {
-	panic(fmt.Errorf("not implemented: EmailVariables - emailVariables"))
-}
-func (r *flowResolver) Statistics(ctx context.Context, obj *model.Flow) (*model.FlowStatistics, error) {
-	panic(fmt.Errorf("not implemented: Statistics - statistics"))
-}
+type flowResolver struct{ *Resolver }
+type flowContactResolver struct{ *Resolver }
+type flowSenderResolver struct{ *Resolver }

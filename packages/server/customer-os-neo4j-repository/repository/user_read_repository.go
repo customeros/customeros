@@ -13,6 +13,7 @@ import (
 
 type UserReadRepository interface {
 	GetAllForTenant(ctx context.Context, tenant string) ([]*dbtype.Node, error)
+	GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error)
 	GetUserById(ctx context.Context, tenant, userId string) (*dbtype.Node, error)
 	FindFirstUserWithRolesByEmail(ctx context.Context, email string) (string, string, []string, error)
 	GetFirstUserByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
@@ -53,6 +54,39 @@ func (r *userReadRepository) GetAllForTenant(ctx context.Context, tenant string)
 
 		queryResult, err := tx.Run(ctx, fmt.Sprintf(
 			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) RETURN u `),
+			params)
+		if err != nil {
+			return nil, err
+		}
+		return queryResult.Collect(ctx)
+	})
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range dbRecords.([]*neo4j.Record) {
+		dbNodes = append(dbNodes, utils.NodePtr(v.Values[0].(neo4j.Node)))
+	}
+	return dbNodes, nil
+}
+
+func (r *userReadRepository) GetByIds(ctx context.Context, tenant string, ids []string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserReadRepository.GetByIds")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	dbNodes := make([]*dbtype.Node, 0)
+
+	dbRecords, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		params := map[string]any{
+			"tenant": tenant,
+			"ids":    ids,
+		}
+
+		queryResult, err := tx.Run(ctx, fmt.Sprintf(
+			`MATCH (:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(u:User) where u.id in $ids RETURN u`),
 			params)
 		if err != nil {
 			return nil, err

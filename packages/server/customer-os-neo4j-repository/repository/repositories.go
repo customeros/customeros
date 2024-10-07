@@ -38,8 +38,8 @@ type Repositories struct {
 	FlowActionWriteRepository             FlowActionWriteRepository
 	FlowParticipantReadRepository         FlowParticipantReadRepository
 	FlowParticipantWriteRepository        FlowParticipantWriteRepository
-	FlowActionSenderReadRepository        FlowActionSenderReadRepository
-	FlowActionSenderWriteRepository       FlowActionSenderWriteRepository
+	FlowSenderReadRepository              FlowSenderReadRepository
+	FlowSenderWriteRepository             FlowSenderWriteRepository
 	FlowExecutionSettingsReadRepository   FlowExecutionSettingsReadRepository
 	FlowExecutionSettingsWriteRepository  FlowExecutionSettingsWriteRepository
 	FlowActionExecutionReadRepository     FlowActionExecutionReadRepository
@@ -126,8 +126,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		FlowActionWriteRepository:             NewFlowActionWriteRepository(driver, neo4jDatabase),
 		FlowParticipantReadRepository:         NewFlowParticipantReadRepository(driver, neo4jDatabase),
 		FlowParticipantWriteRepository:        NewFlowParticipantWriteRepository(driver, neo4jDatabase),
-		FlowActionSenderReadRepository:        NewFlowSequenceSenderReadRepository(driver, neo4jDatabase),
-		FlowActionSenderWriteRepository:       NewFlowActionSenderWriteRepository(driver, neo4jDatabase),
+		FlowSenderReadRepository:              NewFlowSenderReadRepository(driver, neo4jDatabase),
+		FlowSenderWriteRepository:             NewFlowSenderWriteRepository(driver, neo4jDatabase),
 		FlowActionExecutionReadRepository:     NewFlowActionExecutionReadRepository(driver, neo4jDatabase),
 		FlowExecutionSettingsWriteRepository:  NewFlowExecutionSettingsWriteRepository(driver, neo4jDatabase),
 		FlowActionExecutionWriteRepository:    NewFlowActionExecutionWriteRepository(driver, neo4jDatabase),

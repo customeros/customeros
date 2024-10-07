@@ -50,7 +50,7 @@ const (
 	NodeLabelFlow                      = "Flow"
 	NodeLabelFlowAction                = "FlowAction"
 	NodeLabelFlowParticipant           = "FlowParticipant"
-	NodeLabelFlowActionSender          = "FlowActionSender"
+	NodeLabelFlowSender                = "FlowSender"
 	NodeLabelFlowExecutionSettings     = "FlowExecutionSettings"
 	NodeLabelFlowActionExecution       = "FlowActionExecution"
 )

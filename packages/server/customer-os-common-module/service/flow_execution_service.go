@@ -185,7 +185,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 
 		// 1. get all available mailboxes
 		// 2. select the mailbox with the fastest response time
-		flowActionSenders, err := s.services.FlowService.FlowActionSenderGetList(ctx, []string{nextAction.Id})
+		flowSenders, err := s.services.FlowService.FlowSenderGetList(ctx, []string{flowId})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
@@ -194,15 +194,29 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 		mailboxesScheduledAt := make(map[string]*time.Time)
 		mailboxesScheduledAt[""] = utils.TimePtr(time.Date(9999, 1, 1, 0, 0, 0, 0, time.UTC))
 
-		for _, flowActionSender := range *flowActionSenders {
-			if flowActionSender.Mailbox != nil {
-				scheduledAt, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, tx, *flowActionSender.Mailbox)
+		for _, flowActionSender := range *flowSenders {
+			emailEntitites, err := s.services.EmailService.GetAllEmailsForEntityIds(ctx, tenant, model.USER, []string{*flowActionSender.UserId})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return err
+			}
+
+			for _, emailEntity := range *emailEntitites {
+				mailboxes, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetAllByUsername(ctx, tenant, emailEntity.RawEmail)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return err
 				}
 
-				mailboxesScheduledAt[*flowActionSender.Mailbox] = scheduledAt
+				for _, mailbox := range mailboxes {
+					scheduledAt, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetFirstSlotForMailbox(ctx, tx, mailbox.MailboxUsername)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return err
+					}
+
+					mailboxesScheduledAt[mailbox.MailboxUsername] = scheduledAt
+				}
 			}
 		}
 

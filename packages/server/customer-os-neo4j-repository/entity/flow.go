@@ -73,17 +73,16 @@ type FlowParticipantEntity struct {
 
 type FlowParticipantEntities []FlowParticipantEntity
 
-type FlowActionSenderEntity struct {
+type FlowSenderEntity struct {
 	DataLoaderKey
 	Id        string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	Mailbox *string
-	UserId  *string
+	UserId *string
 }
 
-type FlowActionSenderEntities []FlowActionSenderEntity
+type FlowSenderEntities []FlowSenderEntity
 
 type FlowStatus string
 

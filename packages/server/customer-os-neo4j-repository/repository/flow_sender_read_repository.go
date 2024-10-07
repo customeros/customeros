@@ -12,28 +12,28 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type FlowActionSenderReadRepository interface {
-	GetList(ctx context.Context, actionIds []string) ([]*utils.DbNodeAndId, error)
+type FlowSenderReadRepository interface {
+	GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, id string) (*neo4j.Node, error)
-	GetFlowActionBySenderId(ctx context.Context, id string) (*neo4j.Node, error)
+	GetFlowBySenderId(ctx context.Context, id string) (*neo4j.Node, error)
 }
 
-type flowActionSenderReadRepositoryImpl struct {
+type flowSenderReadRepositoryImpl struct {
 	driver   *neo4j.DriverWithContext
 	database string
 }
 
-func NewFlowSequenceSenderReadRepository(driver *neo4j.DriverWithContext, database string) FlowActionSenderReadRepository {
-	return &flowActionSenderReadRepositoryImpl{driver: driver, database: database}
+func NewFlowSenderReadRepository(driver *neo4j.DriverWithContext, database string) FlowSenderReadRepository {
+	return &flowSenderReadRepositoryImpl{driver: driver, database: database}
 }
 
-func (r flowActionSenderReadRepositoryImpl) GetList(ctx context.Context, actionIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionSenderReadRepository.GetList")
+func (r flowSenderReadRepositoryImpl) GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderReadRepository.GetList")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	if actionIds != nil && len(actionIds) > 0 {
-		span.LogFields(log.String("actionIds", fmt.Sprintf("%v", actionIds)))
+	if flowIds != nil && len(flowIds) > 0 {
+		span.LogFields(log.String("flowIds", fmt.Sprintf("%v", flowIds)))
 	}
 
 	tenant := common.GetTenantFromContext(ctx)
@@ -42,12 +42,12 @@ func (r flowActionSenderReadRepositoryImpl) GetList(ctx context.Context, actionI
 		"tenant": tenant,
 	}
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fa:FlowAction_%s)-[:HAS]->(fas:FlowActionSender_%s) `, tenant, tenant, tenant)
-	if actionIds != nil && len(actionIds) > 0 {
-		cypher += "WHERE fa.id in $actionIds "
-		params["actionIds"] = actionIds
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSender_%s) `, tenant, tenant)
+	if flowIds != nil && len(flowIds) > 0 {
+		cypher += "WHERE f.id in $flowIds "
+		params["flowIds"] = flowIds
 	}
-	cypher += "RETURN fas, fa.id"
+	cypher += "RETURN fs, f.id"
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -73,8 +73,8 @@ func (r flowActionSenderReadRepositoryImpl) GetList(ctx context.Context, actionI
 	return result.([]*utils.DbNodeAndId), err
 }
 
-func (r flowActionSenderReadRepositoryImpl) GetById(ctx context.Context, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionSenderReadRepository.GetById")
+func (r flowSenderReadRepositoryImpl) GetById(ctx context.Context, id string) (*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderReadRepository.GetById")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -82,7 +82,7 @@ func (r flowActionSenderReadRepositoryImpl) GetById(ctx context.Context, id stri
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fa:FlowAction_%s)-[:HAS]->(fas:FlowActionSender_%s {id: $id}) RETURN fas`, tenant, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSender_%s {id: $id}) RETURN fs`, tenant, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     id,
@@ -110,8 +110,8 @@ func (r flowActionSenderReadRepositoryImpl) GetById(ctx context.Context, id stri
 	return result.(*dbtype.Node), nil
 }
 
-func (r flowActionSenderReadRepositoryImpl) GetFlowActionBySenderId(ctx context.Context, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionSenderReadRepository.GetFlowActionBySenderId")
+func (r flowSenderReadRepositoryImpl) GetFlowBySenderId(ctx context.Context, id string) (*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderReadRepository.GetFlowBySenderId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -119,7 +119,7 @@ func (r flowActionSenderReadRepositoryImpl) GetFlowActionBySenderId(ctx context.
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fa:FlowAction_%s)-[:HAS]->(fas:FlowActionSender_%s {id: $id}) RETURN fa`, tenant, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSender_%s {id: $id}) RETURN f`, tenant, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     id,

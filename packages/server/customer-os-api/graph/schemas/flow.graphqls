@@ -1,6 +1,5 @@
 extend type Query {
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    flow_mailboxes: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -13,8 +12,7 @@ extend type Mutation {
     flowContact_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowContact_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    #low priority to implement
-    flowSender_Merge(flowActionId: ID!, input: FlowActionSenderMergeInput!): FlowActionSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowSender_Merge(flowId: ID!, input: FlowSenderMergeInput!): FlowSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -27,10 +25,9 @@ type Flow implements MetadataInterface {
     nodes: String!
     edges: String!
 
-    actions: [FlowAction!]! @goField(forceResolver: true)
-
     status: FlowStatus!
     contacts: [FlowContact!]! @goField(forceResolver: true)
+    senders: [FlowSender!]! @goField(forceResolver: true)
 
     statistics: FlowStatistics!
 }
@@ -57,14 +54,6 @@ enum FlowStatus {
     ARCHIVED
 }
 
-type FlowAction implements MetadataInterface {
-    metadata:               Metadata!
-
-    json: String!
-
-    senders: [FlowActionSender!]! @goField(forceResolver: true)
-}
-
 type FlowContact implements MetadataInterface {
     metadata:               Metadata!
 
@@ -76,20 +65,15 @@ type FlowContact implements MetadataInterface {
     scheduledAt: Time
 }
 
-type FlowActionSender implements MetadataInterface {
+type FlowSender implements MetadataInterface {
     metadata: Metadata!
 
-    mailbox:    String
     user: User @goField(forceResolver: true)
 }
 
-input FlowActionSenderMergeInput {
+input FlowSenderMergeInput {
     id: ID
 
-    #email action type
-    mailbox: String
-
-    #linkedin action type
     userId: ID
 }
 

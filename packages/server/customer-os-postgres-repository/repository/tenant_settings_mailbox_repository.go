@@ -20,6 +20,7 @@ type TenantSettingsMailboxRepository interface {
 	GetByMailbox(ctx context.Context, tenant, mailbox string) (*entity.TenantSettingsMailbox, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.TenantSettingsMailbox, error)
 	GetAllByDomain(ctx context.Context, tenant, domain string) ([]entity.TenantSettingsMailbox, error)
+	GetAllByUsername(ctx context.Context, tenant, username string) ([]entity.TenantSettingsMailbox, error)
 
 	Merge(ctx context.Context, tenant string, mailbox *entity.TenantSettingsMailbox) error
 }
@@ -117,6 +118,27 @@ func (r *tenantSettingsMailboxRepository) GetAllByDomain(ctx context.Context, te
 	var result []entity.TenantSettingsMailbox
 	err := r.gormDb.WithContext(ctx).
 		Where("tenant = ? and domain = ?", tenant, domain).
+		Find(&result).
+		Error
+
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "db error"))
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *tenantSettingsMailboxRepository) GetAllByUsername(ctx context.Context, tenant, username string) ([]entity.TenantSettingsMailbox, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetAllByUsername")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("username", username)
+
+	var result []entity.TenantSettingsMailbox
+	err := r.gormDb.WithContext(ctx).
+		Where("tenant = ? and user_name = ?", tenant, username).
 		Find(&result).
 		Error
 

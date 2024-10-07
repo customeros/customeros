@@ -13,39 +13,37 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 )
 
-type FlowActionSenderWriteRepository interface {
-	Merge(ctx context.Context, entity *entity.FlowActionSenderEntity) (*dbtype.Node, error)
+type FlowSenderWriteRepository interface {
+	Merge(ctx context.Context, entity *entity.FlowSenderEntity) (*dbtype.Node, error)
 	Delete(ctx context.Context, id string) error
 }
 
-type flowActionSenderWriteRepositoryImpl struct {
+type flowSenderWriteRepositoryImpl struct {
 	driver   *neo4j.DriverWithContext
 	database string
 }
 
-func NewFlowActionSenderWriteRepository(driver *neo4j.DriverWithContext, database string) FlowActionSenderWriteRepository {
-	return &flowActionSenderWriteRepositoryImpl{driver: driver, database: database}
+func NewFlowSenderWriteRepository(driver *neo4j.DriverWithContext, database string) FlowSenderWriteRepository {
+	return &flowSenderWriteRepositoryImpl{driver: driver, database: database}
 }
 
-func (r *flowActionSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.FlowActionSenderEntity) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionSenderWriteRepository.Merge")
+func (r *flowSenderWriteRepositoryImpl) Merge(ctx context.Context, entity *entity.FlowSenderEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderWriteRepository.Merge")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	cypher := fmt.Sprintf(`
 			MATCH (t:Tenant {name:$tenant})
-			MERGE (t)<-[:BELONGS_TO_TENANT]-(fs:FlowActionSender:FlowActionSender_%s {id: $id})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(fs:FlowSender:FlowSender_%s {id: $id})
 			ON CREATE SET
 				fs.createdAt = $createdAt,
 				fs.updatedAt = $updatedAt,
-				fs.mailbox = $mailbox,
 				fs.userId = $userId
 			RETURN fs`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
 		"tenant":    common.GetTenantFromContext(ctx),
 		"id":        entity.Id,
-		"mailbox":   entity.Mailbox,
 		"userId":    entity.UserId,
 		"createdAt": utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
@@ -71,8 +69,8 @@ func (r *flowActionSenderWriteRepositoryImpl) Merge(ctx context.Context, entity 
 	return result.(*dbtype.Node), nil
 }
 
-func (r *flowActionSenderWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionSenderWriteRepository.Delete")
+func (r *flowSenderWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowSenderWriteRepository.Delete")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
@@ -80,7 +78,7 @@ func (r *flowActionSenderWriteRepositoryImpl) Delete(ctx context.Context, id str
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fas:FlowActionSender_%s {id:$id}) delete r, fas`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fs:FlowSender_%s {id:$id}) delete r, fs`, tenant)
 
 	params := map[string]any{
 		"tenant": tenant,

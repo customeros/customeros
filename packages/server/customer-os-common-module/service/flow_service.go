@@ -37,10 +37,10 @@ type FlowService interface {
 	FlowParticipantAdd(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error)
 	FlowParticipantDelete(ctx context.Context, flowParticipantId string) error
 
-	FlowActionSenderGetList(ctx context.Context, actionIds []string) (*neo4jentity.FlowActionSenderEntities, error)
-	FlowActionSenderGetById(ctx context.Context, id string) (*neo4jentity.FlowActionSenderEntity, error)
-	FlowActionSenderMerge(ctx context.Context, flowActionId string, input *neo4jentity.FlowActionSenderEntity) (*neo4jentity.FlowActionSenderEntity, error)
-	FlowActionSenderDelete(ctx context.Context, flowActionSenderId string) error
+	FlowSenderGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowSenderEntities, error)
+	FlowSenderGetById(ctx context.Context, id string) (*neo4jentity.FlowSenderEntity, error)
+	FlowSenderMerge(ctx context.Context, flowId string, input *neo4jentity.FlowSenderEntity) (*neo4jentity.FlowSenderEntity, error)
+	FlowSenderDelete(ctx context.Context, flowSenderId string) error
 }
 
 type flowService struct {
@@ -817,20 +817,22 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 	return nil
 }
 
-func (s *flowService) FlowActionSenderGetList(ctx context.Context, actionIds []string) (*neo4jentity.FlowActionSenderEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionSenderGetList")
+func (s *flowService) FlowSenderGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowSenderEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderGetList")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	nodes, err := s.services.Neo4jRepositories.FlowActionSenderReadRepository.GetList(ctx, actionIds)
+	span.LogFields(log.Object("flowIds", flowIds))
+
+	nodes, err := s.services.Neo4jRepositories.FlowSenderReadRepository.GetList(ctx, flowIds)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	entities := make(neo4jentity.FlowActionSenderEntities, 0)
+	entities := make(neo4jentity.FlowSenderEntities, 0)
 	for _, v := range nodes {
-		e := mapper.MapDbNodeToFlowActionSenderEntity(v.Node)
+		e := mapper.MapDbNodeToFlowSenderEntity(v.Node)
 		e.DataloaderKey = v.LinkedNodeId
 		entities = append(entities, *e)
 	}
@@ -838,64 +840,64 @@ func (s *flowService) FlowActionSenderGetList(ctx context.Context, actionIds []s
 	return &entities, nil
 }
 
-func (s *flowService) FlowActionSenderGetById(ctx context.Context, id string) (*neo4jentity.FlowActionSenderEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionSenderGetById")
+func (s *flowService) FlowSenderGetById(ctx context.Context, id string) (*neo4jentity.FlowSenderEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderGetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	span.LogFields(log.String("id", id))
 
-	node, err := s.services.Neo4jRepositories.FlowActionSenderReadRepository.GetById(ctx, id)
+	node, err := s.services.Neo4jRepositories.FlowSenderReadRepository.GetById(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	return mapper.MapDbNodeToFlowActionSenderEntity(node), nil
+	return mapper.MapDbNodeToFlowSenderEntity(node), nil
 }
 
-// (fs:FlowSequence {id: $id})-[:HAS]->(:FlowActionSender)
-func (s *flowService) FlowActionSenderMerge(ctx context.Context, flowActionId string, input *neo4jentity.FlowActionSenderEntity) (*neo4jentity.FlowActionSenderEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionSenderMerge")
+func (s *flowService) FlowSenderMerge(ctx context.Context, flowId string, input *neo4jentity.FlowSenderEntity) (*neo4jentity.FlowSenderEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderMerge")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	action, err := s.FlowActionGetById(ctx, flowActionId)
+	span.LogFields(log.String("flowId", flowId), log.Object("input", input))
+
+	flow, err := s.FlowGetById(ctx, flowId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	if action == nil {
-		tracing.TraceErr(span, errors.New("flow action not found"))
-		return nil, errors.New("flow action not found")
+	if flow == nil {
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return nil, errors.New("flow not found")
 	}
 
 	isNew := input.Id == ""
-	var toStore *neo4jentity.FlowActionSenderEntity
+	var toStore *neo4jentity.FlowSenderEntity
 
 	if input.Id == "" {
-		toStore = &neo4jentity.FlowActionSenderEntity{}
-		toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, common.GetTenantFromContext(ctx), model.NodeLabelFlowActionSender)
+		toStore = &neo4jentity.FlowSenderEntity{}
+		toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, common.GetTenantFromContext(ctx), model.NodeLabelFlowSender)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 	} else {
-		toStore, err = s.FlowActionSenderGetById(ctx, input.Id)
+		toStore, err = s.FlowSenderGetById(ctx, input.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 		if toStore == nil {
-			tracing.TraceErr(span, errors.New("flow action sender not found"))
-			return nil, errors.New("flow action sender not found")
+			tracing.TraceErr(span, errors.New("flow sender not found"))
+			return nil, errors.New("flow sender not found")
 		}
 	}
 
-	toStore.Mailbox = input.Mailbox
 	toStore.UserId = input.UserId
 
-	node, err := s.services.Neo4jRepositories.FlowActionSenderWriteRepository.Merge(ctx, toStore)
+	node, err := s.services.Neo4jRepositories.FlowSenderWriteRepository.Merge(ctx, toStore)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -903,11 +905,11 @@ func (s *flowService) FlowActionSenderMerge(ctx context.Context, flowActionId st
 
 	if isNew {
 		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
-			FromEntityId:   flowActionId,
-			FromEntityType: model.FLOW_ACTION,
+			FromEntityId:   flowId,
+			FromEntityType: model.FLOW,
 			Relationship:   model.HAS,
 			ToEntityId:     toStore.Id,
-			ToEntityType:   model.FLOW_ACTION_SENDER,
+			ToEntityType:   model.FLOW_SENDER,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -916,57 +918,79 @@ func (s *flowService) FlowActionSenderMerge(ctx context.Context, flowActionId st
 	}
 
 	//TODO LINK WITH USER and UNLINK WITH PREVIOUS IF CHANGED
+	err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+		FromEntityId:   toStore.Id,
+		FromEntityType: model.FLOW_SENDER,
+		Relationship:   model.HAS,
+		ToEntityId:     *toStore.UserId,
+		ToEntityType:   model.USER,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
-	return mapper.MapDbNodeToFlowActionSenderEntity(node), nil
+	return mapper.MapDbNodeToFlowSenderEntity(node), nil
 }
 
-func (s *flowService) FlowActionSenderDelete(ctx context.Context, flowActionSenderId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowActionSenderDelete")
+func (s *flowService) FlowSenderDelete(ctx context.Context, flowSenderId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowSenderDelete")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	span.LogFields(log.String("flowActionSenderId", flowActionSenderId))
+	span.LogFields(log.String("flowSenderId", flowSenderId))
 
-	actionSender, err := s.FlowActionSenderGetById(ctx, flowActionSenderId)
+	flowSender, err := s.FlowSenderGetById(ctx, flowSenderId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if actionSender == nil {
-		tracing.TraceErr(span, errors.New("flow action sender not found"))
-		return errors.New("flow action sender not found")
+	if flowSender == nil {
+		tracing.TraceErr(span, errors.New("flow sender not found"))
+		return errors.New("flow sender not found")
 	}
 
-	actionNode, err := s.services.Neo4jRepositories.FlowActionSenderReadRepository.GetFlowActionBySenderId(ctx, flowActionSenderId)
+	flowNode, err := s.services.Neo4jRepositories.FlowSenderReadRepository.GetFlowBySenderId(ctx, flowSenderId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	if actionNode == nil {
-		tracing.TraceErr(span, errors.New("flow action not found"))
-		return errors.New("flow action not found")
+	if flowNode == nil {
+		tracing.TraceErr(span, errors.New("flow not found"))
+		return errors.New("flow not found")
 	}
 
-	action := mapper.MapDbNodeToFlowActionEntity(actionNode)
+	flow := mapper.MapDbNodeToFlowActionEntity(flowNode)
 
 	//todo use TX
 
 	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
-		FromEntityId:   action.Id,
-		FromEntityType: model.FLOW_ACTION,
+		FromEntityId:   flow.Id,
+		FromEntityType: model.FLOW,
 		Relationship:   model.HAS,
-		ToEntityId:     actionSender.Id,
-		ToEntityType:   model.FLOW_ACTION_SENDER,
+		ToEntityId:     flowSender.Id,
+		ToEntityType:   model.FLOW_SENDER,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
 
-	//TODO unlink from user
-	err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Delete(ctx, actionSender.Id)
+	err = s.services.Neo4jRepositories.CommonWriteRepository.Unlink(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
+		FromEntityId:   flowSender.Id,
+		FromEntityType: model.FLOW_SENDER,
+		Relationship:   model.HAS,
+		ToEntityId:     *flowSender.UserId,
+		ToEntityType:   model.USER,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Delete(ctx, flowSender.Id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
