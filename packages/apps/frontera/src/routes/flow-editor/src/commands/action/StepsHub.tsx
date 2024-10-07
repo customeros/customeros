@@ -88,7 +88,7 @@ export const StepsHub = observer(() => {
     const newNode = {
       id: `${type}-${nodes.length + 1}`,
       type: type === 'WAIT' ? 'wait' : 'action',
-      position: { x: sourceNode.position.x, y: 0 }, // Initial position will be adjusted by ELK
+      position: { x: sourceNode.position.x, y: sourceNode.position.y + 10 },
       data: {
         action: type,
         ...typeBasedContent,

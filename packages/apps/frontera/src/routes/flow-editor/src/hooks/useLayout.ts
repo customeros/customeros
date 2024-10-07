@@ -1,7 +1,7 @@
 import { useRef, useCallback, useLayoutEffect } from 'react';
 
 import { ElkNode, LayoutOptions } from 'elkjs/lib/elk-api';
-import ELK, { ElkExtendedEdge } from 'elkjs/lib/elk.bundled.js';
+import ELK, { ElkExtendedEdge } from 'elkjs/lib/elk.bundled';
 import {
   Edge,
   Node,

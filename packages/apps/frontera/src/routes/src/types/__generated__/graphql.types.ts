@@ -1422,6 +1422,24 @@ export type EmailValidationDetails = {
   verifyingCheckAll: Scalars['Boolean']['output'];
 };
 
+export type EmailVariableEntity = {
+  __typename?: 'EmailVariableEntity';
+  type: EmailVariableEntityType;
+  variables: Array<EmailVariableName>;
+};
+
+export enum EmailVariableEntityType {
+  Contact = 'CONTACT',
+}
+
+export enum EmailVariableName {
+  ContactEmail = 'CONTACT_EMAIL',
+  ContactFirstName = 'CONTACT_FIRST_NAME',
+  ContactFullName = 'CONTACT_FULL_NAME',
+  ContactLastName = 'CONTACT_LAST_NAME',
+  OrganizationName = 'ORGANIZATION_NAME',
+}
+
 export type EntityTemplate = Node & {
   __typename?: 'EntityTemplate';
   createdAt: Scalars['Time']['output'];
@@ -2430,14 +2448,24 @@ export type Mutation = {
   emailMergeToOrganization: Email;
   emailMergeToUser: Email;
   emailRemoveFromContact: Result;
+  /** @deprecated No longer supported */
   emailRemoveFromContactById: Result;
   emailRemoveFromOrganization: Result;
+  /** @deprecated No longer supported */
   emailRemoveFromOrganizationById: Result;
   emailRemoveFromUser: Result;
+  /** @deprecated No longer supported */
   emailRemoveFromUserById: Result;
+  emailReplaceForContact: Email;
+  emailReplaceForOrganization: Email;
+  emailReplaceForUser: Email;
+  /** @deprecated No longer supported */
   emailUpdate: Email;
+  /** @deprecated No longer supported */
   emailUpdateInContact: Email;
+  /** @deprecated No longer supported */
   emailUpdateInOrganization: Email;
+  /** @deprecated No longer supported */
   emailUpdateInUser: Email;
   email_Validate: ActionResponse;
   entityTemplateCreate: EntityTemplate;
@@ -2845,6 +2873,24 @@ export type MutationEmailRemoveFromUserArgs = {
 
 export type MutationEmailRemoveFromUserByIdArgs = {
   id: Scalars['ID']['input'];
+  userId: Scalars['ID']['input'];
+};
+
+export type MutationEmailReplaceForContactArgs = {
+  contactId: Scalars['ID']['input'];
+  input: EmailInput;
+  previousEmail?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MutationEmailReplaceForOrganizationArgs = {
+  input: EmailInput;
+  organizationId: Scalars['ID']['input'];
+  previousEmail?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MutationEmailReplaceForUserArgs = {
+  input: EmailInput;
+  previousEmail?: InputMaybe<Scalars['String']['input']>;
   userId: Scalars['ID']['input'];
 };
 
@@ -4348,6 +4394,8 @@ export type Query = {
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
+  flow_emailVariables: Array<EmailVariableEntity>;
+  flow_mailboxes: Array<Scalars['String']['output']>;
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
@@ -4357,7 +4405,6 @@ export type Query = {
   invoices: InvoicesPage;
   issue: Issue;
   logEntry: LogEntry;
-  mailboxes: Array<Scalars['String']['output']>;
   masterPlan: MasterPlan;
   masterPlans: Array<MasterPlan>;
   meeting: Meeting;
