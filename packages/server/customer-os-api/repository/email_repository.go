@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -13,11 +12,12 @@ import (
 )
 
 type EmailRepository interface {
+	//Deprecated
 	GetAllFor(ctx context.Context, tenant string, entityType model.EntityType, entityId string) ([]*db.Record, error)
-	RemoveRelationship(ctx context.Context, entityType model.EntityType, tenant, entityId, email string) error
+	//Deprecated
 	RemoveRelationshipById(ctx context.Context, entityType model.EntityType, tenant, entityId, emailId string) error
+	//Deprecated
 	DeleteById(ctx context.Context, tenant, emailId string) error
-	Exists(ctx context.Context, tenant, email string) (bool, error)
 }
 
 type emailRepository struct {
@@ -57,41 +57,6 @@ func (r *emailRepository) GetAllFor(ctx context.Context, tenant string, entityTy
 		return nil, err
 	}
 	return result.Records, nil
-}
-
-func (r *emailRepository) RemoveRelationship(ctx context.Context, entityType model.EntityType, tenant, entityId, email string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.RemoveRelationship")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	query := ""
-	switch entityType {
-	case model.CONTACT:
-		query = `MATCH (entity:Contact {id:$entityId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case model.USER:
-		query = `MATCH (entity:User {id:$entityId})-[:USER_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	case model.ORGANIZATION:
-		query = `MATCH (entity:Organization {id:$entityId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) `
-	}
-
-	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, query+`MATCH (entity)-[rel:HAS]->(e:Email)
-			WHERE e.email = $email OR e.rawEmail = $email
-            DELETE rel`,
-			map[string]any{
-				"entityId": entityId,
-				"email":    email,
-				"tenant":   tenant,
-			})
-		return nil, err
-	}); err != nil {
-		return err
-	} else {
-		return nil
-	}
 }
 
 func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType model.EntityType, tenant, entityId, emailId string) error {
@@ -150,33 +115,6 @@ func (r *emailRepository) DeleteById(ctx context.Context, tenant, emailId string
 	} else {
 		return nil
 	}
-}
-
-func (r *emailRepository) Exists(ctx context.Context, tenant string, email string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.Exists")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	query := "MATCH (e:Email_%s) WHERE e.rawEmail = $email OR e.email = $email RETURN e LIMIT 1"
-
-	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"email": email,
-			}); err != nil {
-			return false, err
-		} else {
-			return queryResult.Next(ctx), nil
-
-		}
-	})
-	if err != nil {
-		return false, err
-	}
-	return result.(bool), err
 }
 
 func (r *emailRepository) executeQuery(ctx context.Context, cypher string, params map[string]any, span opentracing.Span) (*neo4j.EagerResult, error) {

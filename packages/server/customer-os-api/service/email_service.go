@@ -29,15 +29,19 @@ import (
 )
 
 type EmailService interface {
+	//Deprecated
 	CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error)
 	GetAllFor(ctx context.Context, entityType commonModel.EntityType, entityId string) (*neo4jentity.EmailEntities, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType commonModel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
+	//Deprecated
 	UpdateEmailFor(ctx context.Context, entityType commonModel.EntityType, entityId string, input model.EmailRelationUpdateInput) error
-	DetachFromEntity(ctx context.Context, entityType commonModel.EntityType, entityId, email string) (bool, error)
+	//Deprecated
 	DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, emailId string) (bool, error)
+	//Deprecated
 	DeleteById(ctx context.Context, emailId string) (bool, error)
 	GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error)
 	GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error)
+	//Deprecated
 	Update(ctx context.Context, input model.EmailUpdateAddressInput) error
 }
 
@@ -202,23 +206,6 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType commonMode
 	}
 
 	return nil
-}
-
-func (s *emailService) DetachFromEntity(ctx context.Context, entityType commonModel.EntityType, entityId, email string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DetachFromEntity")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("email", email), log.String("entityId", entityId), log.String("entityType", string(entityType)))
-
-	err := s.repositories.EmailRepository.RemoveRelationship(ctx, entityType, common.GetTenantFromContext(ctx), entityId, email)
-
-	if entityType == commonModel.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpoint(ctx, entityId)
-	} else if entityType == commonModel.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, entityId)
-	}
-
-	return err == nil, err
 }
 
 func (s *emailService) DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, emailId string) (bool, error) {
