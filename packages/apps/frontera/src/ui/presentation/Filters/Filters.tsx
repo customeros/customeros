@@ -6,7 +6,6 @@ import { Combobox } from '@ui/form/Combobox';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
 import { FilterLines } from '@ui/media/icons/FilterLines';
-import { components, OptionProps } from '@ui/form/Select/Select';
 import {
   Popover,
   PopoverContent,
@@ -18,6 +17,14 @@ import {
   ColumnViewType,
   ComparisonOperator,
 } from '@shared/types/__generated__/graphql.types';
+import {
+  components,
+  OptionProps,
+  getMenuClassNames,
+  getOptionClassNames,
+  getMenuListClassNames,
+  getContainerClassNames,
+} from '@ui/form/Select/Select';
 
 import { Filter } from '../Filter/Filter';
 
@@ -182,9 +189,9 @@ export const Filters = ({
 
     return (
       <components.Option {...props}>
-        <div className='flex items-center gap-2'>
-          <span>{data.icon}</span>
-          {data.label}
+        <div className='flex justify-start items-center gap-2'>
+          <span className='h-6 align-middle'>{data.icon}</span>
+          <span className='align-middle'>{data.label}</span>
         </div>
       </components.Option>
     );
@@ -220,7 +227,7 @@ export const Filters = ({
           {filters.length ? (
             <IconButton
               size='xs'
-              variant='outline'
+              variant='ghost'
               aria-label='filters'
               icon={<FilterLines />}
               colorScheme='grayModern'
@@ -247,6 +254,7 @@ export const Filters = ({
             escapeClearsValue
             closeMenuOnSelect={false}
             placeholder='Select filter...'
+            noOptionsMessage={() => 'Nothing in sight...'}
             components={{
               Option,
             }}
@@ -269,6 +277,22 @@ export const Filters = ({
                 );
               }
               setIsOpen(false);
+            }}
+            classNames={{
+              input: () => 'pl-3',
+              placeholder: () => 'pl-3 text-gray-400',
+              container: ({ isFocused }) =>
+                getContainerClassNames('flex flex-col pt-2', 'unstyled', {
+                  isFocused,
+                }),
+              option: ({ isFocused }) => getOptionClassNames('', { isFocused }),
+              menuList: () =>
+                getMenuListClassNames(
+                  'p-0 border-none bg-transparent shadow-none !max-h-[600px] ',
+                ),
+              menu: ({ menuPlacement }) =>
+                getMenuClassNames(menuPlacement)('!relative'),
+              noOptionsMessage: () => 'text-gray-500 p-1',
             }}
           />
         </PopoverContent>
