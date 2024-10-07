@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -388,29 +390,21 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 	}
 	if !failedSync {
 		if orgInput.HasEmail() {
-			// Create or update email
-			emailId, err := s.services.EmailService.CreateEmail(ctx, orgInput.Email, orgInput.ExternalSystem, orgInput.AppSource)
+			_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+				commonservice.EmailFields{
+					Email:     orgInput.Email,
+					AppSource: orgInput.AppSource,
+					Source:    orgInput.ExternalSystem,
+					Primary:   true,
+				},
+				&commonservice.LinkWith{
+					Type: commonmodel.ORGANIZATION,
+					Id:   organizationId,
+				})
 			if err != nil {
 				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to create and link email address %s with organization %s: %s", orgInput.Email, organizationId, err.Error())
 				failedSync = true
-				reason = fmt.Sprintf("Failed to create email address %s for organization %s: %s", orgInput.Email, organizationId, err.Error())
-				s.log.Error(reason)
-			}
-			// Link email to organization
-			if emailId != "" {
-				_, err = CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
-						Tenant:         common.GetTenantFromContext(ctx),
-						OrganizationId: organizationId,
-						EmailId:        emailId,
-					})
-				})
-				if err != nil {
-					tracing.TraceErr(span, err, log.String("grpcFunction", "LinkEmailToOrganization"))
-					failedSync = true
-					reason = fmt.Sprintf("Failed to link email address %s with organization %s: %s", orgInput.Email, organizationId, err.Error())
-					s.log.Error(reason)
-				}
 			}
 		}
 

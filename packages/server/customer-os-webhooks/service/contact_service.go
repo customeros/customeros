@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -231,60 +233,40 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		}
 	}
 	if !failedSync && contactInput.HasPrimaryEmail() {
-		// Create or update email
-		emailId, err := s.services.EmailService.CreateEmail(ctx, contactInput.Email, contactInput.ExternalSystem, appSource)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("Failed to create email address for contact %s: %s", contactId, err.Error())
-			s.log.Error(reason)
-		}
-		// Link email to contact
-		if !failedSync {
-			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					ContactId: contactId,
-					EmailId:   emailId,
-					Primary:   true,
-					AppSource: appSource,
-				})
+		_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+			commonservice.EmailFields{
+				Email:     contactInput.Email,
+				AppSource: appSource,
+				Source:    contactInput.ExternalSystem,
+				Primary:   true,
+			},
+			&commonservice.LinkWith{
+				Type: commonmodel.CONTACT,
+				Id:   contactId,
 			})
-			if err != nil {
-				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcMethod", "LinkEmailToContact"))
-				reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", contactInput.Email, contactId, err.Error())
-				s.log.Error(reason)
-			}
+		if err != nil {
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("Failed to create and link email address %s with contact %s: %s", contactInput.Email, contactId, err.Error())
+			failedSync = true
 		}
 	}
 	if !failedSync && contactInput.HasAdditionalEmails() {
 		for _, email := range contactInput.AdditionalEmails {
-			// Create or update email
-			emailId, err := s.services.EmailService.CreateEmail(ctx, email, contactInput.ExternalSystem, appSource)
-			if err != nil {
-				failedSync = true
-				tracing.TraceErr(span, err)
-				reason = fmt.Sprintf("Failed to create email address for contact %s: %s", contactId, err.Error())
-				s.log.Error(reason)
-			}
-			// Link email to contact
-			if !failedSync {
-				_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-					return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-						Tenant:    common.GetTenantFromContext(ctx),
-						ContactId: contactId,
-						EmailId:   emailId,
-						Primary:   false,
-						AppSource: appSource,
-					})
+			_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+				commonservice.EmailFields{
+					Email:     email,
+					AppSource: appSource,
+					Source:    contactInput.ExternalSystem,
+					Primary:   false,
+				},
+				&commonservice.LinkWith{
+					Type: commonmodel.CONTACT,
+					Id:   contactId,
 				})
-				if err != nil {
-					failedSync = true
-					tracing.TraceErr(span, err, log.String("grpcMethod", "LinkEmailToContact"))
-					reason = fmt.Sprintf("Failed to link email address %s with contact %s: %s", email, contactId, err.Error())
-					s.log.Error(reason)
-				}
+			if err != nil {
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("Failed to create and link email address %s with contact %s: %s", contactInput.Email, contactId, err.Error())
+				failedSync = true
 			}
 		}
 	}
