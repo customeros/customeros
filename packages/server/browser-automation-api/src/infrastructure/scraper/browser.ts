@@ -126,7 +126,7 @@ export class Browser {
               },
               logger: {
                 isEnabled: (_name, severity) => !!this.debugBrowserCat,
-                log: (_name, _severity, message, _args) => {
+                log: (name, _severity, message, _args) => {
                   if (message instanceof Error) {
                     return logger.error(message.message, {
                       source: "Playwright",

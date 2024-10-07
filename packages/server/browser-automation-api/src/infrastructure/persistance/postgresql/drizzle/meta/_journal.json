@@ -50,6 +50,13 @@
       "when": 1727348484826,
       "tag": "0006_secret_killer_shrike",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1728289084395,
+      "tag": "0007_narrow_namorita",
+      "breakpoints": true
     }
   ]
 }

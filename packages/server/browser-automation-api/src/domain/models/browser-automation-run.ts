@@ -82,7 +82,7 @@ export class BrowserAutomationRun {
       this.payload = JSON.stringify(payload);
     }
 
-    if (this.retryCount && this?.retryCount >= 10) {
+    if (this.retryCount && this?.retryCount >= 1) {
       this.fail();
       return;
     }

@@ -8,11 +8,12 @@ import { BrowserAutomationRunsRepository } from "@/infrastructure/persistance/po
 
 export class ConnectionsController {
   private browserAutomationRunService = new BrowserAutomationRunService(
-    new BrowserAutomationRunsRepository()
+    new BrowserAutomationRunsRepository(),
   );
 
   constructor() {
     this.scrapeConnections = this.scrapeConnections.bind(this);
+    this.downloadAllConnections = this.downloadAllConnections.bind(this);
   }
 
   async scrapeConnections(req: Request, res: Response) {
@@ -41,7 +42,7 @@ export class ConnectionsController {
           type: "FIND_CONNECTIONS",
           userId: res.locals.user.id,
           payload: JSON.stringify(req.body),
-        }
+        },
       );
 
       res.send({
@@ -58,7 +59,56 @@ export class ConnectionsController {
       });
       res.status(500).send({
         success: false,
-        message: "Failed to get connections",
+        message: "Failed to get all connections",
+        error: error.message,
+      });
+    }
+  }
+
+  async downloadAllConnections(req: Request, res: Response) {
+    const validationErrors = validationResult(req);
+
+    if (!validationErrors.isEmpty()) {
+      return res.status(400).send({
+        success: false,
+        message: "Validation failed",
+        errors: validationErrors.array(),
+      });
+    }
+
+    if (!res.locals.browserConfig) {
+      return res.status(400).send({
+        success: false,
+        message: "Browser config not found",
+      });
+    }
+
+    try {
+      const newAutomationRun = await this.browserAutomationRunService.createRun(
+        {
+          browserConfigId: res.locals.browserConfig.id,
+          tenant: res.locals.tenantName,
+          type: "DOWNLOAD_CONNECTIONS",
+          userId: res.locals.user.id,
+          payload: JSON.stringify(req.body),
+        },
+      );
+
+      res.send({
+        success: true,
+        message: "Browser automation scheduled successfully",
+        data: newAutomationRun?.toDTO(),
+      });
+    } catch (err) {
+      const error = ErrorParser.parse(err);
+      logger.error("Error in ConnectController", {
+        error: error.message,
+        details: error.details,
+        source: "ConnectionsController",
+      });
+      res.status(500).send({
+        success: false,
+        message: "Failed to get all connections",
         error: error.message,
       });
     }
