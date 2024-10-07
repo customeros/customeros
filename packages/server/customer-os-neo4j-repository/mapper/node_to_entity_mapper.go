@@ -1189,16 +1189,15 @@ func MapDbNodeToFlowParticipantEntity(node *dbtype.Node) *entity.FlowParticipant
 	return &e
 }
 
-func MapDbNodeToFlowActionSenderEntity(node *dbtype.Node) *entity.FlowActionSenderEntity {
+func MapDbNodeToFlowSenderEntity(node *dbtype.Node) *entity.FlowSenderEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowActionSenderEntity{
+	e := entity.FlowSenderEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
 		UserId:    utils.GetStringPropOrNil(props, "userId"),
 	}
 	return &e

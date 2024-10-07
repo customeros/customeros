@@ -1133,23 +1133,14 @@ type Flow struct {
 	Description string          `json:"description"`
 	Nodes       string          `json:"nodes"`
 	Edges       string          `json:"edges"`
-	Actions     []*FlowAction   `json:"actions"`
 	Status      FlowStatus      `json:"status"`
 	Contacts    []*FlowContact  `json:"contacts"`
+	Senders     []*FlowSender   `json:"senders"`
 	Statistics  *FlowStatistics `json:"statistics"`
 }
 
 func (Flow) IsMetadataInterface()        {}
 func (this Flow) GetMetadata() *Metadata { return this.Metadata }
-
-type FlowAction struct {
-	Metadata *Metadata           `json:"metadata"`
-	JSON     string              `json:"json"`
-	Senders  []*FlowActionSender `json:"senders"`
-}
-
-func (FlowAction) IsMetadataInterface()        {}
-func (this FlowAction) GetMetadata() *Metadata { return this.Metadata }
 
 type FlowActionInputData struct {
 	Wait                      *FlowActionInputDataWait                      `json:"wait,omitempty"`
@@ -1177,21 +1168,6 @@ type FlowActionInputDataWait struct {
 	Minutes int64 `json:"minutes"`
 }
 
-type FlowActionSender struct {
-	Metadata *Metadata `json:"metadata"`
-	Mailbox  *string   `json:"mailbox,omitempty"`
-	User     *User     `json:"user,omitempty"`
-}
-
-func (FlowActionSender) IsMetadataInterface()        {}
-func (this FlowActionSender) GetMetadata() *Metadata { return this.Metadata }
-
-type FlowActionSenderMergeInput struct {
-	ID      *string `json:"id,omitempty"`
-	Mailbox *string `json:"mailbox,omitempty"`
-	UserID  *string `json:"userId,omitempty"`
-}
-
 type FlowContact struct {
 	Metadata        *Metadata             `json:"metadata"`
 	Contact         *Contact              `json:"contact"`
@@ -1208,6 +1184,19 @@ type FlowMergeInput struct {
 	Name  string  `json:"name"`
 	Nodes string  `json:"nodes"`
 	Edges string  `json:"edges"`
+}
+
+type FlowSender struct {
+	Metadata *Metadata `json:"metadata"`
+	User     *User     `json:"user,omitempty"`
+}
+
+func (FlowSender) IsMetadataInterface()        {}
+func (this FlowSender) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowSenderMergeInput struct {
+	ID     *string `json:"id,omitempty"`
+	UserID *string `json:"userId,omitempty"`
 }
 
 type FlowStatistics struct {
@@ -3022,6 +3011,7 @@ type User struct {
 	// **Required.  If no values it returns an empty array.**
 	Emails       []*Email       `json:"emails,omitempty"`
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
+	Mailboxes    []string       `json:"mailboxes"`
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time   `json:"createdAt"`

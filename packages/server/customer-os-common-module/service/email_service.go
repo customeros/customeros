@@ -6,6 +6,8 @@ import (
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -35,6 +37,8 @@ type EmailService interface {
 	LinkEmail(ctx context.Context, tenant, emailId, email, appSource string, primary bool, linkWith LinkWith) error
 	UnlinkEmail(ctx context.Context, tenant, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
+
+	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonModel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -366,4 +370,23 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, tenant, emailId, a
 	}
 
 	return nil
+}
+
+func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonModel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllEmailsForEntityIds")
+	defer span.Finish()
+
+	emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, entityType, entityIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	emailEntities := make(neo4jentity.EmailEntities, 0, len(emailNodes))
+	for _, v := range emailNodes {
+		emailEntity := mapper.MapDbNodeToEmailEntity(v.Node)
+		emailEntity.DataloaderKey = v.LinkedNodeId
+		emailEntities = append(emailEntities, *emailEntity)
+	}
+	return &emailEntities, nil
 }

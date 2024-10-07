@@ -414,6 +414,15 @@
           "query": "MATCH (n:Organization|Contact)-[:HAS]->(s:Social) WHERE s.updatedAt < datetime() - duration({hours: 24}) AND (s.url IS NULL OR s.url = '') RETURN count(s)"
         }
       ]
+    },
+    {
+      "name": "Flow",
+      "queries": [
+        {
+          "name": "Scheduled actions in error",
+          "query": "MATCH (n:FlowActionExecution) WHERE n.status = 'TECH_ERROR'  RETURN count(n)"
+        }
+      ]
     }
   ],
   "queries": [

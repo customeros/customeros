@@ -34,7 +34,7 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 	tenant := common.GetTenantFromContext(ctx)
 
 	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Flow_%s {id: $flowId})
+			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})
 			MERGE (t)<-[:BELONGS_TO_TENANT]-(fes:FlowExecutionSettings:FlowExecutionSettings_%s {id: $id})<-[:HAS]-(f)
 			ON MATCH SET
 				fes.updatedAt = $updatedAt

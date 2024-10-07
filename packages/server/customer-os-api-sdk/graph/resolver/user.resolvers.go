@@ -72,6 +72,11 @@ func (r *queryResolver) UserByEmail(ctx context.Context, email string) (*model.U
 	panic(fmt.Errorf("not implemented: UserByEmail - user_ByEmail"))
 }
 
+// UsersWithMailboxes is the resolver for the users_WithMailboxes field.
+func (r *queryResolver) UsersWithMailboxes(ctx context.Context) ([]*model.User, error) {
+	panic(fmt.Errorf("not implemented: UsersWithMailboxes - users_WithMailboxes"))
+}
+
 // Roles is the resolver for the roles field.
 func (r *userResolver) Roles(ctx context.Context, obj *model.User) ([]model.Role, error) {
 	panic(fmt.Errorf("not implemented: Roles - roles"))
@@ -85,6 +90,11 @@ func (r *userResolver) Emails(ctx context.Context, obj *model.User) ([]*model.Em
 // PhoneNumbers is the resolver for the phoneNumbers field.
 func (r *userResolver) PhoneNumbers(ctx context.Context, obj *model.User) ([]*model.PhoneNumber, error) {
 	panic(fmt.Errorf("not implemented: PhoneNumbers - phoneNumbers"))
+}
+
+// Mailboxes is the resolver for the mailboxes field.
+func (r *userResolver) Mailboxes(ctx context.Context, obj *model.User) ([]string, error) {
+	panic(fmt.Errorf("not implemented: Mailboxes - mailboxes"))
 }
 
 // JobRoles is the resolver for the jobRoles field.

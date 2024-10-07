@@ -45,9 +45,11 @@ type UserService interface {
 	GetUserOwnersForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error)
 	GetUserCreatorsForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.UserEntities, error)
 	GetUserCreatorsForServiceLineItems(ctx context.Context, serviceLineItemIds []string) (*neo4jentity.UserEntities, error)
+	GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.UserEntities, error)
 	GetUserCreatorsForContracts(ctx context.Context, contractIds []string) (*neo4jentity.UserEntities, error)
 	GetUserAuthorsForLogEntries(ctx context.Context, logEntryIDs []string) (*neo4jentity.UserEntities, error)
 	GetUserAuthorsForComments(ctx context.Context, commentIds []string) (*neo4jentity.UserEntities, error)
+	GetUserForFlowSenders(ctx context.Context, flowSenderIds []string) (*neo4jentity.UserEntities, error)
 	GetUsers(ctx context.Context, userIds []string) (*neo4jentity.UserEntities, error)
 	GetDistinctOrganizationOwners(ctx context.Context) (*neo4jentity.UserEntities, error)
 	GetReminderOwner(ctx context.Context, reminderId string) (*neo4jentity.UserEntity, error)
@@ -589,6 +591,41 @@ func (s *userService) GetUserCreatorsForServiceLineItems(parentCtx context.Conte
 	}
 	return &userEntities, nil
 }
+func (s *userService) GetUsersWithMailboxes(ctx context.Context) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUsersWithMailboxes")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	mailboxes, err := s.repositories.PostgresRepositories.TenantSettingsMailboxRepository.GetAll(ctx, tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	// Create a map to store unique usernames
+	userEmailMap := make(map[string]struct{})
+	for _, mailbox := range mailboxes {
+		// Add the username to the map (map ensures uniqueness)
+		userEmailMap[mailbox.Username] = struct{}{}
+	}
+
+	entities := make(neo4jentity.UserEntities, 0, len(userEmailMap))
+	for userEmail := range userEmailMap {
+		userNode, err := s.repositories.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, userEmail)
+		if err != nil {
+			return nil, err
+		}
+
+		if userNode != nil {
+			userEntity := neo4jmapper.MapDbNodeToUserEntity(userNode)
+			entities = append(entities, *userEntity)
+		}
+	}
+
+	return &entities, nil
+}
 func (s *userService) GetUserCreatorsForContracts(parentCtx context.Context, contractIds []string) (*neo4jentity.UserEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(parentCtx, "UserService.GetUserCreatorsForContracts")
 	defer span.Finish()
@@ -635,6 +672,26 @@ func (s *userService) GetUserAuthorsForComments(ctx context.Context, commentIds 
 	span.LogFields(log.Object("commentIds", commentIds))
 
 	users, err := s.repositories.UserRepository.GetAllAuthorsForComments(ctx, common.GetTenantFromContext(ctx), commentIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	userEntities := make(neo4jentity.UserEntities, 0, len(users))
+	for _, v := range users {
+		userEntity := neo4jmapper.MapDbNodeToUserEntity(v.Node)
+		userEntity.DataloaderKey = v.LinkedNodeId
+		userEntities = append(userEntities, *userEntity)
+	}
+	return &userEntities, nil
+}
+
+func (s *userService) GetUserForFlowSenders(ctx context.Context, flowSenderIds []string) (*neo4jentity.UserEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserService.GetUserForFlowSenders")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("flowSenderIds", flowSenderIds))
+
+	users, err := s.repositories.UserRepository.GetAllSendersForFlowSenders(ctx, common.GetTenantFromContext(ctx), flowSenderIds)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
