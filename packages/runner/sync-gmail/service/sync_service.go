@@ -139,7 +139,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	}
 
 	if domainNode == nil {
-		domainNode, err = s.repositories.DomainRepository.CreateDomain(ctx, tx, domain, source, AppSource, now)
+		domainNode, err = s.repositories.DomainRepository.CreateDomainInTx(ctx, tx, domain, source, AppSource, now)
 		if err != nil {
 			return "", fmt.Errorf("unable to create domain: %v", err)
 		}
