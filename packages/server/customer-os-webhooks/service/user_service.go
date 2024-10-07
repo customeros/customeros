@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -203,7 +204,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		// Wait for user to be created in neo4j
 		if !failedSync && !matchingUserExists {
 			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model2.NodeLabelUser)
+				found, findErr := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, commonmodel.NodeLabelUser)
 				if found && findErr == nil {
 					break
 				}
@@ -212,31 +213,21 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 		}
 	}
 	if !failedSync && userInput.HasEmail() {
-		// Create or update email
-		emailId, err := s.services.EmailService.CreateEmail(ctx, userInput.Email, userInput.ExternalSystem, appSource)
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err)
-			reason = fmt.Sprintf("Failed to create email address for user %s: %s", userId, err.Error())
-			s.log.Error(reason)
-		}
-		// Link email to user
-		if !failedSync {
-			_, err = CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-				return s.grpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					UserId:    userId,
-					EmailId:   emailId,
-					Primary:   true,
-					AppSource: appSource,
-				})
+		_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,
+			commonservice.EmailFields{
+				Email:     userInput.Email,
+				AppSource: userInput.AppSource,
+				Source:    userInput.ExternalSystem,
+				Primary:   true,
+			},
+			&commonservice.LinkWith{
+				Type: commonmodel.USER,
+				Id:   userId,
 			})
-			if err != nil {
-				failedSync = true
-				tracing.TraceErr(span, err, log.String("grpcMethod", "LinkEmailToUser"))
-				reason = fmt.Sprintf("Failed to link email address %s for user %s: %s", userInput.Email, userId, err.Error())
-				s.log.Error(reason)
-			}
+		if err != nil {
+			tracing.TraceErr(span, err)
+			reason = fmt.Sprintf("Failed to create and link email address %s with user %s: %s", userInput.Email, userId, err.Error())
+			failedSync = true
 		}
 	}
 
