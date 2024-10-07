@@ -105,6 +105,10 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	span.SetTag(tracing.SpanTagTenant, tenant)
 	span.LogKV("email", email)
 
+	if email == "" {
+		return "", nil
+	}
+
 	emailId, err := s.repositories.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, tenant, email)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to retrieve email id"))
