@@ -53,7 +53,7 @@ func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tenant, em
 	tracing.TagTenant(span, tenant)
 	span.LogFields(log.String("email", email))
 
-	cypher := fmt.Sprintf(`MATCH (e:Email_%s) WHERE e.email = $email OR e.rawEmail = $email RETURN e.id LIMIT 1 ORDER by e.createdAt`, tenant)
+	cypher := fmt.Sprintf(`MATCH (e:Email_%s) WHERE e.email = $email OR e.rawEmail = $email RETURN e.id ORDER BY e.createdAt LIMIT 1`, tenant)
 	params := map[string]any{
 		"email": email,
 	}
