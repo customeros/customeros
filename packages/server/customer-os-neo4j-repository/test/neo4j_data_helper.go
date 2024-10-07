@@ -578,9 +578,9 @@ func CreateEmail(ctx context.Context, driver *neo4j.DriverWithContext, tenant st
 	return emailId
 }
 
-func CreateEmailForUser(ctx context.Context, driver *neo4j.DriverWithContext, tenant, userId string, entity entity.EmailEntity) string {
-	emailId := CreateEmail(ctx, driver, tenant, entity)
-	LinkNodes(ctx, driver, userId, emailId, "HAS")
+func CreateEmailForEntity(ctx context.Context, driver *neo4j.DriverWithContext, tenant, entityId string, emailEntity entity.EmailEntity) string {
+	emailId := CreateEmail(ctx, driver, tenant, emailEntity)
+	LinkNodes(ctx, driver, entityId, emailId, "HAS")
 	return emailId
 }
 
