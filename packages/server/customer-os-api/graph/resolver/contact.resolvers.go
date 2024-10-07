@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"strings"
 	"time"
 
@@ -834,12 +835,12 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 
-	emails := []string{}
+	var emailsToCreateAndLinkWithContact []string
 	phoneNumbers := []string{}
 	if enrichmentResponse.Data != nil {
 		for _, item := range enrichmentResponse.Data.Data {
 			if item.ContactEmailAddress != "" {
-				emails = append(emails, item.ContactEmailAddress)
+				emailsToCreateAndLinkWithContact = append(emailsToCreateAndLinkWithContact, item.ContactEmailAddress)
 			}
 			if item.ContactPhoneNumber != nil && fmt.Sprintf("%v", item.ContactPhoneNumber) != "" {
 				phoneNumbers = append(phoneNumbers, fmt.Sprintf("%v", item.ContactPhoneNumber))
@@ -876,29 +877,35 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	currentEmails := []string{}
+	var currentEmails []string
 	for _, emailEntity := range *emailEntities {
 		currentEmails = append(currentEmails, emailEntity.RawEmail)
 		currentEmails = append(currentEmails, emailEntity.Email)
 	}
 
-	// create emails that are not already linked to contact
-	emailFound := false
-	for _, email := range emails {
+	// create emails that are not yet linked to contact
+	emailLinked := false
+	for _, email := range emailsToCreateAndLinkWithContact {
 		if !utils.Contains(currentEmails, email) {
-			_, err = r.EmailMergeToContact(ctx, contactID, model.EmailInput{
-				Email: email,
-			})
+			_, err = r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+				commonService.EmailFields{
+					Email:     email,
+					AppSource: constants.AppSourceCustomerOsApi,
+				},
+				&commonService.LinkWith{
+					Type: commonModel.CONTACT,
+					Id:   contactID,
+				})
 			if err != nil {
 				tracing.TraceErr(span, err)
 			} else {
-				emailFound = true
+				emailLinked = true
 			}
 		}
 	}
 
 	// create phone numbers that are not already linked to contact
-	phoneFound := false
+	phoneLinked := false
 	for _, phoneNumber := range phoneNumbers {
 		if !utils.Contains(currentPhoneNumbers, phoneNumber) {
 			_, err = r.PhoneNumberMergeToContact(ctx, contactID, model.PhoneNumberInput{
@@ -907,19 +914,19 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 			if err != nil {
 				tracing.TraceErr(span, err)
 			} else {
-				phoneFound = true
+				phoneLinked = true
 			}
 		}
 	}
 
-	if emailFound {
+	if emailLinked {
 		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonEmailFound, enrichmentResponse.Data.Id,
-			fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emails[0], linkedInUrl, firstName, lastName))
+			fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailsToCreateAndLinkWithContact[0], linkedInUrl, firstName, lastName))
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 		}
 	}
-	if phoneFound {
+	if phoneLinked {
 		_, err = r.Services.CommonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, common.GetTenantFromContext(ctx), postgresentity.BillableEventEnrichPersonPhoneFound, enrichmentResponse.Data.Id,
 			fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumbers[0], linkedInUrl, firstName, lastName))
 		if err != nil {

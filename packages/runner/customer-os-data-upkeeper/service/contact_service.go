@@ -22,7 +22,6 @@ import (
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/generic"
@@ -795,8 +794,8 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 			return
 		}
 
-		// prepare current emails
-		currentEmails := []string{}
+		// current emails linked with contacts
+		var currentEmails []string
 		emailDbNodes, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, record.Tenant, model.CONTACT, []string{record.ContactId})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -808,8 +807,8 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 			}
 		}
 
-		// prepare current phone numbers
-		currentPhones := []string{}
+		// current phone numbers linked with contacts
+		var currentPhones []string
 		phoneDbNodes, err := s.commonServices.Neo4jRepositories.PhoneNumberReadRepository.GetAllForLinkedEntityIds(ctx, record.Tenant, model.CONTACT, []string{record.ContactId})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -824,45 +823,34 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 			}
 		}
 
-		emailFound := false
-		phoneFound := false
+		emailLinked := false
+		phoneLinked := false
 		emailForBillableEvent, phoneNumberForBillableEvent := "", ""
 		if len(betterContactResponse.Data) > 0 {
 			for _, item := range betterContactResponse.Data {
 				if item.ContactEmailAddress != "" && !utils.Contains(currentEmails, item.ContactEmailAddress) {
-					emailFound = true
-					emailIdIfExists, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, record.Tenant, betterContactResponse.Data[0].ContactEmailAddress)
+					_, err = s.commonServices.EmailService.Merge(ctx, record.Tenant,
+						commonService.EmailFields{
+							Email:     item.ContactEmailAddress,
+							AppSource: constants.AppSourceDataUpkeeper,
+						},
+						&commonService.LinkWith{
+							Type: model.CONTACT,
+							Id:   record.ContactId,
+						})
 					if err != nil {
 						tracing.TraceErr(span, err)
-						return
+						continue
 					}
+					emailLinked = true
 					if emailForBillableEvent == "" {
 						emailForBillableEvent = item.ContactEmailAddress
-					}
-					ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-					_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-						contact := model.CONTACT.String()
-						return s.commonServices.GrpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-							Tenant:       record.Tenant,
-							Id:           emailIdIfExists,
-							RawEmail:     item.ContactEmailAddress,
-							LinkWithType: &contact,
-							LinkWithId:   &record.ContactId,
-							SourceFields: &commonpb.SourceFields{
-								AppSource: constants.AppSourceDataUpkeeper,
-							},
-						})
-					})
-
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return
 					}
 				}
 				if item.ContactPhoneNumber != nil {
 					phoneNumber := fmt.Sprintf("%v", item.ContactPhoneNumber)
 					if phoneNumber != "" && !utils.Contains(currentPhones, phoneNumber) {
-						phoneFound = true
+						phoneLinked = true
 						// create phone number
 						ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 						response, err := utils.CallEventsPlatformGRPCWithRetry[*phonenumberpb.PhoneNumberIdGrpcResponse](func() (*phonenumberpb.PhoneNumberIdGrpcResponse, error) {
@@ -908,14 +896,14 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 			}
 		}
 
-		if emailFound {
+		if emailLinked {
 			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, postgresentity.BillableEventEnrichPersonEmailFound, betterContactResponse.Id,
 				fmt.Sprintf("Email: %s, LinkedIn: %s, FirstName: %s, LastName: %s", emailForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "failed to store billable event"))
 			}
 		}
-		if phoneFound {
+		if phoneLinked {
 			_, err = s.commonServices.PostgresRepositories.ApiBillableEventRepository.RegisterEvent(ctx, record.Tenant, postgresentity.BillableEventEnrichPersonPhoneFound, betterContactResponse.Id,
 				fmt.Sprintf("Phone: %s, LinkedIn: %s, FirstName: %s, LastName: %s", phoneNumberForBillableEvent, detailsBetterContact.ContactLinkedInUrl, detailsBetterContact.ContactFirstName, detailsBetterContact.ContactLastName))
 			if err != nil {
