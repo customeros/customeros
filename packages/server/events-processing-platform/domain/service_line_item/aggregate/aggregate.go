@@ -116,7 +116,7 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 		updatedAtNotNil,
 		startedAtNotNil,
 		endedAtNillable,
-		"", // alexbalexb TODO: previousVersionId pass it from service
+		"", //TODO: previousVersionId pass it from service
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)

@@ -121,16 +121,23 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
+	span.LogFields(log.String("request.contactID", contactID), log.String("request.email", email))
 
-	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.CONTACT, contactID, email)
+	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
+		commonservice.LinkWith{
+			Type: commonModel.CONTACT,
+			Id:   contactID,
+		})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", email, contactID)
-		return nil, err
+		return &model.Result{
+			Result: false,
+		}, nil
 	}
+
 	return &model.Result{
-		Result: result,
+		Result: true,
 	}, nil
 }
 
@@ -224,14 +231,20 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID), log.String("request.email", email))
 
-	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.USER, userID, email)
+	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
+		commonservice.LinkWith{
+			Type: commonModel.USER,
+			Id:   userID,
+		})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", email, userID)
-		return nil, err
+		return &model.Result{
+			Result: false,
+		}, nil
 	}
 	return &model.Result{
-		Result: result,
+		Result: true,
 	}, nil
 }
 
@@ -325,14 +338,21 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.email", email))
 
-	result, err := r.Services.EmailService.DetachFromEntity(ctx, commonModel.ORGANIZATION, organizationID, email)
+	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
+		commonservice.LinkWith{
+			Type: commonModel.ORGANIZATION,
+			Id:   organizationID,
+		})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", email, organizationID)
-		return nil, err
+		return &model.Result{
+			Result: false,
+		}, nil
 	}
+
 	return &model.Result{
-		Result: result,
+		Result: true,
 	}, nil
 }
 
