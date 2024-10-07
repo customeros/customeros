@@ -1,6 +1,6 @@
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types.ts';
-import { Node, MarkerType, useReactFlow, FitViewOptions } from '@xyflow/react';
+import { Node, MarkerType, useReactFlow } from '@xyflow/react';
 
 import { cn } from '@ui/utils/cn.ts';
 import { useStore } from '@shared/hooks/useStore';
@@ -16,21 +16,13 @@ import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
 
 import { keywords } from './keywords.ts';
-import { useUndoRedo, useLayoutedElements } from '../../hooks';
-
-const elkOptions = {
-  'elk.algorithm': 'layered',
-  'elk.layered.spacing.nodeNodeBetweenLayers': '100',
-  'elk.spacing.nodeNode': '80',
-  'elk.direction': 'DOWN',
-};
+import { useUndoRedo } from '../../hooks';
 
 export const StepsHub = observer(() => {
   const { ui } = useStore();
-  const { getLayoutedElements } = useLayoutedElements();
   const { takeSnapshot } = useUndoRedo();
 
-  const { setEdges, setNodes, getNodes, getEdges, fitView } = useReactFlow();
+  const { setEdges, setNodes, getNodes, getEdges } = useReactFlow();
 
   const findPreviousEmailNode = (
     nodes: Node[],
@@ -96,7 +88,7 @@ export const StepsHub = observer(() => {
     const newNode = {
       id: `${type}-${nodes.length + 1}`,
       type: type === 'WAIT' ? 'wait' : 'action',
-      position: { x: sourceNode.position.x, y: 0 }, // Initial position will be adjusted by ELK
+      position: { x: sourceNode.position.x, y: sourceNode.position.y + 10 },
       data: {
         action: type,
         ...typeBasedContent,
@@ -138,25 +130,26 @@ export const StepsHub = observer(() => {
     const updatedNodes = [...nodes, newNode];
     const newEdges = [...updatedEdges, edgeToNewNode, edgeFromNewNode];
 
-    getLayoutedElements(updatedNodes, newEdges, elkOptions).then(
-      // Use getLayoutedElements to calculate new positions
-      // @ts-expect-error fix type later
-      ({ nodes: layoutedNodes, edges: layoutedEdges }) => {
-        setNodes(layoutedNodes);
-        setEdges(layoutedEdges);
-        window.requestAnimationFrame(() => {
-          const fitViewOptions: FitViewOptions = {
-            padding: 0.1,
-            maxZoom: 1,
-            minZoom: 1,
-            duration: 0,
-            nodes: layoutedNodes,
-          };
-
-          fitView(fitViewOptions);
-        });
-      },
-    );
+    setNodes(updatedNodes);
+    setEdges(newEdges);
+    // getLayoutedElements(updatedNodes, newEdges, elkOptions).then(
+    //   // Use getLayoutedElements to calculate new positions
+    //   // @ts-expect-error fix type later
+    //   ({ nodes: layoutedNodes, edges: layoutedEdges }) => {
+    //
+    //     window.requestAnimationFrame(() => {
+    //       const fitViewOptions: FitViewOptions = {
+    //         padding: 0.1,
+    //         maxZoom: 1,
+    //         minZoom: 1,
+    //         duration: 0,
+    //         nodes: layoutedNodes,
+    //       };
+    //
+    //       fitView(fitViewOptions);
+    //     });
+    //   },
+    // );
   };
 
   const updateSelectedNode = (type: FlowActionType | 'WAIT') => {

@@ -221,7 +221,7 @@ export const FlowBuilder = observer(
             }
           }}
           fitViewOptions={{
-            padding: 0.1,
+            padding: 0.95,
             includeHiddenNodes: false,
             minZoom: 0.1,
             maxZoom: 5,
