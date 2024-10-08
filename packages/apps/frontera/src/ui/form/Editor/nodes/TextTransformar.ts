@@ -42,11 +42,14 @@ export const setInlineStyle = (node: TextNode) => {
     newStylesMap.delete('text-decoration');
   }
 
+  // Remove alignment styles
+  newStylesMap.delete('text-align');
+
   const attr = Array.from(newStylesMap.entries())
     .map(([k, v]) => `${k}: ${v}`)
     .join(';');
 
-  oldAttr != attr && node.setStyle(attr);
+  oldAttr !== attr && node.setStyle(attr);
 };
 
 const TextNodeTransformer = () => {

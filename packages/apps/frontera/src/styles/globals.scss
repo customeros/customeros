@@ -343,7 +343,7 @@
 
 // inside editor we want to use default element styles to ensure user will get that they expect
 .email-editor {
-  p, ul, ol, a{
+  p, ul, ol, a, h1{
     all: revert;
   }
 

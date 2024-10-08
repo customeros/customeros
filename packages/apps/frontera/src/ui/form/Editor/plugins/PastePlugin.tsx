@@ -64,33 +64,47 @@ export function LinkPastePlugin() {
               const parser = new DOMParser();
               const doc = parser.parseFromString(htmlData, 'text/html');
 
-              // Filter out unsupported elements
-              const filterNode = (node: Node): Node | null => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                  const element = node as Element;
+              const filterNode = (node: Node): DocumentFragment => {
+                const fragment = document.createDocumentFragment();
 
-                  if (!ALLOWED_TAGS.includes(element.tagName.toLowerCase())) {
-                    return document.createTextNode(element.textContent || '');
-                  }
-                  Array.from(element.childNodes).forEach((child) => {
-                    const filteredChild = filterNode(child);
+                if (node.nodeType === Node.TEXT_NODE) {
+                  fragment.appendChild(node.cloneNode());
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                  const element = node as HTMLElement;
+                  const tagName = element.tagName.toLowerCase();
 
-                    if (filteredChild) {
-                      element.replaceChild(filteredChild, child);
-                    } else {
-                      element.removeChild(child);
+                  if (ALLOWED_TAGS.includes(tagName)) {
+                    const newElement = document.createElement(tagName);
+
+                    if (tagName === 'a') {
+                      const href = element.getAttribute('href');
+
+                      if (href) newElement.setAttribute('href', href);
                     }
-                  });
+
+                    Array.from(element.childNodes).forEach((child) => {
+                      newElement.appendChild(filterNode(child));
+                    });
+
+                    fragment.appendChild(newElement);
+                  } else {
+                    Array.from(element.childNodes).forEach((child) => {
+                      fragment.appendChild(filterNode(child));
+                    });
+                  }
                 }
 
-                return node;
+                return fragment;
               };
 
-              doc.body.childNodes.forEach((child) => {
-                filterNode(child);
-              });
+              const filteredBody = filterNode(doc.body);
 
-              const nodes = $generateNodesFromDOM(editor, doc);
+              // Create a new document to hold our filtered content
+              const newDoc = document.implementation.createHTMLDocument();
+
+              newDoc.body.appendChild(filteredBody);
+
+              const nodes = $generateNodesFromDOM(editor, newDoc);
 
               selection.insertNodes(nodes);
             } else {

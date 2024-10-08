@@ -193,17 +193,23 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
 
           <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
 
-          <MentionsPlugin
-            options={mentionsOptions}
-            onSearch={onMentionsSearch}
-          />
+          {onMentionsSearch && (
+            <MentionsPlugin
+              options={mentionsOptions}
+              onSearch={onMentionsSearch}
+            />
+          )}
+
           <LinkPastePlugin />
 
-          <HashtagsPlugin
-            options={hashtagsOptions}
-            onCreate={onHashtagCreate}
-            onSearch={onHashtagSearch}
-          />
+          {onHashtagCreate && onHashtagSearch && (
+            <HashtagsPlugin
+              options={hashtagsOptions}
+              onCreate={onHashtagCreate}
+              onSearch={onHashtagSearch}
+            />
+          )}
+
           {floatingAnchorElem && (
             <>
               <FloatingLinkEditorPlugin anchorElem={floatingAnchorElem} />
