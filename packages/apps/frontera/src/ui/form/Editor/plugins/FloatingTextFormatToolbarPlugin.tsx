@@ -6,14 +6,20 @@ import { computePosition } from '@floating-ui/dom';
 import { $setBlocksType } from '@lexical/selection';
 import { $findMatchingParent } from '@lexical/utils';
 import { $createQuoteNode } from '@lexical/rich-text';
-import { $isLinkNode, $toggleLink } from '@lexical/link';
+import { $isLinkNode, $toggleLink, TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
   createCommand,
+  $setSelection,
   $isRangeSelection,
+  KEY_ESCAPE_COMMAND,
   FORMAT_TEXT_COMMAND,
   $createParagraphNode,
+  KEY_MODIFIER_COMMAND,
+  COMMAND_PRIORITY_HIGH,
+  $createRangeSelection,
+  COMMAND_PRIORITY_NORMAL,
   COMMAND_PRIORITY_NORMAL as NORMAL_PRIORITY,
   SELECTION_CHANGE_COMMAND as ON_SELECTION_CHANGE,
 } from 'lexical';
@@ -206,35 +212,41 @@ export function FloatingMenu({
         </>
       ) : (
         <>
-          <Tooltip label='Bold'>
-            <FloatingToolbarButton
-              active={isBold}
-              aria-label='Format text to bold'
-              icon={<Bold01 className='text-inherit' />}
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
-              }}
-            />
+          <Tooltip label='Bold: ⌘ + B'>
+            <div>
+              <FloatingToolbarButton
+                active={isBold}
+                aria-label='Format text to bold'
+                icon={<Bold01 className='text-inherit' />}
+                onClick={() => {
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'bold');
+                }}
+              />
+            </div>
           </Tooltip>
-          <Tooltip label='Italic'>
-            <FloatingToolbarButton
-              active={isItalic}
-              aria-label='Format text with italic'
-              icon={<Italic01 className='text-inherit' />}
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
-              }}
-            />
+          <Tooltip label='Italic: ⌘ + I'>
+            <div>
+              <FloatingToolbarButton
+                active={isItalic}
+                aria-label='Format text with italic'
+                icon={<Italic01 className='text-inherit' />}
+                onClick={() => {
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'italic');
+                }}
+              />
+            </div>
           </Tooltip>
-          <Tooltip label='Strikethrough'>
-            <FloatingToolbarButton
-              active={isStrikethrough}
-              aria-label='Format text with a strikethrough'
-              icon={<Strikethrough01 className='text-inherit' />}
-              onClick={() => {
-                editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
-              }}
-            />
+          <Tooltip label='Strikethrough: ⌘ + Shift + S'>
+            <div>
+              <FloatingToolbarButton
+                active={isStrikethrough}
+                aria-label='Format text with a strikethrough'
+                icon={<Strikethrough01 className='text-inherit' />}
+                onClick={() => {
+                  editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+                }}
+              />
+            </div>
           </Tooltip>
           <Tooltip label='Insert or remove link'>
             <FloatingToolbarButton
@@ -244,15 +256,17 @@ export function FloatingMenu({
               icon={<Link01 className='text-inherit' />}
             />
           </Tooltip>
-          <Tooltip label='Block quote'>
-            <FloatingToolbarButton
-              active={isBlockquote}
-              aria-label='Format text with block quote'
-              icon={<BlockQuote className='text-inherit' />}
-              onClick={() => {
-                editor.dispatchCommand(TOGGLE_BLOCKQUOTE_COMMAND, undefined);
-              }}
-            />
+          <Tooltip label='Blockquote: ⌘ + Shift + >'>
+            <div>
+              <FloatingToolbarButton
+                active={isBlockquote}
+                aria-label='Format text with block quote'
+                icon={<BlockQuote className='text-inherit' />}
+                onClick={() => {
+                  editor.dispatchCommand(TOGGLE_BLOCKQUOTE_COMMAND, undefined);
+                }}
+              />
+            </div>
           </Tooltip>
         </>
       )}
@@ -311,6 +325,36 @@ export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
     return true;
   }, [editor, calculatePosition]);
 
+  const handleClickOutside = useCallback(
+    (event: MouseEvent) => {
+      if (ref.current && !ref.current.contains(event.target as Node)) {
+        editor.update(() => {
+          setCoords(undefined);
+
+          const currentSelection = $getSelection();
+
+          if ($isRangeSelection(currentSelection)) {
+            const newSelection = $createRangeSelection();
+
+            newSelection.anchor.set(
+              currentSelection.focus.key,
+              currentSelection.focus.offset,
+              currentSelection.focus.type,
+            );
+            newSelection.focus.set(
+              currentSelection.focus.key,
+              currentSelection.focus.offset,
+              currentSelection.focus.type,
+            );
+            newSelection.dirty = true;
+            $setSelection(newSelection);
+          }
+        });
+      }
+    },
+    [editor],
+  );
+
   useEffect(() => {
     const unregisterCommand = editor.registerCommand(
       ON_SELECTION_CHANGE,
@@ -318,8 +362,66 @@ export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
       NORMAL_PRIORITY,
     );
 
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      unregisterCommand();
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [editor, $handleSelectionChange, handleClickOutside]);
+
+  useEffect(() => {
+    const unregisterCommand = editor.registerCommand(
+      KEY_ESCAPE_COMMAND,
+      () => {
+        setCoords(undefined);
+
+        return false;
+      },
+      COMMAND_PRIORITY_HIGH,
+    );
+
     return unregisterCommand;
-  }, [editor, $handleSelectionChange]);
+  }, [editor]);
+
+  useEffect(() => {
+    const removeKeyboardHandler = editor.registerCommand(
+      KEY_MODIFIER_COMMAND,
+      (event: KeyboardEvent) => {
+        if (event.key === 's' && (event.metaKey || event.ctrlKey)) {
+          event.preventDefault();
+          editor.dispatchCommand(FORMAT_TEXT_COMMAND, 'strikethrough');
+
+          return true;
+        }
+
+        if (
+          event.key === '.' &&
+          event.shiftKey &&
+          (event.metaKey || event.ctrlKey)
+        ) {
+          event.preventDefault();
+          editor.dispatchCommand(TOGGLE_BLOCKQUOTE_COMMAND, undefined);
+
+          return true;
+        }
+
+        if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
+          editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://example.com');
+          calculatePosition();
+
+          return true;
+        }
+
+        return false;
+      },
+      COMMAND_PRIORITY_NORMAL,
+    );
+
+    return () => {
+      removeKeyboardHandler();
+    };
+  }, [editor]);
 
   useEffect(() => {
     if (!show && isPointerReleased) {
