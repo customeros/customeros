@@ -52,11 +52,13 @@ func (r enrichDetailsBrandfetchRepository) GetLatestByDomain(ctx context.Context
 	err := r.db.Where("domain = ?", domain).Order("created_at desc").First(&data).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
+			span.LogFields(tracingLog.Bool("result.found", false))
 			return nil, nil // Return nil if no record found
 		}
 		return nil, err // Return other errors as usual
 	}
 
+	span.LogFields(tracingLog.Bool("result.found", true))
 	return &data, nil
 }
 
