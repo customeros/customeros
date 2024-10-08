@@ -178,7 +178,10 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
     }, []);
 
     return (
-      <div className='relative w-full h-full lexical-editor'>
+      <div
+        onClick={() => editor.current?.focus()}
+        className='relative w-full h-full lexical-editor cursor-text'
+      >
         <LexicalComposer initialConfig={initialConfig}>
           <EditorRefPlugin editorRef={editor} />
           <CheckListPlugin />

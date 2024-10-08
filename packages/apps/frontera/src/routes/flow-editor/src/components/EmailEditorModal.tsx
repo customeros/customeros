@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types.ts';
@@ -31,6 +31,8 @@ interface EmailEditorModalProps {
 export const EmailEditorModal = observer(
   ({ isEditorOpen, handleEmailDataChange, data }: EmailEditorModalProps) => {
     const id = useParams().id as string;
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const [subject, setSubject] = useState(data?.subject ?? '');
     const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
     const { takeSnapshot } = useUndoRedo();
@@ -39,6 +41,15 @@ export const EmailEditorModal = observer(
       if (isEditorOpen) {
         setSubject(data?.subject ?? '');
         setBodyTemplate(data?.bodyTemplate ?? '');
+
+        if (
+          data.action !== FlowActionType.EMAIL_REPLY &&
+          data?.subject?.trim()?.length === 0
+        ) {
+          setTimeout(() => {
+            inputRef.current?.focus();
+          }, 0);
+        }
       }
     }, [isEditorOpen]);
 
@@ -84,11 +95,11 @@ export const EmailEditorModal = observer(
                 </div>
 
                 <Input
-                  size='lg'
+                  ref={inputRef}
                   value={subject}
                   variant='unstyled'
                   placeholder='Subject'
-                  className='font-medium text-lg'
+                  className='font-medium text-lg min-h-[auto]'
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={data.action === FlowActionType.EMAIL_REPLY}
                 />

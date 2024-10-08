@@ -2,14 +2,10 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { useRef, Dispatch, useState, useEffect, useCallback } from 'react';
 
+import { $isLinkNode, $createLinkNode } from '@lexical/link';
 import { mergeRegister, $findMatchingParent } from '@lexical/utils';
 import { flip, shift, offset, computePosition } from '@floating-ui/dom';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
-import {
-  $isLinkNode,
-  $createLinkNode,
-  TOGGLE_LINK_COMMAND,
-} from '@lexical/link';
 import {
   $getSelection,
   BaseSelection,
@@ -98,6 +94,35 @@ function FloatingLinkEditor({
       setLastSelection(selection);
     }
   }, [anchorElem, editor, isLink]);
+
+  const handleDeleteLink = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection();
+
+      if ($isRangeSelection(selection)) {
+        const node = getSelectedNode(selection);
+        const parent = node.getParent();
+
+        if ($isLinkNode(parent)) {
+          const children = parent.getChildren();
+
+          for (const child of children) {
+            parent.insertBefore(child);
+          }
+          parent.remove();
+        } else if ($isLinkNode(node)) {
+          const children = node.getChildren();
+
+          for (const child of children) {
+            node.insertBefore(child);
+          }
+          node.remove();
+        }
+      }
+    });
+
+    setIsLink(false);
+  }, [editor, setIsLink]);
 
   useEffect(() => {
     const scrollerElem = anchorElem.parentElement;
@@ -287,11 +312,8 @@ function FloatingLinkEditor({
           />
           <FloatingToolbarButton
             aria-label='Delete link'
+            onClick={handleDeleteLink}
             icon={<Trash01 className='text-inherit' />}
-            onClick={() => {
-              editor.dispatchCommand(TOGGLE_LINK_COMMAND, null);
-              setIsLink(false);
-            }}
           />
         </div>
       )}
