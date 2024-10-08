@@ -71,10 +71,10 @@ export const EmailEditorModal = observer(
           <ModalOverlay className='z-50'>
             <ModalContent
               onKeyDown={(e) => e.stopPropagation()}
-              className='w-full h-full flex justify-center max-w-full top-0 cursor-default overflow-y-auto'
+              className='w-full h-full flex justify-center max-w-full top-0 cursor-default overflow-y-auto '
             >
-              <div className='w-[570px]'>
-                <div className='flex justify-between mt-4 mb-[68px]'>
+              <div className='w-[570px] relative'>
+                <div className='flex justify-between bg-white pt-4 mb-[68px] sticky top-0 z-1'>
                   <div className='flex items-center text-sm'>
                     <span>{flow}</span>
                     <ChevronRight className='size-3 mx-1 text-gray-400' />
@@ -103,15 +103,16 @@ export const EmailEditorModal = observer(
                   onChange={(e) => setSubject(e.target.value)}
                   disabled={data.action === FlowActionType.EMAIL_REPLY}
                 />
-
-                <Editor
-                  placeholder={placeholder}
-                  dataTest='flow-email-editor'
-                  namespace='flow-email-editor'
-                  defaultHtmlValue={bodyTemplate}
-                  onChange={(e) => setBodyTemplate(e)}
-                  className='mb-10 text-base cursor-text email-editor'
-                ></Editor>
+                <div className='h-[60vh] mb-10'>
+                  <Editor
+                    placeholder={placeholder}
+                    dataTest='flow-email-editor'
+                    namespace='flow-email-editor'
+                    defaultHtmlValue={bodyTemplate}
+                    onChange={(e) => setBodyTemplate(e)}
+                    className='text-base cursor-text email-editor h-full'
+                  ></Editor>
+                </div>
               </div>
             </ModalContent>
           </ModalOverlay>
