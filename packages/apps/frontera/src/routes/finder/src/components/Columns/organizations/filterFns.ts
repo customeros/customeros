@@ -291,8 +291,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return filterTypeNumber(filter, ltv);
       },
     )
-
-    .with({ property: ColumnViewType.OrganizationsCity }, (filter) => {
+    .with({ property: ColumnViewType.OrganizationsHeadquarters }, (filter) => {
       return (row: OrganizationStore) => {
         if (!filter.active) return true;
         const locations = row.value.locations;

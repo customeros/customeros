@@ -813,37 +813,6 @@ export const columns: Record<string, Column> = {
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
   }),
-  [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value.metadata', {
-    id: ColumnViewType.OrganizationsCity,
-    size: 210,
-    minSize: 210,
-    maxSize: 400,
-    enableResizing: true,
-    enableColumnFilter: true,
-    enableSorting: true,
-    cell: (props) => {
-      const value = props.getValue()?.id;
-
-      return <CountryCell id={value} type='organization' />;
-    },
-    header: (props) => (
-      <THead<HTMLInputElement>
-        filterWidth='auto'
-        title='Headquarters'
-        id={ColumnViewType.OrganizationsCity}
-        renderFilter={(initialFocusRef) => (
-          <LocationFilter
-            type='organizations'
-            locationType='countryCodeA2'
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.OrganizationsCity}
-          />
-        )}
-        {...getTHeadProps<OrganizationStore>(props)}
-      />
-    ),
-    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
-  }),
 
   [ColumnViewType.OrganizationsHeadquarters]: columnHelper.accessor(
     'value.metadata',
