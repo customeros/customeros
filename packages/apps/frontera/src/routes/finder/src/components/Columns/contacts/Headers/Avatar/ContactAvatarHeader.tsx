@@ -50,7 +50,9 @@ export const ContactAvatarHeader = observer(() => {
 
       if (!searchValue) return targets;
 
-      return targets.filter((item) => item.value.name.includes(searchValue));
+      return targets.filter((item) =>
+        item.value.name?.toLowerCase().includes(searchValue?.toLowerCase()),
+      );
     })
     .map((item) => ({
       label: item.value.name,
