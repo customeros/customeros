@@ -1,3 +1,4 @@
+import { cn } from '@ui/utils/cn';
 import {
   Select,
   SelectProps,
@@ -7,9 +8,16 @@ import {
   getContainerClassNames,
 } from '@ui/form/Select/Select';
 
-interface ComboboxProps extends SelectProps {}
+interface ComboboxProps extends SelectProps {
+  maxHeight?: string;
+}
 
-export const Combobox = ({ size, isReadOnly, ...props }: ComboboxProps) => {
+export const Combobox = ({
+  size,
+  isReadOnly,
+  maxHeight,
+  ...props
+}: ComboboxProps) => {
   return (
     <Select
       autoFocus
@@ -28,9 +36,15 @@ export const Combobox = ({ size, isReadOnly, ...props }: ComboboxProps) => {
           }),
         option: ({ isFocused }) => getOptionClassNames('', { isFocused }),
         menuList: () =>
-          getMenuListClassNames('p-0 border-none bg-transparent shadow-none'),
+          getMenuListClassNames(
+            cn(
+              'p-0 border-none bg-transparent shadow-none',
+              maxHeight && `!max-h-[${maxHeight}]`,
+            ),
+          ),
         menu: ({ menuPlacement }) =>
           getMenuClassNames(menuPlacement)('!relative', size),
+        noOptionsMessage: () => 'text-gray-500 p-1',
       }}
       {...props}
     />

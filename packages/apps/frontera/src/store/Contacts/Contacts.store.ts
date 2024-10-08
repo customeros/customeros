@@ -195,6 +195,7 @@ export class ContactsStore implements GroupStore<Contact> {
       setTimeout(() => {
         if (serverId) {
           this.value.get(serverId)?.invalidate();
+          this.root.organizations.value.get(organizationId)?.invalidate();
         }
       }, 1000);
     }
