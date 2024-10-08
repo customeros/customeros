@@ -76,14 +76,10 @@ export const ListFilter = ({
   const handleItemClick = (id: string) => {
     let newSelectedIds;
 
-    if (filterName === 'Ownership type') {
-      newSelectedIds = [id];
+    if (selectedIds.includes(id)) {
+      newSelectedIds = selectedIds.filter((selectedId) => selectedId !== id);
     } else {
-      if (selectedIds.includes(id)) {
-        newSelectedIds = selectedIds.filter((selectedId) => selectedId !== id);
-      } else {
-        newSelectedIds = [...selectedIds, id];
-      }
+      newSelectedIds = [...selectedIds, id];
     }
 
     setSelectedIds(newSelectedIds);
@@ -135,7 +131,18 @@ export const ListFilter = ({
                 icon={<User01 className='text-gray-500 size-3' />}
               />
             )}
-            <span className='flex-1'>{children}</span>
+            <span
+              className='flex-1'
+              style={{
+                marginLeft:
+                  filterName === 'Email status work email' ||
+                  filterName === 'Email status personal email'
+                    ? '24px'
+                    : '0',
+              }}
+            >
+              {children}
+            </span>
             {selectedIds.includes(data?.id) && (
               <Check className='text-primary-600' />
             )}
