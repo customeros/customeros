@@ -158,6 +158,7 @@ func (s *contactService) createContactWithEvents(ctx context.Context, contactDet
 	return response.Id, err
 }
 
+// Deprecated
 func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSource string, emailEntity neo4jentity.EmailEntity) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkEmailByEvents")
 	defer span.Finish()

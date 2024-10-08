@@ -456,7 +456,7 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 					t.active = true AND
 					ts.enrichContacts = true AND
 					c.enrichedAt IS NULL AND
-					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < 5) AND
+					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < $maxAttempts) AND
 					(c.enrichFailedAt IS NULL OR c.enrichFailedAt < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND
 					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt}))
@@ -482,6 +482,7 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 		"allowedOrgRelationships":      []string{enum.Customer.String(), enum.Prospect.String()},
 		"restrictedOrgStages":          []string{enum.Lead.String()},
 		"limit":                        limit,
+		"maxAttempts":                  1,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

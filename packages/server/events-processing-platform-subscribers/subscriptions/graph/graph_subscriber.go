@@ -182,6 +182,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	}
 
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphSubscriber.When", evt)
+	defer span.Finish()
+
 	switch evt.GetEventType() {
 
 	case "V1_EVENT_COMPLETED":
