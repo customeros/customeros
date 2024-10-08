@@ -35,19 +35,34 @@
         #workspace-name {
             font-weight: 600;
         }
+        .beta-button {
+            display: inline-block;
+            background-color: #007bff;
+            color: white;
+            padding: 10px 20px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin-top: 20px;
+        }
+        .beta-button:hover {
+            background-color: #0056b3;
+        }
     </style>
 </head>
 <body>
     <div id="data-container">
         <div id="workspace-info">
-            <img id="workspace-logo" src="" alt="Workspace Logo">
-            <span id="workspace-name">Loading workspace...</span>
+            <img id="workspace-logo" src="src/assets/customeros.png" alt="CustomerOS Logo">
+            <span id="workspace-name">CustomerOS</span>
         </div>
-        <h1>CustomerOS Data</h1>
-        <div id="loading">Loading data...</div>
-        <div id="error" style="display: none; color: red;"></div>
-        <div id="content"></div>
+        <h1>LinkedIn Helper coming soon</h1>
+        <div id="loading" style="display: none;">Loading data...</div>
+        <div id="error" style="display: none; color: red;">Error loading data</div>
+        <div id="content">
+            <button id="beta-button" class="beta-button">Join the beta</button>
+        </div>
     </div>
-    <script src="sidepanel.js"></script>
+    <script type="module" src="sidepanel.js"></script>
 </body>
 </html>

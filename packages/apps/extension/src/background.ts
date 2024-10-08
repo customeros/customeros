@@ -231,6 +231,3 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     }
   }
 });
-
-// Remove this line
-// chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true });
