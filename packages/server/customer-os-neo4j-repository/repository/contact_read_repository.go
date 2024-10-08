@@ -456,7 +456,7 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 					t.active = true AND
 					ts.enrichContacts = true AND
 					c.enrichedAt IS NULL AND
-					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < 3) AND
+					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < 5) AND
 					(c.enrichFailedAt IS NULL OR c.enrichFailedAt < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND
 					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt}))
