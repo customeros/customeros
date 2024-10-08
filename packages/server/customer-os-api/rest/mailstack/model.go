@@ -76,12 +76,12 @@ type MailboxRequest struct {
 	// Username for the mailbox (e.g., "john.doe")
 	// Required: true
 	// Example: john.doe
-	Username string `json:"username" example:"john.doe" binding:"required"`
+	Username string `json:"username" example:"john.doe"`
 
 	// Password for the mailbox (e.g., "SecurePassword123!")
-	// Required: true
+	// Required: false
 	// Example: SecurePassword123!
-	Password string `json:"password" example:"SecurePassword123!" binding:"required"`
+	Password string `json:"password" example:"SecurePassword123!"`
 
 	// Specifies if email forwarding is enabled
 	// Example: true

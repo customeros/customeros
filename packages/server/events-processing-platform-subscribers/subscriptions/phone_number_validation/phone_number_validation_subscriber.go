@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
@@ -103,6 +104,9 @@ func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventsto
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
+
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "PhoneNumberValidationSubscriber.When", evt)
+	defer span.Finish()
 
 	switch evt.GetEventType() {
 	case events.PhoneNumberCreateV1:

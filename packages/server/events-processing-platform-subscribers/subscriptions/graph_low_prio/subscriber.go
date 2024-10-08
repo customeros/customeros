@@ -125,6 +125,9 @@ func (s *GraphLowPrioSubscriber) When(ctx context.Context, evt eventstore.Event)
 		return nil
 	}
 
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GrpahLowPrioSubscriber.When", evt)
+	defer span.Finish()
+
 	switch evt.GetEventType() {
 
 	case orgevents.OrganizationRefreshLastTouchpointV1:

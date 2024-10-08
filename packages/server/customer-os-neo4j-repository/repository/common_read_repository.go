@@ -105,6 +105,7 @@ func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx neo4j.Mana
 	queryResult, err := tx.Run(ctx, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.exists", false))
 		return false, err
 	}
 	result := queryResult.Next(ctx)

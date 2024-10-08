@@ -882,7 +882,7 @@ func (r *organizationReadRepository) GetOrganizationsForEnrichByDomain(ctx conte
 	params := map[string]any{
 		"limit":          limit,
 		"delayInMinutes": delayInMinutes,
-		"maxAttempts":    5,
+		"maxAttempts":    1,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
