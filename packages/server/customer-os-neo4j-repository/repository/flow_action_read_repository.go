@@ -236,7 +236,7 @@ func (r flowActionReadRepositoryImpl) GetFlowByContactId(ctx context.Context, id
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowContact_%s {id: $id}) RETURN f`, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s)-[:HAS]->(c:Contact_%s {id: $id}) RETURN f`, tenant, tenant, tenant)
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     id,
