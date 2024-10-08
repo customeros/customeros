@@ -152,13 +152,6 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	}
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
 		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
-	} else {
-		// increment enrich attempts
-		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichAttempts))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
-		}
 	}
 
 	return nil

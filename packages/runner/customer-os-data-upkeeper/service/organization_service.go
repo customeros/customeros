@@ -302,6 +302,13 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())
 			}
+
+			// increment enrich attempts
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyEnrichAttempts))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
+			}
 		}
 
 		// if less than limit records are returned, we are done

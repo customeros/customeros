@@ -1063,6 +1063,13 @@ func (s *contactService) enrichContacts(ctx context.Context) {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating contact' enrich requested: %s", err.Error())
 			}
+
+			// increment enrich attempts
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyEnrichAttempts))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
+			}
 		}
 
 		// if less than limit records are returned, we are done
