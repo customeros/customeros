@@ -131,7 +131,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fc:FlowContact_%s {id:$id}) delete r, fc`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fc:FlowParticipant_%s {id:$id}) delete r, fc`, tenant)
 
 	params := map[string]any{
 		"tenant": tenant,
