@@ -1,6 +1,6 @@
 import { defineConfig } from "vite";
-import { resolve } from 'path';
-import fs from 'fs';
+import { resolve } from "path";
+import fs from "fs";
 
 export default defineConfig({
   build: {
@@ -9,7 +9,7 @@ export default defineConfig({
       input: {
         background: "./src/background.ts",
         contentScript: "./src/contentScript.ts",
-        sidepanel: "./src/sidepanel.js",
+        sidepanel: "./src/sidepanel.ts",
         sidepanelHtml: "./src/sidepanel.html", // Add this line
       },
       output: {
@@ -26,18 +26,18 @@ export default defineConfig({
   },
   plugins: [
     {
-      name: 'html-transform',
+      name: "html-transform",
       transformIndexHtml: {
-        enforce: 'pre',
+        enforce: "pre",
         transform(html, ctx) {
-          if (ctx.path.endsWith('sidepanel.html')) {
+          if (ctx.path.endsWith("sidepanel.html")) {
             return {
               html,
               tags: [
                 {
-                  tag: 'script',
-                  attrs: { src: 'sidepanel.js', type: 'module' },
-                  injectTo: 'body',
+                  tag: "script",
+                  attrs: { src: "sidepanel.ts", type: "module" },
+                  injectTo: "body",
                 },
               ],
             };
@@ -46,9 +46,9 @@ export default defineConfig({
       },
     },
     {
-      name: 'copy-sidepanel-html',
+      name: "copy-sidepanel-html",
       writeBundle() {
-        fs.copyFileSync('./src/sidepanel.html', './dist/sidepanel.html');
+        fs.copyFileSync("./src/sidepanel.html", "./dist/sidepanel.html");
       },
     },
   ],

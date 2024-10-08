@@ -1,68 +1,72 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>CustomerOS Data</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
-        }
-        #data-container {
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-        h1 {
-            color: #333;
-            margin-top: 0;
-        }
-        #workspace-info {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-        #workspace-logo {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-        }
-        #workspace-name {
-            font-weight: 600;
-        }
-        .beta-button {
-            display: inline-block;
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            text-decoration: none;
-            border-radius: 5px;
-            font-weight: bold;
-            margin-top: 20px;
-        }
-        .beta-button:hover {
-            background-color: #0056b3;
-        }
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f0f0f0;
+      }
+      #data-container {
+        background-color: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      h1 {
+        color: #333;
+        margin-top: 0;
+      }
+      #workspace-info {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      #workspace-logo {
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+      }
+      #workspace-name {
+        font-weight: 600;
+      }
+      .beta-button {
+        display: inline-block;
+        background-color: #007bff;
+        color: white;
+        padding: 10px 20px;
+        text-decoration: none;
+        border-radius: 5px;
+        font-weight: bold;
+        margin-top: 20px;
+      }
+      .beta-button:hover {
+        background-color: #0056b3;
+      }
     </style>
-</head>
-<body>
+  </head>
+  <body>
     <div id="data-container">
-        <div id="workspace-info">
-            <img id="workspace-logo" src="src/assets/customeros.png" alt="CustomerOS Logo">
-            <span id="workspace-name">CustomerOS</span>
-        </div>
-        <h1>LinkedIn Helper coming soon</h1>
-        <div id="loading" style="display: none;">Loading data...</div>
-        <div id="error" style="display: none; color: red;">Error loading data</div>
-        <div id="content">
-            <button id="beta-button" class="beta-button">Join the beta</button>
-        </div>
+      <div id="workspace-info">
+        <img
+          id="workspace-logo"
+          src="src/assets/customeros.png"
+          alt="CustomerOS Logo"
+        />
+        <span id="workspace-name">CustomerOS</span>
+      </div>
+      <h1>LinkedIn Helper coming soon</h1>
+      <div id="loading" style="display: none">Loading data...</div>
+      <div id="error" style="display: none; color: red">Error loading data</div>
+      <div id="content">
+        <button id="beta-button" class="beta-button">Join the beta</button>
+      </div>
     </div>
-    <script type="module" src="sidepanel.js"></script>
-</body>
+    <script src="sidepanel.js"></script>
+  </body>
 </html>

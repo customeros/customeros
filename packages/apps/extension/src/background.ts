@@ -18,19 +18,7 @@ type data = {
   };
 };
 
-let sessionData: { email: string | null; apiKey: string | null } = { email: null, apiKey: null };
-
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  console.log("Received message in background:", message);
-  if (message.action === "COS_SESSION_DATA") {
-    sessionData = { email: message.email, apiKey: message.apiKey };
-    console.log("Session data updated in background:", sessionData);
-  } else if (message.action === "GET_SESSION_DATA") {
-    console.log("Sending session data from background:", sessionData);
-    sendResponse(sessionData);
-  }
-  return true; // Indicates that the response will be sent asynchronously
-});
+let sessionData: SessionData;
 
 async function getCookiesFromLinkedInTab() {
   try {
@@ -193,39 +181,45 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 async function handleExtensionButtonClick(tab: chrome.tabs.Tab) {
   if (tab.url) {
     const url = new URL(tab.url);
-    if (url.host === 'www.linkedin.com' || url.host === 'linkedin.com') {
+    if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
       // Open side panel for LinkedIn
-      await chrome.sidePanel.open({ tabId: tab.id });
+      chrome.windows.getCurrent((window) => {
+        chrome.sidePanel.open({
+          tabId: Number(tab.id),
+          windowId: window?.id,
+        });
+      });
       await chrome.sidePanel.setOptions({
         tabId: tab.id,
-        path: 'sidepanel.html',
-        enabled: true
+        path: "sidepanel.html",
+        enabled: true,
       });
-      console.log('Sidepanel opened for LinkedIn');
-    } else if (url.host !== 'app.customeros.ai') {
+      console.log("Sidepanel opened for LinkedIn");
+    } else if (url.host !== "app.customeros.ai") {
       // Open CustomerOS app in a new tab
-      await chrome.tabs.create({ url: 'https://app.customeros.ai/' });
+      await chrome.tabs.create({ url: "https://app.customeros.ai/" });
     }
   }
 }
 
-chrome.action.onClicked.addListener((tab) => handleExtensionButtonClick(tab));
+chrome.action.onClicked.addListener((tab: chrome.tabs.Tab) =>
+  handleExtensionButtonClick(tab)
+);
 
-// Add this new listener for tab updates
 chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete') {
+  if (changeInfo.status === "complete") {
     if (tab.url) {
       const url = new URL(tab.url);
-      if (url.host === 'www.linkedin.com' || url.host === 'linkedin.com') {
+      if (url.host === "www.linkedin.com" || url.host === "linkedin.com") {
         chrome.sidePanel.setOptions({
           tabId: tabId,
-          path: 'sidepanel.html',
-          enabled: true
+          path: "sidepanel.html",
+          enabled: true,
         });
       } else {
         chrome.sidePanel.setOptions({
           tabId: tabId,
-          enabled: false
+          enabled: false,
         });
       }
     }

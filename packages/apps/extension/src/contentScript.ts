@@ -36,11 +36,13 @@ function sendSessionData() {
         const apiKey: string | null = sessionData.tenantApiKey || null;
 
         console.log("Sending session data to background:", { email, apiKey });
-        chrome.runtime.sendMessage({
-          action: "COS_SESSION_DATA",
-          email,
-          apiKey,
-        });
+        if (email && apiKey) {
+          chrome.runtime.sendMessage({
+            action: "COS_SESSION_DATA",
+            email,
+            apiKey,
+          });
+        }
       } else {
         console.log("No session data found in IndexedDB");
       }
@@ -56,11 +58,3 @@ function sendSessionData() {
 }
 
 sendSessionData();
-
-// Add a listener for messages from the background script
-chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === "GET_SESSION_DATA") {
-    console.log("Content script received GET_SESSION_DATA request");
-    sendSessionData();
-  }
-});
