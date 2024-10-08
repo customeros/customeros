@@ -7,7 +7,7 @@ type Config struct {
 
 	// Organizations
 	// Defaults to each 5 minutes
-	CronScheduleRefreshLastTouchpoint string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */5 * * * *"`
+	CronScheduleRefreshLastTouchpoint string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
 	// Defaults to each 15 minutes
 	CronScheduleUpdateOrganization string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
 
