@@ -153,7 +153,7 @@ const getDefaultClassNames = ({
   multiValue: () => getMultiValueClassNames(''),
   multiValueLabel: () => getMultiValueLabelClassNames('', size),
   multiValueRemove: () => getMultiValueRemoveClassNames('', size),
-  groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal uppercase',
+  groupHeading: () => 'text-gray-400 text-sm px-3 py-1.5 font-normal',
   valueContainer: () => 'gap-1 py-0.5 mr-0.5 inline-grid',
 });
 

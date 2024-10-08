@@ -1,4 +1,5 @@
 import { match } from 'ts-pattern';
+import { EmailVerificationStatus } from '@finder/components/Columns/contacts/Filters/Email/utils';
 
 import { Equal } from '@ui/media/icons/Equal';
 import { Cube01 } from '@ui/media/icons/Cube01';
@@ -11,7 +12,10 @@ import { CalendarAfter } from '@ui/media/icons/CalendarAfter';
 import { SlashCircle01 } from '@ui/media/icons/SlashCircle01';
 import { SpacingWidth01 } from '@ui/media/icons/SpacingWidth01';
 import { CalendarBefore } from '@ui/media/icons/CalendarBefore';
-import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
+import {
+  EmailDeliverable,
+  ComparisonOperator,
+} from '@shared/types/__generated__/graphql.types';
 
 export const handleOperatorName = (
   operator: ComparisonOperator,
@@ -120,5 +124,66 @@ export const handlePropertyPlural = (property: string, selection: string[]) => {
       selection.length === 1 ? 'last touchpoint' : 'last touchpoints',
     )
     .with('Country', () => (selection.length === 1 ? 'country' : 'countries'))
+    .with('Email status work email', () =>
+      selection.length === 1 ? 'email status' : 'email statuses',
+    )
+    .with('Email status personal email', () =>
+      selection.length === 1 ? 'email status' : 'email statuses',
+    )
+    .with('Flow status', () =>
+      selection.length === 1 ? 'flow status' : 'flow statuses',
+    )
+    .with('Region', () => (selection.length === 1 ? 'region' : 'regions'))
+    .with('City', () => (selection.length === 1 ? 'city' : 'cities'))
+    .with('LinkedIn Connections', () =>
+      selection.length === 1 ? 'connection' : 'connections',
+    )
+    .with('Persona', () => (selection.length === 1 ? 'persona' : 'personas'))
     .otherwise(() => 'unknown');
+};
+
+export const categorySelected = (id: string) => {
+  return match(id)
+    .with(
+      EmailVerificationStatus.FirewallProtected,
+      () => EmailDeliverable.Deliverable,
+    )
+    .with(
+      EmailVerificationStatus.FreeAccount,
+      () => EmailDeliverable.Deliverable,
+    )
+    .with(EmailVerificationStatus.NoRisk, () => EmailDeliverable.Deliverable)
+    .with(
+      EmailVerificationStatus.IncorrectFormat,
+      () => EmailDeliverable.Undeliverable,
+    )
+    .with(
+      EmailVerificationStatus.InvalidMailbox,
+      () => EmailDeliverable.Undeliverable,
+    )
+    .with(
+      EmailVerificationStatus.MailboxFull,
+      () => EmailDeliverable.Undeliverable,
+    )
+    .with(EmailVerificationStatus.CatchAll, () => EmailDeliverable.Unknown)
+    .with(EmailVerificationStatus.NotVerified, () => EmailDeliverable.Unknown)
+    .with(
+      EmailVerificationStatus.VerificationInProgress,
+      () => EmailDeliverable.Unknown,
+    )
+    .otherwise(() => EmailDeliverable.Unknown);
+};
+
+export const emailVerificationLabels = (id: string) => {
+  match(id)
+    .with('no_risk', () => 'No risk')
+    .with('firewall_protected', () => 'Firewall protected')
+    .with('free_account', () => 'Free acount')
+    .with('invalid_mailbox', () => "Mailbox dosen't exist")
+    .with('mailbox_full', () => 'Mailbox full')
+    .with('incorrect_format', () => 'Incorrect email format')
+    .with('catch_all', () => 'Catach all')
+    .with('not_verified', () => 'Not verified yet')
+    .with('verifrication_in_progress', () => 'Verification in progress')
+    .otherwise(() => '');
 };

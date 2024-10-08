@@ -57,36 +57,22 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsName },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
+        const values = row.value.name;
 
-        if (!filterValue && filter.active && !filter.includeEmpty) return true;
-        if (!row.value?.name?.length && filter.includeEmpty) return true;
-        if (!filterValue || !row.value?.name?.length) return false;
+        if (!values) return false;
 
-        return row.value.name
-          ?.toLowerCase()
-          .includes(filterValue?.toLowerCase());
+        return filterTypeText(filter, values);
       },
     )
     .with(
       { property: ColumnViewType.ContactsOrganization },
       (filter) => (row: ContactStore) => {
-        const filterValues = filter?.value;
-
         if (!filter.active) return true;
         const orgs = row.value?.organizations?.content?.map((o) =>
           o.name.toLowerCase().trim(),
         );
 
-        if (filter.includeEmpty && orgs?.every((org) => !org.length)) {
-          return true;
-        }
-
-        if (filter.includeEmpty && filterValues.length === 0) {
-          return false;
-        }
-
-        return orgs?.some((e) => e.includes(filterValues));
+        return filterTypeText(filter, orgs?.join(' '));
       },
     )
     .with(
@@ -101,7 +87,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           .filter((e) => e.work)
           .map((e) => e.email);
 
-        return emails?.some((e) => e?.includes(filterValues));
+        return filterTypeText(filter, emails?.join(' '));
       },
     )
 
@@ -117,23 +103,23 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           .filter((e) => !e.work)
           .map((e) => e.email);
 
-        return emails?.some((e) => e?.includes(filterValues));
+        if (!emails) return false;
+
+        return filterTypeText(filter, emails?.join(' '));
       },
     )
 
     .with(
       { property: ColumnViewType.ContactsPhoneNumbers },
       (filter) => (row: ContactStore) => {
-        const filterValue = filter?.value;
+        const value = row.value?.phoneNumbers
+          ?.map((p) => p.rawPhoneNumber)
+          ?.join(' ');
 
         if (!filter.active) return true;
+        if (value.length < 1) return false;
 
-        if (!filterValue && filter.active && !filter.includeEmpty) return true;
-        if (!row.value?.phoneNumbers?.length && filter.includeEmpty)
-          return true;
-        if (!filterValue || !row.value?.phoneNumbers?.length) return false;
-
-        return row.value?.phoneNumbers?.[0]?.e164?.includes(filterValue);
+        return filterTypeText(filter, value ?? undefined);
       },
     )
 
@@ -141,40 +127,23 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsLinkedin },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
         const linkedInUrl = row.value.socials?.find(
           (v: { id: string; url: string }) => v.url.includes('linkedin'),
         )?.url;
 
-        if (!filterValue && filter.active && !filter.includeEmpty) return true;
-        if (!linkedInUrl?.length && filter.includeEmpty) return true;
-
-        if (!filterValue || !linkedInUrl?.[0] || filter.includeEmpty) {
-          return false;
-        }
-
-        return linkedInUrl.includes(filterValue);
+        return filterTypeText(filter, linkedInUrl);
       },
     )
     .with(
       { property: ColumnViewType.ContactsCity },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const cities = row.value.locations?.map((l) => l?.locality);
 
-        if (filterValue.length === 0 && filter.active && !filter.includeEmpty)
-          return true;
-
-        if (!cities.length && filter.includeEmpty) return true;
-
-        if (filterValue.length === 0 && filter.active && filter.includeEmpty) {
-          return cities.forEach((j) => !j);
-        }
-
-        return cities.some((c) =>
-          filterValue.map((f: string) => f).includes(c),
+        return filterTypeList(
+          filter,
+          cities?.filter((city) => city !== undefined) as string[],
         );
       },
     )
@@ -182,13 +151,9 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       { property: ColumnViewType.ContactsPersona },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const tags = row.value.tags?.map((l: Tag) => l.name);
+        const tags = row.value.tags?.map((l: Tag) => l.id);
 
-        if (!filter.value?.length) return true;
-
-        if (!tags?.length) return false;
-
-        return filter.value.some((f: string) => tags.includes(f));
+        return filterTypeList(filter, tags);
       },
     )
     .with(
@@ -199,152 +164,198 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           (l: User) => row.root.users.value.get(l.id)?.name,
         );
 
-        if (!filter.value?.length) return true;
+        if (!users.length)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
-        if (!users?.length) return false;
-
-        return filter.value.some((f: string) => users.includes(f));
+        return filterTypeList(filter, users as string[]);
       },
     )
     .with(
       { property: ColumnViewType.ContactsLinkedinFollowerCount },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
 
-        const operator = filter.operation;
         const followers = row.value?.socials?.find((e: Social) =>
           e?.url?.includes('linkedin'),
         )?.followersCount;
 
-        if (operator === ComparisonOperator.Lt) {
-          return Number(followers) < Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Gt) {
-          return Number(followers) > Number(filterValue);
-        }
-
-        if (operator === ComparisonOperator.Between) {
-          const filterValue = filter?.value?.map(Number) as number[];
-
-          return (
-            followers >= Number(filterValue[0]) &&
-            followers <= Number(filterValue[1])
-          );
-        }
+        return filterTypeNumber(filter, followers);
       },
     )
     .with(
       { property: ColumnViewType.ContactsJobTitle },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
-        const filterValue = filter?.value;
         const jobTitles = row.value?.jobRoles?.map((j) => j.jobTitle) || [];
 
-        if (!filterValue && filter.active && !filter.includeEmpty) return true;
-        if (!jobTitles.length && filter.includeEmpty) return true;
-        if (!filterValue && filter.active && filter.includeEmpty)
-          return jobTitles.some((j) => !j);
-
-        return jobTitles.some((j) => j?.toLowerCase().includes(filterValue));
+        return filterTypeText(filter, jobTitles.join(' '));
       },
     )
 
     .with(
       { property: ColumnViewType.ContactsCountry },
       (filter) => (row: ContactStore) => {
-        const filterValue = filter?.value;
-
         if (!filter.active) return true;
 
         const countries = row.value.locations?.map((l) => l.countryCodeA2);
 
-        if (filterValue.length === 0 && filter.active && !filter.includeEmpty)
-          return true;
-
-        if (!countries.length && filter.includeEmpty) return true;
-
-        if (filterValue.length === 0 && filter.active && filter.includeEmpty) {
-          return countries.some((j) => !j);
-        }
-
-        return countries.some((c) =>
-          filterValue.map((f: string) => f).includes(c),
-        );
+        return filterTypeList(filter, countries as string[]);
       },
     )
     .with({ property: ColumnViewType.ContactsRegion }, (filter) => {
-      // Early exit if filter is not active
       if (!filter.active) return () => true;
-
-      const filterValue = filter.value;
-      const includeEmpty = filter.includeEmpty;
 
       return (row: ContactStore) => {
         const locations = row.value.locations;
         const region = locations?.[0]?.region;
 
-        // Check for empty cases
-        if (!region) {
-          return includeEmpty;
-        }
-
-        // If filterValue is empty, return based on includeEmpty
-        if (!filterValue.length) {
-          return !includeEmpty;
-        }
-
-        // Check if country is in filterValue
-        return filterValue.includes(region);
+        return filterTypeList(filter, region ? [region] : []);
       };
     })
 
     .with({ property: ColumnViewType.ContactsFlows }, (filter) => {
       if (!filter.active) return () => true;
 
-      const filterValue = filter.value;
-      const includeEmpty = filter.includeEmpty;
-
       return (row: ContactStore) => {
         const flow = row.flow;
 
-        if (!flow) {
-          return includeEmpty;
-        }
-
-        if (!filterValue.length) {
-          return !includeEmpty;
-        }
-
-        return filterValue.includes(flow.value.name);
+        return filterTypeText(filter, flow?.value?.name);
       };
     })
     .with(
-      { property: 'EMAIL_VERIFICATION' },
+      { property: 'EMAIL_VERIFICATION_WORK_EMAIL' },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
 
         const filterValues = filter.value;
-        const email = row.value?.emails?.[0];
+        const email = row.value?.emails?.find((e) => e.work === true);
         const emailValidationData = email?.emailValidationDetails;
 
-        if (!emailValidationData) return false;
+        if (emailValidationData === undefined) return false;
 
-        return filterValues.some(
-          (categoryFilter: {
-            category: string;
-            values: EmailVerificationStatus[];
-          }) =>
-            (categoryFilter.category === EmailDeliverable.Deliverable &&
-              isDeliverable(categoryFilter.values, emailValidationData)) ||
-            (categoryFilter.category === EmailDeliverable.Undeliverable &&
-              isNotDeliverable(categoryFilter.values, emailValidationData)) ||
-            (categoryFilter.category === EmailDeliverable.Unknown &&
-              isDeliverableUnknown(categoryFilter.values, emailValidationData)),
-        );
+        return match(filter.operation)
+          .with(ComparisonOperator.Contains, () =>
+            filterValues?.some(
+              (categoryFilter: { value: string; category: string }) =>
+                (categoryFilter.category === 'DELIVERABLE' &&
+                  isDeliverable(categoryFilter.value, emailValidationData)) ||
+                (categoryFilter.category === 'UNDELIVERABLE' &&
+                  isNotDeliverable(
+                    categoryFilter?.value,
+                    emailValidationData,
+                  )) ||
+                (categoryFilter.category === 'UNKNOWN' &&
+                  isDeliverableUnknown(
+                    categoryFilter.value,
+                    emailValidationData,
+                  )),
+            ),
+          )
+
+          .with(ComparisonOperator.NotContains, () =>
+            filterValues.some(
+              (categoryFilter: { value: string; category: string }) =>
+                !(
+                  categoryFilter.category === 'DELIVERABLE' &&
+                  isDeliverable(categoryFilter.value, emailValidationData)
+                ) &&
+                !(
+                  categoryFilter.category === 'UNDELIVERABLE' &&
+                  isNotDeliverable(categoryFilter.value, emailValidationData)
+                ) &&
+                !(
+                  categoryFilter.category === 'UNKNOWN' &&
+                  isDeliverableUnknown(
+                    categoryFilter.value,
+                    emailValidationData,
+                  )
+                ),
+            ),
+          )
+          .with(
+            ComparisonOperator.IsEmpty,
+            () =>
+              !emailValidationData ||
+              Object.keys(emailValidationData).length === 0,
+          )
+          .with(
+            ComparisonOperator.IsNotEmpty,
+            () =>
+              !!emailValidationData &&
+              Object.keys(emailValidationData).length > 1,
+          )
+          .otherwise(() => true);
       },
     )
+    .with(
+      { property: 'EMAIL_VERIFICATION_PERSONAL_EMAIL' },
+      (filter) => (row: ContactStore) => {
+        if (!filter.active) return true;
+
+        const filterValues = filter.value;
+        const email = row.value?.emails?.find((e) => e.work === false);
+        const emailValidationData = email?.emailValidationDetails;
+
+        if (emailValidationData === undefined) return false;
+
+        return match(filter.operation)
+          .with(ComparisonOperator.Contains, () =>
+            filterValues?.some(
+              (categoryFilter: { value: string; category: string }) =>
+                (categoryFilter.category === 'DELIVERABLE' &&
+                  isDeliverable(categoryFilter.value, emailValidationData)) ||
+                (categoryFilter.category === 'UNDELIVERABLE' &&
+                  isNotDeliverable(
+                    categoryFilter?.value,
+                    emailValidationData,
+                  )) ||
+                (categoryFilter.category === 'UNKNOWN' &&
+                  isDeliverableUnknown(
+                    categoryFilter.value,
+                    emailValidationData,
+                  )),
+            ),
+          )
+
+          .with(ComparisonOperator.NotContains, () =>
+            filterValues.some(
+              (categoryFilter: { value: string; category: string }) =>
+                !(
+                  categoryFilter.category === 'DELIVERABLE' &&
+                  isDeliverable(categoryFilter.value, emailValidationData)
+                ) &&
+                !(
+                  categoryFilter.category === 'UNDELIVERABLE' &&
+                  isNotDeliverable(categoryFilter.value, emailValidationData)
+                ) &&
+                !(
+                  categoryFilter.category === 'UNKNOWN' &&
+                  isDeliverableUnknown(
+                    categoryFilter.value,
+                    emailValidationData,
+                  )
+                ),
+            ),
+          )
+          .with(
+            ComparisonOperator.IsEmpty,
+            () =>
+              !emailValidationData ||
+              Object.keys(emailValidationData).length === 0,
+          )
+          .with(
+            ComparisonOperator.IsNotEmpty,
+            () =>
+              !!emailValidationData &&
+              Object.keys(emailValidationData).length > 1,
+          )
+          .otherwise(() => true);
+      },
+    )
+
     .with(
       { property: ColumnViewType.ContactsFlowStatus },
       (filter) => (row: ContactStore) => {
@@ -362,6 +373,56 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
     .otherwise(() => noop);
 };
 
+const filterTypeText = (filter: FilterItem, value: string | undefined) => {
+  const filterValue = filter?.value?.toLowerCase();
+  const filterOperator = filter?.operation;
+  const valueLower = value?.toLowerCase();
+
+  return match(filterOperator)
+    .with(ComparisonOperator.IsEmpty, () => !value)
+    .with(ComparisonOperator.IsNotEmpty, () => value)
+    .with(
+      ComparisonOperator.NotContains,
+      () => !valueLower?.includes(filterValue),
+    )
+    .with(ComparisonOperator.Contains, () => valueLower?.includes(filterValue))
+    .otherwise(() => false);
+};
+
+const filterTypeNumber = (filter: FilterItem, value: number | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  if (value === undefined || value === null) return false;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.Lt, () => value < Number(filterValue))
+    .with(ComparisonOperator.Gt, () => value > Number(filterValue))
+    .with(ComparisonOperator.Eq, () => value === Number(filterValue))
+    .with(ComparisonOperator.NotEqual, () => value !== Number(filterValue))
+    .otherwise(() => true);
+};
+
+const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.IsEmpty, () => !value?.length)
+    .with(ComparisonOperator.IsNotEmpty, () => value?.length)
+    .with(
+      ComparisonOperator.NotContains,
+      () =>
+        !value?.length ||
+        (value?.length && !value.some((v) => filterValue?.includes(v))),
+    )
+    .with(
+      ComparisonOperator.Contains,
+      () => value?.length && value.some((v) => filterValue?.includes(v)),
+    )
+    .otherwise(() => false);
+};
+
 export const getContactFilterFns = (filters: Filter | null) => {
   if (!filters || !filters.AND) return [];
   const data = filters?.AND;
@@ -370,13 +431,13 @@ export const getContactFilterFns = (filters: Filter | null) => {
 };
 
 function isNotDeliverable(
-  statuses: EmailVerificationStatus[],
+  statuses: string,
   data: EmailValidationDetails,
 ): boolean {
   if (data?.deliverable !== EmailDeliverable.Undeliverable || !data.verified)
     return false;
 
-  if (!statuses.length && data.deliverable && data.verified) return true;
+  if (!statuses?.length && data?.deliverable && data?.verified) return true;
 
   const statusChecks: Record<string, () => boolean> = {
     [EmailVerificationStatus.InvalidMailbox]: () => !data.canConnectSmtp,
@@ -384,15 +445,15 @@ function isNotDeliverable(
     [EmailVerificationStatus.IncorrectFormat]: () => !data.isValidSyntax,
   };
 
-  return statuses.some((status) => statusChecks[status]?.() ?? false);
+  return statusChecks[statuses]?.() ?? false;
 }
 
 function isDeliverableUnknown(
-  statuses: EmailVerificationStatus[],
+  statuses: string,
   data: EmailValidationDetails,
 ): boolean {
   if (
-    !statuses.length &&
+    !statuses?.length &&
     (!data.verified || data.isCatchAll || data.verifyingCheckAll)
   ) {
     return true;
@@ -408,11 +469,11 @@ function isDeliverableUnknown(
       data.verifyingCheckAll,
   };
 
-  return statuses.some((status) => statusChecks[status]?.() ?? false);
+  return statusChecks[status]?.() ?? false;
 }
 
 function isDeliverable(
-  statuses: EmailVerificationStatus[],
+  statuses: string,
   data: EmailValidationDetails,
 ): boolean {
   if (data?.deliverable !== EmailDeliverable.Deliverable || !data.verified)
@@ -425,5 +486,5 @@ function isDeliverable(
     [EmailVerificationStatus.GroupMailbox]: () => data.verifyingCheckAll,
   };
 
-  return statuses.some((status) => statusChecks[status]?.() ?? false);
+  return statusChecks?.[statuses]?.() ?? false;
 }

@@ -103,7 +103,7 @@ export const LocationFilter = observer(
       setSearchValue('');
     };
     const isAllChecked =
-      filter.value.length === allLocations?.length && allLocations?.length > 0;
+      filter.value?.length === allLocations?.length && allLocations?.length > 0;
 
     const handleSelectAll = () => {
       let nextValue: string[] = [];
@@ -192,7 +192,7 @@ export const LocationFilter = observer(
                   onChange={() => handleChange(e)}
                   className='mt-2 min-w-5 flex items-center'
                   labelProps={{ className: 'text-sm mt-2' }}
-                  isChecked={filter.value.includes(e) ?? false}
+                  isChecked={filter.value?.includes(e) ?? false}
                 >
                   <div className='flex items-center overflow-ellipsis'>
                     {locationType === 'countryCodeA2' ? (

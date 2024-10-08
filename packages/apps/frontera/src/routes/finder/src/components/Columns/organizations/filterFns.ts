@@ -89,7 +89,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 
         const values = row.value.relationship;
 
-        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!values)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(
           filter,
@@ -103,7 +107,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.stage;
 
-        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!values)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(
           filter,
@@ -141,7 +149,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.accountDetails?.onboarding?.status;
 
-        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!values)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(
           filter,
@@ -171,7 +183,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 
         const values = row.value.owner?.id;
 
-        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!values)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(
           filter,
@@ -186,7 +202,10 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         const lastTouchpoint = row?.value?.lastTouchpoint?.lastTouchPointType;
 
         if (!lastTouchpoint)
-          return filter.operation === ComparisonOperator.IsEmpty;
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(
           filter,
@@ -264,7 +283,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 
         const value = row.value.leadSource;
 
-        if (!value) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!value)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
@@ -275,7 +298,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const value = row.value.industry;
 
-        if (!value) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!value)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(filter, Array.isArray(value) ? value : [value]);
       },
@@ -297,7 +324,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         const locations = row.value.locations;
         const country = locations?.[0]?.countryCodeA2;
 
-        if (!country) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!country)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(
           filter,
@@ -336,7 +367,11 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.tags?.map((l: Tag) => l.id);
 
-        if (!values) return filter.operation === ComparisonOperator.IsEmpty;
+        if (!values)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeList(
           filter,
@@ -349,14 +384,18 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 };
 
 const filterTypeText = (filter: FilterItem, value: string | undefined) => {
-  const filterValue = filter?.value;
+  const filterValue = filter?.value.toLowerCase();
   const filterOperator = filter?.operation;
+  const valueLower = value?.toLowerCase();
 
   return match(filterOperator)
     .with(ComparisonOperator.IsEmpty, () => !value)
     .with(ComparisonOperator.IsNotEmpty, () => value)
-    .with(ComparisonOperator.NotContains, () => !value?.includes(filterValue))
-    .with(ComparisonOperator.Contains, () => value?.includes(filterValue))
+    .with(
+      ComparisonOperator.NotContains,
+      () => !valueLower?.includes(filterValue),
+    )
+    .with(ComparisonOperator.Contains, () => valueLower?.includes(filterValue))
     .otherwise(() => false);
 };
 
@@ -383,7 +422,9 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
     .with(ComparisonOperator.IsNotEmpty, () => value?.length)
     .with(
       ComparisonOperator.NotContains,
-      () => value?.length && !value.some((v) => filterValue?.includes(v)),
+      () =>
+        !value?.length ||
+        (value?.length && !value.some((v) => filterValue?.includes(v))),
     )
     .with(
       ComparisonOperator.Contains,
