@@ -33,8 +33,8 @@ export const OperatorFilter = ({
             size='xs'
             variant='outline'
             colorScheme='grayModern'
+            className='rounded-none bg-white'
             aria-label={`filter type ${type}`}
-            className='rounded-none bg-white boreder-r-2'
             icon={
               value
                 ? (handleOperatorIcon(
@@ -52,7 +52,7 @@ export const OperatorFilter = ({
             size='xs'
             variant='outline'
             colorScheme='grayModern'
-            className='rounded-none font-normal bg-white text-gray-500'
+            className='rounded-none font-normal bg-white text-gray-500 border-r-0'
           >
             {value
               ? handleOperatorName(

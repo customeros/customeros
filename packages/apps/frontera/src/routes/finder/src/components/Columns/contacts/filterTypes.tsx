@@ -55,7 +55,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <User03 className='mb-0.5' />,
+      icon: <User03 />,
     },
     [ColumnViewType.ContactsOrganization]: {
       filterType: 'text',
@@ -67,7 +67,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Building07 className='mb-0.5' />,
+      icon: <Building07 />,
     },
     [ColumnViewType.ContactsEmails]: {
       filterType: 'text',
@@ -79,7 +79,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 className='mb-0.5' />,
+      icon: <Mail01 />,
     },
     [ColumnViewType.ContactsPersonalEmails]: {
       filterType: 'text',
@@ -91,7 +91,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 className='mb-0.5' />,
+      icon: <Mail01 />,
     },
     [ColumnViewType.ContactsPhoneNumbers]: {
       filterType: 'text',
@@ -103,7 +103,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Phone className='mb-0.5' />,
+      icon: <Phone />,
     },
     [ColumnViewType.ContactsCity]: {
       filterType: 'list',
@@ -115,7 +115,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe05 className='mb-0.5' />,
+      icon: <Globe05 />,
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -144,7 +144,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <LinkedinOutline className='mb-0.5' />,
+      icon: <LinkedinOutline />,
     },
     [ColumnViewType.ContactsPersona]: {
       filterType: 'list',
@@ -172,7 +172,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Certificate01 className='mb-0.5' />,
+      icon: <Certificate01 />,
     },
     [ColumnViewType.ContactsTimeInCurrentRole]: {
       filterType: 'number',
@@ -184,7 +184,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.Eq,
         ComparisonOperator.NotEqual,
       ],
-      icon: <ClockCheck className='mb-0.5' />,
+      icon: <ClockCheck />,
     },
     [ColumnViewType.ContactsLinkedinFollowerCount]: {
       filterType: 'number',
@@ -196,7 +196,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.Eq,
         ComparisonOperator.NotEqual,
       ],
-      icon: <Users03 className='mb-0.5' />,
+      icon: <Users03 />,
     },
     // [ColumnViewType.ContactsLastInteraction]: {
     //   filterType: 'number',
@@ -208,7 +208,7 @@ export const getFilterTypes = (store?: RootStore) => {
     //     ComparisonOperator.IsEmpty,
     //     ComparisonOperator.IsNotEmpty,
     //   ],
-    //   icon: <Calendar className='mb-0.5' />,
+    //   icon: <Calendar  />,
     // },
     [ColumnViewType.ContactsConnections]: {
       filterType: 'list',
@@ -220,7 +220,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <LinkedinOutline className='mb-0.5' />,
+      icon: <LinkedinOutline />,
       options: store?.users.toArray().map((user) => ({
         id: user?.id,
         label: user?.name,
@@ -237,7 +237,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe04 className='mb-0.5' />,
+      icon: <Globe04 />,
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -266,7 +266,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe06 className='mb-0.5' />,
+      icon: <Globe06 />,
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -293,7 +293,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Shuffle01 className='mb-0.5' />,
+      icon: <Shuffle01 />,
     },
     [ColumnViewType.ContactsFlowStatus]: {
       filterType: 'list',
@@ -305,7 +305,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Shuffle01 className='mb-0.5' />,
+      icon: <Shuffle01 />,
     },
     ['EMAIL_VERIFICATION_WORK_EMAIL']: {
       filterType: 'list',
@@ -317,7 +317,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 className='mb-0.5' />,
+      icon: <Mail01 />,
       options: [],
       groupOptions: [
         {
@@ -383,7 +383,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 className='mb-0.5' />,
+      icon: <Mail01 />,
       options: [],
       groupOptions: [
         {

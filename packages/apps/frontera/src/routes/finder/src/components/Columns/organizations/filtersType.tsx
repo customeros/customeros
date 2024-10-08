@@ -372,6 +372,12 @@ export const getFilterTypes = (store?: RootStore) => {
       options: uniqBy(
         store?.organizations
           .toArray()
+          .filter(
+            (org) =>
+              org.value.locations?.[0]?.country !== null ||
+              org.value.locations?.[0]?.country !== undefined ||
+              org.value.locations?.[0]?.country !== '',
+          )
           .map((org) => ({
             id: org.value.locations?.[0]?.countryCodeA2,
             label: org.value.locations?.[0]?.country,
