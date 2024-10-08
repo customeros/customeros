@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 import { useDidMount } from 'rooks';
 import { observer } from 'mobx-react-lite';
@@ -16,8 +17,9 @@ export const CreateNewFlow = observer(() => {
   const store = useStore();
   const [allowSubmit, setAllowSubmit] = useState(false);
   const { flows } = useStore();
+  const navigate = useNavigate();
 
-  const [sequenceName, setSequenceName] = useState('');
+  const [flowName, setFlowName] = useState('');
 
   useDidMount(() => {
     setTimeout(() => {
@@ -29,7 +31,11 @@ export const CreateNewFlow = observer(() => {
     if (!allowSubmit) return;
     setAllowSubmit(false);
 
-    flows.create(sequenceName);
+    flows.create(flowName, {
+      onSuccess: (id) => {
+        navigate(`/flow-editor/${id}`);
+      },
+    });
 
     store.ui.commandMenu.toggle('CreateNewFlow');
   };
@@ -56,13 +62,13 @@ export const CreateNewFlow = observer(() => {
       <div className='pr-6 pl-6 pb-6 flex flex-col gap-2 '>
         <Input
           autoFocus
-          id='sequenceName'
+          id='flowName'
+          value={flowName}
           variant='unstyled'
-          value={sequenceName}
           placeholder='Flow name'
           dataTest='create-new-flow-name'
           onChange={(e) => {
-            setSequenceName(e.target.value);
+            setFlowName(e.target.value);
           }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {

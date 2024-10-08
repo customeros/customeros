@@ -315,6 +315,7 @@ export enum ColumnViewType {
   ContactsEmails = 'CONTACTS_EMAILS',
   ContactsExperience = 'CONTACTS_EXPERIENCE',
   ContactsFlows = 'CONTACTS_FLOWS',
+  ContactsFlowStatus = 'CONTACTS_FLOW_STATUS',
   ContactsJobTitle = 'CONTACTS_JOB_TITLE',
   ContactsLanguages = 'CONTACTS_LANGUAGES',
   ContactsLastInteraction = 'CONTACTS_LAST_INTERACTION',
@@ -327,7 +328,6 @@ export enum ColumnViewType {
   ContactsPhoneNumbers = 'CONTACTS_PHONE_NUMBERS',
   ContactsRegion = 'CONTACTS_REGION',
   ContactsSchools = 'CONTACTS_SCHOOLS',
-  ContactsSequences = 'CONTACTS_SEQUENCES',
   ContactsSkills = 'CONTACTS_SKILLS',
   ContactsTags = 'CONTACTS_TAGS',
   ContactsTimeInCurrentRole = 'CONTACTS_TIME_IN_CURRENT_ROLE',
@@ -342,14 +342,14 @@ export enum ColumnViewType {
   ContractsRenewal = 'CONTRACTS_RENEWAL',
   ContractsRenewalDate = 'CONTRACTS_RENEWAL_DATE',
   ContractsStatus = 'CONTRACTS_STATUS',
+  FlowActionName = 'FLOW_ACTION_NAME',
+  FlowActionStatus = 'FLOW_ACTION_STATUS',
+  FlowCompletedCount = 'FLOW_COMPLETED_COUNT',
+  FlowGoalAchievedCount = 'FLOW_GOAL_ACHIEVED_COUNT',
   FlowName = 'FLOW_NAME',
-  FlowSequenceCompletedCount = 'FLOW_SEQUENCE_COMPLETED_COUNT',
-  FlowSequenceGoalAchievedCount = 'FLOW_SEQUENCE_GOAL_ACHIEVED_COUNT',
-  FlowSequenceName = 'FLOW_SEQUENCE_NAME',
-  FlowSequencePendingCount = 'FLOW_SEQUENCE_PENDING_COUNT',
-  FlowSequenceStatus = 'FLOW_SEQUENCE_STATUS',
-  FlowSequenceTotalCount = 'FLOW_SEQUENCE_TOTAL_COUNT',
+  FlowPendingCount = 'FLOW_PENDING_COUNT',
   FlowStatus = 'FLOW_STATUS',
+  FlowTotalCount = 'FLOW_TOTAL_COUNT',
   InvoicesAmount = 'INVOICES_AMOUNT',
   InvoicesBillingCycle = 'INVOICES_BILLING_CYCLE',
   InvoicesContract = 'INVOICES_CONTRACT',
@@ -426,6 +426,8 @@ export enum ComparisonOperator {
   Lt = 'LT',
   Lte = 'LTE',
   NotContains = 'NOT_CONTAINS',
+  /** Not supported yet */
+  NotEqual = 'NOT_EQUAL',
   StartsWith = 'STARTS_WITH',
 }
 
@@ -1420,6 +1422,24 @@ export type EmailValidationDetails = {
   verifyingCheckAll: Scalars['Boolean']['output'];
 };
 
+export type EmailVariableEntity = {
+  __typename?: 'EmailVariableEntity';
+  type: EmailVariableEntityType;
+  variables: Array<EmailVariableName>;
+};
+
+export enum EmailVariableEntityType {
+  Contact = 'CONTACT',
+}
+
+export enum EmailVariableName {
+  ContactEmail = 'CONTACT_EMAIL',
+  ContactFirstName = 'CONTACT_FIRST_NAME',
+  ContactFullName = 'CONTACT_FULL_NAME',
+  ContactLastName = 'CONTACT_LAST_NAME',
+  OrganizationName = 'ORGANIZATION_NAME',
+}
+
 export type EntityTemplate = Node & {
   __typename?: 'EntityTemplate';
   createdAt: Scalars['Time']['output'];
@@ -1560,6 +1580,7 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
+  actions: Array<FlowAction>;
   contacts: Array<FlowContact>;
   description: Scalars['String']['output'];
   edges: Scalars['String']['output'];
@@ -1568,6 +1589,13 @@ export type Flow = MetadataInterface & {
   nodes: Scalars['String']['output'];
   statistics: FlowStatistics;
   status: FlowStatus;
+};
+
+export type FlowAction = MetadataInterface & {
+  __typename?: 'FlowAction';
+  json: Scalars['String']['output'];
+  metadata: Metadata;
+  senders: Array<FlowActionSender>;
 };
 
 export type FlowActionInputData = {
@@ -1622,15 +1650,8 @@ export type FlowContact = MetadataInterface & {
   metadata: Metadata;
   scheduledAction?: Maybe<Scalars['String']['output']>;
   scheduledAt?: Maybe<Scalars['Time']['output']>;
-  status: FlowContactStatus;
+  status: FlowParticipantStatus;
 };
-
-export enum FlowContactStatus {
-  Completed = 'COMPLETED',
-  InProgress = 'IN_PROGRESS',
-  Paused = 'PAUSED',
-  Scheduled = 'SCHEDULED',
-}
 
 export type FlowMergeInput = {
   edges: Scalars['String']['input'];
@@ -1638,6 +1659,15 @@ export type FlowMergeInput = {
   name: Scalars['String']['input'];
   nodes: Scalars['String']['input'];
 };
+
+export enum FlowParticipantStatus {
+  Completed = 'COMPLETED',
+  GoalAchieved = 'GOAL_ACHIEVED',
+  InProgress = 'IN_PROGRESS',
+  Paused = 'PAUSED',
+  Pending = 'PENDING',
+  Scheduled = 'SCHEDULED',
+}
 
 export type FlowStatistics = {
   __typename?: 'FlowStatistics';
@@ -2380,8 +2410,7 @@ export type Mutation = {
   contact_Archive: Result;
   contact_Create: Scalars['ID']['output'];
   contact_CreateForOrganization: Contact;
-  /** @deprecated Decommissioned */
-  contact_FindEmail: Scalars['String']['output'];
+  contact_FindWorkEmail: ActionResponse;
   contact_HardDelete: Result;
   contact_Hide: ActionResponse;
   contact_Merge: Contact;
@@ -2394,6 +2423,8 @@ export type Mutation = {
   contractLineItem_Close: Scalars['ID']['output'];
   contractLineItem_Create: ServiceLineItem;
   contractLineItem_NewVersion: ServiceLineItem;
+  contractLineItem_Pause: ActionResponse;
+  contractLineItem_Resume: ActionResponse;
   contractLineItem_Update: ServiceLineItem;
   contract_AddAttachment: Contract;
   contract_Create: Contract;
@@ -2417,14 +2448,24 @@ export type Mutation = {
   emailMergeToOrganization: Email;
   emailMergeToUser: Email;
   emailRemoveFromContact: Result;
+  /** @deprecated No longer supported */
   emailRemoveFromContactById: Result;
   emailRemoveFromOrganization: Result;
+  /** @deprecated No longer supported */
   emailRemoveFromOrganizationById: Result;
   emailRemoveFromUser: Result;
+  /** @deprecated No longer supported */
   emailRemoveFromUserById: Result;
+  emailReplaceForContact: Email;
+  emailReplaceForOrganization: Email;
+  emailReplaceForUser: Email;
+  /** @deprecated No longer supported */
   emailUpdate: Email;
+  /** @deprecated No longer supported */
   emailUpdateInContact: Email;
+  /** @deprecated No longer supported */
   emailUpdateInOrganization: Email;
+  /** @deprecated No longer supported */
   emailUpdateInUser: Email;
   email_Validate: ActionResponse;
   entityTemplateCreate: EntityTemplate;
@@ -2633,9 +2674,11 @@ export type MutationContact_CreateForOrganizationArgs = {
   organizationId: Scalars['ID']['input'];
 };
 
-export type MutationContact_FindEmailArgs = {
+export type MutationContact_FindWorkEmailArgs = {
   contactId: Scalars['ID']['input'];
-  organizationId: Scalars['ID']['input'];
+  domain?: InputMaybe<Scalars['String']['input']>;
+  findMobileNumber?: InputMaybe<Scalars['Boolean']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type MutationContact_HardDeleteArgs = {
@@ -2687,6 +2730,14 @@ export type MutationContractLineItem_CreateArgs = {
 
 export type MutationContractLineItem_NewVersionArgs = {
   input: ServiceLineItemNewVersionInput;
+};
+
+export type MutationContractLineItem_PauseArgs = {
+  id: Scalars['ID']['input'];
+};
+
+export type MutationContractLineItem_ResumeArgs = {
+  id: Scalars['ID']['input'];
 };
 
 export type MutationContractLineItem_UpdateArgs = {
@@ -2825,6 +2876,24 @@ export type MutationEmailRemoveFromUserByIdArgs = {
   userId: Scalars['ID']['input'];
 };
 
+export type MutationEmailReplaceForContactArgs = {
+  contactId: Scalars['ID']['input'];
+  input: EmailInput;
+  previousEmail?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MutationEmailReplaceForOrganizationArgs = {
+  input: EmailInput;
+  organizationId: Scalars['ID']['input'];
+  previousEmail?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type MutationEmailReplaceForUserArgs = {
+  input: EmailInput;
+  previousEmail?: InputMaybe<Scalars['String']['input']>;
+  userId: Scalars['ID']['input'];
+};
+
 export type MutationEmailUpdateArgs = {
   input: EmailUpdateAddressInput;
 };
@@ -2894,7 +2963,7 @@ export type MutationFlowSender_DeleteArgs = {
 };
 
 export type MutationFlowSender_MergeArgs = {
-  flowId: Scalars['ID']['input'];
+  flowActionId: Scalars['ID']['input'];
   input: FlowActionSenderMergeInput;
 };
 
@@ -4325,6 +4394,8 @@ export type Query = {
   entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
+  flow_emailVariables: Array<EmailVariableEntity>;
+  flow_mailboxes: Array<Scalars['String']['output']>;
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
@@ -4334,7 +4405,6 @@ export type Query = {
   invoices: InvoicesPage;
   issue: Issue;
   logEntry: LogEntry;
-  mailboxes: Array<Scalars['String']['output']>;
   masterPlan: MasterPlan;
   masterPlans: Array<MasterPlan>;
   meeting: Meeting;
@@ -4663,6 +4733,7 @@ export type ServiceLineItem = MetadataInterface & {
   externalLinks: Array<ExternalSystem>;
   metadata: Metadata;
   parentId: Scalars['ID']['output'];
+  paused: Scalars['Boolean']['output'];
   price: Scalars['Float']['output'];
   quantity: Scalars['Int64']['output'];
   serviceEnded?: Maybe<Scalars['Time']['output']>;
@@ -4821,8 +4892,8 @@ export enum TableIdType {
   ContactsForTargetOrganizations = 'CONTACTS_FOR_TARGET_ORGANIZATIONS',
   Contracts = 'CONTRACTS',
   Customers = 'CUSTOMERS',
+  FlowActions = 'FLOW_ACTIONS',
   FlowContacts = 'FLOW_CONTACTS',
-  FlowSequences = 'FLOW_SEQUENCES',
   Opportunities = 'OPPORTUNITIES',
   OpportunitiesRecords = 'OPPORTUNITIES_RECORDS',
   Organizations = 'ORGANIZATIONS',

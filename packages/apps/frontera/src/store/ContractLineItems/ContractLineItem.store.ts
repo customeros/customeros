@@ -141,6 +141,7 @@ const defaultValue: ServiceLineItem = {
   quantity: 0,
   comments: '',
   serviceEnded: null,
+  paused: false,
   parentId: '',
   serviceStarted: DateTimeUtils.addDays(new Date().toISOString(), 1),
   tax: {

@@ -35,27 +35,37 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 	tenant := common.GetTenantFromContext(ctx)
 
 	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Flow_%s {id: $flowId})
-			MERGE (t)<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution:FlowActionExecution_%s {id: $id})<-[:HAS]-(f)
+			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fa:FlowAction_%s {id: $actionId})
+			MERGE (t)<-[:BELONGS_TO_TENANT]-(fae:FlowActionExecution:FlowActionExecution_%s {id: $id})
 			ON MATCH SET
 				fae.updatedAt = $updatedAt,
+				fae.scheduledAt = $scheduledAt,
 				fae.error = $error,
+				fae.status = $status
+				
+			ON CREATE SET
+				fae.createdAt = $createdAt,
+				fae.updatedAt = $updatedAt,
+				fae.flowId = $flowId,
+				fae.entityId = $entityId,
+				fae.entityType = $entityType,
+				fae.actionId = $actionId,
+				fae.scheduledAt = $scheduledAt,
+				fae.status = $status,
+
+				fae.mailbox = $mailbox,
+				fae.userId = $userId,
+
 				fae.subject = $subject,
 				fae.body = $body,
 				fae.from = $from,
 				fae.to = $to,
 				fae.cc = $cc,
 				fae.bcc = $bcc
-			ON CREATE SET
-				fae.createdAt = $createdAt,
-				fae.updatedAt = $updatedAt,
-				fae.flowId = $flowId,
-				fae.contactId = $contactId,
-				fae.actionId = $actionId,
-				fae.scheduledAt = $scheduledAt,
-				fae.status = $status,
-				fae.mailbox = $mailbox
-			RETURN fae`, tenant, tenant)
+			
+			WITH f, fa, fae
+			MERGE (fa)-[:HAS_EXECUTION]->(fae)
+			RETURN fae`, tenant, tenant, tenant)
 
 	params := map[string]any{
 		"tenant":      tenant,
@@ -63,15 +73,15 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 		"createdAt":   utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt":   utils.TimeOrNow(entity.UpdatedAt),
 		"flowId":      entity.FlowId,
-		"contactId":   entity.ContactId,
+		"entityId":    entity.EntityId,
+		"entityType":  entity.EntityType,
 		"actionId":    entity.ActionId,
 		"scheduledAt": entity.ScheduledAt,
-		"executedAt":  entity.ExecutedAt,
 		"status":      entity.Status,
+		"mailbox":     entity.Mailbox,
+		"userId":      entity.UserId,
+		"executedAt":  entity.ExecutedAt,
 		"error":       entity.Error,
-
-		//config
-		"mailbox": entity.Mailbox,
 
 		//data
 		"subject": entity.Subject,
@@ -121,7 +131,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fc:FlowContact_%s {id:$id}) delete r, fc`, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[r:BELONGS_TO_TENANT]-(fc:FlowParticipant_%s {id:$id}) delete r, fc`, tenant)
 
 	params := map[string]any{
 		"tenant": tenant,

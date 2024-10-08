@@ -14,6 +14,7 @@ const (
 	UserUpdateV1          = "V1_USER_UPDATE"
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
 	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
+	UserEmailUnlinkV1     = "V1_USER_EMAIL_UNLINK"
 	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
 	UserAddRoleV1         = "V1_USER_ADD_ROLE"
 	UserRemoveRoleV1      = "V1_USER_REMOVE_ROLE"
@@ -164,14 +165,16 @@ type UserLinkEmailEvent struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 	EmailId   string    `json:"emailId" validate:"required"`
 	Primary   bool      `json:"primary"`
+	Email     string    `json:"email"`
 }
 
-func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, email string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := UserLinkEmailEvent{
 		Tenant:    tenant,
 		UpdatedAt: updatedAt,
 		EmailId:   emailId,
 		Primary:   primary,
+		Email:     email,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

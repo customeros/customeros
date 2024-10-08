@@ -2,12 +2,12 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
@@ -56,11 +56,16 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 	if result.Error != nil {
 		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
 			// Record doesn't exist, create a new one
+			now := utils.Now()
+			cacheEmailValidation.CreatedAt = now
+			cacheEmailValidation.UpdatedAt = now
 			if err := r.db.WithContext(ctx).Save(&cacheEmailValidation).Error; err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to save cache email validation"))
 				return nil, err
 			}
 		} else {
 			// Some other error occurred
+			tracing.TraceErr(span, result.Error)
 			return nil, result.Error
 		}
 	} else {

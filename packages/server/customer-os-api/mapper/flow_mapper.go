@@ -40,7 +40,7 @@ func MapEntitiesToFlows(entities *neo4jentity.FlowEntities) []*model.Flow {
 	return mapped
 }
 
-func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowContact {
+func MapEntityToFlowContact(entity *neo4jentity.FlowParticipantEntity) *model.FlowContact {
 	if entity == nil {
 		return nil
 	}
@@ -59,7 +59,7 @@ func MapEntityToFlowContact(entity *neo4jentity.FlowContactEntity) *model.FlowCo
 	}
 }
 
-func MapEntitiesToFlowContacts(entities *neo4jentity.FlowContactEntities) []*model.FlowContact {
+func MapEntitiesToFlowContacts(entities *neo4jentity.FlowParticipantEntities) []*model.FlowContact {
 	var mapped []*model.FlowContact
 	for _, entity := range *entities {
 		mapped = append(mapped, MapEntityToFlowContact(&entity))
@@ -67,11 +67,11 @@ func MapEntitiesToFlowContacts(entities *neo4jentity.FlowContactEntities) []*mod
 	return mapped
 }
 
-func MapEntityToFlowActionSender(entity *neo4jentity.FlowActionSenderEntity) *model.FlowActionSender {
+func MapEntityToFlowSender(entity *neo4jentity.FlowSenderEntity) *model.FlowSender {
 	if entity == nil {
 		return nil
 	}
-	return &model.FlowActionSender{
+	return &model.FlowSender{
 		Metadata: &model.Metadata{
 			ID:            entity.Id,
 			Created:       entity.CreatedAt,
@@ -80,14 +80,13 @@ func MapEntityToFlowActionSender(entity *neo4jentity.FlowActionSenderEntity) *mo
 			SourceOfTruth: model.DataSourceOpenline,
 			AppSource:     "",
 		},
-		Mailbox: entity.Mailbox,
 	}
 }
 
-func MapEntitiesToFlowActionSenders(entities *neo4jentity.FlowActionSenderEntities) []*model.FlowActionSender {
-	var mapped []*model.FlowActionSender
+func MapEntitiesToFlowSenders(entities *neo4jentity.FlowSenderEntities) []*model.FlowSender {
+	var mapped []*model.FlowSender
 	for _, entity := range *entities {
-		mapped = append(mapped, MapEntityToFlowActionSender(&entity))
+		mapped = append(mapped, MapEntityToFlowSender(&entity))
 	}
 	return mapped
 }
@@ -101,10 +100,9 @@ func MapFlowMergeInputToEntity(input model.FlowMergeInput) *neo4jentity.FlowEnti
 	}
 }
 
-func MapFlowActionSenderMergeInputToEntity(input model.FlowActionSenderMergeInput) *neo4jentity.FlowActionSenderEntity {
-	return &neo4jentity.FlowActionSenderEntity{
-		Id:      utils.StringOrEmpty(input.ID),
-		Mailbox: input.Mailbox,
-		UserId:  input.UserID,
+func MapFlowActionMergeInputToEntity(input model.FlowSenderMergeInput) *neo4jentity.FlowSenderEntity {
+	return &neo4jentity.FlowSenderEntity{
+		Id:     utils.StringOrEmpty(input.ID),
+		UserId: input.UserID,
 	}
 }

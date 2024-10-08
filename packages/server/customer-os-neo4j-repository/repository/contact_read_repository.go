@@ -403,7 +403,10 @@ func (r *contactReadRepository) GetContactsToEnrichWithEmailFromBetterContact(ct
 					c.techFindWorkEmailWithBetterContactRequestedAt IS NOT NULL AND 
 					c.techFindWorkEmailWithBetterContactCompletedAt is null AND
 					c.techFindWorkEmailWithBetterContactRequestedAt < datetime() - duration({minutes: $minutesDelay})
-				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId ORDER BY c.techFindWorkEmailWithBetterContactRequestedAt asc
+				RETURN t.name, c.id, c.techFindWorkEmailWithBetterContactRequestId 
+				ORDER BY
+					CASE WHEN c.techUpdateWithWorkEmailRequestedAt IS NULL THEN 0 ELSE 1 END ASC, 
+					c.techUpdateWithWorkEmailRequestedAt ASC
 				LIMIT $limit`
 	params := map[string]any{
 		"limit":        limit,
@@ -447,18 +450,21 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 	span.LogFields(log.Int("minutesFromLastEnrichAttempt", minutesFromLastEnrichAttempt))
 	span.LogFields(log.Int("limit", limit))
 
-	cypher := `MATCH (t:Tenant {active:true})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
+	cypher := `MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact),
 				(t)--(ts:TenantSettings)
-				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
-				WHERE
+				WHERE 
+					t.active = true AND
 					ts.enrichContacts = true AND
 					c.enrichedAt IS NULL AND
-					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < 3) AND
-					e.isRoleAccount = false AND
-					(e.isPrimaryDomain = true OR e.isPrimaryDomain IS NULL) AND
+					(c.techEnrichAttempts IS NULL OR c.techEnrichAttempts < $maxAttempts) AND
 					(c.enrichFailedAt IS NULL OR c.enrichFailedAt < datetime() - duration({minutes: $minutesFromLastFailure})) AND
 					(c.updatedAt < datetime() - duration({minutes: $minutesFromLastContactUpdate})) AND
 					(c.techEnrichRequestedAt IS NULL OR c.techEnrichRequestedAt < datetime() - duration({minutes: $minutesFromLastEnrichAttempt}))
+				WITH *
+				OPTIONAL MATCH (c)-[:HAS]->(e:Email)
+				WHERE
+					e.isRoleAccount = false AND
+					(e.isPrimaryDomain = true OR e.isPrimaryDomain IS NULL)
 				WITH t,c,e
 				OPTIONAL MATCH (c)--(j:JobRole)--(o:Organization)
 				WHERE
@@ -476,6 +482,7 @@ func (r *contactReadRepository) GetContactsToEnrich(ctx context.Context, minutes
 		"allowedOrgRelationships":      []string{enum.Customer.String(), enum.Prospect.String()},
 		"restrictedOrgStages":          []string{enum.Lead.String()},
 		"limit":                        limit,
+		"maxAttempts":                  1,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

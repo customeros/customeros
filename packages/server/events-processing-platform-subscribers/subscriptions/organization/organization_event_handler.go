@@ -9,7 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
@@ -196,8 +196,8 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 		}
 		defer response.Body.Close() // Ensures the body is closed only once
 
-		// Retry on 502 Bad Gateway
-		if response.StatusCode == http.StatusBadGateway {
+		// Retry on 502 and 400
+		if response.StatusCode == http.StatusBadGateway || response.StatusCode == http.StatusBadRequest {
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
@@ -205,14 +205,16 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 	}
 
 	if response == nil {
-		tracing.TraceErr(span, errors.New("response is nil"))
-		return nil, errors.New("response is nil")
+		tracing.TraceErr(span, errors.New("Enrich organization response is nil"))
+		return nil, errors.New("Enrich organization response is nil")
 	}
+
 	span.LogFields(log.Int("response.statusCode", response.StatusCode))
 
-	if response.StatusCode == http.StatusBadGateway {
-		tracing.TraceErr(span, errors.New("response status is 502"))
-		return nil, errors.New("response status is 502")
+	if response.StatusCode != http.StatusOK {
+		tracing.TraceErr(span, errors.New("response status is not 200"))
+		h.log.Errorf("Enrich organization API response status is : %d", response.StatusCode)
+		return nil, errors.New("response status is not 200")
 	}
 
 	body, err := io.ReadAll(response.Body)
@@ -233,7 +235,7 @@ func (h *organizationEventHandler) callApiEnrichOrganization(ctx context.Context
 	return &enrichOrganizationApiResponse, nil
 }
 
-func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx context.Context, tenant, domain, enrichSource string, organizationEntity neo4jEntity.OrganizationEntity, data *enrichmentmodel.EnrichOrganizationResponseData) {
+func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx context.Context, tenant, domain, enrichSource string, organizationEntity neo4jentity.OrganizationEntity, data *enrichmentmodel.EnrichOrganizationResponseData) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.updateOrganizationFromEnrichmentResponse")
 	defer span.Finish()
 	tracing.LogObjectAsJson(span, "data", data)

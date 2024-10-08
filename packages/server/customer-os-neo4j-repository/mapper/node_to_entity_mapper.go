@@ -147,14 +147,16 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 			PaymentLinkValidUntil: utils.GetTimePropOrNil(props, string(entity.InvoicePropertyPaymentLinkValidUntil)),
 		},
 		InvoiceInternalFields: entity.InvoiceInternalFields{
-			InvoiceFinalizedSentAt:             utils.GetTimePropOrNil(props, string(entity.InvoicePropertyInvoiceFinalizedEventSentAt)),
-			InvoiceFinalizedWebhookProcessedAt: utils.GetTimePropOrNil(props, string(entity.InvoicePropertyFinalizedWebhookProcessedAt)),
-			InvoicePaidWebhookProcessedAt:      utils.GetTimePropOrNil(props, string(entity.InvoicePropertyPaidWebhookProcessedAt)),
-			PaymentLinkRequestedAt:             utils.GetTimePropOrNil(props, "techPaymentLinkRequestedAt"),
-			PayInvoiceNotificationRequestedAt:  utils.GetTimePropOrNil(props, "techPayNotificationRequestedAt"),
-			PayInvoiceNotificationSentAt:       utils.GetTimePropOrNil(props, "techPayInvoiceNotificationSentAt"),
-			PaidInvoiceNotificationSentAt:      utils.GetTimePropOrNil(props, "techPaidInvoiceNotificationSentAt"),
-			VoidInvoiceNotificationSentAt:      utils.GetTimePropOrNil(props, "techVoidInvoiceNotificationSentAt"),
+			InvoiceFinalizedSentAt:               utils.GetTimePropOrNil(props, string(entity.InvoicePropertyInvoiceFinalizedEventSentAt)),
+			InvoiceFinalizedWebhookProcessedAt:   utils.GetTimePropOrNil(props, string(entity.InvoicePropertyFinalizedWebhookProcessedAt)),
+			InvoicePaidWebhookProcessedAt:        utils.GetTimePropOrNil(props, string(entity.InvoicePropertyPaidWebhookProcessedAt)),
+			PaymentLinkRequestedAt:               utils.GetTimePropOrNil(props, "techPaymentLinkRequestedAt"),
+			PayInvoiceNotificationRequestedAt:    utils.GetTimePropOrNil(props, "techPayNotificationRequestedAt"),
+			PayInvoiceNotificationSentAt:         utils.GetTimePropOrNil(props, "techPayInvoiceNotificationSentAt"),
+			RemindInvoiceNotificationRequestedAt: utils.GetTimePropOrNil(props, string(entity.InvoicePropertyRemindInvoiceNotificationRequestedAt)),
+			LastRemindInvoiceNotificationSentAt:  utils.GetTimePropOrNil(props, string(entity.InvoicePropertyLastRemindInvoiceNotificationSentAt)),
+			PaidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, "techPaidInvoiceNotificationSentAt"),
+			VoidInvoiceNotificationSentAt:        utils.GetTimePropOrNil(props, "techVoidInvoiceNotificationSentAt"),
 		},
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
@@ -584,6 +586,7 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineIt
 		ParentID:      utils.GetStringPropOrEmpty(props, "parentId"),
 		Canceled:      utils.GetBoolPropOrFalse(props, "isCanceled"),
 		VatRate:       utils.GetFloatPropOrZero(props, "vatRate"),
+		Paused:        utils.GetBoolPropOrFalse(props, string(entity.SLIPropertyPaused)),
 	}
 	return &serviceLineItem
 }
@@ -1171,12 +1174,12 @@ func MapDbNodeToFlowEntity(node *dbtype.Node) *entity.FlowEntity {
 	return &domain
 }
 
-func MapDbNodeToFlowContactEntity(node *dbtype.Node) *entity.FlowContactEntity {
+func MapDbNodeToFlowParticipantEntity(node *dbtype.Node) *entity.FlowParticipantEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowContactEntity{
+	e := entity.FlowParticipantEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -1186,16 +1189,15 @@ func MapDbNodeToFlowContactEntity(node *dbtype.Node) *entity.FlowContactEntity {
 	return &e
 }
 
-func MapDbNodeToFlowActionSenderEntity(node *dbtype.Node) *entity.FlowActionSenderEntity {
+func MapDbNodeToFlowSenderEntity(node *dbtype.Node) *entity.FlowSenderEntity {
 	if node == nil {
 		return nil
 	}
 	props := utils.GetPropsFromNode(*node)
-	e := entity.FlowActionSenderEntity{
+	e := entity.FlowSenderEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
 		UserId:    utils.GetStringPropOrNil(props, "userId"),
 	}
 	return &e
@@ -1210,6 +1212,8 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	e := entity.FlowActionEntity{
 		Id:         utils.GetStringPropOrEmpty(props, "id"),
 		ExternalId: utils.GetStringPropOrEmpty(props, "externalId"),
+		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:  utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Json:       utils.GetStringPropOrEmpty(props, "json"),
 		Type:       utils.GetStringPropOrEmpty(props, "type"),
 	}
@@ -1219,6 +1223,7 @@ func MapDbNodeToFlowActionEntity(node *dbtype.Node) *entity.FlowActionEntity {
 	e.Data.WaitBefore = utils.GetInt64PropOrZero(props, "waitBefore")
 
 	e.Data.Entity = utils.GetStringPropOrNil(props, "data_entity")
+	e.Data.TriggerType = utils.GetStringPropOrNil(props, "data_triggerType")
 	e.Data.Subject = utils.GetStringPropOrNil(props, "data_subject")
 	e.Data.BodyTemplate = utils.GetStringPropOrNil(props, "data_bodyTemplate")
 	e.Data.MessageTemplate = utils.GetStringPropOrNil(props, "data_messageTemplate")
@@ -1238,6 +1243,7 @@ func MapDbNodeToFlowExecutionSettingsEntity(node *dbtype.Node) *entity.FlowExecu
 		FlowId:    utils.GetStringPropOrEmpty(props, "flowId"),
 		EntityId:  utils.GetStringPropOrEmpty(props, "entityId"),
 		Mailbox:   utils.GetStringPropOrNil(props, "mailbox"),
+		UserId:    utils.GetStringPropOrNil(props, "userId"),
 	}
 	return &e
 }
@@ -1252,7 +1258,8 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		CreatedAt:   utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		FlowId:      utils.GetStringPropOrEmpty(props, "flowId"),
-		ContactId:   utils.GetStringPropOrEmpty(props, "contactId"),
+		EntityId:    utils.GetStringPropOrEmpty(props, "entityId"),
+		EntityType:  utils.GetStringPropOrEmpty(props, "entityType"),
 		ActionId:    utils.GetStringPropOrEmpty(props, "actionId"),
 		ScheduledAt: utils.GetTimePropOrNow(props, "scheduledAt"),
 		ExecutedAt:  utils.GetTimePropOrNil(props, "executedAt"),
@@ -1260,13 +1267,14 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		Error:       utils.GetStringPropOrNil(props, "error"),
 
 		Mailbox: utils.GetStringPropOrNil(props, "mailbox"),
+		UserId:  utils.GetStringPropOrNil(props, "userId"),
 
 		Subject: utils.GetStringPropOrNil(props, "subject"),
-		Body:    utils.GetStringPropOrNil(props, "subject"),
-		From:    utils.GetStringPropOrNil(props, "subject"),
-		To:      utils.GetListStringPropOrEmpty(props, "subject"),
-		Cc:      utils.GetListStringPropOrEmpty(props, "subject"),
-		Bcc:     utils.GetListStringPropOrEmpty(props, "subject"),
+		Body:    utils.GetStringPropOrNil(props, "body"),
+		From:    utils.GetStringPropOrNil(props, "from"),
+		To:      utils.GetListStringPropOrEmpty(props, "to"),
+		Cc:      utils.GetListStringPropOrEmpty(props, "cc"),
+		Bcc:     utils.GetListStringPropOrEmpty(props, "bcc"),
 	}
 	return &e
 }

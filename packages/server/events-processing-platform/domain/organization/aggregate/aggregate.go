@@ -4,8 +4,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	orgplanevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -56,6 +56,8 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 		return nil, a.removeSocial(ctx, r)
 	case *organizationpb.OrganizationAddLocationGrpcRequest:
 		return a.addLocation(ctx, r)
+	case *organizationpb.UnLinkEmailFromOrganizationGrpcRequest:
+		return nil, a.unlinkEmail(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -209,6 +211,28 @@ func (a *OrganizationAggregate) unlinkDomain(ctx context.Context, request *organ
 	return a.Apply(unlinkDomainEvent)
 }
 
+func (a *OrganizationAggregate) unlinkEmail(ctx context.Context, request *organizationpb.UnLinkEmailFromOrganizationGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.unlinkEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	unlinkEmailEvent, err := organizationEvents.NewOrganizationUnlinkEmailEvent(a, request.Email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewOrganizationUnlinkEmailEvent")
+	}
+	eventstore.EnrichEventWithMetadataExtended(&unlinkEmailEvent, span, eventstore.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(unlinkEmailEvent)
+}
+
 func (a *OrganizationAggregate) addTag(ctx context.Context, request *organizationpb.OrganizationAddTagGrpcRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addTag")
 	defer span.Finish()
@@ -264,6 +288,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onPhoneNumberLink(event)
 	case organizationEvents.OrganizationEmailLinkV1:
 		return a.onEmailLink(event)
+	case organizationEvents.OrganizationEmailUnlinkV1:
+		return a.onEmailUnlink(event)
 	case organizationEvents.OrganizationLocationLinkV1:
 		return a.onLocationLink(event)
 	case organizationEvents.OrganizationLinkDomainV1:
@@ -330,7 +356,7 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 	case organizationEvents.OrganizationAddLocationV1:
 		return a.onAddLocation(event)
 	default:
-		if strings.HasPrefix(event.GetEventType(), events2.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		span, _ := opentracing.StartSpanFromContext(context.Background(), "OrganizationAggregate.When")
@@ -393,7 +419,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	}
 
 	// Update only if the source of truth is 'openline' or the new source matches the source of truth
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Organization.Source.SourceOfTruth = eventData.Source
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
@@ -401,7 +427,7 @@ func (a *OrganizationAggregate) onOrganizationUpdate(event eventstore.Event) err
 	if !eventData.Hide {
 		a.Organization.Hide = false
 	}
-	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == events2.SourceOpenline {
+	if eventData.Source != a.Organization.Source.SourceOfTruth && a.Organization.Source.SourceOfTruth == constants.SourceOpenline {
 		if a.Organization.Name == "" && eventData.UpdateName() {
 			a.Organization.Name = eventData.Name
 		}
@@ -597,6 +623,15 @@ func (a *OrganizationAggregate) onEmailLink(event eventstore.Event) error {
 		Primary: eventData.Primary,
 	}
 	a.Organization.UpdatedAt = eventData.UpdatedAt
+	return nil
+}
+
+func (a *OrganizationAggregate) onEmailUnlink(event eventstore.Event) error {
+	var eventData organizationEvents.OrganizationUnlinkEmailEvent
+	if err := event.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Organization.Emails = make(map[string]model.OrganizationEmail)
 	return nil
 }
 

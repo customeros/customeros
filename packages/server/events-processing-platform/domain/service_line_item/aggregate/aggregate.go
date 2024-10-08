@@ -6,9 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -53,6 +53,10 @@ func (a *ServiceLineItemAggregate) HandleGRPCRequest(ctx context.Context, reques
 		return nil, a.CreateServiceLineItem(ctx, r)
 	case *servicelineitempb.UpdateServiceLineItemGrpcRequest:
 		return nil, a.UpdateServiceLineItem(ctx, r)
+	case *servicelineitempb.PauseServiceLineItemGrpcRequest:
+		return nil, a.PauseServiceLineItem(ctx, r)
+	case *servicelineitempb.ResumeServiceLineItemGrpcRequest:
+		return nil, a.ResumeServiceLineItem(ctx, r)
 	default:
 		return nil, nil
 	}
@@ -112,7 +116,7 @@ func (a *ServiceLineItemAggregate) CreateServiceLineItem(ctx context.Context, r 
 		updatedAtNotNil,
 		startedAtNotNil,
 		endedAtNillable,
-		"", // alexbalexb TODO: previousVersionId pass it from service
+		"", //TODO: previousVersionId pass it from service
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -273,6 +277,52 @@ func (a *ServiceLineItemAggregate) DeleteServiceLineItem(ctx context.Context, r 
 	return a.Apply(deleteEvent)
 }
 
+func (a *ServiceLineItemAggregate) PauseServiceLineItem(ctx context.Context, r *servicelineitempb.PauseServiceLineItemGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.PauseServiceLineItem")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	pauseEvent, err := event.NewServiceLineItemPauseEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewServiceLineItemPauseEvent")
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&pauseEvent, span, eventstore.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.GetLoggedInUserId(),
+		App:    r.GetAppSource(),
+	})
+
+	return a.Apply(pauseEvent)
+}
+
+func (a *ServiceLineItemAggregate) ResumeServiceLineItem(ctx context.Context, r *servicelineitempb.ResumeServiceLineItemGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ServiceLineItemAggregate.ResumeServiceLineItem")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", r)
+
+	resumeEvent, err := event.NewServiceLineItemResumeEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewServiceLineItemResumeEvent")
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&resumeEvent, span, eventstore.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: r.GetLoggedInUserId(),
+		App:    r.GetAppSource(),
+	})
+
+	return a.Apply(resumeEvent)
+}
+
 func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ServiceLineItemCreateV1:
@@ -283,6 +333,9 @@ func (a *ServiceLineItemAggregate) When(evt eventstore.Event) error {
 		return a.onDelete()
 	case event.ServiceLineItemCloseV1:
 		return a.onClose(evt)
+	case event.ServiceLineItemPauseV1,
+		event.ServiceLineItemResumeV1:
+		return nil
 	default:
 		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
 			return nil

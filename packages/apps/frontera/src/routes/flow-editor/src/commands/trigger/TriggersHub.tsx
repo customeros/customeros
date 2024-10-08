@@ -9,6 +9,7 @@ import { PlusSquare } from '@ui/media/icons/PlusSquare';
 import { RefreshCw01 } from '@ui/media/icons/RefreshCw01';
 import { CheckCircleBroken } from '@ui/media/icons/CheckCircleBroken';
 
+import { keywords } from './keywords.ts';
 import { ContactAddedManuallySubItem } from './ContactTriggerSubItems.tsx';
 
 export const TriggersHub = observer(() => {
@@ -38,7 +39,7 @@ export const TriggersHub = observer(() => {
     <>
       <CommandItem
         leftAccessory={<PlusCircle />}
-        keywords={['record', 'added', 'manually']}
+        keywords={keywords.record_added_manually}
         onSelect={() => {
           updateSelectedNode('RecordAddedManually');
         }}
@@ -47,19 +48,35 @@ export const TriggersHub = observer(() => {
       </CommandItem>
 
       <ContactAddedManuallySubItem />
-      <CommandItem disabled leftAccessory={<PlusSquare />}>
+      <CommandItem
+        disabled
+        leftAccessory={<PlusSquare />}
+        keywords={keywords.record_created}
+      >
         <span className='text-gray-700'>Record created</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<RefreshCw01 />}>
+      <CommandItem
+        disabled
+        leftAccessory={<RefreshCw01 />}
+        keywords={keywords.record_updated}
+      >
         <span className='text-gray-700'>Record updated</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<CheckCircleBroken />}>
+      <CommandItem
+        disabled
+        leftAccessory={<CheckCircleBroken />}
+        keywords={keywords.record_matches_condition}
+      >
         <span className='text-gray-700'>Record matches condition</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>
-      <CommandItem disabled leftAccessory={<Code01 />}>
+      <CommandItem
+        disabled
+        leftAccessory={<Code01 />}
+        keywords={keywords.webhook}
+      >
         <span className='text-gray-700'>Webhook</span>{' '}
         <span className='text-gray-500'>(Coming soon)</span>
       </CommandItem>

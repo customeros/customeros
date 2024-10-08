@@ -4,10 +4,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -50,6 +50,8 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.removeSocial(ctx, r)
 	case *contactpb.ContactAddLocationGrpcRequest:
 		return a.addLocation(ctx, r)
+	case *contactpb.UnLinkEmailFromContactGrpcRequest:
+		return nil, a.unlinkEmail(ctx, r)
 	case *contactpb.ContactIdGrpcRequest:
 		requestType := ""
 		if params != nil {
@@ -283,6 +285,28 @@ func (a *ContactAggregate) hideContact(ctx context.Context, request *contactpb.C
 	return a.Apply(hideContactEvent)
 }
 
+func (a *ContactAggregate) unlinkEmail(ctx context.Context, request *contactpb.UnLinkEmailFromContactGrpcRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.unlinkEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	unlinkEmailEvent, err := event.NewContactUnlinkEmailEvent(a, request.Email)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewContactUnlinkEmailEvent")
+	}
+	eventstore.EnrichEventWithMetadataExtended(&unlinkEmailEvent, span, eventstore.EventMetadata{
+		Tenant: a.GetTenant(),
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(unlinkEmailEvent)
+}
+
 func (a *ContactAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
 	case event.ContactCreateV1:
@@ -293,6 +317,8 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onPhoneNumberLink(evt)
 	case event.ContactEmailLinkV1:
 		return a.onEmailLink(evt)
+	case event.ContactEmailUnlinkV1:
+		return a.onEmailUnlink(evt)
 	case event.ContactLocationLinkV1:
 		return a.onLocationLink(evt)
 	case event.ContactOrganizationLinkV1:
@@ -344,7 +370,7 @@ func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
 		return errors.Wrap(err, "GetJsonData")
 	}
 
-	if eventData.Source != a.Contact.Source.SourceOfTruth && a.Contact.Source.SourceOfTruth == events2.SourceOpenline {
+	if eventData.Source != a.Contact.Source.SourceOfTruth && a.Contact.Source.SourceOfTruth == constants.SourceOpenline {
 		if a.Contact.Name == "" {
 			a.Contact.Name = eventData.Name
 		}
@@ -377,7 +403,7 @@ func (a *ContactAggregate) onContactUpdate(evt eventstore.Event) error {
 		a.Contact.Username = eventData.Username
 	}
 	a.Contact.UpdatedAt = eventData.UpdatedAt
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Contact.Source.SourceOfTruth = eventData.Source
 	}
 
@@ -434,6 +460,15 @@ func (a *ContactAggregate) onEmailLink(evt eventstore.Event) error {
 	return nil
 }
 
+func (a *ContactAggregate) onEmailUnlink(evt eventstore.Event) error {
+	var eventData event.ContactUnlinkEmailEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		return errors.Wrap(err, "GetJsonData")
+	}
+	a.Contact.Emails = make(map[string]ContactEmail)
+	return nil
+}
+
 func (a *ContactAggregate) onLocationLink(evt eventstore.Event) error {
 	var eventData event.ContactLinkLocationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
@@ -467,7 +502,7 @@ func (a *ContactAggregate) onOrganizationLink(evt eventstore.Event) error {
 			CreatedAt: eventData.CreatedAt,
 		}
 	} else {
-		if eventData.SourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == events2.SourceOpenline {
+		if eventData.SourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
 			if jobRole.JobTitle == "" {
 				jobRole.JobTitle = eventData.JobTitle
 			}

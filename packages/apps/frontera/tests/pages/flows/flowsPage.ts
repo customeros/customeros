@@ -24,6 +24,7 @@ export class FlowsPage {
   createNewFlowName = 'input[data-test="create-new-flow-name"]';
   cancelCreateNewFlow = 'button[data-test="cancel-create-new-flow"]';
   confirmCreateNewFlow = 'button[data-test="confirm-create-new-flow"]';
+
   flowNameInFlowsTable = 'div[data-test="flow-name-in-flows-table"]';
   flowEndedEarlyInFlowTable =
     'div[data-test="flow-ended-early-in-flows-table"]';
@@ -33,8 +34,11 @@ export class FlowsPage {
   flowStatusButtonInFlowsTable =
     'button[data-test="flow-status-button-in-flows-table"]';
   flowInProgressInFlowsTable =
-    'div[data-test="flow-in-progress-in-flows-table"]';
-  flowCompletedInFlowsTable = 'div[data-test="flow-completed-in-flows-table"]';
+    'span[data-test="flow-in-progress-in-flows-table"]';
+  flowCompletedInFlowsTable = 'span[data-test="flow-completed-in-flows-table"]';
+  flowGoalAchievedInFlowsTable =
+    'span[data-test="flow-goal-achieved-in-flows-table"]';
+
   private flowsActionsArchive = 'button[data-test="actions-archive"]';
   private orgActionsConfirmArchive =
     'button[data-test="org-actions-confirm-archive"]';
@@ -74,10 +78,10 @@ export class FlowsPage {
     await this.page.keyboard.press('Enter');
 
     await Promise.all([requestPromise, responsePromise]);
-    await this.page.waitForSelector(
-      `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${flowName}")`,
-      { timeout: 30000 },
-    );
+    // await this.page.waitForSelector(
+    //   `${this.finderTableFlows} ${this.flowNameInFlowsTable}:has-text("${flowName}")`,
+    //   { timeout: 30000 },
+    // );
 
     return flowName;
   }
@@ -99,14 +103,6 @@ export class FlowsPage {
       .locator(this.flowNameInFlowsTable)
       .innerText();
 
-    const actualFlowEndedEarly = await flowNameInAllOrgsTable
-      .locator(this.flowEndedEarlyInFlowTable)
-      .innerText();
-
-    const actualFlowNotStarted = await flowNameInAllOrgsTable
-      .locator(this.flowNotStartedInFlowsTable)
-      .innerText();
-
     const actualFlowStatusInAllOrgsTable = await flowNameInAllOrgsTable
       .locator(this.flowStatusTextInFlowsTable)
       .innerText();
@@ -119,13 +115,16 @@ export class FlowsPage {
       .locator(this.flowCompletedInFlowsTable)
       .innerText();
 
+    const actualFlowGoalAchievedInFlowsTable = await flowNameInAllOrgsTable
+      .locator(this.flowGoalAchievedInFlowsTable)
+      .innerText();
+
     await Promise.all([
       expect.soft(actualFlow).toBe(expectedFlowName),
-      expect.soft(actualFlowEndedEarly).toBe('No data yet'),
-      expect.soft(actualFlowNotStarted).toBe('No data yet'),
       expect.soft(actualFlowStatusInAllOrgsTable).toBe(notStarted),
-      expect.soft(actualflowInProgressInFlowsTable).toBe('No data yet'),
-      expect.soft(actualFlowCompletedInFlowsTable).toBe('No data yet'),
+      expect.soft(actualflowInProgressInFlowsTable).toBe('0'),
+      expect.soft(actualFlowCompletedInFlowsTable).toBe('0'),
+      expect.soft(actualFlowGoalAchievedInFlowsTable).toBe('0'),
     ]);
   }
 

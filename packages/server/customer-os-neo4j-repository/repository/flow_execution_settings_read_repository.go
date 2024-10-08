@@ -13,7 +13,7 @@ import (
 )
 
 type FlowExecutionSettingsReadRepository interface {
-	GetByEntityId(ctx context.Context, flowId, entityId string) (*dbtype.Node, error)
+	GetByEntityId(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error)
 }
 
 type flowExecutionSettingsReadRepositoryImpl struct {
@@ -25,7 +25,7 @@ func NewFlowExecutionSettingsReadRepository(driver *neo4j.DriverWithContext, dat
 	return &flowExecutionSettingsReadRepositoryImpl{driver: driver, database: database}
 }
 
-func (r flowExecutionSettingsReadRepositoryImpl) GetByEntityId(ctx context.Context, flowId, entityId string) (*dbtype.Node, error) {
+func (r flowExecutionSettingsReadRepositoryImpl) GetByEntityId(ctx context.Context, flowId, entityId, entityType string) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetByEntityId")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -34,11 +34,12 @@ func (r flowExecutionSettingsReadRepositoryImpl) GetByEntityId(ctx context.Conte
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fes:FlowExecutionSettings_%s {entityId: $entityId}) RETURN fes limit 1`, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fes:FlowExecutionSettings_%s {entityId: $entityId, entityType: $entityType}) RETURN fes limit 1`, tenant, tenant)
 	params := map[string]any{
-		"tenant":   tenant,
-		"flowId":   flowId,
-		"entityId": entityId,
+		"tenant":     tenant,
+		"flowId":     flowId,
+		"entityId":   entityId,
+		"entityType": entityType,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

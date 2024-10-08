@@ -1,4 +1,4 @@
-import { useMemo, useState, ReactElement } from 'react';
+import { useMemo, ReactElement } from 'react';
 
 import { htmlToText } from 'html-to-text';
 import { FlowActionType } from '@store/Flows/types.ts';
@@ -27,11 +27,11 @@ export const ActionNode = ({
 }: NodeProps & {
   data: {
     subject: string;
+    isEditing?: boolean;
     bodyTemplate: string;
     action: FlowActionType;
   };
 }) => {
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
   const { setNodes } = useReactFlow();
 
   const color = colorMap?.[data.action];
@@ -52,6 +52,17 @@ export const ActionNode = ({
               ...node.data,
               subject,
               bodyTemplate,
+              isEditing: false,
+            },
+          };
+        }
+
+        if (node.data?.replyTo === id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              subject: `RE: ${subject}`,
             },
           };
         }
@@ -66,10 +77,20 @@ export const ActionNode = ({
     [data?.bodyTemplate],
   );
 
+  const toggleEditing = () => {
+    setNodes((nds) =>
+      nds.map((node) =>
+        node.id === id
+          ? { ...node, data: { ...node.data, isEditing: true } }
+          : node,
+      ),
+    );
+  };
+
   return (
     <>
       <div
-        className={`aspect-[9/1] max-w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
+        className={`aspect-[9/1] max-w-[300px] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
       >
         <div className='text-sm flex items-center justify-between '>
           <div className='truncate text-sm flex items-center'>
@@ -97,14 +118,13 @@ export const ActionNode = ({
             variant='ghost'
             aria-label='Edit'
             icon={<Edit03 />}
-            onClick={() => setIsEditorOpen(true)}
+            onClick={toggleEditing}
             className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
           />
         </div>
         <EmailEditorModal
           data={data}
-          isEditorOpen={isEditorOpen}
-          setIsEditorOpen={setIsEditorOpen}
+          isEditorOpen={data.isEditing || false}
           handleEmailDataChange={handleEmailDataChange}
         />
         <Handle type='target' />

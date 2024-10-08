@@ -51,9 +51,9 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.Man
 	params := map[string]any{
 		"tenant":     common.GetTenantFromContext(ctx),
 		"id":         input.Id,
-		"createdAt":  utils.Now(),
-		"updatedAt":  utils.Now(),
 		"externalId": input.ExternalId,
+		"createdAt":  utils.TimeOrNow(input.CreatedAt),
+		"updatedAt":  utils.TimeOrNow(input.UpdatedAt),
 		"json":       input.Json,
 		"type":       input.Type,
 		"waitBefore": input.Data.WaitBefore,
@@ -62,10 +62,13 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.Man
 
 	if input.Data.Action == entity.FlowActionTypeFlowStart {
 		onCreate += `,
+				fa.data_triggerType = $data_triggerType,
 				fa.data_entity = $data_entity`
 		onMatch += `,
+				fa.data_triggerType = $data_triggerType,
 				fa.data_entity = $data_entity`
 		params["data_entity"] = input.Data.Entity
+		params["data_triggerType"] = input.Data.TriggerType
 	}
 
 	if input.Data.Action == entity.FlowActionTypeEmailNew {

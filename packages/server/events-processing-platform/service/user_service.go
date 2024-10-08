@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/command_handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
@@ -23,13 +24,15 @@ type userService struct {
 	log                logger.Logger
 	userCommands       *command_handler.CommandHandlers
 	userRequestHandler user.UserRequestHandler
+	services           *Services
 }
 
-func NewUserService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, userCommands *command_handler.CommandHandlers) *userService {
+func NewUserService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, userCommands *command_handler.CommandHandlers, services *Services) *userService {
 	return &userService{
 		log:                log,
 		userCommands:       userCommands,
 		userRequestHandler: user.NewUserRequestHandler(log, aggregateStore, cfg.Utils),
+		services:           services,
 	}
 }
 
@@ -152,6 +155,24 @@ func (s *userService) RemoveRole(ctx context.Context, request *userpb.RemoveRole
 	}
 
 	s.log.Infof("Removed role {%s} from user {%s}", request.Role, request.UserId)
+
+	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
+}
+
+func (s *userService) UnLinkEmailFromUser(ctx context.Context, request *userpb.UnLinkEmailFromUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "UserService.UnLinkEmailFromUser")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return aggregate.NewUserAggregateWithTenantAndID(request.Tenant, request.UserId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UnLinkEmailFromUser.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.UserId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
 
 	return &userpb.UserIdGrpcResponse{Id: request.UserId}, nil
 }

@@ -43,6 +43,7 @@ type EmailService interface {
 	ValidateEmailsFromBulkRequests()
 	CheckScrubbyResult()
 	CheckEnrowRequestsWithoutResponse()
+	CleanEmails()
 }
 
 type emailService struct {
@@ -607,4 +608,55 @@ func (s *emailService) generateBulkEmailValidationResponseCSVFileContent(ctx con
 
 	// Return the CSV content as a byte slice
 	return buffer.Bytes(), nil
+}
+
+func (s *emailService) CleanEmails() {
+	s.deleteOrphanEmails()
+}
+
+func (s *emailService) deleteOrphanEmails() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.deleteOrphanEmails")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	limit := 500
+	delayFromLastUpdateInHours := 7 * 24
+
+	for {
+		select {
+		case <-ctx.Done():
+			s.log.Infof("Context cancelled, stopping")
+			return
+		default:
+			// continue as normal
+		}
+
+		records, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetOrphanEmailNodes(ctx, limit, delayFromLastUpdateInHours)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Error getting orphan emails"))
+			return
+		}
+
+		// no record
+		if len(records) == 0 {
+			return
+		}
+
+		for _, record := range records {
+			err = s.commonServices.EmailService.DeleteOrphanEmail(ctx, record.Tenant, record.EmailId, constants.AppSourceDataUpkeeper)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error deleting orphan email"))
+				s.log.Errorf("Error deleting orphan email {%s}: %s", record.EmailId, err.Error())
+			}
+		}
+		if len(records) < limit {
+			return
+		}
+
+		// force exit after single iteration
+		return
+	}
 }

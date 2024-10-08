@@ -5,6 +5,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
@@ -12,7 +13,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -205,6 +205,29 @@ func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventsto
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Primary)
 
 	return err
+}
+
+func (h *UserEventHandler) OnEmailUnlinkedFromUser(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnEmailUnlinkedFromUser")
+	defer span.Finish()
+	setEventSpanTagsAndLogFields(span, evt)
+
+	var eventData events.UserUnlinkEmailEvent
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
+	tracing.TagTenant(span, eventData.Tenant)
+	tracing.TagEntity(span, userId)
+
+	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.UnlinkFromUser(ctx, eventData.Tenant, userId, eventData.Email)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromUser"))
+		h.log.Errorf("Error while unlinking email %s from user %s: %s", eventData.Email, userId, err.Error())
+	}
+
+	return nil
 }
 
 func (h *UserEventHandler) OnAddRole(c context.Context, evt eventstore.Event) error {

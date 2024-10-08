@@ -1,5 +1,5 @@
-import { useNavigate } from 'react-router-dom';
-import React, { useRef, useEffect } from 'react';
+import { useRef, useEffect } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
@@ -9,7 +9,6 @@ import { OpportunityStore } from '@store/Opportunities/Opportunity.store';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
 
-import { TableIdType } from '@graphql/types';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import {
@@ -22,6 +21,7 @@ export const DeleteConfirmationModal = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const navigate = useNavigate();
+  const location = useLocation();
 
   const confirmButtonRef = useRef<HTMLButtonElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -46,8 +46,30 @@ export const DeleteConfirmationModal = observer(() => {
     .otherwise(() => undefined);
 
   const handleClose = () => {
-    store.ui.commandMenu.toggle('DeleteConfirmationModal');
-    store.ui.commandMenu.clearCallback();
+    store.ui.commandMenu.setOpen(false);
+
+    match(context.entity)
+      .with('Organization', () => {
+        store.ui.commandMenu.setType('OrganizationCommands');
+      })
+      .with('Organizations', () => {
+        store.ui.commandMenu.setType('OrganizationBulkCommands');
+      })
+      .with('Contact', () => {
+        store.ui.commandMenu.setType('ContactHub');
+      })
+      .with('Opportunity', () => {
+        store.ui.commandMenu.setType('OpportunityCommands');
+      })
+      .with('Opportunities', () => {
+        store.ui.commandMenu.setType('OpportunityCommands');
+      })
+      .with('Flow', () => {
+        store.ui.commandMenu.setType('FlowCommands');
+      })
+      .with('Flows', () => {
+        store.ui.commandMenu.setType('FlowsBulkCommands');
+      });
   };
 
   const handleConfirm = () => {
@@ -62,49 +84,79 @@ export const DeleteConfirmationModal = observer(() => {
         );
 
         store.organizations.hide(context.ids as string[]);
-        store.opportunities.value.delete(oppotunityIdOfOrgSelected[0]);
 
+        store.opportunities.value.delete(oppotunityIdOfOrgSelected[0]);
+        store.ui.commandMenu.setType('OrganizationHub');
+        store.ui.commandMenu.clearContextIds();
+        store.ui.commandMenu.clearContext();
         context.callback?.();
       })
       .with('Organizations', () => {
         store.organizations.hide(context.ids as string[]);
+        store.ui.commandMenu.setType('OrganizationHub');
+        store.ui.commandMenu.clearContextIds();
+        store.ui.commandMenu.clearContext();
+
         context.callback?.();
       })
       .with('Contact', () => {
         store.contacts.archive(context.ids);
+        store.ui.commandMenu.setType('ContactHub');
+        store.ui.commandMenu.clearContextIds();
+        store.ui.commandMenu.clearContext();
+
         context.callback?.();
       })
       .with('Opportunity', () => {
         store.opportunities.archive(context.ids?.[0]);
+        store.ui.commandMenu.setType('OpportunityHub');
+        store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
+
         context.callback?.();
       })
       .with('Opportunities', () => {
         store.opportunities.archiveMany(context.ids);
+        store.ui.commandMenu.setType('OpportunityHub');
+        store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
+
         context.callback?.();
       })
       .with('Flow', () => {
-        store.flows.archive(context.ids?.[0]);
+        store.flows.archive(context.ids?.[0], {
+          onSuccess: () => {
+            if (location.pathname.includes('flow-editor')) {
+              navigate(`/finder?preset=${store.tableViewDefs.flowsPreset}`);
+            }
+          },
+        });
+        store.ui.commandMenu.setType('FlowHub');
+        store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
+
         context.callback?.();
       })
       .with('Flows', () => {
         store.flows.archiveMany(context.ids);
+        store.ui.commandMenu.setType('FlowHub');
+        store.ui.commandMenu.clearCallback();
+        store.ui.commandMenu.clearContext();
+
         context.callback?.();
       })
       .with('TableViewDef', () => {
         store.tableViewDefs.archive(context.ids?.[0], {
           onSuccess: () => {
-            const allOrgsViewId = store.tableViewDefs
-              ?.toArray()
-              .find((e) => e.value.tableId === TableIdType.Organizations)
-              ?.value.id;
-
-            navigate(`/finder?preset=${allOrgsViewId}`);
+            navigate(
+              `/finder?preset=${store.tableViewDefs.organizationsPreset}`,
+            );
           },
         });
       })
       .otherwise(() => {});
 
-    handleClose();
+    store.ui.commandMenu.setOpen(false);
   };
 
   const title = match(context.entity)
@@ -143,17 +195,21 @@ export const DeleteConfirmationModal = observer(() => {
     .otherwise(() => `Archive selected ${context.entity?.toLowerCase()}`);
   const description = match(context.entity)
     .with(
-      'Flows',
-      () =>
-        `Archiving these flows will remove all contacts currently enrolled to it`,
+      'Flow',
+      () => `Archiving this flow will end all active contacts currently in it`, // todo update contacts to dynamic value when we'll be able to get different record types
     )
     .with(
-      'Flow',
+      'Flows',
       () =>
-        `Archiving this flow will remove all contacts currently enrolled to it`,
+        `Archiving these flows will end all active contacts currently in it`, // todo update contacts to dynamic value when we'll be able to get different record types
     )
-
     .otherwise(() => null);
+
+  const confirmButtonLabel = match(context.entity)
+    .with('Flows', () => `Archive flows`)
+    .with('Flow', () => `Archive flow`)
+
+    .otherwise(() => 'Archive');
 
   useEffect(() => {
     closeButtonRef.current?.focus();
@@ -178,14 +234,14 @@ export const DeleteConfirmationModal = observer(() => {
             colorScheme='error'
             ref={confirmButtonRef}
             onClick={handleConfirm}
-            data-test='org-actions-confirm-archive'
+            dataTest='org-actions-confirm-archive'
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
                 handleConfirm();
               }
             }}
           >
-            Archive
+            {confirmButtonLabel}
           </Button>
         </div>
       </article>

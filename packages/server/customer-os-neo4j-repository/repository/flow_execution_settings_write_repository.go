@@ -34,7 +34,7 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 	tenant := common.GetTenantFromContext(ctx)
 
 	cypher := fmt.Sprintf(`
-			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(:Flow_%s {id: $flowId})
+			MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})
 			MERGE (t)<-[:BELONGS_TO_TENANT]-(fes:FlowExecutionSettings:FlowExecutionSettings_%s {id: $id})<-[:HAS]-(f)
 			ON MATCH SET
 				fes.updatedAt = $updatedAt
@@ -43,7 +43,9 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 				fes.updatedAt = $updatedAt,
 				fes.flowId = $flowId,
 				fes.entityId = $entityId,
-				fes.mailbox = $mailbox
+				fes.entityType = $entityType,
+				fes.mailbox = $mailbox,
+				fes.userId = $userId
 			RETURN fes`, tenant, tenant)
 
 	params := map[string]any{
@@ -51,10 +53,14 @@ func (r *flowExecutionSettingsWriteRepository) Merge(ctx context.Context, tx *ne
 		"id":        entity.Id,
 		"createdAt": utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
-		"flowId":    entity.FlowId,
-		"entityId":  entity.EntityId,
+
+		"flowId": entity.FlowId,
+
+		"entityId":   entity.EntityId,
+		"entityType": entity.EntityType,
 
 		"mailbox": entity.Mailbox,
+		"userId":  entity.UserId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

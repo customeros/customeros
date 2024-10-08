@@ -1,223 +1,341 @@
 import { useParams } from 'react-router-dom';
-import React, { MouseEvent, useCallback } from 'react';
+import React, { useState, MouseEvent, useCallback } from 'react';
 
-import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 import { OnConnect } from '@xyflow/system';
 import { FlowActionType } from '@store/Flows/types.ts';
 import { FlowStore } from '@store/Flows/Flow.store.ts';
 import {
   Edge,
+  Node,
   addEdge,
   ReactFlow,
   Background,
   MarkerType,
+  OnNodeDrag,
+  NodeChange,
+  getIncomers,
+  getOutgoers,
   useNodesState,
   useEdgesState,
+  OnNodesDelete,
+  OnEdgesDelete,
+  OnNodesChange,
   OnBeforeDelete,
   FitViewOptions,
-  NodeMouseHandler,
+  applyNodeChanges,
+  getConnectedEdges,
+  SelectionDragHandler,
 } from '@xyflow/react';
 
 import { useStore } from '@shared/hooks/useStore';
 
 import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
-import { Toolbar } from './controls/Toolbar.tsx';
+import { getHelperLines } from './utils';
+import { useUndoRedo, useKeyboardShortcuts } from './hooks';
+import { HelperLines, FlowBuilderToolbar } from './components';
 
 import '@xyflow/react/dist/style.css';
 const edgeTypes = {
   baseEdge: BasicEdge,
 };
 
-export const FlowBuilder = observer(() => {
-  const store = useStore();
-  const id = useParams().id as string;
+export const FlowBuilder = observer(
+  ({ onHasNewChanges }: { onHasNewChanges: () => void }) => {
+    const store = useStore();
+    const id = useParams().id as string;
 
-  const flow = store.flows.value.get(id) as FlowStore;
+    useKeyboardShortcuts(id, store);
 
-  const [nodes, _setNodes, onNodesChange] = useNodesState(flow?.parsedNodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(flow?.parsedEdges);
+    const flow = store.flows.value.get(id) as FlowStore;
 
-  // const { screenToFlowPosition } = useReactFlow();
-  const { ui } = useStore();
+    const [nodes, setNodes] = useNodesState(flow?.parsedNodes);
+    const [edges, setEdges, onEdgesChange] = useEdgesState(flow?.parsedEdges);
+    const { takeSnapshot } = useUndoRedo();
+    const [helperLineHorizontal, setHelperLineHorizontal] = useState<
+      number | undefined
+    >(undefined);
+    const [helperLineVertical, setHelperLineVertical] = useState<
+      number | undefined
+    >(undefined);
 
-  const onConnect: OnConnect = useCallback(
-    (params) => {
-      const edgeData = {
-        triggerType: 'time',
-        timeValue: 1,
-        timeUnit: 'days',
-      };
+    // const { screenToFlowPosition } = useReactFlow();
+    const { ui } = useStore();
 
-      setEdges((eds) =>
-        addEdge(
-          {
-            ...params,
-            type: 'baseEdge',
+    const onConnect: OnConnect = useCallback(
+      (params) => {
+        takeSnapshot();
 
-            data: edgeData,
-            markerEnd: { type: MarkerType.Arrow },
-          },
-          eds,
+        setEdges((eds) =>
+          addEdge(
+            {
+              ...params,
+              type: 'baseEdge',
+              markerEnd: {
+                type: MarkerType.Arrow,
+                width: 20,
+                height: 20,
+              },
+            },
+            eds,
+          ),
+        );
+      },
+      [setEdges],
+    );
+
+    const onEdgeMouseLeave = (_event: MouseEvent, edge: Edge) => {
+      const edgeId = edge.id;
+
+      setEdges((prevElements) =>
+        prevElements.map((element) =>
+          element.id === edgeId
+            ? {
+                ...element,
+
+                data: {
+                  ...element.data,
+                  isHovered: false,
+                },
+              }
+            : element,
         ),
       );
-    },
-    [setEdges],
-  );
+    };
 
-  const onEdgeMouseLeave = (_event: MouseEvent, edge: Edge) => {
-    const edgeId = edge.id;
+    const onEdgeMouseEnter = (_event: MouseEvent, edge: Edge) => {
+      const edgeId = edge.id;
 
-    // Updates edge
-    setEdges((prevElements) =>
-      prevElements.map((element) =>
-        element.id === edgeId
-          ? {
-              ...element,
+      setEdges((prevElements) =>
+        prevElements.map((element) =>
+          element.id === edgeId
+            ? {
+                ...element,
 
-              data: {
-                ...element.data,
-                isHovered: false,
-              },
+                data: {
+                  ...element.data,
+                  isHovered: true,
+                },
+              }
+            : element,
+        ),
+      );
+    };
+
+    const customApplyNodeChanges = useCallback(
+      (changes: NodeChange[], nodes: Node[]): Node[] => {
+        // reset the helper lines (clear existing lines, if any)
+        setHelperLineHorizontal(undefined);
+        setHelperLineVertical(undefined);
+
+        // this will be true if it's a single node being dragged
+        // inside we calculate the helper lines and snap position for the position where the node is being moved to
+        if (
+          changes.length === 1 &&
+          changes[0].type === 'position' &&
+          changes[0].dragging &&
+          changes[0].position
+        ) {
+          const helperLines = getHelperLines(changes[0], nodes);
+
+          // if we have a helper line, we snap the node to the helper line position
+          // this is being done by manipulating the node position inside the change object
+          changes[0].position.x =
+            helperLines.snapPosition.x ?? changes[0].position.x;
+          changes[0].position.y =
+            helperLines.snapPosition.y ?? changes[0].position.y;
+
+          // if helper lines are returned, we set them so that they can be displayed
+          setHelperLineHorizontal(helperLines.horizontal);
+          setHelperLineVertical(helperLines.vertical);
+        }
+
+        return applyNodeChanges(changes, nodes);
+      },
+      [],
+    );
+
+    const onNodesChange: OnNodesChange = useCallback(
+      (changes) => {
+        setNodes((nodes) => customApplyNodeChanges(changes, nodes));
+      },
+      [setNodes, customApplyNodeChanges],
+    );
+
+    const onBeforeDelete: OnBeforeDelete = async (elements) => {
+      const hasStartNode = elements.nodes.some(
+        (e) => e.data?.action === FlowActionType.FLOW_START,
+      );
+      const hasEndNode = elements.nodes.some(
+        (e) => e.data?.action === FlowActionType.FLOW_END,
+      );
+
+      const hasStartOrEndNode = hasStartNode || hasEndNode;
+
+      return hasStartOrEndNode ? false : elements;
+    };
+
+    const onNodeDragStart: OnNodeDrag = useCallback(() => {
+      takeSnapshot();
+    }, [takeSnapshot]);
+
+    const onSelectionDragStart: SelectionDragHandler = useCallback(() => {
+      takeSnapshot();
+    }, [takeSnapshot]);
+
+    const onNodesDelete: OnNodesDelete = useCallback(
+      (deleted) => {
+        setEdges(
+          deleted.reduce((acc, node) => {
+            const incomers = getIncomers(node, nodes, edges);
+            const outgoers = getOutgoers(node, nodes, edges);
+            const connectedEdges = getConnectedEdges([node], edges);
+
+            const remainingEdges = acc.filter(
+              (edge) => !connectedEdges.includes(edge),
+            );
+
+            const createdEdges = incomers.flatMap(({ id: source }) =>
+              outgoers.map(({ id: target }) => ({
+                id: `${source}->${target}`,
+                source,
+                target,
+                type: 'baseEdge',
+                markerEnd: {
+                  type: MarkerType.Arrow,
+                  width: 20,
+                  height: 20,
+                },
+              })),
+            );
+
+            return [...remainingEdges, ...createdEdges];
+          }, edges),
+        );
+      },
+      [nodes, edges],
+    );
+
+    const onEdgesDelete: OnEdgesDelete = useCallback(() => {
+      takeSnapshot();
+    }, [takeSnapshot]);
+
+    return (
+      <>
+        <ReactFlow
+          snapToGrid
+          maxZoom={5}
+          nodes={nodes}
+          edges={edges}
+          minZoom={0.1}
+          fitView={true}
+          onConnect={onConnect}
+          nodeTypes={nodeTypes}
+          edgeTypes={edgeTypes}
+          onNodesDelete={onNodesDelete}
+          onEdgesDelete={onEdgesDelete}
+          onBeforeDelete={onBeforeDelete}
+          onNodeDragStart={onNodeDragStart}
+          onEdgeMouseLeave={onEdgeMouseLeave}
+          onEdgeMouseEnter={onEdgeMouseEnter}
+          zoomOnPinch={!ui.flowCommandMenu.isOpen}
+          zoomOnScroll={!ui.flowCommandMenu.isOpen}
+          onSelectionDragStart={onSelectionDragStart}
+          defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
+          preventScrolling={!ui.flowCommandMenu.isOpen}
+          proOptions={{
+            hideAttribution: true,
+          }}
+          onClick={() => {
+            if (ui.flowCommandMenu.isOpen) {
+              ui.flowCommandMenu.setOpen(false);
             }
-          : element,
-      ),
-    );
-  };
+          }}
+          fitViewOptions={{
+            padding: 0.95,
+            includeHiddenNodes: false,
+            minZoom: 0.1,
+            maxZoom: 5,
+          }}
+          onInit={(instance) => {
+            const fitViewOptions: FitViewOptions = {
+              padding: 0.1,
+              maxZoom: 1,
+              minZoom: 1,
+              duration: 0,
+              nodes: nodes,
+            };
 
-  const onEdgeMouseEnter = (_event: MouseEvent, edge: Edge) => {
-    const edgeId = edge.id;
+            instance.fitView(fitViewOptions);
+          }}
+          onEdgesChange={(changes) => {
+            // this is hack to prevent removing initial edges automatically for some unknown yet reason
 
-    setEdges((prevElements) =>
-      prevElements.map((element) =>
-        element.id === edgeId
-          ? {
-              ...element,
+            const shouldProhibitChanges =
+              changes.every((change) => change.type === 'remove') &&
+              edges.length === changes.length;
 
-              data: {
-                ...element.data,
-                isHovered: true,
-              },
+            if (shouldProhibitChanges) {
+              return;
             }
-          : element,
-      ),
+            onEdgesChange(changes);
+          }}
+          // onConnectEnd={onConnectEnd}
+          onNodesChange={(changes) => {
+            // this is hack to prevent removing initial edges automatically for some unknown yet reason
+
+            const shouldProhibitChanges =
+              changes.every((change) => change.type === 'remove') &&
+              nodes.length === changes.length;
+
+            if (shouldProhibitChanges) return;
+            onNodesChange(changes);
+
+            if (
+              changes.some(
+                (e) =>
+                  e.type === 'add' ||
+                  e.type === 'remove' ||
+                  e.type === 'replace',
+              )
+            ) {
+              onHasNewChanges();
+            }
+          }}
+          onNodeDoubleClick={(_event, node) => {
+            if (node.type === 'wait' || node.type === 'action') {
+              setNodes((nds) =>
+                nds.map((n) =>
+                  n.id === node.id
+                    ? { ...n, data: { ...n.data, isEditing: true } }
+                    : n,
+                ),
+              );
+
+              return;
+            }
+
+            if (node.type === 'trigger') {
+              ui.flowCommandMenu.setOpen(true);
+              ui.flowCommandMenu.setType('TriggersHub');
+              ui.flowCommandMenu.setContext({
+                id: node.id,
+                entity: 'Trigger',
+              });
+
+              return;
+            }
+          }}
+        >
+          <HelperLines
+            vertical={helperLineVertical}
+            horizontal={helperLineHorizontal}
+          />
+          <Background />
+          <FlowBuilderToolbar />
+        </ReactFlow>
+      </>
     );
-  };
-
-  useKey(
-    'Escape',
-    () => {
-      ui.flowCommandMenu.setOpen(false);
-    },
-    {
-      when: ui.flowCommandMenu.isOpen,
-    },
-  );
-
-  if (!store.flows.isBootstrapped) {
-    return 'IS LOADING';
-  }
-
-  const onBeforeDelete: OnBeforeDelete = async (elements) => {
-    const hasStartNode = elements.nodes.some(
-      (e) => e.data?.action === FlowActionType.FLOW_START,
-    );
-    const hasEndNode = elements.nodes.some(
-      (e) => e.data?.action === FlowActionType.FLOW_END,
-    );
-
-    const hasStartOrEndNode = hasStartNode || hasEndNode;
-
-    return hasStartOrEndNode ? false : elements;
-  };
-
-  const onOpenTriggerHub = (id: string) => {
-    ui.flowCommandMenu.setOpen(true);
-    ui.flowCommandMenu.setType('TriggersHub');
-
-    ui.flowCommandMenu.setContext({
-      ...ui.flowCommandMenu.context,
-      id,
-    });
-  };
-
-  const onOpenTriggerHubDropdown: NodeMouseHandler = (event, node) => {
-    event.preventDefault();
-    event.stopPropagation();
-    onOpenTriggerHub(node.id);
-  };
-
-  return (
-    <>
-      <ReactFlow
-        snapToGrid
-        maxZoom={3}
-        nodes={nodes}
-        edges={edges}
-        minZoom={0.1}
-        fitView={false}
-        onConnect={onConnect}
-        nodeTypes={nodeTypes}
-        edgeTypes={edgeTypes}
-        preventScrolling={false}
-        zoomActivationKeyCode={'91'}
-        onBeforeDelete={onBeforeDelete}
-        onEdgeMouseLeave={onEdgeMouseLeave}
-        onEdgeMouseEnter={onEdgeMouseEnter}
-        onNodeClick={onOpenTriggerHubDropdown}
-        zoomOnPinch={!ui.flowCommandMenu.isOpen}
-        zoomOnScroll={!ui.flowCommandMenu.isOpen}
-        defaultViewport={{ zoom: 0.4, x: 50, y: 0 }}
-        onClick={() => {
-          if (ui.flowCommandMenu.isOpen) {
-            ui.flowCommandMenu.setOpen(false);
-          }
-        }}
-        fitViewOptions={{
-          padding: 0.1,
-          includeHiddenNodes: false,
-          minZoom: 0.1,
-          maxZoom: 5,
-        }}
-        onInit={(instance) => {
-          const fitViewOptions: FitViewOptions = {
-            padding: 0.1,
-            maxZoom: 1,
-            minZoom: 1,
-            duration: 150,
-            nodes: nodes,
-          };
-
-          instance.fitView(fitViewOptions);
-        }}
-        // onConnectEnd={onConnectEnd}
-        onNodesChange={(changes) => {
-          // this is hack to prevent removing initial edges automatically for some unknown yet reason
-
-          const shouldProhibitChanges =
-            changes.every((change) => change.type === 'remove') &&
-            nodes.length === changes.length;
-
-          if (shouldProhibitChanges) return;
-          onNodesChange(changes);
-        }}
-        onEdgesChange={(changes) => {
-          // this is hack to prevent removing initial edges automatically for some unknown yet reason
-
-          const shouldProhibitChanges =
-            changes.every((change) => change.type === 'remove') &&
-            edges.length === changes.length;
-
-          if (shouldProhibitChanges) {
-            return;
-          }
-          onEdgesChange(changes);
-        }}
-      >
-        <Background />
-        <Toolbar />
-      </ReactFlow>
-    </>
-  );
-});
+  },
+);

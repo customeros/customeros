@@ -11,6 +11,8 @@ import (
 )
 
 type Services struct {
+	GlobalConfig *config.GlobalConfig
+
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
 
@@ -48,6 +50,7 @@ type Services struct {
 
 func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients) *Services {
 	services := &Services{
+		GlobalConfig:         globalConfig,
 		GrpcClients:          grpcClients,
 		PostgresRepositories: postgresRepository.InitRepositories(db),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),

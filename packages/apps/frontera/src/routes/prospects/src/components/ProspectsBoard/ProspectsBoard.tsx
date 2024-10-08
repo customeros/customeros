@@ -151,7 +151,10 @@ export const ProspectsBoard = observer(() => {
       />
 
       <DragDropContext onDragEnd={onDragEnd}>
-        <div className='flex flex-grow px-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll'>
+        <div
+          data-test='opps-kanban-board'
+          className='flex flex-grow px-4 space-x-2 h-[calc(100vh-10px)] overflow-y-scroll'
+        >
           {(columns ?? []).map((column) => {
             return (
               <KanbanColumn

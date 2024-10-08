@@ -5,13 +5,12 @@ import merge from 'lodash/merge';
 import { Channel } from 'phoenix';
 import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
+import { MarkerType } from '@xyflow/react';
 import { Transport } from '@store/transport';
-import { Edge, MarkerType } from '@xyflow/react';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
 import { makeAutoSyncableGroup } from '@store/group-store';
-import { FlowNodeType, FlowActionType } from '@store/Flows/types.ts';
 
 import { uuidv4 } from '@utils/generateUuid.ts';
 import {
@@ -20,7 +19,7 @@ import {
   DataSource,
   FlowStatus,
   FlowContact,
-  FlowContactStatus,
+  FlowParticipantStatus,
 } from '@graphql/types';
 
 export class FlowStore implements Store<Flow> {
@@ -90,7 +89,10 @@ export class FlowStore implements Store<Flow> {
     }
   }
 
-  public async updateFlow({ nodes, edges }: { nodes: string; edges: string }) {
+  public async updateFlow(
+    { nodes, edges }: { nodes: string; edges: string },
+    options?: { onError: () => void },
+  ) {
     this.isLoading = true;
 
     try {
@@ -106,9 +108,17 @@ export class FlowStore implements Store<Flow> {
       runInAction(() => {
         this.value.nodes = flow_Merge?.nodes ?? '[]';
         this.value.edges = flow_Merge?.edges ?? '[]';
+
+        this.root.ui.toastSuccess(
+          `${this.value.name} saved`,
+          `update-flow-success-${this.id}`,
+        );
       });
     } catch (e) {
       runInAction(() => {
+        if (options?.onError) {
+          options.onError();
+        }
         this.root.ui.toastError(
           "We couldn't update the flow",
           'update-flow-error',
@@ -167,7 +177,7 @@ export class FlowStore implements Store<Flow> {
         this.value.contacts = [
           ...this.value.contacts,
           {
-            status: FlowContactStatus.Scheduled,
+            status: FlowParticipantStatus.Scheduled,
             scheduledAction: '',
             scheduledAt: new Date().toISOString(),
             metadata: {
@@ -254,7 +264,7 @@ export class FlowStore implements Store<Flow> {
               lastUpdated: new Date().toISOString(),
               sourceOfTruth: DataSource.Openline,
             },
-            status: FlowContactStatus.Scheduled,
+            status: FlowParticipantStatus.Scheduled,
             scheduledAction: '',
             scheduledAt: new Date().toISOString(),
             contact: {
@@ -314,29 +324,44 @@ const getDefaultValue = (): Flow => ({
   contacts: [],
   nodes: JSON.stringify(initialNodes),
   edges: JSON.stringify(initialEdges),
+  actions: [],
 });
 const initialNodes = [
   {
+    $H: 497,
+    data: { action: 'FLOW_START', entity: null, triggerType: null },
+    height: 48,
     id: 'tn-1',
-    type: FlowNodeType.Trigger,
-    position: { x: 250, y: 100 },
-    data: {
-      action: FlowActionType.FLOW_START,
-      entity: null,
-      triggerType: null,
-    },
+    internalId: '00370d94-5f6d-4d00-a1c0-3147413da9fb',
+    measured: { height: 48, width: 300 },
+    position: { x: 12, y: 12 },
+    properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },
+    sourcePosition: 'bottom',
+    targetPosition: 'top',
+    type: 'trigger',
+    width: 300,
+    x: 12,
+    y: 12,
   },
   {
+    $H: 499,
+    data: { action: 'FLOW_END' },
+    height: 48,
     id: 'tn-2',
-    type: FlowNodeType.Control,
-    position: { x: 315, y: 300 },
-    data: {
-      action: FlowActionType.FLOW_END,
-    },
+    internalId: 'ba2070b8-79ad-4f59-8b5a-c4dd77c8cff5',
+    measured: { height: 48, width: 131 },
+    position: { x: 96.5, y: 160 },
+    properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },
+    sourcePosition: 'bottom',
+    targetPosition: 'top',
+    type: 'control',
+    width: 131,
+    x: 96.5,
+    y: 160,
   },
 ];
 
-const initialEdges: Edge[] = [
+const initialEdges = [
   {
     id: 'e1-2',
     source: 'tn-1',
@@ -346,10 +371,21 @@ const initialEdges: Edge[] = [
     focusable: true,
     interactionWidth: 60,
     markerEnd: {
-      type: MarkerType.ArrowClosed,
-      width: 60,
-      height: 60,
+      type: MarkerType.Arrow,
+      width: 20,
+      height: 20,
     },
     type: 'baseEdge',
+    data: { isHovered: false },
+    sections: [
+      {
+        id: 'e1-2_s0',
+        startPoint: { x: 162, y: 60 },
+        endPoint: { x: 162, y: 160 },
+        incomingShape: 'tn-1',
+        outgoingShape: 'tn-2',
+      },
+    ],
+    container: 'root',
   },
 ];

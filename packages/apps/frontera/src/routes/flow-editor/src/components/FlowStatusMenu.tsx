@@ -28,6 +28,7 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
         variant='outline'
         leftIcon={<Play />}
         colorScheme='primary'
+        dataTest='start-flow'
         onClick={() => {
           store.ui.commandMenu.toggle('StartFlow');
         }}
@@ -41,13 +42,13 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
     <>
       <Menu>
         <MenuButton
-          className='text-success-500'
+          className='text-success-500 h-full'
           data-test='flow-editor-status-change-button'
         >
           <Tag
             variant='outline'
             colorScheme='success'
-            className='h-full rounded-md px-2'
+            className='h-full rounded-md px-2 py-1'
           >
             <TagLeftIcon>
               <div>
@@ -59,8 +60,8 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
         </MenuButton>
         <MenuList align='end' side='bottom' className='p-0'>
           <MenuItem
-            className='flex items-center text-base'
-            data-test='contract-menu-delete-contract'
+            className='flex items-center '
+            data-test='stop-flow-menu-button'
             onClick={() => store.ui.commandMenu.toggle('StopFlow')}
           >
             <StopCircle className='mr-1 text-gray-500' />

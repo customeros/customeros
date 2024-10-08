@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { ReactFlowProvider } from '@xyflow/react';
@@ -12,6 +12,7 @@ import '@xyflow/react/dist/style.css';
 
 export const FlowEditor = () => {
   const [searchParams] = useSearchParams();
+  const [hasNewChanges, setHasNewChanges] = useState(false);
   const allowExploration = useFeatureIsOn('flow-editor-poc');
 
   const showFinder = searchParams.get('show') === 'finder';
@@ -23,8 +24,15 @@ export const FlowEditor = () => {
   return (
     <ReactFlowProvider>
       <div className='flex h-full flex-col'>
-        <Header />
-        {showFinder ? <FinderTable isSidePanelOpen={false} /> : <FlowBuilder />}
+        <Header
+          hasChanges={hasNewChanges}
+          onToggleHasChanges={setHasNewChanges}
+        />
+        {showFinder ? (
+          <FinderTable isSidePanelOpen={false} />
+        ) : (
+          <FlowBuilder onHasNewChanges={() => setHasNewChanges(true)} />
+        )}
       </div>
     </ReactFlowProvider>
   );

@@ -3,9 +3,9 @@ package contact
 import (
 	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"reflect"
 	"time"
 )
@@ -172,7 +172,7 @@ func (c *Contact) HasJobRoleInOrganization(organizationId string, jobRoleFields 
 		if found {
 			return true
 		}
-		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == events2.SourceOpenline {
+		if sourceFields.Source != jobRole.Source.SourceOfTruth && jobRole.Source.SourceOfTruth == constants.SourceOpenline {
 			return !(jobRole.JobTitle == "" && jobRoleFields.JobTitle != "") &&
 				!(jobRole.Description == "" && jobRoleFields.Description != "") &&
 				!(jobRole.StartedAt == nil && jobRoleFields.StartedAt != nil) &&

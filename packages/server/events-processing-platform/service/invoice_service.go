@@ -16,8 +16,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	utils2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	utils2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -65,9 +65,9 @@ func (s *invoiceService) NextPreviewInvoiceForContract(ctx context.Context, requ
 	}
 
 	//get last issued on cycle invoice for contract
-	//lastIssuedOnCycleInvoiceForContract, err := s.GetLastIssuedOnCycleInvoiceForContract(ctx, request.Tenant, request.ContactId)
+	//lastIssuedOnCycleInvoiceForContract, err := s.GetLastIssuedOnCycleInvoiceForContract(ctx, request.Tenant, request.EntityId)
 	//if err != nil {
-	//	s.log.Errorf("Error while getting last issued on cycle invoice for contract %s: %s", request.ContactId, err.Error())
+	//	s.log.Errorf("Error while getting last issued on cycle invoice for contract %s: %s", request.EntityId, err.Error())
 	//	tracing.TraceErr(span, err)
 	//	return nil, err
 	//}
@@ -393,6 +393,28 @@ func (s *invoiceService) VoidInvoice(ctx context.Context, request *invoicepb.Voi
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(VoidInvoice) tenant:{%v}, err: %v", request.Tenant, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &invoicepb.InvoiceIdResponse{Id: request.InvoiceId}, nil
+}
+
+func (s *invoiceService) RemindInvoiceNotification(ctx context.Context, request *invoicepb.RemindInvoiceNotificationRequest) (*invoicepb.InvoiceIdResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "InvoiceService.RemindInvoiceNotification")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	if request.InvoiceId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("invoiceId"))
+	}
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return invoice.NewInvoiceAggregateWithTenantAndID(request.Tenant, request.InvoiceId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, *eventstore.NewLoadAggregateOptionsWithRequired(), request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(RemindInvoiceNotification) tenant:{%v}, err: %v", request.Tenant, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

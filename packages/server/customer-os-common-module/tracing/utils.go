@@ -195,6 +195,12 @@ func TagTenant(span opentracing.Span, tenant string) {
 	}
 }
 
+func TagEntity(span opentracing.Span, entityId string) {
+	if entityId != "" {
+		span.SetTag(SpanTagEntityId, entityId)
+	}
+}
+
 func TagComponentCronJob(span opentracing.Span) {
 	span.SetTag(SpanTagComponent, SpanTagComponentCronJob)
 }

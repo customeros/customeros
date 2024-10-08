@@ -21,6 +21,7 @@ const (
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
 	OrganizationPropertyIcpFit                    OrganizationProperty = "icpFit"
 	OrganizationPropertyHiddenAt                  OrganizationProperty = "hiddenAt"
+	OrganizationPropertyEnrichAttempts            OrganizationProperty = "techEnrichAttempts"
 )
 
 type OrganizationEntity struct {
@@ -101,9 +102,10 @@ type OnboardingDetails struct {
 }
 
 type OrganizationEnrichDetails struct {
-	EnrichedAt   *time.Time
-	EnrichDomain string
-	EnrichSource enum.EnrichSource
+	EnrichedAt     *time.Time
+	EnrichDomain   string
+	EnrichSource   enum.EnrichSource
+	EnrichAttempts int64
 }
 
 type OrganizationInternalFields struct {

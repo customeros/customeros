@@ -36,10 +36,10 @@ type Repositories struct {
 	FlowWriteRepository                   FlowWriteRepository
 	FlowActionReadRepository              FlowActionReadRepository
 	FlowActionWriteRepository             FlowActionWriteRepository
-	FlowContactReadRepository             FlowContactReadRepository
-	FlowContactWriteRepository            FlowContactWriteRepository
-	FlowActionSenderReadRepository        FlowActionSenderReadRepository
-	FlowActionSenderWriteRepository       FlowActionSenderWriteRepository
+	FlowParticipantReadRepository         FlowParticipantReadRepository
+	FlowParticipantWriteRepository        FlowParticipantWriteRepository
+	FlowSenderReadRepository              FlowSenderReadRepository
+	FlowSenderWriteRepository             FlowSenderWriteRepository
 	FlowExecutionSettingsReadRepository   FlowExecutionSettingsReadRepository
 	FlowExecutionSettingsWriteRepository  FlowExecutionSettingsWriteRepository
 	FlowActionExecutionReadRepository     FlowActionExecutionReadRepository
@@ -124,10 +124,10 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		FlowWriteRepository:                   NewFlowWriteRepository(driver, neo4jDatabase),
 		FlowActionReadRepository:              NewFlowActionReadRepository(driver, neo4jDatabase),
 		FlowActionWriteRepository:             NewFlowActionWriteRepository(driver, neo4jDatabase),
-		FlowContactReadRepository:             NewFlowContactReadRepository(driver, neo4jDatabase),
-		FlowContactWriteRepository:            NewFlowContactWriteRepository(driver, neo4jDatabase),
-		FlowActionSenderReadRepository:        NewFlowSequenceSenderReadRepository(driver, neo4jDatabase),
-		FlowActionSenderWriteRepository:       NewFlowActionSenderWriteRepository(driver, neo4jDatabase),
+		FlowParticipantReadRepository:         NewFlowParticipantReadRepository(driver, neo4jDatabase),
+		FlowParticipantWriteRepository:        NewFlowParticipantWriteRepository(driver, neo4jDatabase),
+		FlowSenderReadRepository:              NewFlowSenderReadRepository(driver, neo4jDatabase),
+		FlowSenderWriteRepository:             NewFlowSenderWriteRepository(driver, neo4jDatabase),
 		FlowActionExecutionReadRepository:     NewFlowActionExecutionReadRepository(driver, neo4jDatabase),
 		FlowExecutionSettingsWriteRepository:  NewFlowExecutionSettingsWriteRepository(driver, neo4jDatabase),
 		FlowActionExecutionWriteRepository:    NewFlowActionExecutionWriteRepository(driver, neo4jDatabase),

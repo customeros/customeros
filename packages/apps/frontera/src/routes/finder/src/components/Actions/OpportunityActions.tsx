@@ -53,7 +53,7 @@ export const OpportunitiesTableActions = observer(
       if (selection?.length > 1) {
         store.ui.commandMenu.setContext({
           ids: selection,
-          entity: 'Opportunity',
+          entity: 'Opportunities',
           property: property,
         });
       } else {

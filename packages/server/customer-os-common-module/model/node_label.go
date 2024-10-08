@@ -49,8 +49,8 @@ const (
 	NodeLabelOffering                  = "Offering"
 	NodeLabelFlow                      = "Flow"
 	NodeLabelFlowAction                = "FlowAction"
-	NodeLabelFlowContact               = "FlowContact"
-	NodeLabelFlowActionSender          = "FlowActionSender"
+	NodeLabelFlowParticipant           = "FlowParticipant"
+	NodeLabelFlowSender                = "FlowSender"
 	NodeLabelFlowExecutionSettings     = "FlowExecutionSettings"
 	NodeLabelFlowActionExecution       = "FlowActionExecution"
 )

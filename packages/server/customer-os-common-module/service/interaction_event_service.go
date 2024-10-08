@@ -219,8 +219,8 @@ func (s *interactionEventService) Create(ctx context.Context, data *InteractionE
 
 	//TODO EDI
 	//for _, v := range newInteractionEvent.SentBy {
-	//	if v.ContactId != nil {
-	//		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.ContactId)
+	//	if v.EntityId != nil {
+	//		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.EntityId)
 	//	}
 	//	if v.Email != nil {
 	//		s.services.OrganizationService.UpdateLastTouchpointByEmail(ctx, *v.Email)
@@ -230,8 +230,8 @@ func (s *interactionEventService) Create(ctx context.Context, data *InteractionE
 	//	}
 	//}
 	//for _, v := range newInteractionEvent.SentTo {
-	//	if v.ContactId != nil {
-	//		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.ContactId)
+	//	if v.EntityId != nil {
+	//		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, *v.EntityId)
 	//	}
 	//	if v.Email != nil {
 	//		s.services.OrganizationService.UpdateLastTouchpointByEmail(ctx, *v.Email)
@@ -411,9 +411,11 @@ func (s *interactionEventService) linkInteractionEventParticipantInTx(ctx contex
 			linkWithId = emailId
 		} else {
 			//TODO create and use inTx method
-			createdEmailId, err := s.services.EmailService.Merge(ctx, neo4jentity.EmailEntity{
-				Email: *linkWIthData.Email,
-			}, nil)
+			createdEmailId, err := s.services.EmailService.Merge(ctx, "",
+				EmailFields{
+					Email:     *linkWIthData.Email,
+					AppSource: ""},
+				nil)
 
 			if err != nil {
 				tracing.TraceErr(span, err)

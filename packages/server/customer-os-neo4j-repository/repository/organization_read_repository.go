@@ -44,7 +44,7 @@ type OrganizationReadRepository interface {
 	GetAllForOpportunities(ctx context.Context, tenant string, opportunityIds []string) ([]*utils.DbNodeAndId, error)
 	GetOrganizationsForUpdateNextRenewalDate(ctx context.Context, limit int) ([]TenantAndOrganizationId, error)
 	GetOrganizationsWithWebsiteAndWithoutDomains(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationId, error)
-	GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
+	GetOrganizationsForEnrichByDomain(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
 }
@@ -863,8 +863,8 @@ func (r *organizationReadRepository) GetOrganizationsWithWebsiteAndWithoutDomain
 	return output, nil
 }
 
-func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForEnrich")
+func (r *organizationReadRepository) GetOrganizationsForEnrichByDomain(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationsForEnrichByDomain")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
@@ -872,6 +872,7 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain)
 				WHERE 	org.enrichedAt IS NULL AND
 						org.hide = false AND
+						(org.techEnrichAttempts IS NULL OR org.techEnrichAttempts < $maxAttempts OR org.techEnrichRequestedAt IS NULL) AND
 						(org.techEnrichRequestedAt IS NULL OR org.techEnrichRequestedAt < datetime() - duration({minutes: $delayInMinutes}))
 				WITH t.name as tenant, org.id as orgId, d.domain as domain
 				ORDER BY CASE WHEN org.techEnrichRequestedAt IS NULL THEN 0 ELSE 1 END, org.techEnrichRequestedAt ASC
@@ -881,6 +882,7 @@ func (r *organizationReadRepository) GetOrganizationsForEnrich(ctx context.Conte
 	params := map[string]any{
 		"limit":          limit,
 		"delayInMinutes": delayInMinutes,
+		"maxAttempts":    1,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

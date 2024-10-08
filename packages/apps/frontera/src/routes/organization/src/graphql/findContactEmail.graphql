@@ -1,3 +1,5 @@
 mutation findContactEmail($contactId: ID!, $organizationId: ID!) {
-  contact_FindEmail(contactId: $contactId, organizationId: $organizationId)
+  contact_FindWorkEmail(contactId: $contactId, organizationId: $organizationId) {
+    accepted
+  }
 }

@@ -1,9 +1,12 @@
-import { Store } from '@store/store.ts';
-import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
 import { CountryCell } from '@finder/components/Columns/Cells/country';
+import { OrganizationStore } from '@store/Organizations/Organization.store';
 import { OrganizationStageCell } from '@finder/components/Columns/Cells/stage';
 import { SocialsFilter } from '@finder/components/Columns/shared/Filters/Socials';
 import { StageFilter } from '@finder/components/Columns/organizations/Filters/Stage';
+import {
+  ColumnDef,
+  ColumnDef as ColumnDefinition,
+} from '@tanstack/react-table';
 import { AvatarHeader } from '@finder/components/Columns/organizations/Headers/Avatar';
 import { DateCell } from '@finder/components/Columns/shared/Cells/DateCell/DateCell.tsx';
 import { getColumnConfig } from '@finder/components/Columns/shared/util/getColumnConfig.ts';
@@ -13,13 +16,8 @@ import { cn } from '@ui/utils/cn.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber.ts';
+import { Social, TableViewDef, ColumnViewType } from '@graphql/types';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead.tsx';
-import {
-  Social,
-  Organization,
-  TableViewDef,
-  ColumnViewType,
-} from '@graphql/types';
 
 import { TagFilter } from './Filters/Tags';
 import { OwnershipTypeFilter } from '../shared/Filters/OwnershipTypeFilter';
@@ -58,7 +56,7 @@ import {
   RenewalLikelihoodFilter,
 } from './Filters';
 
-type ColumnDatum = Store<Organization>;
+type ColumnDatum = OrganizationStore;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -119,7 +117,7 @@ export const columns: Record<string, Column> = {
         renderFilter={(initialFocusRef) => (
           <OrganizationFilter initialFocusRef={initialFocusRef} />
         )}
-        {...getTHeadProps<Store<Organization>>(props)}
+        {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
@@ -146,7 +144,7 @@ export const columns: Record<string, Column> = {
           renderFilter={(initialFocusRef) => (
             <WebsiteFilter initialFocusRef={initialFocusRef} />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -165,7 +163,7 @@ export const columns: Record<string, Column> = {
           title='Relationship'
           renderFilter={() => <RelationshipFilter />}
           id={ColumnViewType.OrganizationsRelationship}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       cell: (props) => {
@@ -200,7 +198,7 @@ export const columns: Record<string, Column> = {
           title='Onboarding'
           renderFilter={() => <OnboardingFilter />}
           id={ColumnViewType.OrganizationsOnboardingStatus}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => (
@@ -236,7 +234,7 @@ export const columns: Record<string, Column> = {
           data-test='renewal-likelihood'
           renderFilter={() => <RenewalLikelihoodFilter />}
           id={ColumnViewType.OrganizationsRenewalLikelihood}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => (
@@ -269,7 +267,7 @@ export const columns: Record<string, Column> = {
           title='Renewal Date'
           id={ColumnViewType.OrganizationsRenewalDate}
           renderFilter={() => <TimeToRenewalFilter />}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[50%] h-[14px]' />,
@@ -306,7 +304,7 @@ export const columns: Record<string, Column> = {
           renderFilter={(initialFocusRef) => (
             <ForecastFilter initialFocusRef={initialFocusRef} />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => (
@@ -340,7 +338,7 @@ export const columns: Record<string, Column> = {
         renderFilter={(initialFocusRef) => (
           <OwnerFilter initialFocusRef={initialFocusRef} />
         )}
-        {...getTHeadProps<Store<Organization>>(props)}
+        {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -370,7 +368,7 @@ export const columns: Record<string, Column> = {
           title='Source'
           renderFilter={() => <SourceFilter />}
           id={ColumnViewType.OrganizationsLeadSource}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -396,7 +394,7 @@ export const columns: Record<string, Column> = {
           title='Created Date'
           renderFilter={() => <CreatedDateFilter />}
           id={ColumnViewType.OrganizationsCreatedDate}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -432,7 +430,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OrganizationsYearFounded}
             />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -468,7 +466,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OrganizationsEmployeeCount}
             />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -495,7 +493,7 @@ export const columns: Record<string, Column> = {
           renderFilter={(initialFocusRef) => (
             <SocialsFilter initialFocusRef={initialFocusRef} />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -530,7 +528,7 @@ export const columns: Record<string, Column> = {
           title='Last Touchpoint'
           renderFilter={() => <LastTouchpointFilter />}
           id={ColumnViewType.OrganizationsLastTouchpoint}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => (
@@ -563,7 +561,7 @@ export const columns: Record<string, Column> = {
           title='Last Interacted'
           renderFilter={() => <LastInteractedFilter />}
           id={ColumnViewType.OrganizationsLastTouchpointDate}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => (
@@ -596,7 +594,7 @@ export const columns: Record<string, Column> = {
           renderFilter={() => {
             return <ChurnedFilter />;
           }}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -635,7 +633,7 @@ export const columns: Record<string, Column> = {
           renderFilter={(initialFocusRef) => {
             return <LtvFilter initialFocusRef={initialFocusRef} />;
           }}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -661,7 +659,7 @@ export const columns: Record<string, Column> = {
           renderFilter={(initialFocusRef) => (
             <IndustryFilter initialFocusRef={initialFocusRef} />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -687,7 +685,7 @@ export const columns: Record<string, Column> = {
         title='Contacts'
         filterWidth='auto'
         id={ColumnViewType.OrganizationsContactCount}
-        {...getTHeadProps<Store<Organization>>(props)}
+        {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -725,7 +723,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OrganizationsLinkedinFollowerCount}
             />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -755,7 +753,7 @@ export const columns: Record<string, Column> = {
             property={ColumnViewType.OrganizationsTags}
           />
         )}
-        {...getTHeadProps<Store<Organization>>(props)}
+        {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -786,7 +784,7 @@ export const columns: Record<string, Column> = {
             property={ColumnViewType.OrganizationsIsPublic}
           />
         )}
-        {...getTHeadProps<Store<Organization>>(props)}
+        {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -810,38 +808,7 @@ export const columns: Record<string, Column> = {
         filterWidth='auto'
         renderFilter={() => <StageFilter />}
         id={ColumnViewType.OrganizationsStage}
-        {...getTHeadProps<Store<Organization>>(props)}
-      />
-    ),
-    skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
-  }),
-  [ColumnViewType.OrganizationsCity]: columnHelper.accessor('value.metadata', {
-    id: ColumnViewType.OrganizationsCity,
-    size: 210,
-    minSize: 210,
-    maxSize: 400,
-    enableResizing: true,
-    enableColumnFilter: true,
-    enableSorting: true,
-    cell: (props) => {
-      const value = props.getValue()?.id;
-
-      return <CountryCell id={value} type='organization' />;
-    },
-    header: (props) => (
-      <THead<HTMLInputElement>
-        filterWidth='auto'
-        title='Headquarters'
-        id={ColumnViewType.OrganizationsCity}
-        renderFilter={(initialFocusRef) => (
-          <LocationFilter
-            type='organizations'
-            locationType='countryCodeA2'
-            initialFocusRef={initialFocusRef}
-            property={ColumnViewType.OrganizationsCity}
-          />
-        )}
-        {...getTHeadProps<Store<Organization>>(props)}
+        {...getTHeadProps<OrganizationStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -875,7 +842,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OrganizationsHeadquarters}
             />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -917,7 +884,7 @@ export const columns: Record<string, Column> = {
               property={ColumnViewType.OrganizationsParentOrganization}
             />
           )}
-          {...getTHeadProps<Store<Organization>>(props)}
+          {...getTHeadProps<OrganizationStore>(props)}
         />
       ),
       skeleton: () => <Skeleton className='w-[75%] h-[14px]' />,
@@ -927,4 +894,6 @@ export const columns: Record<string, Column> = {
 
 export const getOrganizationColumnsConfig = (
   tableViewDef?: Array<TableViewDef>[0],
-) => getColumnConfig<ColumnDatum>(columns, tableViewDef);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): ColumnDef<ColumnDatum, any>[] =>
+  getColumnConfig<ColumnDatum>(columns, tableViewDef);

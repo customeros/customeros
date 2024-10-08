@@ -4,7 +4,6 @@ import (
 	"context"
 	"github.com/forPelevin/gomoji"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/config"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -25,7 +24,7 @@ type contactService struct {
 	services *Services
 }
 
-func NewContactService(log logger.Logger, aggregateStore eventstore.AggregateStore, cfg *config.Config, services *Services) *contactService {
+func NewContactService(log logger.Logger, services *Services) *contactService {
 	return &contactService{
 		log:      log,
 		services: services,
@@ -198,7 +197,7 @@ func (s *contactService) LinkEmailToContact(ctx context.Context, request *contac
 		}
 	}
 
-	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Primary, time.Now())
+	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Email, request.Primary, time.Now())
 
 	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
 		Tenant: request.Tenant,
@@ -478,6 +477,24 @@ func (s *contactService) ShowContact(ctx context.Context, request *contactpb.Con
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request, params); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(ShowContact.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
+		return nil, grpcerr.ErrResponse(err)
+	}
+
+	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
+}
+
+func (s *contactService) UnLinkEmailFromContact(ctx context.Context, request *contactpb.UnLinkEmailFromContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.UnLinkEmailFromContact")
+	defer span.Finish()
+	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
+	tracing.LogObjectAsJson(span, "request", request)
+
+	initAggregateFunc := func() eventstore.Aggregate {
+		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
+	}
+	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
+		tracing.TraceErr(span, err)
+		s.log.Errorf("(UnLinkEmailFromContact.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

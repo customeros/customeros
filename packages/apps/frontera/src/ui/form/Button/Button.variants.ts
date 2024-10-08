@@ -2453,7 +2453,7 @@ export const linkButton = cva(
     'shadow-xs',
     'outline-none',
     'transition',
-    'disabled:pointer-events-none',
+    'disabled:cursor-not-allowed',
     'disabled:opacity-50',
   ],
   {
@@ -2619,7 +2619,7 @@ export const solidButton = cva(
     'shadow-xs',
     'outline-none',
     'transition',
-    'disabled:pointer-events-none',
+    'disabled:cursor-not-allowed',
     'disabled:opacity-50',
   ],
   {
@@ -2885,7 +2885,7 @@ export const ghostButton = cva(
     'shadow-xs',
     'outline-none',
     'transition',
-    'disabled:pointer-events-none',
+    'disabled:cursor-not-allowed',
     'disabled:opacity-50',
   ],
   {
@@ -3091,7 +3091,7 @@ export const outlineButton = cva(
     'shadow-xs',
     'outline-none',
     'transition',
-    'disabled:pointer-events-none',
+    'disabled:cursor-not-allowed',
     'disabled:opacity-50',
   ],
   {

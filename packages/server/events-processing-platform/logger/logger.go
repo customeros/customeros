@@ -3,7 +3,7 @@ package logger
 import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	common_logger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"go.uber.org/zap"
 	"time"
 )
@@ -30,62 +30,62 @@ type Logger interface {
 
 func (l *ExtendedLogger) HttpMiddlewareAccessLogger(method, uri string, status int, size int64, time time.Duration) {
 	l.Logger().Info(
-		utils.HTTP,
-		zap.String(utils.METHOD, method),
-		zap.String(utils.URI, uri),
-		zap.Int(utils.STATUS, status),
-		zap.Int64(utils.SIZE, size),
-		zap.Duration(utils.TIME, time),
+		constants.HTTP,
+		zap.String(constants.METHOD, method),
+		zap.String(constants.URI, uri),
+		zap.Int(constants.STATUS, status),
+		zap.Int64(constants.SIZE, size),
+		zap.Duration(constants.TIME, time),
 	)
 }
 
 func (l *ExtendedLogger) GrpcMiddlewareAccessLogger(method string, time time.Duration, metaData map[string][]string, err error) {
 	if err != nil {
 		l.Logger().Info(
-			utils.GRPC,
-			zap.String(utils.METHOD, method),
-			zap.Duration(utils.TIME, time),
-			zap.Any(utils.METADATA, metaData),
-			zap.String(utils.ERROR, err.Error()),
+			constants.GRPC,
+			zap.String(constants.METHOD, method),
+			zap.Duration(constants.TIME, time),
+			zap.Any(constants.METADATA, metaData),
+			zap.String(constants.ERROR, err.Error()),
 		)
 		return
 	}
-	l.Logger().Info(utils.GRPC, zap.String(utils.METHOD, method), zap.Duration(utils.TIME, time), zap.Any(utils.METADATA, metaData))
+	l.Logger().Info(constants.GRPC, zap.String(constants.METHOD, method), zap.Duration(constants.TIME, time), zap.Any(constants.METADATA, metaData))
 }
 
 func (l *ExtendedLogger) GrpcClientInterceptorLogger(method string, req, reply interface{}, time time.Duration, metaData map[string][]string, err error) {
 	if err != nil {
 		l.Logger().Info(
-			utils.GRPC,
-			zap.String(utils.METHOD, method),
-			zap.Any(utils.REQUEST, req),
-			zap.Any(utils.REPLY, reply),
-			zap.Duration(utils.TIME, time),
-			zap.Any(utils.METADATA, metaData),
-			zap.String(utils.ERROR, err.Error()),
+			constants.GRPC,
+			zap.String(constants.METHOD, method),
+			zap.Any(constants.REQUEST, req),
+			zap.Any(constants.REPLY, reply),
+			zap.Duration(constants.TIME, time),
+			zap.Any(constants.METADATA, metaData),
+			zap.String(constants.ERROR, err.Error()),
 		)
 		return
 	}
 	l.Logger().Info(
-		utils.GRPC,
-		zap.String(utils.METHOD, method),
-		zap.Any(utils.REQUEST, req),
-		zap.Any(utils.REPLY, reply),
-		zap.Duration(utils.TIME, time),
-		zap.Any(utils.METADATA, metaData),
+		constants.GRPC,
+		zap.String(constants.METHOD, method),
+		zap.Any(constants.REQUEST, req),
+		zap.Any(constants.REPLY, reply),
+		zap.Duration(constants.TIME, time),
+		zap.Any(constants.METADATA, metaData),
 	)
 }
 
 func (l *ExtendedLogger) EventAppeared(groupName string, event *esdb.ResolvedEvent, workerID int) {
 	l.Logger().Info(
 		"EventAppeared",
-		zap.String(utils.GroupName, groupName),
-		zap.String(utils.StreamID, event.OriginalEvent().StreamID),
-		zap.String(utils.EventID, event.OriginalEvent().EventID.String()),
-		zap.String(utils.EventType, event.OriginalEvent().EventType),
-		zap.Uint64(utils.EventNumber, event.OriginalEvent().EventNumber),
-		zap.Time(utils.CreatedDate, event.OriginalEvent().CreatedDate),
-		zap.String(utils.UserMetadata, string(event.OriginalEvent().UserMetadata)),
-		zap.Int(utils.WorkerID, workerID),
+		zap.String(constants.GroupName, groupName),
+		zap.String(constants.StreamID, event.OriginalEvent().StreamID),
+		zap.String(constants.EventID, event.OriginalEvent().EventID.String()),
+		zap.String(constants.EventType, event.OriginalEvent().EventType),
+		zap.Uint64(constants.EventNumber, event.OriginalEvent().EventNumber),
+		zap.Time(constants.CreatedDate, event.OriginalEvent().CreatedDate),
+		zap.String(constants.UserMetadata, string(event.OriginalEvent().UserMetadata)),
+		zap.Int(constants.WorkerID, workerID),
 	)
 }

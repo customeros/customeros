@@ -516,7 +516,7 @@ func (s *masterPlanService) CreateDefaultMasterPlan(ctx context.Context) (string
 
 	milestones := []map[string]any{
 		{"text": "Kickoff activities", "order": 0, "durationHours": 24, "items": []string{
-			"Identify success criteria",
+			"IdentifyForContact success criteria",
 			"Validate onboarding plan",
 			"Get list of admins",
 			"Get list of users",

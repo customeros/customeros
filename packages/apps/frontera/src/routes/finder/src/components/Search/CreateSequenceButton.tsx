@@ -14,10 +14,10 @@ export const CreateSequenceButton = observer(() => {
   return (
     <Button
       size='xs'
-      className='mr-1'
+      className='mr-3'
       leftIcon={<Plus />}
       colorScheme='primary'
-      data-test='add-new-flow'
+      dataTest='add-new-flow'
       onClick={handleCreateSequence}
     >
       New flow

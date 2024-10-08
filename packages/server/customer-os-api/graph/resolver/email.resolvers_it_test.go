@@ -16,6 +16,7 @@ import (
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
+	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
@@ -131,13 +132,22 @@ func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 
 	// Create user and email
 	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "original@email.com", true, "")
+	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, userId, neo4jentity.EmailEntity{
+		Email: "original@email.com",
+	})
 
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
+	userServiceCalled := false
+	userServiceCallbacks := events_platform.MockUserServiceCallbacks{
+		UnLinkEmailFromUser: func(context context.Context, request *userpb.UnLinkEmailFromUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
+			require.Equal(t, tenantName, request.Tenant)
+			require.Equal(t, "original@email.com", request.Email)
+			userServiceCalled = true
+			return &userpb.UserIdGrpcResponse{
+				Id: userId,
+			}, nil
+		},
+	}
+	events_platform.SetUserCallbacks(&userServiceCallbacks)
 
 	// Make the RawPost request and check for errors
 	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_user"),
@@ -152,15 +162,8 @@ func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 	}
 	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
 	require.Nil(t, err, "Error unmarshalling response data")
-
 	require.Equal(t, true, emailStruct.EmailRemoveFromUser.Result)
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Email", "Email_" + tenantName, "User", "User_" + tenantName})
+	require.True(t, userServiceCalled, "User service was not called")
 }
 
 func TestMutationResolver_EmailRemoveFromUserById(t *testing.T) {

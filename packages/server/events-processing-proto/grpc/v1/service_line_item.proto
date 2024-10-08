@@ -57,6 +57,20 @@ message DeleteServiceLineItemGrpcRequest {
   string appSource = 4;
 }
 
+message PauseServiceLineItemGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
+message ResumeServiceLineItemGrpcRequest {
+  string id = 1;
+  string tenant = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+}
+
 message CloseServiceLineItemGrpcRequest {
   string id = 1;
   string tenant = 2;
@@ -77,4 +91,6 @@ service ServiceLineItemGrpcService {
   rpc UpdateServiceLineItem(UpdateServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc DeleteServiceLineItem(DeleteServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
   rpc CloseServiceLineItem(CloseServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
+  rpc PauseServiceLineItem(PauseServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
+  rpc ResumeServiceLineItem(ResumeServiceLineItemGrpcRequest) returns (ServiceLineItemIdGrpcResponse);
 }

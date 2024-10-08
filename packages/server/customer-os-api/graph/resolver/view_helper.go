@@ -337,7 +337,7 @@ func DefaultTableViewDefinitionContracts(span opentracing.Span) (postgresEntity.
 }
 
 func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgresEntity.TableViewDefinition, error) {
-	columns := DefaultColumns(model.TableIDTypeFlowSequences.String())
+	columns := DefaultColumns(model.TableIDTypeFlowActions.String())
 	jsonData, err := json.Marshal(columns)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -347,7 +347,7 @@ func DefaultTableViewDefinitionFlows(span opentracing.Span) (postgresEntity.Tabl
 
 	return postgresEntity.TableViewDefinition{
 		TableType:   model.TableViewTypeFlow.String(),
-		TableId:     model.TableIDTypeFlowSequences.String(),
+		TableId:     model.TableIDTypeFlowActions.String(),
 		Name:        "Flows",
 		ColumnsJson: string(jsonData),
 		Order:       9,
@@ -497,7 +497,6 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 15, ColumnType: model.ColumnViewTypeContactsTimeInCurrentRole.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 17, ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 19, ColumnType: model.ColumnViewTypeContactsConnections.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 20, ColumnType: model.ColumnViewTypeContactsSequences.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 21, ColumnType: model.ColumnViewTypeContactsFlows.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true, Name: "", Filter: ""},
@@ -505,6 +504,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 13, ColumnType: model.ColumnViewTypeContactsSchools.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 14, ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 17, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeContactsForTargetOrganizations.String():
@@ -524,7 +524,6 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 15, ColumnType: model.ColumnViewTypeContactsTimeInCurrentRole.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 17, ColumnType: model.ColumnViewTypeContactsLinkedinFollowerCount.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 19, ColumnType: model.ColumnViewTypeContactsConnections.String(), Width: 100, Visible: true, Name: "", Filter: ""},
-				{ColumnId: 20, ColumnType: model.ColumnViewTypeContactsSequences.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 21, ColumnType: model.ColumnViewTypeContactsFlows.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeContactsPersona.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeContactsLastInteraction.String(), Width: 100, Visible: true, Name: "", Filter: ""},
@@ -532,6 +531,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 13, ColumnType: model.ColumnViewTypeContactsSchools.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 14, ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false, Name: "", Filter: ""},
+				{ColumnId: 17, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeOpportunities.String():
@@ -573,16 +573,15 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 12, ColumnType: model.ColumnViewTypeContractsOwner.String(), Width: 100, Visible: true, Name: "Owner", Filter: ""},
 			},
 		}
-	case model.TableIDTypeFlowSequences.String():
+	case model.TableIDTypeFlowActions.String():
 		return postgresEntity.Columns{
 			Columns: []postgresEntity.ColumnView{
-				{ColumnId: 1, ColumnType: model.ColumnViewTypeFlowSequenceName.String(), Width: 100, Visible: true, Name: "Sequence", Filter: ""},
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeFlowName.String(), Width: 100, Visible: true, Name: "Flow", Filter: ""},
-				{ColumnId: 3, ColumnType: model.ColumnViewTypeFlowSequenceStatus.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
-				{ColumnId: 5, ColumnType: model.ColumnViewTypeFlowSequenceTotalCount.String(), Width: 100, Visible: true, Name: "Contacts", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowSequencePendingCount.String(), Width: 100, Visible: true, Name: "Pending", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeFlowSequenceCompletedCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},
-				{ColumnId: 8, ColumnType: model.ColumnViewTypeFlowSequenceGoalAchievedCount.String(), Width: 100, Visible: true, Name: "Successful", Filter: ""},
+				{ColumnId: 1, ColumnType: model.ColumnViewTypeFlowActionName.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
+				{ColumnId: 5, ColumnType: model.ColumnViewTypeFlowTotalCount.String(), Width: 100, Visible: true, Name: "Contacts", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowPendingCount.String(), Width: 100, Visible: true, Name: "Pending", Filter: ""},
+				{ColumnId: 7, ColumnType: model.ColumnViewTypeFlowCompletedCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},
+				{ColumnId: 8, ColumnType: model.ColumnViewTypeFlowGoalAchievedCount.String(), Width: 100, Visible: true, Name: "Goal achieved", Filter: ""},
 			},
 		}
 	case model.TableIDTypeFlowContacts.String():
@@ -599,6 +598,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 9, ColumnType: model.ColumnViewTypeContactsCountry.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeContactsRegion.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 12, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 			},
 		}
 	}

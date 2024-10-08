@@ -12,6 +12,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/email"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	emailevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -107,6 +108,9 @@ func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
+
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "EnrichSubscriber.When", evt)
+	defer span.Finish()
 
 	switch evt.GetEventType() {
 	case contactevent.ContactRequestEnrichV1:

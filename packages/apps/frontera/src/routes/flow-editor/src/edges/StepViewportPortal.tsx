@@ -17,11 +17,17 @@ export const StepViewportPortal = observer(
   }) => {
     const { ui } = useStore();
 
+    const showStepDropdownMenu =
+      ui.flowCommandMenu?.isOpen &&
+      ui.flowCommandMenu.context.entity === 'Step' &&
+      id === ui.flowCommandMenu.context.id;
+
     return (
       <>
-        {ui.flowCommandMenu?.isOpen && id === ui.flowCommandMenu.context.id && (
+        {showStepDropdownMenu && (
           <ViewportPortal>
             <div
+              className='border border-gray-200 rounded-lg shadow-lg cursor-default'
               style={{
                 transform: `translate(calc(${positionAbsoluteX}px - 50%), ${
                   positionAbsoluteY + 24 // 24 is desired spacing between dropdown and button

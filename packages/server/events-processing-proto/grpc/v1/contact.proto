@@ -61,6 +61,15 @@ message LinkEmailToContactGrpcRequest {
   bool primary = 4;
   string loggedInUserId = 6;
   string appSource = 7;
+  string email = 8;
+}
+
+message UnLinkEmailFromContactGrpcRequest {
+  string tenant = 1;
+  string contactId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  string email = 5;
 }
 
 message LinkLocationToContactGrpcRequest {
@@ -77,13 +86,13 @@ message LinkWithOrganizationGrpcRequest {
   string organizationId = 3;
   string loggedInUserId = 4;
   SourceFields sourceFields = 5;
-  google.protobuf.Timestamp  startedAt = 6;
-  google.protobuf.Timestamp  endedAt = 7;
+  google.protobuf.Timestamp startedAt = 6;
+  google.protobuf.Timestamp endedAt = 7;
   string jobTitle = 8;
   bool primary = 9;
   string description = 10;
-  google.protobuf.Timestamp  createdAt = 11;
-  google.protobuf.Timestamp  updatedAt = 12;
+  google.protobuf.Timestamp createdAt = 11;
+  google.protobuf.Timestamp updatedAt = 12;
   string appSource = 13;
 }
 
@@ -157,6 +166,7 @@ service contactGrpcService {
   rpc UpsertContact(UpsertContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkPhoneNumberToContact(LinkPhoneNumberToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkEmailToContact(LinkEmailToContactGrpcRequest) returns (ContactIdGrpcResponse);
+  rpc UnLinkEmailFromContact(UnLinkEmailFromContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkLocationToContact(LinkLocationToContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc LinkWithOrganization(LinkWithOrganizationGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddSocial(ContactAddSocialGrpcRequest) returns (SocialIdGrpcResponse);

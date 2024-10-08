@@ -835,7 +835,7 @@ const TActions = forwardRef<HTMLDivElement, HTMLAttributes<HTMLDivElement>>(
     return (
       <div
         ref={ref}
-        className='flex items-center justify-center left-[50%] bottom-[32px] absolute'
+        className='flex items-center justify-center left-[50%] bottom-[62px] absolute'
         {...props}
       />
     );

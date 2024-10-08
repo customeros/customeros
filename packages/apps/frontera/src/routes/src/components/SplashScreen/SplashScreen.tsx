@@ -15,6 +15,7 @@ const privatePaths = [
   '/organization/',
   '/settings',
   '/invoices',
+  '/flow-editor',
   '/renewals',
   '/customer-map',
 ];

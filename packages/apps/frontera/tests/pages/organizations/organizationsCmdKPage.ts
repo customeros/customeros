@@ -10,11 +10,11 @@ import { ContractsPage } from '../contracts/contractsPage';
 import { CustomersPage } from '../customers/customersPage';
 import { CustomerMapPage } from '../customer-map/customerMapPage';
 import { SettingsAccountsPage } from '../settings/settingsAccounts';
-import { OpportunitiesPage } from '../opportunities/opportunitiesPage';
 import {
   ensureLocatorIsVisible,
   clickLocatorThatIsVisible,
 } from '../../helper';
+import { OpportunitiesKanbanPage } from '../opportunitiesKanban/opportunitiesKanbanPage';
 
 export class OrganizationsCmdKPage {
   private page: Page;
@@ -37,7 +37,7 @@ export class OrganizationsCmdKPage {
   private organizationHubGn = 'div[data-test="organization-hub-gn"]';
   private organizationHubGi = 'div[data-test="organization-hub-gi"]';
   private organizationHubGr = 'div[data-test="organization-hub-gr"]';
-  private organizationHubGq = 'div[data-test="organization-hub-gq"]';
+  private organizationHubGf = 'div[data-test="organization-hub-gf"]';
   private organizationHubGs = 'div[data-test="organization-hub-gs"]';
   private organizationHubGd = 'div[data-test="organization-hub-gd"]';
 
@@ -154,7 +154,7 @@ export class OrganizationsCmdKPage {
     const organizationHubGrText = await organizationHubGr.textContent();
     const navigationItemTextSeven = await navigationItems[6].textContent();
 
-    const organizationHubGq = this.page.locator(this.organizationHubGq);
+    const organizationHubGq = this.page.locator(this.organizationHubGf);
     const organizationHubGqText = await organizationHubGq.textContent();
     const navigationItemTextEight = await navigationItems[7].textContent();
 
@@ -286,7 +286,7 @@ export class OrganizationsCmdKPage {
   }
 
   async verifyNavigationToOpportunities(page: Page) {
-    const opportunitiesPage = new OpportunitiesPage(page);
+    const opportunitiesPage = new OpportunitiesKanbanPage(page);
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
@@ -390,7 +390,7 @@ export class OrganizationsCmdKPage {
     const organizationsPage = new OrganizationsPage(page);
 
     await this.verifyNavigationWithKeyboard(
-      'KeyQ',
+      'KeyF',
       flowsPage.sideNavItemAllFlowsSelected,
     );
 
@@ -398,7 +398,7 @@ export class OrganizationsCmdKPage {
 
     await this.openCmdK();
     await this.verifyNavigationWithClick(
-      this.organizationHubGq,
+      this.organizationHubGf,
       flowsPage.sideNavItemAllFlowsSelected,
     );
 

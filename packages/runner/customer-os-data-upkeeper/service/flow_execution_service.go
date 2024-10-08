@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -12,7 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
@@ -58,66 +56,20 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 			Tenant: model.GetTenantFromLabels(actionExecutionNode.Labels, model.NodeLabelFlowActionExecution),
 		})
 
-		err := s.processActionExecution(ctx, actionExecution)
+		err := s.commonServices.FlowExecutionService.ProcessActionExecution(ctx, actionExecution)
 		if err != nil {
 			tracing.TraceErr(span, err)
+
+			actionExecution.Status = neo4jEntity.FlowActionExecutionStatusTechError
+
+			_, err = s.commonServices.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, nil, actionExecution)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
 			continue
 		}
 	}
 
-}
-
-func (s *flowExecutionService) processActionExecution(ctx context.Context, scheduledActionExecution *neo4jEntity.FlowActionExecutionEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.processActionExecution")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	span.LogFields(log.Object("scheduledActionExecution", scheduledActionExecution))
-
-	session := utils.NewNeo4jWriteSession(ctx, *s.commonServices.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-
-		currentAction, err := s.commonServices.FlowService.FlowActionGetById(ctx, scheduledActionExecution.ActionId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		if currentAction == nil {
-
-		}
-		//TODO
-		//if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailNew {
-		//	//TODO send email
-		//} else if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailReply {
-		//	//TODO reply to previous email
-		//}
-
-		scheduledActionExecution.Status = neo4jEntity.FlowActionExecutionStatusSuccess
-
-		_, err = s.commonServices.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, &tx, scheduledActionExecution)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		err = s.commonServices.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, scheduledActionExecution.ContactId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		return nil, nil
-	})
-
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
 }
 
 func (s *flowExecutionService) ComputeFlowStatistics() {
@@ -150,7 +102,7 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				Tenant: tenant.Name,
 			})
 
-			pending, err := s.commonServices.Neo4jRepositories.FlowContactReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowContactStatusPending)
+			pending, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusPending)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
@@ -161,7 +113,7 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				return
 			}
 
-			completed, err := s.commonServices.Neo4jRepositories.FlowContactReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowContactStatusCompleted)
+			completed, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusCompleted)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
@@ -172,12 +124,18 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				return
 			}
 
-			goalAchieved, err := s.commonServices.Neo4jRepositories.FlowContactReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowContactStatusGoalAchieved)
+			goalAchieved, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusGoalAchieved)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
 			}
 			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "goalAchieved", goalAchieved)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", pending+completed+goalAchieved)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return

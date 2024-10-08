@@ -2,10 +2,12 @@ package email
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
+	emailevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -39,6 +41,10 @@ func (a *EmailAggregate) HandleGRPCRequest(ctx context.Context, request any, par
 	switch r := request.(type) {
 	case *emailpb.EmailValidationGrpcRequest:
 		return nil, a.emailValidatedV2(ctx, r)
+	case *emailpb.UpsertEmailRequest:
+		return nil, a.UpsertEmail(ctx, r)
+	case *emailpb.DeleteEmailRequest:
+		return nil, a.DeleteEmail(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -53,7 +59,7 @@ func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	event, err := event2.NewEmailValidatedEventV2(a,
+	event, err := emailevent.NewEmailValidatedEventV2(a,
 		request.Tenant,
 		request.RawEmail,
 		request.Email,
@@ -91,20 +97,72 @@ func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.
 	return a.Apply(event)
 }
 
+func (a *EmailAggregate) UpsertEmail(ctx context.Context, request *emailpb.UpsertEmailRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.UpsertEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	sourceFields := common.Source{}
+	sourceFields.FromGrpc(request.SourceFields)
+
+	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
+
+	upsertEvent, err := emailevent.NewEmailUpsertEvent(a, request.Tenant, request.RawEmail, sourceFields, createdAtNotNil)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewEmailUpsertEvent")
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&upsertEvent, span, eventstore.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.SourceFields.AppSource,
+	})
+
+	return a.Apply(upsertEvent)
+}
+
+func (a *EmailAggregate) DeleteEmail(ctx context.Context, request *emailpb.DeleteEmailRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "EmailAggregate.UpsertEmail")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.Tenant)
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
+	tracing.LogObjectAsJson(span, "request", request)
+
+	deleteEvent, err := emailevent.NewEmailDeleteEvent(a, request.Tenant)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewEmailDeleteEvent")
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&deleteEvent, span, eventstore.EventMetadata{
+		Tenant: a.Tenant,
+		UserId: request.LoggedInUserId,
+		App:    request.AppSource,
+	})
+
+	return a.Apply(deleteEvent)
+}
+
 func (a *EmailAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
-	case event2.EmailCreateV1:
+	case emailevent.EmailCreateV1:
 		return a.onEmailCreate(event)
-	case event2.EmailUpdateV1:
+	case emailevent.EmailUpdateV1:
 		return a.onEmailUpdated(event)
-	case event2.EmailValidatedV2:
+	case emailevent.EmailValidatedV2:
 		return a.OnEmailValidated(event)
-	case event2.EmailValidationFailedV1:
-		return nil
-	case event2.EmailValidatedV1:
+	case emailevent.EmailValidationFailedV1,
+		emailevent.EmailValidatedV1,
+		emailevent.EmailUpsertV1,
+		emailevent.EmailDeleteV1:
 		return nil
 	default:
-		if strings.HasPrefix(event.GetEventType(), utils.EsInternalStreamPrefix) {
+		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -114,7 +172,7 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
-	var eventData event2.EmailCreateEvent
+	var eventData emailevent.EmailCreateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
@@ -132,11 +190,11 @@ func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
-	var eventData event2.EmailUpdateEvent
+	var eventData emailevent.EmailUpdateEvent
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == utils.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Email.Source.SourceOfTruth = eventData.Source
 	}
 	a.Email.UpdatedAt = eventData.UpdatedAt
@@ -145,7 +203,7 @@ func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
 }
 
 func (a *EmailAggregate) OnEmailValidated(event eventstore.Event) error {
-	var eventData event2.EmailValidatedEventV2
+	var eventData emailevent.EmailValidatedEventV2
 	if err := event.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}

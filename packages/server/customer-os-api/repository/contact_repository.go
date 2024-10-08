@@ -29,8 +29,6 @@ type ContactRepository interface {
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
 	GetContactsForPhoneNumber(ctx context.Context, tenant, phoneNumber string) ([]*dbtype.Node, error)
 	// Deprecated, use events-platform
-	AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error)
-	// Deprecated, use events-platform
 	RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error)
 	// Deprecated, use events-platform
 	MergeContactPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryContactId, mergedContactId string, sourceOfTruth neo4jentity.DataSource) error
@@ -279,46 +277,6 @@ func (r *contactRepository) GetAllForJobRoles(ctx context.Context, tenant string
 		return nil, err
 	}
 	return result.([]*utils.DbNodeAndId), err
-}
-
-func (r *contactRepository) AddOrganization(ctx context.Context, tenant, contactId, organizationId, source, appSource string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.AddOrganization")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	query := `MATCH (t:Tenant {name:$tenant}), 
-		 (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(t), 
-		 (org:Organization {id:$organizationId})-[:ORGANIZATION_BELONGS_TO_TENANT]->(t) 
-		 MERGE (c)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(org)  
-		 ON CREATE SET c.updatedAt=datetime(),
-		 				j.id=randomUUID(), 
-						j.source=$source, 
-						j.sourceOfTruth=$source, 
-						j.appSource=$appSource, 
-						j.createdAt=$now, 
-						j.updatedAt=datetime(),
-						j:JobRole_%s
-		 RETURN c`
-
-	if result, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		queryResult, err := tx.Run(ctx, fmt.Sprintf(query, tenant),
-			map[string]any{
-				"tenant":         tenant,
-				"contactId":      contactId,
-				"organizationId": organizationId,
-				"now":            utils.Now(),
-				"source":         source,
-				"appSource":      appSource,
-			})
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
 }
 
 func (r *contactRepository) RemoveOrganization(ctx context.Context, tenant, contactId, organizationId string) (*dbtype.Node, error) {

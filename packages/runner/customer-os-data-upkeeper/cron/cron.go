@@ -129,6 +129,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "sendPayInvoiceNotifications", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendRemindInvoiceNotification, func() {
+		lockAndRunJob(cont, invoiceGroup, sendRemindInvoiceNotifications)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendRemindInvoiceNotifications", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshLastTouchpoint, func() {
 		lockAndRunJob(cont, refreshLastTouchpointGroup, refreshLastTouchpoint)
 	})
@@ -248,12 +255,19 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
 	}
 
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
-	//	lockAndRunJob(cont, flowExecutionGroup, flowExecution)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
-	//}
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanEmails, func() {
+		lockAndRunJob(cont, emailGroup, cleanEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
+		lockAndRunJob(cont, flowExecutionGroup, flowExecution)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
+	}
 
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowStatistics, func() {
 		lockAndRunJob(cont, flowStatisticsGroup, flowStatistics)
@@ -353,6 +367,10 @@ func sendPayInvoiceNotifications(cont *container.Container) {
 	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendPayNotifications()
 }
 
+func sendRemindInvoiceNotifications(cont *container.Container) {
+	service.NewInvoiceService(cont.Cfg, cont.Log, cont.Repositories, cont.EventProcessingServicesClient).SendRemindNotifications()
+}
+
 func refreshLastTouchpoint(cont *container.Container) {
 	service.NewOrganizationService(cont.Cfg, cont.Log, cont.CommonServices, cont.EventProcessingServicesClient).RefreshLastTouchpoint()
 }
@@ -387,6 +405,10 @@ func checkScrubbyResult(cont *container.Container) {
 
 func checkEnrowResult(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CheckEnrowRequestsWithoutResponse()
+}
+
+func cleanEmails(cont *container.Container) {
+	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).CleanEmails()
 }
 
 func flowExecution(cont *container.Container) {

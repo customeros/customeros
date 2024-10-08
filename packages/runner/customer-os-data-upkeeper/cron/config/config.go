@@ -7,7 +7,7 @@ type Config struct {
 
 	// Organizations
 	// Defaults to each 5 minutes
-	CronScheduleRefreshLastTouchpoint string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */5 * * * *"`
+	CronScheduleRefreshLastTouchpoint string `env:"CRON_SCHEDULE_REFRESH_LAST_TOUCHPOINT" envDefault:"30 */1 * * * *"`
 	// Defaults to each 15 minutes
 	CronScheduleUpdateOrganization string `env:"CRON_SCHEDULE_UPDATE_ORGANIZATION" envDefault:"0 */15 * * * *"`
 
@@ -37,6 +37,8 @@ type Config struct {
 	CronScheduleCleanupInvoices string `env:"CRON_SCHEDULE_CLEANUP_INVOICES" envDefault:"0 40 */8 * * *"`
 	// Defaults to each 30 mins
 	CronScheduleAdjustInvoiceStatus string `env:"CRON_SCHEDULE_ADJUST_INVOICE_STATUS" envDefault:"0 */30 * * * *"`
+	// Defaults to 9:15am
+	CronScheduleSendRemindInvoiceNotification string `env:"CRON_SCHEDULE_SEND_REMIND_INVOICE_NOTIFICATION" envDefault:"0 15 9 * * *"`
 
 	// Issues
 	// Defaults to each 2 minutes
@@ -62,6 +64,7 @@ type Config struct {
 	CronScheduleValidateEmailsFromBulkRequests string `env:"CRON_SCHEDULE_VALIDATE_EMAILS_BULK_REQUEST" envDefault:"*/10 * * * * *"`
 	CronScheduleCheckScrubbyResult             string `env:"CRON_SCHEDULE_CHECK_SCRUBBY_RESULT" envDefault:"0 45 * * * *"`
 	CronScheduleCheckEnrowResults              string `env:"CRON_SCHEDULE_CHECK_ENROW_RESULTS" envDefault:"0 */5 * * * *"`
+	CronScheduleCleanEmails                    string `env:"CRON_SCHEDULE_CLEAN_EMAILS" envDefault:"0 0 */6 * * *"`
 
 	// Flows
 	CronScheduleFlowExecution  string `env:"CRON_SCHEDULE_FLOW_EXECUTION" envDefault:"*/5 * * * * *"`

@@ -18,11 +18,7 @@ import { Tag, Contact, DataSource, ContactUpdateInput } from '@graphql/types';
 
 import { ContactService } from './__service__/Contact.service.ts';
 
-interface ContractStore {
-  get name(): string;
-}
-
-export class ContactStore implements Store<Contact>, ContractStore {
+export class ContactStore implements Store<Contact> {
   value: Contact;
   version = 0;
   isLoading = false;
@@ -92,13 +88,7 @@ export class ContactStore implements Store<Contact>, ContractStore {
   }
 
   get flowContact(): FlowContactStore | undefined {
-    const fcId = this.flow?.value.contacts?.find(
-      (fc) => fc.contact.metadata.id === this.id,
-    )?.metadata.id;
-
-    if (!fcId) return undefined;
-
-    return this.root.flowContacts.value.get(fcId) as FlowContactStore;
+    return this.root.flowContacts.value.get(this.id) as FlowContactStore;
   }
 
   get name() {
@@ -121,6 +111,10 @@ export class ContactStore implements Store<Contact>, ContractStore {
     if (!this.value.locations?.[0]?.countryCodeA2) return undefined;
 
     return countryMap.get(this.value.locations[0].countryCodeA2.toLowerCase());
+  }
+
+  get organization() {
+    return this.root.organizations.value.get(this.organizationId)?.value;
   }
 
   setId(id: string) {

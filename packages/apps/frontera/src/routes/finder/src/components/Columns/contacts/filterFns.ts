@@ -97,7 +97,25 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
 
         if (!filterValues) return true;
-        const emails = row.value?.emails?.map((e) => e.email);
+        const emails = row.value?.emails
+          .filter((e) => e.work)
+          .map((e) => e.email);
+
+        return emails?.some((e) => e?.includes(filterValues));
+      },
+    )
+
+    .with(
+      { property: ColumnViewType.ContactsPersonalEmails },
+      (filter) => (row: ContactStore) => {
+        const filterValues = filter?.value;
+
+        if (!filter.active) return true;
+
+        if (!filterValues) return true;
+        const emails = row.value?.emails
+          .filter((e) => !e.work)
+          .map((e) => e.email);
 
         return emails?.some((e) => e?.includes(filterValues));
       },
@@ -325,6 +343,19 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
             (categoryFilter.category === EmailDeliverable.Unknown &&
               isDeliverableUnknown(categoryFilter.values, emailValidationData)),
         );
+      },
+    )
+    .with(
+      { property: ColumnViewType.ContactsFlowStatus },
+      (filter) => (row: ContactStore) => {
+        if (!filter.active) return true;
+
+        const filterValues = filter.value;
+        const currentFlowStatus = row.flowContact?.value?.status;
+
+        if (!currentFlowStatus) return false;
+
+        return filterValues.includes(currentFlowStatus);
       },
     )
 

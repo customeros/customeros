@@ -4,8 +4,8 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	baseEvent "github.com/openline-ai/openline-customer-os/packages/server/events/event"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"strings"
@@ -57,7 +57,7 @@ func EnrichEventWithMetadataExtended(event *Event, span opentracing.Span, mtd Ev
 }
 
 func AllowCheckForNoChanges(appSource, loggedInUserId string) bool {
-	return (appSource == utils.AppSourceIntegrationApp || appSource == utils.AppSourceSyncCustomerOsData) && loggedInUserId == ""
+	return (appSource == constants.AppSourceIntegrationApp || appSource == constants.AppSourceSyncCustomerOsData) && loggedInUserId == ""
 }
 
 func LoadAggregate(ctx context.Context, eventStore AggregateStore, agg Aggregate, options LoadAggregateOptions) error {
@@ -87,15 +87,15 @@ func GetAggregateObjectID(aggregateID, tenant string, aggregateType AggregateTyp
 	if tenant == "" {
 		return getAggregateObjectUUID(aggregateID)
 	}
-	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+utils.StreamTempPrefix+"-"+tenant+"-") {
-		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+utils.StreamTempPrefix+"-"+tenant+"-", "")
+	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-") {
+		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-"+tenant+"-", "")
 	}
 	return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+tenant+"-", "")
 }
 
 func GetTenantFromAggregate(aggregateID string, aggregateType AggregateType) string {
-	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+utils.StreamTempPrefix+"-") {
-		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+utils.StreamTempPrefix+"-", "")
+	if strings.HasPrefix(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-") {
+		return strings.ReplaceAll(aggregateID, string(aggregateType)+"-"+constants.StreamTempPrefix+"-", "")
 	}
 
 	var1 := strings.ReplaceAll(aggregateID, string(aggregateType)+"-", "")

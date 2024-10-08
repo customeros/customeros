@@ -13,7 +13,15 @@ export const csvDataMapper = {
     d?.value?.locations?.[0]?.locality,
   [ColumnViewType.ContactsCountry]: (d: ContactStore) => d?.country,
   [ColumnViewType.ContactsEmails]: (d: ContactStore) =>
-    d?.value?.emails?.map((e) => e.email).join('; '),
+    d?.value?.emails
+      ?.filter((e) => e.work)
+      .map((e) => e.email)
+      .join('; '),
+  [ColumnViewType.ContactsPersonalEmails]: (d: ContactStore) =>
+    d?.value?.emails
+      ?.filter((e) => !e.work)
+      .map((e) => e.email)
+      .join('; '),
   [ColumnViewType.ContactsExperience]: () => null,
   [ColumnViewType.ContactsJobTitle]: (d: ContactStore) =>
     d?.value?.jobRoles?.[0]?.jobTitle,

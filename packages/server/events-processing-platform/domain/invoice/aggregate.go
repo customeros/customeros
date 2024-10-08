@@ -8,9 +8,9 @@ import (
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	invoicepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/invoice"
+	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -79,6 +79,8 @@ func (a *InvoiceAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		return nil, a.UpdateInvoice(ctx, r)
 	case *invoicepb.PayInvoiceNotificationRequest:
 		return nil, a.CreatePayInvoiceNotificationEvent(ctx, r)
+	case *invoicepb.RemindInvoiceNotificationRequest:
+		return nil, a.CreateRemindInvoiceNotificationEvent(ctx, r)
 	case *invoicepb.RequestFillInvoiceRequest:
 		return nil, a.CreateFillRequestedEvent(ctx, r)
 	case *invoicepb.PermanentlyDeleteInitializedInvoiceRequest:
@@ -278,6 +280,28 @@ func (a *InvoiceAggregate) CreatePayInvoiceNotificationEvent(ctx context.Context
 	return a.Apply(event)
 }
 
+func (a *InvoiceAggregate) CreateRemindInvoiceNotificationEvent(ctx context.Context, r *invoicepb.RemindInvoiceNotificationRequest) error {
+	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.CreateRemindInvoiceNotificationEvent")
+	defer span.Finish()
+	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
+	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
+	span.LogFields(log.Int64("AggregateVersion", a.GetVersion()))
+
+	event, err := NewInvoiceRemindNotificationEvent(a)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "NewInvoiceRemindNotificationEvent")
+	}
+
+	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
+		Tenant: r.Tenant,
+		UserId: r.LoggedInUserId,
+		App:    r.AppSource,
+	})
+
+	return a.Apply(event)
+}
+
 func (a *InvoiceAggregate) UpdateInvoice(ctx context.Context, r *invoicepb.UpdateInvoiceRequest) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "InvoiceAggregate.UpdateInvoice")
 	defer span.Finish()
@@ -412,6 +436,7 @@ func (a *InvoiceAggregate) When(evt eventstore.Event) error {
 		InvoiceFillRequestedV1,
 		InvoicePaidV1,
 		InvoicePayNotificationV1,
+		InvoiceRemindNotificationV1,
 		InvoiceDeleteV1,
 		InvoiceVoidV1:
 		return nil

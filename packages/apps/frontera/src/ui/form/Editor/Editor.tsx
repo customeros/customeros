@@ -30,6 +30,7 @@ import {
 
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
+import { LinkPastePlugin } from '@ui/form/Editor/plugins/PastePlugin';
 import TextNodeTransformer from '@ui/form/Editor/nodes/TextTransformar.ts';
 
 import { nodes } from './nodes/nodes';
@@ -50,6 +51,12 @@ const theme: EditorThemeClasses = {
     superscript: 'editor-textSuperscript',
     underline: 'editor-textUnderline',
     underlineStrikethrough: 'editor-textUnderlineStrikethrough',
+  },
+  blockquote: {
+    css: `
+      border-left: 2px solid #D0D5DD;
+      padding-left: 12px;
+    `,
   },
 };
 
@@ -119,7 +126,6 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
     const hasLoadedDefaultHtmlValue = useRef(false);
     const [floatingAnchorElem, setFloatingAnchorElem] =
       useState<HTMLDivElement>();
-    const [isLinkEditMode, setIsLinkEditMode] = useState<boolean>(false);
 
     const initialConfig: InitialConfigType = {
       namespace,
@@ -172,7 +178,10 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
     }, []);
 
     return (
-      <div className='relative w-full h-full lexical-editor'>
+      <div
+        onClick={() => editor.current?.focus()}
+        className='relative w-full h-full lexical-editor cursor-text'
+      >
         <LexicalComposer initialConfig={initialConfig}>
           <EditorRefPlugin editorRef={editor} />
           <CheckListPlugin />
@@ -188,6 +197,8 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
             options={mentionsOptions}
             onSearch={onMentionsSearch}
           />
+          <LinkPastePlugin />
+
           <HashtagsPlugin
             options={hashtagsOptions}
             onCreate={onHashtagCreate}
@@ -195,11 +206,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
           />
           {floatingAnchorElem && (
             <>
-              <FloatingLinkEditorPlugin
-                anchorElem={floatingAnchorElem}
-                isLinkEditMode={isLinkEditMode}
-                setIsLinkEditMode={setIsLinkEditMode}
-              />
+              <FloatingLinkEditorPlugin anchorElem={floatingAnchorElem} />
               <FloatingMenuPlugin element={floatingAnchorElem} />
             </>
           )}

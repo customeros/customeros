@@ -8,6 +8,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -35,7 +36,7 @@ import (
 // @Security ApiKeyAuth
 func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewDomain", c.Request.Header)
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "RegisterNewMailbox", c.Request.Header)
 		defer span.Finish()
 		tracing.TagComponentRest(span)
 		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
@@ -68,6 +69,10 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		// Parse and validate request body
 		var mailboxRequest MailboxRequest
 		if err := c.ShouldBindJSON(&mailboxRequest); err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "Invalid request body"))
+			// log body
+			body, _ := c.GetRawData()
+			span.LogFields(tracingLog.String("request.body", string(body)))
 			c.JSON(http.StatusBadRequest,
 				rest.ErrorResponse{
 					Status:  "error",
@@ -82,7 +87,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 			c.JSON(http.StatusBadRequest,
 				rest.ErrorResponse{
 					Status:  "error",
-					Message: "Missing username or password",
+					Message: "Missing username",
 				})
 			span.LogFields(tracingLog.String("result", "Missing username"))
 			return
@@ -181,7 +186,10 @@ func addMailbox(ctx context.Context, tenant, domain string, username, password s
 	}
 
 	// Save mailbox details in postgres
-	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.SaveMailbox(ctx, tenant, domain, mailboxResponse.Email, password)
+	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &entity.TenantSettingsMailbox{
+		Domain: domain, MailboxUsername: username, Tenant: tenant, MailboxPassword: password, MinMinutesBetweenEmails: 5, MaxMinutesBetweenEmails: 5,
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error saving mailbox"))
 		return mailboxResponse, err

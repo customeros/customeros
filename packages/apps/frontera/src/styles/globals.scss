@@ -28,30 +28,31 @@
     }
   }
 
-  blockquote,
-  dl,
-  dd,
-  h1,
-  h2,
-  h3,
-  h4,
-  h5,
-  h6,
-  hr,
-  figure,
-  p,
-  pre {
-    @apply text-gray-700;
-    @apply font-normal;
-  }
 
-  input[type="number"]::-webkit-outer-spin-button,
-  input[type="number"]::-webkit-inner-spin-button,
-  input[type="number"] {
-    -webkit-appearance: none;
-    margin: 0;
-    -moz-appearance: textfield !important;
-  }
+  //blockquote,
+  //dl,
+  //dd,
+  //h1,
+  //h2,
+  //h3,
+  //h4,
+  //h5,
+  //h6,
+  //hr,
+  //figure,
+  //p,
+  //pre {
+  //  @apply text-gray-700;
+  //  @apply font-normal;
+  //}
+  //
+  //input[type="number"]::-webkit-outer-spin-button,
+  //input[type="number"]::-webkit-inner-spin-button,
+  //input[type="number"] {
+  //  -webkit-appearance: none;
+  //  margin: 0;
+  //  -moz-appearance: textfield !important;
+  //}
 }
 
 @layer components {
@@ -298,6 +299,11 @@
     width: 100%;
   }
 }
+.react-flow {
+  --xy-edge-stroke-default: #D0D5DD;
+
+}
+
 .react-flow__edge.react-flow__edge-baseEdge {
   ----xy-edge-stroke-default: #D0D5DD;
   --xy-edge-stroke-selected-default: #9E77ED;
@@ -315,21 +321,30 @@
 .react-flow__controls-button {
   border-right: 8px;
   padding: 8px;
-  height: 40px;
-  width: 40px;
 }
 
-.lexical-editor {
-  ul,ol {
-    padding-left: 18px;
-  }
-  ul li {
-    list-style: disc;
-  }
 
-  ol li {
-    list-style: decimal;
-  }
+.react-flow__controls {
+  box-shadow: none;
+}
+.react-flow__marker polyline {
+  stroke: var(--xy-edge-stroke-default) !important;
+  stroke-width: 1.5px !important;
+}
 
+.react-flow__controls-button svg{
+  fill: transparent;
+  max-width: unset;
+  max-height: unset;
+}
+.react-flow__controls-button:disabled {
+  pointer-events: unset;
+}
+
+// inside editor we want to use default element styles to ensure user will get that they expect
+.email-editor {
+  p, ul, ol, a{
+    all: revert;
+  }
 
 }

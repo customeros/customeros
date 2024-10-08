@@ -182,90 +182,134 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	}
 
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphSubscriber.When", evt)
+	defer span.Finish()
+
 	switch evt.GetEventType() {
 
 	case "V1_EVENT_COMPLETED":
 		return nil
 
 	case generic.LinkEntityWithEntityV1:
-		return s.genericEventHandler.OnLinkEntityWithEntityV1(ctx, evt)
+		_ = s.genericEventHandler.OnLinkEntityWithEntityV1(ctx, evt)
+		return nil
 
 	case phonenumberevents.PhoneNumberCreateV1:
-		return s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
+		_ = s.phoneNumberEventHandler.OnPhoneNumberCreate(ctx, evt)
+		return nil
 	case phonenumberevents.PhoneNumberUpdateV1:
-		return s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
+		_ = s.phoneNumberEventHandler.OnPhoneNumberUpdate(ctx, evt)
+		return nil
 	case phonenumberevents.PhoneNumberValidationFailedV1:
-		return s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
+		_ = s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
+		return nil
 	case phonenumberevents.PhoneNumberValidationSkippedV1:
 		return nil
 	case phonenumberevents.PhoneNumberValidatedV1:
-		return s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
+		_ = s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
+		return nil
 	case phonenumberevents.PhoneNumberValidateV1:
 		return nil
 
 	case emailevents.EmailCreateV1:
-		return s.emailEventHandler.OnEmailCreate(ctx, evt)
+		_ = s.emailEventHandler.OnEmailCreate(ctx, evt)
+		return nil
 	case emailevents.EmailUpdateV1:
-		return s.emailEventHandler.OnEmailUpdate(ctx, evt)
-	case emailevents.EmailValidationFailedV1,
-		emailevents.EmailValidatedV1:
+		_ = s.emailEventHandler.OnEmailUpdate(ctx, evt)
 		return nil
 	case emailevents.EmailValidatedV2:
-		return s.emailEventHandler.OnEmailValidatedV2(ctx, evt)
-	case emailevents.EmailValidateV1:
+		_ = s.emailEventHandler.OnEmailValidatedV2(ctx, evt)
+		return nil
+	case emailevents.EmailDeleteV1:
+		_ = s.emailEventHandler.OnEmailDelete(ctx, evt)
+		return nil
+	case emailevents.EmailValidationFailedV1,
+		emailevents.EmailValidatedV1,
+		emailevents.EmailValidateV1,
+		emailevents.EmailUpsertV1:
 		return nil
 
 	case contactevent.ContactCreateV1:
-		return s.contactEventHandler.OnContactCreate(ctx, evt)
+		_ = s.contactEventHandler.OnContactCreate(ctx, evt)
+		return nil
 	case contactevent.ContactUpdateV1:
-		return s.contactEventHandler.OnContactUpdate(ctx, evt)
+		_ = s.contactEventHandler.OnContactUpdate(ctx, evt)
+		return nil
 	case contactevent.ContactPhoneNumberLinkV1:
-		return s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
+		_ = s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
+		return nil
 	case contactevent.ContactEmailLinkV1:
-		return s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
+		_ = s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
+		return nil
+	case contactevent.ContactEmailUnlinkV1:
+		_ = s.contactEventHandler.OnEmailUnlinkFromContact(ctx, evt)
+		return nil
 	case contactevent.ContactLocationLinkV1:
-		return s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
+		_ = s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
+		return nil
 	case contactevent.ContactOrganizationLinkV1:
-		return s.contactEventHandler.OnContactLinkToOrganization(ctx, evt)
+		_ = s.contactEventHandler.OnContactLinkToOrganization(ctx, evt)
+		return nil
 	case contactevent.ContactAddSocialV1:
-		return s.contactEventHandler.OnSocialAddedToContactV1(ctx, evt)
+		_ = s.contactEventHandler.OnSocialAddedToContactV1(ctx, evt)
+		return nil
 	case contactevent.ContactRemoveSocialV1:
-		return s.contactEventHandler.OnSocialRemovedFromContactV1(ctx, evt)
+		_ = s.contactEventHandler.OnSocialRemovedFromContactV1(ctx, evt)
+		return nil
 	case contactevent.ContactAddTagV1:
-		return s.contactEventHandler.OnAddTag(ctx, evt)
+		_ = s.contactEventHandler.OnAddTag(ctx, evt)
+		return nil
 	case contactevent.ContactRemoveTagV1:
-		return s.contactEventHandler.OnRemoveTag(ctx, evt)
-	case contactevent.ContactRequestEnrichV1:
+		_ = s.contactEventHandler.OnRemoveTag(ctx, evt)
 		return nil
 	case contactevent.ContactAddLocationV1:
-		return s.contactEventHandler.OnLocationAddedToContact(ctx, evt)
+		_ = s.contactEventHandler.OnLocationAddedToContact(ctx, evt)
+		return nil
 	case contactevent.ContactHideV1:
-		return s.contactEventHandler.OnContactHide(ctx, evt)
+		_ = s.contactEventHandler.OnContactHide(ctx, evt)
+		return nil
 	case contactevent.ContactShowV1:
-		return s.contactEventHandler.OnContactShow(ctx, evt)
+		_ = s.contactEventHandler.OnContactShow(ctx, evt)
+		return nil
+	case contactevent.ContactRequestEnrichV1:
+		return nil
 
 	case orgevents.OrganizationCreateV1:
-		return s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
+		_ = s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
+		return nil
 	case orgevents.OrganizationUpdateV1:
-		return s.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
+		_ = s.organizationEventHandler.OnOrganizationUpdate(ctx, evt)
+		return nil
 	case orgevents.OrganizationPhoneNumberLinkV1:
-		return s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationEmailLinkV1:
-		return s.organizationEventHandler.OnEmailLinkedToOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnEmailLinkToOrganization(ctx, evt)
+		return nil
+	case orgevents.OrganizationEmailUnlinkV1:
+		_ = s.organizationEventHandler.OnEmailUnlinkFromOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationLocationLinkV1:
-		return s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationLinkDomainV1:
-		return s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnDomainLinkedToOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationUnlinkDomainV1:
-		return s.organizationEventHandler.OnDomainUnlinkedFromOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnDomainUnlinkedFromOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationAddSocialV1:
-		return s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnSocialAddedToOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationRemoveSocialV1:
-		return s.organizationEventHandler.OnSocialRemovedFromOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnSocialRemovedFromOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationHideV1:
-		return s.organizationEventHandler.OnOrganizationHide(ctx, evt)
+		_ = s.organizationEventHandler.OnOrganizationHide(ctx, evt)
+		return nil
 	case orgevents.OrganizationShowV1:
-		return s.organizationEventHandler.OnOrganizationShow(ctx, evt)
+		_ = s.organizationEventHandler.OnOrganizationShow(ctx, evt)
+		return nil
 	case orgevents.OrganizationRefreshLastTouchpointV1:
 		return nil
 	case orgevents.OrganizationRefreshArrV1:
@@ -278,19 +322,26 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		_ = s.organizationEventHandler.OnRefreshDerivedDataV1(ctx, evt)
 		return nil
 	case orgevents.OrganizationUpsertCustomFieldV1:
-		return s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
+		_ = s.organizationEventHandler.OnUpsertCustomField(ctx, evt)
+		return nil
 	case orgevents.OrganizationAddParentV1:
-		return s.organizationEventHandler.OnLinkWithParentOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnLinkWithParentOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationRemoveParentV1:
-		return s.organizationEventHandler.OnUnlinkFromParentOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnUnlinkFromParentOrganization(ctx, evt)
+		return nil
 	case orgevents.OrganizationUpdateOnboardingStatusV1:
-		return s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
+		_ = s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
+		return nil
 	case orgevents.OrganizationUpdateOwnerV1:
-		return s.organizationEventHandler.OnUpdateOwner(ctx, evt)
+		_ = s.organizationEventHandler.OnUpdateOwner(ctx, evt)
+		return nil
 	case orgevents.OrganizationAddTagV1:
-		return s.organizationEventHandler.OnAddTag(ctx, evt)
+		_ = s.organizationEventHandler.OnAddTag(ctx, evt)
+		return nil
 	case orgevents.OrganizationRemoveTagV1:
-		return s.organizationEventHandler.OnRemoveTag(ctx, evt)
+		_ = s.organizationEventHandler.OnRemoveTag(ctx, evt)
+		return nil
 	case orgevents.OrganizationRequestRenewalForecastV1,
 		orgevents.OrganizationRequestNextCycleDateV1,
 		orgevents.OrganizationUpdateRenewalLikelihoodV1,
@@ -301,102 +352,148 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		orgevents.OrganizationRequestEnrichV1:
 		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
-		return s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
+		_ = s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
+		return nil
 	case orgevents.OrganizationUpdateBillingProfileV1:
-		return s.organizationEventHandler.OnUpdateBillingProfile(ctx, evt)
+		_ = s.organizationEventHandler.OnUpdateBillingProfile(ctx, evt)
+		return nil
 	case orgevents.OrganizationEmailLinkToBillingProfileV1:
-		return s.organizationEventHandler.OnEmailLinkedToBillingProfile(ctx, evt)
+		_ = s.organizationEventHandler.OnEmailLinkedToBillingProfile(ctx, evt)
+		return nil
 	case orgevents.OrganizationEmailUnlinkFromBillingProfileV1:
-		return s.organizationEventHandler.OnEmailUnlinkedFromBillingProfile(ctx, evt)
+		_ = s.organizationEventHandler.OnEmailUnlinkedFromBillingProfile(ctx, evt)
+		return nil
 	case orgevents.OrganizationLocationLinkToBillingProfileV1:
-		return s.organizationEventHandler.OnLocationLinkedToBillingProfile(ctx, evt)
+		_ = s.organizationEventHandler.OnLocationLinkedToBillingProfile(ctx, evt)
+		return nil
 	case orgevents.OrganizationLocationUnlinkFromBillingProfileV1:
-		return s.organizationEventHandler.OnLocationUnlinkedFromBillingProfile(ctx, evt)
+		_ = s.organizationEventHandler.OnLocationUnlinkedFromBillingProfile(ctx, evt)
+		return nil
 	case orgevents.OrganizationAddLocationV1:
-		return s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
+		_ = s.organizationEventHandler.OnLocationAddedToOrganization(ctx, evt)
+		return nil
 
 	case userevents.UserCreateV1:
-		return s.userEventHandler.OnUserCreate(ctx, evt)
+		_ = s.userEventHandler.OnUserCreate(ctx, evt)
+		return nil
 	case userevents.UserUpdateV1:
-		return s.userEventHandler.OnUserUpdate(ctx, evt)
+		_ = s.userEventHandler.OnUserUpdate(ctx, evt)
+		return nil
 	case userevents.UserPhoneNumberLinkV1:
-		return s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
+		_ = s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
+		return nil
 	case userevents.UserEmailLinkV1:
-		return s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
+		_ = s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
+		return nil
+	case userevents.UserEmailUnlinkV1:
+		_ = s.userEventHandler.OnEmailUnlinkedFromUser(ctx, evt)
+		return nil
 	case userevents.UserJobRoleLinkV1:
-		return s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
+		_ = s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
+		return nil
 	case userevents.UserAddRoleV1:
-		return s.userEventHandler.OnAddRole(ctx, evt)
+		_ = s.userEventHandler.OnAddRole(ctx, evt)
+		return nil
 	case userevents.UserRemoveRoleV1:
-		return s.userEventHandler.OnRemoveRole(ctx, evt)
+		_ = s.userEventHandler.OnRemoveRole(ctx, evt)
+		return nil
 
 	case locationevents.LocationCreateV1:
-		return s.locationEventHandler.OnLocationCreate(ctx, evt)
+		_ = s.locationEventHandler.OnLocationCreate(ctx, evt)
+		return nil
 	case locationevents.LocationUpdateV1:
-		return s.locationEventHandler.OnLocationUpdate(ctx, evt)
+		_ = s.locationEventHandler.OnLocationUpdate(ctx, evt)
+		return nil
 	case locationevents.LocationValidationFailedV1:
-		return s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
+		_ = s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
+		return nil
 	case locationevents.LocationValidationSkippedV1:
 		return nil
 	case locationevents.LocationValidatedV1:
-		return s.locationEventHandler.OnLocationValidated(ctx, evt)
+		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
+		return nil
 	case jobroleevents.JobRoleCreateV1:
-		return s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
+		_ = s.jobRoleEventHandler.OnJobRoleCreate(ctx, evt)
+		return nil
 
 	case logentryevents.LogEntryCreateV1:
-		return s.logEntryEventHandler.OnCreate(ctx, evt)
+		_ = s.logEntryEventHandler.OnCreate(ctx, evt)
+		return nil
 	case logentryevents.LogEntryUpdateV1:
-		return s.logEntryEventHandler.OnUpdate(ctx, evt)
+		_ = s.logEntryEventHandler.OnUpdate(ctx, evt)
+		return nil
 	case logentryevents.LogEntryAddTagV1:
-		return s.logEntryEventHandler.OnAddTag(ctx, evt)
+		_ = s.logEntryEventHandler.OnAddTag(ctx, evt)
+		return nil
 	case logentryevents.LogEntryRemoveTagV1:
-		return s.logEntryEventHandler.OnRemoveTag(ctx, evt)
+		_ = s.logEntryEventHandler.OnRemoveTag(ctx, evt)
+		return nil
 
 	case commentevent.CommentCreateV1:
-		return s.commentEventHandler.OnCreate(ctx, evt)
+		_ = s.commentEventHandler.OnCreate(ctx, evt)
+		return nil
 	case commentevent.CommentUpdateV1:
-		return s.commentEventHandler.OnUpdate(ctx, evt)
+		_ = s.commentEventHandler.OnUpdate(ctx, evt)
+		return nil
 
 	case issueevent.IssueCreateV1:
-		return s.issueEventHandler.OnCreate(ctx, evt)
+		_ = s.issueEventHandler.OnCreate(ctx, evt)
+		return nil
 	case issueevent.IssueUpdateV1:
-		return s.issueEventHandler.OnUpdate(ctx, evt)
+		_ = s.issueEventHandler.OnUpdate(ctx, evt)
+		return nil
 	case issueevent.IssueAddUserAssigneeV1:
-		return s.issueEventHandler.OnAddUserAssignee(ctx, evt)
+		_ = s.issueEventHandler.OnAddUserAssignee(ctx, evt)
+		return nil
 	case issueevent.IssueRemoveUserAssigneeV1:
-		return s.issueEventHandler.OnRemoveUserAssignee(ctx, evt)
+		_ = s.issueEventHandler.OnRemoveUserAssignee(ctx, evt)
+		return nil
 	case issueevent.IssueAddUserFollowerV1:
-		return s.issueEventHandler.OnAddUserFollower(ctx, evt)
+		_ = s.issueEventHandler.OnAddUserFollower(ctx, evt)
+		return nil
 	case issueevent.IssueRemoveUserFollowerV1:
-		return s.issueEventHandler.OnRemoveUserFollower(ctx, evt)
+		_ = s.issueEventHandler.OnRemoveUserFollower(ctx, evt)
+		return nil
 
 	case opportunityevent.OpportunityCreateV1:
-		return s.opportunityEventHandler.OnCreate(ctx, evt)
+		_ = s.opportunityEventHandler.OnCreate(ctx, evt)
+		return nil
 	case opportunityevent.OpportunityUpdateNextCycleDateV1:
-		return s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
+		_ = s.opportunityEventHandler.OnUpdateNextCycleDate(ctx, evt)
+		return nil
 	case opportunityevent.OpportunityUpdateV1:
-		return s.opportunityEventHandler.OnUpdate(ctx, evt)
+		_ = s.opportunityEventHandler.OnUpdate(ctx, evt)
+		return nil
 	case opportunityevent.OpportunityCreateRenewalV1:
-		return s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
+		_ = s.opportunityEventHandler.OnCreateRenewal(ctx, evt)
+		return nil
 	case opportunityevent.OpportunityUpdateRenewalV1:
-		return s.opportunityEventHandler.OnUpdateRenewal(ctx, evt)
+		_ = s.opportunityEventHandler.OnUpdateRenewal(ctx, evt)
+		return nil
 	case opportunityevent.OpportunityCloseWinV1:
-		return s.opportunityEventHandler.OnCloseWon(ctx, evt)
+		_ = s.opportunityEventHandler.OnCloseWon(ctx, evt)
+		return nil
 	case opportunityevent.OpportunityCloseLooseV1:
-		return s.opportunityEventHandler.OnCloseLost(ctx, evt)
+		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
+		return nil
 	case opportunityevent.OpportunityArchiveV1:
-		return s.opportunityEventHandler.OnArchive(ctx, evt)
+		_ = s.opportunityEventHandler.OnArchive(ctx, evt)
+		return nil
 
 	case contractevent.ContractCreateV1:
-		return s.contractEventHandler.OnCreate(ctx, evt)
+		_ = s.contractEventHandler.OnCreate(ctx, evt)
+		return nil
 	case contractevent.ContractUpdateV1:
-		return s.contractEventHandler.OnUpdate(ctx, evt)
+		_ = s.contractEventHandler.OnUpdate(ctx, evt)
+		return nil
 	case contractevent.ContractRolloutRenewalOpportunityV1:
-		return s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
+		_ = s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
+		return nil
 	case contractevent.ContractUpdateStatusV1:
 		return nil
 	case contractevent.ContractDeleteV1:
-		return s.contractEventHandler.OnDeleteV1(ctx, evt)
+		_ = s.contractEventHandler.OnDeleteV1(ctx, evt)
+		return nil
 	case contractevent.ContractRefreshStatusV1:
 		_ = s.contractEventHandler.OnRefreshStatus(ctx, evt)
 		return nil
@@ -405,76 +502,108 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 
 	case servicelineitemevent.ServiceLineItemCreateV1:
-		return s.serviceLineItemEventHandler.OnCreateV1(ctx, evt)
+		_ = s.serviceLineItemEventHandler.OnCreateV1(ctx, evt)
+		return nil
 	case servicelineitemevent.ServiceLineItemUpdateV1:
-		return s.serviceLineItemEventHandler.OnUpdateV1(ctx, evt)
+		_ = s.serviceLineItemEventHandler.OnUpdateV1(ctx, evt)
+		return nil
 	case servicelineitemevent.ServiceLineItemDeleteV1:
-		return s.serviceLineItemEventHandler.OnDeleteV1(ctx, evt)
+		_ = s.serviceLineItemEventHandler.OnDeleteV1(ctx, evt)
+		return nil
 	case servicelineitemevent.ServiceLineItemCloseV1:
-		return s.serviceLineItemEventHandler.OnClose(ctx, evt)
+		_ = s.serviceLineItemEventHandler.OnClose(ctx, evt)
+		return nil
+	case servicelineitemevent.ServiceLineItemPauseV1:
+		_ = s.serviceLineItemEventHandler.OnPause(ctx, evt)
+		return nil
+	case servicelineitemevent.ServiceLineItemResumeV1:
+		_ = s.serviceLineItemEventHandler.OnResume(ctx, evt)
+		return nil
 
 	case masterplanevent.MasterPlanCreateV1:
-		return s.masterPlanEventHandler.OnCreate(ctx, evt)
+		_ = s.masterPlanEventHandler.OnCreate(ctx, evt)
+		return nil
 	case masterplanevent.MasterPlanUpdateV1:
-		return s.masterPlanEventHandler.OnUpdate(ctx, evt)
+		_ = s.masterPlanEventHandler.OnUpdate(ctx, evt)
+		return nil
 	case masterplanevent.MasterPlanMilestoneCreateV1:
-		return s.masterPlanEventHandler.OnCreateMilestone(ctx, evt)
+		_ = s.masterPlanEventHandler.OnCreateMilestone(ctx, evt)
+		return nil
 	case masterplanevent.MasterPlanMilestoneUpdateV1:
-		return s.masterPlanEventHandler.OnUpdateMilestone(ctx, evt)
+		_ = s.masterPlanEventHandler.OnUpdateMilestone(ctx, evt)
+		return nil
 	case masterplanevent.MasterPlanMilestoneReorderV1:
-		return s.masterPlanEventHandler.OnReorderMilestones(ctx, evt)
+		_ = s.masterPlanEventHandler.OnReorderMilestones(ctx, evt)
+		return nil
 
 	case invoiceevents.InvoiceCreateForContractV1:
-		return s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
+		_ = s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
+		return nil
 	case invoiceevents.InvoiceFillV1:
-		return s.invoiceEventHandler.OnInvoiceFillV1(ctx, evt)
+		_ = s.invoiceEventHandler.OnInvoiceFillV1(ctx, evt)
+		return nil
 	case invoiceevents.InvoicePdfGeneratedV1:
-		return s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
+		_ = s.invoiceEventHandler.OnInvoicePdfGenerated(ctx, evt)
+		return nil
 	case invoiceevents.InvoiceUpdateV1:
-		return s.invoiceEventHandler.OnInvoiceUpdateV1(ctx, evt)
+		_ = s.invoiceEventHandler.OnInvoiceUpdateV1(ctx, evt)
+		return nil
 	case invoiceevents.InvoiceVoidV1:
-		return s.invoiceEventHandler.OnInvoiceVoidV1(ctx, evt)
+		_ = s.invoiceEventHandler.OnInvoiceVoidV1(ctx, evt)
+		return nil
 	case invoiceevents.InvoiceDeleteV1:
-		return s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
+		_ = s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
+		return nil
 	case invoiceevents.InvoicePdfRequestedV1,
 		invoiceevents.InvoicePaidV1,
 		invoiceevents.InvoiceFillRequestedV1,
-		invoiceevents.InvoicePayNotificationV1:
+		invoiceevents.InvoicePayNotificationV1,
+		invoiceevents.InvoicePayV1:
 		return nil // do nothing
-	case invoiceevents.InvoicePayV1:
-		return nil
 
 	case orgplanevent.OrganizationPlanCreateV1:
-		return s.organizationPlanEventHandler.OnCreate(ctx, evt)
+		_ = s.organizationPlanEventHandler.OnCreate(ctx, evt)
+		return nil
 	case orgplanevent.OrganizationPlanUpdateV1:
-		return s.organizationPlanEventHandler.OnUpdate(ctx, evt)
+		_ = s.organizationPlanEventHandler.OnUpdate(ctx, evt)
+		return nil
 	case orgplanevent.OrganizationPlanMilestoneCreateV1:
-		return s.organizationPlanEventHandler.OnCreateMilestone(ctx, evt)
+		_ = s.organizationPlanEventHandler.OnCreateMilestone(ctx, evt)
+		return nil
 	case orgplanevent.OrganizationPlanMilestoneUpdateV1:
-		return s.organizationPlanEventHandler.OnUpdateMilestone(ctx, evt)
+		_ = s.organizationPlanEventHandler.OnUpdateMilestone(ctx, evt)
+		return nil
 	case orgplanevent.OrganizationPlanMilestoneReorderV1:
-		return s.organizationPlanEventHandler.OnReorderMilestones(ctx, evt)
+		_ = s.organizationPlanEventHandler.OnReorderMilestones(ctx, evt)
+		return nil
 
 	case tenantevent.TenantAddBillingProfileV1:
-		return s.tenantEventHandler.OnAddBillingProfileV1(ctx, evt)
+		_ = s.tenantEventHandler.OnAddBillingProfileV1(ctx, evt)
+		return nil
 	case tenantevent.TenantUpdateBillingProfileV1:
-		return s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
+		_ = s.tenantEventHandler.OnUpdateBillingProfileV1(ctx, evt)
+		return nil
 	case tenantevent.TenantUpdateSettingsV1:
-		return s.tenantEventHandler.OnUpdateTenantSettingsV1(ctx, evt)
+		_ = s.tenantEventHandler.OnUpdateTenantSettingsV1(ctx, evt)
+		return nil
 	case tenantevent.TenantAddBankAccountV1:
-		return s.bankAccountEventHandler.OnAddBankAccountV1(ctx, evt)
+		_ = s.bankAccountEventHandler.OnAddBankAccountV1(ctx, evt)
+		return nil
 	case tenantevent.TenantUpdateBankAccountV1:
-		return s.bankAccountEventHandler.OnUpdateBankAccountV1(ctx, evt)
+		_ = s.bankAccountEventHandler.OnUpdateBankAccountV1(ctx, evt)
+		return nil
 	case tenantevent.TenantDeleteBankAccountV1:
-		return s.bankAccountEventHandler.OnDeleteBankAccountV1(ctx, evt)
-
+		_ = s.bankAccountEventHandler.OnDeleteBankAccountV1(ctx, evt)
+		return nil
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return nil
 
 	case reminderevents.ReminderCreateV1:
-		return s.reminderEventHandler.OnCreate(ctx, evt)
+		_ = s.reminderEventHandler.OnCreate(ctx, evt)
+		return nil
 	case reminderevents.ReminderUpdateV1:
-		return s.reminderEventHandler.OnUpdate(ctx, evt)
+		_ = s.reminderEventHandler.OnUpdate(ctx, evt)
+		return nil
 	case reminderevents.ReminderNotificationV1:
 		return nil
 

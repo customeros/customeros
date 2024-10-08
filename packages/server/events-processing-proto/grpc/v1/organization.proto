@@ -152,6 +152,15 @@ message LinkEmailToOrganizationGrpcRequest {
   bool primary = 4;
   string loggedInUserId = 6;
   string appSource = 7;
+  string email = 8;
+}
+
+message UnLinkEmailFromOrganizationGrpcRequest {
+  string tenant = 1;
+  string organizationId = 2;
+  string loggedInUserId = 3;
+  string appSource = 4;
+  string email = 5;
 }
 
 message LinkEmailToBillingProfileGrpcRequest {
@@ -389,6 +398,7 @@ service organizationGrpcService {
   rpc EnrichOrganization(EnrichOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkPhoneNumberToOrganization(LinkPhoneNumberToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkEmailToOrganization(LinkEmailToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
+  rpc UnLinkEmailFromOrganization(UnLinkEmailFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkLocationToOrganization(LinkLocationToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc LinkDomainToOrganization(LinkDomainToOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc UnlinkDomainFromOrganization(UnLinkDomainFromOrganizationGrpcRequest) returns (OrganizationIdGrpcResponse);

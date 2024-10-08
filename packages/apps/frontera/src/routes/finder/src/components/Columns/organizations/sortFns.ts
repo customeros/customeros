@@ -123,9 +123,12 @@ export const getOrganizationSortFn = (columnId: string) =>
         row.value.socialMedia.find((e: Social) => e?.url?.includes('linkedin'))
           ?.followersCount,
     )
-    .with(ColumnViewType.OrganizationsCity, () => (row: OrganizationStore) => {
-      return row.country?.toLowerCase() || null;
-    })
+    .with(
+      ColumnViewType.OrganizationsHeadquarters,
+      () => (row: OrganizationStore) => {
+        return row.country?.toLowerCase() || null;
+      },
+    )
     .with(
       ColumnViewType.OrganizationsIsPublic,
       () => (row: OrganizationStore) => row.value.public,

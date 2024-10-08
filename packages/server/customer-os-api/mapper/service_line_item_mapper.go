@@ -30,6 +30,7 @@ func MapEntityToServiceLineItem(entity *neo4jentity.ServiceLineItemEntity) *mode
 			TaxRate: entity.VatRate,
 		},
 		Closed: entity.Canceled,
+		Paused: entity.Paused,
 	}
 }
 

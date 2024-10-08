@@ -77,8 +77,8 @@ type EnrichPersonJob struct {
 // EnrichPersonJobDuration represents the duration of a person's job.
 // @Description Job duration of a person.
 type EnrichPersonJobDuration struct {
-	StartMonth int  `json:"startMonth" example:"1"`
-	StartYear  int  `json:"startYear" example:"2020"`
+	StartMonth *int `json:"startMonth,omitempty" example:"1"`
+	StartYear  *int `json:"startYear,omitempty" example:"2020"`
 	EndMonth   *int `json:"endMonth,omitempty" example:"12"`
 	EndYear    *int `json:"endYear,omitempty" example:"2023"`
 }
@@ -229,7 +229,14 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		enrichedPersonData := mapPersonScrapInData(&scrapInPersonResponse)
 
 		// Call findWorkEmail API
-		findWorkEmailApiResponse, err := callApiFindWorkEmail(ctx, services, span, *enrichPersonApiResponse, enrichPhoneNumber)
+		companyName, companyDomain := "", ""
+		if enrichPersonApiResponse.Data.PersonProfile.Company != nil {
+			companyName = enrichPersonApiResponse.Data.PersonProfile.Company.Name
+			companyDomain = services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl)
+		}
+
+		findWorkEmailApiResponse, err := services.EnrichmentService.CallApiFindWorkEmail(ctx, enrichPersonApiResponse.Data.PersonProfile.Person.FirstName, enrichPersonApiResponse.Data.PersonProfile.Person.LastName,
+			companyName, companyDomain, enrichPersonApiResponse.Data.PersonProfile.Person.LinkedInUrl, enrichPhoneNumber)
 		if err != nil || findWorkEmailApiResponse == nil {
 			c.JSON(http.StatusInternalServerError,
 				rest.ErrorResponse{
@@ -574,56 +581,6 @@ func callApiEnrichPerson(ctx context.Context, services *service.Services, span o
 	return &enrichPersonApiResponse, nil
 }
 
-func callApiFindWorkEmail(ctx context.Context, services *service.Services, span opentracing.Span, enrichPersonApiResponse enrichmentmodel.EnrichPersonScrapinResponse, enrichPhoneNumber bool) (*enrichmentmodel.FindWorkEmailResponse, error) {
-	companyName, companyDomain := "", ""
-	if enrichPersonApiResponse.Data.PersonProfile.Company != nil {
-		companyName = enrichPersonApiResponse.Data.PersonProfile.Company.Name
-		companyDomain = services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl)
-	}
-	requestJSON, err := json.Marshal(enrichmentmodel.FindWorkEmailRequest{
-		LinkedinUrl:       enrichPersonApiResponse.Data.PersonProfile.Person.LinkedInUrl,
-		FirstName:         enrichPersonApiResponse.Data.PersonProfile.Person.FirstName,
-		LastName:          enrichPersonApiResponse.Data.PersonProfile.Person.LastName,
-		CompanyName:       companyName,
-		CompanyDomain:     companyDomain,
-		EnrichPhoneNumber: enrichPhoneNumber,
-	})
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to marshal request"))
-		return nil, err
-	}
-	requestBody := []byte(string(requestJSON))
-	req, err := http.NewRequest("GET", services.Cfg.InternalServices.EnrichmentApiUrl+"/findWorkEmail", bytes.NewBuffer(requestBody))
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to create request"))
-		return nil, err
-	}
-	// Inject span context into the HTTP request
-	req = commontracing.InjectSpanContextIntoHTTPRequest(req, span)
-
-	// Set the request headers
-	req.Header.Set(security.ApiKeyHeader, services.Cfg.InternalServices.EnrichmentApiKey)
-	req.Header.Set(security.TenantHeader, common.GetTenantFromContext(ctx))
-
-	// Make the HTTP request
-	client := &http.Client{}
-	response, err := client.Do(req)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to perform request"))
-		return nil, err
-	}
-	defer response.Body.Close()
-	span.LogFields(log.Int("response.status.findWorkEmail", response.StatusCode))
-
-	var findWorkEmailApiResponse enrichmentmodel.FindWorkEmailResponse
-	err = json.NewDecoder(response.Body).Decode(&findWorkEmailApiResponse)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "failed to decode find work email response"))
-		return nil, err
-	}
-	return &findWorkEmailApiResponse, nil
-}
-
 func mapPersonScrapInData(source *postgresentity.ScrapInResponseBody) *EnrichPersonData {
 	if source == nil {
 		return nil
@@ -654,10 +611,10 @@ func mapPersonScrapInData(source *postgresentity.ScrapInResponseBody) *EnrichPer
 			CompanyLinkedin: position.LinkedInUrl,
 			IsCurrent:       position.StartEndDate.End == nil,
 			//Seniority:       position.Seniority, // TODO will be implemented later after clarifications
-			Duration: EnrichPersonJobDuration{
-				StartMonth: position.StartEndDate.Start.Month,
-				StartYear:  position.StartEndDate.Start.Year,
-			},
+		}
+		if position.StartEndDate.Start != nil {
+			enrichPersonJob.Duration.StartMonth = &position.StartEndDate.Start.Month
+			enrichPersonJob.Duration.StartYear = &position.StartEndDate.Start.Year
 		}
 		if position.StartEndDate.End != nil {
 			enrichPersonJob.Duration.EndMonth = &position.StartEndDate.End.Month

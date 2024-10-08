@@ -58,6 +58,7 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
       mask={`${symbol}num`}
       className='max-w-[100px]'
       placeholder='ARR estimate'
+      data-test='card-arr-estimate'
       defaultValue={defaultValue.toString()}
       onClick={(e) => (e.target as HTMLInputElement).select()}
       onAccept={(v, instance) => {

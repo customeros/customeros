@@ -98,7 +98,7 @@ export const SignIn = observer(() => {
                       `mt-3 w-[100%] py-[7px] px-4`,
                       i === 0 ? 'mt-6' : 'mt-3',
                     )}
-                    spinner={
+                    rightSpinner={
                       <Spinner
                         size='sm'
                         label='Authenthicating'

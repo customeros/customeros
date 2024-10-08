@@ -64,6 +64,7 @@ type Services struct {
 	ReminderService            ReminderService
 	OfferingService            OfferingService
 	CloudflareService          CloudflareService
+	EnrichmentService          EnrichmentService
 	NamecheapService           NamecheapService
 	OpensrsService             OpensrsService
 }
@@ -118,6 +119,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 	services.SlackService = NewSlackService(log, repositories, grpcClients, &services)
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.InternalServices.FileStoreApiConfig)
 	services.CloudflareService = NewCloudflareService(log, &services, cfg)
+	services.EnrichmentService = NewEnrichmentService(log, &services, cfg)
 	services.OpensrsService = NewOpensrsService(log, &services, cfg)
 	services.NamecheapService = NewNamecheapService(log, cfg, repositories)
 

@@ -17,7 +17,6 @@ type Services struct {
 	CommonServices *commonService.Services
 
 	TenantService             TenantService
-	EmailService              EmailService
 	LocationService           LocationService
 	PhoneNumberService        PhoneNumberService
 	UserService               UserService
@@ -45,7 +44,6 @@ func InitServices(log logger.Logger,
 	services := Services{
 		CommonServices:            commonServices,
 		TenantService:             NewTenantService(log, repositories, cache),
-		EmailService:              NewEmailService(log, repositories, grpcClients),
 		LocationService:           NewLocationService(log, repositories, grpcClients),
 		PhoneNumberService:        NewPhoneNumberService(log, repositories, grpcClients),
 		SyncStatusService:         NewSyncStatusService(log, repositories),

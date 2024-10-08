@@ -17,6 +17,7 @@ const (
 	ContactPropertyFindWorkEmailWithBetterContactRequestedId ContactProperty = "techFindWorkEmailWithBetterContactRequestId"
 	ContactPropertyFindWorkEmailWithBetterContactRequestedAt ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
 	ContactPropertyFindWorkEmailWithBetterContactCompletedAt ContactProperty = "techFindWorkEmailWithBetterContactCompletedAt"
+	ContactPropertyUpdateWithWorkEmailRequestedAt            ContactProperty = "techUpdateWithWorkEmailRequestedAt"
 	ContactPropertyEnrichRequestedAt                         ContactProperty = "techEnrichRequestedAt"
 	ContactPropertyEnrichAttempts                            ContactProperty = "techEnrichAttempts"
 	ContactPropertyPrefix                                    ContactProperty = "prefix"
@@ -63,6 +64,7 @@ type ContactInternalFields struct {
 	FindWorkEmailWithBetterContactRequestedId *string
 	FindWorkEmailWithBetterContactRequestedAt *time.Time
 	FindWorkEmailWithBetterContactCompletedAt *time.Time
+	UpdateWithWorkEmailRequestedAt            *time.Time
 	EnrichRequestedAt                         *time.Time
 	HiddenAt                                  *time.Time
 }

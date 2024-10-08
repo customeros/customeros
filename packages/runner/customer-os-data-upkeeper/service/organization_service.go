@@ -52,8 +52,8 @@ func (s *organizationService) RefreshLastTouchpoint() {
 		return
 	}
 
-	limit := 2000
-	delayFromPreviousCheckInMinutes := 15 // 15 minutes
+	limit := 50
+	delayFromPreviousCheckInMinutes := 60 // 60 minutes
 
 	for {
 		select {
@@ -271,7 +271,7 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			// continue as normal
 		}
 
-		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrich(ctx, limit, delayFromPreviousAttemptInMinutes)
+		records, err := s.commonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationsForEnrichByDomain(ctx, limit, delayFromPreviousAttemptInMinutes)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			s.log.Errorf("Error getting organizations: %v", err)
@@ -301,6 +301,13 @@ func (s *organizationService) enrichOrganization(ctx context.Context) {
 			if err != nil {
 				tracing.TraceErr(span, err)
 				s.log.Errorf("Error updating domain checked at: %s", err.Error())
+			}
+
+			// increment enrich attempts
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, record.Tenant, model.NodeLabelOrganization, record.OrganizationId, string(neo4jentity.OrganizationPropertyEnrichAttempts))
+			if err != nil {
+				tracing.TraceErr(span, err)
+				s.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
 			}
 		}
 

@@ -50,6 +50,7 @@ type Loaders struct {
 	UserCreatorForContract                        *dataloader.Loader
 	UserAuthorForLogEntry                         *dataloader.Loader
 	UserAuthorForComment                          *dataloader.Loader
+	UserForFlowSender                             *dataloader.Loader
 	User                                          *dataloader.Loader
 	ContactsForEmail                              *dataloader.Loader
 	ContactsForPhoneNumber                        *dataloader.Loader
@@ -111,7 +112,7 @@ type Loaders struct {
 	InvoicesForContract                           *dataloader.Loader
 	FlowContactsForFlow                           *dataloader.Loader
 	FlowActionsForFlow                            *dataloader.Loader
-	FlowActionSendersForFlowAction                *dataloader.Loader
+	FlowSendersForFlow                            *dataloader.Loader
 	FlowsWithContact                              *dataloader.Loader
 }
 
@@ -363,6 +364,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		UserCreatorForContract:                        dataloader.NewBatchedLoader(userBatcher.getUserCreatorsForContracts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserAuthorForLogEntry:                         dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		UserAuthorForComment:                          dataloader.NewBatchedLoader(userBatcher.getUserAuthorsForComments, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		UserForFlowSender:                             dataloader.NewBatchedLoader(userBatcher.getUserForFlowSenders, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		User:                                          dataloader.NewBatchedLoader(userBatcher.getUsers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactsForEmail:                              dataloader.NewBatchedLoader(contactBatcher.getContactsForEmails, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactsForPhoneNumber:                        dataloader.NewBatchedLoader(contactBatcher.getContactsForPhoneNumbers, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
@@ -418,7 +420,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		InvoicesForContract:                           dataloader.NewBatchedLoader(invoiceBatcher.getInvoicesForContract, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowContactsForFlow:                           dataloader.NewBatchedLoader(flowBatcher.getFlowContactsForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowActionsForFlow:                            dataloader.NewBatchedLoader(flowBatcher.getFlowActionsForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		FlowActionSendersForFlowAction:                dataloader.NewBatchedLoader(flowBatcher.getFlowActionSendersForFlowAction, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowSendersForFlow:                            dataloader.NewBatchedLoader(flowBatcher.getFlowSendersForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowsWithContact:                              dataloader.NewBatchedLoader(flowBatcher.getFlowsWithContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }

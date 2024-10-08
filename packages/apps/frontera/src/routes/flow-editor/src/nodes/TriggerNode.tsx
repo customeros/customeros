@@ -5,12 +5,12 @@ import { NodeProps, ViewportPortal } from '@xyflow/react';
 
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
-import { Edit03 } from '@ui/media/icons/Edit03.tsx';
 import { UserPlus01 } from '@ui/media/icons/UserPlus01';
-import { Lightning01 } from '@ui/media/icons/Lightning01.tsx';
+import { ChevronDown } from '@ui/media/icons/ChevronDown';
+import { Lightning01 } from '@ui/media/icons/Lightning01';
 
 import { Handle } from '../components';
-import { DropdownCommandMenu } from '../commands/Commands.tsx';
+import { DropdownCommandMenu } from '../commands/Commands';
 
 export const TriggerNode = (
   props: NodeProps & { data: Record<string, string> },
@@ -60,8 +60,8 @@ export const TriggerNode = (
             size='xxs'
             variant='ghost'
             aria-label='Edit'
-            icon={<Edit03 />}
             onClick={handleOpen}
+            icon={<ChevronDown />}
             className='ml-2 opacity-0 group-hover:opacity-100 pointer-events-all'
           />
         </div>
@@ -89,11 +89,17 @@ export const TriggerViewportPortal = observer(
   }) => {
     const { ui } = useStore();
 
+    const showTriggerDropdown =
+      ui.flowCommandMenu?.isOpen &&
+      id === ui.flowCommandMenu.context.id &&
+      ui.flowCommandMenu.context.entity === 'Trigger';
+
     return (
       <>
-        {ui.flowCommandMenu?.isOpen && id === ui.flowCommandMenu.context.id && (
+        {showTriggerDropdown && (
           <ViewportPortal>
             <div
+              className='border border-gray-200 rounded-lg shadow-lg'
               style={{
                 transform: `translate(calc(${positionAbsoluteX}px + 150px - 180px), ${
                   positionAbsoluteY + 48 + 24 // 48 is height of the node, 24 is desired spacing

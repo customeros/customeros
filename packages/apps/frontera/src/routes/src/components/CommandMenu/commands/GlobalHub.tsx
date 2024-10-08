@@ -143,10 +143,10 @@ export const GlobalSharedCommands = observer(
           Go to Contracts
         </CommandItem>
         <CommandItem
-          dataTest={`${dataTest}-gq`}
+          dataTest={`${dataTest}-gf`}
           leftAccessory={<ArrowNarrowRight />}
           keywords={navigationKeywords.go_to_flows}
-          rightAccessory={<KeyboardShortcut shortcut='Q' />}
+          rightAccessory={<KeyboardShortcut shortcut='F' />}
           onSelect={() => handleGoTo('/finder', flowsPreset)}
         >
           Go to Flows

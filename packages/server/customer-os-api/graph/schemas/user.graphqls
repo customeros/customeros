@@ -3,6 +3,8 @@ extend type Query {
     user(id: ID!): User!
 
     user_ByEmail(email: String!) :User! @hasRole(roles: [ADMIN, PLATFORM_OWNER, OWNER, USER]) @hasTenant
+
+    users_WithMailboxes: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -55,6 +57,7 @@ type User {
     """
     emails: [Email!] @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
+    mailboxes: [String!]! @goField(forceResolver: true)
 
     """
     Timestamp of user creation.

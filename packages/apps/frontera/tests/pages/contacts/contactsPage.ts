@@ -46,7 +46,10 @@ export class ContactsPage {
       if (isVisible) {
         await allContactsSelectAllContacts.click();
 
-        return true;
+        const isAllContactsSelectAllContacts =
+          await allContactsSelectAllContacts.getAttribute('data-state');
+
+        return isAllContactsSelectAllContacts === 'checked';
       }
     } catch (error) {
       if (error.name === 'TimeoutError') {

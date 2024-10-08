@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import React, { useMemo, useState, useEffect } from 'react';
+import React, { useRef, useMemo, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { FlowActionType } from '@store/Flows/types.ts';
@@ -17,9 +17,10 @@ import {
   ModalOverlay,
 } from '@ui/overlay/Modal';
 
+import { useUndoRedo } from '../hooks';
+
 interface EmailEditorModalProps {
   isEditorOpen: boolean;
-  setIsEditorOpen: (isOpen: boolean) => void;
   data: { subject: string; bodyTemplate: string; action: FlowActionType };
   handleEmailDataChange: (args: {
     subject: string;
@@ -28,20 +29,27 @@ interface EmailEditorModalProps {
 }
 
 export const EmailEditorModal = observer(
-  ({
-    isEditorOpen,
-    setIsEditorOpen,
-    handleEmailDataChange,
-    data,
-  }: EmailEditorModalProps) => {
+  ({ isEditorOpen, handleEmailDataChange, data }: EmailEditorModalProps) => {
     const id = useParams().id as string;
+    const inputRef = useRef<HTMLInputElement>(null);
+
     const [subject, setSubject] = useState(data?.subject ?? '');
     const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
+    const { takeSnapshot } = useUndoRedo();
 
     useEffect(() => {
       if (isEditorOpen) {
         setSubject(data?.subject ?? '');
         setBodyTemplate(data?.bodyTemplate ?? '');
+
+        if (
+          data.action !== FlowActionType.EMAIL_REPLY &&
+          data?.subject?.trim()?.length === 0
+        ) {
+          setTimeout(() => {
+            inputRef.current?.focus();
+          }, 0);
+        }
       }
     }, [isEditorOpen]);
 
@@ -52,20 +60,23 @@ export const EmailEditorModal = observer(
     const handleSave = () => {
       handleEmailDataChange({ subject, bodyTemplate });
 
-      setIsEditorOpen(false);
+      setTimeout(() => {
+        takeSnapshot();
+      }, 0);
     };
 
     return (
-      <Modal open={isEditorOpen} onOpenChange={setIsEditorOpen}>
+      <Modal open={isEditorOpen}>
         <ModalPortal>
           <ModalOverlay className='z-50'>
-            <ModalContent className='w-full h-full flex justify-center max-w-full top-0 cursor-default'>
-              <div className='w-[570px]'>
-                <div className='flex justify-between mt-4 mb-[68px]'>
+            <ModalContent
+              onKeyDown={(e) => e.stopPropagation()}
+              className='w-full h-full flex justify-center max-w-full top-0 cursor-default overflow-y-auto '
+            >
+              <div className='w-[570px] relative'>
+                <div className='flex justify-between bg-white pt-4 mb-[68px] sticky top-0 z-1'>
                   <div className='flex items-center text-sm'>
-                    <span role='button' onClick={() => setIsEditorOpen(false)}>
-                      {flow}
-                    </span>
+                    <span>{flow}</span>
                     <ChevronRight className='size-3 mx-1 text-gray-400' />
                     <span className='mr-2 cursor-default'>
                       {data.action === FlowActionType.EMAIL_NEW
@@ -84,22 +95,24 @@ export const EmailEditorModal = observer(
                 </div>
 
                 <Input
-                  size='lg'
+                  ref={inputRef}
                   value={subject}
                   variant='unstyled'
                   placeholder='Subject'
-                  className='font-medium text-lg'
+                  className='font-medium text-lg min-h-[auto]'
                   onChange={(e) => setSubject(e.target.value)}
+                  disabled={data.action === FlowActionType.EMAIL_REPLY}
                 />
-
-                <Editor
-                  placeholder={placeholder}
-                  dataTest='flow-email-editor'
-                  namespace='flow-email-editor'
-                  defaultHtmlValue={bodyTemplate}
-                  onChange={(e) => setBodyTemplate(e)}
-                  className='mb-10 text-base cursor-text'
-                ></Editor>
+                <div className='h-[60vh] mb-10'>
+                  <Editor
+                    placeholder={placeholder}
+                    dataTest='flow-email-editor'
+                    namespace='flow-email-editor'
+                    defaultHtmlValue={bodyTemplate}
+                    onChange={(e) => setBodyTemplate(e)}
+                    className='text-base cursor-text email-editor h-full'
+                  ></Editor>
+                </div>
               </div>
             </ModalContent>
           </ModalOverlay>

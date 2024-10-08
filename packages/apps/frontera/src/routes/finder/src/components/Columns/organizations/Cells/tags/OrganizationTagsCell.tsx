@@ -29,12 +29,12 @@ export const OrganizationsTagsCell = observer(({ id }: OrgCardProps) => {
         store.ui.commandMenu.setOpen(true);
       }}
     >
-      <TagsCell tags={tags ?? []} />
+      <TagsCell tags={tags ?? []} isHovered={isHovered} />
       {isHovered && (
         <IconButton
           size='xxs'
+          className=' '
           variant='ghost'
-          className='ml-3'
           aria-label='Edit tags'
           icon={<Edit01 className='text-gray-500' />}
           onClick={() => {

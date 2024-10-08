@@ -133,7 +133,7 @@ export const ReminderItem = observer(
             variant='ghost'
             colorScheme='warning'
             onClick={handleDismiss}
-            data-test='timeline-reminder-dismiss'
+            dataTest='timeline-reminder-dismiss'
             className='text-[#B7791F] hover:bg-transparent hover:text-warning-900 focus:shadow-ringWarning'
           >
             Dismiss

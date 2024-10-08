@@ -13,6 +13,7 @@ const (
 	ContactUpdateV1           = "V1_CONTACT_UPDATE"
 	ContactPhoneNumberLinkV1  = "V1_CONTACT_PHONE_NUMBER_LINK"
 	ContactEmailLinkV1        = "V1_CONTACT_EMAIL_LINK"
+	ContactEmailUnlinkV1      = "V1_CONTACT_EMAIL_UNLINK"
 	ContactLocationLinkV1     = "V1_CONTACT_LOCATION_LINK"
 	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
 	ContactAddSocialV1        = "V1_CONTACT_ADD_SOCIAL"
@@ -117,32 +118,6 @@ func NewContactLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNumberI
 	return event, nil
 }
 
-type ContactLinkEmailEvent struct {
-	Tenant    string    `json:"tenant" validate:"required"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	EmailId   string    `json:"emailId" validate:"required"`
-	Primary   bool      `json:"primary"`
-}
-
-func NewContactLinkEmailEvent(aggregate eventstore.Aggregate, emailId string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := ContactLinkEmailEvent{
-		Tenant:    aggregate.GetTenant(),
-		UpdatedAt: updatedAt,
-		EmailId:   emailId,
-		Primary:   primary,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate ContactLinkEmailEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, ContactEmailLinkV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for ContactLinkEmailEvent")
-	}
-	return event, nil
-}
-
 type ContactLinkLocationEvent struct {
 	Tenant     string    `json:"tenant" validate:"required"`
 	UpdatedAt  time.Time `json:"updatedAt"`
@@ -172,7 +147,7 @@ type ContactLinkWithOrganizationEvent struct {
 	OrganizationId string        `json:"organizationId" validate:"required"`
 	CreatedAt      time.Time     `json:"createdAt"`
 	UpdatedAt      time.Time     `json:"updatedAt"`
-	StartedAt      *time.Time    `json:"startedAt"`
+	StartedAt      *time.Time    `json:"startedAt,omitempty"`
 	EndedAt        *time.Time    `json:"endedAt,omitempty"`
 	JobTitle       string        `json:"jobTitle"`
 	Description    string        `json:"description"`

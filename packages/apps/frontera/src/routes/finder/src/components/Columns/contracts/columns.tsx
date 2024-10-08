@@ -1,10 +1,11 @@
-import React from 'react';
-
-import { Store } from '@store/store.ts';
-import { ColumnDef as ColumnDefinition } from '@tanstack/react-table';
+import { ContractStore } from '@store/Contracts/Contract.store';
 import { TextCell } from '@finder/components/Columns/shared/Cells/TextCell';
 import { OwnerFilter } from '@finder/components/Columns/shared/Filters/Owner';
 import { ForecastFilter } from '@finder/components/Columns/shared/Filters/Forecast';
+import {
+  ColumnDef,
+  ColumnDef as ColumnDefinition,
+} from '@tanstack/react-table';
 import { currencyIcon } from '@settings/components/Tabs/panels/BillingPanel/components/utils.tsx';
 import { RenewalLikelihoodFilter } from '@finder/components/Columns/shared/Filters/RenewalLikelihood';
 import {
@@ -20,12 +21,7 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import {
-  Contract,
-  Opportunity,
-  TableViewDef,
-  ColumnViewType,
-} from '@graphql/types';
+import { Opportunity, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { getColumnConfig } from '../shared/util/getColumnConfig';
 import { SearchTextFilter } from '../shared/Filters/SearchTextFilter';
@@ -39,7 +35,7 @@ import {
   ArrForecastCell,
 } from './Cells';
 
-type ColumnDatum = Store<Contract>;
+type ColumnDatum = ContractStore;
 
 // REASON: we do not care about exhaustively typing this TValue type
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -72,7 +68,7 @@ const columns: Record<string, Column> = {
             placeholder={'e.g. CustomerOS contract'}
           />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
     skeleton: () => <Skeleton className='w-[100px] h-[14px]' />,
@@ -108,7 +104,7 @@ const columns: Record<string, Column> = {
         renderFilter={() => (
           <DateFilter property={ColumnViewType.ContractsEnded} />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -136,7 +132,7 @@ const columns: Record<string, Column> = {
         renderFilter={(initialFocusRef) => (
           <PeriodFilter initialFocusRef={initialFocusRef} />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -163,7 +159,7 @@ const columns: Record<string, Column> = {
         filterWidth='14rem'
         id={ColumnViewType.ContractsCurrency}
         renderFilter={() => <CurrencyFilter />}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -186,7 +182,7 @@ const columns: Record<string, Column> = {
         filterWidth='14rem'
         id={ColumnViewType.ContractsStatus}
         renderFilter={() => <StatusFilter />}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -216,7 +212,7 @@ const columns: Record<string, Column> = {
         filterWidth='14rem'
         id={ColumnViewType.ContractsRenewal}
         renderFilter={() => <RenewalFilter />}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -246,7 +242,7 @@ const columns: Record<string, Column> = {
         renderFilter={(initialFocusRef) => (
           <LtvFilter initialFocusRef={initialFocusRef} />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -273,7 +269,7 @@ const columns: Record<string, Column> = {
             property={ColumnViewType.ContractsOwner}
           />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -311,7 +307,7 @@ const columns: Record<string, Column> = {
         renderFilter={() => (
           <DateFilter property={ColumnViewType.ContractsRenewalDate} />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -335,7 +331,7 @@ const columns: Record<string, Column> = {
         renderFilter={() => (
           <RenewalLikelihoodFilter property={ColumnViewType.ContractsHealth} />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
@@ -362,11 +358,13 @@ const columns: Record<string, Column> = {
             property={ColumnViewType.ContractsForecastArr}
           />
         )}
-        {...getTHeadProps<Store<Contract>>(props)}
+        {...getTHeadProps<ContractStore>(props)}
       />
     ),
   }),
 };
 export const getContractColumnsConfig = (
   tableViewDef?: Array<TableViewDef>[0],
-) => getColumnConfig<ColumnDatum>(columns, tableViewDef);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+): ColumnDef<ColumnDatum, any>[] =>
+  getColumnConfig<ColumnDatum>(columns, tableViewDef);

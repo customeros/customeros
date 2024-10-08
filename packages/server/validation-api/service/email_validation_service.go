@@ -74,7 +74,7 @@ func NewEmailValidationService(config *config.Config, services *Services, log lo
 func (s *emailValidationService) ValidateEmailWithMailSherpa(ctx context.Context, email string) (*model.ValidateEmailMailSherpaData, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.ValidateEmailWithMailSherpa")
 	defer span.Finish()
-	span.LogFields(log.String("email", email))
+	span.LogKV("email", email)
 
 	result := &model.ValidateEmailMailSherpaData{
 		Email: email,
@@ -174,6 +174,9 @@ func (s *emailValidationService) getDomainValidationWithTimeout(ctx context.Cont
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, MaxDurationCallMailSherpa)
 	defer cancel()
 
+	// Create a new independent background context for validation
+	validationCtx := context.Background()
+
 	domainValidation := postgresentity.CacheEmailValidationDomain{}
 	errChan := make(chan error, 1)
 	timeout := false
@@ -181,14 +184,14 @@ func (s *emailValidationService) getDomainValidationWithTimeout(ctx context.Cont
 	// Run getEmailValidation in a goroutine to handle timeout
 	go func() {
 		var err error
-		domainValidation, err = s.getDomainValidation(ctxWithTimeout, domain, email)
+		domainValidation, err = s.getDomainValidation(validationCtx, domain, email)
 		errChan <- err
 	}()
 
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return domainValidation, timeout, err
+			return domainValidation, false, err
 		}
 	case <-ctxWithTimeout.Done():
 		// Timeout occurred, set default values
@@ -201,6 +204,7 @@ func (s *emailValidationService) getDomainValidationWithTimeout(ctx context.Cont
 func (s *emailValidationService) getDomainValidation(ctx context.Context, domain, email string) (postgresentity.CacheEmailValidationDomain, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailValidationService.getDomainValidation")
 	defer span.Finish()
+	span.LogKV("domain", domain, "email", email)
 
 	cacheDomain, err := s.Services.CommonServices.PostgresRepositories.CacheEmailValidationDomainRepository.Get(ctx, domain)
 	if err != nil {
@@ -253,6 +257,9 @@ func (s *emailValidationService) getEmailValidationWithTimeout(ctx context.Conte
 	ctxWithTimeout, cancel := context.WithTimeout(ctx, MaxDurationCallMailSherpa)
 	defer cancel()
 
+	// Create a new independent background context for validation
+	validationCtx := context.Background()
+
 	emailValidation := postgresentity.CacheEmailValidation{}
 	errChan := make(chan error, 1)
 	timeout := false
@@ -260,14 +267,14 @@ func (s *emailValidationService) getEmailValidationWithTimeout(ctx context.Conte
 	// Run getEmailValidation in a goroutine to handle timeout
 	go func() {
 		var err error
-		emailValidation, err = s.getEmailValidation(ctxWithTimeout, email, syntaxValidation, isPrimaryDomain, primaryDomain)
+		emailValidation, err = s.getEmailValidation(validationCtx, email, syntaxValidation, isPrimaryDomain, primaryDomain)
 		errChan <- err
 	}()
 
 	select {
 	case err := <-errChan:
 		if err != nil {
-			return emailValidation, timeout, err
+			return emailValidation, false, err
 		}
 	case <-ctxWithTimeout.Done():
 		// Timeout occurred, set default values
@@ -315,7 +322,8 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to marshal email validation data"))
 		}
-		cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, postgresentity.CacheEmailValidation{
+
+		cacheEmailValidationEntity := postgresentity.CacheEmailValidation{
 			Email:               email,
 			Deliverable:         emailValidation.IsDeliverable,
 			IsMailboxFull:       emailValidation.IsMailboxFull,
@@ -338,7 +346,12 @@ func (s *emailValidationService) getEmailValidation(ctx context.Context, email s
 			NormalizedEmail:     syntaxValidation.CleanEmail,
 			Domain:              syntaxValidation.Domain,
 			AlternateEmail:      emailValidation.AlternateEmail.Email,
-		})
+		}
+		cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, cacheEmailValidationEntity)
+		if err != nil {
+			// retry saving once
+			cachedEmail, err = s.Services.CommonServices.PostgresRepositories.CacheEmailValidationRepository.Save(ctx, cacheEmailValidationEntity)
+		}
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to save email data"))
 			return postgresentity.CacheEmailValidation{}, err

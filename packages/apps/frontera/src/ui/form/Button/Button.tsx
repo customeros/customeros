@@ -1,4 +1,4 @@
-import { forwardRef, cloneElement } from 'react';
+import React, { forwardRef, cloneElement } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { cva, type VariantProps } from 'class-variance-authority';
@@ -31,12 +31,14 @@ export interface ButtonProps
     VariantProps<typeof solidButton>,
     VariantProps<typeof buttonSize> {
   asChild?: boolean;
+  dataTest?: string;
   isLoading?: boolean;
   isDisabled?: boolean;
   loadingText?: string;
-  spinner?: React.ReactElement;
   leftIcon?: React.ReactElement;
   rightIcon?: React.ReactElement;
+  leftSpinner?: React.ReactElement;
+  rightSpinner?: React.ReactElement;
   variant?: 'link' | 'ghost' | 'solid' | 'outline';
 }
 
@@ -48,12 +50,14 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       className,
       rightIcon,
       colorScheme = 'gray',
-      spinner,
+      leftSpinner,
+      rightSpinner,
       loadingText,
       variant = 'outline',
       isLoading = false,
       isDisabled = false,
       size = 'sm',
+      dataTest,
       ...props
     },
     ref,
@@ -77,6 +81,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         {...props}
+        data-test={dataTest}
         style={{ outline: 'none' }}
         disabled={isLoading || isDisabled}
         className={twMerge(
@@ -87,16 +92,18 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       >
         {leftIcon && (
           <>
-            {cloneElement(leftIcon, {
-              className: twMerge(
-                iconVariant({
-                  size,
-                  variant,
-                  colorScheme,
-                  className: leftIcon.props.className,
-                }),
-              ),
-            })}
+            {isLoading && leftSpinner
+              ? leftSpinner
+              : cloneElement(leftIcon, {
+                  className: twMerge(
+                    iconVariant({
+                      size,
+                      variant,
+                      colorScheme,
+                      className: leftIcon.props.className,
+                    }),
+                  ),
+                })}
           </>
         )}
 
@@ -118,7 +125,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
 
         {isLoading && (
           <span className='flex gap-1 relative items-center'>
-            {spinner && spinner}
+            {rightSpinner && rightSpinner}
           </span>
         )}
       </button>

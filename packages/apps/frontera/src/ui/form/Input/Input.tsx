@@ -9,6 +9,7 @@ export const inputVariants = cva(
     'ease-in-out',
     'delay-50',
     'hover:transition',
+    'disabled:cursor-not-allowed',
     '[&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none',
   ],
   {

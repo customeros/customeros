@@ -104,7 +104,7 @@ const buttonDefaultProp = `cva([
   'shadow-xs',
   'outline-none',
   'transition',
-  'disabled:pointer-events-none',
+  'disabled:cursor-not-allowed',
   'disabled:opacity-50',
 ],`;
 

@@ -136,6 +136,18 @@ func (i *Loaders) GetUserAuthorForLogEntry(ctx context.Context, logEntryId strin
 	return result.(*neo4jentity.UserEntity), nil
 }
 
+func (i *Loaders) GetUserForFlowSenders(ctx context.Context, flowSenderId string) (*neo4jentity.UserEntity, error) {
+	thunk := i.UserForFlowSender.Load(ctx, dataloader.StringKey(flowSenderId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*neo4jentity.UserEntity), nil
+}
+
 func (i *Loaders) GetUserAuthorForComment(ctx context.Context, logEntryId string) (*neo4jentity.UserEntity, error) {
 	thunk := i.UserAuthorForComment.Load(ctx, dataloader.StringKey(logEntryId))
 	result, err := thunk()
@@ -692,6 +704,55 @@ func (b *userBatcher) getUserAuthorsForComments(ctx context.Context, keys datalo
 	defer cancel()
 
 	userEntities, err := b.userService.GetUserAuthorsForComments(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.Wrap(err, "context deadline exceeded")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	userEntityByLogEntryId := make(map[string]neo4jentity.UserEntity)
+	for _, val := range *userEntities {
+		userEntityByLogEntryId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for logEntryId, _ := range userEntityByLogEntryId {
+		if ix, ok := keyOrder[logEntryId]; ok {
+			val := userEntityByLogEntryId[logEntryId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, logEntryId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.UserEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Object("output - results_length", len(results)))
+
+	return results
+}
+
+func (b *userBatcher) getUserForFlowSenders(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "UserDataLoader.getUserForFlowSenders")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	userEntities, err := b.userService.GetUserForFlowSenders(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

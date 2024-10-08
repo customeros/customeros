@@ -3,8 +3,8 @@ package aggregate
 import (
 	"context"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"strings"
 
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
@@ -392,7 +392,7 @@ func (a *OrganizationAggregate) linkEmail(ctx context.Context, cmd *command.Link
 
 	updatedAtNotNil := utils.Now()
 
-	event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, cmd.EmailId, cmd.Primary, updatedAtNotNil)
+	event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, cmd.EmailId, cmd.Email, cmd.Primary, updatedAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
@@ -458,7 +458,7 @@ func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, emailId,
 	}
 
 	if email.Primary {
-		event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, emailId, false, updatedAtNotNil)
+		event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, emailId, "", false, updatedAtNotNil)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
@@ -624,17 +624,17 @@ func (a *OrganizationAggregate) upsertCustomField(ctx context.Context, cmd *comm
 	updatedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.UpdatedAt, createdAtNotNil)
 	sourceFields := cmd.Source
 	if sourceFields.Source == "" {
-		sourceFields.Source = events2.SourceOpenline
+		sourceFields.Source = constants.SourceOpenline
 	}
 	if sourceFields.SourceOfTruth == "" {
 		if val, ok := a.Organization.CustomFields[cmd.CustomFieldData.Id]; ok {
 			sourceFields.SourceOfTruth = val.Source.SourceOfTruth
 		} else {
-			sourceFields.SourceOfTruth = events2.SourceOpenline
+			sourceFields.SourceOfTruth = constants.SourceOpenline
 		}
 	}
 	if sourceFields.AppSource == "" {
-		sourceFields.AppSource = events2.AppSourceEventProcessingPlatform
+		sourceFields.AppSource = constants.AppSourceEventProcessingPlatform
 	}
 
 	found := false

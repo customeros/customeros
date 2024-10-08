@@ -16,6 +16,7 @@ interface CommandInputProps
   label?: string;
   value?: string;
   asChild?: boolean;
+  dataTest?: string;
   placeholder: string;
   wrapperClassName?: string;
   children?: React.ReactNode;
@@ -28,6 +29,7 @@ export const CommandInput = ({
   label,
   asChild,
   children,
+  dataTest,
   placeholder,
   onValueChange,
   onKeyDown,
@@ -57,6 +59,7 @@ export const CommandInput = ({
           autoFocus
           asChild={asChild}
           children={children}
+          data-test={dataTest}
           placeholder={placeholder}
           onValueChange={onValueChange}
           {...rest}

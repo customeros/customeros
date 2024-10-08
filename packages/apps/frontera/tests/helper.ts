@@ -184,7 +184,7 @@ export function createRequestPromise(
 
       return false;
     },
-    { timeout: 15000 },
+    { timeout: 30000 },
   );
 }
 
@@ -220,5 +220,12 @@ export function createResponsePromise(
     }
 
     return false;
+  });
+}
+
+export async function doScreenshot(page: Page, screenshotName: string) {
+  await page.screenshot({
+    path: screenshotName + '.png',
+    fullPage: true,
   });
 }

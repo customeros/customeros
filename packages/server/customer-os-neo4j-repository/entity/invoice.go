@@ -8,12 +8,14 @@ import (
 type InvoiceProperty string
 
 const (
-	InvoicePropertyCreatedAt                   InvoiceProperty = "createdAt"
-	InvoicePropertyFinalizedWebhookProcessedAt InvoiceProperty = "techInvoiceFinalizedWebhookProcessedAt"
-	InvoicePropertyPaidWebhookProcessedAt      InvoiceProperty = "techInvoicePaidWebhookProcessedAt"
-	InvoicePropertyInvoiceFinalizedEventSentAt InvoiceProperty = "techInvoiceFinalizedSentAt"
-	InvoicePropertyPaymentLink                 InvoiceProperty = "paymentLink"
-	InvoicePropertyPaymentLinkValidUntil       InvoiceProperty = "paymentLinkValidUntil"
+	InvoicePropertyCreatedAt                            InvoiceProperty = "createdAt"
+	InvoicePropertyFinalizedWebhookProcessedAt          InvoiceProperty = "techInvoiceFinalizedWebhookProcessedAt"
+	InvoicePropertyPaidWebhookProcessedAt               InvoiceProperty = "techInvoicePaidWebhookProcessedAt"
+	InvoicePropertyInvoiceFinalizedEventSentAt          InvoiceProperty = "techInvoiceFinalizedSentAt"
+	InvoicePropertyPaymentLink                          InvoiceProperty = "paymentLink"
+	InvoicePropertyPaymentLinkValidUntil                InvoiceProperty = "paymentLinkValidUntil"
+	InvoicePropertyLastRemindInvoiceNotificationSentAt  InvoiceProperty = "lastRemindInvoiceNotificationSentAt"
+	InvoicePropertyRemindInvoiceNotificationRequestedAt InvoiceProperty = "techRemindInvoiceNotificationRequestedAt"
 )
 
 type InvoiceEntity struct {
@@ -80,14 +82,17 @@ type PaymentDetails struct {
 }
 
 type InvoiceInternalFields struct {
-	InvoiceFinalizedSentAt             *time.Time // used to send the invoice finalized notification to slack and integration app
-	InvoiceFinalizedWebhookProcessedAt *time.Time // used to process webhook for invoice finalized to temporal, if no webhook is configured, property will be set
-	InvoicePaidWebhookProcessedAt      *time.Time // used to process webhook for invoice paid to temporal, if no webhook is configured, property will be set
-	PaymentLinkRequestedAt             *time.Time
-	PayInvoiceNotificationRequestedAt  *time.Time // used for locking in batch to not send the same notification multiple times under an hour
-	PayInvoiceNotificationSentAt       *time.Time // used to prevent sending the same notification
-	PaidInvoiceNotificationSentAt      *time.Time
-	VoidInvoiceNotificationSentAt      *time.Time
+	InvoiceFinalizedSentAt               *time.Time // used to send the invoice finalized notification to slack and integration app
+	InvoiceFinalizedWebhookProcessedAt   *time.Time // used to process webhook for invoice finalized to temporal, if no webhook is configured, property will be set
+	InvoicePaidWebhookProcessedAt        *time.Time // used to process webhook for invoice paid to temporal, if no webhook is configured, property will be set
+	PaymentLinkRequestedAt               *time.Time
+	PayInvoiceNotificationRequestedAt    *time.Time // used for locking in batch to not send the same notification multiple times under an hour
+	PayInvoiceNotificationSentAt         *time.Time // used to prevent sending the same notification
+	RemindInvoiceNotificationRequestedAt *time.Time
+	LastRemindInvoiceNotificationSentAt  *time.Time
+	RemindInvoiceNotificationRequestAt   *time.Time
+	PaidInvoiceNotificationSentAt        *time.Time
+	VoidInvoiceNotificationSentAt        *time.Time
 }
 
 type InvoiceEntities []InvoiceEntity

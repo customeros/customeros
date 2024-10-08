@@ -5,9 +5,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	commentpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/comment"
+	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	events2 "github.com/openline-ai/openline-customer-os/packages/server/events/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -100,7 +100,7 @@ func (a *CommentAggregate) When(evt eventstore.Event) error {
 	case CommentUpdateV1:
 		return a.onCommentUpdate(evt)
 	default:
-		if strings.HasPrefix(evt.GetEventType(), events2.EsInternalStreamPrefix) {
+		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
 		}
 		err := eventstore.ErrInvalidEventType
@@ -138,10 +138,10 @@ func (a *CommentAggregate) onCommentUpdate(evt eventstore.Event) error {
 	if err := evt.GetJsonData(&eventData); err != nil {
 		return errors.Wrap(err, "GetJsonData")
 	}
-	if eventData.Source == events2.SourceOpenline {
+	if eventData.Source == constants.SourceOpenline {
 		a.Comment.Source.SourceOfTruth = eventData.Source
 	}
-	if eventData.Source != a.Comment.Source.SourceOfTruth && a.Comment.Source.SourceOfTruth == events2.SourceOpenline {
+	if eventData.Source != a.Comment.Source.SourceOfTruth && a.Comment.Source.SourceOfTruth == constants.SourceOpenline {
 		if a.Comment.Content == "" {
 			a.Comment.Content = eventData.Content
 		}

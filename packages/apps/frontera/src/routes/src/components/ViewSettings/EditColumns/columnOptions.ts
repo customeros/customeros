@@ -31,7 +31,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsCity]: 'City',
   [ColumnViewType.ContactsPersona]: 'Persona',
   [ColumnViewType.ContactsLastInteraction]: 'Last Interaction',
-  [ColumnViewType.ContactsEmails]: 'Email',
+  [ColumnViewType.ContactsEmails]: 'Work Email',
   [ColumnViewType.ContactsPhoneNumbers]: 'Mobile Number',
   [ColumnViewType.ContactsAvatar]: 'Avatar',
   [ColumnViewType.ContactsLanguages]: 'Languages',
@@ -43,10 +43,11 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsCountry]: 'Country',
   [ColumnViewType.ContactsSkills]: 'Skills',
   [ColumnViewType.ContactsLinkedinFollowerCount]: 'Linkedin Followers',
-  [ColumnViewType.ContactsConnections]: 'Connected To',
+  [ColumnViewType.ContactsConnections]: 'LinkedIn Connections',
   [ColumnViewType.ContactsRegion]: 'Region',
-  [ColumnViewType.ContactsSequences]: 'Current Flow',
   [ColumnViewType.ContactsFlows]: 'Current Flow',
+  [ColumnViewType.ContactsPersonalEmails]: 'Personal Email',
+  [ColumnViewType.ContactsFlowStatus]: 'Flow Status',
 };
 
 export const invoicesHelperTextMap: Record<
@@ -163,8 +164,9 @@ export const contactsHelperTextMap: Record<string, string> = {
   [ColumnViewType.ContactsSchools]: 'E.g. Stanford University',
   [ColumnViewType.ContactsExperience]: 'E.g. 4 yrs',
   [ColumnViewType.ContactsRegion]: 'E.g. California',
-  [ColumnViewType.ContactsSequences]: 'E.g. Aerospace CTO',
   [ColumnViewType.ContactsFlows]: 'E.g. Education',
+  [ColumnViewType.ContactsPersonalEmails]: 'E.g. steph@convoy.com',
+  [ColumnViewType.ContactsFlowStatus]: 'E.g. Completed',
 };
 
 export const contractsMap: Record<string, string> = {
@@ -213,19 +215,17 @@ export const opportunitiesHelperTextMap: Record<string, string> = {
 
 export const flowsMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'Flow',
-  [ColumnViewType.FlowSequenceName]: 'Flow',
-  [ColumnViewType.FlowSequenceStatus]: 'Status',
-  [ColumnViewType.FlowSequenceTotalCount]: 'Total',
-  [ColumnViewType.FlowSequenceCompletedCount]: 'Completed',
-  [ColumnViewType.FlowSequencePendingCount]: 'In Progress',
-  [ColumnViewType.FlowSequenceGoalAchievedCount]: 'Goal Achieved',
+  [ColumnViewType.FlowActionName]: 'Status', // This is the actual status of the flow - Wrong naming of enum -> to be refactored
+  [ColumnViewType.FlowTotalCount]: 'Total',
+  [ColumnViewType.FlowCompletedCount]: 'Completed',
+  [ColumnViewType.FlowPendingCount]: 'In Progress',
+  [ColumnViewType.FlowGoalAchievedCount]: 'Goal Achieved',
 };
 export const flowsHelperTextMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'E.g. Aerospace CTO',
-  [ColumnViewType.FlowSequenceName]: 'E.g. Education',
-  [ColumnViewType.FlowSequenceStatus]: 'E.g. Active',
-  [ColumnViewType.FlowSequencePendingCount]: 'E.g. 34 (27%)',
-  [ColumnViewType.FlowSequenceCompletedCount]: 'E.g. 78 (62%)',
-  [ColumnViewType.FlowSequenceTotalCount]: 'E.g. 125',
-  [ColumnViewType.FlowSequenceGoalAchievedCount]: 'E.g. 47 (38%)',
+  [ColumnViewType.FlowActionName]: 'E.g. Education',
+  [ColumnViewType.FlowPendingCount]: 'E.g. 34 (27%)',
+  [ColumnViewType.FlowCompletedCount]: 'E.g. 78 (62%)',
+  [ColumnViewType.FlowTotalCount]: 'E.g. 125',
+  [ColumnViewType.FlowGoalAchievedCount]: 'E.g. 47 (38%)',
 };

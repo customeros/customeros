@@ -92,8 +92,10 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
     if (!tableViewDefStore && this.isBootstrapped) {
       const defaultPresetId = this.defaultPreset;
+      const navigateToDefaultPreset =
+        window.location.pathname.includes('finder');
 
-      if (defaultPresetId) {
+      if (defaultPresetId && navigateToDefaultPreset) {
         const defaultTableViewDefStore = this.value.get(defaultPresetId);
 
         if (defaultTableViewDefStore) {
@@ -181,7 +183,7 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
 
   get flowsPreset() {
     return this?.toArray().find(
-      (t) => t.value.tableId === TableIdType.FlowSequences && t.value.isPreset,
+      (t) => t.value.tableId === TableIdType.FlowActions && t.value.isPreset,
     )?.value.id;
   }
 

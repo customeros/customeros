@@ -1017,6 +1017,11 @@ type EmailValidationDetails struct {
 	IsDeliverable     *bool             `json:"isDeliverable,omitempty"`
 }
 
+type EmailVariableEntity struct {
+	Type      EmailVariableEntityType `json:"type"`
+	Variables []EmailVariableName     `json:"variables"`
+}
+
 type EntityTemplate struct {
 	ID                   string                   `json:"id"`
 	Version              int                      `json:"version"`
@@ -1130,6 +1135,7 @@ type Flow struct {
 	Edges       string          `json:"edges"`
 	Status      FlowStatus      `json:"status"`
 	Contacts    []*FlowContact  `json:"contacts"`
+	Senders     []*FlowSender   `json:"senders"`
 	Statistics  *FlowStatistics `json:"statistics"`
 }
 
@@ -1162,27 +1168,12 @@ type FlowActionInputDataWait struct {
 	Minutes int64 `json:"minutes"`
 }
 
-type FlowActionSender struct {
-	Metadata *Metadata `json:"metadata"`
-	Mailbox  *string   `json:"mailbox,omitempty"`
-	User     *User     `json:"user,omitempty"`
-}
-
-func (FlowActionSender) IsMetadataInterface()        {}
-func (this FlowActionSender) GetMetadata() *Metadata { return this.Metadata }
-
-type FlowActionSenderMergeInput struct {
-	ID      *string `json:"id,omitempty"`
-	Mailbox *string `json:"mailbox,omitempty"`
-	UserID  *string `json:"userId,omitempty"`
-}
-
 type FlowContact struct {
-	Metadata        *Metadata         `json:"metadata"`
-	Contact         *Contact          `json:"contact"`
-	Status          FlowContactStatus `json:"status"`
-	ScheduledAction *string           `json:"scheduledAction,omitempty"`
-	ScheduledAt     *time.Time        `json:"scheduledAt,omitempty"`
+	Metadata        *Metadata             `json:"metadata"`
+	Contact         *Contact              `json:"contact"`
+	Status          FlowParticipantStatus `json:"status"`
+	ScheduledAction *string               `json:"scheduledAction,omitempty"`
+	ScheduledAt     *time.Time            `json:"scheduledAt,omitempty"`
 }
 
 func (FlowContact) IsMetadataInterface()        {}
@@ -1193,6 +1184,19 @@ type FlowMergeInput struct {
 	Name  string  `json:"name"`
 	Nodes string  `json:"nodes"`
 	Edges string  `json:"edges"`
+}
+
+type FlowSender struct {
+	Metadata *Metadata `json:"metadata"`
+	User     *User     `json:"user,omitempty"`
+}
+
+func (FlowSender) IsMetadataInterface()        {}
+func (this FlowSender) GetMetadata() *Metadata { return this.Metadata }
+
+type FlowSenderMergeInput struct {
+	ID     *string `json:"id,omitempty"`
+	UserID *string `json:"userId,omitempty"`
 }
 
 type FlowStatistics struct {
@@ -2591,6 +2595,7 @@ type ServiceLineItem struct {
 	CreatedBy      *User             `json:"createdBy,omitempty"`
 	ExternalLinks  []*ExternalSystem `json:"externalLinks"`
 	Closed         bool              `json:"closed"`
+	Paused         bool              `json:"paused"`
 }
 
 func (ServiceLineItem) IsMetadataInterface()        {}
@@ -3006,6 +3011,7 @@ type User struct {
 	// **Required.  If no values it returns an empty array.**
 	Emails       []*Email       `json:"emails,omitempty"`
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
+	Mailboxes    []string       `json:"mailboxes"`
 	// Timestamp of user creation.
 	// **Required**
 	CreatedAt     time.Time   `json:"createdAt"`
@@ -3429,8 +3435,8 @@ const (
 	ColumnViewTypeContactsJobTitle                   ColumnViewType = "CONTACTS_JOB_TITLE"
 	ColumnViewTypeContactsTags                       ColumnViewType = "CONTACTS_TAGS"
 	ColumnViewTypeContactsConnections                ColumnViewType = "CONTACTS_CONNECTIONS"
-	ColumnViewTypeContactsSequences                  ColumnViewType = "CONTACTS_SEQUENCES"
 	ColumnViewTypeContactsFlows                      ColumnViewType = "CONTACTS_FLOWS"
+	ColumnViewTypeContactsFlowStatus                 ColumnViewType = "CONTACTS_FLOW_STATUS"
 	ColumnViewTypeOpportunitiesCommonColumn          ColumnViewType = "OPPORTUNITIES_COMMON_COLUMN"
 	ColumnViewTypeOpportunitiesName                  ColumnViewType = "OPPORTUNITIES_NAME"
 	ColumnViewTypeOpportunitiesOrganization          ColumnViewType = "OPPORTUNITIES_ORGANIZATION"
@@ -3452,13 +3458,13 @@ const (
 	ColumnViewTypeContractsOwner                     ColumnViewType = "CONTRACTS_OWNER"
 	ColumnViewTypeContractsHealth                    ColumnViewType = "CONTRACTS_HEALTH"
 	ColumnViewTypeFlowName                           ColumnViewType = "FLOW_NAME"
+	ColumnViewTypeFlowTotalCount                     ColumnViewType = "FLOW_TOTAL_COUNT"
+	ColumnViewTypeFlowPendingCount                   ColumnViewType = "FLOW_PENDING_COUNT"
+	ColumnViewTypeFlowCompletedCount                 ColumnViewType = "FLOW_COMPLETED_COUNT"
+	ColumnViewTypeFlowGoalAchievedCount              ColumnViewType = "FLOW_GOAL_ACHIEVED_COUNT"
 	ColumnViewTypeFlowStatus                         ColumnViewType = "FLOW_STATUS"
-	ColumnViewTypeFlowSequenceName                   ColumnViewType = "FLOW_SEQUENCE_NAME"
-	ColumnViewTypeFlowSequenceStatus                 ColumnViewType = "FLOW_SEQUENCE_STATUS"
-	ColumnViewTypeFlowSequenceTotalCount             ColumnViewType = "FLOW_SEQUENCE_TOTAL_COUNT"
-	ColumnViewTypeFlowSequencePendingCount           ColumnViewType = "FLOW_SEQUENCE_PENDING_COUNT"
-	ColumnViewTypeFlowSequenceCompletedCount         ColumnViewType = "FLOW_SEQUENCE_COMPLETED_COUNT"
-	ColumnViewTypeFlowSequenceGoalAchievedCount      ColumnViewType = "FLOW_SEQUENCE_GOAL_ACHIEVED_COUNT"
+	ColumnViewTypeFlowActionName                     ColumnViewType = "FLOW_ACTION_NAME"
+	ColumnViewTypeFlowActionStatus                   ColumnViewType = "FLOW_ACTION_STATUS"
 )
 
 var AllColumnViewType = []ColumnViewType{
@@ -3520,8 +3526,8 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeContactsJobTitle,
 	ColumnViewTypeContactsTags,
 	ColumnViewTypeContactsConnections,
-	ColumnViewTypeContactsSequences,
 	ColumnViewTypeContactsFlows,
+	ColumnViewTypeContactsFlowStatus,
 	ColumnViewTypeOpportunitiesCommonColumn,
 	ColumnViewTypeOpportunitiesName,
 	ColumnViewTypeOpportunitiesOrganization,
@@ -3543,18 +3549,18 @@ var AllColumnViewType = []ColumnViewType{
 	ColumnViewTypeContractsOwner,
 	ColumnViewTypeContractsHealth,
 	ColumnViewTypeFlowName,
+	ColumnViewTypeFlowTotalCount,
+	ColumnViewTypeFlowPendingCount,
+	ColumnViewTypeFlowCompletedCount,
+	ColumnViewTypeFlowGoalAchievedCount,
 	ColumnViewTypeFlowStatus,
-	ColumnViewTypeFlowSequenceName,
-	ColumnViewTypeFlowSequenceStatus,
-	ColumnViewTypeFlowSequenceTotalCount,
-	ColumnViewTypeFlowSequencePendingCount,
-	ColumnViewTypeFlowSequenceCompletedCount,
-	ColumnViewTypeFlowSequenceGoalAchievedCount,
+	ColumnViewTypeFlowActionName,
+	ColumnViewTypeFlowActionStatus,
 }
 
 func (e ColumnViewType) IsValid() bool {
 	switch e {
-	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeInvoicesOrganization, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeOrganizationsParentOrganization, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPersonalEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeContactsSequences, ColumnViewTypeContactsFlows, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeOpportunitiesName, ColumnViewTypeOpportunitiesOrganization, ColumnViewTypeOpportunitiesStage, ColumnViewTypeOpportunitiesEstimatedArr, ColumnViewTypeOpportunitiesOwner, ColumnViewTypeOpportunitiesTimeInStage, ColumnViewTypeOpportunitiesCreatedDate, ColumnViewTypeOpportunitiesNextStep, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth, ColumnViewTypeFlowName, ColumnViewTypeFlowStatus, ColumnViewTypeFlowSequenceName, ColumnViewTypeFlowSequenceStatus, ColumnViewTypeFlowSequenceTotalCount, ColumnViewTypeFlowSequencePendingCount, ColumnViewTypeFlowSequenceCompletedCount, ColumnViewTypeFlowSequenceGoalAchievedCount:
+	case ColumnViewTypeInvoicesIssueDate, ColumnViewTypeInvoicesIssueDatePast, ColumnViewTypeInvoicesDueDate, ColumnViewTypeInvoicesContract, ColumnViewTypeInvoicesBillingCycle, ColumnViewTypeInvoicesInvoiceNumber, ColumnViewTypeInvoicesAmount, ColumnViewTypeInvoicesInvoiceStatus, ColumnViewTypeInvoicesInvoicePreview, ColumnViewTypeInvoicesOrganization, ColumnViewTypeOrganizationsAvatar, ColumnViewTypeOrganizationsName, ColumnViewTypeOrganizationsWebsite, ColumnViewTypeOrganizationsRelationship, ColumnViewTypeOrganizationsOnboardingStatus, ColumnViewTypeOrganizationsRenewalLikelihood, ColumnViewTypeOrganizationsRenewalDate, ColumnViewTypeOrganizationsForecastArr, ColumnViewTypeOrganizationsOwner, ColumnViewTypeOrganizationsLastTouchpoint, ColumnViewTypeOrganizationsLastTouchpointDate, ColumnViewTypeOrganizationsStage, ColumnViewTypeOrganizationsContactCount, ColumnViewTypeOrganizationsSocials, ColumnViewTypeOrganizationsLeadSource, ColumnViewTypeOrganizationsCreatedDate, ColumnViewTypeOrganizationsEmployeeCount, ColumnViewTypeOrganizationsYearFounded, ColumnViewTypeOrganizationsIndustry, ColumnViewTypeOrganizationsChurnDate, ColumnViewTypeOrganizationsLtv, ColumnViewTypeOrganizationsCity, ColumnViewTypeOrganizationsIsPublic, ColumnViewTypeOrganizationsLinkedinFollowerCount, ColumnViewTypeOrganizationsTags, ColumnViewTypeOrganizationsHeadquarters, ColumnViewTypeOrganizationsParentOrganization, ColumnViewTypeContactsAvatar, ColumnViewTypeContactsName, ColumnViewTypeContactsOrganization, ColumnViewTypeContactsEmails, ColumnViewTypeContactsPersonalEmails, ColumnViewTypeContactsPhoneNumbers, ColumnViewTypeContactsLinkedin, ColumnViewTypeContactsCity, ColumnViewTypeContactsPersona, ColumnViewTypeContactsLastInteraction, ColumnViewTypeContactsCountry, ColumnViewTypeContactsRegion, ColumnViewTypeContactsSkills, ColumnViewTypeContactsSchools, ColumnViewTypeContactsLanguages, ColumnViewTypeContactsTimeInCurrentRole, ColumnViewTypeContactsExperience, ColumnViewTypeContactsLinkedinFollowerCount, ColumnViewTypeContactsJobTitle, ColumnViewTypeContactsTags, ColumnViewTypeContactsConnections, ColumnViewTypeContactsFlows, ColumnViewTypeContactsFlowStatus, ColumnViewTypeOpportunitiesCommonColumn, ColumnViewTypeOpportunitiesName, ColumnViewTypeOpportunitiesOrganization, ColumnViewTypeOpportunitiesStage, ColumnViewTypeOpportunitiesEstimatedArr, ColumnViewTypeOpportunitiesOwner, ColumnViewTypeOpportunitiesTimeInStage, ColumnViewTypeOpportunitiesCreatedDate, ColumnViewTypeOpportunitiesNextStep, ColumnViewTypeContractsName, ColumnViewTypeContractsEnded, ColumnViewTypeContractsPeriod, ColumnViewTypeContractsCurrency, ColumnViewTypeContractsStatus, ColumnViewTypeContractsRenewal, ColumnViewTypeContractsLtv, ColumnViewTypeContractsRenewalDate, ColumnViewTypeContractsForecastArr, ColumnViewTypeContractsOwner, ColumnViewTypeContractsHealth, ColumnViewTypeFlowName, ColumnViewTypeFlowTotalCount, ColumnViewTypeFlowPendingCount, ColumnViewTypeFlowCompletedCount, ColumnViewTypeFlowGoalAchievedCount, ColumnViewTypeFlowStatus, ColumnViewTypeFlowActionName, ColumnViewTypeFlowActionStatus:
 		return true
 	}
 	return false
@@ -3598,7 +3604,8 @@ const (
 	ComparisonOperatorIsNoneOf    ComparisonOperator = "IS_NONE_OF"
 	ComparisonOperatorIsNotEmpty  ComparisonOperator = "IS_NOT_EMPTY"
 	ComparisonOperatorNotContains ComparisonOperator = "NOT_CONTAINS"
-	ComparisonOperatorNotEqual    ComparisonOperator = "NOT_EQUAL"
+	// Not supported yet
+	ComparisonOperatorNotEqual ComparisonOperator = "NOT_EQUAL"
 )
 
 var AllComparisonOperator = []ComparisonOperator{
@@ -4167,6 +4174,92 @@ func (e EmailLabel) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type EmailVariableEntityType string
+
+const (
+	EmailVariableEntityTypeContact EmailVariableEntityType = "CONTACT"
+)
+
+var AllEmailVariableEntityType = []EmailVariableEntityType{
+	EmailVariableEntityTypeContact,
+}
+
+func (e EmailVariableEntityType) IsValid() bool {
+	switch e {
+	case EmailVariableEntityTypeContact:
+		return true
+	}
+	return false
+}
+
+func (e EmailVariableEntityType) String() string {
+	return string(e)
+}
+
+func (e *EmailVariableEntityType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailVariableEntityType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailVariableEntityType", str)
+	}
+	return nil
+}
+
+func (e EmailVariableEntityType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
+type EmailVariableName string
+
+const (
+	EmailVariableNameContactFirstName EmailVariableName = "CONTACT_FIRST_NAME"
+	EmailVariableNameContactLastName  EmailVariableName = "CONTACT_LAST_NAME"
+	EmailVariableNameContactFullName  EmailVariableName = "CONTACT_FULL_NAME"
+	EmailVariableNameContactEmail     EmailVariableName = "CONTACT_EMAIL"
+	EmailVariableNameOrganizationName EmailVariableName = "ORGANIZATION_NAME"
+)
+
+var AllEmailVariableName = []EmailVariableName{
+	EmailVariableNameContactFirstName,
+	EmailVariableNameContactLastName,
+	EmailVariableNameContactFullName,
+	EmailVariableNameContactEmail,
+	EmailVariableNameOrganizationName,
+}
+
+func (e EmailVariableName) IsValid() bool {
+	switch e {
+	case EmailVariableNameContactFirstName, EmailVariableNameContactLastName, EmailVariableNameContactFullName, EmailVariableNameContactEmail, EmailVariableNameOrganizationName:
+		return true
+	}
+	return false
+}
+
+func (e EmailVariableName) String() string {
+	return string(e)
+}
+
+func (e *EmailVariableName) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = EmailVariableName(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid EmailVariableName", str)
+	}
+	return nil
+}
+
+func (e EmailVariableName) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type EntityTemplateExtension string
 
 const (
@@ -4361,48 +4454,52 @@ func (e FlowActionStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
-type FlowContactStatus string
+type FlowParticipantStatus string
 
 const (
-	FlowContactStatusScheduled  FlowContactStatus = "SCHEDULED"
-	FlowContactStatusInProgress FlowContactStatus = "IN_PROGRESS"
-	FlowContactStatusPaused     FlowContactStatus = "PAUSED"
-	FlowContactStatusCompleted  FlowContactStatus = "COMPLETED"
+	FlowParticipantStatusPending      FlowParticipantStatus = "PENDING"
+	FlowParticipantStatusScheduled    FlowParticipantStatus = "SCHEDULED"
+	FlowParticipantStatusInProgress   FlowParticipantStatus = "IN_PROGRESS"
+	FlowParticipantStatusPaused       FlowParticipantStatus = "PAUSED"
+	FlowParticipantStatusCompleted    FlowParticipantStatus = "COMPLETED"
+	FlowParticipantStatusGoalAchieved FlowParticipantStatus = "GOAL_ACHIEVED"
 )
 
-var AllFlowContactStatus = []FlowContactStatus{
-	FlowContactStatusScheduled,
-	FlowContactStatusInProgress,
-	FlowContactStatusPaused,
-	FlowContactStatusCompleted,
+var AllFlowParticipantStatus = []FlowParticipantStatus{
+	FlowParticipantStatusPending,
+	FlowParticipantStatusScheduled,
+	FlowParticipantStatusInProgress,
+	FlowParticipantStatusPaused,
+	FlowParticipantStatusCompleted,
+	FlowParticipantStatusGoalAchieved,
 }
 
-func (e FlowContactStatus) IsValid() bool {
+func (e FlowParticipantStatus) IsValid() bool {
 	switch e {
-	case FlowContactStatusScheduled, FlowContactStatusInProgress, FlowContactStatusPaused, FlowContactStatusCompleted:
+	case FlowParticipantStatusPending, FlowParticipantStatusScheduled, FlowParticipantStatusInProgress, FlowParticipantStatusPaused, FlowParticipantStatusCompleted, FlowParticipantStatusGoalAchieved:
 		return true
 	}
 	return false
 }
 
-func (e FlowContactStatus) String() string {
+func (e FlowParticipantStatus) String() string {
 	return string(e)
 }
 
-func (e *FlowContactStatus) UnmarshalGQL(v interface{}) error {
+func (e *FlowParticipantStatus) UnmarshalGQL(v interface{}) error {
 	str, ok := v.(string)
 	if !ok {
 		return fmt.Errorf("enums must be strings")
 	}
 
-	*e = FlowContactStatus(str)
+	*e = FlowParticipantStatus(str)
 	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid FlowContactStatus", str)
+		return fmt.Errorf("%s is not a valid FlowParticipantStatus", str)
 	}
 	return nil
 }
 
-func (e FlowContactStatus) MarshalGQL(w io.Writer) {
+func (e FlowParticipantStatus) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
@@ -5528,7 +5625,7 @@ const (
 	TableIDTypeOpportunities                  TableIDType = "OPPORTUNITIES"
 	TableIDTypeOpportunitiesRecords           TableIDType = "OPPORTUNITIES_RECORDS"
 	TableIDTypeContracts                      TableIDType = "CONTRACTS"
-	TableIDTypeFlowSequences                  TableIDType = "FLOW_SEQUENCES"
+	TableIDTypeFlowActions                    TableIDType = "FLOW_ACTIONS"
 	TableIDTypeFlowContacts                   TableIDType = "FLOW_CONTACTS"
 )
 
@@ -5543,13 +5640,13 @@ var AllTableIDType = []TableIDType{
 	TableIDTypeOpportunities,
 	TableIDTypeOpportunitiesRecords,
 	TableIDTypeContracts,
-	TableIDTypeFlowSequences,
+	TableIDTypeFlowActions,
 	TableIDTypeFlowContacts,
 }
 
 func (e TableIDType) IsValid() bool {
 	switch e {
-	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts, TableIDTypeFlowSequences, TableIDTypeFlowContacts:
+	case TableIDTypeOrganizations, TableIDTypeCustomers, TableIDTypeTargets, TableIDTypeUpcomingInvoices, TableIDTypePastInvoices, TableIDTypeContacts, TableIDTypeContactsForTargetOrganizations, TableIDTypeOpportunities, TableIDTypeOpportunitiesRecords, TableIDTypeContracts, TableIDTypeFlowActions, TableIDTypeFlowContacts:
 		return true
 	}
 	return false

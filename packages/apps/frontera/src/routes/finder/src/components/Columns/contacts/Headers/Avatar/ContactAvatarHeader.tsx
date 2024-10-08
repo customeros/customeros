@@ -50,7 +50,9 @@ export const ContactAvatarHeader = observer(() => {
 
       if (!searchValue) return targets;
 
-      return targets.filter((item) => item.value.name.includes(searchValue));
+      return targets.filter((item) =>
+        item.value.name?.toLowerCase().includes(searchValue?.toLowerCase()),
+      );
     })
     .map((item) => ({
       label: item.value.name,
@@ -154,6 +156,7 @@ export const ContactAvatarHeader = observer(() => {
                   if (e.key === 'Escape') {
                     setIsOpen(false);
                   }
+                  e.stopPropagation();
                 }}
               />
               {validation.linkedin && (
@@ -214,7 +217,7 @@ export const ContactAvatarHeader = observer(() => {
               onClick={handleSubmit}
               loadingText='Creating contact'
               isLoading={store.contacts.isLoading}
-              spinner={
+              rightSpinner={
                 <Spinner
                   size='sm'
                   label='loading'

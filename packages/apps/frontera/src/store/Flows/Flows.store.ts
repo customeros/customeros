@@ -1,5 +1,4 @@
 import { Channel } from 'phoenix';
-import { Store } from '@store/store';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { GroupOperation } from '@store/types';
@@ -17,7 +16,7 @@ export class FlowsStore implements GroupStore<Flow> {
   error: string | null = null;
   channel?: Channel | undefined;
   isBootstrapped: boolean = false;
-  value: Map<string, Store<Flow>> = new Map();
+  value: Map<string, FlowStore> = new Map();
   sync = makeAutoSyncableGroup.sync;
   subscribe = makeAutoSyncableGroup.subscribe;
   load = makeAutoSyncableGroup.load<Flow>();

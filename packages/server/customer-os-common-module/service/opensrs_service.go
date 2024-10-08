@@ -25,10 +25,10 @@ type openSRSService struct {
 }
 
 type OpenSrsService interface {
-	Reply(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error)
+	SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error)
 }
 
-func (s *openSRSService) Reply(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error) {
+func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error) {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpenSrsService.Reply")
 	defer span.Finish()
 
@@ -77,18 +77,39 @@ func (s *openSRSService) Reply(ctx context.Context, tenant string, request dto.M
 		}
 	}
 
-	interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
+	subject := ""
+	inReplyTo := ""
+	references := make([]string, 0)
 
-	emailChannelData := dto.EmailChannelData{}
-	err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
+	if request.ReplyTo != nil {
+		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
+
+		emailChannelData := dto.EmailChannelData{}
+		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
+		}
+
+		subject = emailChannelData.Subject
+		if len(emailChannelData.Subject) < 3 || emailChannelData.Subject[:3] != "Re:" {
+			subject = "Re: " + emailChannelData.Subject
+		}
+
+		if emailChannelData.Reference == nil {
+			emailChannelData.Reference = []string{}
+		}
+
+		emailChannelData.Reference = append(emailChannelData.Reference, emailChannelData.ProviderMessageId)
+
+		inReplyTo = emailChannelData.ProviderMessageId
+	} else {
+		subject = *request.Subject
 	}
 
 	// Compose the email headers and body
@@ -113,24 +134,12 @@ Content-Type: text/html; charset=UTF-8
 {{.HTMLBody}}
 --{{.Boundary}}--
 `
-	subject := emailChannelData.Subject
-	if len(emailChannelData.Subject) < 3 || emailChannelData.Subject[:3] != "Re:" {
-		subject = "Re: " + emailChannelData.Subject
-	}
 
 	plainText, err := HTMLToPlainText(request.Content)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
-	if emailChannelData.Reference == nil {
-		emailChannelData.Reference = []string{}
-	}
-
-	emailChannelData.Reference = append(emailChannelData.Reference, emailChannelData.ProviderMessageId)
-
-	references := strings.Join(emailChannelData.Reference, " ")
 
 	data := struct {
 		FromEmail  string
@@ -153,8 +162,8 @@ Content-Type: text/html; charset=UTF-8
 		Subject:    subject,
 		Date:       time.Now().Format("Mon, 02 Jan 2006 15:04:05 -0700"),
 		MessageId:  generateMessageID(mailbox.MailboxUsername),
-		InReplyTo:  emailChannelData.ProviderMessageId,
-		References: references,
+		InReplyTo:  inReplyTo,
+		References: strings.Join(references, " "),
 		Boundary:   fmt.Sprintf("=_%x", time.Now().UnixNano()),
 		PlainBody:  plainText,
 		HTMLBody:   request.Content,
@@ -197,7 +206,7 @@ Content-Type: text/html; charset=UTF-8
 	retMail.Header = make(map[string][]string)
 	retMail.Header["Message-Id"] = []string{data.MessageId}
 	retMail.InReplyTo = []string{data.InReplyTo}
-	retMail.References = emailChannelData.Reference
+	retMail.References = references
 
 	return &retMail, nil
 }

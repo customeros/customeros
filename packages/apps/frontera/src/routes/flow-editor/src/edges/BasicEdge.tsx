@@ -5,7 +5,6 @@ import { observer } from 'mobx-react-lite';
 import {
   BaseEdge,
   EdgeProps,
-  MarkerType,
   useReactFlow,
   getSmoothStepPath,
   EdgeLabelRenderer,
@@ -60,12 +59,7 @@ export const BasicEdge: React.FC<
 
   return (
     <>
-      <BaseEdge
-        {...props}
-        path={edgePath}
-        interactionWidth={80}
-        markerEnd={MarkerType.ArrowClosed}
-      />
+      <BaseEdge {...props} path={edgePath} />
 
       <EdgeLabelRenderer>
         <div
@@ -83,6 +77,7 @@ export const BasicEdge: React.FC<
             aria-label='Add step or trigger'
             icon={
               <Plus
+                strokeWidth={4}
                 className='text-inherit transition-transform duration-100'
                 style={{
                   transform:
@@ -94,14 +89,9 @@ export const BasicEdge: React.FC<
               />
             }
             className={cn(
-              'text-white bg-gray-300 hover:bg-gray-700 hover:text-white focus:bg-gray-700 focus:text-white rounded-full scale-[0.3635] hover:scale-100 transition-all ease-in-out ',
+              'bg-gray-300 border-4 border-white text-transparent hover:bg-gray-700 hover:text-white focus:bg-inherit focus:text-inherit  rounded-full scale-[0.3635] transition-all ease-in-out ',
               {
-                'text-transparent':
-                  !data?.isHovered &&
-                  (!ui.flowCommandMenu.isOpen ||
-                    id !== ui.flowCommandMenu.context.id),
-
-                'scale-100 bg-gray-700':
+                'scale-100 !bg-gray-700 text-white border-2':
                   data?.isHovered ||
                   (ui.flowCommandMenu.isOpen &&
                     id === ui.flowCommandMenu.context.id),

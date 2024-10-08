@@ -58,6 +58,15 @@ jobs:
         env:
           PROD_FE_TEST_USER_URL: ${{ secrets.PROD_FE_TEST_USER_URL }}
 
+      - name: Upload video artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-videos
+          path: ./packages/apps/frontera/videos/*.webm
+          if-no-files-found: ignore
+          retention-days: 30
+
       - name: Read test results
         if: always()
         id: test_results

@@ -11,12 +11,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 )
 
+// Deprecated
 func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := fmt.Sprintf("DROP INDEX basicSearchStandard_location_terms IF EXISTS")
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
@@ -28,6 +28,7 @@ func CreateFullTextBasicSearchIndexes(ctx context.Context, driver *neo4j.DriverW
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{})
 }
 
+// Deprecated
 func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
@@ -37,6 +38,7 @@ func CreateHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
+// Deprecated
 func CreateSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)
@@ -48,6 +50,7 @@ func CreateSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithCont
 	})
 }
 
+// Deprecated
 func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) {
 	query := `MATCH (t:Tenant {name:$tenant})
 			MERGE (e:ExternalSystem {id:$externalSystemId})-[:EXTERNAL_SYSTEM_BELONGS_TO_TENANT]->(t)`
@@ -57,14 +60,17 @@ func CreateCalComExternalSystem(ctx context.Context, driver *neo4j.DriverWithCon
 	})
 }
 
+// Deprecated
 func LinkWithHubspotExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
 	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Hubspot), externalUrl, externalSource, syncDate)
 }
 
+// Deprecated
 func LinkWithSlackExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId string, externalUrl, externalSource *string, syncDate time.Time) {
 	LinkWithExternalSystem(ctx, driver, entityId, externalId, string(neo4jenum.Slack), externalUrl, externalSource, syncDate)
 }
 
+// Deprecated
 func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext, entityId, externalId, externalSystemId string, externalUrl, externalSource *string, syncDate time.Time) {
 	query := `MATCH (e:ExternalSystem {id:$externalSystemId}), (n {id:$entityId})
 			MERGE (n)-[rel:IS_LINKED_WITH {externalId:$externalId}]->(e)
@@ -79,6 +85,7 @@ func LinkWithExternalSystem(ctx context.Context, driver *neo4j.DriverWithContext
 	})
 }
 
+// Deprecated
 func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, attachment neo4jentity.AttachmentEntity) string {
 	if len(attachment.Id) == 0 {
 		attachmentUuid, _ := uuid.NewRandom()
@@ -110,67 +117,17 @@ func CreateAttachment(ctx context.Context, driver *neo4j.DriverWithContext, tena
 	return attachment.Id
 }
 
-func CreateDefaultPlayer(ctx context.Context, driver *neo4j.DriverWithContext, authId, provider string) string {
-	return CreatePlayerWithId(ctx, driver, "", neo4jentity.PlayerEntity{
-		AuthId:     authId,
-		Provider:   provider,
-		IdentityId: "test-player-id",
-	})
-}
-
-func CreatePlayerWithId(ctx context.Context, driver *neo4j.DriverWithContext, playerId string, player neo4jentity.PlayerEntity) string {
-	if len(playerId) == 0 {
-		playerUuid, _ := uuid.NewRandom()
-		playerId = playerUuid.String()
-	}
-	query := `
-			MERGE (p:Player {
-				  	id: $playerId,
-					authId: $authId,
-					provider: $provider
-				})
-			SET     p.identityId = $identityId,
-					p.createdAt = datetime({timezone: 'UTC'}),
-					p.updatedAt = datetime({timezone: 'UTC'}),
-					p.source =  $source,
-					p.sourceOfTruth = $sourceOfTruth,
-			        p.appSource = $appSource`
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query), map[string]any{
-		"playerId":      playerId,
-		"authId":        player.AuthId,
-		"provider":      player.Provider,
-		"source":        player.Source,
-		"sourceOfTruth": player.SourceOfTruth,
-		"appSource":     player.AppSource,
-		"identityId":    player.IdentityId,
-	})
-
-	return playerId
-}
-
-func LinkPlayerToUser(ctx context.Context, driver *neo4j.DriverWithContext, playerId string, userId string, isDefault bool) {
-	query := `
-			MATCH (p:Player {id:$playerId})
-			MATCH (u:User {id:$userId})
-			MERGE (p)-[:IDENTIFIES {default: $default}]->(u)
-			`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, fmt.Sprintf(query), map[string]any{
-		"playerId": playerId,
-		"userId":   userId,
-		"default":  isDefault,
-	})
-
-}
-
+// Deprecated
 func CreateDefaultContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string) string {
 	return CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: "first", LastName: "last"})
 }
 
+// Deprecated
 func CreateContactWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, firstName string, lastName string) string {
 	return CreateContact(ctx, driver, tenant, neo4jentity.ContactEntity{Prefix: "MR", FirstName: firstName, LastName: lastName})
 }
 
+// Deprecated
 func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contact neo4jentity.ContactEntity) string {
 	contactId := utils.NewUUIDIfEmpty(contact.Id)
 	query := `MATCH (t:Tenant {name: $tenant}) 
@@ -205,15 +162,18 @@ func CreateContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant 
 	return contactId
 }
 
+// Deprecated
 func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, contactId string, contact neo4jentity.ContactEntity) string {
 	contact.Id = contactId
 	return CreateContact(ctx, driver, tenant, contact)
 }
 
+// Deprecated
 func CreateDefaultFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
 	return CreateFieldSet(ctx, driver, contactId, entity.FieldSetEntity{Name: "name", Source: neo4jentity.DataSourceOpenline, SourceOfTruth: neo4jentity.DataSourceOpenline})
 }
 
+// Deprecated
 func CreateFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, fieldSet entity.FieldSetEntity) string {
 	var fieldSetId, _ = uuid.NewRandom()
 	query := `
@@ -235,6 +195,7 @@ func CreateFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contac
 	return fieldSetId.String()
 }
 
+// Deprecated
 func CreateDefaultCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWithContext, fieldSetId string) string {
 	return createCustomFieldInSet(ctx, driver, fieldSetId,
 		entity.CustomFieldEntity{
@@ -245,6 +206,7 @@ func CreateDefaultCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWith
 			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
+// Deprecated
 func createCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWithContext, fieldSetId string, customField entity.CustomFieldEntity) string {
 	var fieldId, _ = uuid.NewRandom()
 	customField.AdjustValueByDatatype()
@@ -270,6 +232,7 @@ func createCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWithContext
 	return fieldId.String()
 }
 
+// Deprecated
 func CreateDefaultCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
 	return createCustomFieldInContact(ctx, driver, contactId,
 		entity.CustomFieldEntity{
@@ -280,6 +243,7 @@ func CreateDefaultCustomFieldInContact(ctx context.Context, driver *neo4j.Driver
 			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
 }
 
+// Deprecated
 func createCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, customField entity.CustomFieldEntity) string {
 	var fieldId, _ = uuid.NewRandom()
 	customField.AdjustValueByDatatype()
@@ -305,7 +269,7 @@ func createCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithCon
 	return fieldId.String()
 }
 
-// Deprecated
+// Deprecated, use CreateEmailForEntity
 func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType commonModel.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
 
@@ -339,6 +303,7 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 	return emailId.String()
 }
 
+// Deprecated
 func LinkEmail(ctx context.Context, driver *neo4j.DriverWithContext, entityId, emailId string, primary bool) {
 	query :=
 		`	MATCH (n {id:$entityId})--(t:Tenant) 
@@ -353,6 +318,7 @@ func LinkEmail(ctx context.Context, driver *neo4j.DriverWithContext, entityId, e
 	})
 }
 
+// Deprecated
 func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tenant, id, phoneNumber string, primary bool, label string) string {
 	var phoneNumberId, _ = uuid.NewRandom()
 	query :=
@@ -375,6 +341,7 @@ func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tena
 	return phoneNumberId.String()
 }
 
+// Deprecated
 func LinkPhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, id, phoneNumberId string, primary bool, label string) {
 	query :=
 		` 	MATCH (n {id:$entityId})--(t:Tenant) 
@@ -389,6 +356,7 @@ func LinkPhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, id, p
 	})
 }
 
+// Deprecated
 func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, tenant, extends string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
@@ -403,6 +371,7 @@ func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return templateId.String()
 }
 
+// Deprecated
 func LinkEntityTemplateToContact(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId, contactId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
 			(e:EntityTemplate {id:$TemplateId})
@@ -413,6 +382,7 @@ func LinkEntityTemplateToContact(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
+// Deprecated
 func AddFieldTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
@@ -429,6 +399,7 @@ func AddFieldTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithConte
 	return templateId.String()
 }
 
+// Deprecated
 func AddFieldTemplateToSet(ctx context.Context, driver *neo4j.DriverWithContext, setTemplateId string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (e:FieldSetTemplate {id:$setTemplateId})
@@ -445,6 +416,7 @@ func AddFieldTemplateToSet(ctx context.Context, driver *neo4j.DriverWithContext,
 	return templateId.String()
 }
 
+// Deprecated
 func AddSetTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
@@ -504,6 +476,7 @@ func IssueReportedBy(ctx context.Context, driver *neo4j.DriverWithContext, issue
 	})
 }
 
+// Deprecated
 func IssueSubmittedBy(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
 			MERGE (e)<-[:SUBMITTED_BY]-(i)`
@@ -523,6 +496,7 @@ func IssueFollowedBy(ctx context.Context, driver *neo4j.DriverWithContext, issue
 	})
 }
 
+// Deprecated
 func IssueAssignedTo(ctx context.Context, driver *neo4j.DriverWithContext, issueId, entityId string) {
 	query := `MATCH (e:Organization|User|Contact {id:$entityId}), (i:Issue {id:$issueId})
 			MERGE (e)<-[:ASSIGNED_TO]-(i)`
@@ -532,6 +506,7 @@ func IssueAssignedTo(ctx context.Context, driver *neo4j.DriverWithContext, issue
 	})
 }
 
+// Deprecated
 func TagIssue(ctx context.Context, driver *neo4j.DriverWithContext, issueId, tagId string) {
 	query := `MATCH (i:Issue {id:$issueId}), (tag:Tag {id:$tagId})
 			MERGE (i)-[r:TAGGED]->(tag)
@@ -542,6 +517,7 @@ func TagIssue(ctx context.Context, driver *neo4j.DriverWithContext, issueId, tag
 	})
 }
 
+// Deprecated
 func TagContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId, tagId string) {
 	query := `MATCH (c:Contact {id:$contactId}), (tag:Tag {id:$tagId})
 			MERGE (c)-[r:TAGGED]->(tag)
@@ -552,6 +528,7 @@ func TagContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId,
 	})
 }
 
+// Deprecated
 func TagLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, logEntryId, tagId string, taggedAt *time.Time) {
 	query := `MATCH (l:LogEntry {id:$logEntryId}), (tag:Tag {id:$tagId})
 			MERGE (l)-[r:TAGGED]->(tag)
@@ -563,6 +540,7 @@ func TagLogEntry(ctx context.Context, driver *neo4j.DriverWithContext, logEntryI
 	})
 }
 
+// Deprecated
 func TagOrganization(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, tagId string) {
 	query := `MATCH (o:Organization {id:$organizationId}), (tag:Tag {id:$tagId})
 			MERGE (o)-[r:TAGGED]->(tag)
@@ -580,6 +558,7 @@ func CreateOrganization(ctx context.Context, driver *neo4j.DriverWithContext, te
 	})
 }
 
+// Deprecated
 func CreateTenantOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationName string) string {
 	return neo4jtest.CreateOrganization(ctx, driver, tenant, neo4jentity.OrganizationEntity{
 		Name: organizationName,
@@ -587,6 +566,7 @@ func CreateTenantOrganization(ctx context.Context, driver *neo4j.DriverWithConte
 	})
 }
 
+// Deprecated
 func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithContext, parentOrganizationId, subOrganizationId, relationType string) {
 	query := `MATCH (parent:Organization {id:$parentOrganizationId}),
 			(org:Organization {id:$subOrganizationId})
@@ -599,6 +579,7 @@ func LinkOrganizationAsSubsidiary(ctx context.Context, driver *neo4j.DriverWithC
 	})
 }
 
+// Deprecated
 func RefreshLastTouchpoint(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, timelineEventId string, timelineEventAt time.Time, timelineEventType model.LastTouchpointType) {
 	query := `MATCH (org:Organization {id:$organizationId})
 			SET org.lastTouchpointId=$timelineEventId, org.lastTouchpointAt = $timelineEventAt, org.lastTouchpointType=$timelineEventType`
@@ -610,6 +591,7 @@ func RefreshLastTouchpoint(ctx context.Context, driver *neo4j.DriverWithContext,
 	})
 }
 
+// Deprecated
 func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, primaryOrgId, orgId, suggestedBy string, suggestedAt time.Time, confidence float64) {
 	query := `MATCH (primary:Organization {id:$primaryOrgId}),
 					(org:Organization {id:$orgId})
@@ -624,6 +606,7 @@ func LinkSuggestedMerge(ctx context.Context, driver *neo4j.DriverWithContext, pr
 	})
 }
 
+// Deprecated
 func AddDomainToOrg(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, domain string) {
 	query := ` MERGE (d:Domain {domain:$domain})
 			ON CREATE SET
@@ -642,6 +625,7 @@ func AddDomainToOrg(ctx context.Context, driver *neo4j.DriverWithContext, organi
 	})
 }
 
+// Deprecated
 func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId, jobTitle string, primary bool) string {
 	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
@@ -660,6 +644,7 @@ func ContactWorksForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return roleId.String()
 }
 
+// Deprecated
 func UserWorksAs(ctx context.Context, driver *neo4j.DriverWithContext, userId, jobTitle string, description string, primary bool) string {
 	var roleId, _ = uuid.NewRandom()
 	query := `MATCH (u:User {id:$userId})
@@ -677,16 +662,7 @@ func UserWorksAs(ctx context.Context, driver *neo4j.DriverWithContext, userId, j
 	return roleId.String()
 }
 
-func UserOwnsContact(ctx context.Context, driver *neo4j.DriverWithContext, userId, contactId string) {
-	query := `MATCH (c:Contact {id:$contactId}),
-			        (u:User {id:$userId})
-			MERGE (u)-[:OWNS]->(c)`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"contactId": contactId,
-		"userId":    userId,
-	})
-}
-
+// Deprecated
 func DeleteUserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithContext, userId, organizationId string) {
 	query := `MATCH (u:User {id:$userId})-[r:OWNS]->(o:Organization {id:$organizationId})     
 			DELETE r`
@@ -696,6 +672,7 @@ func DeleteUserOwnsOrganization(ctx context.Context, driver *neo4j.DriverWithCon
 	})
 }
 
+// Deprecated
 func UserHasCalendar(ctx context.Context, driver *neo4j.DriverWithContext, userId, link, calType string, primary bool) string {
 	var calId, _ = uuid.NewRandom()
 	query := `MATCH (u:User {id:$userId})
@@ -712,6 +689,7 @@ func UserHasCalendar(ctx context.Context, driver *neo4j.DriverWithContext, userI
 	return calId.String()
 }
 
+// Deprecated
 func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, pageViewEntity entity.PageViewEntity) string {
 	var actionId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId})
@@ -748,6 +726,7 @@ func CreatePageView(ctx context.Context, driver *neo4j.DriverWithContext, contac
 	return actionId.String()
 }
 
+// Deprecated
 func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, location neo4jentity.LocationEntity) string {
 	var locationId, _ = uuid.NewRandom()
 	query := "MATCH (t:Tenant {name:$tenant}) " +
@@ -808,6 +787,7 @@ func CreateLocation(ctx context.Context, driver *neo4j.DriverWithContext, tenant
 	return locationId.String()
 }
 
+// Deprecated
 func ContactAssociatedWithLocation(ctx context.Context, driver *neo4j.DriverWithContext, contactId, locationId string) {
 	query := `MATCH (c:Contact {id:$contactId}),
 			        (l:Location {id:$locationId})
@@ -818,6 +798,7 @@ func ContactAssociatedWithLocation(ctx context.Context, driver *neo4j.DriverWith
 	})
 }
 
+// Deprecated
 func OrganizationAssociatedWithLocation(ctx context.Context, driver *neo4j.DriverWithContext, organizationId, locationId string) {
 	query := `MATCH (org:Organization {id:$organizationId}),
 			        (l:Location {id:$locationId})
@@ -828,6 +809,7 @@ func OrganizationAssociatedWithLocation(ctx context.Context, driver *neo4j.Drive
 	})
 }
 
+// Deprecated
 func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, tenant, contactId, content, contentType string, createdAt time.Time) string {
 	var noteId, _ = uuid.NewRandom()
 
@@ -856,6 +838,7 @@ func CreateNoteForContact(ctx context.Context, driver *neo4j.DriverWithContext, 
 	return noteId.String()
 }
 
+// Deprecated
 func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId, content string, createdAt time.Time) string {
 	var noteId, _ = uuid.NewRandom()
 
@@ -878,6 +861,7 @@ func CreateNoteForOrganization(ctx context.Context, driver *neo4j.DriverWithCont
 	return noteId.String()
 }
 
+// Deprecated
 func LogEntryCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext, logEntryId, userId string) {
 	query := `MATCH (l:LogEntry {id:$logEntryId}),
 					(u:User {id:$userId})
@@ -890,27 +874,7 @@ func LogEntryCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext,
 	})
 }
 
-func LinkNoteWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, noteId, organizationId string) {
-	query := `MATCH (n:Note {id:$noteId}),
-			(org:Organization {id:$organizationId})
-			MERGE (n)<-[:NOTED]-(org)`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"organizationId": organizationId,
-		"noteId":         noteId,
-	})
-}
-
-func NoteCreatedByUser(ctx context.Context, driver *neo4j.DriverWithContext, noteId, userId string) {
-	query := `MATCH (u:User {id:$userId})
-				MATCH (n:Note {id:$noteId})
-			MERGE (u)-[:CREATED]->(n)
-`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"noteId": noteId,
-		"userId": userId,
-	})
-}
-
+// Deprecated
 func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithContext, contactId, organizationId string) string {
 	var jobId, _ = uuid.NewRandom()
 	query := `MATCH (c:Contact {id:$contactId}),
@@ -932,6 +896,7 @@ func LinkContactWithOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return jobId.String()
 }
 
+// Deprecated
 func CreateActionItemLinkedWith(ctx context.Context, driver *neo4j.DriverWithContext, tenant, linkedWith string, linkedWithId, content string, createdAt time.Time) string {
 	var actionItemId, _ = uuid.NewRandom()
 
@@ -960,6 +925,7 @@ func CreateActionItemLinkedWith(ctx context.Context, driver *neo4j.DriverWithCon
 	return actionItemId.String()
 }
 
+// Deprecated
 func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant, name string, createdAt time.Time) string {
 	var meetingId, _ = uuid.NewRandom()
 
@@ -989,6 +955,7 @@ func CreateMeeting(ctx context.Context, driver *neo4j.DriverWithContext, tenant,
 	return meetingId.String()
 }
 
+// Deprecated
 func InteractionSessionAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionSessionId, nodeId, interactionType string) {
 	query := "MATCH (is:InteractionSession_%s {id:$interactionSessionId}), " +
 		"(n {id:$nodeId}) " +
@@ -1000,6 +967,7 @@ func InteractionSessionAttendedBy(ctx context.Context, driver *neo4j.DriverWithC
 	})
 }
 
+// Deprecated
 func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId, interactionType string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(n {id:$nodeId}) " +
@@ -1011,6 +979,7 @@ func InteractionEventSentBy(ctx context.Context, driver *neo4j.DriverWithContext
 	})
 }
 
+// Deprecated
 func MeetingCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, meetingId, nodeId string) {
 	query := "MATCH (m:Meeting {id:$meetingId}), " +
 		"(n {id:$nodeId}) " +
@@ -1021,6 +990,7 @@ func MeetingCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, meet
 	})
 }
 
+// Deprecated
 func MeetingAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, meetingId, nodeId string) {
 	query := "MATCH (m:Meeting {id:$meetingId}), " +
 		"(n {id:$nodeId}) " +
@@ -1031,6 +1001,7 @@ func MeetingAttendedBy(ctx context.Context, driver *neo4j.DriverWithContext, mee
 	})
 }
 
+// Deprecated
 func InteractionEventSentTo(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, nodeId, interactionType string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(n {id:$nodeId}) " +
@@ -1042,6 +1013,7 @@ func InteractionEventSentTo(ctx context.Context, driver *neo4j.DriverWithContext
 	})
 }
 
+// Deprecated
 func InteractionEventPartOfInteractionSession(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, interactionSessionId string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(is:InteractionSession {id:$interactionSessionId}) " +
@@ -1052,6 +1024,7 @@ func InteractionEventPartOfInteractionSession(ctx context.Context, driver *neo4j
 	})
 }
 
+// Deprecated
 func InteractionEventPartOfMeeting(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, meetingId string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(m:Meeting {id:$meetingId}) " +
@@ -1062,6 +1035,7 @@ func InteractionEventPartOfMeeting(ctx context.Context, driver *neo4j.DriverWith
 	})
 }
 
+// Deprecated
 func InteractionEventPartOfIssue(ctx context.Context, driver *neo4j.DriverWithContext, interactionEventId, issueId string) {
 	query := "MATCH (ie:InteractionEvent {id:$interactionEventId}), " +
 		"(i:Issue {id:$issueId}) " +
@@ -1072,6 +1046,7 @@ func InteractionEventPartOfIssue(ctx context.Context, driver *neo4j.DriverWithCo
 	})
 }
 
+// Deprecated
 func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId, repliesToInteractionEventId string) {
 	query := "MATCH (ie:InteractionEvent_%s {id:$interactionEventId}), " +
 		"(rie:InteractionEvent_%s {id:$repliesToInteractionEventId}) " +
@@ -1082,6 +1057,7 @@ func InteractionEventRepliesToInteractionEvent(ctx context.Context, driver *neo4
 	})
 }
 
+// Deprecated
 func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCodeA3, name, code string) {
 	query := "MATCH (c:Country{codeA3: $countryCodeA3}) MERGE (c)<-[:BELONGS_TO_COUNTRY]-(az:State { code: $code }) ON CREATE SET az.id = randomUUID(), az.name = $name, az.createdAt = datetime({timezone: 'UTC'}), az.updatedAt = datetime({timezone: 'UTC'})"
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -1091,6 +1067,7 @@ func CreateState(ctx context.Context, driver *neo4j.DriverWithContext, countryCo
 	})
 }
 
+// Deprecated
 func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant string, social neo4jentity.SocialEntity) string {
 	var socialId, _ = uuid.NewRandom()
 	query := " MERGE (s:Social {id:$id}) " +
@@ -1114,6 +1091,7 @@ func CreateSocial(ctx context.Context, driver *neo4j.DriverWithContext, tenant s
 	return socialId.String()
 }
 
+// Deprecated
 func LinkSocialWithEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityId, socialId string) {
 	query := `MATCH (e {id:$entityId}), (s:Social {id:$socialId}) MERGE (e)-[:HAS]->(s)`
 	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
@@ -1122,13 +1100,7 @@ func LinkSocialWithEntity(ctx context.Context, driver *neo4j.DriverWithContext, 
 	})
 }
 
-func CreateOrganizationRelationship(ctx context.Context, driver *neo4j.DriverWithContext, name string) {
-	query := `MERGE (r:OrganizationRelationship {name:$name}) ON CREATE SET r.id=randomUUID()`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"name": name,
-	})
-}
-
+// Deprecated
 func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
 	var actionId, _ = uuid.NewRandom()
 
@@ -1153,6 +1125,7 @@ func CreateActionForOrganization(ctx context.Context, driver *neo4j.DriverWithCo
 	return actionId.String()
 }
 
+// Deprecated
 func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWithContext, tenant, interactionEventId string, actionType neo4jenum.ActionType, createdAt time.Time) string {
 	var actionId, _ = uuid.NewRandom()
 
@@ -1177,6 +1150,7 @@ func CreateActionForInteractionEvent(ctx context.Context, driver *neo4j.DriverWi
 	return actionId.String()
 }
 
+// Deprecated
 func CreateActionForOrganizationWithProperties(ctx context.Context, driver *neo4j.DriverWithContext, tenant, organizationId string, actionType neo4jenum.ActionType, createdAt time.Time, extraProperties map[string]string) string {
 	var actionId, _ = uuid.NewRandom()
 
@@ -1216,6 +1190,7 @@ func ActiveRenewalOpportunityForContract(ctx context.Context, driver *neo4j.Driv
 	return opportunityId
 }
 
+// Deprecated
 func OpportunityCreatedBy(ctx context.Context, driver *neo4j.DriverWithContext, opportunityId, entityId string) {
 	query := `MATCH (e:User {id:$entityId}), (op:Opportunity {id:$opportunityId})
 			MERGE (e)<-[:CREATED_BY]-(op)`
@@ -1233,10 +1208,4 @@ func OpportunityOwnedBy(ctx context.Context, driver *neo4j.DriverWithContext, op
 		"opportunityId": opportunityId,
 		"entityId":      entityId,
 	})
-}
-
-func GetTotalCountOfNodes(ctx context.Context, driver *neo4j.DriverWithContext) int {
-	query := `MATCH (n) RETURN count(n)`
-	result := neo4jtest.ExecuteReadQueryWithSingleReturn(ctx, driver, query, map[string]any{})
-	return int(result.(*db.Record).Values[0].(int64))
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -26,7 +27,7 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
-	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -64,7 +65,24 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	defer span.Finish()
 	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
 
-	var eventData event2.ContactRequestEnrich
+	var eventData contactevent.ContactRequestEnrich
+	if err := evt.GetJsonData(&eventData); err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
+		return errors.Wrap(err, "evt.GetJsonData")
+	}
+	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
+	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
+	span.SetTag(tracing.SpanTagEntityId, contactId)
+
+	return h.enrichContact(ctx, eventData.Tenant, contactId, "")
+}
+
+func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt eventstore.Event) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialAddedToContact")
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
+
+	var eventData contactevent.ContactAddSocialEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
 		return errors.Wrap(err, "evt.GetJsonData")
@@ -73,7 +91,11 @@ func (h *ContactEventHandler) OnEnrichContactRequested(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	return h.enrichContact(ctx, eventData.Tenant, contactId, "")
+	if strings.Contains(eventData.Url, ".linkedin.com") || strings.Contains(eventData.Url, "/linkedin.com") {
+		return h.enrichContact(ctx, eventData.Tenant, contactId, eventData.Url)
+	}
+
+	return nil
 }
 
 func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contactId, linkedInUrl string) error {
@@ -111,9 +133,22 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 		return nil
 	}
 
-	// if linkedin url not available get email
 	emailAddress, firstName, lastName, domain := "", "", "", ""
 	if linkedInUrl == "" {
+		socialDbNodes, err := h.services.CommonServices.Neo4jRepositories.SocialReadRepository.GetAllForEntities(ctx, tenant, model.CONTACT, []string{contactId})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "SocialReadRepository.GetAllForEntities"))
+			h.log.Errorf("Error getting social profiles for contact: %s", err.Error())
+		} else {
+			for _, socialDbNode := range socialDbNodes {
+				socialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode.Node)
+				if strings.Contains(socialEntity.Url, ".linkedin.com") || strings.Contains(socialEntity.Url, "/linkedin.com") {
+					linkedInUrl = socialEntity.Url
+					break
+				}
+			}
+		}
+
 		// get email from contact
 		emailAddress, err = h.getContactEmail(ctx, tenant, contactId)
 		if err != nil {
@@ -195,13 +230,6 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactWriteRepository.UpdateAnyProperty"))
 			h.log.Errorf("Error updating enriched scrap in person search param property: %s", err.Error())
-		}
-
-		// increment enrich attempts
-		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.IncrementProperty(ctx, tenant, model.NodeLabelContact, contact.Id, string(neo4jentity.ContactPropertyEnrichAttempts))
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("Error incrementing contact' enrich attempts: %s", err.Error())
 		}
 
 		return nil
@@ -370,102 +398,126 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		}
 	}
 
-	// add organization
-	organizationNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByContactId(ctx, tenant, contact.Id)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByContactId"))
-		h.log.Errorf("Error getting organization by contact id: %s", err.Error())
-		return err
-	}
+	if scrapinContactResponse.Company != nil {
+		var organizationDbNode *dbtype.Node
 
-	if organizationNode == nil && scrapinContactResponse.Company != nil {
-		domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
-		span.LogFields(log.String("extractedDomainFromWebsite", domain))
-		if domain != "" {
-			var organizationId string
+		// step1 - check org exists by linkedin url
+		organizationDbNode, err = h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationBySocialUrl(ctx, tenant, scrapinContactResponse.Company.LinkedInUrl)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationBySocialUrl"))
+			h.log.Errorf("Error getting organization by social url: %s", err.Error())
+		}
 
-			organizationByDomainNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
-				h.log.Errorf("Error getting organization by domain: %s", err.Error())
-				return err
-			}
-
-			if organizationByDomainNode == nil {
-				upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
-					Tenant:       tenant,
-					Name:         scrapinContactResponse.Company.Name,
-					Website:      scrapinContactResponse.Company.WebsiteUrl,
-					Relationship: neo4jenum.Prospect.String(),
-					Stage:        neo4jenum.Lead.String(),
-					SourceFields: &commonpb.SourceFields{
-						Source:    constants.SourceOpenline,
-						AppSource: constants.AppScrapin,
-					},
-				}
-
-				organizationCreateResponse, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return h.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
-				})
+		// step 2 - check org exists by domain
+		if organizationDbNode == nil {
+			// step 2 - find by domain
+			domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+			span.LogFields(log.String("extractedDomainFromWebsite", domain))
+			if domain != "" {
+				organizationDbNode, err = h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
 				if err != nil {
-					tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.UpsertOrganization"))
-					h.log.Errorf("Error upserting organization: %s", err.Error())
+					tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationByDomain"))
+					h.log.Errorf("Error getting organization by domain: %s", err.Error())
 					return err
 				}
-
-				organizationId = organizationCreateResponse.Id
-			} else {
-				organizationId = utils.GetStringPropOrEmpty(organizationByDomainNode.Props, "id")
-			}
-
-			positionName := ""
-			if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
-				for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
-					if position.Title != "" && position.CompanyName != "" && position.CompanyName == scrapinContactResponse.Company.Name {
-						positionName = position.Title
-						break
+				if organizationDbNode != nil {
+					orgId := utils.GetStringPropOrEmpty(organizationDbNode.Props, "id")
+					_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+						return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+							Tenant:         tenant,
+							OrganizationId: orgId,
+							Url:            scrapinContactResponse.Company.LinkedInUrl,
+							FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
+						})
+					})
+					if err != nil {
+						tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.AddSocial"))
+						h.log.Errorf("Error adding social profile: %s", err.Error())
 					}
 				}
 			}
+		}
 
-			//minimize the impact on the batch processing
-			time.Sleep(3 * time.Second)
+		// step 3 if not found - create organization
+		if organizationDbNode == nil {
+			upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
+				Tenant:       tenant,
+				Name:         scrapinContactResponse.Company.Name,
+				Website:      scrapinContactResponse.Company.WebsiteUrl,
+				Relationship: neo4jenum.Prospect.String(),
+				Stage:        neo4jenum.Lead.String(),
+				SourceFields: &commonpb.SourceFields{
+					Source:    constants.SourceOpenline,
+					AppSource: constants.AppScrapin,
+				},
+			}
 
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-				return h.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
+			organizationCreateResponse, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return h.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
+			})
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.UpsertOrganization"))
+				h.log.Errorf("Error upserting organization: %s", err.Error())
+				return err
+			}
+
+			time.Sleep(2 * time.Second)
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+				return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
 					Tenant:         tenant,
-					ContactId:      contact.Id,
-					OrganizationId: organizationId,
-					JobTitle:       positionName,
+					OrganizationId: organizationCreateResponse.Id,
+					Url:            scrapinContactResponse.Company.LinkedInUrl,
+					FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
 				})
 			})
 			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
-				h.log.Errorf("Error upserting organization: %s", err.Error())
-				return err
+				tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.AddSocial"))
+				h.log.Errorf("Error adding social profile: %s", err.Error())
 			}
 		}
 	}
 
-	return nil
-}
+	//minimize the impact on the batch processing
+	time.Sleep(3 * time.Second)
 
-func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnSocialAddedToContact")
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()))
-
-	var eventData event2.ContactAddSocialEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "evt.GetJsonData"))
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
-	if strings.Contains(eventData.Url, ".linkedin.com") || strings.Contains(eventData.Url, "/linkedin.com") {
-		return h.enrichContact(ctx, eventData.Tenant, contactId, eventData.Url)
+	if len(scrapinContactResponse.Person.Positions.PositionHistory) > 0 {
+		positionName := ""
+		var positionStartedAt, positionEndedAt *time.Time
+		for _, position := range scrapinContactResponse.Person.Positions.PositionHistory {
+			// find organization by linkedin url
+			orgByLinkedinUrlNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationBySocialUrl(ctx, tenant, position.LinkedInUrl)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "OrganizationReadRepository.GetOrganizationBySocialUrl"))
+				h.log.Errorf("Error getting organization by social url: %s", err.Error())
+				continue
+			}
+			if orgByLinkedinUrlNode != nil {
+				positionName = position.Title
+				if position.StartEndDate.Start != nil {
+					positionStartedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.Start.Year, position.StartEndDate.Start.Month))
+				}
+				if position.StartEndDate.End != nil {
+					positionEndedAt = utils.TimePtr(utils.FirstTimeOfMonth(position.StartEndDate.End.Year, position.StartEndDate.End.Month))
+				}
+				organizationId := utils.GetStringPropOrEmpty(orgByLinkedinUrlNode.Props, "id")
+				// link contact with organization
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+					return h.grpcClients.ContactClient.LinkWithOrganization(ctx, &contactpb.LinkWithOrganizationGrpcRequest{
+						Tenant:         tenant,
+						ContactId:      contact.Id,
+						OrganizationId: organizationId,
+						JobTitle:       positionName,
+						StartedAt:      utils.ConvertTimeToTimestampPtr(positionStartedAt),
+						EndedAt:        utils.ConvertTimeToTimestampPtr(positionEndedAt),
+					})
+				})
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "ContactClient.LinkWithOrganization"))
+					h.log.Errorf("Error upserting organization: %s", err.Error())
+					return err
+				}
+			}
+		}
 	}
 
 	return nil

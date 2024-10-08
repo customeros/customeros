@@ -15,7 +15,7 @@ import (
 	"time"
 )
 
-type JobRoleCreateFields struct {
+type JobRoleFields struct {
 	Description  string       `json:"description"`
 	JobTitle     string       `json:"jobTitle"`
 	StartedAt    *time.Time   `json:"startedAt"`
@@ -26,11 +26,10 @@ type JobRoleCreateFields struct {
 }
 
 type JobRoleWriteRepository interface {
-	//Rework this. pass neo4j entity
-	CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleCreateFields) error
+	CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleFields) error
 	CreateJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, input entity.JobRoleEntity) (*dbtype.Node, error)
 	LinkWithUser(ctx context.Context, tenant, userId, jobRoleId string) error
-	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleCreateFields) error
+	LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleFields) error
 
 	DeleteJobRoleInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, roleId string) error
 	SetOtherJobRolesForContactNonPrimaryInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, skipRoleId string) error
@@ -50,7 +49,7 @@ func NewJobRoleWriteRepository(driver *neo4j.DriverWithContext, database string)
 	}
 }
 
-func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleCreateFields) error {
+func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobRoleId string, data JobRoleFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "JobRoleWriteRepository.CreateJobRole")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -118,7 +117,7 @@ func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userI
 	return err
 }
 
-func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleCreateFields) error {
+func (r *jobRoleWriteRepository) LinkContactWithOrganization(ctx context.Context, tenant, contactId, organizationId string, data JobRoleFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkContactWithOrganizationByInternalId")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)

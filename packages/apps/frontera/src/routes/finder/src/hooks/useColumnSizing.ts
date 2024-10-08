@@ -1,11 +1,11 @@
 import { useMemo, useCallback } from 'react';
 
 import { ColumnDef, ColumnSizingState } from '@tanstack/react-table';
-import { FinderTableEntityTypes } from '@finder/components/FinderTable';
 import { TableViewDefStore } from '@store/TableViewDefs/TableViewDef.store.ts';
 
 export const useColumnSizing = (
-  tableColumns: ColumnDef<FinderTableEntityTypes>[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  tableColumns: ColumnDef<any, any>[],
   tableViewDef?: TableViewDefStore,
 ) => {
   const columnCache = useMemo(
@@ -25,7 +25,7 @@ export const useColumnSizing = (
       let columnSettings = columnCache.get(columnId);
 
       if (!columnSettings) {
-        columnSettings = tableColumns.find((e) => e.id === columnId) || {};
+        columnSettings = tableColumns?.find((e) => e.id === columnId) || {};
         columnCache.set(columnId, columnSettings);
       }
 

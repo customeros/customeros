@@ -18,6 +18,7 @@ const (
 	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
 	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
+	OrganizationEmailUnlinkV1     = "V1_ORGANIZATION_EMAIL_UNLINK"
 	//Deprecated
 	OrganizationLocationLinkV1 = "V1_ORGANIZATION_LOCATION_LINK"
 	OrganizationLinkDomainV1   = "V1_ORGANIZATION_LINK_DOMAIN"
@@ -94,14 +95,16 @@ type OrganizationLinkEmailEvent struct {
 	UpdatedAt time.Time `json:"updatedAt"`
 	EmailId   string    `json:"emailId" validate:"required"`
 	Primary   bool      `json:"primary"`
+	Email     string    `json:"email"`
 }
 
-func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
+func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId, email string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
 	eventData := OrganizationLinkEmailEvent{
 		Tenant:    aggregate.GetTenant(),
 		UpdatedAt: updatedAt,
 		EmailId:   emailId,
 		Primary:   primary,
+		Email:     email,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

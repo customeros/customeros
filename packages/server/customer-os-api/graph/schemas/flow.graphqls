@@ -1,6 +1,6 @@
 extend type Query {
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    mailboxes: [String!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -12,8 +12,7 @@ extend type Mutation {
     flowContact_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowContact_DeleteBulk(id: [ID!]!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    #low priority to implement
-    flowSender_Merge(flowId: ID!, input: FlowActionSenderMergeInput!): FlowActionSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    flowSender_Merge(flowId: ID!, input: FlowSenderMergeInput!): FlowSender! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flowSender_Delete(id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
@@ -28,6 +27,7 @@ type Flow implements MetadataInterface {
 
     status: FlowStatus!
     contacts: [FlowContact!]! @goField(forceResolver: true)
+    senders: [FlowSender!]! @goField(forceResolver: true)
 
     statistics: FlowStatistics!
 }
@@ -54,33 +54,26 @@ enum FlowStatus {
     ARCHIVED
 }
 
-#FlowContact
 type FlowContact implements MetadataInterface {
     metadata:               Metadata!
 
     contact: Contact! @goField(forceResolver: true)
 
-    status: FlowContactStatus!
+    status: FlowParticipantStatus!
 
     scheduledAction: String
     scheduledAt: Time
 }
 
-#FlowActionSender
-type FlowActionSender implements MetadataInterface {
+type FlowSender implements MetadataInterface {
     metadata: Metadata!
 
-    mailbox:    String
     user: User @goField(forceResolver: true)
 }
 
-input FlowActionSenderMergeInput {
+input FlowSenderMergeInput {
     id: ID
 
-    #email action type
-    mailbox: String
-
-    #linkedin action type
     userId: ID
 }
 
@@ -118,9 +111,28 @@ enum FlowActionStatus {
     ARCHIVED
 }
 
-enum FlowContactStatus {
+enum FlowParticipantStatus {
+    PENDING
     SCHEDULED
     IN_PROGRESS
     PAUSED
     COMPLETED
+    GOAL_ACHIEVED
+}
+
+type EmailVariableEntity {
+    type: EmailVariableEntityType!
+    variables: [EmailVariableName!]!
+}
+
+enum EmailVariableEntityType {
+    CONTACT
+}
+
+enum EmailVariableName {
+    CONTACT_FIRST_NAME
+    CONTACT_LAST_NAME
+    CONTACT_FULL_NAME
+    CONTACT_EMAIL
+    ORGANIZATION_NAME
 }

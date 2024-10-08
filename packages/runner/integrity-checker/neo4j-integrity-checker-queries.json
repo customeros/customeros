@@ -129,7 +129,7 @@
         },
         {
           "name": "Organizations not enriched",
-          "query": "MATCH (:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})--(d:Domain) WHERE o.enrichedAt IS NULL AND (o.techEnrichRequestedAt < datetime()-duration({hours:240}) OR o.techEnrichRequestedAt IS NULL) AND o.createdAt < datetime()-duration({minutes:60}) return count(o)"
+          "query": "MATCH (:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})--(d:Domain) WHERE o.enrichedAt IS NULL AND (o.techEnrichAttempts IS NULL OR o.techEnrichAttempts < 3) AND (o.techEnrichRequestedAt < datetime()-duration({hours:245}) OR o.techEnrichRequestedAt IS NULL) AND o.createdAt < datetime()-duration({minutes:60}) return count(o)"
         },
         {
           "name": "Organization ltv not updated",
@@ -138,6 +138,10 @@
         {
           "name": "Organization industry not valid",
           "query": "MATCH (o:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant)\nWHERE o.updatedAt < datetime() - duration({minutes:15}) AND o.hide = false AND NOT o.industry IS NULL AND o.industry <> '' AND NOT o.industry IN [\n    \"Aerospace & Defense\",\n    \"Air Freight & Logistics\",\n    \"Automobile Components\",\n    \"Automobiles\",\n    \"Banks\",\n    \"Beverages\",\n    \"Biotechnology\",\n    \"Broadline Retail\",\n    \"Building Products\",\n    \"Capital Markets\",\n    \"Chemicals\",\n    \"Commercial Services & Supplies\",\n    \"Communications Equipment\",\n    \"Construction & Engineering\",\n    \"Construction Materials\",\n    \"Consumer Finance\",\n    \"Consumer Staples Distribution & Retail\",\n    \"Containers & Packaging\",\n    \"Diversified Consumer Services\",\n    \"Diversified REITs\",\n    \"Diversified Telecommunication Services\",\n    \"Distributors\",\n    \"Electric Utilities\",\n    \"Electrical Equipment\",\n    \"Electronic Equipment, Instruments & Components\",\n    \"Energy Equipment & Services\",\n    \"Entertainment\",\n    \"Financial Services\",\n    \"Food Products\",\n    \"Gas Utilities\",\n    \"Ground Transportation\",\n    \"Health Care Equipment & Supplies\",\n    \"Health Care Providers & Services\",\n    \"Health Care REITs\",\n    \"Health Care Technology\",\n    \"Hotel & Resort REITs\",\n    \"Hotels, Restaurants & Leisure\",\n    \"Household Durables\",\n    \"Household Products\",\n    \"Independent Power and Renewable Electricity Producers\",\n    \"Industrial Conglomerates\",\n    \"Industrial REITs\",\n    \"Insurance\",\n    \"Interactive Media & Services\",\n    \"Internet Software & Services\",\n    \"IT Services\",\n    \"Leisure Products\",\n    \"Life Sciences Tools & Services\",\n    \"Machinery\",\n    \"Marine Transportation\",\n    \"Media\",\n    \"Metals & Mining\",\n    \"Mortgage Real Estate Investment Trusts (REITs)\",\n    \"Multi-Utilities\",\n    \"Office REITs\",\n    \"Oil, Gas & Consumable Fuels\",\n    \"Paper & Forest Products\",\n    \"Passenger Airlines\",\n    \"Personal Products\",\n    \"Pharmaceuticals\",\n    \"Professional Services\",\n    \"Real Estate Management & Development\",\n    \"Residential REITs\",\n    \"Retail REITs\",\n    \"Semiconductors & Semiconductor Equipment\",\n    \"Software\",\n    \"Specialized REITs\",\n    \"Specialty Retail\",\n    \"Technology Hardware, Storage & Peripherals\",\n    \"Textiles, Apparel & Luxury Goods\",\n    \"Tobacco\",\n    \"Trading Companies & Distributors\",\n    \"Transportation Infrastructure\",\n    \"Water Utilities\",\n    \"Wireless Telecommunication Services\"\n]\nRETURN COUNT(o)"
+        },
+        {
+          "name": "Duplicated organizations by socials",
+          "query": "MATCH (t:Tenant)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)--(s:Social) WHERE s.url is not null and s.url <> '' WITH t, s.url AS sharedUrl, COUNT(o) AS orgCount WHERE orgCount > 1 RETURN count(sharedUrl)"
         }
       ]
     },
@@ -210,6 +214,14 @@
         {
           "name": "Emails not validated",
           "query": "MATCH (t:Tenant {active:true})--(e:Email) WHERE e.rawEmail <> '' AND e.techValidatedAt IS NULL AND e.updatedAt < datetime() - duration({minutes:60}) RETURN count(e)"
+        },
+        {
+          "name": "Duplicate emails by clean email",
+          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.rawEmail <> '' AND e.rawEmail IS NOT NULL WITH t, e.rawEmail AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
+        },
+        {
+          "name": "Duplicate emails by raw email",
+          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.email <> '' AND e.email IS NOT NULL WITH t, e.email AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
         }
       ]
     },
@@ -223,6 +235,14 @@
         {
           "name": "Cross tenants phone number link",
           "query": "MATCH (t1:Tenant)--(n:User|Contact|Organization)--(:PhoneNumber)--(t2:Tenant) where t1.name <> t2.name return count(n)"
+        },
+        {
+          "name": "Duplicate phone numbers by e164",
+          "query": "MATCH (t:Tenant)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber) where p.e164 <> '' AND p.e164 IS NOT NULL WITH t, p.e164 AS phone, COUNT(p) AS phoneCount WHERE phoneCount > 1 RETURN count(phone)"
+        },
+        {
+          "name": "Duplicate phone numbers by raw phone number",
+          "query": "MATCH (t:Tenant)<-[:PHONE_NUMBER_BELONGS_TO_TENANT]-(p:PhoneNumber) where p.rawPhoneNumber <> '' AND p.rawPhoneNumber IS NOT NULL WITH t, p.rawPhoneNumber AS phone, COUNT(p) AS phoneCount WHERE phoneCount > 1 RETURN count(phone)"
         }
       ]
     },
@@ -236,6 +256,10 @@
         {
           "name": "Contacts with group email address",
           "query": "MATCH (c:Contact)-[:HAS]->(e:Email) WHERE (c.hide IS NULL OR c.hide = false) AND e.isRoleAccount = true AND c.updatedAt < datetime() - duration({minutes:15}) AND e.updatedAt < datetime() - duration({minutes:15}) RETURN COUNT(c)"
+        },
+        {
+          "name": "Duplicated contacts by socials",
+          "query": "MATCH (t:Tenant)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)--(s:Social) WHERE s.url is not null and s.url <> '' WITH t, s.url AS sharedUrl, COUNT(c) AS contactCount WHERE contactCount > 1 RETURN count(sharedUrl)"
         }
       ]
     },
@@ -388,6 +412,15 @@
         {
           "name": "Empty socials",
           "query": "MATCH (n:Organization|Contact)-[:HAS]->(s:Social) WHERE s.updatedAt < datetime() - duration({hours: 24}) AND (s.url IS NULL OR s.url = '') RETURN count(s)"
+        }
+      ]
+    },
+    {
+      "name": "Flow",
+      "queries": [
+        {
+          "name": "Scheduled actions in error",
+          "query": "MATCH (n:FlowActionExecution) WHERE n.status = 'TECH_ERROR'  RETURN count(n)"
         }
       ]
     }

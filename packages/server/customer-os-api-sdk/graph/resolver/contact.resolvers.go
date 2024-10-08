@@ -176,9 +176,9 @@ func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID st
 	panic(fmt.Errorf("not implemented: ContactRemoveSocial - contact_RemoveSocial"))
 }
 
-// ContactFindEmail is the resolver for the contact_FindEmail field.
-func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (string, error) {
-	panic(fmt.Errorf("not implemented: ContactFindEmail - contact_FindEmail"))
+// ContactFindWorkEmail is the resolver for the contact_FindWorkEmail field.
+func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID string, organizationID *string, domain *string, findMobileNumber *bool) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactFindWorkEmail - contact_FindWorkEmail"))
 }
 
 // Contact is the resolver for the contact field.
@@ -205,3 +205,16 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
 type contactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) ContactFindPhoneNumber(ctx context.Context, contactID string, organizationID *string, domain *string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactFindPhoneNumber - contact_FindPhoneNumber"))
+}
+func (r *mutationResolver) ContactFindEmail(ctx context.Context, contactID string, organizationID string) (string, error) {
+	panic(fmt.Errorf("not implemented: ContactFindEmail - contact_FindEmail"))
+}

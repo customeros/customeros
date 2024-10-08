@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/invoice"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
@@ -107,6 +108,8 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "InvoiceSubscriber.When", evt)
+	defer span.Finish()
 
 	if s.cfg.Subscriptions.InvoiceSubscription.IgnoreEvents {
 		return nil
@@ -129,6 +132,8 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 		return s.invoiceEventHandler.onInvoicePaidV1(ctx, evt)
 	case invoice.InvoicePayNotificationV1:
 		return s.invoiceEventHandler.onInvoicePayNotificationV1(ctx, evt)
+	case invoice.InvoiceRemindNotificationV1:
+		return s.invoiceEventHandler.onInvoiceRemindNotificationV1(ctx, evt)
 	default:
 		return nil
 	}

@@ -127,7 +127,7 @@ export const Logger = observer(({ hide }: LoggerProps) => {
           variant='outline'
           onClick={handleSave}
           className='absolute bottom-0 right-0'
-          data-test='timeline-log-confirmation-button'
+          dataTest='timeline-log-confirmation-button'
         >
           Log
         </Button>

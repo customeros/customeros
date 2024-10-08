@@ -53,6 +53,7 @@ func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label str
 		id = uuid.New().String()
 		exists, err := r.ExistsById(ctx, tenant, id, label)
 		if err != nil {
+			tracing.TraceErr(span, err)
 			return "", err
 		}
 		if !exists {
@@ -104,6 +105,7 @@ func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx neo4j.Mana
 	queryResult, err := tx.Run(ctx, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
+		span.LogFields(log.Bool("result.exists", false))
 		return false, err
 	}
 	result := queryResult.Next(ctx)

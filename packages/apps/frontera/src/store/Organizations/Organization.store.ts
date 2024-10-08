@@ -424,18 +424,17 @@ export class OrganizationStore extends Syncable<Organization> {
         input: {
           organizationId: this.id,
           subsidiaryId: subsidiaryId,
-          removeExisting: true,
+          removeExisting: false,
         },
       });
 
       runInAction(() => {
         this.root.organizations.value.get(subsidiaryId)?.update(
           (org: Organization) => {
-            org.parentCompanies = [
-              {
-                organization: this.value,
-              },
-            ];
+            org.parentCompanies.push({
+              ...org.parentCompanies,
+              organization: this.value,
+            });
 
             return org;
           },
