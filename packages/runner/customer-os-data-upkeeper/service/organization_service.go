@@ -52,8 +52,8 @@ func (s *organizationService) RefreshLastTouchpoint() {
 		return
 	}
 
-	limit := 2000
-	delayFromPreviousCheckInMinutes := 15 // 15 minutes
+	limit := 50
+	delayFromPreviousCheckInMinutes := 60 // 60 minutes
 
 	for {
 		select {
