@@ -8,6 +8,7 @@ import {
   PASTE_COMMAND,
   $createTextNode,
   $isRangeSelection,
+  $createParagraphNode,
 } from 'lexical';
 
 function isValidUrl(string: string) {
@@ -19,6 +20,7 @@ function isValidUrl(string: string) {
     return false;
   }
 }
+
 const ALLOWED_TAGS = [
   'ul',
   'ol',
@@ -33,7 +35,9 @@ const ALLOWED_TAGS = [
   'i',
   'b',
   'u',
-  'li', // Additional text formatting tags
+  'li',
+  'pre',
+  'code',
 ];
 
 export function LinkPastePlugin() {
@@ -45,7 +49,7 @@ export function LinkPastePlugin() {
 
       if ($isRangeSelection(selection)) {
         const clipboardData = event.clipboardData;
-        const pastedData = clipboardData.getData('text/plain');
+        const pastedData = clipboardData?.getData('text/plain');
         const selectedText = selection.getTextContent().trim();
 
         if (selectedText.length && isValidUrl(pastedData)) {
@@ -58,45 +62,69 @@ export function LinkPastePlugin() {
           });
         } else {
           editor.update(() => {
-            const htmlData = clipboardData.getData('text/html');
+            const htmlData = clipboardData?.getData('text/html');
 
             if (htmlData) {
               const parser = new DOMParser();
               const doc = parser.parseFromString(htmlData, 'text/html');
 
-              // Filter out unsupported elements
-              const filterNode = (node: Node): Node | null => {
-                if (node.nodeType === Node.ELEMENT_NODE) {
-                  const element = node as Element;
+              const filterNode = (node: Node): DocumentFragment => {
+                const fragment = document.createDocumentFragment();
 
-                  if (!ALLOWED_TAGS.includes(element.tagName.toLowerCase())) {
-                    return document.createTextNode(element.textContent || '');
-                  }
-                  Array.from(element.childNodes).forEach((child) => {
-                    const filteredChild = filterNode(child);
+                if (node.nodeType === Node.TEXT_NODE) {
+                  fragment.appendChild(node.cloneNode(true));
+                } else if (node.nodeType === Node.ELEMENT_NODE) {
+                  const element = node as HTMLElement;
+                  const tagName = element.tagName.toLowerCase();
 
-                    if (filteredChild) {
-                      element.replaceChild(filteredChild, child);
-                    } else {
-                      element.removeChild(child);
+                  if (ALLOWED_TAGS.includes(tagName)) {
+                    const newElement = document.createElement(tagName);
+
+                    if (tagName === 'a') {
+                      const href = element.getAttribute('href');
+
+                      if (href) newElement.setAttribute('href', href);
                     }
-                  });
+
+                    Array.from(element.attributes).forEach((attr) => {
+                      newElement.setAttribute(attr.name, attr.value);
+                    });
+
+                    Array.from(element.childNodes).forEach((child) => {
+                      newElement.appendChild(filterNode(child));
+                    });
+
+                    fragment.appendChild(newElement);
+                  } else {
+                    Array.from(element.childNodes).forEach((child) => {
+                      fragment.appendChild(filterNode(child));
+                    });
+                  }
                 }
 
-                return node;
+                return fragment;
               };
 
-              doc.body.childNodes.forEach((child) => {
-                filterNode(child);
-              });
+              const filteredBody = filterNode(doc.body);
+              const newDoc = document.implementation.createHTMLDocument();
 
-              const nodes = $generateNodesFromDOM(editor, doc);
+              newDoc.body.appendChild(filteredBody);
+
+              const nodes = $generateNodesFromDOM(editor, newDoc);
 
               selection.insertNodes(nodes);
             } else {
-              const textNode = $createTextNode(pastedData);
+              const lines = pastedData.split('\n');
+              const nodes = lines.map((line) => {
+                const paragraphNode = $createParagraphNode();
+                const textNode = $createTextNode(line);
 
-              selection.insertNodes([textNode]);
+                paragraphNode.append(textNode);
+
+                return paragraphNode;
+              });
+
+              selection.insertNodes(nodes);
             }
           });
         }
