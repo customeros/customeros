@@ -1,29 +1,30 @@
 import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
-import { FlowsStore } from '@store/Flows/Flows.store.ts';
+import { FlowsStore } from '@store/Flows/Flows.store';
 import { configurePersistable } from 'mobx-persist-store';
-import { FlowContactsStore } from '@store/FlowContacts/FlowContacts.store.ts';
+import { FlowContactsStore } from '@store/FlowContacts/FlowContacts.store';
 
 import { UIStore } from './UI/UI.store';
 import { Transport } from './transport';
-import { MailStore } from './Mail/Mail.store.ts';
-import { TagsStore } from './Tags/Tags.store.ts';
-import { UsersStore } from './Users/Users.store.ts';
-import { FilesStore } from './Files/Files.store.ts';
+import { MailStore } from './Mail/Mail.store';
+import { TagsStore } from './Tags/Tags.store';
+import { UsersStore } from './Users/Users.store';
+import { FilesStore } from './Files/Files.store';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
-import { InvoicesStore } from './Invoices/Invoices.store.ts';
-import { ContactsStore } from './Contacts/Contacts.store.ts';
-import { ContractsStore } from './Contracts/Contracts.store.ts';
-import { RemindersStore } from './Reminders/Reminders.store.ts';
-import { WorkFlowsStore } from './WorkFlows/WorkFlows.store.ts';
+import { InvoicesStore } from './Invoices/Invoices.store';
+import { ContactsStore } from './Contacts/Contacts.store';
+import { ContractsStore } from './Contracts/Contracts.store';
+import { RemindersStore } from './Reminders/Reminders.store';
+import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
-import { OrganizationsStore } from './Organizations/Organizations.store.ts';
-import { OpportunitiesStore } from './Opportunities/Opportunities.store.ts';
-import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store.ts';
-import { ContractLineItemsStore } from './ContractLineItems/ContractLineItems.store.ts';
-import { ExternalSystemInstancesStore } from './ExternalSystemInstances/ExternalSystemInstances.store.ts';
+import { OrganizationsStore } from './Organizations/Organizations.store';
+import { OpportunitiesStore } from './Opportunities/Opportunities.store';
+import { TimelineEventsStore } from './TimelineEvents/TimelineEvents.store';
+import { ContractLineItemsStore } from './ContractLineItems/ContractLineItems.store';
+import { FlowEmailVariablesStore } from './FlowEmailVariables/FlowEmailVariables.store';
+import { ExternalSystemInstancesStore } from './ExternalSystemInstances/ExternalSystemInstances.store';
 
 localforage.config({
   driver: localforage.INDEXEDDB,
@@ -63,6 +64,7 @@ export class RootStore {
   timelineEvents: TimelineEventsStore;
   contractLineItems: ContractLineItemsStore;
   externalSystemInstances: ExternalSystemInstancesStore;
+  flowEmailVariables: FlowEmailVariablesStore;
 
   constructor(private transport: Transport, demoMode: boolean = false) {
     makeAutoObservable(this);
@@ -87,6 +89,7 @@ export class RootStore {
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
     this.flowContacts = new FlowContactsStore(this, this.transport);
+    this.flowEmailVariables = new FlowEmailVariablesStore(this, this.transport);
     this.flows = new FlowsStore(this, this.transport);
 
     this.externalSystemInstances = new ExternalSystemInstancesStore(
@@ -125,6 +128,7 @@ export class RootStore {
       this.contacts.bootstrap(),
       this.workFlows.bootstrap(),
       this.flows.bootstrap(),
+      this.flowEmailVariables.bootstrap(),
     ]);
   }
 

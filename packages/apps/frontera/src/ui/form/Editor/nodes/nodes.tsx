@@ -4,16 +4,17 @@ import { LinkNode, AutoLinkNode } from '@lexical/link';
 import { ListNode, ListItemNode } from '@lexical/list';
 import { QuoteNode, HeadingNode } from '@lexical/rich-text';
 
-import { ExtendedTextNode } from '@ui/form/Editor/nodes/ExtendedTextNode';
-import { ExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode';
-
 import { MentionNode } from './MentionNode';
 import { HashtagNode } from './HashtagNode';
+import { VariableNode } from './VariableNode';
+import { ExtendedTextNode } from './ExtendedTextNode';
+import { ExtendedQuoteNode } from './ExtendedQuoteNode';
 
 export const nodes = [
   LinkNode,
   AutoLinkNode,
   HashtagNode,
+  VariableNode,
   MentionNode,
   HashtagNode,
   ExtendedTextNode,

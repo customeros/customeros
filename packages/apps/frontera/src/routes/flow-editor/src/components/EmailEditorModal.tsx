@@ -36,6 +36,7 @@ export const EmailEditorModal = observer(
     const [subject, setSubject] = useState(data?.subject ?? '');
     const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
     const { takeSnapshot } = useUndoRedo();
+    const [variablesQuery, setVariablesQuery] = useState<string | null>('');
 
     useEffect(() => {
       if (isEditorOpen) {
@@ -54,6 +55,7 @@ export const EmailEditorModal = observer(
     }, [isEditorOpen]);
 
     const store = useStore();
+
     const flow = store.flows.value.get(id)?.value?.name;
     const placeholder = useMemo(() => getRandomEmailPrompt(), [isEditorOpen]);
 
@@ -64,6 +66,14 @@ export const EmailEditorModal = observer(
         takeSnapshot();
       }, 0);
     };
+
+    const variables = store.flowEmailVariables?.value
+      .get('CONTACT')
+      ?.variables.filter((t) =>
+        variablesQuery
+          ? t.toLowerCase().includes(variablesQuery?.toLowerCase())
+          : true,
+      );
 
     return (
       <Modal open={isEditorOpen}>
@@ -106,9 +116,11 @@ export const EmailEditorModal = observer(
                 <div className='h-[60vh] mb-10'>
                   <Editor
                     placeholder={placeholder}
+                    variableOptions={variables}
                     dataTest='flow-email-editor'
                     namespace='flow-email-editor'
                     defaultHtmlValue={bodyTemplate}
+                    onVariableSearch={setVariablesQuery}
                     onChange={(e) => setBodyTemplate(e)}
                     className='text-base cursor-text email-editor h-full'
                   ></Editor>
