@@ -157,6 +157,12 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const tags = row.value.tags?.map((l: Tag) => l.id);
 
+        if (!tags)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
+
         return filterTypeList(filter, tags);
       },
     )
@@ -206,6 +212,12 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
 
         const countries = row.value.locations?.map((l) => l.countryCodeA2);
 
+        if (!countries)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
+
         return filterTypeList(filter, countries as string[]);
       },
     )
@@ -216,6 +228,12 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const locations = row.value.locations;
         const region = locations?.[0]?.region;
 
+        if (!region)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
+
         return filterTypeList(filter, region ? [region] : []);
       };
     })
@@ -224,7 +242,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       if (!filter.active) return () => true;
 
       return (row: ContactStore) => {
-        const flow = row.flow?.value.name;
+        const flow = row.flow?.value.metadata.id;
 
         if (!flow)
           return (
@@ -371,12 +389,15 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
 
-        const filterValues = filter.value;
         const currentFlowStatus = row.flowContact?.value?.status;
 
-        if (!currentFlowStatus) return false;
+        if (!currentFlowStatus)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
-        return filterValues.includes(currentFlowStatus);
+        return filterTypeList(filter, [currentFlowStatus]);
       },
     )
 

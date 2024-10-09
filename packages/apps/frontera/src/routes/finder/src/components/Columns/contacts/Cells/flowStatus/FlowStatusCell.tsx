@@ -14,7 +14,7 @@ export const FlowStatusCell = ({ value }: FlowStatusCellProps) => {
     .with(FlowParticipantStatus.Completed, () => 'Completed')
     .with(FlowParticipantStatus.Scheduled, () => 'Scheduled')
     .with(FlowParticipantStatus.GoalAchieved, () => 'Goal achieved')
-    .otherwise(() => value);
+    .otherwise(() => <span className='text-grayModern-400'>Not in flow</span>);
 
   return <div>{flowStatus}</div>;
 };

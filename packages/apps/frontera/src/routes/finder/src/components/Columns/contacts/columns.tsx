@@ -701,7 +701,7 @@ const columns: Record<string, Column> = {
     },
     header: (props) => (
       <THead<HTMLInputElement>
-        title='Flow status'
+        title='Status in Flow'
         id={ColumnViewType.ContactsFlowStatus}
         renderFilter={() => <ContactFlowStatusFilter />}
         {...getTHeadProps<ContactStore>(props)}

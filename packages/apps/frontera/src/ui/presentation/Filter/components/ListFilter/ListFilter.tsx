@@ -14,12 +14,15 @@ import { Check } from '@ui/media/icons/Check';
 import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
 import { components, OptionProps } from '@ui/form/Select/Select';
-import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
+import {
+  FlowStatus,
+  ComparisonOperator,
+} from '@shared/types/__generated__/graphql.types';
 
 import { handleOperatorName, handlePropertyPlural } from '../../utils/utils';
 interface GroupedOption {
@@ -32,8 +35,13 @@ interface ListFilterProps {
   operatorName: string;
   filterValue: string[];
   onMultiSelectChange: (ids: string[]) => void;
-  options: { id: string; label: string; avatar?: string }[];
   groupOptions?: { label: string; options: { id: string; label: string }[] }[];
+  options: {
+    id: string;
+    label: string;
+    avatar?: string;
+    isArchived?: FlowStatus;
+  }[];
 }
 
 export const ListFilter = ({
@@ -106,7 +114,14 @@ export const ListFilter = ({
   }, [isOpen]);
 
   const options = useMemo(
-    () => [..._options.filter((o) => o.label !== undefined)],
+    () => [
+      ..._options.filter(
+        (o) =>
+          o.label !== undefined &&
+          o.label !== '' &&
+          o.isArchived !== FlowStatus.Archived,
+      ),
+    ],
     [_options.length],
   );
 

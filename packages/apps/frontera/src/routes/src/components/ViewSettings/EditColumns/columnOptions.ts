@@ -47,7 +47,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsRegion]: 'Region',
   [ColumnViewType.ContactsFlows]: 'Current Flow',
   [ColumnViewType.ContactsPersonalEmails]: 'Personal Email',
-  [ColumnViewType.ContactsFlowStatus]: 'Flow Status',
+  [ColumnViewType.ContactsFlowStatus]: 'Status in Flow',
 };
 
 export const invoicesHelperTextMap: Record<

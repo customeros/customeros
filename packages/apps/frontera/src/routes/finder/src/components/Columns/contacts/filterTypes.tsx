@@ -4,6 +4,7 @@ import { Building07 } from '@ui/media/icons/Building07';
 import {
   ColumnViewType,
   ComparisonOperator,
+  FlowParticipantStatus,
 } from '@shared/types/__generated__/graphql.types';
 
 export type FilterType = {
@@ -252,15 +253,9 @@ export const getFilterTypes = (store?: RootStore) => {
         store?.contacts
           ?.toArray()
           .flatMap((contact) => contact?.value.locations?.[0])
-          .filter(
-            (l) =>
-              l?.locality !== null &&
-              l?.locality !== undefined &&
-              l?.locality !== '',
-          )
           .map((location) => ({
-            id: location.locality,
-            label: location.locality,
+            id: location?.locality,
+            label: location?.locality,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
         'id',
@@ -380,15 +375,9 @@ export const getFilterTypes = (store?: RootStore) => {
         store?.contacts
           ?.toArray()
           .flatMap((contact) => contact?.value.locations?.[0])
-          .filter(
-            (l) =>
-              l?.country !== null &&
-              l?.country !== undefined &&
-              l?.country !== '',
-          )
           .map((location) => ({
-            id: location.countryCodeA2,
-            label: location.country,
+            id: location?.countryCodeA2,
+            label: location?.country,
           }))
           .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
         'id',
@@ -436,13 +425,14 @@ export const getFilterTypes = (store?: RootStore) => {
         store?.flows.toArray().map((flow) => ({
           id: flow?.id,
           label: flow?.value.name,
+          isArchived: flow.value.status,
         })),
         'id',
       ),
     },
     [ColumnViewType.ContactsFlowStatus]: {
       filterType: 'list',
-      filterName: 'Flow status',
+      filterName: 'Status in flow',
       filterAccesor: ColumnViewType.ContactsFlowStatus,
       filterOperators: [
         ComparisonOperator.Contains,
@@ -451,6 +441,32 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsNotEmpty,
       ],
       icon: <Shuffle01 className='group-hover:text-gray-700 text-gray-500' />,
+      options: [
+        {
+          id: FlowParticipantStatus.Scheduled,
+          label: 'Scheduled',
+        },
+        {
+          id: FlowParticipantStatus.InProgress,
+          label: 'In progress',
+        },
+        {
+          id: FlowParticipantStatus.Paused,
+          label: 'Paused',
+        },
+        {
+          id: FlowParticipantStatus.Completed,
+          label: 'Completed',
+        },
+        {
+          id: FlowParticipantStatus.GoalAchieved,
+          label: 'Goal achieved',
+        },
+        {
+          id: 'PENDING',
+          label: 'Pending',
+        },
+      ],
     },
   };
 

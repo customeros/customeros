@@ -301,7 +301,6 @@ export const Filters = ({
         >
           <Combobox
             size='xs'
-            maxHeight='600px'
             escapeClearsValue
             closeMenuOnSelect={false}
             placeholder='Select filter...'

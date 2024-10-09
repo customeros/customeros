@@ -52,7 +52,7 @@ export const OperatorFilter = ({
             size='xs'
             variant='outline'
             colorScheme='grayModern'
-            className='rounded-none font-normal bg-white text-gray-500 border-r-0'
+            className='rounded-none font-normal bg-white text-gray-500 border-r-1'
           >
             {value
               ? handleOperatorName(

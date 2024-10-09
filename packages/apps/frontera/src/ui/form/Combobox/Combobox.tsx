@@ -38,10 +38,7 @@ export const Combobox = ({
           getOptionClassNames('!cursor-pointer', { isFocused }),
         menuList: () =>
           getMenuListClassNames(
-            cn(
-              'p-0 border-none bg-transparent shadow-none',
-              maxHeight && `!max-h-[${maxHeight}]`,
-            ),
+            cn('p-0 border-none bg-transparent shadow-none !max-h-[600px]'),
           ),
         menu: ({ menuPlacement }) =>
           getMenuClassNames(menuPlacement)('!relative', size),
