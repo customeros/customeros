@@ -33,8 +33,8 @@ export const OperatorFilter = ({
             size='xs'
             variant='outline'
             colorScheme='grayModern'
+            className='rounded-none bg-white'
             aria-label={`filter type ${type}`}
-            className='rounded-none bg-white boreder-r-2'
             icon={
               value
                 ? (handleOperatorIcon(
@@ -52,7 +52,7 @@ export const OperatorFilter = ({
             size='xs'
             variant='outline'
             colorScheme='grayModern'
-            className='rounded-none font-normal bg-white text-gray-500'
+            className='rounded-none font-normal bg-white text-gray-500 border-r-1'
           >
             {value
               ? handleOperatorName(
@@ -64,7 +64,7 @@ export const OperatorFilter = ({
           </Button>
         )}
       </MenuButton>
-      <MenuList>
+      <MenuList side='bottom' align='start'>
         {operators?.map((operator) => (
           <MenuItem
             key={operator}
@@ -72,7 +72,7 @@ export const OperatorFilter = ({
             onClick={() => onSelect(operator)}
           >
             <div className='flex items-center gap-2'>
-              <span>
+              <span className='mb-0.5'>
                 {handleOperatorIcon(operator as ComparisonOperator, type)}
               </span>
               {handleOperatorName(

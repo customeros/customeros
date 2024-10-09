@@ -158,7 +158,7 @@ export class TableViewDefStore implements Store<TableViewDef> {
   }
 
   hasFilters() {
-    return this.getFilters().AND.length > 0;
+    return this.getFilters()?.AND?.length > 0;
   }
 
   getFilter(id: string) {

@@ -13,14 +13,21 @@ import {
   ColumnViewType,
 } from '@shared/types/__generated__/graphql.types';
 
-import { getFilterTypes } from '../Columns/organizations/filtersType';
+import { getFilterTypes as getFilterTypesForContacts } from '../Columns/contacts/filterTypes';
+import { getFilterTypes as getFilterTypesForOrganizations } from '../Columns/organizations/filtersType';
 
 export const FinderFilters = observer(
   ({ tableId, type }: { type: TableViewType; tableId: TableIdType }) => {
     const store = useStore();
+    const getFilterTypes = match(tableId)
+      .with(TableIdType.Contacts, () => getFilterTypesForContacts)
+      .with(TableIdType.Organizations, () => getFilterTypesForOrganizations)
+      .otherwise(() => getFilterTypesForOrganizations);
+
     const [searchParams] = useSearchParams();
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const [optionsMap, helperTextMap] = useTableColumnOptionsMap(type as any);
+
     const filterTypes = getFilterTypes(store);
 
     const preset = match(tableId)
@@ -34,12 +41,7 @@ export const FinderFilters = observer(
 
     const columns =
       tableViewDef?.value?.columns
-        .filter(
-          (c) =>
-            ![ColumnViewType.FlowName, ColumnViewType.ContactsFlows].includes(
-              c.columnType,
-            ),
-        )
+        .filter((c) => ![ColumnViewType.FlowName].includes(c.columnType))
         .map((c) => ({
           ...c,
           label: optionsMap[c.columnType],
@@ -48,6 +50,21 @@ export const FinderFilters = observer(
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const filters = tableViewDef?.getFilters()?.AND as any | undefined;
+
+    if (tableId === TableIdType.Contacts) {
+      columns.push({
+        // @ts-expect-error fix later
+        columnType: 'EMAIL_VERIFICATION_WORK_EMAIL',
+        label: 'Work email status',
+        helperText: 'Email Verification',
+      });
+      columns.push({
+        // @ts-expect-error fix later
+        columnType: 'EMAIL_VERIFICATION_PERSONAL_EMAIL',
+        label: 'Personal email statusl',
+        helperText: 'Email Verification',
+      });
+    }
 
     const flattenedFilters: FilterItem[] =
       filters
@@ -74,8 +91,9 @@ export const FinderFilters = observer(
     return (
       <Filters
         columns={columns}
-        filterTypes={filterTypes}
         filters={flattenedFilters}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        filterTypes={filterTypes as any}
         onClearFilter={(filter, idx) =>
           tableViewDef?.removeFilter(filter.property, idx)
         }

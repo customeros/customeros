@@ -100,6 +100,10 @@ export const NumberFilter = ({
             operatorValue as ComparisonOperator,
           )}...`}
           onKeyDown={(e) => {
+            if (e.key === 'e') {
+              e.preventDefault();
+            }
+
             if (e.key === 'Escape') {
               setIsOpen(false);
             }

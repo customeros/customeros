@@ -21,6 +21,7 @@ interface FilterProps {
   operatorValue: ComparisonOperator;
   onChangeOperator: (operator: string) => void;
   onChangeFilterValue: (value: string | Date | string[]) => void;
+  groupOptions?: { label: string; options: { id: string; label: string }[] }[];
 }
 
 export const Filter = ({
@@ -32,6 +33,7 @@ export const Filter = ({
   onChangeFilterValue,
   filterValue,
   listFilterOptions,
+  groupOptions,
   onClearFilter,
   icon,
 }: FilterProps) => {
@@ -85,6 +87,7 @@ export const Filter = ({
           filterName={filterName}
           options={listFilterOptions}
           operatorName={operatorValue}
+          groupOptions={groupOptions || []}
           filterValue={filterValue as string[]}
           onMultiSelectChange={onChangeFilterValue as (ids: string[]) => void}
         />

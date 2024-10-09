@@ -71,7 +71,7 @@ export const ConnectedToFilter = observer(
       ),
     ].sort((a, b) => a.localeCompare(b));
 
-    const isAllChecked = filter.value.length === options?.length;
+    const isAllChecked = filter?.value?.length === options?.length;
 
     const handleSelectAll = () => {
       let nextValue: string[] = [];
@@ -141,7 +141,7 @@ export const ConnectedToFilter = observer(
                 className='mt-2'
                 key={`option-${e}`}
                 onChange={() => handleChange(e)}
-                isChecked={filter.value.includes(e) ?? false}
+                isChecked={filter?.value?.includes(e) ?? false}
                 labelProps={{
                   className:
                     'text-sm mt-2 whitespace-nowrap overflow-hidden overflow-ellipsis',

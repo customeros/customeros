@@ -7,8 +7,6 @@ import {
   ComponentType,
 } from 'react';
 
-import debounce from 'lodash/debounce';
-
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
 import { Combobox } from '@ui/form/Combobox';
@@ -16,21 +14,34 @@ import { Check } from '@ui/media/icons/Check';
 import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
 import { components, OptionProps } from '@ui/form/Select/Select';
-import { ComparisonOperator } from '@shared/types/__generated__/graphql.types';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
+import {
+  FlowStatus,
+  ComparisonOperator,
+} from '@shared/types/__generated__/graphql.types';
 
 import { handleOperatorName, handlePropertyPlural } from '../../utils/utils';
+interface GroupedOption {
+  readonly label: string;
+  readonly options: { id: string; label: string }[];
+}
 
 interface ListFilterProps {
   filterName: string;
   operatorName: string;
   filterValue: string[];
   onMultiSelectChange: (ids: string[]) => void;
-  options: { id: string; label: string; avatar?: string }[];
+  groupOptions?: { label: string; options: { id: string; label: string }[] }[];
+  options: {
+    id: string;
+    label: string;
+    avatar?: string;
+    isArchived?: FlowStatus;
+  }[];
 }
 
 export const ListFilter = ({
@@ -38,14 +49,25 @@ export const ListFilter = ({
   options: _options,
   filterValue,
   filterName,
+  groupOptions,
   operatorName,
 }: ListFilterProps) => {
   const [selectedIds, setSelectedIds] = useState<string[]>(filterValue ?? []);
   const [isOpen, setIsOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const debouncedOnMultiSelectChange = useMemo(
-    () => debounce(onMultiSelectChange, 300),
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedOnMultiSelectChange = useCallback(
+    (ids: string[]) => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+
+      timeoutRef.current = setTimeout(() => {
+        onMultiSelectChange(ids);
+      }, 300);
+    },
     [onMultiSelectChange],
   );
 
@@ -54,7 +76,7 @@ export const ListFilter = ({
       if (filterName) {
         setTimeout(() => {
           setIsOpen(true);
-        }, 100);
+        }, 50);
       }
     }
   }, [filterName]);
@@ -62,24 +84,26 @@ export const ListFilter = ({
   const handleItemClick = (id: string) => {
     let newSelectedIds;
 
-    if (filterName === 'Ownership type') {
-      newSelectedIds = [id];
+    if (selectedIds.includes(id)) {
+      newSelectedIds = selectedIds.filter((selectedId) => selectedId !== id);
     } else {
-      if (selectedIds.includes(id)) {
-        newSelectedIds = selectedIds.filter((selectedId) => selectedId !== id);
-      } else {
-        newSelectedIds = [...selectedIds, id];
-      }
+      newSelectedIds = [...selectedIds, id];
     }
 
     setSelectedIds(newSelectedIds);
-
     debouncedOnMultiSelectChange(newSelectedIds);
   };
 
-  const filterValueLabels = _options
-    .filter((option) => selectedIds?.includes(option.id))
-    .map((option) => option.label);
+  const filterValueLabels =
+    filterName !== 'Email status work email' &&
+    filterName !== 'Email status personal email'
+      ? _options
+          .filter((option) => selectedIds?.includes(option.id))
+          .map((option) => option.label)
+      : groupOptions
+          ?.flatMap((group) => group.options)
+          .filter((option) => selectedIds?.includes(option.id))
+          .map((option) => option.label);
 
   useEffect(() => {
     setTimeout(() => {
@@ -90,7 +114,14 @@ export const ListFilter = ({
   }, [isOpen]);
 
   const options = useMemo(
-    () => [..._options.filter((o) => o.label !== undefined)],
+    () => [
+      ..._options.filter(
+        (o) =>
+          o.label !== undefined &&
+          o.label !== '' &&
+          o.isArchived !== FlowStatus.Archived,
+      ),
+    ],
     [_options.length],
   );
 
@@ -115,7 +146,18 @@ export const ListFilter = ({
                 icon={<User01 className='text-gray-500 size-3' />}
               />
             )}
-            <span className='flex-1'>{children}</span>
+            <span
+              className='flex-1'
+              style={{
+                marginLeft:
+                  filterName === 'Work email status' ||
+                  filterName === 'Personal email status'
+                    ? '8px'
+                    : '0',
+              }}
+            >
+              {children}
+            </span>
             {selectedIds.includes(data?.id) && (
               <Check className='text-primary-600' />
             )}
@@ -137,7 +179,7 @@ export const ListFilter = ({
       return (
         <components.Option {...props}>
           <div className='flex items-center gap-2'>
-            <span>{flags[country.id]}</span>
+            <span className='mb-[2px]'>{flags[country.id]}</span>
             <span>{children}</span>
             {selectedIds.includes(country.id) && (
               <Check className='text-primary-600' />
@@ -149,6 +191,13 @@ export const ListFilter = ({
     [selectedIds.length],
   );
 
+  const getOptions = useCallback(() => {
+    return filterName !== 'Work email status' &&
+      filterName !== 'Personal email status'
+      ? options
+      : groupOptions;
+  }, [filterName]);
+
   if (
     operatorName === ComparisonOperator.IsEmpty ||
     operatorName === ComparisonOperator.IsNotEmpty
@@ -159,6 +208,12 @@ export const ListFilter = ({
   const Options: ComponentType<OptionProps<any, any, any>> =
     filterName === 'Country' ? CountryOption : Option;
 
+  const formatGroupLabel = (groupOption: GroupedOption) => (
+    <div className='flex justify-between items-center'>
+      <span className='font-medium text-gray-700'>{groupOption.label}</span>
+    </div>
+  );
+
   return (
     <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
       <PopoverTrigger asChild>
@@ -167,10 +222,10 @@ export const ListFilter = ({
           colorScheme='grayModern'
           className='border-l-0 rounded-none text-gray-700 bg-white font-normal'
         >
-          {filterValueLabels.length === 1
+          {filterValueLabels?.length === 1
             ? filterValueLabels?.[0]
-            : filterValueLabels.length > 1
-            ? `${filterValueLabels.length} ${handlePropertyPlural(
+            : (filterValueLabels?.length ?? 0) > 1
+            ? `${filterValueLabels?.length} ${handlePropertyPlural(
                 filterName,
                 selectedIds,
               )}`
@@ -185,8 +240,9 @@ export const ListFilter = ({
         <Combobox
           size='xs'
           escapeClearsValue
-          options={options}
+          options={getOptions()}
           closeMenuOnSelect={false}
+          formatGroupLabel={formatGroupLabel}
           onChange={(value) => handleItemClick(value.id)}
           components={{
             Option: Options,

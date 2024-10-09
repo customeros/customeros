@@ -20,6 +20,7 @@ import {
 } from '@graphql/types';
 
 import { Filter } from '../Filter/Filter';
+import { categorySelected } from '../Filter/utils/utils';
 
 interface FiltersProps {
   filters: FilterItem[];
@@ -79,6 +80,14 @@ export const Filters = ({
     return filterType?.options;
   };
 
+  const getFilterGroupOptions = (property: string) => {
+    const filterType = Object.values(filterTypes).find(
+      (type) => type.filterAccesor === property,
+    );
+
+    return filterType?.groupOptions;
+  };
+
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => {
@@ -87,7 +96,6 @@ export const Filters = ({
     }
   }, [isOpen]);
 
-  // Add keydown event to open the filter list when 'f' is pressed
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'f') {
@@ -134,27 +142,64 @@ export const Filters = ({
     filter: FilterItem,
     index: number,
   ) => {
-    if (Array.isArray(value) && value.length === 0) {
+    if (
+      filter.property === 'EMAIL_VERIFICATION_WORK_EMAIL' ||
+      filter.property === 'EMAIL_VERIFICATION_PERSONAL_EMAIL'
+    ) {
+      const emailVerificationValues = Array.isArray(value) ? value : [value];
+
+      const updatedValue = emailVerificationValues.map((val) => ({
+        category: categorySelected(val as string),
+        value: val,
+      }));
+
       setFilters(
         {
           ...filter,
-          property: filter.property,
-          active: false,
-          operation: filter.operation,
-          value: value,
-        },
-        index,
-      );
-    } else {
-      setFilters(
-        {
-          ...filter,
-          value: value,
+          value: updatedValue,
           property: filter.property,
           active: true,
         },
         index,
       );
+
+      if ((value as [])?.length === 0) {
+        setFilters(
+          {
+            ...filter,
+            active: false,
+          },
+          index,
+        );
+      }
+    }
+
+    if (
+      filter.property !== 'EMAIL_VERIFICATION_WORK_EMAIL' &&
+      filter.property !== 'EMAIL_VERIFICATION_PERSONAL_EMAIL'
+    ) {
+      if (Array.isArray(value) && value.length === 0) {
+        setFilters(
+          {
+            ...filter,
+            property: filter.property,
+            active: false,
+            operation: filter.operation,
+            value: value,
+          },
+          index,
+        );
+      } else {
+        setFilters(
+          {
+            ...filter,
+            value: value,
+            property: filter.property,
+            active: true,
+          },
+          index,
+        );
+      }
     }
   };
 
@@ -181,7 +226,7 @@ export const Filters = ({
     };
 
     return (
-      <components.Option {...props}>
+      <components.Option {...props} className='group'>
         <div className='flex justify-start items-center gap-2'>
           <span className='h-6 align-middle'>{data.icon}</span>
           <span className='align-middle text-sm'>{data.label}</span>
@@ -192,28 +237,40 @@ export const Filters = ({
 
   return (
     <div className='flex gap-2 flex-wrap'>
-      {filters.map((f, idx) => (
-        <Filter
-          filterValue={f.value}
-          key={`${f.property}-${idx}`}
-          filterName={handleFilterName(f.property)}
-          operators={getFilterOperators(f.property)}
-          onClearFilter={() => onClearFilter(f, idx)}
-          filterType={getFilterTypes(f.property) || ''}
-          listFilterOptions={getFilterOptions(f.property) || []}
-          operatorValue={f.operation || ComparisonOperator.Between}
-          onChangeFilterValue={(value) =>
-            handleChangeFilterValue(value, f, idx)
-          }
-          onChangeOperator={(operator) =>
-            handleChangeOperator(operator, f, idx)
-          }
-          icon={
-            availableFilters.find((filter) => filter?.columnType === f.property)
-              ?.icon || <></>
-          }
-        />
-      ))}
+      {filters.map((f, idx) => {
+        const value =
+          f.property === 'EMAIL_VERIFICATION' ? f?.value?.[0]?.value : f?.value;
+
+        return (
+          <Filter
+            filterValue={value}
+            key={`${f.property}-${idx}`}
+            filterName={handleFilterName(f.property)}
+            operators={getFilterOperators(f.property)}
+            onClearFilter={() => onClearFilter(f, idx)}
+            filterType={getFilterTypes(f.property) || ''}
+            listFilterOptions={getFilterOptions(f.property) || []}
+            operatorValue={f.operation || ComparisonOperator.Between}
+            onChangeFilterValue={(value) =>
+              handleChangeFilterValue(value, f, idx)
+            }
+            onChangeOperator={(operator) =>
+              handleChangeOperator(operator, f, idx)
+            }
+            icon={
+              availableFilters.find(
+                (filter) => filter?.columnType === f.property,
+              )?.icon || <></>
+            }
+            groupOptions={
+              getFilterGroupOptions(f.property) as unknown as {
+                label: string;
+                options: { id: string; label: string }[];
+              }[]
+            }
+          />
+        );
+      })}
 
       <Popover open={isOpen} onOpenChange={(open) => setIsOpen(open)}>
         <PopoverTrigger asChild>
@@ -244,8 +301,8 @@ export const Filters = ({
         >
           <Combobox
             size='xs'
-            maxHeight='600px'
             escapeClearsValue
+            maxHeight='600px'
             closeMenuOnSelect={false}
             placeholder='Select filter...'
             noOptionsMessage={() => 'Nothing in sight...'}

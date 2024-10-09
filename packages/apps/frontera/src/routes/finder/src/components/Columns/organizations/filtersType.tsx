@@ -32,6 +32,7 @@ export type FilterType = {
   filterAccesor: ColumnViewType;
   filterOperators: ComparisonOperator[];
   filterType: 'text' | 'date' | 'number' | 'list';
+  groupOptions?: { label: string; options: { id: string; label: string }[] };
 };
 
 import { uniqBy } from 'lodash';
@@ -369,10 +370,13 @@ export const getFilterTypes = (store?: RootStore) => {
       ],
       icon: <Building07 className='mb-0.5' />,
       options: uniqBy(
-        store?.organizations.toArray().map((org) => ({
-          id: org.value.locations?.[0]?.countryCodeA2,
-          label: org.value.locations?.[0]?.country,
-        })),
+        store?.organizations
+          .toArray()
+          .map((org) => ({
+            id: org.value.locations?.[0]?.countryCodeA2,
+            label: org.value.locations?.[0]?.country,
+          }))
+          .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
         'id',
       ),
     },
