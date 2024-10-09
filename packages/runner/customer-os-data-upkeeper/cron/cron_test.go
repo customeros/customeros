@@ -54,6 +54,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleFlowExecution:                                         "0 0 */1 * * *",
 			CronScheduleFlowStatistics:                                        "0 0 */1 * * *",
 			CronScheduleCleanEmails:                                           "0 0 */1 * * *",
+			CronScheduleSendEmails:                                            "0 0 */1 * * *",
 		},
 	}
 

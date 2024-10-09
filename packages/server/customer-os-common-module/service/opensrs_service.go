@@ -6,13 +6,12 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"github.com/DusanKasan/parsemail"
 	"github.com/PuerkitoBio/goquery"
-	mimemail "github.com/emersion/go-message/mail"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"net/smtp"
 	"strings"
@@ -25,10 +24,10 @@ type openSRSService struct {
 }
 
 type OpenSrsService interface {
-	SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error)
+	SendEmail(ctx context.Context, tenant string, request *entity.EmailMessage) error
 }
 
-func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error) {
+func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request *entity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OpenSrsService.Reply")
 	defer span.Finish()
 
@@ -39,40 +38,23 @@ func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request d
 	mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, request.From)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 
 	toEmail := []string{}
 	ccEmail := []string{}
 	bccEmail := []string{}
 
-	//build internal object for transfer
-	retMail := parsemail.Email{}
-	retMail.HTMLBody = request.Content
-	retMail.Subject = *request.Subject
-
-	sentByName := "" //TODO
-	fromAddress := []*mimemail.Address{{sentByName, request.From}}
-	retMail.From = fromAddress
-	var toAddress []*mimemail.Address
-	var ccAddress []*mimemail.Address
-	var bccAddress []*mimemail.Address
 	for _, to := range request.To {
-		toAddress = append(toAddress, &mimemail.Address{Address: to})
-		retMail.To = toAddress
 		toEmail = append(toEmail, to)
 	}
 	if request.Cc != nil {
 		for _, cc := range request.Cc {
-			ccAddress = append(ccAddress, &mimemail.Address{Address: cc})
-			retMail.Cc = ccAddress
 			ccEmail = append(ccEmail, cc)
 		}
 	}
 	if request.Bcc != nil {
 		for _, bcc := range request.Bcc {
-			bccAddress = append(bccAddress, &mimemail.Address{Address: bcc})
-			retMail.Bcc = bccAddress
 			bccEmail = append(bccEmail, bcc)
 		}
 	}
@@ -85,15 +67,15 @@ func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request d
 		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return err
 		}
 		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
 
-		emailChannelData := dto.EmailChannelData{}
+		emailChannelData := neo4jentity.EmailChannelData{}
 		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
+			return fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
 		}
 
 		subject = emailChannelData.Subject
@@ -101,15 +83,15 @@ func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request d
 			subject = "Re: " + emailChannelData.Subject
 		}
 
-		if emailChannelData.Reference == nil {
-			emailChannelData.Reference = []string{}
+		if emailChannelData.Reference != "" {
+			emailChannelData.Reference = emailChannelData.Reference + " " + emailChannelData.ProviderMessageId
+		} else {
+			emailChannelData.Reference = emailChannelData.ProviderMessageId
 		}
-
-		emailChannelData.Reference = append(emailChannelData.Reference, emailChannelData.ProviderMessageId)
 
 		inReplyTo = emailChannelData.ProviderMessageId
 	} else {
-		subject = *request.Subject
+		subject = request.Subject
 	}
 
 	// Compose the email headers and body
@@ -138,7 +120,7 @@ Content-Type: text/html; charset=UTF-8
 	plainText, err := HTMLToPlainText(request.Content)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 
 	data := struct {
@@ -171,12 +153,14 @@ Content-Type: text/html; charset=UTF-8
 
 	tmpl, err := template.New("email").Parse(messageTemplate)
 	if err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	var msgBuffer bytes.Buffer
 	if err := tmpl.Execute(&msgBuffer, data); err != nil {
-		return nil, err
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	msg := msgBuffer.String()
@@ -199,16 +183,15 @@ Content-Type: text/html; charset=UTF-8
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 
-	retMail.MessageID = data.MessageId
-	retMail.Header = make(map[string][]string)
-	retMail.Header["Message-Id"] = []string{data.MessageId}
-	retMail.InReplyTo = []string{data.InReplyTo}
-	retMail.References = references
+	request.ProviderMessageId = data.MessageId
+	request.ProviderThreadId = data.MessageId
+	request.ProviderInReplyTo = data.InReplyTo
+	request.ProviderReferences = data.References
 
-	return &retMail, nil
+	return nil
 }
 
 func HTMLToPlainText(html string) (string, error) {

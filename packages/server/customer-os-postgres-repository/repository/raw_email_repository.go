@@ -1,11 +1,11 @@
 package repository
 
 import (
+	"errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/sirupsen/logrus"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
 	"time"
@@ -35,7 +35,7 @@ func (repo *rawEmailRepositoryImpl) CountForUsername(ctx context.Context, extern
 	err := repo.gormDb.Model(entity.RawEmail{}).Where("external_system = ? AND tenant = ? AND username = ?", externalSystem, tenant, username).Count(&result).Error
 
 	if err != nil {
-		logrus.Errorf("RawEmailRepository.CountForUsername - failed: %s; %s; %s", externalSystem, tenant, username)
+		tracing.TraceErr(span, err)
 		return 0, err
 	}
 
@@ -52,7 +52,7 @@ func (repo *rawEmailRepositoryImpl) EmailExistsByMessageId(ctx context.Context, 
 	err := repo.gormDb.Model(entity.RawEmail{}).Where("external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).Count(&result).Error
 
 	if err != nil {
-		logrus.Errorf("RawEmailRepository.EmailExistsByMessageId - failed: %s; %s; %s", externalSystem, tenant, messageId)
+		tracing.TraceErr(span, err)
 		return false, err
 	}
 
@@ -69,13 +69,14 @@ func (repo *rawEmailRepositoryImpl) Store(ctx context.Context, externalSystem, t
 	err := repo.gormDb.Find(&result, "external_system = ? AND tenant = ? AND username = ? AND message_id = ?", externalSystem, tenant, username, messageId).Error
 
 	if err != nil {
-		logrus.Errorf("RawEmailRepository.Store - failed retrieving rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
+		tracing.TraceErr(span, err)
 		return err
 	}
 
 	if result.Tenant != "" {
-		logrus.Infof("RawEmailRepository.Store - already exists: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
-		return nil
+		err := errors.New("RawEmailRepository.Store - email already exists")
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	result.ProviderMessageId = providerMessageId
@@ -92,7 +93,7 @@ func (repo *rawEmailRepositoryImpl) Store(ctx context.Context, externalSystem, t
 
 	err = repo.gormDb.Save(&result).Error
 	if err != nil {
-		logrus.Errorf("RawEmailRepository.Store - failed storing rawEmail: %s; %s; %s; %s", externalSystem, tenant, username, messageId)
+		tracing.TraceErr(span, err)
 		return err
 	}
 

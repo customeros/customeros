@@ -5,12 +5,10 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"github.com/DusanKasan/parsemail"
-	mimemail "github.com/emersion/go-message/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"github.com/opentracing/opentracing-go"
@@ -33,7 +31,7 @@ type azureService struct {
 type AzureService interface {
 	ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error)
 
-	SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error)
+	SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error
 }
 
 func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error) {
@@ -114,7 +112,7 @@ func (s *azureService) ReadEmailsFromAzureAd(ctx context.Context, importState *p
 	return nil, "", fmt.Errorf("failed to fetch emails: %v", resp.Status)
 }
 
-func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error) {
+func (s *azureService) SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "AzureService.SendEmail")
 	defer span.Finish()
 
@@ -122,47 +120,18 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto
 
 	oAuthTokenEntity, err := s.repositories.OAuthTokenRepository.GetByEmail(ctx, tenant, "azure-ad", request.From)
 	if err != nil {
-		return nil, fmt.Errorf("unable to get token for user: %v", err)
+		return fmt.Errorf("unable to get token for user: %v", err)
 	}
 	if oAuthTokenEntity == nil {
-		return nil, fmt.Errorf("unable to get token for user: %v", err)
+		return fmt.Errorf("unable to get token for user: %v", err)
 	}
 	if oAuthTokenEntity.NeedsManualRefresh {
-		return nil, fmt.Errorf("oauth token needs manual refresh: %v", err)
-	}
-
-	//build internal object for transfer
-	retMail := parsemail.Email{}
-	retMail.HTMLBody = request.Content
-	retMail.Subject = *request.Subject
-
-	sentByName := "" //TODO
-
-	fromAddress := []*mimemail.Address{{sentByName, request.From}}
-	retMail.From = fromAddress
-	var toAddress []*mimemail.Address
-	var ccAddress []*mimemail.Address
-	var bccAddress []*mimemail.Address
-	for _, to := range request.To {
-		toAddress = append(toAddress, &mimemail.Address{Address: to})
-		retMail.To = toAddress
-	}
-	if request.Cc != nil {
-		for _, cc := range request.Cc {
-			ccAddress = append(ccAddress, &mimemail.Address{Address: cc})
-			retMail.Cc = ccAddress
-		}
-	}
-	if request.Bcc != nil {
-		for _, bcc := range request.Bcc {
-			bccAddress = append(bccAddress, &mimemail.Address{Address: bcc})
-			retMail.Bcc = bccAddress
-		}
+		return fmt.Errorf("oauth token needs manual refresh: %v", err)
 	}
 
 	// build and send the email
 	var message MailRequest
-	message.Subject = *request.Subject
+	message.Subject = request.Subject
 	message.Body.ContentType = "HTML"
 	message.Body.Content = request.Content
 	message.From.EmailAddress.Address = request.From
@@ -196,26 +165,26 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto
 	if request.ReplyTo == nil {
 		reqBody, err := json.Marshal(message)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal request body: %v", err)
+			return fmt.Errorf("failed to marshal request body: %v", err)
 		}
 
 		req, err = http.NewRequest("POST", "https://graph.microsoft.com/v1.0/me/messages", bytes.NewBuffer(reqBody))
 		if err != nil {
-			return nil, fmt.Errorf("failed to create request: %v", err)
+			return fmt.Errorf("failed to create request: %v", err)
 		}
 	} else {
 		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return err
 		}
 		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
 
-		emailChannelData := dto.EmailChannelData{}
+		emailChannelData := entity.EmailChannelData{}
 		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
+			return fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
 		}
 
 		replyReq := ReplyRequest{
@@ -224,12 +193,12 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto
 
 		reqBody, err := json.Marshal(replyReq)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal request body: %v", err)
+			return fmt.Errorf("failed to marshal request body: %v", err)
 		}
 
 		req, err = http.NewRequest("POST", fmt.Sprintf("https://graph.microsoft.com/v1.0/me/messages/%s/createReply", emailChannelData.ProviderMessageId), bytes.NewBuffer(reqBody))
 		if err != nil {
-			return nil, fmt.Errorf("failed to create request: %v", err)
+			return fmt.Errorf("failed to create request: %v", err)
 		}
 	}
 
@@ -240,18 +209,18 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, fmt.Errorf("failed to send request: %v", err)
+		return fmt.Errorf("failed to send request: %v", err)
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusCreated {
 		bodyBytes, _ := ioutil.ReadAll(resp.Body)
-		return nil, fmt.Errorf("API request failed with status: %s, response: %s", resp.Status, bodyBytes)
+		return fmt.Errorf("API request failed with status: %s, response: %s", resp.Status, bodyBytes)
 	} else {
 
 		var draftResponse DraftResponse
 		if err := json.NewDecoder(resp.Body).Decode(&draftResponse); err != nil {
-			return nil, fmt.Errorf("failed to decode response body: %v", err)
+			return fmt.Errorf("failed to decode response body: %v", err)
 		}
 
 		sendDraftReq := SendDraftRequest{
@@ -260,12 +229,12 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto
 
 		reqBody, err := json.Marshal(sendDraftReq)
 		if err != nil {
-			return nil, fmt.Errorf("failed to marshal request body: %v", err)
+			return fmt.Errorf("failed to marshal request body: %v", err)
 		}
 
 		req, err := http.NewRequest("POST", fmt.Sprintf("https://graph.microsoft.com/v1.0/me/messages/%s/send", draftResponse.Id), bytes.NewBuffer(reqBody))
 		if err != nil {
-			return nil, fmt.Errorf("failed to create request: %v", err)
+			return fmt.Errorf("failed to create request: %v", err)
 		}
 
 		req.Header.Set("Authorization", "Bearer "+oAuthTokenEntity.AccessToken)
@@ -274,28 +243,26 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request dto
 		client := &http.Client{}
 		resp, err := client.Do(req)
 		if err != nil {
-			return nil, fmt.Errorf("failed to send request: %v", err)
+			return fmt.Errorf("failed to send request: %v", err)
 		}
 		defer resp.Body.Close()
 
 		if resp.StatusCode != http.StatusAccepted {
 			bodyBytes, _ := ioutil.ReadAll(resp.Body)
-			return nil, fmt.Errorf("API request failed with status: %s, response: %s", resp.Status, bodyBytes)
+			return fmt.Errorf("API request failed with status: %s, response: %s", resp.Status, bodyBytes)
 		}
 
 		messageId, threadId, err := getIdAndThreadIdForSentEmail(oAuthTokenEntity.AccessToken, draftResponse.Id)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get conversation id for sent email: %v", err)
+			return fmt.Errorf("failed to get conversation id for sent email: %v", err)
 		}
 
-		//this is used to store the thread id
-		retMail.Header = map[string][]string{
-			"Message-Id": {messageId},
-			"Thread-Id":  {threadId},
-		}
+		request.ProviderMessageId = messageId
+		request.ProviderThreadId = threadId
+		//todo do we need references?
 	}
 
-	return &retMail, nil
+	return nil
 }
 
 func getIdAndThreadIdForSentEmail(token, messageId string) (string, string, error) {

@@ -69,4 +69,6 @@ type Config struct {
 	// Flows
 	CronScheduleFlowExecution  string `env:"CRON_SCHEDULE_FLOW_EXECUTION" envDefault:"*/5 * * * * *"`
 	CronScheduleFlowStatistics string `env:"CRON_SCHEDULE_FLOW_STATISTICS" envDefault:"* */5 * * * *"`
+
+	CronScheduleSendEmails string `env:"CRON_SCHEDULE_SEND_EMAILS" envDefault:"*/30 * * * * *"`
 }
