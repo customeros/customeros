@@ -55,7 +55,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <User03 />,
+      icon: <User03 className='group-hover:text-gray-700 text-gray-500' />,
     },
     [ColumnViewType.ContactsOrganization]: {
       filterType: 'text',
@@ -67,7 +67,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Building07 />,
+      icon: <Building07 className='group-hover:text-gray-700 text-gray-500' />,
     },
     [ColumnViewType.ContactsEmails]: {
       filterType: 'text',
@@ -79,11 +79,77 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 />,
+      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
+    },
+    ['EMAIL_VERIFICATION_WORK_EMAIL']: {
+      filterType: 'list',
+      filterName: 'Work email status',
+      filterAccesor: 'EMAIL_VERIFICATION_WORK_EMAIL',
+      filterOperators: [
+        ComparisonOperator.Contains,
+        ComparisonOperator.NotContains,
+        ComparisonOperator.IsEmpty,
+        ComparisonOperator.IsNotEmpty,
+      ],
+      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
+      options: [],
+      groupOptions: [
+        {
+          label: 'Deliverable',
+          options: [
+            {
+              id: EmailVerificationStatus.FirewallProtected,
+              label: 'Firewall protected',
+            },
+            {
+              id: EmailVerificationStatus.FreeAccount,
+              label: 'Free account',
+            },
+            {
+              id: EmailVerificationStatus.NoRisk,
+              label: 'No risk',
+            },
+          ],
+        },
+        {
+          label: 'Not deliverable',
+          options: [
+            {
+              id: EmailVerificationStatus.IncorrectFormat,
+              label: 'Incorrect email format',
+            },
+            {
+              id: EmailVerificationStatus.InvalidMailbox,
+              label: 'Mailbox doesn’t exist',
+            },
+            {
+              id: EmailVerificationStatus.MailboxFull,
+              label: 'Mailbox full',
+            },
+          ],
+        },
+        {
+          label: "Don't know",
+          options: [
+            {
+              id: EmailVerificationStatus.CatchAll,
+              label: 'Catch all',
+            },
+            {
+              id: EmailVerificationStatus.NotVerified,
+              label: 'Not verified yet',
+            },
+            {
+              id: EmailVerificationStatus.VerificationInProgress,
+              label: 'Verification in progress',
+            },
+          ],
+        },
+      ],
     },
     [ColumnViewType.ContactsPersonalEmails]: {
       filterType: 'text',
-      filterName: 'Personal Email',
+      filterName: 'Personal email',
       filterAccesor: ColumnViewType.ContactsPersonalEmails,
       filterOperators: [
         ComparisonOperator.Contains,
@@ -91,11 +157,77 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Mail01 />,
+      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
+    },
+    ['EMAIL_VERIFICATION_PERSONAL_EMAIL']: {
+      filterType: 'list',
+      filterName: 'Personal email status',
+      filterAccesor: 'EMAIL_VERIFICATION_PERSONAL_EMAIL',
+      filterOperators: [
+        ComparisonOperator.Contains,
+        ComparisonOperator.NotContains,
+        ComparisonOperator.IsEmpty,
+        ComparisonOperator.IsNotEmpty,
+      ],
+      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
+      options: [],
+      groupOptions: [
+        {
+          label: 'Deliverable',
+          options: [
+            {
+              id: EmailVerificationStatus.FirewallProtected,
+              label: 'Firewall protected',
+            },
+            {
+              id: EmailVerificationStatus.FreeAccount,
+              label: 'Free account',
+            },
+            {
+              id: EmailVerificationStatus.NoRisk,
+              label: 'No risk',
+            },
+          ],
+        },
+        {
+          label: 'Not deliverable',
+          options: [
+            {
+              id: EmailVerificationStatus.IncorrectFormat,
+              label: 'Incorrect email format',
+            },
+            {
+              id: EmailVerificationStatus.InvalidMailbox,
+              label: 'Mailbox doesn’t exist',
+            },
+            {
+              id: EmailVerificationStatus.MailboxFull,
+              label: 'Mailbox full',
+            },
+          ],
+        },
+        {
+          label: "Don't know",
+          options: [
+            {
+              id: EmailVerificationStatus.CatchAll,
+              label: 'Catch all',
+            },
+            {
+              id: EmailVerificationStatus.NotVerified,
+              label: 'Not verified yet',
+            },
+            {
+              id: EmailVerificationStatus.VerificationInProgress,
+              label: 'Verification in progress',
+            },
+          ],
+        },
+      ],
     },
     [ColumnViewType.ContactsPhoneNumbers]: {
       filterType: 'text',
-      filterName: 'Mobile Number',
+      filterName: 'Mobile number',
       filterAccesor: ColumnViewType.ContactsPhoneNumbers,
       filterOperators: [
         ComparisonOperator.Contains,
@@ -103,7 +235,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Phone />,
+      icon: <Phone className='group-hover:text-gray-700 text-gray-500' />,
     },
     [ColumnViewType.ContactsCity]: {
       filterType: 'list',
@@ -115,7 +247,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe05 />,
+      icon: <Globe05 className='group-hover:text-gray-700 text-gray-500' />,
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -144,7 +276,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <LinkedinOutline />,
+      icon: (
+        <LinkedinOutline className='group-hover:text-gray-700 text-gray-500' />
+      ),
     },
     [ColumnViewType.ContactsPersona]: {
       filterType: 'list',
@@ -156,7 +290,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Tag01 />,
+      icon: <Tag01 className='group-hover:text-gray-700 text-gray-500' />,
       options: store?.tags.toArray().map((tag) => ({
         id: tag?.value?.id,
         label: tag?.value?.name,
@@ -172,11 +306,13 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Certificate01 />,
+      icon: (
+        <Certificate01 className='group-hover:text-gray-700 text-gray-500' />
+      ),
     },
     [ColumnViewType.ContactsTimeInCurrentRole]: {
       filterType: 'number',
-      filterName: 'Time In Current Role',
+      filterName: 'Time in current role',
       filterAccesor: ColumnViewType.ContactsTimeInCurrentRole,
       filterOperators: [
         ComparisonOperator.Gt,
@@ -184,7 +320,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.Eq,
         ComparisonOperator.NotEqual,
       ],
-      icon: <ClockCheck />,
+      icon: <ClockCheck className='group-hover:text-gray-700 text-gray-500' />,
     },
     [ColumnViewType.ContactsLinkedinFollowerCount]: {
       filterType: 'number',
@@ -196,7 +332,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.Eq,
         ComparisonOperator.NotEqual,
       ],
-      icon: <Users03 />,
+      icon: <Users03 className='group-hover:text-gray-700 text-gray-500' />,
     },
     // [ColumnViewType.ContactsLastInteraction]: {
     //   filterType: 'number',
@@ -212,7 +348,7 @@ export const getFilterTypes = (store?: RootStore) => {
     // },
     [ColumnViewType.ContactsConnections]: {
       filterType: 'list',
-      filterName: 'LinkedIn Connections',
+      filterName: 'LinkedIn connections',
       filterAccesor: ColumnViewType.ContactsConnections,
       filterOperators: [
         ComparisonOperator.Contains,
@@ -220,7 +356,9 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <LinkedinOutline />,
+      icon: (
+        <LinkedinOutline className='group-hover:text-gray-700 text-gray-500' />
+      ),
       options: store?.users.toArray().map((user) => ({
         id: user?.id,
         label: user?.name,
@@ -237,7 +375,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe04 />,
+      icon: <Globe04 className='group-hover:text-gray-700 text-gray-500' />,
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -266,7 +404,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Globe06 />,
+      icon: <Globe06 className='group-hover:text-gray-700 text-gray-500' />,
       options: uniqBy(
         store?.contacts
           ?.toArray()
@@ -284,8 +422,8 @@ export const getFilterTypes = (store?: RootStore) => {
       ),
     },
     [ColumnViewType.ContactsFlows]: {
-      filterType: 'text',
-      filterName: 'Current Flow',
+      filterType: 'list',
+      filterName: 'Current flow',
       filterAccesor: ColumnViewType.ContactsFlows,
       filterOperators: [
         ComparisonOperator.Contains,
@@ -293,7 +431,14 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Shuffle01 />,
+      icon: <Shuffle01 className='group-hover:text-gray-700 text-gray-500' />,
+      options: uniqBy(
+        store?.flows.toArray().map((flow) => ({
+          id: flow?.id,
+          label: flow?.value.name,
+        })),
+        'id',
+      ),
     },
     [ColumnViewType.ContactsFlowStatus]: {
       filterType: 'list',
@@ -305,139 +450,7 @@ export const getFilterTypes = (store?: RootStore) => {
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Shuffle01 />,
-    },
-    ['EMAIL_VERIFICATION_WORK_EMAIL']: {
-      filterType: 'list',
-      filterName: 'Email status work email',
-      filterAccesor: 'EMAIL_VERIFICATION_WORK_EMAIL',
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
-      icon: <Mail01 />,
-      options: [],
-      groupOptions: [
-        {
-          label: 'Deliverable',
-          options: [
-            {
-              id: EmailVerificationStatus.FirewallProtected,
-              label: 'Firewall protected',
-            },
-            {
-              id: EmailVerificationStatus.FreeAccount,
-              label: 'Free account',
-            },
-            {
-              id: EmailVerificationStatus.NoRisk,
-              label: 'No risk',
-            },
-          ],
-        },
-        {
-          label: 'Not deliverable',
-          options: [
-            {
-              id: EmailVerificationStatus.IncorrectFormat,
-              label: 'Incorrect email format',
-            },
-            {
-              id: EmailVerificationStatus.InvalidMailbox,
-              label: 'Mailbox doesn’t exist',
-            },
-            {
-              id: EmailVerificationStatus.MailboxFull,
-              label: 'Mailbox full',
-            },
-          ],
-        },
-        {
-          label: "Don't know",
-          options: [
-            {
-              id: EmailVerificationStatus.CatchAll,
-              label: 'Catch all',
-            },
-            {
-              id: EmailVerificationStatus.NotVerified,
-              label: 'Not verified yet',
-            },
-            {
-              id: EmailVerificationStatus.VerificationInProgress,
-              label: 'Verification in progress',
-            },
-          ],
-        },
-      ],
-    },
-    ['EMAIL_VERIFICATION_PERSONAL_EMAIL']: {
-      filterType: 'list',
-      filterName: 'Email status personal email',
-      filterAccesor: 'EMAIL_VERIFICATION_PERSONAL_EMAIL',
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
-      icon: <Mail01 />,
-      options: [],
-      groupOptions: [
-        {
-          label: 'Deliverable',
-          options: [
-            {
-              id: EmailVerificationStatus.FirewallProtected,
-              label: 'Firewall protected',
-            },
-            {
-              id: EmailVerificationStatus.FreeAccount,
-              label: 'Free account',
-            },
-            {
-              id: EmailVerificationStatus.NoRisk,
-              label: 'No risk',
-            },
-          ],
-        },
-        {
-          label: 'Not deliverable',
-          options: [
-            {
-              id: EmailVerificationStatus.IncorrectFormat,
-              label: 'Incorrect email format',
-            },
-            {
-              id: EmailVerificationStatus.InvalidMailbox,
-              label: 'Mailbox doesn’t exist',
-            },
-            {
-              id: EmailVerificationStatus.MailboxFull,
-              label: 'Mailbox full',
-            },
-          ],
-        },
-        {
-          label: "Don't know",
-          options: [
-            {
-              id: EmailVerificationStatus.CatchAll,
-              label: 'Catch all',
-            },
-            {
-              id: EmailVerificationStatus.NotVerified,
-              label: 'Not verified yet',
-            },
-            {
-              id: EmailVerificationStatus.VerificationInProgress,
-              label: 'Verification in progress',
-            },
-          ],
-        },
-      ],
+      icon: <Shuffle01 className='group-hover:text-gray-700 text-gray-500' />,
     },
   };
 

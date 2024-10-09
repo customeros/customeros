@@ -55,13 +55,13 @@ export const FinderFilters = observer(
       columns.push({
         // @ts-expect-error fix later
         columnType: 'EMAIL_VERIFICATION_WORK_EMAIL',
-        label: 'Email status work email',
+        label: 'Work email status',
         helperText: 'Email Verification',
       });
       columns.push({
         // @ts-expect-error fix later
         columnType: 'EMAIL_VERIFICATION_PERSONAL_EMAIL',
-        label: 'Email status personal email',
+        label: 'Personal email statusl',
         helperText: 'Email Verification',
       });
     }

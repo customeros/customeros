@@ -64,7 +64,7 @@ export const OperatorFilter = ({
           </Button>
         )}
       </MenuButton>
-      <MenuList>
+      <MenuList side='bottom' align='start'>
         {operators?.map((operator) => (
           <MenuItem
             key={operator}
@@ -72,7 +72,7 @@ export const OperatorFilter = ({
             onClick={() => onSelect(operator)}
           >
             <div className='flex items-center gap-2'>
-              <span>
+              <span className='mb-0.5'>
                 {handleOperatorIcon(operator as ComparisonOperator, type)}
               </span>
               {handleOperatorName(

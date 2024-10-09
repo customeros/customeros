@@ -254,9 +254,9 @@ export const getOptionClassNames = (
   const { isFocused, isSelected } = props;
 
   return cn(
-    'my-[2px] px-3 py-1.5 rounded-md text-gray-700 truncate transition ease-in-out delay-50 hover:bg-gray-50',
+    'my-[2px] px-3 py-1 rounded-md text-gray-700 truncate transition ease-in-out delay-50 hover:bg-grayModern-100',
     isSelected && 'bg-gray-50 font-medium leading-normal',
-    isFocused && 'bg-gray-50',
+    isFocused && 'bg-grayModern-100',
     className,
   );
 };

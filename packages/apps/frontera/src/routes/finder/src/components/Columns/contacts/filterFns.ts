@@ -59,7 +59,11 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
         const values = row.value.name;
 
-        if (!values) return false;
+        if (!values)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
 
         return filterTypeText(filter, values);
       },
@@ -220,9 +224,15 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       if (!filter.active) return () => true;
 
       return (row: ContactStore) => {
-        const flow = row.flow;
+        const flow = row.flow?.value.name;
 
-        return filterTypeText(filter, flow?.value?.name);
+        if (!flow)
+          return (
+            filter.operation === ComparisonOperator.IsEmpty ||
+            filter.operation === ComparisonOperator.NotContains
+          );
+
+        return filterTypeList(filter, flow?.split(' ') as string[]);
       };
     })
     .with(

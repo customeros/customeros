@@ -34,7 +34,8 @@ export const Combobox = ({
             isFocused,
             size,
           }),
-        option: ({ isFocused }) => getOptionClassNames('', { isFocused }),
+        option: ({ isFocused }) =>
+          getOptionClassNames('!cursor-pointer', { isFocused }),
         menuList: () =>
           getMenuListClassNames(
             cn(
@@ -45,6 +46,7 @@ export const Combobox = ({
         menu: ({ menuPlacement }) =>
           getMenuClassNames(menuPlacement)('!relative', size),
         noOptionsMessage: () => 'text-gray-500 p-1',
+        valueContainer: () => '!cursor-text',
       }}
       {...props}
     />

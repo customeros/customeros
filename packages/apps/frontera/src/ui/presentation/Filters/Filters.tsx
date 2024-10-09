@@ -226,7 +226,7 @@ export const Filters = ({
     };
 
     return (
-      <components.Option {...props}>
+      <components.Option {...props} className='group'>
         <div className='flex justify-start items-center gap-2'>
           <span className='h-6 align-middle'>{data.icon}</span>
           <span className='align-middle text-sm'>{data.label}</span>

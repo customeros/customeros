@@ -135,9 +135,9 @@ export const ListFilter = ({
               className='flex-1'
               style={{
                 marginLeft:
-                  filterName === 'Email status work email' ||
-                  filterName === 'Email status personal email'
-                    ? '24px'
+                  filterName === 'Work email status' ||
+                  filterName === 'Personal email status'
+                    ? '8px'
                     : '0',
               }}
             >
@@ -164,7 +164,7 @@ export const ListFilter = ({
       return (
         <components.Option {...props}>
           <div className='flex items-center gap-2'>
-            <span>{flags[country.id]}</span>
+            <span className='mb-[2px]'>{flags[country.id]}</span>
             <span>{children}</span>
             {selectedIds.includes(country.id) && (
               <Check className='text-primary-600' />
@@ -177,8 +177,8 @@ export const ListFilter = ({
   );
 
   const getOptions = useCallback(() => {
-    return filterName !== 'Email status work email' &&
-      filterName !== 'Email status personal email'
+    return filterName !== 'Work email status' &&
+      filterName !== 'Personal email status'
       ? options
       : groupOptions;
   }, [filterName]);
