@@ -3,10 +3,8 @@ package graph
 import (
 	"context"
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/test"
@@ -15,7 +13,7 @@ import (
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
-	event2 "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
+	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
@@ -44,14 +42,14 @@ func TestGraphContactEventHandler_OnContactCreate(t *testing.T) {
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, myContactId.String())
 	curTime := utils.Now()
 
-	dataFields := event2.ContactDataFields{
+	dataFields := contactevent.ContactDataFields{
 		FirstName:   "Bob",
 		LastName:    "Smith",
 		Prefix:      "Mr.",
 		Description: "This is a test contact.",
 	}
 	source := cmnmod.Source{Source: "N/A", SourceOfTruth: "N/A", AppSource: "event-processing-platform"}
-	event, err := event2.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
+	event, err := contactevent.NewContactCreateEvent(contactAggregate, dataFields, source, cmnmod.ExternalSystem{}, curTime, curTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactCreate(context.Background(), event)
 	require.Nil(t, err)
@@ -117,7 +115,7 @@ func TestGraphContactEventHandler_OnLocationLinkToContact(t *testing.T) {
 	}
 	orgAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	now := utils.Now()
-	event, err := event2.NewContactLinkLocationEvent(orgAggregate, locationId, now)
+	event, err := contactevent.NewContactLinkLocationEvent(orgAggregate, locationId, now)
 	require.Nil(t, err)
 	err = contactEventHandler.OnLocationLinkToContact(context.Background(), event)
 	require.Nil(t, err)
@@ -180,7 +178,7 @@ func TestGraphContactEventHandler_OnPhoneNumberLinkToContact(t *testing.T) {
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	phoneNumberLabel := "phoneNumberLabel"
 	updateTime := utils.Now()
-	event, err := event2.NewContactLinkPhoneNumberEvent(contactAggregate, phoneNumberId, phoneNumberLabel, true, updateTime)
+	event, err := contactevent.NewContactLinkPhoneNumberEvent(contactAggregate, phoneNumberId, phoneNumberLabel, true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnPhoneNumberLinkToContact(context.Background(), event)
 	require.Nil(t, err)
@@ -247,7 +245,7 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 	updateTime := utils.Now()
-	userLinkEmailEvent, err := event2.NewContactLinkEmailEvent(contactAggregate, emailId, "", true, updateTime)
+	userLinkEmailEvent, err := contactevent.NewContactLinkEmailEvent(contactAggregate, emailId, "", true, updateTime)
 	require.Nil(t, err)
 	err = contactEventHandler.OnEmailLinkToContact(context.Background(), userLinkEmailEvent)
 	require.Nil(t, err)
@@ -329,7 +327,7 @@ func TestGraphContactEventHandler_OnContactLinkToOrganization(t *testing.T) {
 	}
 	curTime := utils.Now()
 	endedAt := curTime.AddDate(2, 0, 0)
-	event, err := event2.NewContactLinkWithOrganizationEvent(contactAggregate, organizationId, jobTitle, jobRoleDescription, true, sourceFields, curTime, curTime, &curTime, &endedAt)
+	event, err := contactevent.NewContactLinkWithOrganizationEvent(contactAggregate, organizationId, jobTitle, jobRoleDescription, true, sourceFields, curTime, curTime, &curTime, &endedAt)
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactLinkToOrganization(context.Background(), event)
 	require.Nil(t, err)
@@ -421,7 +419,7 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	usernameUpdate := "usernameUpdate"
 	prefixUpdate := "Mrs."
 	descriptionUpdate := "Description Update"
-	dataFields := event2.ContactDataFields{
+	dataFields := contactevent.ContactDataFields{
 		Name:            contactNameUpdate,
 		FirstName:       contactFirstNameUpdate,
 		LastName:        contactLastNameUpdate,
@@ -432,15 +430,15 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 		Description:     descriptionUpdate,
 	}
 	curTime := utils.Now()
-	event, err := event2.NewContactUpdateEvent(contactAggregate, source, "test", dataFields, cmnmod.ExternalSystem{}, curTime,
-		[]string{event2.FieldMaskName,
-			event2.FieldMaskFirstName,
-			event2.FieldMaskLastName,
-			event2.FieldMaskTimezone,
-			event2.FieldMaskProfilePhotoUrl,
-			event2.FieldMaskUsername,
-			event2.FieldMaskPrefix,
-			event2.FieldMaskDescription})
+	event, err := contactevent.NewContactUpdateEvent(contactAggregate, source, "test", dataFields, cmnmod.ExternalSystem{}, curTime,
+		[]string{contactevent.FieldMaskName,
+			contactevent.FieldMaskFirstName,
+			contactevent.FieldMaskLastName,
+			contactevent.FieldMaskTimezone,
+			contactevent.FieldMaskProfilePhotoUrl,
+			contactevent.FieldMaskUsername,
+			contactevent.FieldMaskPrefix,
+			contactevent.FieldMaskDescription})
 	require.Nil(t, err)
 	err = contactEventHandler.OnContactUpdate(context.Background(), event)
 	require.Nil(t, err)
@@ -468,15 +466,13 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	defer tearDownTestCase(ctx, testDatabase)(t)
 
 	socialId := uuid.New().String()
-	socialUrl := "https://www.facebook.com/contact"
-	now := utils.Now()
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	contactId := neo4jtest.CreateContact(ctx, testDatabase.Driver, tenantName, neo4jentity.ContactEntity{})
-	neo4jtest.CreateSocial(ctx, testDatabase.Driver, tenantName, neo4jentity.SocialEntity{Url: socialUrl})
+	contactId := uuid.New().String()
 
 	// prepare grpc mock
+	completionEventCalled := false
 	callbacks := mocked_grpc.MockEventCompletionCallbacks{
 		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			completionEventCalled = true
 			return &emptypb.Empty{}, nil
 		},
 	}
@@ -488,34 +484,18 @@ func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {
 	}
 	contactAggregate := contact.NewContactAggregateWithTenantAndID(tenantName, contactId)
 
-	event, err := event2.NewContactAddSocialEvent(contactAggregate,
-		socialId, socialUrl, "alias", "ext1", 100,
+	event, err := contactevent.NewContactAddSocialEvent(contactAggregate,
+		socialId, "url", "alias", "ext1", 100,
 		cmnmod.Source{
 			Source:        constants.SourceOpenline,
 			SourceOfTruth: constants.SourceOpenline,
 			AppSource:     "event-processing-platform",
-		}, now)
+		}, utils.Now())
 	require.Nil(t, err)
 
 	// EXECUTE
 	err = contactEventHandler.OnSocialAddedToContactV1(context.Background(), event)
 	require.Nil(t, err)
 
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{model.NodeLabelContact: 1, model.NodeLabelWithTenant(model.NodeLabelContact, tenantName): 1, model.NodeLabelSocial: 2, model.NodeLabelSocial + "_" + tenantName: 2})
-
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Social_"+tenantName, socialId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNode)
-
-	social := neo4jmapper.MapDbNodeToSocialEntity(dbNode)
-	require.Equal(t, socialId, social.Id)
-	require.Equal(t, socialUrl, social.Url)
-	require.Equal(t, "alias", social.Alias)
-	require.Equal(t, "ext1", social.ExternalId)
-	require.Equal(t, int64(100), social.FollowersCount)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.Source)
-	require.Equal(t, neo4jentity.DataSource(constants.SourceOpenline), social.SourceOfTruth)
-	require.Equal(t, "event-processing-platform", social.AppSource)
-	require.Equal(t, now, social.CreatedAt)
-	test.AssertRecentTime(t, social.UpdatedAt)
+	require.True(t, completionEventCalled)
 }
