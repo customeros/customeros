@@ -494,6 +494,7 @@ func (s *trackingService) askAndStoreSnitcherData(c context.Context, ip string) 
 	var snitherResponse entity.SnitcherResponseBody
 	if err = json.Unmarshal(responseBody, &snitherResponse); err != nil {
 		tracing.TraceErr(span, err)
+		span.LogFields(log.String("snitcherResponseBody", string(responseBody)))
 		return nil, fmt.Errorf("failed to unmarshal response body: %v", err)
 	}
 
