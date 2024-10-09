@@ -142,7 +142,10 @@ export const computeFinderData = (
           );
         }
 
-        const filters = getContactFilterFns(tableViewDef?.getFilters());
+        const filters = getContactFilterFns(
+          tableViewDef?.getFilters(),
+          isFeatureEnabled,
+        );
 
         if (filters) {
           arr = arr.filter((v) => filters.every((fn) => fn(v)));

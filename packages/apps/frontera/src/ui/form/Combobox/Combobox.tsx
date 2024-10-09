@@ -26,6 +26,7 @@ export const Combobox = ({
       backspaceRemovesValue
       isReadOnly={isReadOnly}
       controlShouldRenderValue={false}
+      styles={{ menuList: (base) => ({ ...base, maxHeight }) }}
       classNames={{
         input: () => 'pl-3',
         placeholder: () => 'pl-3 text-gray-400',
@@ -38,7 +39,7 @@ export const Combobox = ({
           getOptionClassNames('!cursor-pointer', { isFocused }),
         menuList: () =>
           getMenuListClassNames(
-            cn('p-0 border-none bg-transparent shadow-none !max-h-[600px]'),
+            cn('p-0 border-none bg-transparent shadow-none'),
           ),
         menu: ({ menuPlacement }) =>
           getMenuClassNames(menuPlacement)('!relative', size),
