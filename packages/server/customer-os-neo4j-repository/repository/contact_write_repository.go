@@ -14,8 +14,9 @@ import (
 	"time"
 )
 
+// TODO syncedWithEventStore to be removed from code and from neo4j DB
 type ContactFields struct {
-	//Deprecated
+	//Deprecated, TODO remove aggregate version once contact update is moved to sync. Clean code and neo4j db
 	AggregateVersion      int64        `json:"aggregateVersion"`
 	FirstName             string       `json:"firstName"`
 	LastName              string       `json:"lastName"`
@@ -124,7 +125,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 		"name":             data.Name,
 		"tenant":           tenant,
 		"source":           data.SourceFields.Source,
-		"sourceOfTruth":    data.SourceFields.SourceOfTruth,
+		"sourceOfTruth":    utils.FirstNotEmptyString(data.SourceFields.SourceOfTruth, data.SourceFields.Source),
 		"appSource":        data.SourceFields.AppSource,
 		"createdAt":        data.CreatedAt,
 		"overwrite":        data.SourceFields.SourceOfTruth == constants.SourceOpenline,

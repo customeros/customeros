@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
@@ -11,8 +12,7 @@ import (
 	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/opentracing/opentracing-go"
 	"strings"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"time"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -215,8 +215,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphSubscriber.When", evt)
 	defer span.Finish()
 
-	switch evt.GetEventType() {
+	// set 25 sec context deadline
+	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
+	defer cancel()
 
+	switch evt.GetEventType() {
 	case generic.LinkEntityWithEntityV1:
 		_ = s.genericEventHandler.OnLinkEntityWithEntityV1(ctx, evt)
 		return nil
