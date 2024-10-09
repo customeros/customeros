@@ -29,6 +29,7 @@ func NewSubscriptions(log logger.Logger, db *esdb.Client, cfg *config.Config) *S
 func (s *Subscriptions) RefreshSubscriptions(ctx context.Context) error {
 	graphSubscriptionSettings := esdb.SubscriptionSettingsDefault()
 	graphSubscriptionSettings.ExtraStatistics = true
+	graphSubscriptionSettings.CheckpointLowerBound = s.cfg.Subscriptions.GraphSubscription.CheckpointLowerBound
 	if err := s.subscribeToAll(ctx,
 		s.cfg.Subscriptions.GraphSubscription.GroupName,
 		nil,
