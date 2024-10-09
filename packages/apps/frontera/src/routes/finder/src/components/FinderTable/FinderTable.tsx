@@ -38,6 +38,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const [sorting, setSorting] = useState<SortingState>([
     { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
   ]);
+  const filtersV2 = useFeatureIsOn('filters-v2');
 
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
@@ -53,7 +54,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     currentPreset: preset,
   });
 
-  const data = computeFinderData(store, {
+  const data = computeFinderData(store, filtersV2, {
     sorting,
     tableViewDef,
     urlParams: params,

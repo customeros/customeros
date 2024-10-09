@@ -32,6 +32,7 @@ interface ComputeFinderDataOptions {
 
 export const computeFinderData = (
   store: RootStore,
+  isFeatureEnabled: boolean,
   options: ComputeFinderDataOptions,
 ) => {
   const { searchTerm, sorting, tableViewDef, urlParams } = options;
@@ -97,7 +98,10 @@ export const computeFinderData = (
   return match(tableType)
     .with(TableViewType.Organizations, () =>
       store.organizations?.toComputedArray((arr) => {
-        const filters = getOrganizationFilterFns(tableViewDef?.getFilters());
+        const filters = getOrganizationFilterFns(
+          tableViewDef?.getFilters(),
+          isFeatureEnabled,
+        );
         const flowFilters = getFlowFilterFns(workFlow?.getFilters());
 
         if (flowFilters.length && store.ui.isFilteringICP) {
