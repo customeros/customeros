@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
 	contactevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	emailevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
@@ -11,8 +12,7 @@ import (
 	reminderevents "github.com/openline-ai/openline-customer-os/packages/server/events/event/reminder/event"
 	"github.com/opentracing/opentracing-go"
 	"strings"
-
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
+	"time"
 
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -181,15 +181,45 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
+	switch evt.GetEventType() {
+	case "V1_EVENT_COMPLETED",
+		phonenumberevents.PhoneNumberValidateV1,
+		emailevents.EmailValidationFailedV1,
+		emailevents.EmailValidatedV1,
+		emailevents.EmailValidateV1,
+		emailevents.EmailUpsertV1,
+		orgevents.OrganizationRefreshLastTouchpointV1,
+		phonenumberevents.PhoneNumberValidationSkippedV1,
+		contactevent.ContactRequestEnrichV1,
+		orgevents.OrganizationRequestRenewalForecastV1,
+		orgevents.OrganizationRequestNextCycleDateV1,
+		orgevents.OrganizationUpdateRenewalLikelihoodV1,
+		orgevents.OrganizationUpdateRenewalForecastV1,
+		orgevents.OrganizationUpdateBillingDetailsV1,
+		orgevents.OrganizationRequestScrapeByWebsiteV1,
+		orgevents.OrganizationAdjustIndustryV1,
+		orgevents.OrganizationRequestEnrichV1,
+		contractevent.ContractUpdateStatusV1,
+		locationevents.LocationValidationSkippedV1,
+		reminderevents.ReminderNotificationV1,
+		orgevents.OrganizationUpdateOwnerNotificationV1,
+		invoiceevents.InvoicePdfRequestedV1,
+		invoiceevents.InvoicePaidV1,
+		invoiceevents.InvoiceFillRequestedV1,
+		invoiceevents.InvoicePayNotificationV1,
+		invoiceevents.InvoicePayV1,
+		invoiceevents.InvoiceRemindNotificationV1:
+		return nil
+	}
 
 	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GraphSubscriber.When", evt)
 	defer span.Finish()
 
+	// set 25 sec context deadline
+	ctx, cancel := context.WithTimeout(ctx, 25*time.Second)
+	defer cancel()
+
 	switch evt.GetEventType() {
-
-	case "V1_EVENT_COMPLETED":
-		return nil
-
 	case generic.LinkEntityWithEntityV1:
 		_ = s.genericEventHandler.OnLinkEntityWithEntityV1(ctx, evt)
 		return nil
@@ -203,12 +233,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case phonenumberevents.PhoneNumberValidationFailedV1:
 		_ = s.phoneNumberEventHandler.OnPhoneNumberValidationFailed(ctx, evt)
 		return nil
-	case phonenumberevents.PhoneNumberValidationSkippedV1:
-		return nil
 	case phonenumberevents.PhoneNumberValidatedV1:
 		_ = s.phoneNumberEventHandler.OnPhoneNumberValidated(ctx, evt)
-		return nil
-	case phonenumberevents.PhoneNumberValidateV1:
 		return nil
 
 	case emailevents.EmailCreateV1:
@@ -222,11 +248,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case emailevents.EmailDeleteV1:
 		_ = s.emailEventHandler.OnEmailDelete(ctx, evt)
-		return nil
-	case emailevents.EmailValidationFailedV1,
-		emailevents.EmailValidatedV1,
-		emailevents.EmailValidateV1,
-		emailevents.EmailUpsertV1:
 		return nil
 
 	case contactevent.ContactCreateV1:
@@ -271,8 +292,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case contactevent.ContactShowV1:
 		_ = s.contactEventHandler.OnContactShow(ctx, evt)
 		return nil
-	case contactevent.ContactRequestEnrichV1:
-		return nil
 
 	case orgevents.OrganizationCreateV1:
 		_ = s.organizationEventHandler.OnOrganizationCreate(ctx, evt)
@@ -310,8 +329,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case orgevents.OrganizationShowV1:
 		_ = s.organizationEventHandler.OnOrganizationShow(ctx, evt)
 		return nil
-	case orgevents.OrganizationRefreshLastTouchpointV1:
-		return nil
 	case orgevents.OrganizationRefreshArrV1:
 		_ = s.organizationEventHandler.OnRefreshArr(ctx, evt)
 		return nil
@@ -341,15 +358,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationRemoveTagV1:
 		_ = s.organizationEventHandler.OnRemoveTag(ctx, evt)
-		return nil
-	case orgevents.OrganizationRequestRenewalForecastV1,
-		orgevents.OrganizationRequestNextCycleDateV1,
-		orgevents.OrganizationUpdateRenewalLikelihoodV1,
-		orgevents.OrganizationUpdateRenewalForecastV1,
-		orgevents.OrganizationUpdateBillingDetailsV1,
-		orgevents.OrganizationRequestScrapeByWebsiteV1,
-		orgevents.OrganizationAdjustIndustryV1,
-		orgevents.OrganizationRequestEnrichV1:
 		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
 		_ = s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
@@ -406,8 +414,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case locationevents.LocationValidationFailedV1:
 		_ = s.locationEventHandler.OnLocationValidationFailed(ctx, evt)
-		return nil
-	case locationevents.LocationValidationSkippedV1:
 		return nil
 	case locationevents.LocationValidatedV1:
 		_ = s.locationEventHandler.OnLocationValidated(ctx, evt)
@@ -489,8 +495,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case contractevent.ContractRolloutRenewalOpportunityV1:
 		_ = s.contractEventHandler.OnRolloutRenewalOpportunity(ctx, evt)
 		return nil
-	case contractevent.ContractUpdateStatusV1:
-		return nil
 	case contractevent.ContractDeleteV1:
 		_ = s.contractEventHandler.OnDeleteV1(ctx, evt)
 		return nil
@@ -554,12 +558,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case invoiceevents.InvoiceDeleteV1:
 		_ = s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
 		return nil
-	case invoiceevents.InvoicePdfRequestedV1,
-		invoiceevents.InvoicePaidV1,
-		invoiceevents.InvoiceFillRequestedV1,
-		invoiceevents.InvoicePayNotificationV1,
-		invoiceevents.InvoicePayV1:
-		return nil // do nothing
 
 	case orgplanevent.OrganizationPlanCreateV1:
 		_ = s.organizationPlanEventHandler.OnCreate(ctx, evt)
@@ -595,8 +593,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case tenantevent.TenantDeleteBankAccountV1:
 		_ = s.bankAccountEventHandler.OnDeleteBankAccountV1(ctx, evt)
 		return nil
-	case orgevents.OrganizationUpdateOwnerNotificationV1:
-		return nil
 
 	case reminderevents.ReminderCreateV1:
 		_ = s.reminderEventHandler.OnCreate(ctx, evt)
@@ -604,15 +600,11 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case reminderevents.ReminderUpdateV1:
 		_ = s.reminderEventHandler.OnUpdate(ctx, evt)
 		return nil
-	case reminderevents.ReminderNotificationV1:
-		return nil
 
 	default:
 		s.log.Errorf("(GraphSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
-		span, _ := opentracing.StartSpanFromContext(ctx, "GraphSubscriber.When")
-		defer span.Finish()
 		tracing.TraceErr(span, err)
 		return err
 	}

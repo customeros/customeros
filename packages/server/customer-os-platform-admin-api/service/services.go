@@ -4,6 +4,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-platform-admin-api/config"
@@ -25,7 +26,8 @@ func InitServices(
 	driver *neo4j.DriverWithContext,
 	gormDB *gorm.DB,
 	cfg *config.Config,
-	grpcClients *grpc_client.Clients) *Services {
+	grpcClients *grpc_client.Clients,
+	appLogger logger.Logger) *Services {
 
 	services := Services{
 		cfg:          cfg,
@@ -33,7 +35,7 @@ func InitServices(
 		Repositories: repository.InitRepos(driver, gormDB, cfg.Neo4j.Database),
 	}
 
-	services.CommonServices = commonservice.InitServices(&commonConfig.GlobalConfig{}, gormDB, driver, cfg.Neo4j.Database, grpcClients)
+	services.CommonServices = commonservice.InitServices(&commonConfig.GlobalConfig{}, gormDB, driver, cfg.Neo4j.Database, grpcClients, appLogger)
 
 	return &services
 }

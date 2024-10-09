@@ -180,6 +180,7 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
               e.preventDefault();
               e.currentTarget.select();
             }
+            e.stopPropagation();
           }}
           onKeyUp={(e) => {
             if (

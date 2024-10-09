@@ -20,7 +20,7 @@ type Services struct {
 
 func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(&commconf.GlobalConfig{}, db, driver, cfg.Neo4j.Database, nil),
+		CommonServices: commonService.InitServices(&commconf.GlobalConfig{}, db, driver, cfg.Neo4j.Database, nil, logger),
 	}
 
 	services.TenantSettingsService = NewTenantSettingsService(services, logger, cfg)

@@ -76,27 +76,10 @@ func (r *commonWriteRepository) Link(ctx context.Context, tx *neo4j.ManagedTrans
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	if tx == nil {
-		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-		defer session.Close(ctx)
-
-		_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			_, err := tx.Run(ctx, cypher, params)
-			if err != nil {
-				return nil, err
-			}
-			return nil, nil
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	} else {
-		_, err := (*tx).Run(ctx, cypher, params)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	err := utils.ExecuteWriteQueryNoReturn(ctx, *r.driver, tx, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil
@@ -119,27 +102,10 @@ func (r *commonWriteRepository) Unlink(ctx context.Context, tx *neo4j.ManagedTra
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	if tx == nil {
-		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-		defer session.Close(ctx)
-
-		_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			_, err := tx.Run(ctx, cypher, params)
-			if err != nil {
-				return nil, err
-			}
-			return nil, nil
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	} else {
-		_, err := (*tx).Run(ctx, cypher, params)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
+	err := utils.ExecuteWriteQueryNoReturn(ctx, *r.driver, tx, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
 	}
 
 	return nil

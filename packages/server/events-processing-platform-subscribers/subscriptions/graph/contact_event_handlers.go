@@ -53,54 +53,63 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
-
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		var err error
-
-		data := neo4jrepository.ContactCreateFields{
-			AggregateVersion: evt.Version,
-			FirstName:        eventData.FirstName,
-			LastName:         eventData.LastName,
-			Prefix:           eventData.Prefix,
-			Description:      eventData.Description,
-			Timezone:         eventData.Timezone,
-			ProfilePhotoUrl:  eventData.ProfilePhotoUrl,
-			Username:         eventData.Username,
-			Name:             eventData.Name,
-			CreatedAt:        eventData.CreatedAt,
-			SourceFields: neo4jmodel.Source{
-				Source:        helper.GetSource(eventData.Source),
-				SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
-				AppSource:     helper.GetAppSource(eventData.AppSource),
-			},
-		}
-		err = h.services.CommonServices.Neo4jRepositories.ContactWriteRepository.CreateContactInTx(ctx, tx, eventData.Tenant, contactId, data)
-		if err != nil {
-			h.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())
-			return nil, err
-		}
-		if eventData.ExternalSystem.Available() {
-			externalSystemData := neo4jmodel.ExternalSystem{
-				ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
-				ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
-				ExternalId:       eventData.ExternalSystem.ExternalId,
-				ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
-				ExternalSource:   eventData.ExternalSystem.ExternalSource,
-				SyncDate:         eventData.ExternalSystem.SyncDate,
-			}
-			err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, model.NodeLabelContact, externalSystemData)
-			if err != nil {
-				h.log.Errorf("Error while link contact %s with external system %s: %s", contactId, eventData.ExternalSystem.ExternalSystemId, err.Error())
-				return nil, err
-			}
-		}
-		return nil, nil
-	})
+	// if contact exists by id, skip creation
+	contactExists, err := h.services.CommonServices.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, eventData.Tenant, contactId, model.NodeLabelContact)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	if !contactExists {
+		session := utils.NewNeo4jWriteSession(ctx, *h.services.CommonServices.Neo4jRepositories.Neo4jDriver)
+		defer session.Close(ctx)
+
+		_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+			var err error
+
+			data := neo4jrepository.ContactFields{
+				AggregateVersion: evt.Version,
+				FirstName:        eventData.FirstName,
+				LastName:         eventData.LastName,
+				Prefix:           eventData.Prefix,
+				Description:      eventData.Description,
+				Timezone:         eventData.Timezone,
+				ProfilePhotoUrl:  eventData.ProfilePhotoUrl,
+				Username:         eventData.Username,
+				Name:             eventData.Name,
+				CreatedAt:        eventData.CreatedAt,
+				SourceFields: neo4jmodel.Source{
+					Source:        helper.GetSource(eventData.Source),
+					SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
+					AppSource:     helper.GetAppSource(eventData.AppSource),
+				},
+			}
+			err = h.services.CommonServices.Neo4jRepositories.ContactWriteRepository.CreateContactInTx(ctx, tx, eventData.Tenant, contactId, data)
+			if err != nil {
+				h.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())
+				return nil, err
+			}
+			if eventData.ExternalSystem.Available() {
+				externalSystemData := neo4jmodel.ExternalSystem{
+					ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
+					ExternalUrl:      eventData.ExternalSystem.ExternalUrl,
+					ExternalId:       eventData.ExternalSystem.ExternalId,
+					ExternalIdSecond: eventData.ExternalSystem.ExternalIdSecond,
+					ExternalSource:   eventData.ExternalSystem.ExternalSource,
+					SyncDate:         eventData.ExternalSystem.SyncDate,
+				}
+				err = h.services.CommonServices.Neo4jRepositories.ExternalSystemWriteRepository.LinkWithEntityInTx(ctx, tx, eventData.Tenant, contactId, model.NodeLabelContact, externalSystemData)
+				if err != nil {
+					h.log.Errorf("Error while link contact %s with external system %s: %s", contactId, eventData.ExternalSystem.ExternalSystemId, err.Error())
+					return nil, err
+				}
+			}
+			return nil, nil
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
 	}
 
 	if eventData.SocialUrl != "" {
@@ -137,17 +146,19 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	data := neo4jrepository.ContactUpdateFields{
-		AggregateVersion:      evt.Version,
-		FirstName:             eventData.FirstName,
-		LastName:              eventData.LastName,
-		Prefix:                eventData.Prefix,
-		Description:           eventData.Description,
-		Timezone:              eventData.Timezone,
-		ProfilePhotoUrl:       eventData.ProfilePhotoUrl,
-		Username:              eventData.Username,
-		Name:                  eventData.Name,
-		Source:                eventData.Source,
+	data := neo4jrepository.ContactFields{
+		AggregateVersion: evt.Version,
+		FirstName:        eventData.FirstName,
+		LastName:         eventData.LastName,
+		Prefix:           eventData.Prefix,
+		Description:      eventData.Description,
+		Timezone:         eventData.Timezone,
+		ProfilePhotoUrl:  eventData.ProfilePhotoUrl,
+		Username:         eventData.Username,
+		Name:             eventData.Name,
+		SourceFields: neo4jmodel.Source{
+			Source: eventData.Source,
+		},
 		UpdateFirstName:       eventData.UpdateFirstName(),
 		UpdateLastName:        eventData.UpdateLastName(),
 		UpdateName:            eventData.UpdateName(),

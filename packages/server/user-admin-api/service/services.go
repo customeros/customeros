@@ -5,6 +5,7 @@ import (
 	service "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
@@ -22,7 +23,7 @@ type Services struct {
 	RegistrationService RegistrationService
 }
 
-func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients, cache *caches.Cache) *Services {
+func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithContext, grpcClients *grpc_client.Clients, cache *caches.Cache, appLogger logger.Logger) *Services {
 	services := Services{
 		Cache:               cache,
 		GrpcClients:         grpcClients,
@@ -30,7 +31,7 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 		CustomerOSApiClient: service.NewCustomerOsClient(cfg.CustomerOS.CustomerOsAPI, cfg.CustomerOS.CustomerOsAPIKey),
 	}
 
-	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.GoogleOAuth}, db, driver, cfg.Neo4j.Database, grpcClients)
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.GoogleOAuth}, db, driver, cfg.Neo4j.Database, grpcClients, appLogger)
 	services.RegistrationService = NewRegistrationService(&services)
 
 	return &services

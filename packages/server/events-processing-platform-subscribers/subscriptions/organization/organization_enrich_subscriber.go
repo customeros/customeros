@@ -6,6 +6,7 @@ import (
 	aiConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/config"
 	ai "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -115,13 +116,22 @@ func (s *OrganizationEnrichSubscriber) ProcessEvents(ctx context.Context, sub *e
 }
 
 func (s *OrganizationEnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error {
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "OrganizationEnrichSubscriber.When", evt)
-	defer span.Finish()
-	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
-
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
+
+	acceptedEventTypes := []string{
+		orgevts.OrganizationLinkDomainV1,
+		orgevts.OrganizationRequestEnrichV1,
+	}
+
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
+		return nil
+	}
+
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "OrganizationEnrichSubscriber.When", evt)
+	defer span.Finish()
+	span.LogFields(log.String("AggregateID", evt.GetAggregateID()), log.String("EventType", evt.GetEventType()))
 
 	switch evt.GetEventType() {
 	case orgevts.OrganizationLinkDomainV1:

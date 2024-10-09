@@ -25,7 +25,7 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 
 	services.GrpcClient = grpcClient
 
-	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, gormDb, driver, cfg.Neo4j.Database, grpcClient)
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, gormDb, driver, cfg.Neo4j.Database, grpcClient, logger)
 
 	services.EnrichDetailsTrackingService = NewTrackingService(cfg, services)
 

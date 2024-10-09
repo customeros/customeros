@@ -10,3 +10,7 @@ type ExternalSystem struct {
 	ExternalSource   string     `json:"externalSource,omitempty"`
 	SyncDate         *time.Time `json:"syncDate,omitempty"`
 }
+
+func (e ExternalSystem) Available() bool {
+	return e.ExternalSystemId != "" && e.ExternalId != ""
+}

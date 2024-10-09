@@ -3,6 +3,7 @@ package reminder
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -105,12 +106,20 @@ func (s *ReminderSubscriber) When(ctx context.Context, evt eventstore.Event) err
 		return nil
 	}
 
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "ReminderSubscriber.When", evt)
-	defer span.Finish()
+	acceptedEventTypes := []string{
+		event.ReminderCreateV1,
+		event.ReminderUpdateV1,
+	}
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
+		return nil
+	}
 
 	if s.cfg.Subscriptions.ReminderSubscription.IgnoreEvents {
 		return nil
 	}
+
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "ReminderSubscriber.When", evt)
+	defer span.Finish()
 
 	switch evt.GetEventType() {
 	case event.ReminderCreateV1:

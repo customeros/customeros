@@ -60,7 +60,7 @@ func main() {
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	appCache := caches.NewCache()
-	services := service.InitServices(cfg, db.GormDB, &neo4jDriver, grpcContainer, appCache)
+	services := service.InitServices(cfg, db.GormDB, &neo4jDriver, grpcContainer, appCache, appLogger)
 
 	//init app cache
 	personalEmailProviderEntities, err := services.CommonServices.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()

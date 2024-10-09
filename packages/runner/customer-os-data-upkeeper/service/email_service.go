@@ -44,6 +44,7 @@ type EmailService interface {
 	CheckScrubbyResult()
 	CheckEnrowRequestsWithoutResponse()
 	CleanEmails()
+	SendEmails()
 }
 
 type emailService struct {
@@ -658,5 +659,42 @@ func (s *emailService) deleteOrphanEmails() {
 
 		// force exit after single iteration
 		return
+	}
+}
+
+func (s *emailService) SendEmails() {
+	s.sendEmails()
+}
+
+func (s *emailService) sendEmails() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.sendEmails")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	emailMessages, err := s.commonServices.PostgresRepositories.EmailMessageRepository.GetForSending(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return // return if error
+	}
+
+	for _, emailMessage := range emailMessages {
+		err := s.commonServices.MailService.SendMail(ctx, emailMessage)
+		if err != nil {
+			tracing.TraceErr(span, err)
+
+			s2 := err.Error()
+			emailMessage.Error = &s2
+
+			err := s.commonServices.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				break
+			}
+
+			continue
+		}
 	}
 }

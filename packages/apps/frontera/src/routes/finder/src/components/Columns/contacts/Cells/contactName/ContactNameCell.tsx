@@ -23,7 +23,7 @@ export const ContactNameCell = observer(
     const [isHovered, setIsHovered] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
-    const contactName = contactStore?.value.name;
+    const contactName = contactStore?.name;
     const navigate = useNavigate();
     const [tabs] = useLocalStorage<{
       [key: string]: string;
@@ -104,8 +104,8 @@ export const ContactNameCell = observer(
             placeholder='Name'
             variant='unstyled'
             ref={contactNameInputRef}
+            value={contactStore?.name ?? ''}
             onFocus={(e) => e.target.select()}
-            value={contactStore?.value?.name ?? ''}
             className={'font-medium placeholder-font-normal'}
             onBlur={(e) => {
               contactStore?.update((value) => {

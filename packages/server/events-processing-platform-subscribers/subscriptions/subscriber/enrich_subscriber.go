@@ -4,6 +4,7 @@ import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
@@ -106,6 +107,15 @@ func (s *EnrichSubscriber) ProcessEvents(ctx context.Context, sub *esdb.Persiste
 
 func (s *EnrichSubscriber) When(ctx context.Context, evt eventstore.Event) error {
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
+		return nil
+	}
+
+	acceptedEventTypes := []string{
+		contactevent.ContactRequestEnrichV1,
+		contactevent.ContactAddSocialV1,
+		emailevent.EmailValidateV1,
+	}
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
 		return nil
 	}
 

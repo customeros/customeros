@@ -14,45 +14,34 @@ import (
 	"time"
 )
 
-type ContactCreateFields struct {
-	FirstName        string       `json:"firstName"`
-	LastName         string       `json:"lastName"`
-	Prefix           string       `json:"prefix"`
-	Description      string       `json:"description"`
-	Timezone         string       `json:"timezone"`
-	ProfilePhotoUrl  string       `json:"profilePhotoUrl"`
-	Username         string       `json:"username"`
-	Name             string       `json:"name"`
-	CreatedAt        time.Time    `json:"createdAt"`
-	SourceFields     model.Source `json:"sourceFields"`
-	AggregateVersion int64        `json:"aggregateVersion"`
-}
-
-type ContactUpdateFields struct {
-	AggregateVersion      int64  `json:"aggregateVersion"`
-	FirstName             string `json:"firstName"`
-	LastName              string `json:"lastName"`
-	Prefix                string `json:"prefix"`
-	Description           string `json:"description"`
-	Timezone              string `json:"timezone"`
-	ProfilePhotoUrl       string `json:"profilePhotoUrl"`
-	Username              string `json:"username"`
-	Name                  string `json:"name"`
-	Source                string `json:"source"`
-	UpdateFirstName       bool   `json:"updateFirstName"`
-	UpdateLastName        bool   `json:"updateLastName"`
-	UpdateName            bool   `json:"updateName"`
-	UpdatePrefix          bool   `json:"updatePrefix"`
-	UpdateDescription     bool   `json:"updateDescription"`
-	UpdateTimezone        bool   `json:"updateTimezone"`
-	UpdateProfilePhotoUrl bool   `json:"updateProfilePhotoUrl"`
-	UpdateUsername        bool   `json:"updateUsername"`
+// TODO syncedWithEventStore to be removed from code and from neo4j DB
+type ContactFields struct {
+	//Deprecated, TODO remove aggregate version once contact update is moved to sync. Clean code and neo4j db
+	AggregateVersion      int64        `json:"aggregateVersion"`
+	FirstName             string       `json:"firstName"`
+	LastName              string       `json:"lastName"`
+	Prefix                string       `json:"prefix"`
+	Description           string       `json:"description"`
+	Timezone              string       `json:"timezone"`
+	ProfilePhotoUrl       string       `json:"profilePhotoUrl"`
+	Username              string       `json:"username"`
+	Name                  string       `json:"name"`
+	SourceFields          model.Source `json:"sourceFields"`
+	CreatedAt             time.Time    `json:"createdAt"`
+	UpdateFirstName       bool         `json:"updateFirstName"`
+	UpdateLastName        bool         `json:"updateLastName"`
+	UpdateName            bool         `json:"updateName"`
+	UpdatePrefix          bool         `json:"updatePrefix"`
+	UpdateDescription     bool         `json:"updateDescription"`
+	UpdateTimezone        bool         `json:"updateTimezone"`
+	UpdateProfilePhotoUrl bool         `json:"updateProfilePhotoUrl"`
+	UpdateUsername        bool         `json:"updateUsername"`
 }
 
 type ContactWriteRepository interface {
-	CreateContact(ctx context.Context, tenant, contactId string, data ContactCreateFields) error
-	CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, data ContactCreateFields) error
-	UpdateContact(ctx context.Context, tenant, contactId string, data ContactUpdateFields) error
+	CreateContact(ctx context.Context, tenant, contactId string, data ContactFields) error
+	CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, data ContactFields) error
+	UpdateContact(ctx context.Context, tenant, contactId string, data ContactFields) error
 	UpdateAnyProperty(ctx context.Context, tenant, contactId string, property entity.ContactProperty, value any) error
 }
 
@@ -68,7 +57,7 @@ func NewContactWriteRepository(driver *neo4j.DriverWithContext, database string)
 	}
 }
 
-func (r *contactWriteRepository) CreateContact(ctx context.Context, tenant, contactId string, data ContactCreateFields) error {
+func (r *contactWriteRepository) CreateContact(ctx context.Context, tenant, contactId string, data ContactFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.CreateContact")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -84,7 +73,7 @@ func (r *contactWriteRepository) CreateContact(ctx context.Context, tenant, cont
 	return err
 }
 
-func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, data ContactCreateFields) error {
+func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, data ContactFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.CreateContactInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -136,7 +125,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 		"name":             data.Name,
 		"tenant":           tenant,
 		"source":           data.SourceFields.Source,
-		"sourceOfTruth":    data.SourceFields.SourceOfTruth,
+		"sourceOfTruth":    utils.FirstNotEmptyString(data.SourceFields.SourceOfTruth, data.SourceFields.Source),
 		"appSource":        data.SourceFields.AppSource,
 		"createdAt":        data.CreatedAt,
 		"overwrite":        data.SourceFields.SourceOfTruth == constants.SourceOpenline,
@@ -153,7 +142,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 	return err
 }
 
-func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, contactId string, data ContactUpdateFields) error {
+func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, contactId string, data ContactFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.UpdateContact")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -161,7 +150,6 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact:Contact_%s {id:$id})
-				WHERE c.aggregateVersion IS NULL OR c.aggregateVersion < $aggregateVersion
 		 SET	c.updatedAt = datetime(),
 				c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
 				c.aggregateVersion = $aggregateVersion,
@@ -170,8 +158,8 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	params := map[string]any{
 		"id":               contactId,
 		"tenant":           tenant,
-		"sourceOfTruth":    data.Source,
-		"overwrite":        data.Source == constants.SourceOpenline,
+		"sourceOfTruth":    data.SourceFields.Source,
+		"overwrite":        data.SourceFields.Source == constants.SourceOpenline,
 		"aggregateVersion": data.AggregateVersion,
 	}
 

@@ -21,6 +21,7 @@ enum ContactFieldMask {
   CONTACT_FIELD_USERNAME = 8;
 }
 
+//Deprecated, implement separate create and update requests
 message UpsertContactGrpcRequest {
   string id = 1;
   string tenant = 2;

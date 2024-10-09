@@ -333,12 +333,11 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 		}
 
 		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
-			FromEntityId:           interactionEventId,
-			FromEntityType:         commonModel.INTERACTION_EVENT,
-			Relationship:           commonModel.REPLIES_TO,
-			RelationshipProperties: nil,
-			ToEntityId:             *newInteractionEvent.MeetingIdentifier,
-			ToEntityType:           commonModel.INTERACTION_EVENT,
+			FromEntityId:   interactionEventId,
+			FromEntityType: commonModel.INTERACTION_EVENT,
+			Relationship:   commonModel.REPLIES_TO,
+			ToEntityId:     *newInteractionEvent.MeetingIdentifier,
+			ToEntityType:   commonModel.INTERACTION_EVENT,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

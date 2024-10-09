@@ -172,6 +172,7 @@ func (s *syncToEventStoreService) SyncContacts(ctx context.Context, batchSize in
 	s.log.Infof("completed {%d} and failed {%d} contacts upserting to eventstore", completed, failed)
 }
 
+// Deprecated. TODO delete once contact create and update moved to event store
 func (s *syncToEventStoreService) upsertContactsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
 	processedRecords := 0
 	failedRecords := 0

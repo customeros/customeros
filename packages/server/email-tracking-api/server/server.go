@@ -63,7 +63,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer neo4jDriver.Close(ctx)
 
 	// Setting up common services
-	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, nil)
+	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, nil, server.log)
 
 	// Setting up Gin
 	r := gin.Default()

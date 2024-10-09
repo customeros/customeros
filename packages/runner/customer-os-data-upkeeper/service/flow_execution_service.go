@@ -52,8 +52,9 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 	for _, actionExecutionNode := range actionsToExecute {
 		actionExecution := neo4jmapper.MapDbNodeToFlowActionExecutionEntity(actionExecutionNode)
 
+		tenant := model.GetTenantFromLabels(actionExecutionNode.Labels, model.NodeLabelFlowActionExecution)
 		ctx = common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant: model.GetTenantFromLabels(actionExecutionNode.Labels, model.NodeLabelFlowActionExecution),
+			Tenant: tenant,
 		})
 
 		err := s.commonServices.FlowExecutionService.ProcessActionExecution(ctx, actionExecution)
@@ -66,6 +67,12 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 			if err != nil {
 				tracing.TraceErr(span, err)
 			}
+
+			err := s.commonServices.PostgresRepositories.EmailMessageRepository.DeleteByProducerId(ctx, tenant, actionExecution.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			}
+
 			continue
 		}
 	}

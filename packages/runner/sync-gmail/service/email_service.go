@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/entity"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-gmail/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -237,7 +236,7 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 			return entity.SKIPPED, &reason, nil
 		}
 
-		channelData, err := dto.BuildEmailChannelData(rawEmailData.ProviderMessageId, rawEmailData.ThreadId, rawEmailData.Subject, references, inReplyTo)
+		channelData, err := neo4jentity.BuildEmailChannelData(rawEmailData.ProviderMessageId, rawEmailData.ThreadId, rawEmailData.Subject, strings.Join(inReplyTo, " "), strings.Join(references, " "))
 		if err != nil {
 			logrus.Errorf("failed to build email channel data for email with id %v: %v", emailIdString, err)
 			return entity.ERROR, nil, err
