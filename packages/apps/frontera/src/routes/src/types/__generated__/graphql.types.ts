@@ -1580,22 +1580,15 @@ export type FilterItem = {
 
 export type Flow = MetadataInterface & {
   __typename?: 'Flow';
-  actions: Array<FlowAction>;
   contacts: Array<FlowContact>;
   description: Scalars['String']['output'];
   edges: Scalars['String']['output'];
   metadata: Metadata;
   name: Scalars['String']['output'];
   nodes: Scalars['String']['output'];
+  senders: Array<FlowSender>;
   statistics: FlowStatistics;
   status: FlowStatus;
-};
-
-export type FlowAction = MetadataInterface & {
-  __typename?: 'FlowAction';
-  json: Scalars['String']['output'];
-  metadata: Metadata;
-  senders: Array<FlowActionSender>;
 };
 
 export type FlowActionInputData = {
@@ -1622,19 +1615,6 @@ export type FlowActionInputDataLinkedinMessage = {
 
 export type FlowActionInputDataWait = {
   minutes: Scalars['Int64']['input'];
-};
-
-export type FlowActionSender = MetadataInterface & {
-  __typename?: 'FlowActionSender';
-  mailbox?: Maybe<Scalars['String']['output']>;
-  metadata: Metadata;
-  user?: Maybe<User>;
-};
-
-export type FlowActionSenderMergeInput = {
-  id?: InputMaybe<Scalars['ID']['input']>;
-  mailbox?: InputMaybe<Scalars['String']['input']>;
-  userId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export enum FlowActionStatus {
@@ -1668,6 +1648,17 @@ export enum FlowParticipantStatus {
   Pending = 'PENDING',
   Scheduled = 'SCHEDULED',
 }
+
+export type FlowSender = MetadataInterface & {
+  __typename?: 'FlowSender';
+  metadata: Metadata;
+  user?: Maybe<User>;
+};
+
+export type FlowSenderMergeInput = {
+  id?: InputMaybe<Scalars['ID']['input']>;
+  userId?: InputMaybe<Scalars['ID']['input']>;
+};
 
 export type FlowStatistics = {
   __typename?: 'FlowStatistics';
@@ -2478,7 +2469,7 @@ export type Mutation = {
   flowContact_Delete: Result;
   flowContact_DeleteBulk: Result;
   flowSender_Delete: Result;
-  flowSender_Merge: FlowActionSender;
+  flowSender_Merge: FlowSender;
   flow_ChangeStatus: Flow;
   flow_Merge: Flow;
   interactionEvent_LinkAttachment: Result;
@@ -2963,8 +2954,8 @@ export type MutationFlowSender_DeleteArgs = {
 };
 
 export type MutationFlowSender_MergeArgs = {
-  flowActionId: Scalars['ID']['input'];
-  input: FlowActionSenderMergeInput;
+  flowId: Scalars['ID']['input'];
+  input: FlowSenderMergeInput;
 };
 
 export type MutationFlow_ChangeStatusArgs = {
@@ -4395,7 +4386,6 @@ export type Query = {
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
   flow_emailVariables: Array<EmailVariableEntity>;
-  flow_mailboxes: Array<Scalars['String']['output']>;
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
   global_Cache: GlobalCache;
@@ -4434,6 +4424,7 @@ export type Query = {
   user: User;
   user_ByEmail: User;
   users: UserPage;
+  users_WithMailboxes: Array<User>;
   workflow_ByType: Workflow;
   workflows: Array<Workflow>;
 };
@@ -5243,6 +5234,7 @@ export type User = {
    * **Required**
    */
   lastName: Scalars['String']['output'];
+  mailboxes: Array<Scalars['String']['output']>;
   name?: Maybe<Scalars['String']['output']>;
   phoneNumbers: Array<PhoneNumber>;
   profilePhotoUrl?: Maybe<Scalars['String']['output']>;
