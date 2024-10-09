@@ -20,8 +20,8 @@ export class ExtendedQuoteNode extends QuoteNode {
   }
 }
 
-export function $createExtendedQuoteNode(text: string): ExtendedQuoteNode {
-  return $applyNodeReplacement(new ExtendedQuoteNode(text));
+export function $createExtendedQuoteNode(): ExtendedQuoteNode {
+  return $applyNodeReplacement(new ExtendedQuoteNode());
 }
 
 export function $isExtendedQuoteNode(

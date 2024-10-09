@@ -22,6 +22,7 @@ import { AutoFocusPlugin } from '@lexical/react/LexicalAutoFocusPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
 import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { $generateNodesFromDOM, $generateHtmlFromNodes } from '@lexical/html';
+import { TabIndentationPlugin } from '@lexical/react/LexicalTabIndentationPlugin';
 import { MarkdownShortcutPlugin } from '@lexical/react/LexicalMarkdownShortcutPlugin';
 import {
   LexicalComposer,
@@ -199,6 +200,7 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
               onSearch={onMentionsSearch}
             />
           )}
+          <TabIndentationPlugin />
 
           <LinkPastePlugin />
 

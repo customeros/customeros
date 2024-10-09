@@ -8,6 +8,7 @@ import {
   PASTE_COMMAND,
   $createTextNode,
   $isRangeSelection,
+  $createParagraphNode,
 } from 'lexical';
 
 function isValidUrl(string: string) {
@@ -19,6 +20,7 @@ function isValidUrl(string: string) {
     return false;
   }
 }
+
 const ALLOWED_TAGS = [
   'ul',
   'ol',
@@ -33,7 +35,9 @@ const ALLOWED_TAGS = [
   'i',
   'b',
   'u',
-  'li', // Additional text formatting tags
+  'li',
+  'pre',
+  'code',
 ];
 
 export function LinkPastePlugin() {
@@ -45,7 +49,7 @@ export function LinkPastePlugin() {
 
       if ($isRangeSelection(selection)) {
         const clipboardData = event.clipboardData;
-        const pastedData = clipboardData.getData('text/plain');
+        const pastedData = clipboardData?.getData('text/plain');
         const selectedText = selection.getTextContent().trim();
 
         if (selectedText.length && isValidUrl(pastedData)) {
@@ -58,7 +62,7 @@ export function LinkPastePlugin() {
           });
         } else {
           editor.update(() => {
-            const htmlData = clipboardData.getData('text/html');
+            const htmlData = clipboardData?.getData('text/html');
 
             if (htmlData) {
               const parser = new DOMParser();
@@ -68,7 +72,7 @@ export function LinkPastePlugin() {
                 const fragment = document.createDocumentFragment();
 
                 if (node.nodeType === Node.TEXT_NODE) {
-                  fragment.appendChild(node.cloneNode());
+                  fragment.appendChild(node.cloneNode(true));
                 } else if (node.nodeType === Node.ELEMENT_NODE) {
                   const element = node as HTMLElement;
                   const tagName = element.tagName.toLowerCase();
@@ -81,6 +85,10 @@ export function LinkPastePlugin() {
 
                       if (href) newElement.setAttribute('href', href);
                     }
+
+                    Array.from(element.attributes).forEach((attr) => {
+                      newElement.setAttribute(attr.name, attr.value);
+                    });
 
                     Array.from(element.childNodes).forEach((child) => {
                       newElement.appendChild(filterNode(child));
@@ -98,8 +106,6 @@ export function LinkPastePlugin() {
               };
 
               const filteredBody = filterNode(doc.body);
-
-              // Create a new document to hold our filtered content
               const newDoc = document.implementation.createHTMLDocument();
 
               newDoc.body.appendChild(filteredBody);
@@ -108,9 +114,17 @@ export function LinkPastePlugin() {
 
               selection.insertNodes(nodes);
             } else {
-              const textNode = $createTextNode(pastedData);
+              const lines = pastedData.split('\n');
+              const nodes = lines.map((line) => {
+                const paragraphNode = $createParagraphNode();
+                const textNode = $createTextNode(line);
 
-              selection.insertNodes([textNode]);
+                paragraphNode.append(textNode);
+
+                return paragraphNode;
+              });
+
+              selection.insertNodes(nodes);
             }
           });
         }

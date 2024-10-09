@@ -3,19 +3,15 @@ import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react';
 
 import { computePosition } from '@floating-ui/dom';
-import { $setBlocksType } from '@lexical/selection';
 import { $findMatchingParent } from '@lexical/utils';
-import { $createQuoteNode } from '@lexical/rich-text';
 import { $isLinkNode, $toggleLink, TOGGLE_LINK_COMMAND } from '@lexical/link';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
-  createCommand,
   $setSelection,
   $isRangeSelection,
   KEY_ESCAPE_COMMAND,
   FORMAT_TEXT_COMMAND,
-  $createParagraphNode,
   KEY_MODIFIER_COMMAND,
   COMMAND_PRIORITY_HIGH,
   $createRangeSelection,
@@ -25,26 +21,28 @@ import {
 } from 'lexical';
 
 import { Input } from '@ui/form/Input';
+import { Bold01 } from '@ui/media/icons/Bold01';
+import { Link01 } from '@ui/media/icons/Link01';
+import { Trash01 } from '@ui/media/icons/Trash01';
 import { Divider } from '@ui/presentation/Divider';
-import { Bold01 } from '@ui/media/icons/Bold01.tsx';
-import { Link01 } from '@ui/media/icons/Link01.tsx';
-import { Trash01 } from '@ui/media/icons/Trash01.tsx';
-import { Italic01 } from '@ui/media/icons/Italic01.tsx';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
+import { Italic01 } from '@ui/media/icons/Italic01';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { BlockQuote } from '@ui/media/icons/BlockQuote';
 import { getExternalUrl } from '@utils/getExternalLink.ts';
 import { sanitizeUrl } from '@ui/form/Editor/utils/url.ts';
-import { BlockQuote } from '@ui/media/icons/BlockQuote.tsx';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
+import { Strikethrough01 } from '@ui/media/icons/Strikethrough01';
 import { FloatingToolbarButton } from '@ui/form/Editor/components';
-import { LinkExternal02 } from '@ui/media/icons/LinkExternal02.tsx';
-import { Strikethrough01 } from '@ui/media/icons/Strikethrough01.tsx';
-import { $isExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode.tsx';
+import { $isExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode';
 
-import { usePointerInteractions } from './../utils/usePointerInteractions.tsx';
+import { usePointerInteractions } from './../utils/usePointerInteractions';
+import {
+  registerEnterQuoteCommand,
+  TOGGLE_BLOCKQUOTE_COMMAND,
+  registerToggleQuoteCommand,
+} from './../commands';
 
 const DEFAULT_DOM_ELEMENT = document.body;
-export const TOGGLE_BLOCKQUOTE_COMMAND = createCommand(
-  'TOGGLE_BLOCKQUOTE_COMMAND',
-);
 
 type FloatingMenuCoords = { x: number; y: number } | undefined;
 
@@ -72,26 +70,14 @@ export function FloatingMenu({
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    return editor.registerCommand(
-      TOGGLE_BLOCKQUOTE_COMMAND,
-      () => {
-        const selection = $getSelection();
+    const toggleQuoteCommand = registerToggleQuoteCommand(editor);
+    const blockquoteEnterCommand = registerEnterQuoteCommand(editor);
 
-        if ($isRangeSelection(selection)) {
-          if (isBlockquote) {
-            $setBlocksType(selection, $createParagraphNode);
-          } else {
-            $setBlocksType(selection, $createQuoteNode);
-          }
-
-          return true;
-        }
-
-        return false;
-      },
-      0,
-    );
-  }, [editor, isBlockquote]);
+    return () => {
+      toggleQuoteCommand();
+      blockquoteEnterCommand();
+    };
+  }, [editor]);
 
   const toggleLink = useCallback(() => {
     if (!isLink) {
