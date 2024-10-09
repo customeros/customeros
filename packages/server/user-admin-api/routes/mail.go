@@ -3,17 +3,16 @@ package routes
 import (
 	"bytes"
 	"context"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/service"
 	tracingLog "github.com/opentracing/opentracing-go/log"
@@ -65,7 +64,7 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 
 			ctx = common.WithCustomContext(ctx, customCtx)
 
-			var request dto.MailRequest
+			var request *entity.EmailMessage
 
 			if err := c.BindJSON(&request); err != nil {
 				tracing.TraceErr(span, err)
@@ -73,19 +72,20 @@ func addMailRoutes(rg *gin.RouterGroup, conf *config.Config, services *service.S
 				return
 			}
 
+			request.Tenant = tenant
+			request.ProducerId = "N/A"
+			request.ProducerType = "N/A"
+
 			span.LogFields(tracingLog.Object("request", request))
 
-			interactionEventId, err := services.CommonServices.MailService.SendMail(ctx, nil, tenant, request)
+			err := services.CommonServices.MailService.SendMail(ctx, request)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				c.JSON(http.StatusInternalServerError, gin.H{"msg": err.Error()})
 				return
 			}
 
-			span.LogFields(tracingLog.String("result - interactionEventId", *interactionEventId))
-			c.JSON(http.StatusOK, gin.H{
-				"result": fmt.Sprintf("interaction event created with id: %s", *interactionEventId),
-			})
+			c.JSON(http.StatusOK, gin.H{})
 
 		})
 

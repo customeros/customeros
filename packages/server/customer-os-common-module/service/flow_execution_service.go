@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"time"
@@ -438,12 +438,16 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				return nil, errors.New("Email not found")
 			}
 
-			_, err = s.services.MailService.SendMail(ctx, &tx, tenant, dto.MailRequest{
-				From:    *scheduledActionExecution.Mailbox,
-				To:      []string{toEmail},
-				Subject: currentAction.Data.Subject,
-				Content: *currentAction.Data.BodyTemplate,
-			})
+			emailMessage := postgresEntity.EmailMessage{
+				ProducerId:   scheduledActionExecution.Id,
+				ProducerType: model.NodeLabelFlowActionExecution,
+				From:         *scheduledActionExecution.Mailbox,
+				To:           []string{toEmail},
+				Subject:      *currentAction.Data.Subject,
+				Content:      *currentAction.Data.BodyTemplate,
+			}
+
+			err = s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, tenant, &emailMessage)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err

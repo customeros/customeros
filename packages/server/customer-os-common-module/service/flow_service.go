@@ -493,21 +493,21 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		if status == neo4jentity.FlowStatusActive {
-			flowContactList, err := s.FlowParticipantGetList(ctx, []string{flow.Id})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-
-			for _, v := range *flowContactList {
-				err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, v.ContactId, model.CONTACT)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, err
-				}
-			}
-		}
+		//if status == neo4jentity.FlowStatusActive {
+		//	flowContactList, err := s.FlowParticipantGetList(ctx, []string{flow.Id})
+		//	if err != nil {
+		//		tracing.TraceErr(span, err)
+		//		return nil, err
+		//	}
+		//
+		//	for _, v := range *flowContactList {
+		//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, v.ContactId, model.CONTACT)
+		//		if err != nil {
+		//			tracing.TraceErr(span, err)
+		//			return nil, err
+		//		}
+		//	}
+		//}
 
 		flow.Status = status
 

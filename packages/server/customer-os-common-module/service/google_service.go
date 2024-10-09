@@ -6,13 +6,12 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/DusanKasan/parsemail"
 	"github.com/araddon/dateparse"
 	mimemail "github.com/emersion/go-message/mail"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
@@ -52,7 +51,7 @@ type GoogleService interface {
 
 	ReadEmails(ctx context.Context, batchSize int64, importState *postgresEntity.UserEmailImportState) ([]*postgresEntity.EmailRawData, string, error)
 
-	SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error)
+	SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error
 }
 
 func NewGoogleService(cfg *config.GoogleOAuthConfig, postgresRepositories *postgresRepository.Repositories, services *Services) GoogleService {
@@ -497,58 +496,36 @@ func (s *googleService) ReadEmailFromGoogle(gmailService *gmail.Service, usernam
 	return rawEmailData, nil
 }
 
-func (s *googleService) SendEmail(ctx context.Context, tenant string, request dto.MailRequest) (*parsemail.Email, error) {
+func (s *googleService) SendEmail(ctx context.Context, tenant string, request *postgresEntity.EmailMessage) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "GoogleService.SendEmail")
 	defer span.Finish()
 
 	gSrv, err := s.GetGmailService(ctx, request.From, tenant)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
+		return fmt.Errorf("unable to retrieve mail token for new gmail service: %v", err)
 	}
 
 	if gSrv == nil {
 		tracing.TraceErr(span, errors.New("unable to build a gmail service with service account or auth token"))
-		return nil, err
+		return err
 	}
 
-	sentByName := "" //TODO
-	//if user.UserByEmail.Name != nil && *user.UserByEmail.Name != "" {
-	//	sentByName = *user.UserByEmail.Name
-	//} else if user.UserByEmail.FirstName != nil && user.UserByEmail.LastName != nil {
-	//	if *user.UserByEmail.FirstName != "" && *user.UserByEmail.LastName != "" {
-	//		sentByName = *user.UserByEmail.FirstName + " " + *user.UserByEmail.LastName
-	//	} else if *user.UserByEmail.LastName != "" {
-	//		sentByName = *user.UserByEmail.LastName
-	//	} else if *user.UserByEmail.FirstName != "" {
-	//		sentByName = *user.UserByEmail.FirstName
-	//	}
-	//} else {
-	//	sentByName = *username
-	//}
-
-	retMail := parsemail.Email{}
-	retMail.HTMLBody = request.Content
-
-	fromAddress := []*mimemail.Address{{sentByName, request.From}}
-	retMail.From = fromAddress
+	fromAddress := []*mimemail.Address{{"", request.From}}
 	var toAddress []*mimemail.Address
 	var ccAddress []*mimemail.Address
 	var bccAddress []*mimemail.Address
 	for _, to := range request.To {
 		toAddress = append(toAddress, &mimemail.Address{Address: to})
-		retMail.To = toAddress
 	}
 	if request.Cc != nil {
 		for _, cc := range request.Cc {
 			ccAddress = append(ccAddress, &mimemail.Address{Address: cc})
-			retMail.Cc = ccAddress
 		}
 	}
 	if request.Bcc != nil {
 		for _, bcc := range request.Bcc {
 			bccAddress = append(bccAddress, &mimemail.Address{Address: bcc})
-			retMail.Bcc = bccAddress
 		}
 	}
 
@@ -562,8 +539,8 @@ func (s *googleService) SendEmail(ctx context.Context, tenant string, request dt
 	h.SetAddressList("Cc", ccAddress)
 	h.SetAddressList("Bcc", bccAddress)
 
-	if request.Subject != nil {
-		h.SetSubject(*request.Subject)
+	if request.Subject != "" {
+		h.SetSubject(request.Subject)
 	}
 
 	threadId := ""
@@ -573,32 +550,29 @@ func (s *googleService) SendEmail(ctx context.Context, tenant string, request dt
 		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return err
 		}
 		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
 
-		emailChannelData := dto.EmailChannelData{}
+		emailChannelData := entity.EmailChannelData{}
 		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
+			return fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
 		}
-		retMail.Subject = emailChannelData.Subject
-		retMail.References = append(emailChannelData.Reference, interactionEvent.Identifier)
-		retMail.InReplyTo = []string{interactionEvent.Identifier}
 
-		h.Set("References", strings.Join(retMail.References, " "))
+		h.Set("References", emailChannelData.Reference+" "+interactionEvent.Identifier)
 		h.Set("In-Reply-To", interactionEvent.Identifier)
 
 		interactionSessionNode, err := s.services.Neo4jRepositories.InteractionSessionReadRepository.GetForInteractionEvent(ctx, tenant, *request.ReplyTo)
 		if err != nil {
 			tracing.TraceErr(span, err)
-			return nil, err
+			return err
 		}
 
 		if interactionSessionNode == nil {
 			tracing.TraceErr(span, errors.New("interaction session not found"))
-			return nil, errors.New("interaction session not found")
+			return errors.New("interaction session not found")
 		}
 
 		interactionSession := neo4jmapper.MapDbNodeToInteractionSessionEntity(interactionSessionNode)
@@ -613,21 +587,21 @@ func (s *googleService) SendEmail(ctx context.Context, tenant string, request dt
 	mw, err := mimemail.CreateWriter(&b, h)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 
 	// Create a text part
 	tw, err := mw.CreateInline()
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 	var th mimemail.InlineHeader
 	th.Set("Content-Type", "text/html")
 	w, err := tw.CreatePart(th)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 	io.WriteString(w, request.Content)
 	w.Close()
@@ -647,28 +621,28 @@ func (s *googleService) SendEmail(ctx context.Context, tenant string, request dt
 	result, err := gSrv.Users.Messages.Send("me", msgToSend).Do()
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 
-	//this is used to store the thread id
-	retMail.Header = map[string][]string{
-		"Thread-Id": {result.ThreadId},
-	}
+	request.ProviderThreadId = result.ThreadId
 
 	generatedMessage, err := gSrv.Users.Messages.Get("me", result.Id).Do()
 	if err != nil {
 		tracing.TraceErr(span, err)
-		return nil, err
+		return err
 	}
 	for _, header := range generatedMessage.Payload.Headers {
 		if strings.EqualFold(header.Name, "Message-ID") {
-			retMail.MessageID = header.Value
-			retMail.References = append(retMail.References, header.Value)
+			request.ProviderMessageId = header.Value
+			break
+		}
+		if strings.EqualFold(header.Name, "References") {
+			request.ProviderReferences = header.Value
 			break
 		}
 	}
 
-	return &retMail, nil
+	return nil
 }
 
 func convertToUTC(datetimeStr string) (time.Time, error) {
