@@ -12,7 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/opentracing/opentracing-go"
 	"github.com/pkg/errors"
 	"golang.org/x/sync/errgroup"
 	"strings"
@@ -125,11 +124,7 @@ func (s *LocationValidationSubscriber) When(ctx context.Context, evt eventstore.
 		s.log.Warnf("(LocationValidationSubscriber) Unknown EventType: {%s}", evt.EventType)
 		err := eventstore.ErrInvalidEventType
 		err.EventType = evt.GetEventType()
-
-		span, _ := opentracing.StartSpanFromContext(ctx, "LocationValidationSubscriber.When")
-		defer span.Finish()
 		tracing.TraceErr(span, err)
-
 		return err
 	}
 }

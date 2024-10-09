@@ -3,6 +3,7 @@ package notifications
 import (
 	"context"
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -108,20 +109,27 @@ func (s *NotificationsSubscriber) When(ctx context.Context, evt eventstore.Event
 		return nil
 	}
 
-	ctx, span := tracing.StartProjectionTracerSpan(ctx, "NotificationsSubscriber.When", evt)
-	defer span.Finish()
+	acceptedEventTypes := []string{
+		orgevents.OrganizationUpdateOwnerNotificationV1,
+		reminder.ReminderNotificationV1,
+	}
+
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
+		return nil
+	}
 
 	if s.cfg.Subscriptions.NotificationsSubscription.IgnoreEvents {
 		return nil
 	}
 
-	switch evt.GetEventType() {
+	ctx, span := tracing.StartProjectionTracerSpan(ctx, "NotificationsSubscriber.When", evt)
+	defer span.Finish()
 
+	switch evt.GetEventType() {
 	case orgevents.OrganizationUpdateOwnerNotificationV1:
 		return s.orgEventHandler.OnOrganizationUpdateOwner(ctx, evt)
 	case reminder.ReminderNotificationV1:
 		return s.reminderEventHandler.OnReminderNotification(ctx, evt)
-
 	default:
 		return nil
 	}

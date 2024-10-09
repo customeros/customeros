@@ -3,6 +3,7 @@ package organization
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/tracing"
@@ -116,6 +117,16 @@ func (s *OrganizationSubscriber) ProcessEvents(ctx context.Context, sub *esdb.Pe
 
 func (s *OrganizationSubscriber) When(ctx context.Context, evt eventstore.Event) error {
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
+		return nil
+	}
+
+	acceptedEventTypes := []string{
+		orgevts.OrganizationCreateV1,
+		orgevts.OrganizationUpdateV1,
+		orgevts.OrganizationAdjustIndustryV1,
+	}
+
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
 		return nil
 	}
 
