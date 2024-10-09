@@ -1,3 +1,5 @@
+import { toZonedTime } from 'date-fns-tz';
+
 import { DateTimeUtils } from '@utils/date';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { BilledType, InvoiceLine, InvoiceLineSimulate } from '@graphql/types';
@@ -54,6 +56,13 @@ export function ServicesTable({
           const isGenerated = isPartialInvoiceLineItem(service) && service;
           const price = formatCurrency(service?.price ?? 0, 2, currency);
           const vat = formatCurrency(service?.taxDue ?? 0, 2, currency);
+          const utcServiceStarted =
+            isGenerated && service?.contractLineItem?.serviceStarted
+              ? toZonedTime(
+                  service.contractLineItem.serviceStarted,
+                  'UTC',
+                ).toUTCString()
+              : '';
 
           return (
             <div
@@ -72,7 +81,7 @@ export function ServicesTable({
                       <>
                         {service?.contractLineItem?.serviceStarted &&
                           DateTimeUtils.format(
-                            service.contractLineItem.serviceStarted,
+                            utcServiceStarted,
                             DateTimeUtils.defaultFormatShortString,
                           )}
                       </>
@@ -82,14 +91,20 @@ export function ServicesTable({
                           <>
                             {invoicePeriodStart &&
                               DateTimeUtils.format(
-                                invoicePeriodStart,
+                                toZonedTime(
+                                  invoicePeriodStart,
+                                  'UTC',
+                                ).toUTCString(),
                                 DateTimeUtils.dateWithAbreviatedMonth,
                               )}{' '}
                             {invoicePeriodEnd && invoicePeriodStart && '-'}
                             {''}
                             {invoicePeriodEnd &&
                               DateTimeUtils.format(
-                                invoicePeriodEnd,
+                                toZonedTime(
+                                  invoicePeriodEnd,
+                                  'UTC',
+                                ).toUTCString(),
                                 DateTimeUtils.dateWithAbreviatedMonth,
                               )}
                           </>
