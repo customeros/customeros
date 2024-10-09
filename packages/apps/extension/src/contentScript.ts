@@ -1,4 +1,5 @@
 function sendSessionData() {
+  console.log("Attempting to send session data from content script");
   const request: IDBOpenDBRequest = indexedDB.open("customerDB", 2);
 
   request.onerror = function (event: Event) {
@@ -28,19 +29,19 @@ function sendSessionData() {
 
     getRequest.onsuccess = function (event: Event) {
       const sessionData = (event.target as IDBRequest).result;
+      console.log("Session data retrieved from IndexedDB:", sessionData);
 
       if (sessionData) {
         const email: string | null = sessionData.value.profile.email || null;
         const apiKey: string | null = sessionData.tenantApiKey || null;
 
+        console.log("Sending session data to background:", { email, apiKey });
         if (email && apiKey) {
           chrome.runtime.sendMessage({
             action: "COS_SESSION_DATA",
             email,
             apiKey,
           });
-        } else {
-          console.log("Session data is incomplete:", { email, apiKey });
         }
       } else {
         console.log("No session data found in IndexedDB");
