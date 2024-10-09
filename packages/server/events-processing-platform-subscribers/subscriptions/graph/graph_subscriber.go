@@ -207,7 +207,8 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		invoiceevents.InvoicePaidV1,
 		invoiceevents.InvoiceFillRequestedV1,
 		invoiceevents.InvoicePayNotificationV1,
-		invoiceevents.InvoicePayV1:
+		invoiceevents.InvoicePayV1,
+		invoiceevents.InvoiceRemindNotificationV1:
 		return nil
 	}
 
