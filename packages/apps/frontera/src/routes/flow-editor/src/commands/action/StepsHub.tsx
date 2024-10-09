@@ -95,7 +95,10 @@ export const StepsHub = observer(() => {
     const newNode = {
       id: `${type}-${nodes.length + 1}`,
       type: type === 'WAIT' ? 'wait' : 'action',
-      position: { x: type === 'WAIT' ? 87 : 12, y: sourceNode.position.y + 10 },
+      position: {
+        x: type === 'WAIT' ? 96 : 12,
+        y: sourceNode.position.y + 10,
+      },
       data: {
         action: type,
         ...typeBasedContent,
