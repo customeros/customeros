@@ -252,9 +252,9 @@ export const ContactCard = observer(
                 ref={nameInputRef}
                 placeholder='Name'
                 onChange={handleChange}
+                value={contactStore?.name ?? ''}
                 dataTest='org-people-contact-name'
                 className='font-semibold text-gray-700'
-                value={contactStore?.value?.name ?? ''}
               />
               <Input
                 size='xs'
