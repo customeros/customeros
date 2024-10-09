@@ -1,7 +1,6 @@
-import { useState } from 'react';
+import { useMemo } from 'react';
 
 import { set } from 'lodash';
-import { useKey } from 'rooks';
 import { observer } from 'mobx-react-lite';
 
 import { Edit03 } from '@ui/media/icons/Edit03';
@@ -12,55 +11,35 @@ export const EditEmail = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
   const contact = store.contacts.value.get(context.ids?.[0] as string);
-  const [email, setEmail] = useState(
-    () => contact?.value.emails?.[0]?.email ?? '',
+  const oldEmail = useMemo(
+    () => contact?.value?.emails?.[0]?.email,
+    [contact?.isLoading],
   );
   const emailAdress = contact?.value?.emails?.[0]?.email ?? '';
 
   const label = `Contact - ${contact?.value.name}`;
 
-  const handleChangeEmail = () => {
-    contact?.update(
-      (value) => {
-        set(value, 'emails[0].email', email);
-
-        return value;
-      },
-      { mutate: false },
-    );
-
-    if (emailAdress?.length === 0) {
-      contact?.addEmail();
-    } else {
-      contact?.updateEmail();
-    }
-
-    if (email.length === 0) {
-      contact?.removeEmail();
-    }
-
+  const handleSaveEmail = () => {
+    contact?.updateEmail(oldEmail ?? '');
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.setType('ContactCommands');
   };
-
-  useKey('Enter', handleChangeEmail);
 
   return (
     <Command>
       <CommandInput
         label={label}
-        value={email || ''}
+        value={emailAdress}
         placeholder='Edit email'
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
             e.stopPropagation();
           }
         }}
-        onValueChange={(value) => {
-          setEmail(value);
+        onValueChange={(newValue) => {
           contact?.update(
             (value) => {
-              set(value, 'emails[0].email', email);
+              set(value, 'emails[0].email', newValue);
 
               return value;
             },
@@ -71,8 +50,8 @@ export const EditEmail = observer(() => {
       <Command.List>
         <CommandItem
           leftAccessory={<Edit03 />}
-          onSelect={handleChangeEmail}
-        >{`Rename email to "${email}"`}</CommandItem>
+          onSelect={handleSaveEmail}
+        >{`Rename email to "${emailAdress}"`}</CommandItem>
       </Command.List>
     </Command>
   );

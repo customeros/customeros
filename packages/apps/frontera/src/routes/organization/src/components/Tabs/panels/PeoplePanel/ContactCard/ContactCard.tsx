@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, MouseEvent } from 'react';
+import React, { useRef, useMemo, useEffect, MouseEvent } from 'react';
 
 import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
@@ -102,6 +102,10 @@ export const ContactCard = observer(
     const contactStore = store.contacts.value.get(id);
     const emailInputRef = useRef<HTMLInputElement | null>(null);
     const nameInputRef = useRef<HTMLInputElement | null>(null);
+    const oldEmail = useMemo(
+      () => contactStore?.value.emails?.[0]?.email,
+      [contactStore?.isLoading],
+    );
 
     const toggle = (e: MouseEvent<HTMLDivElement>) => {
       if (
@@ -355,11 +359,7 @@ export const ContactCard = observer(
                   dataTest='org-people-contact-email'
                   value={contactStore?.value?.emails?.[0]?.email ?? ''}
                   onBlur={() => {
-                    if (!contactStore?.value?.emails?.[0]?.id) {
-                      contactStore?.addEmail();
-                    } else {
-                      contactStore?.updateEmail();
-                    }
+                    contactStore?.updateEmail(oldEmail ?? '');
                   }}
                   onChange={(e) => {
                     contactStore?.update(

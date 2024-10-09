@@ -12,7 +12,6 @@ import type {
   ContactUpdateInput,
   JobRoleUpdateInput,
   PhoneNumberUpdateInput,
-  EmailUpdateAddressInput,
   ContactOrganizationInput,
 } from '@graphql/types';
 
@@ -68,15 +67,6 @@ class ContactService {
     >(UPDATE_JOB_ROLE_MUTATION, payload);
   }
 
-  async addContactEmail(
-    payload: ADD_CONTACT_EMAIL_PAYLOAD,
-  ): Promise<ADD_CONTACT_EMAIL_RESPONSE> {
-    return this.transport.graphql.request<
-      ADD_CONTACT_EMAIL_RESPONSE,
-      ADD_CONTACT_EMAIL_PAYLOAD
-    >(ADD_CONTACT_EMAIL_MUTATION, payload);
-  }
-
   async updateContactEmail(
     payload: UPDATE_CONTACT_EMAIL_PAYLOAD,
   ): Promise<UPDATE_CONTACT_EMAIL_RESPONSE> {
@@ -84,15 +74,6 @@ class ContactService {
       UPDATE_CONTACT_EMAIL_RESPONSE,
       UPDATE_CONTACT_EMAIL_PAYLOAD
     >(UPDATE_CONTACT_EMAIL_MUTATION, payload);
-  }
-
-  async removeContactEmail(
-    payload: REMOVE_CONTACT_EMAIL_PAYLOAD,
-  ): Promise<REMOVE_CONTACT_EMAIL_RESPONSE> {
-    return this.transport.graphql.request<
-      REMOVE_CONTACT_EMAIL_RESPONSE,
-      REMOVE_CONTACT_EMAIL_PAYLOAD
-    >(REMOVE_CONTACT_EMAIL_MUTATION, payload);
   }
 
   async addPhoneNumber(
@@ -246,52 +227,28 @@ const UPDATE_JOB_ROLE_MUTATION = gql`
   }
 `;
 
-type ADD_CONTACT_EMAIL_RESPONSE = {
-  emailMergeToContact: {
-    id: string;
-  };
-};
-type ADD_CONTACT_EMAIL_PAYLOAD = {
-  contactId: string;
-  input: EmailInput;
-};
-const ADD_CONTACT_EMAIL_MUTATION = gql`
-  mutation addContactEmail($contactId: ID!, $input: EmailInput!) {
-    emailMergeToContact(contactId: $contactId, input: $input) {
-      id
-    }
-  }
-`;
-
 type UPDATE_CONTACT_EMAIL_RESPONSE = {
-  emailUpdate: {
+  emailReplaceForContact: {
     id: string;
   };
 };
 type UPDATE_CONTACT_EMAIL_PAYLOAD = {
-  input: EmailUpdateAddressInput;
+  contactId: string;
+  input: EmailInput;
+  previousEmail: string;
 };
 const UPDATE_CONTACT_EMAIL_MUTATION = gql`
-  mutation updateContactEmail($input: EmailUpdateAddressInput!) {
-    emailUpdate(input: $input) {
+  mutation updateContactEmail(
+    $contactId: ID!
+    $previousEmail: String!
+    $input: EmailInput!
+  ) {
+    emailReplaceForContact(
+      contactId: $contactId
+      previousEmail: $previousEmail
+      input: $input
+    ) {
       id
-    }
-  }
-`;
-
-type REMOVE_CONTACT_EMAIL_RESPONSE = {
-  emailRemoveFromContact: {
-    result: boolean;
-  };
-};
-type REMOVE_CONTACT_EMAIL_PAYLOAD = {
-  email: string;
-  contactId: string;
-};
-const REMOVE_CONTACT_EMAIL_MUTATION = gql`
-  mutation removeContactEmail($contactId: ID!, $email: String!) {
-    emailRemoveFromContact(contactId: $contactId, email: $email) {
-      result
     }
   }
 `;
