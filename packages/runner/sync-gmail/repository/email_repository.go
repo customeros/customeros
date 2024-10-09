@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
-	"time"
 )
 
 type EmailRepository interface {
@@ -71,6 +71,9 @@ func (r *emailRepository) FindEmailsByUserId(ctx context.Context, tenant string,
 }
 
 func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, emailId, firstName, lastName, source, appSource string) (string, error) {
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailRepository.CreateContactWithEmailLinkedToOrganization")
+	defer span.Finish()
+
 	dbResult, err := tx.Run(ctx, fmt.Sprintf(
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id: $organizationId}) WITH t, o "+
 			" MATCH (e:Email {id: $emailId})--(t) "+
@@ -106,13 +109,15 @@ func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context
 			"source":         source,
 			"sourceOfTruth":  "openline",
 			"appSource":      appSource,
-			"now":            time.Now().UTC(),
+			"now":            utils.Now(),
 		})
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return "", err
 	}
 	records, err := dbResult.Collect(ctx)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return "", err
 	}
 	if len(records) == 0 {
