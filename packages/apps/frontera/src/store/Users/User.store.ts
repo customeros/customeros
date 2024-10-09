@@ -75,4 +75,5 @@ const defaultValue: User = {
   sourceOfTruth: DataSource.Openline,
   profilePhotoUrl: '',
   timezone: '',
+  mailboxes: [],
 };

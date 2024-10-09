@@ -51,9 +51,12 @@ export const Header = observer(
     }, [store.ui.commandMenu.isOpen, id]);
 
     useUnmount(() => {
-      if (saveFlag) {
+      if (saveFlag && !showFinder) {
         const nodes = getNodes();
         const edges = getEdges();
+
+        // this should never happen
+        if (nodes.length === 0 && edges.length === 0) return;
 
         flow?.updateFlow({
           nodes: JSON.stringify(nodes),

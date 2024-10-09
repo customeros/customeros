@@ -1,3 +1,5 @@
+import { toZonedTime } from 'date-fns-tz';
+
 import { cn } from '@ui/utils/cn';
 import { DateTimeUtils } from '@utils/date';
 import {
@@ -100,6 +102,8 @@ export function Invoice({
     : 'filter-none';
 
   const blurDummyClass = shouldBlurDummy ? 'blur-[2px]' : 'filter-none';
+  const utcDueDate = toZonedTime(dueDate, 'UTC').toUTCString();
+  const utcIssueDate = toZonedTime(issueDate, 'UTC').toUTCString();
 
   return (
     <div className='px-4 flex flex-col w-full overflow-y-auto h-full justify-between pb-4 '>
@@ -119,14 +123,14 @@ export function Invoice({
                 className={cn('text-sm mb-4 text-gray-500', blurDummyClass)}
               >
                 {DateTimeUtils.format(
-                  issueDate,
+                  utcIssueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
                 )}
               </span>
               <span className='font-semibold mb-1 text-sm'>Due</span>
               <span className={cn('text-sm text-gray-500', blurDummyClass)}>
                 {DateTimeUtils.format(
-                  dueDate,
+                  utcDueDate,
                   DateTimeUtils.dateWithAbreviatedMonth,
                 )}
               </span>
