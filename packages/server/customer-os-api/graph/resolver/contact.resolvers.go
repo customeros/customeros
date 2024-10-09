@@ -8,12 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
-	"strings"
-	"time"
-
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
@@ -23,18 +18,19 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
-	opentracing "github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
+	"strings"
+	"time"
 )
 
 // Tags is the resolver for the tags field.
@@ -330,7 +326,7 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 
 	// Link contact to organization
 	if contactId != "" {
-		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contactId, commonModel.NodeLabelContact, span)
+		neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, r.Services.Repositories.Neo4jRepositories, contactId, commonmodel.NodeLabelContact, span)
 
 		err = r.Services.ContactService.LinkToOrganization(ctx, contactId, organizationID, constants.AppSourceCustomerOsApi)
 		if err != nil {
@@ -629,7 +625,7 @@ func (r *mutationResolver) ContactAddNewLocation(ctx context.Context, contactID 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 
-	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.CONTACT, contactID, entity.SourceFields{
+	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonmodel.CONTACT, contactID, entity.SourceFields{
 		Source:        neo4jentity.DataSourceOpenline,
 		SourceOfTruth: neo4jentity.DataSourceOpenline,
 		AppSource:     constants.AppSourceCustomerOsApi,
@@ -670,24 +666,15 @@ func (r *mutationResolver) ContactAddSocial(ctx context.Context, contactID strin
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddSocial", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
+	span.LogKV("request.contactID", contactID)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	socialId := uuid.New().String()
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-		return r.Clients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			ContactId:      contactID,
-			SocialId:       socialId,
-			Url:            input.URL,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: constants.AppSourceCustomerOsApi,
-			},
+	socialId, err := r.Services.CommonServices.SocialService.MergeSocialWithEntity(ctx, common.GetTenantFromContext(ctx), contactID, commonmodel.CONTACT,
+		neo4jentity.SocialEntity{
+			Url:       input.URL,
+			Source:    neo4jentity.DataSourceOpenline,
+			AppSource: utils.StringPtrFirstNonEmpty(input.AppSource, utils.StringPtr(constants.AppSourceCustomerOsApi)),
 		})
-	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to add social %s from contact %s", input.URL, contactID)
@@ -809,7 +796,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		orgDomain = *domain
 	}
 
-	socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(ctx, common.GetTenantFromContext(ctx), commonModel.CONTACT, []string{contactID})
+	socials, err := r.Services.CommonServices.SocialService.GetAllForEntities(ctx, common.GetTenantFromContext(ctx), commonmodel.CONTACT, []string{contactID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get socials for contact %s", contactID)
@@ -855,18 +842,18 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
-		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonModel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
+		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactRequestedAt), utils.NowPtr())
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
-		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonModel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt))
+		err = r.Services.Repositories.Neo4jRepositories.CommonWriteRepository.RemoveProperty(ctx, common.GetTenantFromContext(ctx), commonmodel.NodeLabelContact, contactID, string(neo4jentity.ContactPropertyFindWorkEmailWithBetterContactCompletedAt))
 		if err != nil {
 			tracing.TraceErr(span, err)
 		}
 		return &model.ActionResponse{Accepted: true}, nil
 	}
 
-	phoneNumberEntities, err := r.Services.PhoneNumberService.GetAllForEntityTypeByIds(ctx, commonModel.CONTACT, []string{contactID})
+	phoneNumberEntities, err := r.Services.PhoneNumberService.GetAllForEntityTypeByIds(ctx, commonmodel.CONTACT, []string{contactID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -876,7 +863,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		currentPhoneNumbers = append(currentPhoneNumbers, phoneNumberEntity.E164)
 	}
 
-	emailEntities, err := r.Services.EmailService.GetAllForEntityTypeByIds(ctx, commonModel.CONTACT, []string{contactID})
+	emailEntities, err := r.Services.EmailService.GetAllForEntityTypeByIds(ctx, commonmodel.CONTACT, []string{contactID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
@@ -896,7 +883,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 					AppSource: constants.AppSourceCustomerOsApi,
 				},
 				&commonService.LinkWith{
-					Type: commonModel.CONTACT,
+					Type: commonmodel.CONTACT,
 					Id:   contactID,
 				})
 			if err != nil {

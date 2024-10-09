@@ -377,21 +377,16 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			}
 		}
 
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-			return h.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
-				ContactId:      contact.Id,
-				Tenant:         tenant,
-				SocialId:       socialId,
+		_, err = h.services.CommonServices.SocialService.MergeSocialWithEntity(ctx, tenant, contact.Id, model.CONTACT,
+			neo4jentity.SocialEntity{
+				Id:             socialId,
 				Url:            url,
 				Alias:          scrapinContactResponse.Person.PublicIdentifier,
 				ExternalId:     scrapinContactResponse.Person.LinkedInIdentifier,
 				FollowersCount: int64(scrapinContactResponse.Person.FollowerCount),
-				SourceFields: &commonpb.SourceFields{
-					Source:    constants.SourceOpenline,
-					AppSource: constants.AppScrapin,
-				},
+				Source:         neo4jentity.DataSourceOpenline,
+				AppSource:      constants.AppScrapin,
 			})
-		})
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ContactClient.AddSocial"))
 			h.log.Errorf("Error adding social profile: %s", err.Error())

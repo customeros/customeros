@@ -130,15 +130,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 	sourceFields.FromGrpc(request.SourceFields)
 	sourceFields.SetDefaultValues()
 
-	socialId := request.SocialId
-	if request.Url != "" && socialId == "" {
-		if existingSocialId := a.Contact.GetSocialIdForUrl(request.Url); existingSocialId != "" {
-			socialId = existingSocialId
-		}
-	}
-	socialId = utils.NewUUIDIfEmpty(socialId)
-
-	addSocialEvent, err := event.NewContactAddSocialEvent(a, socialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
+	addSocialEvent, err := event.NewContactAddSocialEvent(a, request.SocialId, request.Url, request.Alias, request.ExternalId, request.FollowersCount, sourceFields, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return "", errors.Wrap(err, "NewContactAddSocialEvent")
@@ -149,7 +141,7 @@ func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.Con
 		App:    sourceFields.AppSource,
 	})
 
-	return socialId, a.Apply(addSocialEvent)
+	return request.SocialId, a.Apply(addSocialEvent)
 }
 
 func (a *ContactAggregate) removeSocial(ctx context.Context, request *contactpb.ContactRemoveSocialGrpcRequest) error {
