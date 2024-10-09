@@ -95,7 +95,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(bodyLoggerMiddleware)
 
 	// Setting up services
-	serviceContainer := service.InitServices(&neo4jDriver, postgresDb.GormDB, server.cfg, grpcContainer)
+	serviceContainer := service.InitServices(&neo4jDriver, postgresDb.GormDB, server.cfg, grpcContainer, server.log)
 
 	commonCache := commoncaches.NewCommonCache()
 

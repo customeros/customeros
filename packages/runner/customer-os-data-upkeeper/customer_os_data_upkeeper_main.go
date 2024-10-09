@@ -72,7 +72,7 @@ func main() {
 		Cfg:                           cfg,
 		Log:                           appLogger,
 		Repositories:                  repositories,
-		CommonServices:                commonService.InitServices(&commconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient),
+		CommonServices:                commonService.InitServices(&commconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient, appLogger),
 		EventProcessingServicesClient: epClient,
 		CustomerOSApiClient:           cosClient.NewCustomerOsClient(cfg.CustomerOS.CustomerOsAPI, cfg.CustomerOS.CustomerOsAPIKey),
 		EventBufferStoreService:       eventBufferStoreService,

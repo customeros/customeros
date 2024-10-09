@@ -32,12 +32,12 @@ func main() {
 	}
 	defer (*neo4jDriver).Close(ctx)
 
-	services := service.InitServices(neo4jDriver, gormDb, config)
-
 	// Initialize logger
 	appLogger := logger.NewExtendedAppLogger(&config.Logger)
 	appLogger.InitLogger()
 	appLogger.WithName("sync-gmail-raw")
+
+	services := service.InitServices(neo4jDriver, gormDb, config, appLogger)
 
 	cronJobs := localCron.StartCronJobs(config, services)
 

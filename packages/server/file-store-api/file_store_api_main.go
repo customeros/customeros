@@ -73,7 +73,7 @@ func main() {
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
-	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil)
+	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
 
 	graphqlClient := graphql.NewClient(cfg.Service.CustomerOsAPI)
 	services := service.InitServices(cfg, graphqlClient, appLogger)

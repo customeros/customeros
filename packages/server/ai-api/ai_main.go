@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-ai/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/sirupsen/logrus"
 	"net/http"
@@ -30,7 +31,7 @@ func main() {
 	db, _ := InitDB(cfg)
 	defer db.SqlDB.Close()
 
-	services := service.InitServices(cfg, db)
+	services := service.InitServices(cfg, db, logger.NewAppLogger(nil))
 
 	// Setting up Gin
 	r := gin.Default()

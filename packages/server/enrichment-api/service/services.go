@@ -19,7 +19,7 @@ type Services struct {
 
 func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, logger logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonservice.InitServices(&commonconfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil),
+		CommonServices: commonservice.InitServices(&commonconfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil, logger),
 	}
 	services.Logger = logger
 	services.ScrapeInService = NewScrapeInService(config, services, logger)
