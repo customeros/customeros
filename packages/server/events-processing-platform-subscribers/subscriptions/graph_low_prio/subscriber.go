@@ -3,6 +3,7 @@ package graph_low_prio
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	orgevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/events"
@@ -125,11 +126,18 @@ func (s *GraphLowPrioSubscriber) When(ctx context.Context, evt eventstore.Event)
 		return nil
 	}
 
+	acceptedEventTypes := []string{
+		orgevents.OrganizationRefreshLastTouchpointV1,
+	}
+
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
+		return nil
+	}
+
 	ctx, span := tracing.StartProjectionTracerSpan(ctx, "GrpahLowPrioSubscriber.When", evt)
 	defer span.Finish()
 
 	switch evt.GetEventType() {
-
 	case orgevents.OrganizationRefreshLastTouchpointV1:
 		_ = s.organizationEventHandler.OnRefreshLastTouchPointV1(ctx, evt)
 		return nil

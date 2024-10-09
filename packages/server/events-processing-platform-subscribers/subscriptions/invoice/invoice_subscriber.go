@@ -5,6 +5,7 @@ import (
 	"github.com/EventStore/EventStore-Client-Go/v3/esdb"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
@@ -108,6 +109,21 @@ func (s *InvoiceSubscriber) When(ctx context.Context, evt eventstore.Event) erro
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
 		return nil
 	}
+
+	acceptedEventTypes := []string{
+		invoice.InvoiceFillRequestedV1,
+		invoice.InvoicePdfRequestedV1,
+		invoice.InvoicePdfGeneratedV1,
+		invoice.InvoiceVoidV1,
+		invoice.InvoicePaidV1,
+		invoice.InvoicePayNotificationV1,
+		invoice.InvoiceRemindNotificationV1,
+	}
+
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
+		return nil
+	}
+
 	ctx, span := tracing.StartProjectionTracerSpan(ctx, "InvoiceSubscriber.When", evt)
 	defer span.Finish()
 

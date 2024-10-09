@@ -3,6 +3,7 @@ package phone_number_validation
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
@@ -102,6 +103,14 @@ func (s *PhoneNumberValidationSubscriber) ProcessEvents(ctx context.Context, sub
 
 func (s *PhoneNumberValidationSubscriber) When(ctx context.Context, evt eventstore.Event) error {
 	if strings.HasPrefix(evt.GetAggregateID(), constants.EsInternalStreamPrefix) {
+		return nil
+	}
+
+	acceptedEventTypes := []string{
+		events.PhoneNumberCreateV1,
+		events.PhoneNumberValidateV1,
+	}
+	if !utils.Contains(acceptedEventTypes, evt.GetEventType()) {
 		return nil
 	}
 
