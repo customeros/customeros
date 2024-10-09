@@ -10,11 +10,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -95,10 +95,37 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 		return "", err
 	}
 
-	contactId, err := s.createContactWithEvents(ctx, contactDetails)
+	externalSystem := neo4jmodel.ExternalSystem{}
+	if contactDetails.ExternalReference != nil && contactDetails.ExternalReference.ExternalSystemId != "" {
+		externalSystem = neo4jmodel.ExternalSystem{
+			ExternalSystemId: string(contactDetails.ExternalReference.ExternalSystemId),
+			ExternalId:       contactDetails.ExternalReference.Relationship.ExternalId,
+			ExternalUrl:      utils.IfNotNilString(contactDetails.ExternalReference.Relationship.ExternalUrl),
+			ExternalSource:   utils.IfNotNilString(contactDetails.ExternalReference.Relationship.ExternalSource),
+		}
+		if contactDetails.ExternalReference.Relationship.SyncDate != nil {
+			externalSystem.SyncDate = contactDetails.ExternalReference.Relationship.SyncDate
+		}
+	}
+
+	contactId, err := s.services.CommonServices.ContactService.CreateContact(ctx, common.GetTenantFromContext(ctx),
+		neo4jrepository.ContactFields{
+			SourceFields: neo4jmodel.Source{
+				Source:    string(contactDetails.Source),
+				AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
+			},
+			FirstName:       contactDetails.ContactEntity.FirstName,
+			LastName:        contactDetails.ContactEntity.LastName,
+			Prefix:          contactDetails.ContactEntity.Prefix,
+			Description:     contactDetails.ContactEntity.Description,
+			ProfilePhotoUrl: contactDetails.ContactEntity.ProfilePhotoUrl,
+			Username:        contactDetails.ContactEntity.Username,
+			Name:            contactDetails.ContactEntity.Name,
+			Timezone:        contactDetails.ContactEntity.Timezone,
+		}, contactDetails.SocialUrl, externalSystem)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing: %s", err.Error())
+		s.log.Errorf("Failed to create contact: %s", err.Error())
 		return "", err
 	}
 
@@ -112,50 +139,6 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 
 	span.LogFields(log.String("output - createdContactId", contactId))
 	return contactId, nil
-}
-
-func (s *contactService) createContactWithEvents(ctx context.Context, contactDetails *ContactCreateData) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Create")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-
-	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
-		Tenant: common.GetTenantFromContext(ctx),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(contactDetails.Source),
-			AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
-		},
-		LoggedInUserId:  common.GetUserIdFromContext(ctx),
-		FirstName:       contactDetails.ContactEntity.FirstName,
-		LastName:        contactDetails.ContactEntity.LastName,
-		Prefix:          contactDetails.ContactEntity.Prefix,
-		Description:     contactDetails.ContactEntity.Description,
-		ProfilePhotoUrl: contactDetails.ContactEntity.ProfilePhotoUrl,
-		Username:        contactDetails.ContactEntity.Username,
-		SocialUrl:       contactDetails.SocialUrl,
-		Name:            contactDetails.ContactEntity.Name,
-		Timezone:        contactDetails.ContactEntity.Timezone,
-	}
-	upsertContactRequest.CreatedAt = timestamppb.New(contactDetails.ContactEntity.CreatedAt)
-	if contactDetails.ExternalReference != nil && contactDetails.ExternalReference.ExternalSystemId != "" {
-		upsertContactRequest.ExternalSystemFields = &commonpb.ExternalSystemFields{
-			ExternalSystemId: string(contactDetails.ExternalReference.ExternalSystemId),
-			ExternalId:       contactDetails.ExternalReference.Relationship.ExternalId,
-			ExternalUrl:      utils.IfNotNilString(contactDetails.ExternalReference.Relationship.ExternalUrl),
-			ExternalSource:   utils.IfNotNilString(contactDetails.ExternalReference.Relationship.ExternalSource),
-		}
-		if contactDetails.ExternalReference.Relationship.SyncDate != nil {
-			upsertContactRequest.ExternalSystemFields.SyncDate = timestamppb.New(*contactDetails.ExternalReference.Relationship.SyncDate)
-		}
-	}
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
-	})
-
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, model2.NodeLabelContact, span)
-
-	return response.Id, err
 }
 
 // Deprecated
@@ -593,31 +576,23 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 
 	result := &model.CustomerContact{}
 
-	contactCreateRequest := &contactpb.UpsertContactGrpcRequest{
-		Tenant:      common.GetTenantFromContext(ctx),
-		FirstName:   data.ContactEntity.FirstName,
-		LastName:    data.ContactEntity.LastName,
-		Prefix:      data.ContactEntity.Prefix,
-		Description: data.ContactEntity.Description,
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(data.ContactEntity.Source),
-			AppSource: data.ContactEntity.AppSource,
-		},
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-	}
-	contactCreateRequest.CreatedAt = timestamppb.New(data.ContactEntity.CreatedAt)
-
-	contextWithTimeout, cancel := utils.GetLongLivedContext(ctx)
-	defer cancel()
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-		return s.grpcClients.ContactClient.UpsertContact(contextWithTimeout, contactCreateRequest)
-	})
+	contactId, err := s.services.CommonServices.ContactService.CreateContact(ctx, common.GetTenantFromContext(ctx),
+		neo4jrepository.ContactFields{
+			FirstName:   data.ContactEntity.FirstName,
+			LastName:    data.ContactEntity.LastName,
+			Prefix:      data.ContactEntity.Prefix,
+			Description: data.ContactEntity.Description,
+			SourceFields: neo4jmodel.Source{
+				Source:    string(data.ContactEntity.Source),
+				AppSource: data.ContactEntity.AppSource,
+			},
+		}, "", neo4jmodel.ExternalSystem{})
 	if err != nil {
-		s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
-	result.ID = response.Id
+	result.ID = contactId
 
 	if data.EmailEntity != nil {
 		emailCreate := &emailpb.UpsertEmailGrpcRequest{
@@ -631,7 +606,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 		}
 		emailCreate.CreatedAt = timestamppb.New(data.ContactEntity.CreatedAt)
 		emailId, err := utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-			return s.grpcClients.EmailClient.UpsertEmail(contextWithTimeout, emailCreate)
+			return s.grpcClients.EmailClient.UpsertEmail(ctx, emailCreate)
 		})
 		if err != nil {
 			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
@@ -642,9 +617,9 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 			ID: emailId.Id,
 		}
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.grpcClients.ContactClient.LinkEmailToContact(contextWithTimeout, &contactpb.LinkEmailToContactGrpcRequest{
+			return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
 				Primary:   data.EmailEntity.Primary,
-				ContactId: response.Id,
+				ContactId: contactId,
 				EmailId:   emailId.Id,
 				Tenant:    common.GetTenantFromContext(ctx),
 				AppSource: data.ContactEntity.AppSource,

@@ -39,6 +39,16 @@ func TimeOrNow(t time.Time) time.Time {
 	return t
 }
 
+func TimeOrNowFromPtr(t *time.Time) time.Time {
+	if t == nil {
+		return Now()
+	}
+	if t.IsZero() {
+		return Now()
+	}
+	return *t
+}
+
 func Today() time.Time {
 	return ToDate(Now())
 }
