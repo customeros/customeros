@@ -322,9 +322,9 @@ const getDefaultValue = (): Flow => ({
     goalAchieved: 0,
   },
   contacts: [],
+  senders: [],
   nodes: JSON.stringify(initialNodes),
   edges: JSON.stringify(initialEdges),
-  actions: [],
 });
 const initialNodes = [
   {
