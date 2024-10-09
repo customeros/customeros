@@ -61,7 +61,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 	createdAt := utils.Now()
 
 	if emailFields.Email == "" {
-		return nil, errors.New("email address is required")
+		return nil, nil
 	}
 
 	// check if email already exists
@@ -139,11 +139,11 @@ func (s *emailService) ReplaceEmail(ctx context.Context, tenant, previousEmail s
 		return nil, err
 	}
 
-	if previousEmail != "" {
-		if tenant == "" {
-			tenant = common.GetTenantFromContext(ctx)
-		}
+	if tenant == "" {
+		tenant = common.GetTenantFromContext(ctx)
+	}
 
+	if previousEmail != "" {
 		err := s.UnlinkEmail(ctx, tenant, previousEmail, emailFields.AppSource, linkWith)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unlink email"))

@@ -82,7 +82,7 @@ func (r *socialWriteRepository) MergeSocialForEntity(ctx context.Context, tenant
 		"followersCount": data.FollowersCount,
 		"externalId":     data.ExternalId,
 		"source":         data.SourceFields.Source,
-		"sourceOfTruth":  data.SourceFields.SourceOfTruth,
+		"sourceOfTruth":  utils.FirstNotEmptyString(data.SourceFields.SourceOfTruth, data.SourceFields.Source),
 		"appSource":      data.SourceFields.AppSource,
 	}
 	span.LogFields(log.String("cypher", cypher))

@@ -19,9 +19,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	pkgerrors "github.com/pkg/errors"
 	"strings"
 	"sync"
 	"time"
@@ -298,21 +298,15 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 	}
 	if !failedSync && contactInput.HasSocials() {
 		for _, social := range contactInput.Socials {
-			// Link social to contact
-			_, err = CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-				return s.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
-					Tenant:    common.GetTenantFromContext(ctx),
-					ContactId: contactId,
-					SourceFields: &commonpb.SourceFields{
-						Source:    contactInput.ExternalSystem,
-						AppSource: appSource,
-					},
-					Url: social.URL,
+			_, err = s.services.CommonServices.SocialService.MergeSocialWithEntity(ctx, tenant, contactId, commonmodel.CONTACT,
+				neo4jentity.SocialEntity{
+					Url:       social.URL,
+					Source:    neo4jentity.GetDataSource(contactInput.ExternalSystem),
+					AppSource: appSource,
 				})
-			})
 			if err != nil {
-				tracing.TraceErr(span, err, log.String("grpcMethod", "LinkSocialToContact"))
-				reason = fmt.Sprintf("Failed to link social %s with contact %s: %s", social.URL, contactId, err.Error())
+				tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to merge social with contact"))
+				reason = fmt.Sprintf("Failed to merge social %s with contact %s: %s", social.URL, contactId, err.Error())
 				s.log.Error(reason)
 			}
 		}

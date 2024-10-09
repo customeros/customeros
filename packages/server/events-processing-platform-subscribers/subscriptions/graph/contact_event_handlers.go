@@ -15,9 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/event/contact/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
@@ -110,20 +108,18 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 			tracing.TraceErr(span, err)
 			return err
 		}
-	}
 
-	if eventData.SocialUrl != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-			return h.grpcClients.ContactClient.AddSocial(ctx, &contactpb.ContactAddSocialGrpcRequest{
-				Tenant:    eventData.Tenant,
-				ContactId: contactId,
-				Url:       eventData.SocialUrl,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			h.log.Errorf("AddSocial failed: %v", err.Error())
+		if eventData.SocialUrl != "" {
+			_, err = h.services.CommonServices.SocialService.MergeSocialWithEntity(ctx, eventData.Tenant, contactId, model.CONTACT,
+				neo4jentity.SocialEntity{
+					Url:       eventData.SocialUrl,
+					Source:    neo4jentity.GetDataSource(eventData.Source),
+					AppSource: eventData.AppSource,
+				})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				h.log.Errorf("AddSocial failed: %v", err.Error())
+			}
 		}
 	}
 
@@ -353,24 +349,9 @@ func (h *ContactEventHandler) OnSocialAddedToContactV1(ctx context.Context, evt 
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 
-	data := neo4jrepository.SocialFields{
-		SocialId:       eventData.SocialId,
-		Url:            eventData.Url,
-		Alias:          eventData.Alias,
-		ExternalId:     eventData.ExternalId,
-		FollowersCount: eventData.FollowersCount,
-		CreatedAt:      eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
-			Source:        helper.GetSource(eventData.Source.Source),
-			SourceOfTruth: helper.GetSource(eventData.Source.Source),
-			AppSource:     helper.GetSource(eventData.Source.AppSource),
-		},
-	}
-	err := h.services.CommonServices.Neo4jRepositories.SocialWriteRepository.MergeSocialForEntity(ctx, eventData.Tenant, contactId, model.NodeLabelContact, data)
-
 	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
 
-	return err
+	return nil
 }
 
 func (h *ContactEventHandler) OnSocialRemovedFromContactV1(ctx context.Context, evt eventstore.Event) error {

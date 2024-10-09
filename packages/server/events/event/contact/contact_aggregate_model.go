@@ -135,18 +135,6 @@ func (c *Contact) HasLocation(locationId string) bool {
 	return false
 }
 
-func (c *Contact) HasSocialUrl(url string) bool {
-	if c.Socials == nil {
-		return false
-	}
-	for _, social := range c.Socials {
-		if social.Url == url {
-			return true
-		}
-	}
-	return false
-}
-
 func (c *Contact) GetSocialIdForUrl(url string) string {
 	if c.Socials == nil {
 		return ""

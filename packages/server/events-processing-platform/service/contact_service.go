@@ -329,6 +329,10 @@ func (s *contactService) AddSocial(ctx context.Context, request *contactpb.Conta
 	initAggregateFunc := func() eventstore.Aggregate {
 		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
 	}
+
+	if request.SocialId == "" {
+		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
+	}
 	socialId, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request)
 	if err != nil {
 		tracing.TraceErr(span, err)
