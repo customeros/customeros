@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/ai-api/config"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 )
 
@@ -13,9 +14,9 @@ type Services struct {
 	OpenAiService    OpenAiService
 }
 
-func InitServices(cfg *config.Config, db *config.StorageDB) *Services {
+func InitServices(cfg *config.Config, db *config.StorageDB, appLogger logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, db.GormDB, nil, "", nil),
+		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, db.GormDB, nil, "", nil, appLogger),
 	}
 
 	services.OpenAiService = NewOpenAiService(cfg)

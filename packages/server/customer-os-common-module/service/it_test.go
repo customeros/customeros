@@ -51,7 +51,7 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 
-	CommonServices = InitServices(&config.GlobalConfig{}, postgresGormDB, driver, "neo4j", nil)
+	CommonServices = InitServices(&config.GlobalConfig{}, postgresGormDB, driver, "neo4j", nil, appLogger)
 }
 
 func initContext() context.Context {

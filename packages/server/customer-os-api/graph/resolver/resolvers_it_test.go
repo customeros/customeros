@@ -88,7 +88,7 @@ func prepareClient() {
 	gRPCconn, _ := testDialFactory.GetEventsProcessingPlatformConn()
 
 	grpcClient := grpc_client.InitClients(gRPCconn)
-	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, driver, "neo4j", grpcClient)
+	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{}, postgresGormDB, driver, "neo4j", grpcClient, appLogger)
 	customerOsApiServices = service.InitServices(appLogger, driver, &config.Config{}, commonServices, grpcClient, postgresGormDB, nil)
 	graphResolver := NewResolver(appLogger, customerOsApiServices, customerOsApiServices.CommonServices.GrpcClients, &config.Config{})
 	loader := dataloader.NewDataLoader(customerOsApiServices)

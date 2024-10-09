@@ -3,7 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -38,7 +38,7 @@ type EmailService interface {
 	UnlinkEmail(ctx context.Context, tenant, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
 
-	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonModel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
+	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -73,7 +73,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 
 	// email not exist, create one
 	if emailId == "" {
-		emailId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelEmail)
+		emailId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonmodel.NodeLabelEmail)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -189,7 +189,7 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 	}
 
 	switch linkWith.Type.String() {
-	case commonModel.CONTACT.String():
+	case commonmodel.CONTACT.String():
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return s.services.GrpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
@@ -205,7 +205,7 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to contact"))
 		}
-	case commonModel.USER.String():
+	case commonmodel.USER.String():
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 			return s.services.GrpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
@@ -221,7 +221,7 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
 		}
-	case commonModel.ORGANIZATION.String():
+	case commonmodel.ORGANIZATION.String():
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.services.GrpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
@@ -271,7 +271,7 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 
 	switch linkWith.Type.String() {
 
-	case commonModel.CONTACT.String():
+	case commonmodel.CONTACT.String():
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
 			return s.services.GrpcClients.ContactClient.UnLinkEmailFromContact(ctx, &contactpb.UnLinkEmailFromContactGrpcRequest{
@@ -285,7 +285,7 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to contact"))
 		}
-	case commonModel.USER.String():
+	case commonmodel.USER.String():
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
 			return s.services.GrpcClients.UserClient.UnLinkEmailFromUser(ctx, &userpb.UnLinkEmailFromUserGrpcRequest{
@@ -299,7 +299,7 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
 		}
-	case commonModel.ORGANIZATION.String():
+	case commonmodel.ORGANIZATION.String():
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.services.GrpcClients.OrganizationClient.UnLinkEmailFromOrganization(ctx, &organizationpb.UnLinkEmailFromOrganizationGrpcRequest{
@@ -332,7 +332,7 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, tenant, emailId, a
 	}
 
 	// check if email exists by id
-	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, emailId, commonModel.NodeLabelEmail)
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, emailId, commonmodel.NodeLabelEmail)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to check if email exists by id"))
 		return err
@@ -372,7 +372,7 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, tenant, emailId, a
 	return nil
 }
 
-func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonModel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
+func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllEmailsForEntityIds")
 	defer span.Finish()
 

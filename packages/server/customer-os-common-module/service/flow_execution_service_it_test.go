@@ -69,10 +69,10 @@ func TestFlowExecutionService_FlowExecution_1(t *testing.T) {
 	contactId1 := "1"
 	contactI2 := "2"
 
-	err = CommonServices.Neo4jRepositories.ContactWriteRepository.CreateContact(ctx, tenantName, contactId1, repository.ContactCreateFields{})
+	err = CommonServices.Neo4jRepositories.ContactWriteRepository.CreateContact(ctx, tenantName, contactId1, repository.ContactFields{})
 	require.NoError(t, err)
 
-	err = CommonServices.Neo4jRepositories.ContactWriteRepository.CreateContact(ctx, tenantName, contactI2, repository.ContactCreateFields{})
+	err = CommonServices.Neo4jRepositories.ContactWriteRepository.CreateContact(ctx, tenantName, contactI2, repository.ContactFields{})
 	require.NoError(t, err)
 
 	require.Equal(t, 2, neo4jtest.GetCountOfNodes(ctx, driver, model.NodeLabelContact))

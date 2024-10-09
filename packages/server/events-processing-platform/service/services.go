@@ -51,7 +51,7 @@ func InitServices(cfg *config.Config, repositories *repository.Repositories, agg
 	services.es = aggregateStore
 
 	services.FileStoreApiService = fsc.NewFileStoreApiService(&cfg.Services.FileStoreApiConfig)
-	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver, cfg.Neo4j.Database, nil)
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{}, repositories.Drivers.GormDb, repositories.Drivers.Neo4jDriver, cfg.Neo4j.Database, nil, log)
 
 	services.RequestHandler = NewRequestHandler(log, aggregateStore, cfg.Utils)
 

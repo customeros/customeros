@@ -48,7 +48,19 @@ type AppLogger struct {
 
 // NewAppLogger App Logger constructor
 func NewAppLogger(cfg *Config) *AppLogger {
-	return &AppLogger{Level: strings.ToLower(cfg.LogLevel), DevMode: cfg.DevMode, Encoding: cfg.Encoder}
+	var devMode bool
+	var encoding string
+	var logLevel string
+	if cfg == nil {
+		devMode = false
+		encoding = "console"
+		logLevel = "info"
+	} else {
+		devMode = cfg.DevMode
+		encoding = cfg.Encoder
+		logLevel = cfg.LogLevel
+	}
+	return &AppLogger{Level: strings.ToLower(logLevel), DevMode: devMode, Encoding: encoding}
 }
 
 // For mapping config logger to email_service logger levels

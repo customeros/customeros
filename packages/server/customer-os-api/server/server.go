@@ -104,7 +104,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	grpcContainer := grpc_client.InitClients(gRPCconn)
 
 	// Setting up Postgres repositories
-	commonServices := commonservice.InitServices(&commonConfig.GlobalConfig{}, db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer)
+	commonServices := commonservice.InitServices(&commonConfig.GlobalConfig{}, db.GormDB, &neo4jDriver, server.cfg.Neo4j.Database, grpcContainer, server.log)
 
 	// Setting up Gin
 	r := gin.Default()

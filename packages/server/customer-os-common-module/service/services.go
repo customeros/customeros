@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
@@ -19,6 +20,7 @@ type Services struct {
 	GrpcClients *grpc_client.Clients
 
 	AttachmentService         AttachmentService
+	ContactService            ContactService
 	ContractService           ContractService
 	CommonService             CommonService
 	CurrencyService           CurrencyService
@@ -48,7 +50,7 @@ type Services struct {
 	ApiCacheService ApiCacheService
 }
 
-func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients) *Services {
+func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, logger logger.Logger) *Services {
 	services := &Services{
 		GlobalConfig:         globalConfig,
 		GrpcClients:          grpcClients,
@@ -63,12 +65,13 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 
 	services.AttachmentService = NewAttachmentService(services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
-	services.ContractService = NewContractService(nil, services)
+	services.ContactService = NewContactService(logger, services)
+	services.ContractService = NewContractService(logger, services)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
-	services.DomainService = NewDomainService(nil, services, cache)
+	services.DomainService = NewDomainService(logger, services, cache)
 	services.EmailService = NewEmailService(services)
-	services.EmailingService = NewEmailingService(nil, services)
-	services.ExternalSystemService = NewExternalSystemService(nil, services)
+	services.EmailingService = NewEmailingService(logger, services)
+	services.ExternalSystemService = NewExternalSystemService(logger, services)
 	services.FlowService = NewFlowService(services)
 	services.FlowExecutionService = NewFlowExecutionService(services)
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
@@ -76,12 +79,12 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.JobRoleService = NewJobRoleService(services)
 	services.InteractionSessionService = NewInteractionSessionService(services)
 	services.InteractionEventService = NewInteractionEventService(services)
-	services.SocialService = NewSocialService(nil, services)
+	services.SocialService = NewSocialService(logger, services)
 	services.MailService = NewMailService(services)
 	services.OpenSrsService = NewOpenSRSService(services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
-	services.ServiceLineItemService = NewServiceLineItemService(nil, services)
-	services.TenantService = NewTenantService(nil, services)
+	services.ServiceLineItemService = NewServiceLineItemService(logger, services)
+	services.TenantService = NewTenantService(logger, services)
 	services.UserService = NewUserService(services)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)

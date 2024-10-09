@@ -20,7 +20,7 @@ type Services struct {
 
 func InitServices(config *config.Config, gormDb *gorm.DB, driver *neo4j.DriverWithContext, log logger.Logger) *Services {
 	services := &Services{
-		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil),
+		CommonServices: commonService.InitServices(&commonConfig.GlobalConfig{}, gormDb, driver, config.Neo4j.Database, nil, log),
 	}
 
 	services.AddressValidationService = NewAddressValidationService(config, services)
