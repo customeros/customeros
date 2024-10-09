@@ -10,6 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -183,54 +185,78 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 		span.LogFields(log.Bool("found matching contact", matchingContactExists))
 
 		// Create new contact id if not found
-		contactId = utils.NewUUIDIfEmpty(contactId)
-		contactInput.Id = contactId
-		span.LogFields(log.String("contactId", contactId))
-
-		// Create or update contact
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
-				Tenant:          tenant,
-				Id:              contactId,
-				Name:            contactInput.Name,
-				FirstName:       contactInput.FirstName,
-				LastName:        contactInput.LastName,
-				Description:     contactInput.Description,
-				Timezone:        contactInput.Timezone,
-				ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
-				CreatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.CreatedAt),
-				UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
-				SourceFields: &commonpb.SourceFields{
-					Source:    contactInput.ExternalSystem,
-					AppSource: appSource,
+		createContact := true
+		if contactId != "" {
+			createContact = false
+		}
+		if createContact {
+			contactId, err = s.services.CommonServices.ContactService.CreateContact(ctx, tenant,
+				neo4jrepo.ContactFields{
+					Name:            contactInput.Name,
+					FirstName:       contactInput.FirstName,
+					LastName:        contactInput.LastName,
+					Description:     contactInput.Description,
+					Timezone:        contactInput.Timezone,
+					ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
+					CreatedAt:       utils.TimeOrNowFromPtr(contactInput.CreatedAt),
+					SourceFields: neo4jmodel.Source{
+						Source:    contactInput.ExternalSystem,
+						AppSource: appSource,
+					},
 				},
-				ExternalSystemFields: &commonpb.ExternalSystemFields{
+				"",
+				neo4jmodel.ExternalSystem{
 					ExternalSystemId: contactInput.ExternalSystem,
 					ExternalId:       contactInput.ExternalId,
 					ExternalUrl:      contactInput.ExternalUrl,
 					ExternalIdSecond: contactInput.ExternalIdSecond,
 					ExternalSource:   contactInput.ExternalSourceEntity,
-					SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
-				},
+					SyncDate:         &syncDate,
+				})
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err)
+				reason = fmt.Sprintf("failed creating contact id for external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err.Error())
+				s.log.Error(reason)
+			}
+			contactInput.Id = contactId
+		} else {
+			// update contact
+			ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+			_, err = CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
+				return s.grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
+					Tenant:          tenant,
+					Id:              contactId,
+					Name:            contactInput.Name,
+					FirstName:       contactInput.FirstName,
+					LastName:        contactInput.LastName,
+					Description:     contactInput.Description,
+					Timezone:        contactInput.Timezone,
+					ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
+					CreatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.CreatedAt),
+					UpdatedAt:       utils.ConvertTimeToTimestampPtr(contactInput.UpdatedAt),
+					SourceFields: &commonpb.SourceFields{
+						Source:    contactInput.ExternalSystem,
+						AppSource: appSource,
+					},
+					ExternalSystemFields: &commonpb.ExternalSystemFields{
+						ExternalSystemId: contactInput.ExternalSystem,
+						ExternalId:       contactInput.ExternalId,
+						ExternalUrl:      contactInput.ExternalUrl,
+						ExternalIdSecond: contactInput.ExternalIdSecond,
+						ExternalSource:   contactInput.ExternalSourceEntity,
+						SyncDate:         utils.ConvertTimeToTimestampPtr(&syncDate),
+					},
+				})
 			})
-		})
-		if err != nil {
-			failedSync = true
-			tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertContact"))
-			reason = fmt.Sprintf("failed sending event to upsert contact  with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err)
-			s.log.Error(reason)
-		}
-		// Wait for contact to be created in neo4j
-		if !failedSync && !matchingContactExists {
-			for i := 1; i <= constants.MaxRetryCheckDataInNeo4jAfterEventRequest; i++ {
-				contact, findErr := s.repositories.ContactRepository.GetById(ctx, tenant, contactId)
-				if contact != nil && findErr == nil {
-					break
-				}
-				time.Sleep(utils.BackOffExponentialDelay(i))
+			if err != nil {
+				failedSync = true
+				tracing.TraceErr(span, err, log.String("grpcMethod", "UpsertContact"))
+				reason = fmt.Sprintf("failed sending event to upsert contact with external reference %s for tenant %s :%s", contactInput.ExternalId, tenant, err)
+				s.log.Error(reason)
 			}
 		}
+		span.LogFields(log.String("contactId", contactInput.Id))
 	}
 	if !failedSync && contactInput.HasPrimaryEmail() {
 		_, err = s.services.CommonServices.EmailService.Merge(ctx, tenant,

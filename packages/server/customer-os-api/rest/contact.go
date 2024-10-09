@@ -9,7 +9,8 @@ import (
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -100,20 +101,12 @@ func CreateContact(services *service.Services, grpcClients *grpc_client.Clients)
 			}
 
 			if contactId == "" {
-				ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-				contactGrpcResponse, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-					return grpcClients.ContactClient.UpsertContact(ctx, &contactpb.UpsertContactGrpcRequest{
-						Tenant:    tenant,
-						SocialUrl: contactSocialUrl,
-					})
-				})
+				contactId, err = services.CommonServices.ContactService.CreateContact(ctx, tenant, neo4jrepo.ContactFields{}, contactSocialUrl, neo4jmodel.ExternalSystem{})
 				if err != nil {
 					span.LogFields(tracingLog.String("result", "Failed to upsert contact"))
 					c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to upsert contact"})
 					return
 				}
-
-				contactId = contactGrpcResponse.Id
 			}
 
 			if emailId == "" {

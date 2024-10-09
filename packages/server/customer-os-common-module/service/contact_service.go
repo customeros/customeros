@@ -54,9 +54,7 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 	tracing.TagEntity(span, contactId)
 
 	// if createdAt missing, set it to now
-	if contactFields.CreatedAt.IsZero() {
-		contactFields.CreatedAt = utils.Now()
-	}
+	contactFields.CreatedAt = utils.TimeOrNow(contactFields.CreatedAt)
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
@@ -83,6 +81,7 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 
 	// TODO move link with social url to a (sync process + event)
 
+	// TODO create new proto event for contact creation (after deprecating existing event)
 	// send contact to events
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
@@ -101,10 +100,17 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 				Source:    contactFields.SourceFields.Source,
 				AppSource: contactFields.SourceFields.AppSource,
 			},
-			LoggedInUserId:       common.GetUserIdFromContext(ctx),
-			SocialUrl:            socialUrl,
-			Username:             contactFields.Username,
-			ExternalSystemFields: &commonpb.ExternalSystemFields{}, // TODO alexb implement me
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			SocialUrl:      socialUrl,
+			Username:       contactFields.Username,
+			ExternalSystemFields: &commonpb.ExternalSystemFields{
+				ExternalSystemId: externalSystem.ExternalSystemId,
+				ExternalUrl:      externalSystem.ExternalUrl,
+				ExternalId:       externalSystem.ExternalId,
+				ExternalSource:   externalSystem.ExternalSource,
+				ExternalIdSecond: externalSystem.ExternalIdSecond,
+				SyncDate:         utils.ConvertTimeToTimestampPtr(externalSystem.SyncDate),
+			},
 		})
 	})
 	if err != nil {
