@@ -99,7 +99,6 @@ func main() {
 	//testCreateLogEntry()
 	//testUpdateLogEntry()
 	//testAddCustomField()
-	//testCreateEmail()
 	//testCreatePhoneNumber()
 	//testAddParentOrganization()
 	//testRemoveParentOrganization()
@@ -389,21 +388,6 @@ func testAddCustomField() {
 		CustomFieldDataType:   organizationpb.CustomFieldDataType_TEXT,
 		CustomFieldValue: &organizationpb.CustomFieldValue{
 			StringValue: utils.StringPtr("super secret value"),
-		},
-	})
-	print(result)
-}
-
-func testCreateEmail() {
-	userId := "697563a8-171c-4950-a067-1aaaaf2de1d8"
-	rawEmail := "aa@test.com"
-
-	result, _ := clients.EmailClient.UpsertEmail(context.Background(), &emailpb.UpsertEmailGrpcRequest{
-		Tenant:         tenant,
-		RawEmail:       rawEmail,
-		LoggedInUserId: userId,
-		SourceFields: &commonpb.SourceFields{
-			AppSource: "test_app",
 		},
 	})
 	print(result)

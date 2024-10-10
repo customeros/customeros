@@ -150,14 +150,12 @@ func (a *EmailAggregate) DeleteEmail(ctx context.Context, request *emailpb.Delet
 
 func (a *EmailAggregate) When(event eventstore.Event) error {
 	switch event.GetEventType() {
-	case emailevent.EmailCreateV1:
-		return a.onEmailCreate(event)
-	case emailevent.EmailUpdateV1:
-		return a.onEmailUpdated(event)
 	case emailevent.EmailValidatedV2:
 		return a.OnEmailValidated(event)
 	case emailevent.EmailValidationFailedV1,
 		emailevent.EmailValidatedV1,
+		emailevent.EmailCreateV1,
+		emailevent.EmailUpdateV1,
 		emailevent.EmailUpsertV1,
 		emailevent.EmailDeleteV1:
 		return nil
@@ -169,37 +167,6 @@ func (a *EmailAggregate) When(event eventstore.Event) error {
 		err.EventType = event.GetEventType()
 		return err
 	}
-}
-
-func (a *EmailAggregate) onEmailCreate(event eventstore.Event) error {
-	var eventData emailevent.EmailCreateEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Email.RawEmail = eventData.RawEmail
-	if eventData.SourceFields.Available() {
-		a.Email.Source = eventData.SourceFields
-	} else {
-		a.Email.Source.Source = eventData.Source
-		a.Email.Source.SourceOfTruth = eventData.SourceOfTruth
-		a.Email.Source.AppSource = eventData.AppSource
-	}
-	a.Email.CreatedAt = eventData.CreatedAt
-	a.Email.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *EmailAggregate) onEmailUpdated(event eventstore.Event) error {
-	var eventData emailevent.EmailUpdateEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if eventData.Source == constants.SourceOpenline {
-		a.Email.Source.SourceOfTruth = eventData.Source
-	}
-	a.Email.UpdatedAt = eventData.UpdatedAt
-	a.Email.RawEmail = eventData.RawEmail
-	return nil
 }
 
 func (a *EmailAggregate) OnEmailValidated(event eventstore.Event) error {

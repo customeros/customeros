@@ -21,20 +21,6 @@ message DeleteEmailRequest {
   string appSource = 4;
 }
 
-// Deprecated
-message UpsertEmailGrpcRequest {
-  string tenant = 1;
-  string rawEmail = 2;
-  google.protobuf.Timestamp  createdAt = 6;
-  google.protobuf.Timestamp  updatedAt = 7;
-  string id = 8;
-  string loggedInUserId = 9;
-  SourceFields sourceFields = 10;
-
-  optional string LinkWithType = 11;
-  optional string LinkWithId = 12;
-}
-
 message EmailValidationGrpcRequest {
   string tenant = 1;
   string emailId = 2;
@@ -76,8 +62,6 @@ message EmailIdGrpcResponse {
 }
 
 service emailGrpcService {
-  // Deprecated
-  rpc UpsertEmail(UpsertEmailGrpcRequest) returns (EmailIdGrpcResponse);
   rpc UpsertEmailV2(UpsertEmailRequest) returns (EmailIdGrpcResponse);
   rpc RequestEmailValidation(RequestEmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
   rpc UpdateEmailValidation(EmailValidationGrpcRequest) returns (EmailIdGrpcResponse);
