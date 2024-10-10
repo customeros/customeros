@@ -88,7 +88,7 @@ export const ContactAvatarHeader = observer(() => {
 
     if (!validate()) return;
 
-    if (contactsTargetPreset === preset) {
+    if (contactsTargetPreset === preset || organizationId) {
       store.contacts.createWithSocial({
         organizationId,
         socialUrl: linkedin,
