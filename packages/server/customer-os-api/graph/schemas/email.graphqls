@@ -17,7 +17,6 @@ extend type Mutation {
 
     email_Validate(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    emailDelete(id: ID!): Result! @deprecated
     emailUpdate(input: EmailUpdateAddressInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
     emailUpdateInContact(contactId : ID!, input: EmailRelationUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
     emailRemoveFromContactById(contactId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated

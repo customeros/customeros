@@ -37,8 +37,6 @@ type EmailService interface {
 	UpdateEmailFor(ctx context.Context, entityType commonModel.EntityType, entityId string, input model.EmailRelationUpdateInput) error
 	//Deprecated
 	DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, emailId string) (bool, error)
-	//Deprecated
-	DeleteById(ctx context.Context, emailId string) (bool, error)
 	GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error)
 	GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error)
 	//Deprecated
@@ -222,16 +220,6 @@ func (s *emailService) DetachFromEntityById(ctx context.Context, entityType comm
 		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, entityId)
 	}
 
-	return err == nil, err
-}
-
-func (s *emailService) DeleteById(ctx context.Context, emailId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DeleteById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("emailId", emailId))
-
-	err := s.repositories.EmailRepository.DeleteById(ctx, common.GetTenantFromContext(ctx), emailId)
 	return err == nil, err
 }
 
