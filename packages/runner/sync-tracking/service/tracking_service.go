@@ -261,7 +261,6 @@ func (s *trackingService) NotifyOnSlack(ctx context.Context) {
 		err := s.notifyOnSlack(ctx, r)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to notify on slack"))
-			return
 		}
 	}
 
