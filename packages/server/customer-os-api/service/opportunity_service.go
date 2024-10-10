@@ -29,7 +29,6 @@ type OpportunityService interface {
 	Update(ctx context.Context, input model.OpportunityUpdateInput) error
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error
 	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalAdjustedRate *int64) error
-	CloseWon(ctx context.Context, opportunityId string) error
 	CloseLost(ctx context.Context, opportunityId string) error
 	ReplaceOwner(ctx context.Context, opportunityId, userId string) error
 	RemoveOwner(ctx context.Context, opportunityId string) error
@@ -345,54 +344,6 @@ func (s *opportunityService) GetPaginatedOrganizationOpportunities(ctx context.C
 	}
 	paginatedResult.SetRows(&opportunities)
 	return &paginatedResult, nil
-}
-
-func (s *opportunityService) CloseWon(ctx context.Context, opportunityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CloseWon")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	opportunity, err := s.services.CommonServices.OpportunityService.GetById(ctx, tenant, opportunityId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if opportunity == nil {
-		err = fmt.Errorf("opportunity not found")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	// check opportunity is not already closed won
-	if opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon {
-		err = fmt.Errorf("opportunity already closed won")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	closeWonRequest := opportunitypb.CloseWinOpportunityGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		Id:             opportunity.Id,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-		return s.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &closeWonRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("error from events processing: %s", err.Error())
-		return err
-	}
-
-	return nil
 }
 
 func (s *opportunityService) CloseLost(ctx context.Context, opportunityId string) error {

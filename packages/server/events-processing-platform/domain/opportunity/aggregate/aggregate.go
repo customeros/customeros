@@ -254,8 +254,6 @@ func (a *OpportunityAggregate) When(evt eventstore.Event) error {
 		return a.onRenewalOpportunityUpdate(evt)
 	case opportunityevent.OpportunityUpdateNextCycleDateV1:
 		return a.onOpportunityUpdateNextCycleDate(evt)
-	case opportunityevent.OpportunityCloseWinV1:
-		return a.onOpportunityCloseWin(evt)
 	case opportunityevent.OpportunityCloseLooseV1:
 		return a.onOpportunityCloseLoose(evt)
 	default:
@@ -444,16 +442,6 @@ func (a *OpportunityAggregate) onRenewalOpportunityUpdate(evt eventstore.Event) 
 		a.Opportunity.RenewalDetails.RenewalAdjustedRate = eventData.RenewalAdjustedRate
 	}
 
-	return nil
-}
-
-func (a *OpportunityAggregate) onOpportunityCloseWin(evt eventstore.Event) error {
-	var eventData opportunityevent.OpportunityCloseWinEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Opportunity.InternalStage = neo4jenum.OpportunityInternalStageClosedWon.String()
-	a.Opportunity.ClosedAt = &eventData.ClosedAt
 	return nil
 }
 

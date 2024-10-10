@@ -440,6 +440,8 @@ func enrichContextMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{}
 
+		customCtx.AppSource = constants.AppSourceCustomerOsApi
+
 		if c.Keys[security.KEY_TENANT_NAME] != nil {
 			customCtx.Tenant = c.Keys[security.KEY_TENANT_NAME].(string)
 		}

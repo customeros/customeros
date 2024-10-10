@@ -5,6 +5,8 @@ extend type Query {
 extend type Mutation {
     opportunity_Save(input: OpportunitySaveInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_Archive(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    #TODO these are not used on UI AT ALL
     opportunity_CloseWon(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_CloseLost(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 

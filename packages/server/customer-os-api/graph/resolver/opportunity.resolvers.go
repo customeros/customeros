@@ -118,7 +118,9 @@ func (r *mutationResolver) OpportunityCloseWon(ctx context.Context, opportunityI
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.opportunityID", opportunityID))
 
-	err := r.Services.OpportunityService.CloseWon(ctx, opportunityID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.OpportunityService.CloseWon(ctx, tenant, opportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to close opportunity %s", opportunityID)
