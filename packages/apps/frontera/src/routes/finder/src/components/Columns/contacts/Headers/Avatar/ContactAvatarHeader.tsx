@@ -46,7 +46,7 @@ export const ContactAvatarHeader = observer(() => {
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const store = useStore();
 
-  // const contactsPreset = store.tableViewDefs.contactsPreset;
+  const contactsPreset = store.tableViewDefs.contactsPreset;
   const contactsTargetPreset = store.tableViewDefs.contactsTargetPreset;
 
   const options = store?.organizations
@@ -196,6 +196,7 @@ export const ContactAvatarHeader = observer(() => {
             <div className='flex flex-col'>
               <label htmlFor='organizationId' className='text-sm font-semibold'>
                 Organization
+                {contactsPreset === preset && ' (optional)'}
               </label>
               <Select
                 isClearable
