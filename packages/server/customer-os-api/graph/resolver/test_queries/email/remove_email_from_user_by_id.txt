@@ -1,6 +1,0 @@
-mutation RemoveEmailFromUserById($userId: ID!, $emailId: ID!) {
-  emailRemoveFromUserById(userId: $userId, id: $emailId)
-    {
-      result
-    }
-}
