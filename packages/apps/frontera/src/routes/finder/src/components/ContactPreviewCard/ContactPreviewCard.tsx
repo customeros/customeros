@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
-import { set } from 'lodash';
+import set from 'lodash/set';
 import { useKeyBindings } from 'rooks';
 import cityTimezone from 'city-timezones';
 import { observer } from 'mobx-react-lite';
@@ -16,12 +16,8 @@ import { getTimezone } from '@utils/getTimezone';
 import { useStore } from '@shared/hooks/useStore';
 import { Tags } from '@organization/components/Tabs';
 import { getFormattedLink } from '@utils/getExternalLink';
+import { Tag, Social, TableViewType } from '@graphql/types';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
-import {
-  Tag,
-  Social,
-  TableViewType,
-} from '@shared/types/__generated__/graphql.types';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 
 export const ContactPreviewCard = observer(() => {
@@ -58,6 +54,7 @@ export const ContactPreviewCard = observer(() => {
     : null;
 
   const email = contact?.value.emails?.[0]?.email;
+  const previousEmail = useMemo(() => email, [contact?.isLoading]);
   const validationDetails = contact?.value.emails?.[0]?.emailValidationDetails;
 
   const fromatedUrl = contact?.value?.socials?.[0]?.url.replace(
@@ -220,11 +217,7 @@ export const ContactPreviewCard = observer(() => {
               className='text-ellipsis ml-[-2px]'
               value={contact?.value.emails?.[0]?.email || ''}
               onBlur={() => {
-                if (!contact?.value?.emails?.[0]?.id) {
-                  contact?.addEmail();
-                } else {
-                  contact?.updateEmail();
-                }
+                contact?.updateEmail(previousEmail ?? '');
               }}
               onChange={(e) => {
                 contact?.update(

@@ -177,12 +177,8 @@ export class ContactStore implements Store<Contact> {
         }
       })
       .with(['emails', 0, ...P.array()], () => {
-        if (type === 'add') {
-          this.addEmail();
-        }
-
         if (type === 'update') {
-          this.updateEmail();
+          this.updateEmail(oldValue);
         }
       })
       .with(['tags', ...P.array()], () => {
@@ -281,51 +277,20 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
-  async addEmail() {
-    const email = this.value.emails?.[0]?.email ?? '';
-
-    try {
-      const { emailMergeToContact } = await this.service.addContactEmail({
-        contactId: this.getId(),
-        input: {
-          email,
-        },
-      });
-
-      runInAction(() => {
-        set(this.value.emails?.[0], 'id', emailMergeToContact.id);
-      });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    }
-  }
-
-  async updateEmail() {
+  async updateEmail(previousEmail: string) {
     const email = this.value.emails?.[0].email ?? '';
 
     try {
+      this.isLoading = true;
       await this.service.updateContactEmail({
+        contactId: this.getId(),
         input: {
-          id: this.value.emails[0].id,
           email,
         },
+        previousEmail,
       });
-    } catch (e) {
       runInAction(() => {
-        this.error = (e as Error).message;
-      });
-    }
-  }
-
-  async removeEmail() {
-    const email = this.value.emails?.[0].email ?? '';
-
-    try {
-      await this.service.removeContactEmail({
-        contactId: this.getId(),
-        email,
+        this.isLoading = false;
       });
     } catch (e) {
       runInAction(() => {

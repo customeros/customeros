@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, KeyboardEvent } from 'react';
+import { useRef, useMemo, useState, useEffect, KeyboardEvent } from 'react';
 
 import set from 'lodash/set';
 import { observer } from 'mobx-react-lite';
@@ -24,6 +24,7 @@ export const EmailCell = observer(
     const [isHovered, setIsHovered] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
+    const oldEmail = useMemo(() => contactStore?.value?.emails?.[0]?.email, []);
 
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
@@ -75,11 +76,7 @@ export const EmailCell = observer(
               onFocus={(e) => e.target.select()}
               value={contactStore?.value?.emails?.[0]?.email ?? ''}
               onBlur={() => {
-                if (!contactStore?.value?.emails?.[0]?.id) {
-                  contactStore?.addEmail();
-                } else {
-                  contactStore?.updateEmail();
-                }
+                contactStore?.updateEmail(oldEmail ?? '');
               }}
               onChange={(e) => {
                 contactStore?.update(
