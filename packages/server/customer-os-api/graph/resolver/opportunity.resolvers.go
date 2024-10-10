@@ -36,13 +36,16 @@ func (r *mutationResolver) OpportunityCreate(ctx context.Context, input model.Op
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	opportunityId, err := r.Services.OpportunityService.Create(ctx, input)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create opportunity")
 		return nil, nil
 	}
-	opportunityEntity, err := r.Services.OpportunityService.GetById(ctx, opportunityId)
+
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", opportunityId)
@@ -66,13 +69,35 @@ func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.Op
 		return &model.Opportunity{Metadata: &model.Metadata{ID: input.OpportunityID}}, nil
 	}
 
-	opportunityEntity, err := r.Services.OpportunityService.GetById(ctx, input.OpportunityID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, input.OpportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", input.OpportunityID)
 		return &model.Opportunity{Metadata: &model.Metadata{ID: input.OpportunityID}}, nil
 	}
 
+	return mapper.MapEntityToOpportunity(opportunityEntity), nil
+}
+
+// OpportunitySave is the resolver for the opportunity_save field.
+func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityUpdate", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	id, err := r.Services.CommonServices.OpportunityService.Save(ctx, nil, tenant, input.OrganizationID, input.OpportunityID, mapper.MapOpportunitySaveInputToEntity(input))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update opportunity %s", input.OpportunityID)
+		return nil, err
+	}
+
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, *id)
 	return mapper.MapEntityToOpportunity(opportunityEntity), nil
 }
 
@@ -83,8 +108,9 @@ func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.id", id))
 
-	// Check opportunity is not RENEWAL
-	opportunity, err := r.Services.OpportunityService.GetById(ctx, id)
+	tenant := common.GetTenantFromContext(ctx)
+
+	opportunity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "opportunity not found")
@@ -199,13 +225,15 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	err := r.Services.OpportunityService.UpdateRenewal(ctx, input.OpportunityID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.Amount, input.Comments, input.OwnerUserID, input.RenewalAdjustedRate, utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update opportunity renewal %s", input.OpportunityID)
 		return &model.Opportunity{ID: input.OpportunityID}, nil
 	}
-	opportunityEntity, err := r.Services.OpportunityService.GetById(ctx, input.OpportunityID)
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, input.OpportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching opportunity details. Opportunity id: %s", input.OpportunityID)
@@ -303,7 +331,9 @@ func (r *queryResolver) Opportunity(ctx context.Context, id string) (*model.Oppo
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.issueID", id))
 
-	opportunityEntity, err := r.Services.OpportunityService.GetById(ctx, id)
+	tenant := common.GetTenantFromContext(ctx)
+
+	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, id)
 	if err != nil || opportunityEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Opportunity with id %s not found", id)
@@ -319,10 +349,12 @@ func (r *queryResolver) OpportunitiesLinkedToOrganizations(ctx context.Context, 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.pagination", pagination)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	if pagination == nil {
 		pagination = &model.Pagination{Page: 0, Limit: 0}
 	}
-	paginatedResult, err := r.Services.OpportunityService.GetPaginatedOrganizationOpportunities(ctx, pagination.Page, pagination.Limit)
+	paginatedResult, err := r.Services.CommonServices.OpportunityService.GetPaginatedOrganizationOpportunities(ctx, tenant, pagination.Page, pagination.Limit)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error while fetching opportunities")

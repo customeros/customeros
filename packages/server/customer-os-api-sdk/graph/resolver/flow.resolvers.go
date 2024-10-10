@@ -63,7 +63,7 @@ func (r *mutationResolver) FlowContactDeleteBulk(ctx context.Context, id []strin
 }
 
 // FlowSenderMerge is the resolver for the flowSender_Merge field.
-func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowActionID string, input model.FlowSenderMergeInput) (*model.FlowSender, error) {
+func (r *mutationResolver) FlowSenderMerge(ctx context.Context, flowID string, input model.FlowSenderMergeInput) (*model.FlowSender, error) {
 	panic(fmt.Errorf("not implemented: FlowSenderMerge - flowSender_Merge"))
 }
 

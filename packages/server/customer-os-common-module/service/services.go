@@ -33,6 +33,7 @@ type Services struct {
 	InvoiceService            InvoiceService
 	InteractionSessionService InteractionSessionService
 	InteractionEventService   InteractionEventService
+	OpportunityService        OpportunityService
 	SlackChannelService       SlackChannelService
 	ServiceLineItemService    ServiceLineItemService
 	TenantService             TenantService
@@ -80,6 +81,8 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.InteractionSessionService = NewInteractionSessionService(services)
 	services.InteractionEventService = NewInteractionEventService(services)
 	services.SocialService = NewSocialService(log, services)
+	services.OpportunityService = NewOpportunityService(logger, services)
+	services.SocialService = NewSocialService(logger, services)
 	services.MailService = NewMailService(services)
 	services.OpenSrsService = NewOpenSRSService(services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)

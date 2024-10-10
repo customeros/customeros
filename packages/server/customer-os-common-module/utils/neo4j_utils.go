@@ -600,6 +600,33 @@ func ExecuteWriteQueryOnDb(ctx context.Context, driver neo4j.DriverWithContext, 
 	return err
 }
 
+func ExecuteWriteInTransaction(
+	ctx context.Context,
+	driver *neo4j.DriverWithContext,
+	database string,
+	tx *neo4j.ManagedTransaction,
+	action func(tx neo4j.ManagedTransaction) (any, error),
+) (any, error) {
+	if tx != nil {
+		return action(*tx)
+	}
+
+	session := NewNeo4jWriteSession(ctx, *driver, WithDatabaseName(database))
+	defer session.Close(ctx)
+
+	// Otherwise, create a new transaction using ExecuteWrite
+	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		// Pass the new transaction to the action
+		result, err := action(tx)
+		if err != nil {
+			return nil, err
+		}
+		return result, nil
+	})
+
+	return nil, err
+}
+
 func ExecuteWriteQueryNoReturn(ctx context.Context, driver neo4j.DriverWithContext, tx *neo4j.ManagedTransaction, cypher string, params map[string]any) error {
 	if tx == nil {
 		session := NewNeo4jWriteSession(ctx, driver)
@@ -615,7 +642,6 @@ func ExecuteWriteQueryNoReturn(ctx context.Context, driver neo4j.DriverWithConte
 		if err != nil {
 			return err
 		}
-
 		return nil
 	} else {
 		_, err := (*tx).Run(ctx, cypher, params)

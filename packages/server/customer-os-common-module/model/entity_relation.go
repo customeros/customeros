@@ -5,6 +5,7 @@ type EntityRelation string
 const (
 	BELONGS_TO_TENANT EntityRelation = "BELONGS_TO_TENANT"
 	HAS               EntityRelation = "HAS"
+	HAS_OPPORTUNITY   EntityRelation = "HAS_OPPORTUNITY"
 	INCLUDES          EntityRelation = "INCLUDES"
 	RECORDING         EntityRelation = "RECORDING"
 	PART_OF           EntityRelation = "PART_OF"

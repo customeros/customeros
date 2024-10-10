@@ -73,7 +73,9 @@ func (r *contractResolver) ExternalLinks(ctx context.Context, obj *model.Contrac
 func (r *contractResolver) Opportunities(ctx context.Context, obj *model.Contract) ([]*model.Opportunity, error) {
 	ctx = tracing.EnrichCtxWithSpanCtxForGraphQL(ctx, graphql.GetOperationContext(ctx))
 
-	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForContract(ctx, obj.ID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	opportunityEntities, err := dataloader.For(ctx).GetOpportunitiesForContract(ctx, tenant, obj.ID)
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("Failed to get opportunities for contract %s: %s", obj.ID, err.Error())

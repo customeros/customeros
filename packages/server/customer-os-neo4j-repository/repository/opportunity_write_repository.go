@@ -14,6 +14,7 @@ import (
 	"time"
 )
 
+// Deprecated
 type OpportunityCreateFields struct {
 	OrganizationId    string        `json:"organizationId"`
 	CreatedAt         time.Time     `json:"createdAt"`
@@ -32,6 +33,7 @@ type OpportunityCreateFields struct {
 	LikelihoodRate    int64         `json:"likelihoodRate"`
 }
 
+// Deprecated
 type OpportunityUpdateFields struct {
 	Source                  string        `json:"source"`
 	Name                    string        `json:"name"`
@@ -54,6 +56,36 @@ type OpportunityUpdateFields struct {
 	UpdateCurrency          bool          `json:"updateCurrency"`
 	UpdateNextSteps         bool          `json:"updateNextSteps"`
 	UpdateLikelihoodRate    bool          `json:"updateLikelihoodRate"`
+}
+
+type OpportunitySaveFields struct {
+	AppSource         string        `json:"appSource"`
+	Source            string        `json:"source"`
+	Name              string        `json:"name"`
+	Amount            float64       `json:"amount"`
+	MaxAmount         float64       `json:"maxAmount"`
+	ExternalStage     string        `json:"externalStage"`
+	ExternalType      string        `json:"externalType"`
+	EstimatedClosedAt *time.Time    `json:"estimatedClosedAt"`
+	InternalStage     string        `json:"internalStage"`
+	InternalType      string        `json:"internalType"`
+	Currency          enum.Currency `json:"currency"`
+	NextSteps         string        `json:"nextSteps"`
+	LikelihoodRate    int64         `json:"likelihoodRate"`
+	OwnerUserId       string        `json:"ownerUserId"`
+
+	UpdateName              bool `json:"updateName"`
+	UpdateAmount            bool `json:"updateAmount"`
+	UpdateMaxAmount         bool `json:"updateMaxAmount"`
+	UpdateExternalStage     bool `json:"updateExternalStage"`
+	UpdateExternalType      bool `json:"updateExternalType"`
+	UpdateEstimatedClosedAt bool `json:"updateEstimatedClosedAt"`
+	UpdateInternalStage     bool `json:"updateInternalStage"`
+	UpdateInternalType      bool `json:"updateInternalType"`
+	UpdateCurrency          bool `json:"updateCurrency"`
+	UpdateNextSteps         bool `json:"updateNextSteps"`
+	UpdateLikelihoodRate    bool `json:"updateLikelihoodRate"`
+	UpdateOwnerUserId       bool `json:"updateOwnerUserId"`
 }
 
 type RenewalOpportunityCreateFields struct {
@@ -88,15 +120,19 @@ type RenewalOpportunityUpdateFields struct {
 }
 
 type OpportunityWriteRepository interface {
+	//Deprecated
 	CreateForOrganization(ctx context.Context, tenant, opportunityId string, data OpportunityCreateFields) error
+	//Deprecated
 	Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error
+
+	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data OpportunitySaveFields) error
 	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
 	RemoveOwner(ctx context.Context, tenant, opportunityId string) error
 	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
-	CloseWin(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
-	CloseLoose(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
+	CloseWon(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
+	CloseLost(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
 	MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
 }
@@ -243,6 +279,104 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *opportunityWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data OpportunitySaveFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Save")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
+	tracing.LogObjectAsJson(span, "data", data)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		//create if not exists
+		cypherCreate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) MERGE(t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId})`, tenant)
+		paramsCreate := map[string]any{
+			"tenant":        tenant,
+			"opportunityId": opportunityId,
+		}
+
+		span.LogFields(log.String("cypherCreate", cypherCreate))
+		tracing.LogObjectAsJson(span, "paramsCreate", paramsCreate)
+
+		_, err := tx.Run(ctx, cypherCreate, paramsCreate)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		paramsUpdate := map[string]any{
+			"tenant":        tenant,
+			"opportunityId": opportunityId,
+			"sourceOfTruth": data.Source,
+			"overwrite":     data.Source == constants.SourceOpenline,
+		}
+
+		cypherUpdate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId}) SET `, tenant)
+		if data.UpdateName {
+			cypherUpdate += ` op.name = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR op.name = '' THEN $name ELSE op.name END, `
+			paramsUpdate["name"] = data.Name
+		}
+		if data.UpdateAmount {
+			cypherUpdate += ` op.amount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $amount ELSE op.amount END, `
+			paramsUpdate["amount"] = data.Amount
+		}
+		if data.UpdateMaxAmount {
+			cypherUpdate += ` op.maxAmount = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $maxAmount ELSE op.maxAmount END, `
+			paramsUpdate["maxAmount"] = data.MaxAmount
+		}
+		if data.UpdateExternalType {
+			cypherUpdate += ` op.externalType = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalType ELSE op.externalType END, `
+			paramsUpdate["externalType"] = data.ExternalType
+		}
+		if data.UpdateExternalStage {
+			cypherUpdate += ` op.externalStage = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $externalStage ELSE op.externalStage END, `
+			paramsUpdate["externalStage"] = data.ExternalStage
+		}
+		if data.UpdateEstimatedClosedAt {
+			cypherUpdate += ` op.estimatedClosedAt = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $estimatedClosedAt ELSE op.estimatedClosedAt END, `
+			paramsUpdate["estimatedClosedAt"] = utils.TimePtrAsAny(data.EstimatedClosedAt)
+		}
+		if data.UpdateInternalStage {
+			cypherUpdate += ` op.internalStage = $internalStage, `
+			paramsUpdate["internalStage"] = data.InternalStage
+		}
+		if data.UpdateInternalType {
+			cypherUpdate += ` op.internalType = $internalType, `
+			paramsUpdate["internalType"] = data.InternalType
+		}
+		if data.UpdateCurrency {
+			cypherUpdate += ` op.currency = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $currency ELSE op.currency END, `
+			paramsUpdate["currency"] = data.Currency.String()
+		}
+		if data.UpdateNextSteps {
+			cypherUpdate += ` op.nextSteps = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $nextSteps ELSE op.nextSteps END, `
+			paramsUpdate["nextSteps"] = data.NextSteps
+		}
+		if data.UpdateLikelihoodRate {
+			cypherUpdate += ` op.likelihoodRate = CASE WHEN op.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $likelihoodRate ELSE op.likelihoodRate END, `
+			paramsUpdate["likelihoodRate"] = data.LikelihoodRate
+		}
+		cypherUpdate += ` op.updatedAt = datetime(),
+				op.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE op.sourceOfTruth END`
+
+		span.LogFields(log.String("cypherUpdate", cypherUpdate))
+		tracing.LogObjectAsJson(span, "paramsUpdate", paramsUpdate)
+
+		_, err = tx.Run(ctx, cypherUpdate, paramsUpdate)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return nil, nil
+	})
+
 	return err
 }
 
@@ -454,8 +588,8 @@ func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, 
 	return err
 }
 
-func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseWin")
+func (r *opportunityWriteRepository) CloseWon(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseWon")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -486,8 +620,8 @@ func (r *opportunityWriteRepository) CloseWin(ctx context.Context, tenant, oppor
 	return err
 }
 
-func (r *opportunityWriteRepository) CloseLoose(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseLoose")
+func (r *opportunityWriteRepository) CloseLost(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseLost")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)

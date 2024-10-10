@@ -786,6 +786,7 @@ func MapDbNodeToExternalSystem(node *dbtype.Node) *entity.ExternalSystemEntity {
 	return &externalSystemEntity
 }
 
+// TODO use nil
 func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 	if node == nil {
 		return &entity.OpportunityEntity{}

@@ -5,6 +5,8 @@ extend type Query {
 extend type Mutation {
     opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_Update(input: OpportunityUpdateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    opportunity_save(input: OpportunitySaveInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_Archive(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_CloseWon(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_CloseLost(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -127,6 +129,23 @@ input OpportunityUpdateInput {
     opportunityId:       ID!
     name:                String
     amount:              Float
+    internalStage:       InternalStage
+    externalType:        String
+    externalStage:       String
+    estimatedClosedDate: Time
+    nextSteps:           String
+    likelihoodRate:      Int64
+    maxAmount:           Float
+    currency:            Currency
+}
+
+input OpportunitySaveInput {
+    organizationId:      ID
+    opportunityId:       ID
+
+    name:                String
+    amount:              Float
+    internalType:        InternalType
     internalStage:       InternalStage
     externalType:        String
     externalStage:       String
