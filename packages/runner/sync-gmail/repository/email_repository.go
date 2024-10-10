@@ -5,9 +5,9 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type EmailRepository interface {
@@ -16,7 +16,7 @@ type EmailRepository interface {
 	//Deprecated
 	FindEmailsByUserId(ctx context.Context, tenant string, userId string) ([]*dbtype.Node, error)
 	//Deprecated
-	CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, emailId, firstName, lastName, source, appSource string) (string, error)
+	CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, source, appSource string) (string, error)
 }
 
 type emailRepository struct {
@@ -70,13 +70,18 @@ func (r *emailRepository) FindEmailsByUserId(ctx context.Context, tenant string,
 	return result.([]*dbtype.Node), err
 }
 
-func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, emailId, firstName, lastName, source, appSource string) (string, error) {
-	span, ctx := tracing.StartTracerSpan(ctx, "EmailRepository.CreateContactWithEmailLinkedToOrganization")
-	defer span.Finish()
-
+func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId, email, firstName, lastName, source, appSource string) (string, error) {
 	dbResult, err := tx.Run(ctx, fmt.Sprintf(
 		" MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization{id: $organizationId}) WITH t, o "+
-			" MATCH (e:Email {id: $emailId})--(t) "+
+			" MERGE (e:Email {rawEmail: $email})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t) "+
+			" ON CREATE SET "+
+			"				e.id=randomUUID(), "+
+			"				e.createdAt=$now, "+
+			"				e.updatedAt=$now, "+
+			"				e.source=$source, "+
+			"				e.sourceOfTruth=$sourceOfTruth, "+
+			"				e.appSource=$appSource, "+
+			"				e:%s "+
 			" WITH t, e, o "+
 			" MERGE (e)<-[rel:HAS]-(c:Contact)-[:CONTACT_BELONGS_TO_TENANT]->(t) "+
 			" ON CREATE SET rel.primary=true, "+
@@ -99,29 +104,27 @@ func (r *emailRepository) CreateContactWithEmailLinkedToOrganization(ctx context
 			"   j.createdAt=$now, "+
 			"   j.updatedAt=$now, "+
 			"   j:JobRole_%s "+
-			" RETURN e.id limit 1", "Contact_"+tenant, tenant),
+			" RETURN e.id limit 1", "Email_"+tenant, "Contact_"+tenant, tenant),
 		map[string]interface{}{
 			"tenant":         tenant,
 			"organizationId": organizationId,
-			"emailId":        emailId,
+			"email":          email,
 			"firstName":      firstName,
 			"lastName":       lastName,
 			"source":         source,
 			"sourceOfTruth":  "openline",
 			"appSource":      appSource,
-			"now":            utils.Now(),
+			"now":            time.Now().UTC(),
 		})
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return "", err
 	}
 	records, err := dbResult.Collect(ctx)
 	if err != nil {
-		tracing.TraceErr(span, err)
 		return "", err
 	}
 	if len(records) == 0 {
-		return "", errors.New("no contact created")
+		return "", errors.New("no email created")
 	}
 	return records[0].Values[0].(string), nil
 }

@@ -134,9 +134,8 @@ func (s *emailService) ReplaceEmail(ctx context.Context, tenant, previousEmail s
 	span.LogKV("previousEmail", previousEmail)
 
 	if previousEmail == emailFields.Email {
-		err := errors.New("previous email is same as new email")
-		tracing.TraceErr(span, err)
-		return nil, err
+		span.LogFields(log.Bool("email.same", true))
+		return nil, nil
 	}
 
 	if tenant == "" {
