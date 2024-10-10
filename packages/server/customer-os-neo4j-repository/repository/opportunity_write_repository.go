@@ -72,7 +72,7 @@ type OpportunitySaveFields struct {
 	Currency          enum.Currency `json:"currency"`
 	NextSteps         string        `json:"nextSteps"`
 	LikelihoodRate    int64         `json:"likelihoodRate"`
-	OwnerUserId       string        `json:"ownerUserId"`
+	OwnerId           string        `json:"ownerId"`
 
 	UpdateName              bool `json:"updateName"`
 	UpdateAmount            bool `json:"updateAmount"`
@@ -85,7 +85,7 @@ type OpportunitySaveFields struct {
 	UpdateCurrency          bool `json:"updateCurrency"`
 	UpdateNextSteps         bool `json:"updateNextSteps"`
 	UpdateLikelihoodRate    bool `json:"updateLikelihoodRate"`
-	UpdateOwnerUserId       bool `json:"updateOwnerUserId"`
+	UpdateOwnerId           bool `json:"updateOwnerId"`
 }
 
 type RenewalOpportunityCreateFields struct {
@@ -388,15 +388,15 @@ func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, o
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 	span.LogFields(log.String("userId", userId))
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (op:Opportunity {id:$opportunityId}) WHERE op:Opportunity_%s
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}), (op:Opportunity:Opportunity_%s {id:$opportunityId})
 			WITH op, t
-			OPTIONAL MATCH (:User)-[rel:OWNS]->(op)
+			OPTIONAL MATCH (:User_%s)-[rel:OWNS]->(op)
 			DELETE rel
 			WITH op, t
-			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User {id:$userId})
+			MATCH (t)<-[:USER_BELONGS_TO_TENANT]-(u:User_%s {id:$userId})
 			WHERE (u.internal=false OR u.internal is null) AND (u.bot=false OR u.bot is null)
 			MERGE (u)-[:OWNS]->(op)
-			SET op.updatedAt=datetime()`, tenant)
+			SET op.updatedAt=datetime()`, tenant, tenant, tenant)
 	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
@@ -420,10 +420,9 @@ func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tenant, op
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	cypher := fmt.Sprintf(`MATCH (op:Opportunity {id:$opportunityId})<-[rel:OWNS]-(:User)-->(:Tenant {name:$tenant})
-				WHERE op:Opportunity_%s,
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId})<-[rel:OWNS]-(:User_%s)
 				SET op.updatedAt=datetime()
-				DELETE rel`, tenant)
+				DELETE rel`, tenant, tenant)
 	params := map[string]any{
 		"tenant":        tenant,
 		"opportunityId": opportunityId,

@@ -92,6 +92,10 @@ func MapOpportunitySaveInputToEntity(input model.OpportunitySaveInput) *reposito
 		mapped.LikelihoodRate = *input.LikelihoodRate
 		mapped.UpdateLikelihoodRate = true
 	}
+	if input.OwnerID != nil {
+		mapped.OwnerId = *input.OwnerID
+		mapped.UpdateOwnerId = true
+	}
 
 	if input.Currency != nil {
 		mapped.Currency = mapper.MapCurrencyFromModel(*input.Currency)
