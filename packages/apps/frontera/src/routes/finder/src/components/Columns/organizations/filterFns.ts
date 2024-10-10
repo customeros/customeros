@@ -784,7 +784,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         return ltv >= filterValue[0] && ltv <= filterValue[1];
       },
     )
-    .with({ property: ColumnViewType.OrganizationsCity }, (filter) => {
+    .with({ property: ColumnViewType.OrganizationsHeadquarters }, (filter) => {
       // Early exit if filter is not active
       if (!filter.active) return () => true;
 
