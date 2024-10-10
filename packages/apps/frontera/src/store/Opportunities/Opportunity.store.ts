@@ -101,7 +101,7 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateProperty(property: keyof Opportunity) {
     try {
       this.isLoading = true;
-      await this.service.updateOpportunity({
+      await this.service.saveOpportunity({
         input: {
           opportunityId: this.id,
           [property]: this.value[property],
@@ -149,7 +149,7 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityExternalStage(externalStage: string) {
     try {
       this.isLoading = true;
-      await this.service.updateOpportunity({
+      await this.service.saveOpportunity({
         input: {
           opportunityId: this.id,
           externalStage,
@@ -170,8 +170,12 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityCloseLost() {
     try {
       this.isLoading = true;
-      await this.service.updateOpportunityToCloseLost({
-        opportunityId: this.id,
+      await this.service.saveOpportunity({
+        input: {
+          opportunityId: this.id,
+          externalStage: '',
+          internalStage: InternalStage.ClosedLost,
+        },
       });
     } catch (err) {
       runInAction(() => {
@@ -187,8 +191,12 @@ export class OpportunityStore implements Store<Opportunity> {
   private async updateOpportunityCloseWon() {
     try {
       this.isLoading = true;
-      await this.service.updateOpportunityToCloseWon({
-        opportunityId: this.id,
+      await this.service.saveOpportunity({
+        input: {
+          opportunityId: this.id,
+          externalStage: '',
+          internalStage: InternalStage.ClosedWon,
+        },
       });
     } catch (err) {
       runInAction(() => {

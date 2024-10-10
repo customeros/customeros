@@ -2434,6 +2434,7 @@ export type Mutation = {
   customFieldsMergeAndUpdateInContact: Contact;
   customer_contact_Create: CustomerContact;
   customer_user_AddJobRole: CustomerUser;
+  /** @deprecated No longer supported */
   emailDelete: Result;
   emailMergeToContact: Email;
   emailMergeToOrganization: Email;
@@ -2524,6 +2525,7 @@ export type Mutation = {
   opportunity_RemoveOwner: ActionResponse;
   opportunity_SetOwner: ActionResponse;
   opportunity_Update: Opportunity;
+  opportunity_save: Opportunity;
   organizationPlanMilestone_BulkUpdate: Array<OrganizationPlanMilestone>;
   organizationPlanMilestone_Create: OrganizationPlanMilestone;
   organizationPlanMilestone_Duplicate: OrganizationPlanMilestone;
@@ -3195,6 +3197,10 @@ export type MutationOpportunity_UpdateArgs = {
   input: OpportunityUpdateInput;
 };
 
+export type MutationOpportunity_SaveArgs = {
+  input: OpportunitySaveInput;
+};
+
 export type MutationOrganizationPlanMilestone_BulkUpdateArgs = {
   input: Array<OrganizationPlanMilestoneUpdateInput>;
 };
@@ -3735,6 +3741,22 @@ export type OpportunityRenewalUpdateInput = {
   ownerUserId?: InputMaybe<Scalars['ID']['input']>;
   renewalAdjustedRate?: InputMaybe<Scalars['Int64']['input']>;
   renewalLikelihood?: InputMaybe<OpportunityRenewalLikelihood>;
+};
+
+export type OpportunitySaveInput = {
+  amount?: InputMaybe<Scalars['Float']['input']>;
+  currency?: InputMaybe<Currency>;
+  estimatedClosedDate?: InputMaybe<Scalars['Time']['input']>;
+  externalStage?: InputMaybe<Scalars['String']['input']>;
+  externalType?: InputMaybe<Scalars['String']['input']>;
+  internalStage?: InputMaybe<InternalStage>;
+  internalType?: InputMaybe<InternalType>;
+  likelihoodRate?: InputMaybe<Scalars['Int64']['input']>;
+  maxAmount?: InputMaybe<Scalars['Float']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  nextSteps?: InputMaybe<Scalars['String']['input']>;
+  opportunityId?: InputMaybe<Scalars['ID']['input']>;
+  organizationId?: InputMaybe<Scalars['ID']['input']>;
 };
 
 export type OpportunityUpdateInput = {
