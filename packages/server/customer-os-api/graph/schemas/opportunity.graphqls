@@ -3,17 +3,19 @@ extend type Query {
     opportunities_LinkedToOrganizations(pagination: Pagination): OpportunityPage! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 extend type Mutation {
-    opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    opportunity_Update(input: OpportunityUpdateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
-    opportunity_save(input: OpportunitySaveInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    opportunity_Save(input: OpportunitySaveInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_Archive(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_CloseWon(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_CloseLost(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    opportunity_SetOwner(opportunityId: ID!, userId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    opportunity_RemoveOwner(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
     opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Organization!
+
+    #TODO: Remove these after UI migration
+    opportunity_Create(input: OpportunityCreateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
+    opportunity_Update(input: OpportunityUpdateInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
+    opportunity_SetOwner(opportunityId: ID!, userId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
+    opportunity_RemoveOwner(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #Deprecated
 }
 
 type Opportunity implements MetadataInterface {
@@ -154,6 +156,8 @@ input OpportunitySaveInput {
     likelihoodRate:      Int64
     maxAmount:           Float
     currency:            Currency
+
+    ownerId:             ID
 }
 
 input OpportunityRenewalUpdateAllForOrganizationInput {

@@ -24,8 +24,6 @@ type OpportunityService interface {
 	GetPaginatedOrganizationOpportunities(ctx context.Context, tenant string, page int, limit int) (*utils.Pagination, error)
 
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId, opportunityId *string, input *repository.OpportunitySaveFields) (*string, error)
-	ReplaceOwner(ctx context.Context, tenant string, opportunityId, userId string) error
-	RemoveOwner(ctx context.Context, tenant string, opportunityId string) error
 	CloseWon(ctx context.Context, tenant, opportunityId string) error
 	CloseLost(ctx context.Context, tenant, opportunityId string) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
@@ -216,25 +214,20 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	}
 
 	//TODO use TX
-	if input.OwnerUserId != "" {
-		err = s.services.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, tenant, *opportunityId, input.OwnerUserId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-	}
-	if input.UpdateOwnerUserId {
-		if input.OwnerUserId != "" {
-			err = s.services.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, tenant, *opportunityId, input.OwnerUserId)
+	if input.UpdateOwnerId {
+		if input.OwnerId != "" {
+			err = s.services.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, tenant, *opportunityId, input.OwnerId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
 		} else {
-			err = s.services.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, tenant, *opportunityId)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
+			if existingOpportunity != nil {
+				err = s.services.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, tenant, *opportunityId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
 			}
 		}
 	}
@@ -269,61 +262,6 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	//}
 
 	return opportunityId, nil
-}
-
-func (s *opportunityService) ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.ReplaceOwner")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-	span.LogFields(log.String("userId", userId))
-
-	opportunityExists, _ := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, opportunityId, model2.NodeLabelOpportunity)
-	if !opportunityExists {
-		err := fmt.Errorf("(OpportunityService.ReplaceOwner) opportunity with id {%s} not found", opportunityId)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	userExists, _ := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, userId, model2.NodeLabelUser)
-	if !userExists {
-		err := fmt.Errorf("(OpportunityService.ReplaceOwner) user with id {%s} not found", userId)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err := s.services.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, tenant, opportunityId, userId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
-}
-
-func (s *opportunityService) RemoveOwner(ctx context.Context, tenant, opportunityId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.RemoveOwner")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-
-	opportunityExists, _ := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, opportunityId, model2.NodeLabelOpportunity)
-	if !opportunityExists {
-		err := fmt.Errorf("(OpportunityService.ReplaceOwner) opportunity with id {%s} not found", opportunityId)
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	err := s.services.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, tenant, opportunityId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	return nil
 }
 
 func (s *opportunityService) CloseWon(ctx context.Context, tenant, opportunityId string) error {
