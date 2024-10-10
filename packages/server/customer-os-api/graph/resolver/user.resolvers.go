@@ -6,9 +6,7 @@ package resolver
 
 import (
 	"context"
-	"errors"
 	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -19,10 +17,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -44,39 +42,20 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 
 	if input.Email != nil {
-		emailId, err := r.Services.CommonServices.Neo4jRepositories.EmailReadRepository.GetEmailIdIfExists(ctx, common.GetTenantFromContext(ctx), input.Email.Email)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			r.log.Errorf("Failed to get email id for email %s: %s", input.Email.Email, err.Error())
-		}
-
-		if emailId == "" {
-			emailId, err = r.Services.EmailService.CreateEmailAddressViaEvents(ctx, input.Email.Email, utils.IfNotNilString(input.AppSource))
-			if err != nil {
-				tracing.TraceErr(span, err)
-				r.log.Errorf("Failed to create email address for user %s: %s", userId, err.Error())
-			}
-		}
-
-		if emailId == "" {
-			tracing.TraceErr(span, errors.New("emailId is empty"))
-			graphql.AddErrorf(ctx, "Failed to create email address for user %s", userId)
-			return nil, nil
-		}
-
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				UserId:         userId,
-				EmailId:        emailId,
-				Primary:        utils.IfNotNilBool(input.Email.Primary),
-				AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+		_, err = r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+			commonservice.EmailFields{
+				Email:     input.Email.Email,
+				Primary:   utils.IfNotNilBool(input.Email.Primary),
+				Source:    neo4jentity.DataSourceOpenline.String(),
+				AppSource: constants.AppSourceCustomerOsApi,
+			}, &commonservice.LinkWith{
+				Type: commonModel.USER,
+				Id:   userId,
 			})
-		})
 		if err != nil {
 			tracing.TraceErr(span, err)
-			r.log.Errorf("Failed to link email address %s to user %s: %s", emailId, userId, err.Error())
+			graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email.Email)
+			return nil, err
 		}
 	}
 

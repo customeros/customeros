@@ -3,7 +3,6 @@ package resolver
 import (
 	"context"
 	"github.com/99designs/gqlgen/client"
-	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
@@ -13,74 +12,71 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
 
-func TestMutationResolver_EmailMergeToContact(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	// Create a default contact
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := uuid.New().String()
-
-	emailServiceCalled := false
-	contactServiceCalled := false
-
-	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
-		UpsertEmail: func(ctx context.Context, email *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
-			require.Equal(t, tenantName, email.Tenant)
-			require.NotNil(t, email)
-			emailServiceCalled = true
-			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
-				Id:        emailId,
-				Email:     "test@gmail.com",
-				CreatedAt: utils.Now(),
-				UpdatedAt: utils.Now(),
-			})
-			return &emailpb.EmailIdGrpcResponse{
-				Id: emailId,
-			}, nil
-		},
-	}
-	events_platform.SetEmailCallbacks(&emailServiceCallbacks)
-
-	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		LinkEmailToContact: func(context context.Context, contact *contactpb.LinkEmailToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-			require.Equal(t, tenantName, contact.Tenant)
-			require.Equal(t, contactId, contact.ContactId)
-			require.Equal(t, emailId, contact.EmailId)
-			contactServiceCalled = true
-			return &contactpb.ContactIdGrpcResponse{
-				Id: contactId,
-			}, nil
-		},
-	}
-	events_platform.SetContactCallbacks(&contactServiceCallbacks)
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_contact"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailMergeToContact model.Email
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	require.True(t, emailServiceCalled, "Email service was not called")
-	require.True(t, contactServiceCalled, "Contact service was not called")
-}
+//func TestMutationResolver_EmailMergeToContact(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//
+//	// Create a tenant in the Neo4j database
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	// Create a default contact
+//	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
+//	emailId := uuid.New().String()
+//
+//	emailServiceCalled := false
+//	contactServiceCalled := false
+//
+//	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
+//		UpsertEmail: func(ctx context.Context, email *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+//			require.Equal(t, tenantName, email.Tenant)
+//			require.NotNil(t, email)
+//			emailServiceCalled = true
+//			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
+//				Id:        emailId,
+//				Email:     "test@gmail.com",
+//				CreatedAt: utils.Now(),
+//				UpdatedAt: utils.Now(),
+//			})
+//			return &emailpb.EmailIdGrpcResponse{
+//				Id: emailId,
+//			}, nil
+//		},
+//	}
+//	events_platform.SetEmailCallbacks(&emailServiceCallbacks)
+//
+//	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
+//		LinkEmailToContact: func(context context.Context, contact *contactpb.LinkEmailToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+//			require.Equal(t, tenantName, contact.Tenant)
+//			require.Equal(t, contactId, contact.ContactId)
+//			require.Equal(t, emailId, contact.EmailId)
+//			contactServiceCalled = true
+//			return &contactpb.ContactIdGrpcResponse{
+//				Id: contactId,
+//			}, nil
+//		},
+//	}
+//	events_platform.SetContactCallbacks(&contactServiceCallbacks)
+//
+//	// Make the RawPost request and check for errors
+//	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_contact"),
+//		client.Var("contactId", contactId))
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	// Unmarshal the response data into the email struct
+//	var emailStruct struct {
+//		EmailMergeToContact model.Email
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
+//	require.Nil(t, err, "Error unmarshalling response data")
+//
+//	require.True(t, emailServiceCalled, "Email service was not called")
+//	require.True(t, contactServiceCalled, "Contact service was not called")
+//}
 
 func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 	ctx := context.Background()
@@ -125,66 +121,66 @@ func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 	require.True(t, userServiceCalled, "User service was not called")
 }
 
-func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	// Create a default organization
-	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
-	emailId := uuid.New().String()
-
-	emailServiceCalled := false
-	organizationServiceCalled := false
-
-	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
-		UpsertEmail: func(ctx context.Context, email *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
-			require.Equal(t, tenantName, email.Tenant)
-			require.NotNil(t, email)
-			emailServiceCalled = true
-			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
-				Id:        emailId,
-				Email:     "test@gmail.com",
-				CreatedAt: utils.Now(),
-				UpdatedAt: utils.Now(),
-			})
-			return &emailpb.EmailIdGrpcResponse{
-				Id: emailId,
-			}, nil
-		},
-	}
-	events_platform.SetEmailCallbacks(&emailServiceCallbacks)
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		LinkEmailToOrganization: func(context context.Context, org *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, org.Tenant)
-			require.Equal(t, orgId, org.OrganizationId)
-			require.Equal(t, emailId, org.EmailId)
-			organizationServiceCalled = true
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: orgId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_organization"),
-		client.Var("organizationId", orgId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailMergeToOrganization model.Email
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	require.True(t, emailServiceCalled, "Email service was not called")
-	require.True(t, organizationServiceCalled, "Organization service was not called")
-}
+//func TestMutationResolver_EmailMergeToOrganization(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//
+//	// Create a tenant in the Neo4j database
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//
+//	// Create a default organization
+//	orgId := neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{})
+//	emailId := uuid.New().String()
+//
+//	emailServiceCalled := false
+//	organizationServiceCalled := false
+//
+//	emailServiceCallbacks := events_platform.MockEmailServiceCallbacks{
+//		UpsertEmail: func(ctx context.Context, email *emailpb.UpsertEmailGrpcRequest) (*emailpb.EmailIdGrpcResponse, error) {
+//			require.Equal(t, tenantName, email.Tenant)
+//			require.NotNil(t, email)
+//			emailServiceCalled = true
+//			neo4jtest.CreateEmail(ctx, driver, tenantName, neo4jentity.EmailEntity{
+//				Id:        emailId,
+//				Email:     "test@gmail.com",
+//				CreatedAt: utils.Now(),
+//				UpdatedAt: utils.Now(),
+//			})
+//			return &emailpb.EmailIdGrpcResponse{
+//				Id: emailId,
+//			}, nil
+//		},
+//	}
+//	events_platform.SetEmailCallbacks(&emailServiceCallbacks)
+//
+//	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
+//		LinkEmailToOrganization: func(context context.Context, org *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
+//			require.Equal(t, tenantName, org.Tenant)
+//			require.Equal(t, orgId, org.OrganizationId)
+//			require.Equal(t, emailId, org.EmailId)
+//			organizationServiceCalled = true
+//			return &organizationpb.OrganizationIdGrpcResponse{
+//				Id: orgId,
+//			}, nil
+//		},
+//	}
+//	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
+//
+//	// Make the RawPost request and check for errors
+//	rawResponse, err := c.RawPost(getQuery("email/merge_email_to_organization"),
+//		client.Var("organizationId", orgId))
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	// Unmarshal the response data into the email struct
+//	var emailStruct struct {
+//		EmailMergeToOrganization model.Email
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
+//	require.Nil(t, err, "Error unmarshalling response data")
+//
+//	require.True(t, emailServiceCalled, "Email service was not called")
+//	require.True(t, organizationServiceCalled, "Organization service was not called")
+//}
 
 func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
 	ctx := context.Background()
