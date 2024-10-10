@@ -1,9 +1,0 @@
-mutation DuplicateMasterPlanMilestone($masterPlanId: ID!, $id: ID!) {
-masterPlanMilestone_Duplicate(
-        masterPlanId: $masterPlanId
-        id: $id
-    ) {
-    id
-    name
-  }
-}

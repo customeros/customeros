@@ -8,8 +8,6 @@ import (
 	"time"
 
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
-
-	orgplanmodel "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/model"
 )
 
 const (
@@ -85,27 +83,26 @@ type Organization struct {
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
 	Emails            map[string]OrganizationEmail       `json:"emails"`
 	// Deprecated
-	LocationIds         []string                                 `json:"locationIds,omitempty"`
-	Domains             []string                                 `json:"domains,omitempty"`
-	Socials             map[string]common.Social                 `json:"socials,omitempty"`
-	CustomFields        map[string]CustomField                   `json:"customFields,omitempty"`
-	ExternalSystems     []common.ExternalSystem                  `json:"externalSystems"`
-	ParentOrganizations map[string]ParentOrganization            `json:"parentOrganizations,omitempty"`
-	LogoUrl             string                                   `json:"logoUrl,omitempty"`
-	IconUrl             string                                   `json:"iconUrl,omitempty"`
-	YearFounded         *int64                                   `json:"yearFounded,omitempty"`
-	Headquarters        string                                   `json:"headquarters,omitempty"`
-	EmployeeGrowthRate  string                                   `json:"employeeGrowthRate,omitempty"`
-	SlackChannelId      string                                   `json:"slackChannelId,omitempty"`
-	OnboardingDetails   OnboardingDetails                        `json:"onboardingDetails,omitempty"`
-	BillingProfiles     map[string]BillingProfile                `json:"billingProfiles,omitempty"`
-	OrganizationPlans   map[string]orgplanmodel.OrganizationPlan `json:"organizationPlans,omitempty"`
-	Relationship        string                                   `json:"relationship,omitempty"`
-	Stage               string                                   `json:"stage,omitempty"`
-	LeadSource          string                                   `json:"leadSource,omitempty"`
-	TagIds              []string                                 `json:"tagIds,omitempty"`
-	Locations           map[string]common.Location               `json:"locations,omitempty"`
-	IcpFit              bool                                     `json:"icpFit"`
+	LocationIds         []string                      `json:"locationIds,omitempty"`
+	Domains             []string                      `json:"domains,omitempty"`
+	Socials             map[string]common.Social      `json:"socials,omitempty"`
+	CustomFields        map[string]CustomField        `json:"customFields,omitempty"`
+	ExternalSystems     []common.ExternalSystem       `json:"externalSystems"`
+	ParentOrganizations map[string]ParentOrganization `json:"parentOrganizations,omitempty"`
+	LogoUrl             string                        `json:"logoUrl,omitempty"`
+	IconUrl             string                        `json:"iconUrl,omitempty"`
+	YearFounded         *int64                        `json:"yearFounded,omitempty"`
+	Headquarters        string                        `json:"headquarters,omitempty"`
+	EmployeeGrowthRate  string                        `json:"employeeGrowthRate,omitempty"`
+	SlackChannelId      string                        `json:"slackChannelId,omitempty"`
+	OnboardingDetails   OnboardingDetails             `json:"onboardingDetails,omitempty"`
+	BillingProfiles     map[string]BillingProfile     `json:"billingProfiles,omitempty"`
+	Relationship        string                        `json:"relationship,omitempty"`
+	Stage               string                        `json:"stage,omitempty"`
+	LeadSource          string                        `json:"leadSource,omitempty"`
+	TagIds              []string                      `json:"tagIds,omitempty"`
+	Locations           map[string]common.Location    `json:"locations,omitempty"`
+	IcpFit              bool                          `json:"icpFit"`
 }
 
 type BillingProfile struct {

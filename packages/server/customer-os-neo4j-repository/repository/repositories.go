@@ -60,17 +60,11 @@ type Repositories struct {
 	LocationWriteRepository               LocationWriteRepository
 	LogEntryReadRepository                LogEntryReadRepository
 	LogEntryWriteRepository               LogEntryWriteRepository
-	MasterPlanReadRepository              MasterPlanReadRepository
-	MasterPlanWriteRepository             MasterPlanWriteRepository
-	OfferingReadRepository                OfferingReadRepository
-	OfferingWriteRepository               OfferingWriteRepository
 	OpportunityReadRepository             OpportunityReadRepository
 	OpportunityWriteRepository            OpportunityWriteRepository
 	OrganizationReadRepository            OrganizationReadRepository
 	OrganizationWithFiltersReadRepository OrganizationWithFiltersReadRepository
 	OrganizationWriteRepository           OrganizationWriteRepository
-	OrganizationPlanReadRepository        OrganizationPlanReadRepository
-	OrganizationPlanWriteRepository       OrganizationPlanWriteRepository
 	PhoneNumberReadRepository             PhoneNumberReadRepository
 	PhoneNumberWriteRepository            PhoneNumberWriteRepository
 	PlayerReadRepository                  PlayerReadRepository
@@ -149,17 +143,11 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		LocationWriteRepository:               NewLocationWriteRepository(driver, neo4jDatabase),
 		LogEntryReadRepository:                NewLogEntryReadRepository(driver, neo4jDatabase),
 		LogEntryWriteRepository:               NewLogEntryWriteRepository(driver, neo4jDatabase),
-		MasterPlanReadRepository:              NewMasterPlanReadRepository(driver, neo4jDatabase),
-		MasterPlanWriteRepository:             NewMasterPlanWriteRepository(driver, neo4jDatabase),
-		OfferingReadRepository:                NewOfferingReadRepository(driver, neo4jDatabase),
-		OfferingWriteRepository:               NewOfferingWriteRepository(driver, neo4jDatabase),
 		OpportunityReadRepository:             NewOpportunityReadRepository(driver, neo4jDatabase),
 		OpportunityWriteRepository:            NewOpportunityWriteRepository(driver, neo4jDatabase),
 		OrganizationReadRepository:            NewOrganizationReadRepository(driver, neo4jDatabase),
 		OrganizationWithFiltersReadRepository: NewOrganizationWithFiltersReadRepository(driver, neo4jDatabase),
 		OrganizationWriteRepository:           NewOrganizationWriteRepository(driver, neo4jDatabase),
-		OrganizationPlanReadRepository:        NewOrganizationPlanReadRepository(driver, neo4jDatabase),
-		OrganizationPlanWriteRepository:       NewOrganizationPlanWriteRepository(driver, neo4jDatabase),
 		PhoneNumberReadRepository:             NewPhoneNumberReadRepository(driver, neo4jDatabase),
 		PhoneNumberWriteRepository:            NewPhoneNumberWriteRepository(driver, neo4jDatabase),
 		PlayerReadRepository:                  NewPlayerReadRepository(driver, neo4jDatabase),

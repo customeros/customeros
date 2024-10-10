@@ -388,8 +388,6 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		model2.NodeLabelLogEntry,
 		model2.NodeLabelOrganization,
 		model2.NodeLabelBillingProfile,
-		model2.NodeLabelMasterPlan,
-		model2.NodeLabelMasterPlanMilestone,
 		model2.NodeLabelAction,
 		model2.NodeLabelPageView,
 		model2.NodeLabelPhoneNumber,
@@ -409,10 +407,7 @@ func (r *tenantWriteRepository) HardDeleteTenant(ctx context.Context, tenant str
 		model2.NodeLabelExternalSystem,
 		model2.NodeLabelInvoice,
 		model2.NodeLabelInvoiceLine,
-		model2.NodeLabelOrganizationPlan,
-		model2.NodeLabelOrganizationPlanMilestone,
 		model2.NodeLabelReminder,
-		model2.NodeLabelOffering,
 	}
 
 	//drop nodes with NodeLabel_Tenant

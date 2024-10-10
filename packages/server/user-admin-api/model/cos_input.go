@@ -185,15 +185,6 @@ type OrganizationUpdateOnboardingStatus struct {
 	Comments       string `json:"comments,omitempty"`
 }
 
-type MasterPlanMilestoneInput struct {
-	MasterPlanId  string   `json:"masterPlanId"`
-	Name          string   `json:"name"`
-	Order         int64    `json:"order"`
-	DurationHours int64    `json:"durationHours"`
-	Optional      bool     `json:"optional"`
-	Items         []string `json:"items"`
-}
-
 type OrganizationRelationship string
 
 const (

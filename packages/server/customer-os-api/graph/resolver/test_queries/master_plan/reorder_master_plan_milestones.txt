@@ -1,7 +1,0 @@
-mutation ReorderMasterPlanMilestones($masterPlanId: ID!, $milestoneIds: [ID!]!) {
-masterPlanMilestone_Reorder(
-    input: {
-        masterPlanId: $masterPlanId
-        orderedIds: $milestoneIds
-    })
-}

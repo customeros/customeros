@@ -15,9 +15,7 @@ import (
 	jobrolepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/job_role"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	logentrypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/log_entry"
-	masterplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/master_plan"
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
-	orgplanpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/org_plan"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
 	servicelineitempb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/service_line_item"
@@ -89,11 +87,9 @@ func RegisterGrpcServices(grpcServer *grpc.Server, services *service.Services) {
 	opportunitypb.RegisterOpportunityGrpcServiceServer(grpcServer, services.OpportunityService)
 	contractpb.RegisterContractGrpcServiceServer(grpcServer, services.ContractService)
 	servicelineitempb.RegisterServiceLineItemGrpcServiceServer(grpcServer, services.ServiceLineItemService)
-	masterplanpb.RegisterMasterPlanGrpcServiceServer(grpcServer, services.MasterPlanService)
 	invoicepb.RegisterInvoiceGrpcServiceServer(grpcServer, services.InvoiceService)
 	countrypb.RegisterCountryGrpcServiceServer(grpcServer, services.CountryService)
 	tenantpb.RegisterTenantGrpcServiceServer(grpcServer, services.TenantService)
-	orgplanpb.RegisterOrganizationPlanGrpcServiceServer(grpcServer, services.OrganizationPlanService)
 	eventstorepb.RegisterEventStoreGrpcServiceServer(grpcServer, services.EventStoreService)
 	eventcompletionpb.RegisterEventCompletionGrpcServiceServer(grpcServer, services.EventCompletionService)
 }

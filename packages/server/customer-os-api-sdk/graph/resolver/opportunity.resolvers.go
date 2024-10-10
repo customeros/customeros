@@ -12,16 +12,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
 )
 
-// OpportunityCreate is the resolver for the opportunity_Create field.
-func (r *mutationResolver) OpportunityCreate(ctx context.Context, input model.OpportunityCreateInput) (*model.Opportunity, error) {
-	panic(fmt.Errorf("not implemented: OpportunityCreate - opportunity_Create"))
-}
-
-// OpportunityUpdate is the resolver for the opportunityUpdate field.
-func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error) {
-	panic(fmt.Errorf("not implemented: OpportunityUpdate - opportunityUpdate"))
-}
-
 // OpportunitySave is the resolver for the opportunity_save field.
 func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error) {
 	panic(fmt.Errorf("not implemented: OpportunitySave - opportunity_save"))
@@ -42,16 +32,6 @@ func (r *mutationResolver) OpportunityCloseLost(ctx context.Context, opportunity
 	panic(fmt.Errorf("not implemented: OpportunityCloseLost - opportunity_CloseLost"))
 }
 
-// OpportunitySetOwner is the resolver for the opportunity_SetOwner field.
-func (r *mutationResolver) OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: OpportunitySetOwner - opportunity_SetOwner"))
-}
-
-// OpportunityRemoveOwner is the resolver for the opportunity_RemoveOwner field.
-func (r *mutationResolver) OpportunityRemoveOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: OpportunityRemoveOwner - opportunity_RemoveOwner"))
-}
-
 // OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
 func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error) {
 	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdate - opportunityRenewalUpdate"))
@@ -60,6 +40,26 @@ func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input m
 // OpportunityRenewalUpdateAllForOrganization is the resolver for the opportunityRenewal_UpdateAllForOrganization field.
 func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OpportunityRenewalUpdateAllForOrganization - opportunityRenewal_UpdateAllForOrganization"))
+}
+
+// OpportunityCreate is the resolver for the opportunity_Create field.
+func (r *mutationResolver) OpportunityCreate(ctx context.Context, input model.OpportunityCreateInput) (*model.Opportunity, error) {
+	panic(fmt.Errorf("not implemented: OpportunityCreate - opportunity_Create"))
+}
+
+// OpportunityUpdate is the resolver for the opportunityUpdate field.
+func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error) {
+	panic(fmt.Errorf("not implemented: OpportunityUpdate - opportunityUpdate"))
+}
+
+// OpportunitySetOwner is the resolver for the opportunity_SetOwner field.
+func (r *mutationResolver) OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunitySetOwner - opportunity_SetOwner"))
+}
+
+// OpportunityRemoveOwner is the resolver for the opportunity_RemoveOwner field.
+func (r *mutationResolver) OpportunityRemoveOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OpportunityRemoveOwner - opportunity_RemoveOwner"))
 }
 
 // Organization is the resolver for the organization field.
