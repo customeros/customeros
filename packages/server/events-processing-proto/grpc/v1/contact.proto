@@ -41,7 +41,7 @@ message UpsertContactGrpcRequest {
   ExternalSystemFields externalSystemFields = 16;
   string loggedInUserId = 17;
   repeated ContactFieldMask fieldsMask = 18;
-  string socialUrl = 19;
+  string socialUrl = 19 [deprecated = true];
   string username = 20;
 }
 

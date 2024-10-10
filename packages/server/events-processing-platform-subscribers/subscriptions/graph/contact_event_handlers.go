@@ -108,19 +108,6 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 			tracing.TraceErr(span, err)
 			return err
 		}
-
-		if eventData.SocialUrl != "" {
-			_, err = h.services.CommonServices.SocialService.MergeSocialWithEntity(ctx, eventData.Tenant, contactId, model.CONTACT,
-				neo4jentity.SocialEntity{
-					Url:       eventData.SocialUrl,
-					Source:    neo4jentity.GetDataSource(eventData.Source),
-					AppSource: eventData.AppSource,
-				})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				h.log.Errorf("AddSocial failed: %v", err.Error())
-			}
-		}
 	}
 
 	subscriptions.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, evt.GetEventType(), h.grpcClients)
