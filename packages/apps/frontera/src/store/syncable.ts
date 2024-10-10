@@ -1,4 +1,5 @@
-import { Channel } from 'phoenix';
+import type { Channel } from 'phoenix';
+
 import { getDiff, applyDiff } from 'recursive-diff';
 import {
   toJS,
@@ -10,9 +11,9 @@ import {
   makeObservable,
 } from 'mobx';
 
-import { RootStore } from './root';
-import { Transport } from './transport';
-import { Operation, SyncPacket } from './types';
+import type { RootStore } from './root';
+import type { Transport } from './transport';
+import type { Operation, SyncPacket } from './types';
 
 type SyncableUpdateOptions = {
   mutate?: boolean;
