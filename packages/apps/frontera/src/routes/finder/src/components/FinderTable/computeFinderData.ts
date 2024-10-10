@@ -77,8 +77,21 @@ export const computeFinderData = (
 
         if (searchTerm) {
           arr = new Fuse(arr, {
-            keys: ['value.name'],
-            threshold: 0.3,
+            keys: [
+              {
+                name: 'name',
+                getFn: (o) => o.value.name,
+              },
+              {
+                name: 'webiste',
+                getFn: (o) => o.value?.website || '',
+              },
+              {
+                name: 'socials',
+                getFn: (o) => o.value.socialMedia?.[0]?.url,
+              },
+            ],
+            threshold: 0.4,
             isCaseSensitive: false,
           })
             .search(removeAccents(searchTerm), { limit: 40 })
