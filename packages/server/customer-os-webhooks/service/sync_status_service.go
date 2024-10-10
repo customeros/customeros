@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/repository/postgres/entity"
 	"github.com/opentracing/opentracing-go"

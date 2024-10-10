@@ -4,23 +4,22 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"github.com/gin-gonic/gin"
+	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 	pkgerrors "github.com/pkg/errors"
 	"io"
 	"net/http"
 	"time"
-
-	"github.com/gin-gonic/gin"
-	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 )
 
 func AddContactRoutes(ctx context.Context, route *gin.Engine, cfg *config.Config, services *service.Services, log logger.Logger, cache *commoncaches.Cache) {
@@ -75,7 +74,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		}
 
 		// Context timeout, allocate per contact
-		timeout := time.Duration(len(contacts)) * common.Min1Duration
+		timeout := time.Duration(len(contacts)) * common.Min5Duration
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
@@ -130,7 +129,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		}
 
 		// Context timeout, allocate per contact
-		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
+		ctx, cancel := context.WithTimeout(ctx, common.Min5Duration)
 		defer cancel()
 
 		syncResult, err := services.ContactService.SyncContacts(ctx, []model.ContactData{contact})

@@ -7,6 +7,7 @@ import (
 )
 
 const Min1Duration = 1 * time.Minute
+const Min5Duration = 5 * time.Minute
 
 type CustomContext struct {
 	Tenant string
