@@ -32,6 +32,7 @@ import {
 import { cn } from '@ui/utils/cn';
 import { SelectOption } from '@ui/utils/types';
 import { LinkPastePlugin } from '@ui/form/Editor/plugins/PastePlugin';
+import VariablesPlugin from '@ui/form/Editor/plugins/VariablesPlugin';
 import TextNodeTransformer from '@ui/form/Editor/nodes/TextTransformar.ts';
 
 import { nodes } from './nodes/nodes';
@@ -87,12 +88,14 @@ interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   usePlainText?: boolean;
   defaultHtmlValue?: string;
   mentionsOptions?: string[];
+  variableOptions?: string[];
   children?: React.ReactNode;
   placeholderClassName?: string;
   hashtagsOptions?: SelectOption[];
   onChange?: (html: string) => void;
   onHashtagCreate?: (hashtag: string) => void;
   onHashtagSearch?: (q: string | null) => void;
+  onVariableSearch?: (q: string | null) => void;
   onMentionsSearch?: (q: string | null) => void;
   onHashtagsChange?: (hashtags: SelectOption[]) => void;
   onBlur?: (e: React.FocusEvent<HTMLDivElement>) => void;
@@ -113,9 +116,11 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       onHashtagCreate,
       onHashtagsChange,
       onMentionsSearch,
+      onVariableSearch,
       defaultHtmlValue,
       hashtagsOptions = [],
       mentionsOptions = [],
+      variableOptions = [],
       usePlainText = false,
       placeholderClassName,
       onKeyDown,
@@ -204,7 +209,14 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
 
           <LinkPastePlugin />
 
-          {onHashtagCreate && onHashtagSearch && (
+          {onVariableSearch && (
+            <VariablesPlugin
+              options={variableOptions}
+              onSearch={onVariableSearch}
+            />
+          )}
+
+          {onHashtagSearch && (
             <HashtagsPlugin
               options={hashtagsOptions}
               onCreate={onHashtagCreate}

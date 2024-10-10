@@ -1,0 +1,6 @@
+query getFlowEmailVariables {
+  flow_emailVariables {
+    type
+    variables
+  }
+}

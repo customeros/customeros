@@ -35,9 +35,7 @@ const ALLOWED_TAGS = [
   'i',
   'b',
   'u',
-  'li',
-  'pre',
-  'code',
+  'li', // Additional text formatting tags
 ];
 
 export function LinkPastePlugin() {
@@ -85,10 +83,6 @@ export function LinkPastePlugin() {
 
                       if (href) newElement.setAttribute('href', href);
                     }
-
-                    Array.from(element.attributes).forEach((attr) => {
-                      newElement.setAttribute(attr.name, attr.value);
-                    });
 
                     Array.from(element.childNodes).forEach((child) => {
                       newElement.appendChild(filterNode(child));
