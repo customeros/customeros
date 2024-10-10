@@ -8,6 +8,7 @@ import (
 	model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
@@ -56,10 +57,7 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 	// if createdAt missing, set it to now
 	contactFields.CreatedAt = utils.TimeOrNow(contactFields.CreatedAt)
 
-	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
-	defer session.Close(ctx)
-
-	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 		innerErr := s.services.Neo4jRepositories.ContactWriteRepository.CreateContactInTx(ctx, tx, tenant, contactId, contactFields)
 		if innerErr != nil {
 			s.log.Errorf("Error while saving contact %s: %s", contactId, err.Error())
@@ -78,8 +76,6 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 		tracing.TraceErr(span, err)
 		return "", err
 	}
-
-	// TODO move link with social url to a (sync process + event)
 
 	// TODO create new proto event for contact creation (after deprecating existing event)
 	// send contact to events
@@ -101,7 +97,6 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 				AppSource: contactFields.SourceFields.AppSource,
 			},
 			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			SocialUrl:      socialUrl,
 			Username:       contactFields.Username,
 			ExternalSystemFields: &commonpb.ExternalSystemFields{
 				ExternalSystemId: externalSystem.ExternalSystemId,
@@ -116,6 +111,18 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to create contact in events platform"))
 		return contactId, err
+	}
+
+	if socialUrl != "" {
+		_, err := s.services.SocialService.MergeSocialWithEntity(ctx, tenant, contactId, model.CONTACT,
+			neo4jentity.SocialEntity{
+				Url:       socialUrl,
+				Source:    neo4jentity.GetDataSource(contactFields.SourceFields.Source),
+				AppSource: contactFields.SourceFields.AppSource,
+			})
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to merge social with contact"))
+		}
 	}
 
 	span.LogFields(log.Bool("response.contactCreated", true))
