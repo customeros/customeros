@@ -1,14 +1,12 @@
 import { Transport } from '@store/transport';
 
 import GetOpportunityDocument from './getOpportunity.graphql';
+import SaveOpportunityDocument from './saveOpportunity.graphql';
 import GetOpportunitiesDocument from './getOpportunities.graphql';
 import CreateOpportunityDocument from './createOpportunity.graphql';
-import UpdateOpportunityDocument from './updateOpportunity.graphql';
 import ArchiveOpportunityDocument from './archiveOpportunity.graphql';
 import UpdateOpportunityOwnerDocument from './updateOpportunityOwner.graphql';
 import UpdateOpportunityRenewalDocument from './updateOpportunityRenewal.graphql';
-import UpdateOpportunityToCloseWonDocument from './updateOpportunityToCloseWon.graphql';
-import UpdateOpportunityToCloseLostDocument from './updateOpportunityToCloseLost.graphql';
 import {
   OpportunityQuery,
   OpportunityQueryVariables,
@@ -18,13 +16,13 @@ import {
   GetOpportunitiesQueryVariables,
 } from './getOpportunities.generated';
 import {
+  SaveOpportunityMutation,
+  SaveOpportunityMutationVariables,
+} from './saveOpportunity.generated';
+import {
   CreateOpportunityMutation,
   CreateOpportunityMutationVariables,
 } from './createOpportunity.generated';
-import {
-  UpdateOpportunityMutation,
-  UpdateOpportunityMutationVariables,
-} from './updateOpportunity.generated';
 import {
   ArchiveOpportunityMutation,
   ArchiveOpportunityMutationVariables,
@@ -37,14 +35,6 @@ import {
   UpdateOpportunityRenewalMutation,
   UpdateOpportunityRenewalMutationVariables,
 } from './updateOpportunityRenewal.generated';
-import {
-  UpdateOpportunityToCloseWonMutation,
-  UpdateOpportunityToCloseWonMutationVariables,
-} from './updateOpportunityToCloseWon.generated';
-import {
-  UpdateOpportunityToCloseLostMutation,
-  UpdateOpportunityToCloseLostMutationVariables,
-} from './updateOpportunityToCloseLost.generated';
 
 export class OpportunitiesService {
   private static instance: OpportunitiesService | null = null;
@@ -80,6 +70,15 @@ export class OpportunitiesService {
     );
   }
 
+  async saveOpportunity(
+    variables: SaveOpportunityMutationVariables,
+  ): Promise<SaveOpportunityMutation> {
+    return this.transport.graphql.request<
+      SaveOpportunityMutation,
+      SaveOpportunityMutationVariables
+    >(SaveOpportunityDocument, variables);
+  }
+
   async createOpportunity(
     variables: CreateOpportunityMutationVariables,
   ): Promise<CreateOpportunityMutation> {
@@ -87,15 +86,6 @@ export class OpportunitiesService {
       CreateOpportunityMutation,
       CreateOpportunityMutationVariables
     >(CreateOpportunityDocument, variables);
-  }
-
-  async updateOpportunity(
-    variables: UpdateOpportunityMutationVariables,
-  ): Promise<UpdateOpportunityMutation> {
-    return this.transport.graphql.request<
-      UpdateOpportunityMutation,
-      UpdateOpportunityMutationVariables
-    >(UpdateOpportunityDocument, variables);
   }
 
   async updateOpportunityRenewal(
@@ -114,24 +104,6 @@ export class OpportunitiesService {
       UpdateOpportunityOwnerMutation,
       UpdateOpportunityOwnerMutationVariables
     >(UpdateOpportunityOwnerDocument, variables);
-  }
-
-  async updateOpportunityToCloseLost(
-    variables: UpdateOpportunityToCloseLostMutationVariables,
-  ): Promise<UpdateOpportunityToCloseLostMutation> {
-    return this.transport.graphql.request<
-      UpdateOpportunityToCloseLostMutation,
-      UpdateOpportunityToCloseLostMutationVariables
-    >(UpdateOpportunityToCloseLostDocument, variables);
-  }
-
-  async updateOpportunityToCloseWon(
-    variables: UpdateOpportunityToCloseWonMutationVariables,
-  ): Promise<UpdateOpportunityToCloseWonMutation> {
-    return this.transport.graphql.request<
-      UpdateOpportunityToCloseWonMutation,
-      UpdateOpportunityToCloseWonMutationVariables
-    >(UpdateOpportunityToCloseWonDocument, variables);
   }
 
   async archiveOpportunity(
