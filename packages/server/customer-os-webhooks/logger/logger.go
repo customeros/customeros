@@ -14,7 +14,3 @@ func NewExtendedAppLogger(cfg *common_logger.Config) *ExtendedLogger {
 		AppLogger: *appLogger,
 	}
 }
-
-type Logger interface {
-	common_logger.Logger
-}

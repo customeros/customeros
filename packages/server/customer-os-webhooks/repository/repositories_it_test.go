@@ -3,8 +3,8 @@ package repository
 import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	comlog "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	locallogger "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/logger"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/test/neo4j"
 	postgrest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/test/postgres"
 	"github.com/testcontainers/testcontainers-go"
@@ -22,7 +22,7 @@ var (
 const tenantName = "openline"
 
 func SetupTestLogger() logger.Logger {
-	testLogger := logger.NewExtendedAppLogger(&comlog.Config{
+	testLogger := locallogger.NewExtendedAppLogger(&logger.Config{
 		DevMode: true,
 	})
 	testLogger.InitLogger()

@@ -50,7 +50,7 @@ type Services struct {
 	ApiCacheService ApiCacheService
 }
 
-func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, logger logger.Logger) *Services {
+func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
 	services := &Services{
 		GlobalConfig:         globalConfig,
 		GrpcClients:          grpcClients,
@@ -65,13 +65,13 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 
 	services.AttachmentService = NewAttachmentService(services)
 	services.AzureService = NewAzureService(globalConfig.AzureOAuthConfig, services.PostgresRepositories, services)
-	services.ContactService = NewContactService(logger, services)
-	services.ContractService = NewContractService(logger, services)
+	services.ContactService = NewContactService(log, services)
+	services.ContractService = NewContractService(log, services)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
-	services.DomainService = NewDomainService(logger, services, cache)
+	services.DomainService = NewDomainService(log, services, cache)
 	services.EmailService = NewEmailService(services)
-	services.EmailingService = NewEmailingService(logger, services)
-	services.ExternalSystemService = NewExternalSystemService(logger, services)
+	services.EmailingService = NewEmailingService(log, services)
+	services.ExternalSystemService = NewExternalSystemService(log, services)
 	services.FlowService = NewFlowService(services)
 	services.FlowExecutionService = NewFlowExecutionService(services)
 	services.GoogleService = NewGoogleService(globalConfig.GoogleOAuthConfig, services.PostgresRepositories, services)
@@ -79,12 +79,12 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.JobRoleService = NewJobRoleService(services)
 	services.InteractionSessionService = NewInteractionSessionService(services)
 	services.InteractionEventService = NewInteractionEventService(services)
-	services.SocialService = NewSocialService(logger, services)
+	services.SocialService = NewSocialService(log, services)
 	services.MailService = NewMailService(services)
 	services.OpenSrsService = NewOpenSRSService(services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
-	services.ServiceLineItemService = NewServiceLineItemService(logger, services)
-	services.TenantService = NewTenantService(logger, services)
+	services.ServiceLineItemService = NewServiceLineItemService(log, services)
+	services.TenantService = NewTenantService(log, services)
 	services.UserService = NewUserService(services)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
