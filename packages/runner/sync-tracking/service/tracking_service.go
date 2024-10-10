@@ -611,8 +611,8 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		organizationName = "Unknown"
 	}
 
-	if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Location != "" {
-		organizationLocation = snitcherDataResponse.Company.Location
+	if snitcherDataResponse.Company != nil && snitcherDataResponse.HasLocation() {
+		organizationLocation = snitcherDataResponse.LocationToString()
 	} else {
 		organizationLocation = "Unknown"
 	}
