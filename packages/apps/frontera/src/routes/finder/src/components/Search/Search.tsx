@@ -133,16 +133,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
     totalResults === 0 &&
     !!searchParams.get('search');
 
-  useKeyBindings(
-    {
-      Enter: () => {
-        store.ui.commandMenu.setType('AddNewOrganization');
-        store.ui.commandMenu.setOpen(true);
-      },
-    },
-    { when: allowCreation },
-  );
-
   const flag = useFeatureIsOn('filters-v2');
 
   return (
@@ -175,13 +165,6 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
             store.ui.setIsSearching('organizations');
             wrapperRef.current?.setAttribute('data-focused', '');
           }}
-          onKeyDown={(e) => {
-            if (e.key === 'a' && (e.metaKey || e.ctrlKey)) {
-              e.preventDefault();
-              e.currentTarget.select();
-            }
-            e.stopPropagation();
-          }}
           onKeyUp={(e) => {
             if (
               e.code === 'Escape' ||
@@ -191,6 +174,18 @@ export const Search = observer(({ onClose, onOpen, open }: SearchProps) => {
               inputRef.current?.blur();
               store.ui.setIsSearching(null);
             }
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'a' && (e.metaKey || e.ctrlKey)) {
+              e.preventDefault();
+              e.currentTarget.select();
+            }
+
+            if (e.key === 'Enter' && allowCreation) {
+              store.ui.commandMenu.setType('AddNewOrganization');
+              store.ui.commandMenu.setOpen(true);
+            }
+            e.stopPropagation();
           }}
         />
         <RightElement>
