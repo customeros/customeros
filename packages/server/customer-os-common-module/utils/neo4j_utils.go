@@ -627,28 +627,11 @@ func ExecuteWriteInTransaction(
 	return nil, err
 }
 
-func ExecuteWriteQueryNoReturn(ctx context.Context, driver neo4j.DriverWithContext, tx *neo4j.ManagedTransaction, cypher string, params map[string]any) error {
+func ExecuteWriteQueryOptionalTx(ctx context.Context, driver neo4j.DriverWithContext, tx *neo4j.ManagedTransaction, cypher string, params map[string]any) error {
 	if tx == nil {
-		session := NewNeo4jWriteSession(ctx, driver)
-		defer session.Close(ctx)
-
-		_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			_, err := tx.Run(ctx, cypher, params)
-			if err != nil {
-				return nil, err
-			}
-			return nil, nil
-		})
-		if err != nil {
-			return err
-		}
-		return nil
+		return ExecuteWriteQuery(ctx, driver, cypher, params)
 	} else {
-		_, err := (*tx).Run(ctx, cypher, params)
-		if err != nil {
-			return err
-		}
-		return nil
+		return ExecuteQueryInTx(ctx, *tx, cypher, params)
 	}
 }
 
