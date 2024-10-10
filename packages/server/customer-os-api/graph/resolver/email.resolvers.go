@@ -432,24 +432,6 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 	return &model.ActionResponse{Accepted: true}, nil
 }
 
-// EmailDelete is the resolver for the emailDelete field.
-func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.emailID", id))
-
-	result, err := r.Services.EmailService.DeleteById(ctx, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not remove email %s", id)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
 // EmailUpdate is the resolver for the emailUpdate field.
 func (r *mutationResolver) EmailUpdate(ctx context.Context, input model.EmailUpdateAddressInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdate", graphql.GetOperationContext(ctx))

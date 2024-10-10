@@ -77,11 +77,6 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 	panic(fmt.Errorf("not implemented: EmailValidate - email_Validate"))
 }
 
-// EmailDelete is the resolver for the emailDelete field.
-func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
-}
-
 // EmailUpdate is the resolver for the emailUpdate field.
 func (r *mutationResolver) EmailUpdate(ctx context.Context, input model.EmailUpdateAddressInput) (*model.Email, error) {
 	panic(fmt.Errorf("not implemented: EmailUpdate - emailUpdate"))
@@ -126,3 +121,13 @@ func (r *queryResolver) Email(ctx context.Context, id string) (*model.Email, err
 func (r *Resolver) Email() generated.EmailResolver { return &emailResolver{r} }
 
 type emailResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
+}

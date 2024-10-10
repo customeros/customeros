@@ -82,47 +82,6 @@ func TestMutationResolver_EmailMergeToContact(t *testing.T) {
 	require.True(t, contactServiceCalled, "Contact service was not called")
 }
 
-func TestMutationResolver_EmailDelete(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	contactId := neo4jt.CreateDefaultContact(ctx, driver, tenantName)
-	emailId := neo4jt.AddEmailTo(ctx, driver, commonModel.USER, tenantName, userId, "original@email.com", true, "")
-	neo4jt.AddEmailTo(ctx, driver, commonModel.CONTACT, tenantName, contactId, "original@email.com", true, "")
-
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Email_"+tenantName))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 2, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/delete_email"),
-		client.Var("emailId", emailId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailDelete model.Result
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-
-	require.Equal(t, true, emailStruct.EmailDelete.Result)
-
-	require.Equal(t, 0, neo4jtest.GetCountOfNodes(ctx, driver, "Email"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Contact"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "User"))
-	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tenant"))
-	require.Equal(t, 0, neo4jtest.GetCountOfRelationships(ctx, driver, "HAS"))
-	neo4jtest.AssertNeo4jLabels(ctx, t, driver, []string{"Tenant", "Contact", "Contact_" + tenantName, "User", "User_" + tenantName})
-}
-
 func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)

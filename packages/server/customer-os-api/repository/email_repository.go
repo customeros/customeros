@@ -16,8 +16,6 @@ type EmailRepository interface {
 	GetAllFor(ctx context.Context, tenant string, entityType model.EntityType, entityId string) ([]*db.Record, error)
 	//Deprecated
 	RemoveRelationshipById(ctx context.Context, entityType model.EntityType, tenant, entityId, emailId string) error
-	//Deprecated
-	DeleteById(ctx context.Context, tenant, emailId string) error
 }
 
 type emailRepository struct {
@@ -84,30 +82,6 @@ func (r *emailRepository) RemoveRelationshipById(ctx context.Context, entityType
 				"entityId": entityId,
 				"emailId":  emailId,
 				"tenant":   tenant,
-			})
-		return nil, err
-	}); err != nil {
-		return err
-	} else {
-		return nil
-	}
-}
-
-// Deprecated
-func (r *emailRepository) DeleteById(ctx context.Context, tenant, emailId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailRepository.DeleteById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	if _, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		_, err := tx.Run(ctx, `MATCH (e:Email {id:$emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
-            DETACH DELETE e`,
-			map[string]any{
-				"tenant":  tenant,
-				"emailId": emailId,
 			})
 		return nil, err
 	}); err != nil {
