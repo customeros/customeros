@@ -231,8 +231,8 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 
 	_, err = s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, emailId, firstName, lastname, source, AppSource)
 	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to create email linked to organization"))
-		return "", fmt.Errorf("unable to create email linked to organization: %v", err)
+		tracing.TraceErr(span, errors.Wrap(err, "unable to create contact linked to organization"))
+		return "", fmt.Errorf("unable to create contact linked to organization: %s", err.Error())
 	}
 
 	return emailId, nil

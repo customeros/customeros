@@ -143,7 +143,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 	tracing.LogObjectAsJson(span, "data", data)
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
-		 		SET e.email = $email,
+		 		SET e.email = CASE WHEN $email <> '' THEN $email ELSE e.email END,
 					e.isCatchAll = $isCatchAll,
 					e.deliverable = $deliverable,
 					e.isValidSyntax = $isValidSyntax,

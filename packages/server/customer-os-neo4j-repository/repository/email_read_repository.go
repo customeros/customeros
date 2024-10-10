@@ -75,7 +75,7 @@ func (r *emailReadRepository) GetEmailIdIfExists(ctx context.Context, tenant, em
 		return "", err
 	}
 	if len(result.([]*db.Record)) == 0 {
-		span.LogFields(log.String("result", ""))
+		span.LogFields(log.Bool("result.found", false))
 		return "", nil
 	}
 	span.LogFields(log.String("result", result.([]*db.Record)[0].Values[0].(string)))
