@@ -74,6 +74,17 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
+      { property: ColumnViewType.OrganizationsParentOrganization },
+      (filter) => (row: OrganizationStore) => {
+        if (!filter.active) return true;
+
+        const values =
+          row.value.parentCompanies?.[0]?.organization.name.toLowerCase();
+
+        return filterTypeText(filter, values);
+      },
+    )
+    .with(
       { property: ColumnViewType.OrganizationsWebsite },
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
@@ -510,6 +521,36 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const filterOperator = filter?.operation;
 
         const values = row.value.name.toLowerCase();
+
+        if (
+          filter.includeEmpty &&
+          filterOperator === ComparisonOperator.IsEmpty
+        ) {
+          return !values;
+        }
+
+        if (filterOperator === ComparisonOperator.IsNotEmpty) {
+          return values;
+        }
+
+        if (filterOperator === ComparisonOperator.NotContains) {
+          return !values.includes(filterValue);
+        }
+
+        {
+          return values.includes(filterValue);
+        }
+      },
+    )
+    .with(
+      { property: ColumnViewType.OrganizationsParentOrganization },
+      (filter) => (row: OrganizationStore) => {
+        if (!filter.active) return true;
+        const filterValue = filter?.value?.toLowerCase();
+        const filterOperator = filter?.operation;
+
+        const values =
+          row.value.parentCompanies?.[0]?.organization.name.toLowerCase();
 
         if (
           filter.includeEmpty &&

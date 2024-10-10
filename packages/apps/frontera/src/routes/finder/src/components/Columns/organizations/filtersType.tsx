@@ -450,6 +450,18 @@ export const getFilterTypes = (store?: RootStore) => {
         },
       ],
     },
+    [ColumnViewType.OrganizationsParentOrganization]: {
+      filterType: 'text',
+      filterName: 'Parent org',
+      filterAccesor: ColumnViewType.OrganizationsParentOrganization,
+      filterOperators: [
+        ComparisonOperator.Contains,
+        ComparisonOperator.NotContains,
+        ComparisonOperator.IsEmpty,
+        ComparisonOperator.IsNotEmpty,
+      ],
+      icon: <Globe01 className='mb-0.5' />,
+    },
   };
 
   return filterTypes;

@@ -857,7 +857,7 @@ export const columns: Record<string, Column> = {
       minSize: 210,
       maxSize: 400,
       enableResizing: true,
-      enableColumnFilter: false,
+      enableColumnFilter: true,
       enableSorting: false,
       cell: (props) => {
         const parentOrg =
