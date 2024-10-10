@@ -3,15 +3,16 @@ package rest
 import (
 	"encoding/csv"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"io"
@@ -110,17 +111,17 @@ func CreateContact(services *service.Services, grpcClients *grpc_client.Clients)
 			}
 
 			if emailId == "" {
-				contact := commonModel.CONTACT.String()
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-					return grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-						Tenant:       tenant,
-						RawEmail:     contactEmail,
-						LinkWithId:   &contactId,
-						LinkWithType: &contact,
+				_, err := services.CommonServices.EmailService.Merge(ctx, tenant,
+					commonservice.EmailFields{
+						Email:     contactEmail,
+						Source:    neo4jentity.DataSourceOpenline.String(),
+						AppSource: constants.AppSourceCustomerOsApiRest,
+					}, &commonservice.LinkWith{
+						Type: commonModel.CONTACT,
+						Id:   contactId,
 					})
-				})
-
 				if err != nil {
+					tracing.TraceErr(span, err)
 					span.LogFields(tracingLog.String("result", "Failed to upsert email"))
 					c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to upsert email"})
 					return

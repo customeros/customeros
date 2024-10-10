@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	locationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/location"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	phonenumberpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/phone_number"
@@ -36,37 +35,6 @@ func NewSyncToEventStoreService(repositories *repository.Repositories, services 
 		grpcClients:  grpcClients,
 		log:          log,
 	}
-}
-
-func (s *syncToEventStoreService) upsertEmailsIntoEventStore(ctx context.Context, batchSize int) (int, int, error) {
-	processedRecords := 0
-	failedRecords := 0
-	records, err := s.repositories.EmailRepository.GetAllCrossTenantsWithRawEmail(ctx, batchSize)
-	if err != nil {
-		return 0, 0, err
-	}
-	for _, v := range records {
-		_, err := s.grpcClients.EmailClient.UpsertEmail(context.Background(), &emailpb.UpsertEmailGrpcRequest{
-			Id:       utils.GetStringPropOrEmpty(v.Node.Props, "id"),
-			Tenant:   v.LinkedNodeId,
-			RawEmail: utils.GetStringPropOrEmpty(v.Node.Props, "rawEmail"),
-			SourceFields: &commonpb.SourceFields{
-				Source:        utils.GetStringPropOrEmpty(v.Node.Props, "source"),
-				SourceOfTruth: utils.GetStringPropOrEmpty(v.Node.Props, "sourceOfTruth"),
-				AppSource:     utils.GetStringPropOrEmpty(v.Node.Props, "appSource"),
-			},
-			CreatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "createdAt")),
-			UpdatedAt: utils.ConvertTimeToTimestampPtr(utils.GetTimePropOrNil(v.Node.Props, "updatedAt")),
-		})
-		if err != nil {
-			failedRecords++
-			s.log.Errorf("Failed to call method: %v", err)
-		} else {
-			processedRecords++
-		}
-	}
-
-	return processedRecords, failedRecords, nil
 }
 
 func (s *syncToEventStoreService) SyncPhoneNumbers(ctx context.Context, batchSize int) {

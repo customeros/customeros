@@ -20,11 +20,9 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
-	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
 	"strings"
 )
@@ -582,41 +580,23 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	result.ID = contactId
 
 	if data.EmailEntity != nil {
-		emailCreate := &emailpb.UpsertEmailGrpcRequest{
-			Tenant:   common.GetTenantFromContext(ctx),
-			RawEmail: data.EmailEntity.RawEmail,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(data.EmailEntity.Source),
-				AppSource: data.EmailEntity.AppSource,
-			},
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		}
-		emailCreate.CreatedAt = timestamppb.New(data.ContactEntity.CreatedAt)
-		emailId, err := utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-			return s.grpcClients.EmailClient.UpsertEmail(ctx, emailCreate)
-		})
-		if err != nil {
-			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			return nil, err
-		}
-
-		result.Email = &model.CustomerEmail{
-			ID: emailId.Id,
-		}
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-				Primary:   data.EmailEntity.Primary,
-				ContactId: contactId,
-				EmailId:   emailId.Id,
-				Tenant:    common.GetTenantFromContext(ctx),
-				AppSource: data.ContactEntity.AppSource,
+		emailId, err := s.services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+			commonservice.EmailFields{
+				Email:     strings.TrimSpace(utils.FirstNotEmptyString(data.EmailEntity.Email, data.EmailEntity.RawEmail)),
+				Primary:   utils.IfNotNilBool(data.EmailEntity.Primary),
+				Source:    neo4jentity.DataSourceOpenline.String(),
+				AppSource: constants.AppSourceCustomerOsApi,
+			}, &commonservice.LinkWith{
+				Type: commonModel.CONTACT,
+				Id:   contactId,
 			})
-		})
 		if err != nil {
-			s.log.Errorf("(%s) Failed to call method: {%v}", utils.GetFunctionName(), err.Error())
-			return nil, err
+			tracing.TraceErr(span, err)
+			return result, err
 		}
-
+		result.Email = &model.CustomerEmail{
+			ID: utils.IfNotNilString(emailId),
+		}
 	}
 	return result, nil
 }

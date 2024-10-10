@@ -106,34 +106,6 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
 	return err
 }
 
-func (r *emailWriteRepository) UpdateEmail(ctx context.Context, tenant, emailId, rawEmail, source string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.UpdateEmail")
-	defer span.Finish()
-	tracing.TagComponentNeo4jRepository(span)
-	tracing.TagTenant(span, tenant)
-	span.SetTag(tracing.SpanTagEntityId, emailId)
-
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email:Email_%s {id:$id})
-		 SET 	e.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE e.sourceOfTruth END,
-				e.updatedAt = datetime(),
-				e.rawEmail = $rawEmail`, tenant)
-	params := map[string]any{
-		"id":            emailId,
-		"tenant":        tenant,
-		"sourceOfTruth": source,
-		"rawEmail":      rawEmail,
-		"overwrite":     source == constants.SourceOpenline,
-	}
-	span.LogFields(log.String("cypher", cypher))
-	tracing.LogObjectAsJson(span, "params", params)
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	return err
-}
-
 func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.EmailValidated")
 	defer span.Finish()

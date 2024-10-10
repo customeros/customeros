@@ -22,8 +22,6 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type EmailGrpcServiceClient interface {
-	// Deprecated
-	UpsertEmail(ctx context.Context, in *UpsertEmailGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
 	UpsertEmailV2(ctx context.Context, in *UpsertEmailRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
 	RequestEmailValidation(ctx context.Context, in *RequestEmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
 	UpdateEmailValidation(ctx context.Context, in *EmailValidationGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error)
@@ -36,15 +34,6 @@ type emailGrpcServiceClient struct {
 
 func NewEmailGrpcServiceClient(cc grpc.ClientConnInterface) EmailGrpcServiceClient {
 	return &emailGrpcServiceClient{cc}
-}
-
-func (c *emailGrpcServiceClient) UpsertEmail(ctx context.Context, in *UpsertEmailGrpcRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error) {
-	out := new(EmailIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/emailGrpcService/UpsertEmail", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
 }
 
 func (c *emailGrpcServiceClient) UpsertEmailV2(ctx context.Context, in *UpsertEmailRequest, opts ...grpc.CallOption) (*EmailIdGrpcResponse, error) {
@@ -87,8 +76,6 @@ func (c *emailGrpcServiceClient) DeleteEmail(ctx context.Context, in *DeleteEmai
 // All implementations should embed UnimplementedEmailGrpcServiceServer
 // for forward compatibility
 type EmailGrpcServiceServer interface {
-	// Deprecated
-	UpsertEmail(context.Context, *UpsertEmailGrpcRequest) (*EmailIdGrpcResponse, error)
 	UpsertEmailV2(context.Context, *UpsertEmailRequest) (*EmailIdGrpcResponse, error)
 	RequestEmailValidation(context.Context, *RequestEmailValidationGrpcRequest) (*EmailIdGrpcResponse, error)
 	UpdateEmailValidation(context.Context, *EmailValidationGrpcRequest) (*EmailIdGrpcResponse, error)
@@ -99,9 +86,6 @@ type EmailGrpcServiceServer interface {
 type UnimplementedEmailGrpcServiceServer struct {
 }
 
-func (UnimplementedEmailGrpcServiceServer) UpsertEmail(context.Context, *UpsertEmailGrpcRequest) (*EmailIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UpsertEmail not implemented")
-}
 func (UnimplementedEmailGrpcServiceServer) UpsertEmailV2(context.Context, *UpsertEmailRequest) (*EmailIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertEmailV2 not implemented")
 }
@@ -124,24 +108,6 @@ type UnsafeEmailGrpcServiceServer interface {
 
 func RegisterEmailGrpcServiceServer(s grpc.ServiceRegistrar, srv EmailGrpcServiceServer) {
 	s.RegisterService(&EmailGrpcService_ServiceDesc, srv)
-}
-
-func _EmailGrpcService_UpsertEmail_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UpsertEmailGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(EmailGrpcServiceServer).UpsertEmail(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/emailGrpcService/UpsertEmail",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(EmailGrpcServiceServer).UpsertEmail(ctx, req.(*UpsertEmailGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
 }
 
 func _EmailGrpcService_UpsertEmailV2_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -223,10 +189,6 @@ var EmailGrpcService_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "emailGrpcService",
 	HandlerType: (*EmailGrpcServiceServer)(nil),
 	Methods: []grpc.MethodDesc{
-		{
-			MethodName: "UpsertEmail",
-			Handler:    _EmailGrpcService_UpsertEmail_Handler,
-		},
 		{
 			MethodName: "UpsertEmailV2",
 			Handler:    _EmailGrpcService_UpsertEmailV2_Handler,
