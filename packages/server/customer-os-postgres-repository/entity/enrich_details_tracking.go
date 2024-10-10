@@ -28,7 +28,7 @@ type SnitcherResponseBody struct {
 		Domain        string      `json:"domain"`
 		Website       string      `json:"website"`
 		Industry      string      `json:"industry"`
-		FoundedYear   string      `json:"founded_year"`
+		FoundedYear   interface{} `json:"founded_year"`
 		EmployeeRange string      `json:"employee_range"`
 		AnnualRevenue interface{} `json:"annual_revenue"`
 		TotalFunding  interface{} `json:"total_funding"`
