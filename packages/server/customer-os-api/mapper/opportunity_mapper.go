@@ -6,6 +6,7 @@ import (
 	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 )
 
 func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opportunity {
@@ -45,19 +46,59 @@ func MapEntityToOpportunity(entity *neo4jentity.OpportunityEntity) *model.Opport
 	}
 }
 
-func MapOpportunityUpdateInputToEntity(input model.OpportunityUpdateInput) *neo4jentity.OpportunityEntity {
-	opportunityEntity := neo4jentity.OpportunityEntity{
-		Id:                input.OpportunityID,
-		Name:              utils.IfNotNilString(input.Name),
-		Amount:            utils.IfNotNilFloat64(input.Amount),
-		ExternalType:      utils.IfNotNilString(input.ExternalType),
-		ExternalStage:     utils.IfNotNilString(input.ExternalStage),
-		EstimatedClosedAt: input.EstimatedClosedDate,
-		Source:            neo4jentity.DataSourceOpenline,
-		SourceOfTruth:     neo4jentity.DataSourceOpenline,
-		AppSource:         constants.AppSourceCustomerOsApi,
+func MapOpportunitySaveInputToEntity(input model.OpportunitySaveInput) *repository.OpportunitySaveFields {
+	mapped := repository.OpportunitySaveFields{
+		AppSource: constants.AppSourceCustomerOsApi,
+		Source:    neo4jentity.DataSourceOpenline.String(),
 	}
-	return &opportunityEntity
+
+	if input.Name != nil {
+		mapped.Name = *input.Name
+		mapped.UpdateName = true
+	}
+	if input.Amount != nil {
+		mapped.Amount = *input.Amount
+		mapped.UpdateAmount = true
+	}
+	if input.MaxAmount != nil {
+		mapped.MaxAmount = *input.MaxAmount
+		mapped.UpdateMaxAmount = true
+	}
+	if input.ExternalStage != nil {
+		mapped.ExternalStage = *input.ExternalStage
+		mapped.UpdateExternalStage = true
+	}
+	if input.ExternalType != nil {
+		mapped.ExternalType = *input.ExternalType
+		mapped.UpdateExternalType = true
+	}
+	if input.EstimatedClosedDate != nil {
+		mapped.EstimatedClosedAt = input.EstimatedClosedDate
+		mapped.UpdateEstimatedClosedAt = true
+	}
+	if input.InternalStage != nil {
+		mapped.InternalStage = MapInternalStageFromModel(*input.InternalStage).String()
+		mapped.UpdateInternalStage = true
+	}
+	if input.InternalType != nil {
+		mapped.InternalType = MapInternalStageFromModel(*input.InternalStage).String()
+		mapped.UpdateInternalStage = true
+	}
+	if input.NextSteps != nil {
+		mapped.NextSteps = *input.NextSteps
+		mapped.UpdateNextSteps = true
+	}
+	if input.LikelihoodRate != nil {
+		mapped.LikelihoodRate = *input.LikelihoodRate
+		mapped.UpdateLikelihoodRate = true
+	}
+
+	if input.Currency != nil {
+		mapped.Currency = mapper.MapCurrencyFromModel(*input.Currency)
+		mapped.UpdateCurrency = true
+	}
+
+	return &mapped
 }
 
 func MapEntitiesToOpportunities(entities *neo4jentity.OpportunityEntities) []*model.Opportunity {

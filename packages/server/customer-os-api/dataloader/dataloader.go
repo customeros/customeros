@@ -207,7 +207,7 @@ type serviceLineItemBatcher struct {
 	serviceLineItemService commonservice.ServiceLineItemService
 }
 type opportunityBatcher struct {
-	opportunityService service.OpportunityService
+	opportunityService commonservice.OpportunityService
 }
 type masterPlanBatcher struct {
 	masterPlanService service.MasterPlanService
@@ -312,7 +312,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		serviceLineItemService: services.CommonServices.ServiceLineItemService,
 	}
 	opportunityBatcher := &opportunityBatcher{
-		opportunityService: services.OpportunityService,
+		opportunityService: services.CommonServices.OpportunityService,
 	}
 	masterPlanBatcher := &masterPlanBatcher{
 		masterPlanService: services.MasterPlanService,

@@ -395,24 +395,6 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
-// EmailDelete is the resolver for the emailDelete field.
-func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailDelete", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.emailID", id))
-
-	result, err := r.Services.EmailService.DeleteById(ctx, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not remove email %s", id)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
 // EmailValidate is the resolver for the email_Validate field.
 func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model.ActionResponse, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailValidate", graphql.GetOperationContext(ctx))
@@ -448,6 +430,24 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 	}
 
 	return &model.ActionResponse{Accepted: true}, nil
+}
+
+// EmailDelete is the resolver for the emailDelete field.
+func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailDelete", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.emailID", id))
+
+	result, err := r.Services.EmailService.DeleteById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Could not remove email %s", id)
+		return nil, err
+	}
+	return &model.Result{
+		Result: result,
+	}, nil
 }
 
 // EmailUpdate is the resolver for the emailUpdate field.

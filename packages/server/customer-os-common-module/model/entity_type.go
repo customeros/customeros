@@ -42,6 +42,8 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelUser
 	case ORGANIZATION:
 		return NodeLabelOrganization
+	case OPPORTUNITY:
+		return NodeLabelOpportunity
 	case EMAIL:
 		return NodeLabelEmail
 	case PHONE_NUMBER:

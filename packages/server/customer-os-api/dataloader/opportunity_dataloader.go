@@ -3,6 +3,7 @@ package dataloader
 import (
 	"context"
 	"github.com/graph-gophers/dataloader"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -12,7 +13,7 @@ import (
 	"reflect"
 )
 
-func (i *Loaders) GetOpportunitiesForContract(ctx context.Context, contractId string) (*neo4jentity.OpportunityEntities, error) {
+func (i *Loaders) GetOpportunitiesForContract(ctx context.Context, tenant, contractId string) (*neo4jentity.OpportunityEntities, error) {
 	thunk := i.OpportunitiesForContract.Load(ctx, dataloader.StringKey(contractId))
 	result, err := thunk()
 	if err != nil {
@@ -38,12 +39,14 @@ func (b *opportunityBatcher) getOpportunitiesForContracts(ctx context.Context, k
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	opportunityEntitiesPtr, err := b.opportunityService.GetOpportunitiesForContracts(ctx, ids)
+	opportunityEntitiesPtr, err := b.opportunityService.GetOpportunitiesForContracts(ctx, tenant, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -90,12 +93,14 @@ func (b *opportunityBatcher) getOpportunitiesForOrganizations(ctx context.Contex
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	ids, keyOrder := sortKeys(keys)
 
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	opportunityEntitiesPtr, err := b.opportunityService.GetOpportunitiesForOrganizations(ctx, ids)
+	opportunityEntitiesPtr, err := b.opportunityService.GetOpportunitiesForOrganizations(ctx, tenant, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

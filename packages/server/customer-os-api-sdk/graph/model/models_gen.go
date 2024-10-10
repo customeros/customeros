@@ -2034,6 +2034,22 @@ type OpportunityRenewalUpdateInput struct {
 	Name *string `json:"name,omitempty"`
 }
 
+type OpportunitySaveInput struct {
+	OrganizationID      *string        `json:"organizationId,omitempty"`
+	OpportunityID       *string        `json:"opportunityId,omitempty"`
+	Name                *string        `json:"name,omitempty"`
+	Amount              *float64       `json:"amount,omitempty"`
+	InternalType        *InternalType  `json:"internalType,omitempty"`
+	InternalStage       *InternalStage `json:"internalStage,omitempty"`
+	ExternalType        *string        `json:"externalType,omitempty"`
+	ExternalStage       *string        `json:"externalStage,omitempty"`
+	EstimatedClosedDate *time.Time     `json:"estimatedClosedDate,omitempty"`
+	NextSteps           *string        `json:"nextSteps,omitempty"`
+	LikelihoodRate      *int64         `json:"likelihoodRate,omitempty"`
+	MaxAmount           *float64       `json:"maxAmount,omitempty"`
+	Currency            *Currency      `json:"currency,omitempty"`
+}
+
 type OpportunityUpdateInput struct {
 	OpportunityID       string         `json:"opportunityId"`
 	Name                *string        `json:"name,omitempty"`

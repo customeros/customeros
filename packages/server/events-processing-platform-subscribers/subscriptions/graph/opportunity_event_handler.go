@@ -374,6 +374,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		return err
 	}
 
+	//on service
 	if eventData.UpdateOwnerUserId() {
 		if eventData.OwnerUserId != "" {
 			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
@@ -390,6 +391,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		}
 	}
 
+	//NOT on service
 	if eventData.ExternalSystem.Available() {
 		externalSystemData := neo4jmodel.ExternalSystem{
 			ExternalSystemId: eventData.ExternalSystem.ExternalSystemId,
@@ -415,6 +417,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 	opportunityAfterUpdate := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
 
+	//on service
 	if opportunityBeforeUpdate.InternalStage != opportunityAfterUpdate.InternalStage || opportunityBeforeUpdate.ExternalStage != opportunityAfterUpdate.ExternalStage {
 		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, eventData.Tenant, model.NodeLabelOpportunity, opportunityId, string(neo4jentity.OpportunityPropertyStageUpdatedAt), utils.NowPtr())
 		if err != nil {
@@ -423,6 +426,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 		}
 	}
 
+	//on service
 	// if amount changed, recalculate organization combined ARR forecast
 	if (eventData.UpdateAmount() || eventData.UpdateMaxAmount()) && opportunityBeforeUpdate.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		h.sendEventToUpdateOrganizationArr(ctx, eventData.Tenant, opportunityId, span)
@@ -555,7 +559,7 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseWin(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseWon(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())
@@ -673,7 +677,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseLoose(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseLost(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())

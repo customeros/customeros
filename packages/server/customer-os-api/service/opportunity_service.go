@@ -22,18 +22,13 @@ import (
 	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
 )
 
 type OpportunityService interface {
 	Create(ctx context.Context, input model.OpportunityCreateInput) (string, error)
 	Update(ctx context.Context, input model.OpportunityUpdateInput) error
 	UpdateRenewal(ctx context.Context, opportunityId string, renewalLikelihood neo4jenum.RenewalLikelihood, amount *float64, comments *string, ownerUserId *string, adjustedRate *int64, appSource string) error
-	GetById(ctx context.Context, id string) (*neo4jentity.OpportunityEntity, error)
-	GetOpportunitiesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.OpportunityEntities, error)
-	GetOpportunitiesForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OpportunityEntities, error)
 	UpdateRenewalsForOrganization(ctx context.Context, organizationId string, renewalLikelihood neo4jenum.RenewalLikelihood, renewalAdjustedRate *int64) error
-	GetPaginatedOrganizationOpportunities(ctx context.Context, page int, limit int) (*utils.Pagination, error)
 	CloseWon(ctx context.Context, opportunityId string) error
 	CloseLost(ctx context.Context, opportunityId string) error
 	ReplaceOwner(ctx context.Context, opportunityId, userId string) error
@@ -126,64 +121,15 @@ func (s *opportunityService) Create(ctx context.Context, input model.Opportunity
 	return opportunityIdGrpcResponse.Id, nil
 }
 
-func (s *opportunityService) GetById(ctx context.Context, opportunityId string) (*neo4jentity.OpportunityEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("opportunityId", opportunityId))
-
-	if opportunityDbNode, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetOpportunityById(ctx, common.GetContext(ctx).Tenant, opportunityId); err != nil {
-		tracing.TraceErr(span, err)
-		wrappedErr := errors.Wrap(err, fmt.Sprintf("opportunity with id {%s} not found", opportunityId))
-		return nil, wrappedErr
-	} else {
-		return neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode), nil
-	}
-}
-
-func (s *opportunityService) GetOpportunitiesForContracts(ctx context.Context, contractIDs []string) (*neo4jentity.OpportunityEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForContracts")
-	defer span.Finish()
-	span.LogFields(log.Object("contractIDs", contractIDs))
-
-	opportunities, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetForContracts(ctx, common.GetTenantFromContext(ctx), contractIDs)
-	if err != nil {
-		return nil, err
-	}
-	opportunityEntities := make(neo4jentity.OpportunityEntities, 0, len(opportunities))
-	for _, v := range opportunities {
-		opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(v.Node)
-		opportunityEntity.DataloaderKey = v.LinkedNodeId
-		opportunityEntities = append(opportunityEntities, *opportunityEntity)
-	}
-	return &opportunityEntities, nil
-}
-
-func (s *opportunityService) GetOpportunitiesForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OpportunityEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.GetOpportunitiesForOrganizations")
-	defer span.Finish()
-	span.LogFields(log.Object("organizationIds", organizationIds))
-
-	opportunities, err := s.repositories.Neo4jRepositories.OpportunityReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
-	if err != nil {
-		return nil, err
-	}
-	opportunityEntities := make(neo4jentity.OpportunityEntities, 0, len(opportunities))
-	for _, v := range opportunities {
-		opportunityEntity := neo4jmapper.MapDbNodeToOpportunityEntity(v.Node)
-		opportunityEntity.DataloaderKey = v.LinkedNodeId
-		opportunityEntities = append(opportunityEntities, *opportunityEntity)
-	}
-	return &opportunityEntities, nil
-}
-
 func (s *opportunityService) Update(ctx context.Context, input model.OpportunityUpdateInput) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Update")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	opportunity, err := s.GetById(ctx, input.OpportunityID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	opportunity, err := s.services.CommonServices.OpportunityService.GetById(ctx, tenant, input.OpportunityID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -407,7 +353,9 @@ func (s *opportunityService) CloseWon(ctx context.Context, opportunityId string)
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	opportunity, err := s.GetById(ctx, opportunityId)
+	tenant := common.GetTenantFromContext(ctx)
+
+	opportunity, err := s.services.CommonServices.OpportunityService.GetById(ctx, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -453,7 +401,9 @@ func (s *opportunityService) CloseLost(ctx context.Context, opportunityId string
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	opportunity, err := s.GetById(ctx, opportunityId)
+	tenant := common.GetTenantFromContext(ctx)
+
+	opportunity, err := s.services.CommonServices.OpportunityService.GetById(ctx, tenant, opportunityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

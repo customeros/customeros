@@ -22,6 +22,11 @@ func (r *mutationResolver) OpportunityUpdate(ctx context.Context, input model.Op
 	panic(fmt.Errorf("not implemented: OpportunityUpdate - opportunityUpdate"))
 }
 
+// OpportunitySave is the resolver for the opportunity_save field.
+func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error) {
+	panic(fmt.Errorf("not implemented: OpportunitySave - opportunity_save"))
+}
+
 // OpportunityArchive is the resolver for the opportunity_Archive field.
 func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: OpportunityArchive - opportunity_Archive"))

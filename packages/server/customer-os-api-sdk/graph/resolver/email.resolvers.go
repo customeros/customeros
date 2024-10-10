@@ -72,14 +72,14 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 	panic(fmt.Errorf("not implemented: EmailReplaceForOrganization - emailReplaceForOrganization"))
 }
 
-// EmailDelete is the resolver for the emailDelete field.
-func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
-	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
-}
-
 // EmailValidate is the resolver for the email_Validate field.
 func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: EmailValidate - email_Validate"))
+}
+
+// EmailDelete is the resolver for the emailDelete field.
+func (r *mutationResolver) EmailDelete(ctx context.Context, id string) (*model.Result, error) {
+	panic(fmt.Errorf("not implemented: EmailDelete - emailDelete"))
 }
 
 // EmailUpdate is the resolver for the emailUpdate field.
