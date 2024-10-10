@@ -258,6 +258,8 @@ func (s *emailService) syncEmail(tenant string, emailId uuid.UUID) (entity.RawSt
 		defer session.Close(ctx)
 
 		tx, err := session.BeginTransaction(ctx)
+		defer tx.Close(ctx)
+
 		if err != nil {
 			logrus.Errorf("failed to start transaction for email with id %v: %v", emailIdString, err)
 			return entity.ERROR, nil, err

@@ -77,7 +77,7 @@ func (r *commonWriteRepository) Link(ctx context.Context, tx *neo4j.ManagedTrans
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQueryNoReturn(ctx, *r.driver, tx, cypher, params)
+	err := utils.ExecuteWriteQueryOptionalTx(ctx, *r.driver, tx, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -103,7 +103,7 @@ func (r *commonWriteRepository) Unlink(ctx context.Context, tx *neo4j.ManagedTra
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQueryNoReturn(ctx, *r.driver, tx, cypher, params)
+	err := utils.ExecuteWriteQueryOptionalTx(ctx, *r.driver, tx, cypher, params)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

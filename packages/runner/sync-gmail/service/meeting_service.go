@@ -78,6 +78,8 @@ func (s *meetingService) syncCalendarEvent(externalSystemId, tenant string, rawC
 	defer session.Close(ctx)
 
 	tx, err := session.BeginTransaction(ctx)
+	defer tx.Close(ctx)
+
 	if err != nil {
 		logrus.Errorf("failed to start transaction for calendar event with id %v: %v", rawCalendarIdString, err)
 		return entity.ERROR, nil, err
