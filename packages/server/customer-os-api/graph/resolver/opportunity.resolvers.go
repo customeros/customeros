@@ -93,7 +93,7 @@ func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.Oppo
 	id, err := r.Services.CommonServices.OpportunityService.Save(ctx, nil, tenant, input.OrganizationID, input.OpportunityID, mapper.MapOpportunitySaveInputToEntity(input))
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update opportunity %s", input.OpportunityID)
+		graphql.AddErrorf(ctx, "Failed to save opportunity")
 		return nil, err
 	}
 
