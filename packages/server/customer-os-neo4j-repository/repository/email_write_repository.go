@@ -46,7 +46,6 @@ type EmailValidatedFields struct {
 
 type EmailWriteRepository interface {
 	CreateEmail(ctx context.Context, tenant, emailId string, data EmailCreateFields) error
-	UpdateEmail(ctx context.Context, tenant, emailId, rawEmail, source string) error
 	EmailValidated(ctx context.Context, tenant, emailId string, data EmailValidatedFields) error
 	CleanEmailValidation(ctx context.Context, tenant, emailId string) error
 	LinkWithContact(ctx context.Context, tenant, contactId, emailId string, primary bool) error
