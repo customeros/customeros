@@ -214,22 +214,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 		}
 	}
 
-	emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
-		Email:     email,
-		Source:    source,
-		AppSource: AppSource,
-	}, nil)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "unable to create email"))
-		return "", err
-	}
-	emailId = utils.IfNotNilString(emailIdPtr)
-	if emailId == "" {
-		tracing.TraceErr(span, errors.New("unable to create email"))
-		return "", errors.New("unable to create email")
-	}
-
-	_, err = s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, emailId, firstName, lastname, source, AppSource)
+	emailId, err = s.repositories.EmailRepository.CreateContactWithEmailLinkedToOrganization(ctx, tx, tenant, organizationId, email, firstName, lastname, source, AppSource)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "unable to create contact linked to organization"))
 		return "", fmt.Errorf("unable to create contact linked to organization: %s", err.Error())

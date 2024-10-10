@@ -729,7 +729,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 		}
 		if organizationDbNode != nil {
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-			// Make organization customer if it's not already
+			// Make organization target if it's not already
 			if organizationEntity.Relationship == neo4jenum.Prospect && organizationEntity.Stage == neo4jenum.Engaged {
 				ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 				_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
