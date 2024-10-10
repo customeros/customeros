@@ -481,24 +481,6 @@ func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID s
 	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
-// EmailRemoveFromContactByID is the resolver for the emailRemoveFromContactById field.
-func (r *mutationResolver) EmailRemoveFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromContactByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.emailID", id))
-
-	result, err := r.Services.EmailService.DetachFromEntityById(ctx, commonModel.CONTACT, contactID, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not remove email %s from contact %s", id, contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
 // EmailUpdateInUser is the resolver for the emailUpdateInUser field.
 func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string, input model.EmailRelationUpdateInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInUser", graphql.GetOperationContext(ctx))
@@ -522,42 +504,6 @@ func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string,
 	}
 
 	return mapper.MapEntityToEmail(emailEntity), nil
-}
-
-// EmailRemoveFromUserByID is the resolver for the emailRemoveFromUserById field.
-func (r *mutationResolver) EmailRemoveFromUserByID(ctx context.Context, userID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromUserByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID), log.String("request.emailID", id))
-
-	result, err := r.Services.EmailService.DetachFromEntityById(ctx, commonModel.USER, userID, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not remove email %s from user %s", id, userID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
-// EmailRemoveFromOrganizationByID is the resolver for the emailRemoveFromOrganizationById field.
-func (r *mutationResolver) EmailRemoveFromOrganizationByID(ctx context.Context, organizationID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailRemoveFromOrganizationByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.emailID", id))
-
-	result, err := r.Services.EmailService.DetachFromEntityById(ctx, commonModel.ORGANIZATION, organizationID, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not remove email %s from organization %s", id, organizationID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
 }
 
 // EmailUpdateInOrganization is the resolver for the emailUpdateInOrganization field.

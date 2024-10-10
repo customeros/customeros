@@ -35,8 +35,6 @@ type EmailService interface {
 	GetAllForEntityTypeByIds(ctx context.Context, entityType commonModel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	//Deprecated
 	UpdateEmailFor(ctx context.Context, entityType commonModel.EntityType, entityId string, input model.EmailRelationUpdateInput) error
-	//Deprecated
-	DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, emailId string) (bool, error)
 	GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error)
 	GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error)
 	//Deprecated
@@ -204,23 +202,6 @@ func (s *emailService) UpdateEmailFor(ctx context.Context, entityType commonMode
 	}
 
 	return nil
-}
-
-func (s *emailService) DetachFromEntityById(ctx context.Context, entityType commonModel.EntityType, entityId, emailId string) (bool, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.DetachFromEntityById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("emailId", emailId), log.String("entityId", entityId), log.String("entityType", string(entityType)))
-
-	err := s.repositories.EmailRepository.RemoveRelationshipById(ctx, entityType, common.GetTenantFromContext(ctx), entityId, emailId)
-
-	if entityType == commonModel.ORGANIZATION {
-		s.services.OrganizationService.UpdateLastTouchpoint(ctx, entityId)
-	} else if entityType == commonModel.CONTACT {
-		s.services.OrganizationService.UpdateLastTouchpointByContactId(ctx, entityId)
-	}
-
-	return err == nil, err
 }
 
 func (s *emailService) GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error) {

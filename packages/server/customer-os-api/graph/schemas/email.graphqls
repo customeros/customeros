@@ -19,10 +19,7 @@ extend type Mutation {
 
     emailUpdate(input: EmailUpdateAddressInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
     emailUpdateInContact(contactId : ID!, input: EmailRelationUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    emailRemoveFromContactById(contactId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
     emailUpdateInUser(userId : ID!, input: EmailRelationUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    emailRemoveFromUserById(userId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
-    emailRemoveFromOrganizationById(organizationId : ID!, id: ID!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
     emailUpdateInOrganization(organizationId : ID!, input: EmailRelationUpdateInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
 }
 
