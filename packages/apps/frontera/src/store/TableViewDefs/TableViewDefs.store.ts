@@ -175,6 +175,14 @@ export class TableViewDefsStore implements GroupStore<TableViewDef> {
     )?.value.id;
   }
 
+  get contactsTargetPreset() {
+    return this?.toArray().find(
+      (t) =>
+        t.value.tableId === TableIdType.ContactsForTargetOrganizations &&
+        t.value.isPreset,
+    )?.value.id;
+  }
+
   get contractsPreset() {
     return this?.toArray().find(
       (t) => t.value.tableId === TableIdType.Contracts && t.value.isPreset,

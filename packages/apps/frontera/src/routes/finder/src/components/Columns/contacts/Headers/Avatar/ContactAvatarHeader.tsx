@@ -1,3 +1,4 @@
+import { useSearchParams } from 'react-router-dom';
 import { useRef, useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
@@ -38,21 +39,35 @@ export const ContactAvatarHeader = observer(() => {
     linkedin: false,
     organizationId: false,
   });
+  const [searchParams] = useSearchParams();
+
+  const preset = searchParams.get('preset');
 
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const store = useStore();
 
+  // const contactsPreset = store.tableViewDefs.contactsPreset;
+  const contactsTargetPreset = store.tableViewDefs.contactsTargetPreset;
+
   const options = store?.organizations
     ?.toComputedArray((arr) => {
-      const targets = arr.filter(
-        (item) => item.value.stage === OrganizationStage.Target,
-      );
+      if (contactsTargetPreset === preset) {
+        const targets = arr.filter(
+          (item) => item.value.stage === OrganizationStage.Target,
+        );
 
-      if (!searchValue) return targets;
+        if (!searchValue) return targets;
 
-      return targets.filter((item) =>
-        item.value.name?.toLowerCase().includes(searchValue?.toLowerCase()),
-      );
+        return targets.filter((item) =>
+          item.value.name?.toLowerCase().includes(searchValue?.toLowerCase()),
+        );
+      } else {
+        return arr.filter(
+          (item) =>
+            item.value.name !== '' &&
+            item.value.name?.toLowerCase().includes(searchValue?.toLowerCase()),
+        );
+      }
     })
     .map((item) => ({
       label: item.value.name,
@@ -62,10 +77,10 @@ export const ContactAvatarHeader = observer(() => {
   const validate = () => {
     setValidation(() => ({
       linkedin: !linkedin,
-      organizationId: !organizationId,
+      organizationId: !organizationId && contactsTargetPreset === preset,
     }));
 
-    return linkedin && organizationId;
+    return linkedin && (organizationId || contactsTargetPreset !== preset);
   };
 
   const handleSubmit = () => {
@@ -73,16 +88,28 @@ export const ContactAvatarHeader = observer(() => {
 
     if (!validate()) return;
 
-    store.contacts.createWithSocial({
-      organizationId,
-      socialUrl: linkedin,
-      options: {
-        onSuccess: () => {
-          setIsOpen(false);
-          reset();
+    if (contactsTargetPreset === preset) {
+      store.contacts.createWithSocial({
+        organizationId,
+        socialUrl: linkedin,
+        options: {
+          onSuccess: () => {
+            setIsOpen(false);
+            reset();
+          },
         },
-      },
-    });
+      });
+    } else {
+      store.contacts.createWithoutOrg({
+        socialUrl: linkedin,
+        options: {
+          onSuccess: () => {
+            setIsOpen(false);
+            reset();
+          },
+        },
+      });
+    }
   };
 
   const reset = () => {
@@ -193,13 +220,17 @@ export const ContactAvatarHeader = observer(() => {
                 classNames={{
                   container: (props) =>
                     getContainerClassNames(
-                      cn(validation.organizationId && 'border-error-500'),
+                      cn(
+                        validation.organizationId &&
+                          contactsTargetPreset === preset &&
+                          'border-error-500',
+                      ),
                       'flushed',
                       props,
                     ),
                 }}
               />
-              {validation.organizationId && (
+              {validation.organizationId && contactsTargetPreset === preset && (
                 <p className='text-sm text-error-500 mt-1'>
                   Please select an organization
                 </p>
