@@ -49,52 +49,6 @@ export const computeFinderData = (
   const getWorkFlowId = getWorkFlow.map((wf) => wf.value.id);
   const workFlow = store.workFlows.getByType(getWorkFlowId[0]);
 
-  const orgsFuse = new Fuse(store.organizations.toArray(), {
-    keys: ['value.name'],
-    threshold: 0.3,
-    isCaseSensitive: false,
-  });
-
-  const contactsFuse = new Fuse(store.contacts.toArray(), {
-    keys: [
-      { name: 'name', getFn: (o) => o.name },
-      {
-        name: 'organization',
-        getFn: (o) => o.value?.organizations.content?.[0]?.name,
-      },
-      {
-        name: 'email',
-        getFn: (o) => o.value?.emails?.[0]?.email || '',
-      },
-    ],
-    threshold: 0.3,
-    isCaseSensitive: false,
-  });
-
-  const contractsFuse = new Fuse(store.contracts.toArray(), {
-    keys: ['value.name'],
-    threshold: 0.3,
-    isCaseSensitive: false,
-  });
-
-  const invoicesFuse = new Fuse(store.invoices.toArray(), {
-    keys: ['value.contract.contractName'],
-    threshold: 0.3,
-    isCaseSensitive: false,
-  });
-
-  const flowsFuse = new Fuse(store.flows.toArray(), {
-    keys: ['value.name'],
-    threshold: 0.3,
-    isCaseSensitive: false,
-  });
-
-  const opportunitiesFuse = new Fuse(store.opportunities.toArray(), {
-    keys: ['value.name', 'organization.value.name', 'owner.name'],
-    threshold: 0.3,
-    isCaseSensitive: false,
-  });
-
   return match(tableType)
     .with(TableViewType.Organizations, () =>
       store.organizations?.toComputedArray((arr) => {
@@ -122,7 +76,11 @@ export const computeFinderData = (
         }
 
         if (searchTerm) {
-          arr = orgsFuse
+          arr = new Fuse(arr, {
+            keys: ['value.name'],
+            threshold: 0.3,
+            isCaseSensitive: false,
+          })
             .search(removeAccents(searchTerm), { limit: 40 })
             .map((r) => r.item);
         }
@@ -161,7 +119,21 @@ export const computeFinderData = (
         }
 
         if (searchTerm) {
-          arr = contactsFuse
+          arr = new Fuse(arr, {
+            keys: [
+              { name: 'name', getFn: (o) => o.name },
+              {
+                name: 'organization',
+                getFn: (o) => o.value?.organizations.content?.[0]?.name,
+              },
+              {
+                name: 'email',
+                getFn: (o) => o.value?.emails?.[0]?.email || '',
+              },
+            ],
+            threshold: 0.3,
+            isCaseSensitive: false,
+          })
             .search(removeAccents(searchTerm), { limit: 40 })
             .map((r) => r.item);
         }
@@ -187,7 +159,11 @@ export const computeFinderData = (
         }
 
         if (searchTerm) {
-          arr = contractsFuse
+          arr = new Fuse(arr, {
+            keys: ['value.name'],
+            threshold: 0.3,
+            isCaseSensitive: false,
+          })
             .search(removeAccents(searchTerm), { limit: 40 })
             .map((r) => r.item);
         }
@@ -215,7 +191,11 @@ export const computeFinderData = (
         if (searchTerm) {
           const normalizedSearchTerm = removeAccents(searchTerm);
 
-          arr = invoicesFuse
+          arr = new Fuse(arr, {
+            keys: ['value.contract.contractName'],
+            threshold: 0.3,
+            isCaseSensitive: false,
+          })
             .search(normalizedSearchTerm, { limit: 40 })
             .map((r) => r.item);
         }
@@ -245,7 +225,11 @@ export const computeFinderData = (
         if (searchTerm) {
           const normalizedSearchTerm = removeAccents(searchTerm);
 
-          arr = flowsFuse
+          arr = new Fuse(arr, {
+            keys: ['value.name'],
+            threshold: 0.3,
+            isCaseSensitive: false,
+          })
             .search(normalizedSearchTerm, { limit: 40 })
             .map((r) => r.item);
         }
@@ -276,7 +260,11 @@ export const computeFinderData = (
         if (searchTerm) {
           const normalizedSearchTerm = removeAccents(searchTerm);
 
-          arr = opportunitiesFuse
+          arr = new Fuse(arr, {
+            keys: ['value.name', 'organization.value.name', 'owner.name'],
+            threshold: 0.3,
+            isCaseSensitive: false,
+          })
             .search(normalizedSearchTerm, { limit: 40 })
             .map((r) => r.item);
         }
