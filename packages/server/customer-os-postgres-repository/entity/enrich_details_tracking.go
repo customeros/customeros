@@ -120,13 +120,13 @@ func (location SnitcherResponseBody) LocationToString() string {
 		if result != "" {
 			result += ", "
 		}
-		result += ", " + location.Company.Location.RegionName
+		result += location.Company.Location.RegionName
 	}
 	if location.Company.Location.Country.Name != "" {
 		if result != "" {
 			result += ", "
 		}
-		result += ", " + location.Company.Location.Country.Name
+		result += location.Company.Location.Country.Name
 	}
 
 	return result
