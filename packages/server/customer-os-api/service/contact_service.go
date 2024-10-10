@@ -10,6 +10,8 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -24,6 +26,7 @@ import (
 	"github.com/pkg/errors"
 	"google.golang.org/protobuf/types/known/timestamppb"
 	"reflect"
+	"strings"
 )
 
 type ContactService interface {
@@ -130,7 +133,20 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 	}
 
 	if contactDetails.EmailEntity != nil {
-		s.linkEmailByEvents(ctx, contactId, utils.StringFirstNonEmpty(contactDetails.EmailEntity.AppSource, contactDetails.AppSource), *contactDetails.EmailEntity)
+		_, err := s.services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+			commonservice.EmailFields{
+				Email:     strings.TrimSpace(utils.FirstNotEmptyString(contactDetails.EmailEntity.Email, contactDetails.EmailEntity.RawEmail)),
+				Primary:   utils.IfNotNilBool(contactDetails.EmailEntity.Primary),
+				Source:    neo4jentity.DataSourceOpenline.String(),
+				AppSource: constants.AppSourceCustomerOsApi,
+			}, &commonservice.LinkWith{
+				Type: commonModel.CONTACT,
+				Id:   contactId,
+			})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return contactId, err
+		}
 	}
 
 	if contactDetails.PhoneNumberEntity != nil {
@@ -139,35 +155,6 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 
 	span.LogFields(log.String("output - createdContactId", contactId))
 	return contactId, nil
-}
-
-// Deprecated
-func (s *contactService) linkEmailByEvents(ctx context.Context, contactId, appSource string, emailEntity neo4jentity.EmailEntity) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.linkEmailByEvents")
-	defer span.Finish()
-
-	emailId, err := s.services.EmailService.CreateEmailAddressViaEvents(ctx, utils.StringFirstNonEmpty(emailEntity.RawEmail, emailEntity.Email), appSource)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed to create email address for contact %s: %s", contactId, err.Error())
-	}
-	if emailId != "" {
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				ContactId:      contactId,
-				EmailId:        emailId,
-				Primary:        emailEntity.Primary,
-				AppSource:      appSource,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			s.log.Errorf("Failed to link email address %s with contact %s: %s", emailId, contactId, err.Error())
-		}
-	}
 }
 
 func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId, appSource string, phoneNumberEntity neo4jentity.PhoneNumberEntity) {

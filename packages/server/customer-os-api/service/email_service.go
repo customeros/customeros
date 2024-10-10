@@ -2,11 +2,8 @@ package service
 
 import (
 	"context"
-	"github.com/99designs/gqlgen/graphql"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
@@ -16,29 +13,15 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commongrpc "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
-	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"github.com/pkg/errors"
-	"strings"
 )
 
 type EmailService interface {
-	//Deprecated
-	CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error)
 	GetAllFor(ctx context.Context, entityType commonModel.EntityType, entityId string) (*neo4jentity.EmailEntities, error)
 	GetAllForEntityTypeByIds(ctx context.Context, entityType commonModel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
-	//Deprecated
-	UpdateEmailFor(ctx context.Context, entityType commonModel.EntityType, entityId string, input model.EmailRelationUpdateInput) error
 	GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error)
 	GetByEmailAddress(ctx context.Context, email string) (*neo4jentity.EmailEntity, error)
-	//Deprecated
-	Update(ctx context.Context, input model.EmailUpdateAddressInput) error
 }
 
 type emailService struct {
@@ -103,107 +86,6 @@ func (s *emailService) GetAllForEntityTypeByIds(ctx context.Context, entityType 
 	return &emailEntities, nil
 }
 
-func (s *emailService) UpdateEmailFor(ctx context.Context, entityType commonModel.EntityType, entityId string, input model.EmailRelationUpdateInput) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UpdateEmailFor")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("entityType", string(entityType)), log.String("entityId", entityId))
-
-	emailEntity, err := s.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if entityType == commonModel.CONTACT {
-		contactExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, commonModel.NodeLabelContact)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		if !contactExists {
-			err = errors.New("Contact not found")
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.grpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				ContactId:      entityId,
-				EmailId:        emailEntity.Id,
-				Primary:        utils.IfNotNilBool(input.Primary),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to add email %s to contact %s", input.ID, entityId)
-			return err
-		}
-	} else if entityType == commonModel.ORGANIZATION {
-		organizationExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, commonModel.NodeLabelOrganization)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		if !organizationExists {
-			err = errors.New("Organization not found")
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.grpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				OrganizationId: entityId,
-				EmailId:        emailEntity.Id,
-				Primary:        utils.IfNotNilBool(input.Primary),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to add email %s to organization %s", input.ID, entityId)
-			return err
-		}
-	} else if entityType == commonModel.USER {
-		userExists, err := s.repositories.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), entityId, commonModel.NodeLabelUser)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		if !userExists {
-			err = errors.New("User not found")
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return s.grpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				UserId:         entityId,
-				EmailId:        emailEntity.Id,
-				Primary:        utils.IfNotNilBool(input.Primary),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to add email %s to user %s", input.ID, entityId)
-			return err
-		}
-	}
-
-	return nil
-}
-
 func (s *emailService) GetById(ctx context.Context, emailId string) (*neo4jentity.EmailEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetById")
 	defer span.Finish()
@@ -236,75 +118,7 @@ func (s *emailService) GetByEmailAddress(ctx context.Context, email string) (*ne
 	return neo4jmapper.MapDbNodeToEmailEntity(emailNode), nil
 }
 
-func (s *emailService) CreateEmailAddressViaEvents(ctx context.Context, email, appSource string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.CreateEmailAddressViaEvents")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("email", email), log.String("appSource", appSource))
-
-	email = strings.TrimSpace(email)
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-		return s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-			Tenant:   common.GetTenantFromContext(ctx),
-			RawEmail: email,
-			SourceFields: &commongrpc.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi),
-			},
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing %s", err.Error())
-		return "", err
-	}
-
-	neo4jrepository.WaitForNodeCreatedInNeo4j(ctx, s.repositories.Neo4jRepositories, response.Id, commonModel.NodeLabelEmail, span)
-	return response.Id, nil
-}
-
 func (s *emailService) addDbRelationshipToEmailEntity(relationship dbtype.Relationship, emailEntity *neo4jentity.EmailEntity) {
 	props := utils.GetPropsFromRelationship(relationship)
 	emailEntity.Primary = utils.GetBoolPropOrFalse(props, "primary")
-}
-
-func (s *emailService) Update(ctx context.Context, input model.EmailUpdateAddressInput) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
-
-	emailEntity, err := s.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if emailEntity.Email == input.Email || emailEntity.RawEmail == input.Email {
-		err = errors.New("Email address is the same as the current one")
-		tracing.TraceErr(span, err)
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*emailpb.EmailIdGrpcResponse](func() (*emailpb.EmailIdGrpcResponse, error) {
-		return s.grpcClients.EmailClient.UpsertEmail(ctx, &emailpb.UpsertEmailGrpcRequest{
-			Id:       input.ID,
-			Tenant:   common.GetTenantFromContext(ctx),
-			RawEmail: input.Email,
-			SourceFields: &commongrpc.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: constants.AppSourceCustomerOsApi,
-			},
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Error from events processing %s", err.Error())
-		return err
-	}
-
-	return err
 }

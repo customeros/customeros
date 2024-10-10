@@ -21,10 +21,7 @@ import (
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	opentracing "github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	pkgerrors "github.com/pkg/errors"
@@ -80,39 +77,33 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 	span.LogFields(log.String("request.contactID", contactID))
 	tracing.LogObjectAsJson(span, "request.emailInput", input)
 
-	inputEmail := strings.TrimSpace(input.Email)
-
-	emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, inputEmail, utils.IfNotNilString(input.AppSource))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create email %s", inputEmail)
-		return nil, err
-	}
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-		return r.Clients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			ContactId:      contactID,
-			EmailId:        emailId,
-			Primary:        utils.IfNotNilBool(input.Primary),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		commonservice.EmailFields{
+			Email:     strings.TrimSpace(input.Email),
+			Primary:   utils.IfNotNilBool(input.Primary),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		}, &commonservice.LinkWith{
+			Type: commonModel.CONTACT,
+			Id:   contactID,
 		})
-	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add email %s to contact %s", emailId, contactID)
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
 
-	emailEntity, err := r.Services.EmailService.GetById(ctx, emailId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch email details %s", inputEmail)
+	if utils.IfNotNilString(emailId) == "" {
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, nil
 	}
 
+	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
+		return nil, nil
+	}
 	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
@@ -188,39 +179,33 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 	span.LogFields(log.String("request.userID", userID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	inputEmail := strings.TrimSpace(input.Email)
-
-	emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, inputEmail, utils.IfNotNilString(input.AppSource))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Operation failed to create email %s", inputEmail)
-		return nil, err
-	}
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-		return r.Clients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			UserId:         userID,
-			EmailId:        emailId,
-			Primary:        utils.IfNotNilBool(input.Primary),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		commonservice.EmailFields{
+			Email:     strings.TrimSpace(input.Email),
+			Primary:   utils.IfNotNilBool(input.Primary),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		}, &commonservice.LinkWith{
+			Type: commonModel.USER,
+			Id:   userID,
 		})
-	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not add email %s to user %s", inputEmail, userID)
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
 
-	emailEntity, err := r.Services.EmailService.GetById(ctx, emailId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch email details %s", inputEmail)
+	if utils.IfNotNilString(emailId) == "" {
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, nil
 	}
 
+	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
+		return nil, nil
+	}
 	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
@@ -295,39 +280,33 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 	span.LogFields(log.String("request.organizationID", organizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	inputEmail := strings.TrimSpace(input.Email)
-
-	emailId, err := r.Services.EmailService.CreateEmailAddressViaEvents(ctx, inputEmail, utils.IfNotNilString(input.AppSource))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create email %s", inputEmail)
-		return nil, err
-	}
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: organizationID,
-			EmailId:        emailId,
-			Primary:        utils.IfNotNilBool(input.Primary),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			AppSource:      utils.IfNotNilStringWithDefault(input.AppSource, constants.AppSourceCustomerOsApi),
+	emailId, err := r.Services.CommonServices.EmailService.Merge(ctx, common.GetTenantFromContext(ctx),
+		commonservice.EmailFields{
+			Email:     strings.TrimSpace(input.Email),
+			Primary:   utils.IfNotNilBool(input.Primary),
+			Source:    neo4jentity.DataSourceOpenline.String(),
+			AppSource: constants.AppSourceCustomerOsApi,
+		}, &commonservice.LinkWith{
+			Type: commonModel.ORGANIZATION,
+			Id:   organizationID,
 		})
-	})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add email %s to organization %s", emailId, organizationID)
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, err
 	}
 
-	emailEntity, err := r.Services.EmailService.GetById(ctx, emailId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch email details %s", inputEmail)
+	if utils.IfNotNilString(emailId) == "" {
+		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
 		return nil, nil
 	}
 
+	emailEntity, err := r.Services.EmailService.GetById(ctx, *emailId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
+		return nil, nil
+	}
 	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
@@ -430,105 +409,6 @@ func (r *mutationResolver) EmailValidate(ctx context.Context, id string) (*model
 	}
 
 	return &model.ActionResponse{Accepted: true}, nil
-}
-
-// EmailUpdate is the resolver for the emailUpdate field.
-func (r *mutationResolver) EmailUpdate(ctx context.Context, input model.EmailUpdateAddressInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.EmailService.Update(ctx, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update email %s", input.ID)
-		return nil, err
-	}
-
-	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.Email)
-		return nil, nil
-	}
-
-	return mapper.MapEntityToEmail(emailEntity), nil
-}
-
-// EmailUpdateInContact is the resolver for the emailUpdateInContact field.
-func (r *mutationResolver) EmailUpdateInContact(ctx context.Context, contactID string, input model.EmailRelationUpdateInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.emailUpdateInput", input)
-
-	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.CONTACT, contactID, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not update email %s for contact %s", input.ID, contactID)
-		return nil, err
-	}
-
-	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.ID)
-		return nil, nil
-	}
-
-	return mapper.MapEntityToEmail(emailEntity), nil
-}
-
-// EmailUpdateInUser is the resolver for the emailUpdateInUser field.
-func (r *mutationResolver) EmailUpdateInUser(ctx context.Context, userID string, input model.EmailRelationUpdateInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInUser", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.userID", userID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.USER, userID, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not update email %s for user %s", input.ID, userID)
-		return nil, err
-	}
-
-	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.ID)
-		return nil, nil
-	}
-
-	return mapper.MapEntityToEmail(emailEntity), nil
-}
-
-// EmailUpdateInOrganization is the resolver for the emailUpdateInOrganization field.
-func (r *mutationResolver) EmailUpdateInOrganization(ctx context.Context, organizationID string, input model.EmailRelationUpdateInput) (*model.Email, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailUpdateInOrganization", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	err := r.Services.EmailService.UpdateEmailFor(ctx, commonModel.ORGANIZATION, organizationID, input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not update email %s for organization %s", input.ID, organizationID)
-		return nil, err
-	}
-
-	emailEntity, err := r.Services.EmailService.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch email details %s", input.ID)
-		return nil, nil
-	}
-
-	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
 // Email is the resolver for the email field.
