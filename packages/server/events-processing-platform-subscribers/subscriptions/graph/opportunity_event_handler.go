@@ -132,7 +132,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -211,7 +211,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -265,7 +265,7 @@ func (h *OpportunityEventHandler) OnUpdateNextCycleDate(ctx context.Context, evt
 
 	h.sendEventToUpdateOrganizationRenewalSummary(ctx, eventData.Tenant, opportunityId, span)
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -433,7 +433,7 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.AppSource != constants.AppSourceCustomerOsApi {
-		subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+		utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 	}
 	return nil
 }
@@ -540,7 +540,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -657,7 +657,7 @@ func (h *OpportunityEventHandler) OnCloseWon(ctx context.Context, evt eventstore
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -751,7 +751,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -783,30 +783,4 @@ func (h *OpportunityEventHandler) saveLikelihoodChangeAction(ctx context.Context
 	}
 	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.CreateWithProperties(ctx, eventData.Tenant, contractId, model.CONTRACT, neo4jenum.ActionRenewalLikelihoodUpdated, message, metadata, eventData.UpdatedAt, constants.AppSourceEventProcessingPlatformSubscribers, extraActionProperties)
 	return err
-}
-
-func (h *OpportunityEventHandler) OnArchive(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityEventHandler.OnArchive")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData opportunityevent.OpportunityArchiveEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	opportunityId := aggregate.GetOpportunityObjectID(evt.GetAggregateID(), eventData.Tenant)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, opportunityId)
-
-	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.Archive(ctx, eventData.Tenant, opportunityId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while archiving opportunity %s: %s", opportunityId, err.Error())
-		return nil
-	}
-
-	subscriptions.EventCompleted(ctx, eventData.Tenant, model.OPPORTUNITY.String(), opportunityId, evt.GetEventType(), h.grpcClients)
-
-	return nil
 }

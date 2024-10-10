@@ -61,6 +61,8 @@ func (r *commonReadRepository) GenerateId(ctx context.Context, tenant, label str
 		}
 	}
 
+	span.LogFields(log.String("id", id))
+
 	return id, nil
 }
 

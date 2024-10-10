@@ -18,7 +18,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/helper"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions"
 	contracthandler "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/subscriptions/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
@@ -327,7 +326,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		}
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -524,7 +523,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 	}
 
 	if eventData.Source.AppSource != constants.AppSourceCustomerOsApi {
-		subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+		utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
 	}
 
 	return nil
@@ -623,7 +622,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		h.log.Errorf("Failed remove service line item action for contract %s: %s", contract.Id, err.Error())
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -666,7 +665,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contract.Id)
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -691,7 +690,7 @@ func (h *ServiceLineItemEventHandler) OnPause(ctx context.Context, evt eventstor
 		h.log.Errorf("Error while pausing service line item %s: %s", serviceLineItemId, err.Error())
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }
@@ -716,7 +715,7 @@ func (h *ServiceLineItemEventHandler) OnResume(ctx context.Context, evt eventsto
 		h.log.Errorf("Error while resuming service line item %s: %s", serviceLineItemId, err.Error())
 	}
 
-	subscriptions.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
 
 	return nil
 }

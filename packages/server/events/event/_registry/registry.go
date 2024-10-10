@@ -32,8 +32,6 @@ var eventsRegistry = map[string]reflect.Type{
 	reminderevent.ReminderCreateV1:       reflect.TypeOf(reminderevent.ReminderCreateEvent{}),
 	reminderevent.ReminderUpdateV1:       reflect.TypeOf(reminderevent.ReminderUpdateEvent{}),
 	reminderevent.ReminderNotificationV1: reflect.TypeOf(reminderevent.ReminderNotificationEvent{}),
-
-	opportunityevent.OpportunityArchiveV1: reflect.TypeOf(opportunityevent.OpportunityArchiveEvent{}),
 }
 
 func UnmarshalBaseEventPayload(eventDataBytes []byte) (interface{}, error) {

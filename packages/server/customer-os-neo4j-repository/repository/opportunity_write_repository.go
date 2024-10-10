@@ -282,7 +282,7 @@ func (r *opportunityWriteRepository) Update(ctx context.Context, tenant, opportu
 	return err
 }
 
-func (r *opportunityWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data OpportunitySaveFields) error {
+func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.ManagedTransaction, tenant, opportunityId string, data OpportunitySaveFields) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -292,7 +292,7 @@ func (r *opportunityWriteRepository) Save(ctx context.Context, tx *neo4j.Managed
 
 	tracing.LogObjectAsJson(span, "data", data)
 
-	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, txx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		//create if not exists
 		cypherCreate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) MERGE(t)<-[:OPPORTUNITY_BELONGS_TO_TENANT]-(op:Opportunity:Opportunity_%s {id:$opportunityId})`, tenant)
