@@ -2,11 +2,7 @@ package main
 
 import (
 	"context"
-	"encoding/json"
-	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	eventstorepb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_store"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event"
-	opportunityevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/opportunity"
 	"log"
 
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client/interceptor"
@@ -769,33 +765,6 @@ func testCloseLooseOpportunity() {
 		Id:             opportunityId,
 		LoggedInUserId: userId,
 		AppSource:      appSource,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
-}
-
-func testArchiveOpportunity() {
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	opportunityId := "89cf5274-70be-4af6-9cfc-1dbd71ec2b42"
-
-	ctx := context.Background()
-
-	evt, err := json.Marshal(opportunityevent.OpportunityArchiveEvent{
-		BaseEvent: event.BaseEvent{
-			Tenant:         tenant,
-			EventName:      opportunityevent.OpportunityArchiveV1,
-			CreatedAt:      utils.Now(),
-			AppSource:      appSource,
-			EntityType:     commonmodel.OPPORTUNITY,
-			EntityId:       opportunityId,
-			LoggedInUserId: userId,
-		},
-	})
-
-	result, err := clients.EventStoreClient.StoreEvent(ctx, &eventstorepb.StoreEventGrpcRequest{
-		EventDataBytes: evt,
 	})
 	if err != nil {
 		log.Fatalf("Failed: %v", err.Error())

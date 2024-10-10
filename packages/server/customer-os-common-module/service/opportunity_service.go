@@ -28,6 +28,7 @@ type OpportunityService interface {
 	RemoveOwner(ctx context.Context, tenant string, opportunityId string) error
 	CloseWon(ctx context.Context, tenant, opportunityId string) error
 	CloseLost(ctx context.Context, tenant, opportunityId string) error
+	Archive(ctx context.Context, tenant, opportunityId string) error
 }
 
 type opportunityService struct {
@@ -193,6 +194,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 		input.UpdateInternalStage = true
 	}
 
+	//todo init transaction
 	err = s.services.Neo4jRepositories.OpportunityWriteRepository.Save(ctx, tx, tenant, *opportunityId, *input)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -458,6 +460,40 @@ func (s *opportunityService) CloseLost(ctx context.Context, tenant, opportunityI
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	return nil
+}
+
+func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.Archive")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, opportunityId)
+
+	opportunity, err := s.GetById(ctx, tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if opportunity == nil {
+		err = fmt.Errorf("opportunity not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		err = errors.New("Renewal opportunity cannot be archived")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.Neo4jRepositories.OpportunityWriteRepository.Archive(ctx, tenant, opportunityId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	utils.EventCompleted(ctx, tenant, model2.OPPORTUNITY.String(), opportunityId, "V1_OPPORTUNITY_ARCHIVE", s.services.GrpcClients)
 
 	return nil
 }

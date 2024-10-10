@@ -478,9 +478,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case opportunityevent.OpportunityCloseLooseV1:
 		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
 		return nil
-	case opportunityevent.OpportunityArchiveV1:
-		_ = s.opportunityEventHandler.OnArchive(ctx, evt)
-		return nil
 
 	case contractevent.ContractCreateV1:
 		_ = s.contractEventHandler.OnCreate(ctx, evt)
