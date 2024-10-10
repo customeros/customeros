@@ -7,7 +7,7 @@ import { User, Social, JobRole, ColumnViewType } from '@graphql/types';
 export const getContactSortFn = (columnId: string) =>
   match(columnId)
     .with(ColumnViewType.ContactsName, () => (row: ContactStore) => {
-      return row.value?.name?.trim().toLowerCase() || null;
+      return row.name?.trim().toLowerCase() || null;
     })
     .with(
       ColumnViewType.ContactsOrganization,
