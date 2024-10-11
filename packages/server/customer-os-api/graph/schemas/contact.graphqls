@@ -166,6 +166,13 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
+    enrichDetails: EnrichDetails!
+}
+
+type EnrichDetails {
+    requestedAt: Time
+    enrichedAt: Time
+    failedAt: Time
 }
 
 """

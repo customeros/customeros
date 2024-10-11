@@ -13,13 +13,14 @@ type ContactProperty string
 const (
 	ContactPropertyEnrichedAt                                ContactProperty = "enrichedAt"
 	ContactPropertyEnrichFailedAt                            ContactProperty = "enrichFailedAt"
+	ContactPropertyEnrichRequestedAt                         ContactProperty = "techEnrichRequestedAt"
+	ContactPropertyEnrichAttempts                            ContactProperty = "techEnrichAttempts"
+	ContactPropertyEnrichedScrapinRecordId                   ContactProperty = "enrichedScrapinRecordId"
 	ContactPropertyBettercontactFoundEmailAt                 ContactProperty = "bettercontactFoundEmailAt"
 	ContactPropertyFindWorkEmailWithBetterContactRequestedId ContactProperty = "techFindWorkEmailWithBetterContactRequestId"
 	ContactPropertyFindWorkEmailWithBetterContactRequestedAt ContactProperty = "techFindWorkEmailWithBetterContactRequestedAt"
 	ContactPropertyFindWorkEmailWithBetterContactCompletedAt ContactProperty = "techFindWorkEmailWithBetterContactCompletedAt"
 	ContactPropertyUpdateWithWorkEmailRequestedAt            ContactProperty = "techUpdateWithWorkEmailRequestedAt"
-	ContactPropertyEnrichRequestedAt                         ContactProperty = "techEnrichRequestedAt"
-	ContactPropertyEnrichAttempts                            ContactProperty = "techEnrichAttempts"
 	ContactPropertyPrefix                                    ContactProperty = "prefix"
 	ContactPropertyName                                      ContactProperty = "name"
 	ContactPropertyFirstName                                 ContactProperty = "firstName"
@@ -29,7 +30,6 @@ const (
 	ContactPropertyProfilePhotoUrl                           ContactProperty = "profilePhotoUrl"
 	ContactPropertyHide                                      ContactProperty = "hide"
 	ContactPropertyUsername                                  ContactProperty = "username"
-	ContactPropertyEnrichedScrapinRecordId                   ContactProperty = "enrichedScrapinRecordId"
 	ContactPropertyHiddenAt                                  ContactProperty = "hiddenAt"
 )
 
@@ -65,16 +65,16 @@ type ContactInternalFields struct {
 	FindWorkEmailWithBetterContactRequestedAt *time.Time
 	FindWorkEmailWithBetterContactCompletedAt *time.Time
 	UpdateWithWorkEmailRequestedAt            *time.Time
-	EnrichRequestedAt                         *time.Time
 	HiddenAt                                  *time.Time
 }
 
 type ContactEnrichDetails struct {
-	BettercontactFoundEmailAt *time.Time
+	EnrichRequestedAt         *time.Time
 	EnrichedAt                *time.Time
-	EnrichedFailedAt          *time.Time
-	EnrichedScrapinRecordId   string
+	EnrichFailedAt            *time.Time
 	EnrichAttempts            int64
+	BettercontactFoundEmailAt *time.Time
+	EnrichedScrapinRecordId   string
 }
 
 type ContactEntities []ContactEntity

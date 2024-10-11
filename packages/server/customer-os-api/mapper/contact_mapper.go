@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"time"
 )
 
 func MapContactInputToEntity(input model.ContactInput) *neo4jentity.ContactEntity {
@@ -67,6 +68,7 @@ func MapEntityToContact(contact *neo4jentity.ContactEntity) *model.Contact {
 		Source:          MapDataSourceToModel(contact.Source),
 		SourceOfTruth:   MapDataSourceToModel(contact.SourceOfTruth),
 		AppSource:       utils.StringPtr(contact.AppSource),
+		EnrichDetails:   prepareContactEnrichDetails(contact.EnrichDetails.EnrichRequestedAt, contact.EnrichDetails.EnrichedAt, contact.EnrichDetails.EnrichFailedAt),
 	}
 }
 
@@ -76,4 +78,19 @@ func MapEntitiesToContacts(contactEntities *neo4jentity.ContactEntities) []*mode
 		contacts = append(contacts, MapEntityToContact(&contactEntity))
 	}
 	return contacts
+}
+
+func prepareContactEnrichDetails(requestedAt, enrichedAt, failedAt *time.Time) *model.EnrichDetails {
+	output := model.EnrichDetails{
+		RequestedAt: requestedAt,
+		EnrichedAt:  enrichedAt,
+		FailedAt:    failedAt,
+	}
+	if enrichedAt == nil && failedAt == nil && requestedAt != nil {
+		// if requested is older than 1 min, remove it
+		if time.Since(*requestedAt) > time.Minute {
+			output.RequestedAt = nil
+		}
+	}
+	return &output
 }
