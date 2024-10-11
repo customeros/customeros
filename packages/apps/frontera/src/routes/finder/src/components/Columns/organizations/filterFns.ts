@@ -414,7 +414,7 @@ const filterTypeNumber = (filter: FilterItem, value: number | undefined) => {
   const filterValue = filter?.value;
   const filterOperator = filter?.operation;
 
-  if (!value) return false;
+  if (value === undefined || value === null) return false;
 
   return match(filterOperator)
     .with(ComparisonOperator.Lt, () => value < Number(filterValue))
