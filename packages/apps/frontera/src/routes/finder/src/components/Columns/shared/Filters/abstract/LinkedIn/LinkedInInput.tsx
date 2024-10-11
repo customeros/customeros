@@ -59,6 +59,7 @@ export const LinkedInInput = ({
     if (e.key === 'Escape') {
       setIsEdit(false);
     }
+    e.stopPropagation();
   };
 
   return (

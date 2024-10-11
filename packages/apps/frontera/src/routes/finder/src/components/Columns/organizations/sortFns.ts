@@ -12,17 +12,17 @@ import {
 export const getOrganizationSortFn = (columnId: string) =>
   match(columnId)
     .with(
-      'ORGANIZATIONS_NAME',
+      ColumnViewType.OrganizationsName,
       () => (row: OrganizationStore) =>
         row.value?.name?.trim().toLocaleLowerCase() || null,
     )
     .with(
-      'ORGANIZATIONS_RELATIONSHIP',
+      ColumnViewType.OrganizationsRelationship,
       () => (row: OrganizationStore) =>
         row.value?.relationship === OrganizationRelationship.Customer,
     )
     .with(
-      'ORGANIZATIONS_ONBOARDING_STATUS',
+      ColumnViewType.OrganizationsOnboardingStatus,
       () => (row: OrganizationStore) =>
         match(row.value?.accountDetails?.onboarding?.status)
           .with(OnboardingStatus.NotApplicable, () => null)
@@ -35,7 +35,7 @@ export const getOrganizationSortFn = (columnId: string) =>
           .otherwise(() => null),
     )
     .with(
-      'ORGANIZATIONS_RENEWAL_LIKELIHOOD',
+      ColumnViewType.OrganizationsRenewalLikelihood,
       () => (row: OrganizationStore) =>
         match(row.value?.accountDetails?.renewalSummary?.renewalLikelihood)
           .with(OpportunityRenewalLikelihood.HighRenewal, () => 3)
@@ -43,17 +43,22 @@ export const getOrganizationSortFn = (columnId: string) =>
           .with(OpportunityRenewalLikelihood.LowRenewal, () => 1)
           .otherwise(() => null),
     )
-    .with('ORGANIZATIONS_RENEWAL_DATE', () => (row: OrganizationStore) => {
-      const value = row.value?.accountDetails?.renewalSummary?.nextRenewalDate;
 
-      return value ? new Date(value) : null;
-    })
     .with(
-      'ORGANIZATIONS_FORECAST_ARR',
+      ColumnViewType.OrganizationsRenewalDate,
+      () => (row: OrganizationStore) => {
+        const value =
+          row.value?.accountDetails?.renewalSummary?.nextRenewalDate;
+
+        return value ? new Date(value) : null;
+      },
+    )
+    .with(
+      ColumnViewType.OrganizationsForecastArr,
       () => (row: OrganizationStore) =>
         row.value?.accountDetails?.renewalSummary?.arrForecast,
     )
-    .with('ORGANIZATIONS_OWNER', () => (row: OrganizationStore) => {
+    .with(ColumnViewType.OrganizationsOwner, () => (row: OrganizationStore) => {
       const name = row.value?.owner?.name ?? '';
       const firstName = row.value?.owner?.firstName ?? '';
       const lastName = row.value?.owner?.lastName ?? '';
@@ -63,54 +68,60 @@ export const getOrganizationSortFn = (columnId: string) =>
       return fullName.length ? fullName.toLocaleLowerCase() : null;
     })
     .with(
-      'ORGANIZATIONS_LEAD_SOURCE',
+      ColumnViewType.OrganizationsLeadSource,
       () => (row: OrganizationStore) => row.value?.leadSource,
     )
     .with(
-      'ORGANIZATIONS_CREATED_DATE',
+      ColumnViewType.OrganizationsCreatedDate,
       () => (row: OrganizationStore) =>
         row.value?.metadata?.created
           ? new Date(row.value?.metadata?.created)
           : null,
     )
     .with(
-      'ORGANIZATIONS_YEAR_FOUNDED',
+      ColumnViewType.OrganizationsYearFounded,
       () => (row: OrganizationStore) => row.value?.yearFounded,
     )
     .with(
-      'ORGANIZATIONS_EMPLOYEE_COUNT',
+      ColumnViewType.OrganizationsEmployeeCount,
       () => (row: OrganizationStore) => row.value?.employees,
     )
     .with(
-      'ORGANIZATIONS_SOCIALS',
+      ColumnViewType.OrganizationsSocials,
       () => (row: OrganizationStore) => row.value?.socialMedia?.[0]?.url,
     )
-    .with('ORGANIZATIONS_LAST_TOUCHPOINT', () => (row: OrganizationStore) => {
-      const value = row.value?.lastTouchpoint?.lastTouchPointAt;
-
-      if (!value) return null;
-
-      return new Date(value);
-    })
     .with(
-      'ORGANIZATIONS_LAST_TOUCHPOINT_DATE',
+      ColumnViewType.OrganizationsLastTouchpoint,
+      () => (row: OrganizationStore) => {
+        const value = row.value?.lastTouchpoint?.lastTouchPointAt;
+
+        if (!value) return null;
+
+        return new Date(value);
+      },
+    )
+    .with(
+      ColumnViewType.OrganizationsLastTouchpointDate,
       () => (row: OrganizationStore) => {
         const value = row.value?.lastTouchpoint?.lastTouchPointAt;
 
         return value ? new Date(value) : null;
       },
     )
-    .with('ORGANIZATIONS_CHURN_DATE', () => (row: OrganizationStore) => {
-      const value = row.value?.accountDetails?.churned;
-
-      return value ? new Date(value) : null;
-    })
     .with(
-      'ORGANIZATIONS_LTV',
+      ColumnViewType.OrganizationsChurnDate,
+      () => (row: OrganizationStore) => {
+        const value = row.value?.accountDetails?.churned;
+
+        return value ? new Date(value) : null;
+      },
+    )
+    .with(
+      ColumnViewType.OrganizationsLtv,
       () => (row: OrganizationStore) => row.value?.accountDetails?.ltv,
     )
     .with(
-      'ORGANIZATIONS_INDUSTRY',
+      ColumnViewType.OrganizationsIndustry,
       () => (row: OrganizationStore) => row.value?.industry,
     )
     .with(
@@ -140,4 +151,14 @@ export const getOrganizationSortFn = (columnId: string) =>
     .with(ColumnViewType.OrganizationsTags, () => (row: OrganizationStore) => {
       return row.value?.tags?.[0]?.name?.trim().toLowerCase() || null;
     })
+    .with(
+      ColumnViewType.OrganizationsParentOrganization,
+      () => (row: OrganizationStore) => {
+        return (
+          row.value?.parentCompanies?.[0]?.organization?.name
+            .trim()
+            .toLowerCase() || null
+        );
+      },
+    )
     .otherwise(() => (_row: OrganizationStore) => false);
