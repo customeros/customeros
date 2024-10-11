@@ -390,7 +390,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	if currentRenewalOpportunityDbNode != nil {
 		currentOpportunity := neo4jmapper.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
 
-		err := h.services.CommonServices.OpportunityService.CloseWon(ctx, eventData.Tenant, currentOpportunity.Id)
+		err := h.services.CommonServices.OpportunityService.CloseWon(ctx, nil, eventData.Tenant, currentOpportunity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CloseWinOpportunity failed: %s", err.Error())
