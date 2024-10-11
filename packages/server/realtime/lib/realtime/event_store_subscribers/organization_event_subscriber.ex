@@ -41,7 +41,7 @@ defmodule Realtime.OrganizationEventSubscriber do
           "Contracts:#{tenant}"
 
         "OPPORTUNITY" ->
-          "Opportunity:#{tenant}"
+          "Opportunities:#{tenant}"
 
         "SERVICE_LINE_ITEM" ->
           "ContractLineItems:#{tenant}"
