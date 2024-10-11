@@ -344,7 +344,7 @@ export class OpportunitiesKanbanPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'opportunity_Update?.id',
+      'opportunity_Save?.metadata?.id',
       undefined,
     );
 
