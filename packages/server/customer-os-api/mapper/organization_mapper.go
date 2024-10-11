@@ -6,6 +6,7 @@ import (
 	mapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	"time"
 )
 
 func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Organization {
@@ -71,6 +72,7 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		Relationship:     utils.ToPtr(mapper.MapRelationshipToModel(entity.Relationship)),
 		LeadSource:       utils.StringPtr(entity.LeadSource),
 		StageLastUpdated: entity.StageUpdatedAt,
+		EnrichDetails:    prepareOrganizationEnrichDetails(entity.EnrichDetails.EnrichRequestedAt, entity.EnrichDetails.EnrichedAt, entity.EnrichDetails.EnrichFailedAt),
 
 		// TODO: All below fields are deprecated and should be removed
 		IsPublic:                      utils.BoolPtr(entity.IsPublic),
@@ -103,4 +105,19 @@ func MapEntitiesToOrganizations(organizationEntities *neo4jentity.OrganizationEn
 		organizations = append(organizations, MapEntityToOrganization(&organizationEntity))
 	}
 	return organizations
+}
+
+func prepareOrganizationEnrichDetails(requestedAt, enrichedAt, failedAt *time.Time) *model.EnrichDetails {
+	output := model.EnrichDetails{
+		RequestedAt: requestedAt,
+		EnrichedAt:  enrichedAt,
+		FailedAt:    failedAt,
+	}
+	if enrichedAt == nil && failedAt == nil && requestedAt != nil {
+		// if requested is older than 1 min, remove it
+		if time.Since(*requestedAt) > time.Minute {
+			output.RequestedAt = nil
+		}
+	}
+	return &output
 }

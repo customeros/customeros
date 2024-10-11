@@ -207,6 +207,7 @@ type ComplexityRoot struct {
 		CustomFields             func(childComplexity int) int
 		Description              func(childComplexity int) int
 		Emails                   func(childComplexity int) int
+		EnrichDetails            func(childComplexity int) int
 		FieldSets                func(childComplexity int) int
 		FirstName                func(childComplexity int) int
 		Flows                    func(childComplexity int) int
@@ -512,6 +513,12 @@ type ComplexityRoot struct {
 	EmailVariableEntity struct {
 		Type      func(childComplexity int) int
 		Variables func(childComplexity int) int
+	}
+
+	EnrichDetails struct {
+		EnrichedAt  func(childComplexity int) int
+		FailedAt    func(childComplexity int) int
+		RequestedAt func(childComplexity int) int
 	}
 
 	EntityTemplate struct {
@@ -1183,6 +1190,7 @@ type ComplexityRoot struct {
 		Emails                        func(childComplexity int) int
 		EmployeeGrowthRate            func(childComplexity int) int
 		Employees                     func(childComplexity int) int
+		EnrichDetails                 func(childComplexity int) int
 		EntityTemplate                func(childComplexity int) int
 		ExternalLinks                 func(childComplexity int) int
 		FieldSets                     func(childComplexity int) int
@@ -2712,6 +2720,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.Emails(childComplexity), true
 
+	case "Contact.enrichDetails":
+		if e.complexity.Contact.EnrichDetails == nil {
+			break
+		}
+
+		return e.complexity.Contact.EnrichDetails(childComplexity), true
+
 	case "Contact.fieldSets":
 		if e.complexity.Contact.FieldSets == nil {
 			break
@@ -4189,6 +4204,27 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EmailVariableEntity.Variables(childComplexity), true
+
+	case "EnrichDetails.enrichedAt":
+		if e.complexity.EnrichDetails.EnrichedAt == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.EnrichedAt(childComplexity), true
+
+	case "EnrichDetails.failedAt":
+		if e.complexity.EnrichDetails.FailedAt == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.FailedAt(childComplexity), true
+
+	case "EnrichDetails.requestedAt":
+		if e.complexity.EnrichDetails.RequestedAt == nil {
+			break
+		}
+
+		return e.complexity.EnrichDetails.RequestedAt(childComplexity), true
 
 	case "EntityTemplate.createdAt":
 		if e.complexity.EntityTemplate.CreatedAt == nil {
@@ -8885,6 +8921,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.Employees(childComplexity), true
 
+	case "Organization.enrichDetails":
+		if e.complexity.Organization.EnrichDetails == nil {
+			break
+		}
+
+		return e.complexity.Organization.EnrichDetails(childComplexity), true
+
 	case "Organization.entityTemplate":
 		if e.complexity.Organization.EntityTemplate == nil {
 			break
@@ -11872,6 +11915,13 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
 
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
+    enrichDetails: EnrichDetails!
+}
+
+type EnrichDetails {
+    requestedAt: Time
+    enrichedAt: Time
+    failedAt: Time
 }
 
 """
@@ -14238,6 +14288,7 @@ type Organization implements MetadataInterface {
     contactCount: Int64! @goField(forceResolver: true)
     inboundCommsCount: Int64! @goField(forceResolver: true)
     outboundCommsCount: Int64! @goField(forceResolver: true)
+    enrichDetails: EnrichDetails!
 
     """
     Deprecated, use relationship instead
@@ -25946,6 +25997,58 @@ func (ec *executionContext) fieldContext_Contact_timelineEventsTotalCount(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_enrichDetails(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_enrichDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnrichDetails, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EnrichDetails)
+	fc.Result = res
+	return ec.marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEnrichDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_enrichDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "requestedAt":
+				return ec.fieldContext_EnrichDetails_requestedAt(ctx, field)
+			case "enrichedAt":
+				return ec.fieldContext_EnrichDetails_enrichedAt(ctx, field)
+			case "failedAt":
+				return ec.fieldContext_EnrichDetails_failedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EnrichDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _ContactParticipant_contactParticipant(ctx context.Context, field graphql.CollectedField, obj *model.ContactParticipant) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ContactParticipant_contactParticipant(ctx, field)
 	if err != nil {
@@ -26051,6 +26154,8 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(_
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -26204,6 +26309,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(_ context.Context,
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -31014,6 +31121,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -33866,6 +33975,8 @@ func (ec *executionContext) fieldContext_Email_contacts(_ context.Context, field
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -34022,6 +34133,8 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -35007,6 +35120,129 @@ func (ec *executionContext) fieldContext_EmailVariableEntity_variables(_ context
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type EmailVariableName does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_requestedAt(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_requestedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.RequestedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_requestedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_enrichedAt(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_enrichedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnrichedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_enrichedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _EnrichDetails_failedAt(ctx context.Context, field graphql.CollectedField, obj *model.EnrichDetails) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_EnrichDetails_failedAt(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.FailedAt, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*time.Time)
+	fc.Result = res
+	return ec.marshalOTime2ᚖtimeᚐTime(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_EnrichDetails_failedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "EnrichDetails",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Time does not have child fields")
 		},
 	}
 	return fc, nil
@@ -36966,6 +37202,8 @@ func (ec *executionContext) fieldContext_FlowContact_contact(_ context.Context, 
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -40334,6 +40572,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -45425,6 +45665,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -45568,6 +45810,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(_ context.Context, fiel
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -46384,6 +46628,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -50780,6 +51026,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_CreateForOrganization(
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -50964,6 +51212,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -51264,6 +51514,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -51654,6 +51906,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -51777,6 +52031,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -52013,6 +52269,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx con
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -53379,6 +53637,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -57236,6 +57496,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -57433,6 +57695,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -59987,6 +60251,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -60694,6 +60960,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -60925,6 +61193,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -61670,6 +61940,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -61901,6 +62173,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -62132,6 +62406,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -62704,6 +62980,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -62935,6 +63213,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -63166,6 +63446,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -63397,6 +63679,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -70349,6 +70633,8 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -74300,6 +74586,58 @@ func (ec *executionContext) fieldContext_Organization_outboundCommsCount(_ conte
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_enrichDetails(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_enrichDetails(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EnrichDetails, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.EnrichDetails)
+	fc.Result = res
+	return ec.marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEnrichDetails(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_enrichDetails(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "requestedAt":
+				return ec.fieldContext_EnrichDetails_requestedAt(ctx, field)
+			case "enrichedAt":
+				return ec.fieldContext_EnrichDetails_enrichedAt(ctx, field)
+			case "failedAt":
+				return ec.fieldContext_EnrichDetails_failedAt(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type EnrichDetails", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_isCustomer(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_isCustomer(ctx, field)
 	if err != nil {
@@ -75200,6 +75538,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -75522,6 +75862,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -76799,6 +77141,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(_ context.Context,
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -76955,6 +77299,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -77527,6 +77873,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -77713,6 +78061,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -77836,6 +78186,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_timelineEvents(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Contact_timelineEventsTotalCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Contact_enrichDetails(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Contact", field.Name)
 		},
@@ -80472,6 +80824,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -80700,6 +81054,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -80928,6 +81284,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -83478,6 +83836,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -85050,6 +85410,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -86202,6 +86564,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
 			case "outboundCommsCount":
 				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
 			case "isCustomer":
 				return ec.fieldContext_Organization_isCustomer(ctx, field)
 			case "socials":
@@ -101002,6 +101366,11 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "enrichDetails":
+			out.Values[i] = ec._Contact_enrichDetails(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -103266,6 +103635,46 @@ func (ec *executionContext) _EmailVariableEntity(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var enrichDetailsImplementors = []string{"EnrichDetails"}
+
+func (ec *executionContext) _EnrichDetails(ctx context.Context, sel ast.SelectionSet, obj *model.EnrichDetails) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, enrichDetailsImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("EnrichDetails")
+		case "requestedAt":
+			out.Values[i] = ec._EnrichDetails_requestedAt(ctx, field, obj)
+		case "enrichedAt":
+			out.Values[i] = ec._EnrichDetails_enrichedAt(ctx, field, obj)
+		case "failedAt":
+			out.Values[i] = ec._EnrichDetails_failedAt(ctx, field, obj)
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -109840,6 +110249,11 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "enrichDetails":
+			out.Values[i] = ec._Organization_enrichDetails(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				atomic.AddUint32(&out.Invalids, 1)
+			}
 		case "isCustomer":
 			out.Values[i] = ec._Organization_isCustomer(ctx, field, obj)
 		case "socials":
@@ -115262,6 +115676,16 @@ func (ec *executionContext) marshalNEmailVariableName2ᚕgithubᚗcomᚋopenline
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEnrichDetails(ctx context.Context, sel ast.SelectionSet, v *model.EnrichDetails) graphql.Marshaler {
+	if v == nil {
+		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
+			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
+		}
+		return graphql.Null
+	}
+	return ec._EnrichDetails(ctx, sel, v)
 }
 
 func (ec *executionContext) marshalNEntityTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx context.Context, sel ast.SelectionSet, v model.EntityTemplate) graphql.Marshaler {

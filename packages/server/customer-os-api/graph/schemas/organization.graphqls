@@ -91,6 +91,7 @@ type Organization implements MetadataInterface {
     contactCount: Int64! @goField(forceResolver: true)
     inboundCommsCount: Int64! @goField(forceResolver: true)
     outboundCommsCount: Int64! @goField(forceResolver: true)
+    enrichDetails: EnrichDetails!
 
     """
     Deprecated, use relationship instead

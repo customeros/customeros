@@ -16,11 +16,13 @@ const (
 	OrganizationPropertyIndustry                  OrganizationProperty = "industry"
 	OrganizationPropertyIsPublic                  OrganizationProperty = "isPublic"
 	OrganizationPropertyDomainCheckedAt           OrganizationProperty = "techDomainCheckedAt"
-	OrganizationPropertyEnrichRequestedAt         OrganizationProperty = "techEnrichRequestedAt"
 	OrganizationPropertyIndustryCheckedAt         OrganizationProperty = "techIndustryCheckedAt"
 	OrganizationPropertyLastTouchpointRequestedAt OrganizationProperty = "techLastTouchpointRequestedAt"
 	OrganizationPropertyIcpFit                    OrganizationProperty = "icpFit"
 	OrganizationPropertyHiddenAt                  OrganizationProperty = "hiddenAt"
+	OrganizationPropertyEnrichRequestedAt         OrganizationProperty = "techEnrichRequestedAt"
+	OrganizationPropertyEnrichedAt                OrganizationProperty = "enrichedAt"
+	OrganizationPropertyEnrichFailedAt            OrganizationProperty = "enrichFailedAt"
 	OrganizationPropertyEnrichAttempts            OrganizationProperty = "techEnrichAttempts"
 )
 
@@ -102,16 +104,17 @@ type OnboardingDetails struct {
 }
 
 type OrganizationEnrichDetails struct {
-	EnrichedAt     *time.Time
-	EnrichDomain   string
-	EnrichSource   enum.EnrichSource
-	EnrichAttempts int64
+	EnrichRequestedAt *time.Time
+	EnrichedAt        *time.Time
+	EnrichFailedAt    *time.Time
+	EnrichAttempts    int64
+	EnrichDomain      string
+	EnrichSource      enum.EnrichSource
 }
 
 type OrganizationInternalFields struct {
 	DomainCheckedAt           *time.Time
 	IndustryCheckedAt         *time.Time
-	EnrichRequestedAt         *time.Time
 	LastTouchpointRequestedAt *time.Time
 	HiddenAt                  *time.Time
 }

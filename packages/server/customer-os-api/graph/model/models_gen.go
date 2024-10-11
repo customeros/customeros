@@ -371,6 +371,7 @@ type Contact struct {
 	Flows                    []*Flow         `json:"flows"`
 	TimelineEvents           []TimelineEvent `json:"timelineEvents"`
 	TimelineEventsTotalCount int64           `json:"timelineEventsTotalCount"`
+	EnrichDetails            *EnrichDetails  `json:"enrichDetails"`
 }
 
 func (Contact) IsExtensibleEntity()               {}
@@ -1015,6 +1016,12 @@ type EmailValidationDetails struct {
 type EmailVariableEntity struct {
 	Type      EmailVariableEntityType `json:"type"`
 	Variables []EmailVariableName     `json:"variables"`
+}
+
+type EnrichDetails struct {
+	RequestedAt *time.Time `json:"requestedAt,omitempty"`
+	EnrichedAt  *time.Time `json:"enrichedAt,omitempty"`
+	FailedAt    *time.Time `json:"failedAt,omitempty"`
 }
 
 type EntityTemplate struct {
@@ -1990,6 +1997,7 @@ type Organization struct {
 	ContactCount             int64                         `json:"contactCount"`
 	InboundCommsCount        int64                         `json:"inboundCommsCount"`
 	OutboundCommsCount       int64                         `json:"outboundCommsCount"`
+	EnrichDetails            *EnrichDetails                `json:"enrichDetails"`
 	// Deprecated, use relationship instead
 	IsCustomer *bool `json:"isCustomer,omitempty"`
 	// Deprecated

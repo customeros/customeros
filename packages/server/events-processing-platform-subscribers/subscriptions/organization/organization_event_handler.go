@@ -144,14 +144,28 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 
+	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
+	}
+
 	enrichOrganizationResponse, err := h.callApiEnrichOrganization(ctx, tenant, domain)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to call enrich organization API"))
 		h.log.Errorf("Error calling enrich organization API: %s", err.Error())
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
+		}
 		return nil
 	}
 	if enrichOrganizationResponse != nil && enrichOrganizationResponse.Success == true {
 		h.updateOrganizationFromEnrichmentResponse(ctx, tenant, domain, enrichOrganizationResponse.PrimaryEnrichSource, *organizationEntity, &enrichOrganizationResponse.Data)
+	} else {
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichFailedAt), utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
+		}
 	}
 
 	return nil

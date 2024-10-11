@@ -170,13 +170,24 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 		firstName, lastName = contactEntity.DeriveFirstAndLastNames()
 	}
 
-	if linkedInUrl != "" || emailAddress != "" {
+	if linkedInUrl != "" || emailAddress != "" || (firstName != "" && lastName != "" && domain != "") {
+		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
+		}
 		apiResponse, err := h.callApiEnrichPerson(ctx, tenant, linkedInUrl, emailAddress, firstName, lastName, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "callApiEnrichPerson"))
+			err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichFailedAt), utils.NowPtr())
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich failed at"))
+			}
+		} else {
+			err = h.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, apiResponse)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "enrichContactWithScrapInEnrichDetails"))
+			}
 		}
-		err = h.enrichContactWithScrapInEnrichDetails(ctx, tenant, contactEntity, apiResponse)
-
 	}
 
 	return nil
