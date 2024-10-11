@@ -126,8 +126,8 @@ type OpportunityWriteRepository interface {
 	Update(ctx context.Context, tenant, opportunityId string, data OpportunityUpdateFields) error
 
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, data OpportunitySaveFields) error
-	ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error
-	RemoveOwner(ctx context.Context, tenant, opportunityId string) error
+	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId, userId string) error
+	RemoveOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
@@ -380,7 +380,7 @@ func (r *opportunityWriteRepository) Save(ctx context.Context, txx *neo4j.Manage
 	return err
 }
 
-func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, opportunityId, userId string) error {
+func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.ReplaceOwner")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -403,17 +403,23 @@ func (r *opportunityWriteRepository) ReplaceOwner(ctx context.Context, tenant, o
 		"userId":        userId,
 		"now":           utils.Now(),
 	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
-func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tenant, opportunityId string) error {
+func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.RemoveOwner")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -427,14 +433,20 @@ func (r *opportunityWriteRepository) RemoveOwner(ctx context.Context, tenant, op
 		"tenant":        tenant,
 		"opportunityId": opportunityId,
 	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (r *opportunityWriteRepository) CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error) {

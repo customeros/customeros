@@ -1,6 +1,7 @@
 package entity
 
 import (
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
 
@@ -64,7 +65,8 @@ type FlowParticipantEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 
-	ContactId string
+	EntityId   string
+	EntityType model.EntityType
 
 	Status          FlowParticipantStatus
 	ScheduledAction *string

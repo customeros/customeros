@@ -21,7 +21,7 @@ type FlowService interface {
 	FlowGetList(ctx context.Context) (*neo4jentity.FlowEntities, error)
 	FlowGetById(ctx context.Context, id string) (*neo4jentity.FlowEntity, error)
 	FlowGetByActionId(ctx context.Context, flowActionId string) (*neo4jentity.FlowEntity, error)
-	FlowGetByContactId(ctx context.Context, flowContactId string) (*neo4jentity.FlowEntity, error)
+	FlowGetByParticipant(ctx context.Context, entityId string, entityType model.EntityType) (*neo4jentity.FlowEntity, error)
 	FlowsGetListWithContact(ctx context.Context, contactIds []string) (*neo4jentity.FlowEntities, error)
 	FlowMerge(ctx context.Context, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
 	FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error)
@@ -33,7 +33,7 @@ type FlowService interface {
 
 	FlowParticipantGetList(ctx context.Context, flowIds []string) (*neo4jentity.FlowParticipantEntities, error)
 	FlowParticipantById(ctx context.Context, flowParticipantId string) (*neo4jentity.FlowParticipantEntity, error)
-	FlowParticipantByContactId(ctx context.Context, flowId, contactId string) (*neo4jentity.FlowParticipantEntity, error)
+	FlowParticipantByEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error)
 	FlowParticipantAdd(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error)
 	FlowParticipantDelete(ctx context.Context, flowParticipantId string) error
 
@@ -110,14 +110,14 @@ func (s *flowService) FlowGetByActionId(ctx context.Context, flowActionId string
 	return mapper.MapDbNodeToFlowEntity(node), nil
 }
 
-func (s *flowService) FlowGetByContactId(ctx context.Context, flowContactId string) (*neo4jentity.FlowEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetByContactId")
+func (s *flowService) FlowGetByParticipant(ctx context.Context, entityId string, entityType model.EntityType) (*neo4jentity.FlowEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowGetByParticipant")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	span.LogFields(log.String("flowContactId", flowContactId))
+	span.LogFields(log.String("entityId", entityId), log.String("entityType", entityType.String()))
 
-	node, err := s.services.Neo4jRepositories.FlowActionReadRepository.GetFlowByContactId(ctx, flowContactId)
+	node, err := s.services.Neo4jRepositories.FlowActionReadRepository.GetFlowByEntity(ctx, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -484,9 +484,9 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	flow := mapper.MapDbNodeToFlowEntity(node)
 
-	if flow.Status == status {
-		return flow, nil
-	}
+	//if flow.Status == status {
+	//	return flow, nil
+	//}
 
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
@@ -494,14 +494,14 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		//if status == neo4jentity.FlowStatusActive {
-		//	flowContactList, err := s.FlowParticipantGetList(ctx, []string{flow.Id})
+		//	flowParticipants, err := s.FlowParticipantGetList(ctx, []string{flow.Id})
 		//	if err != nil {
 		//		tracing.TraceErr(span, err)
 		//		return nil, err
 		//	}
 		//
-		//	for _, v := range *flowContactList {
-		//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, v.ContactId, model.CONTACT)
+		//	for _, v := range *flowParticipants {
+		//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, &v)
 		//		if err != nil {
 		//			tracing.TraceErr(span, err)
 		//			return nil, err
@@ -644,14 +644,14 @@ func (s *flowService) FlowParticipantById(ctx context.Context, flowParticipantId
 	return mapper.MapDbNodeToFlowParticipantEntity(node), nil
 }
 
-func (s *flowService) FlowParticipantByContactId(ctx context.Context, flowId, contactId string) (*neo4jentity.FlowParticipantEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantByContactId")
+func (s *flowService) FlowParticipantByEntity(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*neo4jentity.FlowParticipantEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowParticipantByEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	span.LogFields(log.String("flowId", flowId), log.String("contactId", contactId))
+	span.LogFields(log.String("flowId", flowId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
 
-	identified, err := s.services.Neo4jRepositories.FlowParticipantReadRepository.IdentifyForContact(ctx, flowId, contactId)
+	identified, err := s.services.Neo4jRepositories.FlowParticipantReadRepository.Identify(ctx, flowId, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -677,14 +677,10 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 		return nil, errors.New("flow not found")
 	}
 
-	var identified *neo4j.Node
-
-	if entityType == model.CONTACT {
-		identified, err = s.services.Neo4jRepositories.FlowParticipantReadRepository.IdentifyForContact(ctx, flowId, entityId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+	identified, err := s.services.Neo4jRepositories.FlowParticipantReadRepository.Identify(ctx, flowId, entityId, entityType)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
 	if identified == nil {
@@ -703,11 +699,9 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 		}
 
 		toStore := neo4jentity.FlowParticipantEntity{
-			Status: neo4jentity.FlowParticipantStatusPending,
-		}
-
-		if entityType == model.CONTACT {
-			toStore.ContactId = entityId
+			Status:     neo4jentity.FlowParticipantStatusPending,
+			EntityId:   entityId,
+			EntityType: entityType,
 		}
 
 		toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, common.GetTenantFromContext(ctx), model.NodeLabelFlowParticipant)
@@ -772,8 +766,7 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		return errors.New("flow sequence contact not found")
 	}
 
-	//TODO generify
-	flow, err := s.FlowGetByContactId(ctx, entity.ContactId)
+	flow, err := s.FlowGetByParticipant(ctx, entity.EntityId, entity.EntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -800,8 +793,8 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		FromEntityId:   entity.Id,
 		FromEntityType: model.FLOW_PARTICIPANT,
 		Relationship:   model.HAS,
-		ToEntityId:     entity.ContactId,
-		ToEntityType:   model.CONTACT,
+		ToEntityId:     entity.EntityId,
+		ToEntityType:   entity.EntityType,
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
