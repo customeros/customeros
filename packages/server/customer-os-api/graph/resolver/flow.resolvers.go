@@ -61,7 +61,8 @@ func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContac
 		return nil, err
 	}
 
-	contactEntity, err := r.Services.ContactService.GetById(ctx, entity.ContactId)
+	//TODO THIS IS NOT CORRECT
+	contactEntity, err := r.Services.ContactService.GetById(ctx, entity.EntityId)
 	if err != nil || contactEntity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")

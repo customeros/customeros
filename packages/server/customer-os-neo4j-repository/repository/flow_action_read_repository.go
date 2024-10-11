@@ -6,6 +6,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -18,7 +19,7 @@ type FlowActionReadRepository interface {
 	GetStartAction(ctx context.Context, flowId string) (*neo4j.Node, error)
 	GetNext(ctx context.Context, actionId string) ([]*neo4j.Node, error)
 	GetFlowByActionId(ctx context.Context, id string) (*neo4j.Node, error)
-	GetFlowByContactId(ctx context.Context, id string) (*neo4j.Node, error)
+	GetFlowByEntity(ctx context.Context, entityId string, entityType model.EntityType) (*neo4j.Node, error)
 }
 
 type flowActionReadRepositoryImpl struct {
@@ -227,19 +228,20 @@ func (r flowActionReadRepositoryImpl) GetFlowByActionId(ctx context.Context, id 
 	return result.(*dbtype.Node), nil
 }
 
-func (r flowActionReadRepositoryImpl) GetFlowByContactId(ctx context.Context, id string) (*neo4j.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionReadRepository.GetFlowByContactId")
+func (r flowActionReadRepositoryImpl) GetFlowByEntity(ctx context.Context, entityId string, entityType model.EntityType) (*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionReadRepository.GetFlowByEntity")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	span.LogFields(log.String("id", id))
+	span.LogFields(log.String("entityId", entityId), log.String("entityType", entityType.String()))
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s)-[:HAS]->(c:Contact_%s {id: $id}) RETURN f`, tenant, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s { entityId: $entityId, entityType: $entityType }) RETURN f`, tenant, tenant)
 	params := map[string]any{
-		"tenant": tenant,
-		"id":     id,
+		"tenant":     tenant,
+		"entityId":   entityId,
+		"entityType": entityType.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))

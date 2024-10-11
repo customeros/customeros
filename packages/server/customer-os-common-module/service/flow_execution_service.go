@@ -20,7 +20,7 @@ import (
 const numberOfEmailsPerDay = 2
 
 type FlowExecutionService interface {
-	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, contactId string, entityType model.EntityType) error
+	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error
 	ProcessActionExecution(ctx context.Context, scheduledActionExecution *entity.FlowActionExecutionEntity) error
 }
 
@@ -34,14 +34,14 @@ func NewFlowExecutionService(services *Services) FlowExecutionService {
 	}
 }
 
-func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) error {
+func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.ScheduleFlow")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	now := utils.Now()
 
-	flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, entityId, entityType)
+	flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -64,7 +64,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 
 			scheduleAt := now.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
 
-			err := s.scheduleNextAction(ctx, tx, flowId, entityId, entityType, scheduleAt, *nextAction)
+			err := s.scheduleNextAction(ctx, tx, flowId, flowParticipant, scheduleAt, *nextAction)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -91,23 +91,6 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 
 			//marking the flow as completed if the next action is FLOW_END
 			if nextAction.Data.Action == entity.FlowActionTypeFlowEnd {
-
-				var flowParticipant *entity.FlowParticipantEntity
-
-				//TODO support multiple entities
-				if entityType == model.CONTACT {
-					flowParticipant, err = s.services.FlowService.FlowParticipantByContactId(ctx, flowId, entityId)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return err
-					}
-				}
-
-				if flowParticipant == nil {
-					tracing.TraceErr(span, errors.New("Flow participant not found"))
-					return errors.New("Flow participant not found")
-				}
-
 				flowParticipant.Status = entity.FlowParticipantStatusCompleted
 
 				_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, tx, flowParticipant)
@@ -121,7 +104,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 
 			scheduleAt := lastActionExecutedAt.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
 
-			err := s.scheduleNextAction(ctx, tx, flowId, entityId, entityType, scheduleAt, *nextAction)
+			err := s.scheduleNextAction(ctx, tx, flowId, flowParticipant, scheduleAt, *nextAction)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return err
@@ -152,21 +135,21 @@ func (s *flowExecutionService) getFlowActionExecutions(ctx context.Context, flow
 	return entities, nil
 }
 
-func (s *flowExecutionService) scheduleNextAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
+func (s *flowExecutionService) scheduleNextAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleNextAction")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	switch nextAction.Data.Action {
 	case entity.FlowActionTypeEmailNew, entity.FlowActionTypeEmailReply:
-		return s.scheduleEmailAction(ctx, tx, flowId, entityId, entityType, scheduleAt, nextAction)
+		return s.scheduleEmailAction(ctx, tx, flowId, flowParticipant, scheduleAt, nextAction)
 	default:
 		tracing.TraceErr(span, fmt.Errorf("Unsupported action type %s", nextAction.Data.Action))
 		return errors.New("Unsupported action type")
 	}
 }
 
-func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
+func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity, scheduleAt time.Time, nextAction entity.FlowActionEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.scheduleEmailAction")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -174,7 +157,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 	tenant := common.GetTenantFromContext(ctx)
 
 	// 1. Get the mailbox for contact or associate the best available mailbox
-	flowExecutionSettings, err := s.getFlowExecutionSettings(ctx, flowId, entityId, entityType)
+	flowExecutionSettings, err := s.getFlowExecutionSettings(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -243,8 +226,8 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 		flowExecutionSettings = &entity.FlowExecutionSettingsEntity{
 			Id:         id,
 			FlowId:     flowId,
-			EntityId:   entityId,
-			EntityType: entityType.String(),
+			EntityId:   flowParticipant.EntityId,
+			EntityType: flowParticipant.EntityType.String(),
 			Mailbox:    &fastestMailbox,
 			UserId:     nil,
 		}
@@ -264,7 +247,14 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 		return err
 	}
 
-	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, entityId, entityType, flowExecutionSettings.Mailbox, *actualScheduleAt)
+	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant.EntityId, flowParticipant.EntityType, flowExecutionSettings.Mailbox, *actualScheduleAt)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	flowParticipant.Status = entity.FlowParticipantStatusScheduled
+	_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, tx, flowParticipant)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -350,8 +340,7 @@ func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Contex
 		return err
 	}
 
-	// After the wait duration, the next action will be executed
-	actionExecution := entity.FlowActionExecutionEntity{
+	_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, tx, &entity.FlowActionExecutionEntity{
 		Id:          id,
 		FlowId:      flowId,
 		ActionId:    actionId,
@@ -360,9 +349,7 @@ func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Contex
 		Mailbox:     mailbox,
 		ScheduledAt: executionTime,
 		Status:      entity.FlowActionExecutionStatusScheduled,
-	}
-
-	_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, tx, &actionExecution)
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -465,7 +452,13 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			return nil, err
 		}
 
-		err = s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, model.GetEntityType(scheduledActionExecution.EntityType))
+		flowParticipant, err := s.services.FlowService.FlowParticipantByEntity(ctx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, model.GetEntityType(scheduledActionExecution.EntityType))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		err = s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, flowParticipant)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

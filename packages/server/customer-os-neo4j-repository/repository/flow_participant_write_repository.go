@@ -37,7 +37,8 @@ func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4
 			MERGE (t)<-[:BELONGS_TO_TENANT]-(fc:FlowParticipant:FlowParticipant_%s {id: $id})
 			ON MATCH SET
 				fc.updatedAt = $updatedAt,
-				fc.contactId = $contactId,
+				fc.entityId = $entityId,
+				fc.entityType = $entityType,
 				fc.status = $status
 			ON CREATE SET
 				fc.createdAt = $createdAt,
@@ -47,12 +48,13 @@ func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4
 			RETURN fc`, common.GetTenantFromContext(ctx))
 
 	params := map[string]any{
-		"tenant":    common.GetTenantFromContext(ctx),
-		"id":        entity.Id,
-		"createdAt": utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt": utils.TimeOrNow(entity.UpdatedAt),
-		"contactId": entity.ContactId,
-		"status":    entity.Status,
+		"tenant":     common.GetTenantFromContext(ctx),
+		"id":         entity.Id,
+		"createdAt":  utils.TimeOrNow(entity.CreatedAt),
+		"updatedAt":  utils.TimeOrNow(entity.UpdatedAt),
+		"entityId":   entity.EntityId,
+		"entityType": entity.EntityType.String(),
+		"status":     entity.Status,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

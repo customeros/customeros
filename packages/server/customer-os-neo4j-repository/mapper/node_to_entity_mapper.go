@@ -1037,11 +1037,12 @@ func MapDbNodeToFlowParticipantEntity(node *dbtype.Node) *entity.FlowParticipant
 	}
 	props := utils.GetPropsFromNode(*node)
 	e := entity.FlowParticipantEntity{
-		Id:        utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		ContactId: utils.GetStringPropOrEmpty(props, "contactId"),
-		Status:    entity.GetFlowContactStatus(utils.GetStringPropOrEmpty(props, "status")),
+		Id:         utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
+		UpdatedAt:  utils.GetTimePropOrEpochStart(props, "updatedAt"),
+		EntityId:   utils.GetStringPropOrEmpty(props, "entityId"),
+		EntityType: model.GetEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
+		Status:     entity.GetFlowContactStatus(utils.GetStringPropOrEmpty(props, "status")),
 	}
 	return &e
 }

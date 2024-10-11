@@ -107,7 +107,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	}
 
 	if eventData.OwnerUserId != "" {
-		err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, nil, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
@@ -377,13 +377,13 @@ func (h *OpportunityEventHandler) OnUpdate(ctx context.Context, evt eventstore.E
 	//on service
 	if eventData.UpdateOwnerUserId() {
 		if eventData.OwnerUserId != "" {
-			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, nil, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
 			}
 		} else {
-			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, eventData.Tenant, opportunityId)
+			err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, nil, eventData.Tenant, opportunityId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Error while removing owner of opportunity %s: %s", opportunityId, err.Error())
@@ -462,7 +462,7 @@ func (h *OpportunityEventHandler) OnUpdateRenewal(ctx context.Context, evt event
 	adjustedRateChanged := eventData.UpdateRenewalAdjustedRate() && opportunity.RenewalDetails.RenewalAdjustedRate != eventData.RenewalAdjustedRate
 	setUpdatedByUserId := (amountChanged || likelihoodChanged || adjustedRateChanged) && eventData.UpdatedByUserId != ""
 	if eventData.OwnerUserId != "" {
-		err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, eventData.Tenant, opportunityId, eventData.OwnerUserId)
+		err = h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, nil, eventData.Tenant, opportunityId, eventData.OwnerUserId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Error while replacing owner of opportunity %s: %s", opportunityId, err.Error())
