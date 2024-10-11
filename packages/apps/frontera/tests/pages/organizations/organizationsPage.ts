@@ -161,7 +161,7 @@ export class OrganizationsPage {
         .locator(this.organizationWebsiteInAllOrgsTable)
         .innerText();
 
-      expect(website).toBe('Unknown');
+      expect(website).toBe('Not set');
     });
 
     await assertWithRetry(async () => {
