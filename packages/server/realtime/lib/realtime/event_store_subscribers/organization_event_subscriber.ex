@@ -34,6 +34,18 @@ defmodule Realtime.OrganizationEventSubscriber do
         "ORGANIZATION" ->
           "Organizations:#{tenant}"
 
+        "CONTACT" ->
+          "Contacts:#{tenant}"
+
+        "CONTRACT" ->
+          "Contracts:#{tenant}"
+
+        "OPPORTUNITY" ->
+          "Opportunity:#{tenant}"
+
+        "SERVICE_LINE_ITEM" ->
+          "ContractLineItems:#{tenant}"
+
         _ ->
           IO.puts("Unknown entity: #{entity}")
           nil
