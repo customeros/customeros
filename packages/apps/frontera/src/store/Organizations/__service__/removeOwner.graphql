@@ -1,0 +1,5 @@
+mutation removeOrganizationOwner($organizationId: ID!) {
+  organization_UnsetOwner(organizationId: $organizationId) {
+    id
+  }
+}

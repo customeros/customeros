@@ -1,17 +1,56 @@
 import { computed, reaction, observable, makeObservable } from 'mobx';
 
-import type { Operation } from './types';
+import type { RootStore } from './root';
 import type { Transport } from './transport';
+import type { Operation, GroupOperation } from './types';
 
-type Transaction = {
-  status: string;
-  createdAt: Date;
-  retryDelay: number;
-  channelName: string;
-  lastAttemptAt: Date;
-  operation: Operation;
-  retryAttempts: number;
+import { GraphqlService } from './graphql';
+
+type TransactionType = 'SINGLE' | 'GROUP';
+type TransactionStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'RETRYING'
+  | 'FAILED';
+type OperationType = Operation | GroupOperation;
+type TransactionOptions = {
+  onFailled: () => void;
+  onCompleted: () => void;
 };
+
+class Transaction {
+  type: TransactionType;
+  status: TransactionStatus = 'PENDING';
+  createdAt = new Date();
+  completedAt?: Date;
+  failedAt?: Date;
+  retryDelay = 0;
+  lastAttemptAt: Date | null = null;
+  operation: OperationType;
+  retryAttempts = 0;
+
+  constructor(
+    type: TransactionType,
+    operation: OperationType,
+    private options?: TransactionOptions,
+  ) {
+    this.type = type;
+    this.operation = operation;
+  }
+
+  success() {
+    this.status = 'COMPLETED';
+    this.completedAt = new Date();
+    this?.options?.onCompleted();
+  }
+
+  fail() {
+    this.status = 'FAILED';
+    this.failedAt = new Date();
+    this?.options?.onFailled();
+  }
+}
 
 class TransactionQueue {
   private queue: Transaction[] = [];
@@ -41,12 +80,19 @@ class TransactionRunner {
   private isRetryRunning = false;
   private maxRetries = 3;
   private baseDelay = 1000;
+  private graphqlService: GraphqlService;
 
   constructor(
+    private root: RootStore,
     private transport: Transport,
     private mainQueue: TransactionQueue,
     private retryQueue: TransactionQueue,
-  ) {}
+  ) {
+    this.graphqlService = new GraphqlService(this.root, this.transport);
+    // this.processGraphqlMutation = this.processGraphqlMutation.bind(this);
+    // this.processSyncPacket = this.processSyncPacket.bind(this);
+    // this.processTransaction = this.processTransaction.bind(this);
+  }
 
   // tx should contain a type property to handle group packets too
   async processMainQueue() {
@@ -57,7 +103,7 @@ class TransactionRunner {
       const tx = this.mainQueue.next();
 
       if (!tx) continue;
-      if (!tx.channelName) continue;
+      if (!tx.operation.entityId) continue;
 
       try {
         this.processTransaction(tx);
@@ -77,7 +123,7 @@ class TransactionRunner {
       const tx = this.retryQueue.next();
 
       if (!tx) continue;
-      if (!tx.channelName) continue;
+      if (!tx.operation.entityId) continue;
 
       const delayPassed = this.hasRetryDelayPassed(tx);
 
@@ -97,13 +143,32 @@ class TransactionRunner {
   }
 
   private async processTransaction(tx: Transaction) {
-    await new Promise((resolve, reject) => {
-      this.transport.channels
-        .get(tx.channelName)
-        ?.push('sync_packet', { payload: { operation: tx.operation } })
-        ?.receive('ok', resolve)
-        ?.receive('error', reject);
+    await this.processGraphqlMutation(tx);
+    await this.processSyncPacket(tx);
+  }
+
+  private async processSyncPacket(tx: Transaction) {
+    await new Promise<void>((resolve, reject) => {
+      const channelBinding =
+        tx.type === 'SINGLE' ? 'sync_packet' : 'sync_group_packet';
+
+      const channel = this.transport?.channels?.get(
+        tx.operation.entityId as string,
+      );
+
+      channel
+        ?.push(channelBinding, { payload: { operation: tx.operation } })
+        ?.receive('ok', () => {
+          resolve();
+        })
+        ?.receive('error', () => {
+          reject();
+        });
     });
+  }
+
+  private async processGraphqlMutation(tx: Transaction) {
+    await this.graphqlService.mutate(tx.operation as Operation);
   }
 
   private handleRetry(tx: Transaction) {
@@ -143,18 +208,23 @@ export class TransactionService {
   private retryQueue: TransactionQueue;
   private runner: TransactionRunner;
 
-  constructor(private transport: Transport) {
+  constructor(private root: RootStore, private transport: Transport) {
     this.mainQueue = new TransactionQueue();
     this.retryQueue = new TransactionQueue();
     this.runner = new TransactionRunner(
+      this.root,
       this.transport,
       this.mainQueue,
       this.retryQueue,
     );
   }
 
-  commit(tx: Transaction) {
-    this.mainQueue.push(tx);
+  commit(operation: Operation, options?: TransactionOptions) {
+    this.mainQueue.push(new Transaction('SINGLE', operation, options));
+  }
+
+  groupCommit(operation: GroupOperation, options?: TransactionOptions) {
+    this.mainQueue.push(new Transaction('GROUP', operation, options));
   }
 
   startRunners() {

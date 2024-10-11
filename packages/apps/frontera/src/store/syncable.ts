@@ -22,6 +22,7 @@ type SyncableUpdateOptions = {
 
 export class Syncable<T extends object> {
   value: T;
+  snapshot: T;
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -30,6 +31,8 @@ export class Syncable<T extends object> {
 
   constructor(public root: RootStore, public transport: Transport, data: T) {
     this.value = data;
+    this.snapshot = Object.assign({}, data);
+
     makeObservable<Syncable<T>, 'initChannelConnection' | 'subscribe'>(this, {
       id: computed,
       load: action,
@@ -142,33 +145,46 @@ export class Syncable<T extends object> {
     const operation: Operation = {
       id: this.version,
       diff,
+      entityId: this.getId(),
       ref: this.transport.refId,
+      entity: this.getChannelName().split(':')[0],
     };
 
     this.history.push(operation);
     this.value = next;
 
-    if (this?.save) {
-      (async () => {
-        try {
-          this.error = null;
+    this.root.transactions.commit(operation);
 
-          if (options?.mutate && !this.root.demoMode) {
-            await this.save(operation);
-          }
+    // if (this?.save) {
+    //   (async () => {
+    //     try {
+    //       this.error = null;
+    //
+    //       if (options?.mutate && !this.root.demoMode) {
+    //         await this.save(operation);
+    //       }
+    //
+    //       this?.channel
+    //         ?.push('sync_packet', { payload: { operation } })
+    //         ?.receive('ok', ({ version }: { version: number }) => {
+    //           this.version = version;
+    //         });
+    //     } catch (e) {
+    //       console.error(e);
+    //       this.value = lhs;
+    //       this.history.pop();
+    //     }
+    //   })();
+    // }
+  }
 
-          this?.channel
-            ?.push('sync_packet', { payload: { operation } })
-            ?.receive('ok', ({ version }: { version: number }) => {
-              this.version = version;
-            });
-        } catch (e) {
-          console.error(e);
-          this.value = lhs;
-          this.history.pop();
-        }
-      })();
-    }
+  public commit() {
+    const operation = this.makeChangesetOperation();
+
+    this.root.transactions.commit(operation, {
+      onFailled: () => {},
+      onCompleted: () => {},
+    });
   }
 
   public save(_operation: Operation) {
@@ -177,6 +193,22 @@ export class Syncable<T extends object> {
 
   public async invalidate() {
     /* Placeholder: should be overwritten by sub-classes with the apropiate invalidation logic */
+  }
+
+  private makeChangesetOperation() {
+    const lhs = toJS(this.value);
+    const rhs = this.snapshot;
+    const diff = getDiff(lhs, rhs, true);
+
+    const operation: Operation = {
+      id: this.version,
+      diff,
+      entityId: this.getId(),
+      ref: this.transport.refId,
+      entity: this.getChannelName().split(':')[0],
+    };
+
+    return operation;
   }
 
   static getDefaultValue<T extends object>(_data?: T): T {
