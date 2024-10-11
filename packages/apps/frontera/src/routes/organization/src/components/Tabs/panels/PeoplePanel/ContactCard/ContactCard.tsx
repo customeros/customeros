@@ -224,6 +224,12 @@ export const ContactCard = observer(
       });
     };
 
+    const enrichedContact = contactStore?.value.enrichDetails;
+    const enrichingStatus =
+      !enrichedContact?.enrichedAt &&
+      enrichedContact?.requestedAt &&
+      !enrichedContact?.failedAt;
+
     return (
       <>
         <Card
@@ -238,68 +244,83 @@ export const ContactCard = observer(
           )}
         >
           <CardHeader onClick={toggle} className={cn('flex p-4 relative')}>
-            <Avatar
-              variant='shadowed'
-              name={contactStore?.value.name ?? ''}
-              icon={<User03 className='text-primary-700 size-6' />}
-              src={
-                contactStore?.value?.profilePhotoUrl
-                  ? contactStore.value.profilePhotoUrl
-                  : undefined
-              }
-            />
+            <div className='flex flex-col'>
+              {enrichingStatus && (
+                <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 mb-4 w-full'>
+                  <Spinner
+                    label='enriching org'
+                    className='text-grayModern-300 fill-grayModern-500 size-4'
+                  />
+                  <span className='font-medium'>
+                    We're enriching this contact's details...
+                  </span>
+                </div>
+              )}
+              <div className='flex'>
+                <Avatar
+                  variant='shadowed'
+                  name={contactStore?.value.name ?? ''}
+                  icon={<User03 className='text-primary-700 size-6' />}
+                  src={
+                    contactStore?.value?.profilePhotoUrl
+                      ? contactStore.value.profilePhotoUrl
+                      : undefined
+                  }
+                />
 
-            <div className='ml-4 flex flex-col flex-1'>
-              <Input
-                size='xs'
-                name='name'
-                ref={nameInputRef}
-                placeholder='Name'
-                onChange={handleChange}
-                value={contactStore?.name ?? ''}
-                dataTest='org-people-contact-name'
-                className='font-semibold text-gray-700'
-              />
-              <Input
-                size='xs'
-                name='prefix'
-                placeholder='Title'
-                className='text-gray-500'
-                dataTest='org-people-contact-title'
-                value={contactStore?.value?.jobRoles?.[0]?.jobTitle ?? ''}
-                onChange={(e) => {
-                  contactStore?.update((value) => {
-                    set(value, 'jobRoles[0].jobTitle', e.target.value);
+                <div className='ml-4 flex flex-col flex-1'>
+                  <Input
+                    size='xs'
+                    name='name'
+                    ref={nameInputRef}
+                    placeholder='Name'
+                    onChange={handleChange}
+                    value={contactStore?.name ?? ''}
+                    dataTest='org-people-contact-name'
+                    className='font-semibold text-gray-700'
+                  />
+                  <Input
+                    size='xs'
+                    name='prefix'
+                    placeholder='Title'
+                    className='text-gray-500'
+                    dataTest='org-people-contact-title'
+                    value={contactStore?.value?.jobRoles?.[0]?.jobTitle ?? ''}
+                    onChange={(e) => {
+                      contactStore?.update((value) => {
+                        set(value, 'jobRoles[0].jobTitle', e.target.value);
 
-                    return value;
-                  });
-                }}
-              />
-              <Select
-                isMulti
-                size='xs'
-                name='role'
-                options={roleOptions}
-                placeholder='Choose job roles'
-                dataTest='org-people-contact-job-roles'
-                value={
-                  contactStore?.value?.jobRoles?.[0]?.description
-                    ?.split(',')
-                    .filter(Boolean)
-                    .map((v) => ({ value: v, label: v })) ?? []
-                }
-                onChange={(opt) => {
-                  contactStore?.update((value) => {
-                    const description = opt
-                      .map((v: SelectOption) => v.value)
-                      .join(',');
+                        return value;
+                      });
+                    }}
+                  />
+                  <Select
+                    isMulti
+                    size='xs'
+                    name='role'
+                    options={roleOptions}
+                    placeholder='Choose job roles'
+                    dataTest='org-people-contact-job-roles'
+                    value={
+                      contactStore?.value?.jobRoles?.[0]?.description
+                        ?.split(',')
+                        .filter(Boolean)
+                        .map((v) => ({ value: v, label: v })) ?? []
+                    }
+                    onChange={(opt) => {
+                      contactStore?.update((value) => {
+                        const description = opt
+                          .map((v: SelectOption) => v.value)
+                          .join(',');
 
-                    set(value, 'jobRoles[0].description', description);
+                        set(value, 'jobRoles[0].description', description);
 
-                    return value;
-                  });
-                }}
-              />
+                        return value;
+                      });
+                    }}
+                  />
+                </div>
+              </div>
             </div>
             {isExpanded && (
               <IconButton

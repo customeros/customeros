@@ -621,4 +621,9 @@ const getDefaultValue = (): Contact => ({
     lastUpdated: new Date().toISOString(),
     sourceOfTruth: DataSource.Openline,
   },
+  enrichDetails: {
+    enrichedAt: '',
+    failedAt: '',
+    requestedAt: '',
+  },
 });

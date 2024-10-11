@@ -411,9 +411,18 @@ export const columns: Record<string, Column> = {
       enableColumnFilter: true,
       cell: (props) => {
         const value = props.getValue();
+        const enrichedOrg = props.row.original.value.enrichDetails;
+        const enrichingStatus =
+          !enrichedOrg?.enrichedAt &&
+          enrichedOrg?.requestedAt &&
+          !enrichedOrg?.failedAt;
 
         if (!value) {
-          return <p className='text-gray-400'>Not set</p>;
+          return (
+            <p className='text-gray-400'>
+              {enrichingStatus ? 'Enriching...' : 'Not set'}
+            </p>
+          );
         }
 
         return <p className='text-gray-700 cursor-default truncate'>{value}</p>;
@@ -448,9 +457,18 @@ export const columns: Record<string, Column> = {
       enableSorting: false,
       cell: (props) => {
         const value = props.getValue();
+        const enrichedOrg = props.row.original.value.enrichDetails;
+        const enrichingStatus =
+          !enrichedOrg?.enrichedAt &&
+          enrichedOrg?.requestedAt &&
+          !enrichedOrg?.failedAt;
 
         if (!value) {
-          return <p className='text-gray-400'>Not set</p>;
+          return (
+            <p className='text-gray-400'>
+              {enrichingStatus ? 'Enriching...' : 'Not set'}
+            </p>
+          );
         }
 
         return <p className='text-gray-700 cursor-default truncate'>{value}</p>;
@@ -648,8 +666,13 @@ export const columns: Record<string, Column> = {
       enableResizing: true,
       cell: (props) => {
         const value = props.getValue();
+        const enrichedOrg = props.row.original.value.enrichDetails;
+        const enrichingStatus =
+          !enrichedOrg?.enrichedAt &&
+          enrichedOrg?.requestedAt &&
+          !enrichedOrg?.failedAt;
 
-        return <IndustryCell value={value} />;
+        return <IndustryCell value={value} enrichingStatus={enrichingStatus} />;
       },
       header: (props) => (
         <THead<HTMLInputElement>

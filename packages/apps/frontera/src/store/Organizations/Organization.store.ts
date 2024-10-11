@@ -766,6 +766,11 @@ export const ORGANIZATION_QUERY = gql`
         countryCodeA2
         countryCodeA3
       }
+      enrichDetails {
+        enrichedAt
+        failedAt
+        requestedAt
+      }
       subsidiaries {
         organization {
           metadata {
@@ -1152,4 +1157,9 @@ export const getDefaultValue = (): Organization => ({
   sourceOfTruth: DataSource.Na,
   subsidiaryOf: [],
   updatedAt: '',
+  enrichDetails: {
+    enrichedAt: '',
+    failedAt: '',
+    requestedAt: '',
+  },
 });

@@ -576,7 +576,11 @@ const ORGANIZATIONS_QUERY = gql`
         valueProposition
         slackChannelId
         public
-
+        enrichDetails {
+          enrichedAt
+          failedAt
+          requestedAt
+        }
         socialMedia {
           id
           url

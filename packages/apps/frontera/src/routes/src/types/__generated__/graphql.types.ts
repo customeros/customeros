@@ -448,6 +448,7 @@ export type Contact = ExtensibleEntity &
      * **Required.  If no values it returns an empty array.**
      */
     emails: Array<Email>;
+    enrichDetails: EnrichDetails;
     fieldSets: Array<FieldSet>;
     /** The first name of the contact in customerOS. */
     firstName?: Maybe<Scalars['String']['output']>;
@@ -1423,6 +1424,13 @@ export enum EmailVariableName {
   ContactLastName = 'CONTACT_LAST_NAME',
   OrganizationName = 'ORGANIZATION_NAME',
 }
+
+export type EnrichDetails = {
+  __typename?: 'EnrichDetails';
+  enrichedAt?: Maybe<Scalars['Time']['output']>;
+  failedAt?: Maybe<Scalars['Time']['output']>;
+  requestedAt?: Maybe<Scalars['Time']['output']>;
+};
 
 export type EntityTemplate = Node & {
   __typename?: 'EntityTemplate';
@@ -3482,6 +3490,7 @@ export type Organization = MetadataInterface & {
   emails: Array<Email>;
   employeeGrowthRate?: Maybe<Scalars['String']['output']>;
   employees?: Maybe<Scalars['Int64']['output']>;
+  enrichDetails: EnrichDetails;
   entityTemplate?: Maybe<EntityTemplate>;
   externalLinks: Array<ExternalSystem>;
   fieldSets: Array<FieldSet>;

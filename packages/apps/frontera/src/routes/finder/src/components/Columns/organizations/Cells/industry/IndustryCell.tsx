@@ -2,10 +2,21 @@ import { useRef } from 'react';
 
 import { TableCellTooltip } from '@ui/presentation/Table/TableCellTooltip';
 
-export const IndustryCell = ({ value }: { value?: string }) => {
+export const IndustryCell = ({
+  value,
+  enrichingStatus,
+}: {
+  value?: string;
+  enrichingStatus: boolean;
+}) => {
   const cellRef = useRef<HTMLDivElement>(null);
 
-  if (!value) return <p className='text-gray-400'>Not set</p>;
+  if (!value)
+    return (
+      <p className='text-gray-400'>
+        {enrichingStatus ? 'Enriching...' : 'Not set'}
+      </p>
+    );
 
   return (
     <TableCellTooltip

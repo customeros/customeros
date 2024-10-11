@@ -237,8 +237,19 @@ const columns: Record<string, Column> = {
       ),
       cell: (props) => {
         const phoneNumber = props.getValue()?.[0];
+        const enrichedContact = props.row.original.value.enrichDetails;
 
-        if (!phoneNumber) return <p className='text-gray-400'>Not set</p>;
+        const enrichingStatus =
+          !enrichedContact?.enrichedAt &&
+          enrichedContact?.requestedAt &&
+          !enrichedContact?.failedAt;
+
+        if (!phoneNumber)
+          return (
+            <p className='text-gray-400'>
+              {enrichingStatus ? 'Enriching...' : 'Not set'}
+            </p>
+          );
 
         return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
       },
@@ -254,8 +265,13 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     cell: (props) => {
       const city = props.getValue()?.[0]?.locality;
+      const enrichedContact = props.row.original.value.enrichDetails;
+      const enrichingStatus =
+        !enrichedContact?.enrichedAt &&
+        enrichedContact?.requestedAt &&
+        !enrichedContact?.failedAt;
 
-      return <TextCell text={city} />;
+      return <TextCell text={city} enrichingStatus={enrichingStatus} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>
@@ -409,9 +425,19 @@ const columns: Record<string, Column> = {
         const jobRole = props.getValue()?.find((role: JobRole) => {
           return role?.endedAt !== null;
         });
+        const enrichedContact = props.row.original.value.enrichDetails;
+
+        const enrichingStatus =
+          !enrichedContact?.enrichedAt &&
+          enrichedContact?.requestedAt &&
+          !enrichedContact?.failedAt;
 
         if (!jobRole?.startedAt)
-          return <p className='text-gray-400'>Not set</p>;
+          return (
+            <p className='text-gray-400'>
+              {enrichingStatus ? 'Enriching...' : 'Not set'}
+            </p>
+          );
 
         return <p>{DateTimeUtils.timeAgo(jobRole.startedAt)}</p>;
       },
@@ -558,8 +584,18 @@ const columns: Record<string, Column> = {
             e?.url?.includes('linkedin'),
           )?.followersCount;
 
+        const enrichedContact = props.row.original.value.enrichDetails;
+        const enrichingStatus =
+          !enrichedContact?.enrichedAt &&
+          enrichedContact?.requestedAt &&
+          !enrichedContact?.failedAt;
+
         if (typeof value !== 'number')
-          return <div className='text-gray-400'>Not set</div>;
+          return (
+            <div className='text-gray-400'>
+              {enrichingStatus ? 'Enriching...' : 'Not set'}
+            </div>
+          );
 
         return <div>{value.toLocaleString()}</div>;
       },
@@ -640,8 +676,13 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     cell: (props) => {
       const region = props.getValue()?.[0]?.region;
+      const enrichedContact = props.row.original.value.enrichDetails;
+      const enrichingStatus =
+        !enrichedContact?.enrichedAt &&
+        enrichedContact?.requestedAt &&
+        !enrichedContact?.failedAt;
 
-      return <TextCell text={region} />;
+      return <TextCell text={region} enrichingStatus={enrichingStatus} />;
     },
     header: (props) => (
       <THead<HTMLInputElement>

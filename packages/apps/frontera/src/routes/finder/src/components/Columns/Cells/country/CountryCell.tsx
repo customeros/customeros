@@ -17,8 +17,19 @@ export const CountryCell = observer(({ id, type }: ContactNameCellProps) => {
   const itemStore = store.value.get(id);
   const country = itemStore?.country;
 
+  const enrichedItem = itemStore?.value.enrichDetails;
+
+  const enrichingStatus =
+    !enrichedItem?.enrichedAt &&
+    enrichedItem?.requestedAt &&
+    !enrichedItem?.failedAt;
+
   if (!country) {
-    return <div className='text-gray-400'>Not set</div>;
+    return (
+      <div className='text-gray-400'>
+        {enrichingStatus ? 'Enriching...' : 'Not set'}
+      </div>
+    );
   }
   const alpha2 = itemStore?.value?.locations?.[0]?.countryCodeA2;
 

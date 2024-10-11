@@ -24,6 +24,12 @@ export const OrganizationRelationshipCell = observer(
 
     const organization = store.organizations.value.get(id);
 
+    const enrichedOrg = organization?.value.enrichDetails;
+    const enrichingStatus =
+      !enrichedOrg?.enrichedAt &&
+      enrichedOrg?.requestedAt &&
+      !enrichedOrg?.failedAt;
+
     const value = relationshipOptions.find(
       (option) => option.value === organization?.value.relationship,
     );
@@ -63,7 +69,11 @@ export const OrganizationRelationshipCell = observer(
             !value && 'text-gray-400',
           )}
         >
-          {value?.label ?? 'Not set'}
+          {value?.label
+            ? value.label
+            : enrichingStatus
+            ? 'Enriching...'
+            : 'Not set'}
         </p>
         <Menu open={isEditing} onOpenChange={setIsEditing}>
           <MenuButton asChild>

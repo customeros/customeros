@@ -20,8 +20,15 @@ export const OrganizationLinkedInCell = observer(
     const store = useStore();
     const [isHovered, setIsHovered] = useState(false);
     const [isEdit, setIsEdit] = useState(false);
-    const organization = store.organizations.value.get(organizationId);
     const [metaKey, setMetaKey] = useState(false);
+    const organization = store.organizations.value.get(organizationId);
+
+    const enrichedOrganizations = organization?.value.enrichDetails;
+
+    const enrichingStatus =
+      !enrichedOrganizations?.enrichedAt &&
+      enrichedOrganizations?.requestedAt &&
+      !enrichedOrganizations?.failedAt;
 
     useEffect(() => {
       store.ui.setIsEditingTableCell(isEdit);
@@ -87,6 +94,7 @@ export const OrganizationLinkedInCell = observer(
           setIsEdit={setIsEdit}
           setMetaKey={setMetaKey}
           setIsHovered={setIsHovered}
+          enrichedStatus={enrichingStatus}
           handleAddSocial={handleAddSocial}
         />
       );

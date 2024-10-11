@@ -15,14 +15,20 @@ interface JobTitleCellProps {
 
 export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
   const store = useStore();
-  const jobTitleInputRef = useRef<HTMLInputElement | null>(null);
   const [isHovered, setIsHovered] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const jobTitleInputRef = useRef<HTMLInputElement | null>(null);
+  const ref = useRef(null);
 
   const contactStore = store.contacts.value.get(contactId);
   const jobTitle = contactStore?.value.jobRoles?.[0]?.jobTitle ?? '';
 
-  const [isEdit, setIsEdit] = useState(false);
-  const ref = useRef(null);
+  const enrichedContact = contactStore?.value.enrichDetails;
+
+  const enrichingStatus =
+    !enrichedContact?.enrichedAt &&
+    enrichedContact?.requestedAt &&
+    !enrichedContact?.failedAt;
 
   useOutsideClick({
     ref: ref,
@@ -58,7 +64,11 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className='flex ' style={{ width: `calc(100% - 1rem)` }}>
-        {!isEdit && !jobTitle && <p className='text-gray-400'>Not set</p>}
+        {!isEdit && !jobTitle && (
+          <p className='text-gray-400'>
+            {enrichingStatus ? 'Enriching...' : 'Not set'}
+          </p>
+        )}
         {!isEdit && jobTitle && (
           <p className='overflow-ellipsis overflow-hidden'>{jobTitle}</p>
         )}

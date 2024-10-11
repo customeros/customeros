@@ -126,6 +126,7 @@ const getDefaultValue = (): FlowContact => ({
     locations: [],
     phoneNumbers: [],
     profilePhotoUrl: '',
+    enrichDetails: {},
     organizations: {
       content: [],
       totalPages: 0,

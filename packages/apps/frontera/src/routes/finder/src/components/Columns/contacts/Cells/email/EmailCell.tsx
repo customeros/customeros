@@ -26,6 +26,13 @@ export const EmailCell = observer(
     const contactStore = store.contacts.value.get(contactId);
     const oldEmail = useMemo(() => contactStore?.value?.emails?.[0]?.email, []);
 
+    const enrichedContact = contactStore?.value.enrichDetails;
+
+    const enrichingStatus =
+      !enrichedContact?.enrichedAt &&
+      enrichedContact?.requestedAt &&
+      !enrichedContact?.failedAt;
+
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
 
@@ -63,7 +70,11 @@ export const EmailCell = observer(
         onMouseLeave={() => setIsHovered(false)}
       >
         <div className='flex ' style={{ width: `calc(100% - 1rem)` }}>
-          {!isEdit && !email && <p className='text-gray-400'>Not set</p>}
+          {!isEdit && !email && (
+            <p className='text-gray-400'>
+              {enrichingStatus ? 'Enriching...' : 'Not set'}
+            </p>
+          )}
           {!isEdit && email && (
             <p className='overflow-ellipsis overflow-hidden'>{email}</p>
           )}
