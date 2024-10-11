@@ -560,7 +560,7 @@ func (h *OpportunityEventHandler) OnCloseLost(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
-	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseLost(ctx, eventData.Tenant, opportunityId, eventData.ClosedAt)
+	err := h.services.CommonServices.Neo4jRepositories.OpportunityWriteRepository.CloseLost(ctx, nil, eventData.Tenant, opportunityId, eventData.ClosedAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("error while closing opportunity %s: %s", opportunityId, err.Error())

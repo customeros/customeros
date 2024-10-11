@@ -247,7 +247,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 		return err
 	}
 
-	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant.EntityId, flowParticipant.EntityType, flowExecutionSettings.Mailbox, *actualScheduleAt)
+	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant, flowExecutionSettings.Mailbox, *actualScheduleAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -327,7 +327,7 @@ func (s *flowExecutionService) getFlowExecutionSettings(ctx context.Context, flo
 	return mapper.MapDbNodeToFlowExecutionSettingsEntity(node), nil
 }
 
-func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId, entityId string, entityType model.EntityType, mailbox *string, executionTime time.Time) error {
+func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId string, flowParticipant *entity.FlowParticipantEntity, mailbox *string, executionTime time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.storeNextActionExecutionEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -344,8 +344,8 @@ func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Contex
 		Id:          id,
 		FlowId:      flowId,
 		ActionId:    actionId,
-		EntityId:    entityId,
-		EntityType:  entityType.String(),
+		EntityId:    flowParticipant.EntityId,
+		EntityType:  flowParticipant.EntityType,
 		Mailbox:     mailbox,
 		ScheduledAt: executionTime,
 		Status:      entity.FlowActionExecutionStatusScheduled,
@@ -399,24 +399,23 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 			toEmail := ""
 
-			if model.GetEntityType(scheduledActionExecution.EntityType) == model.CONTACT {
-				emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, model.CONTACT, []string{scheduledActionExecution.EntityId})
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, err
-				}
+			//identify the primary work email associated with the entity
+			emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, scheduledActionExecution.EntityType, []string{scheduledActionExecution.EntityId})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
 
-				if emailNodes == nil || len(emailNodes) == 0 {
-					tracing.TraceErr(span, errors.New("Email not found"))
-					return nil, errors.New("Email not found")
-				}
+			if emailNodes == nil || len(emailNodes) == 0 {
+				tracing.TraceErr(span, errors.New("Email not found"))
+				return nil, errors.New("Email not found")
+			}
 
-				for _, emailNode := range emailNodes {
-					emailEntity := mapper.MapDbNodeToEmailEntity(emailNode.Node)
-					if emailEntity != nil && emailEntity.Work != nil && *emailEntity.Work {
-						toEmail = emailEntity.RawEmail // TODO we should look for verified emails?
-						break
-					}
+			for _, emailNode := range emailNodes {
+				emailEntity := mapper.MapDbNodeToEmailEntity(emailNode.Node)
+				if emailEntity != nil && emailEntity.Work != nil && *emailEntity.Work {
+					toEmail = emailEntity.RawEmail // TODO we should look for verified emails?
+					break
 				}
 			}
 
@@ -452,7 +451,7 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			return nil, err
 		}
 
-		flowParticipant, err := s.services.FlowService.FlowParticipantByEntity(ctx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, model.GetEntityType(scheduledActionExecution.EntityType))
+		flowParticipant, err := s.services.FlowService.FlowParticipantByEntity(ctx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
