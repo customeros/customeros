@@ -413,7 +413,7 @@ export const columns: Record<string, Column> = {
         const value = props.getValue();
 
         if (!value) {
-          return <p className='text-gray-400'>Unknown</p>;
+          return <p className='text-gray-400'>Not set</p>;
         }
 
         return <p className='text-gray-700 cursor-default truncate'>{value}</p>;
@@ -450,7 +450,7 @@ export const columns: Record<string, Column> = {
         const value = props.getValue();
 
         if (!value) {
-          return <p className='text-gray-400'>Unknown</p>;
+          return <p className='text-gray-400'>Not set</p>;
         }
 
         return <p className='text-gray-700 cursor-default truncate'>{value}</p>;

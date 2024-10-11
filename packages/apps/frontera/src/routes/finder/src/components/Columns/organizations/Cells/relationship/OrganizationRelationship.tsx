@@ -63,7 +63,7 @@ export const OrganizationRelationshipCell = observer(
             !value && 'text-gray-400',
           )}
         >
-          {value?.label ?? 'No relationship'}
+          {value?.label ?? 'Not set'}
         </p>
         <Menu open={isEditing} onOpenChange={setIsEditing}>
           <MenuButton asChild>

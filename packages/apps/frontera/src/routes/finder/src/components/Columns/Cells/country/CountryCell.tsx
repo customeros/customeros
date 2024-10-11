@@ -18,7 +18,7 @@ export const CountryCell = observer(({ id, type }: ContactNameCellProps) => {
   const country = itemStore?.country;
 
   if (!country) {
-    return <div className='text-gray-400'>Unknown</div>;
+    return <div className='text-gray-400'>Not set</div>;
   }
   const alpha2 = itemStore?.value?.locations?.[0]?.countryCodeA2;
 

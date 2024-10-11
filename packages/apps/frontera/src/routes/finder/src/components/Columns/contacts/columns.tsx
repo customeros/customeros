@@ -238,7 +238,7 @@ const columns: Record<string, Column> = {
       cell: (props) => {
         const phoneNumber = props.getValue()?.[0];
 
-        if (!phoneNumber) return <p className='text-gray-400'>Unknown</p>;
+        if (!phoneNumber) return <p className='text-gray-400'>Not set</p>;
 
         return <PhoneCell phone={phoneNumber?.rawPhoneNumber} />;
       },
@@ -411,7 +411,7 @@ const columns: Record<string, Column> = {
         });
 
         if (!jobRole?.startedAt)
-          return <p className='text-gray-400'>Unknown</p>;
+          return <p className='text-gray-400'>Not set</p>;
 
         return <p>{DateTimeUtils.timeAgo(jobRole.startedAt)}</p>;
       },
@@ -559,7 +559,7 @@ const columns: Record<string, Column> = {
           )?.followersCount;
 
         if (typeof value !== 'number')
-          return <div className='text-gray-400'>Unknown</div>;
+          return <div className='text-gray-400'>Not set</div>;
 
         return <div>{value.toLocaleString()}</div>;
       },
