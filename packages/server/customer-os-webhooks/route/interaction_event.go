@@ -9,6 +9,7 @@ import (
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -381,7 +382,7 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 				}
 
 				for _, flow := range *flowsWithContact {
-					flowContact, err := services.CommonServices.FlowService.FlowParticipantByEntity(ctx, flow.Id, contactEntity.Id)
+					flowContact, err := services.CommonServices.FlowService.FlowParticipantByEntity(ctx, flow.Id, contactEntity.Id, commonModel.CONTACT)
 					if err != nil {
 						tracing.TraceErr(span, err)
 						return err

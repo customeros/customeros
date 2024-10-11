@@ -43,7 +43,8 @@ func (r *flowParticipantWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4
 			ON CREATE SET
 				fc.createdAt = $createdAt,
 				fc.updatedAt = $updatedAt,
-				fc.contactId = $contactId,
+				fc.entityId = $entityId,
+				fc.entityType = $entityType,
 				fc.status = $status
 			RETURN fc`, common.GetTenantFromContext(ctx))
 
