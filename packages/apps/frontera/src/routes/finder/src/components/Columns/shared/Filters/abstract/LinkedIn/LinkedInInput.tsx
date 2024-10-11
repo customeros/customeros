@@ -10,6 +10,7 @@ interface LinkedInInputProps {
   isEdit: boolean;
   metaKey: boolean;
   isHovered: boolean;
+  enrichedStatus: boolean;
   setIsEdit: (value: boolean) => void;
   setMetaKey: (value: boolean) => void;
   setIsHovered: (value: boolean) => void;
@@ -23,6 +24,7 @@ export const LinkedInInput = ({
   setIsEdit,
   handleAddSocial,
   metaKey,
+  enrichedStatus,
   setMetaKey,
   type,
 }: LinkedInInputProps) => {
@@ -74,7 +76,9 @@ export const LinkedInInput = ({
       onKeyDown={(e) => e.metaKey && setMetaKey(true)}
     >
       {!isEdit ? (
-        <p className='text-gray-400'>Not set</p>
+        <p className='text-gray-400'>
+          {enrichedStatus ? 'Enriching...' : 'Not set'}
+        </p>
       ) : (
         <Input
           size='xs'

@@ -7,6 +7,7 @@ import { useFeatureIsOn } from '@growthbook/growthbook-react';
 import { Input } from '@ui/form/Input';
 import { Select } from '@ui/form/Select';
 import { UrlInput } from '@ui/form/UrlInput';
+import { Spinner } from '@ui/feedback/Spinner';
 import { Tag01 } from '@ui/media/icons/Tag01.tsx';
 import { Users03 } from '@ui/media/icons/Users03';
 import { Share07 } from '@ui/media/icons/Share07';
@@ -210,9 +211,27 @@ export const AboutPanel = observer(() => {
       value: tag.id,
     }));
 
+  const enrichedOrg = organization?.value.enrichDetails;
+  const enrichingStatus =
+    !enrichedOrg?.enrichedAt &&
+    enrichedOrg?.requestedAt &&
+    !enrichedOrg?.failedAt;
+
   return (
     <div className='flex pt-[6px] px-6 w-full h-full overflow-y-auto flex-1 bg-gray-25 rounded-2xl'>
       <div className='flex h-full flex-col  overflow-visible w-full'>
+        {enrichingStatus && (
+          <div className='flex items-center justify-start gap-2 border-[1px] text-sm border-grayModern-100 bg-grayModern-50 rounded-[4px] py-1 px-2 '>
+            <Spinner
+              label='enriching org'
+              className='text-grayModern-300 fill-grayModern-500 size-4'
+            />
+            <span className='font-medium'>
+              We're enriching this organizations's details...
+            </span>
+          </div>
+        )}
+
         <div className='flex items-center justify-between'>
           <Input
             size='xs'

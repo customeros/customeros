@@ -21,6 +21,12 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
   const [metaKey, setMetaKey] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const organization = store.organizations.value.get(organizationId);
+  const enrichedOrganizations = organization?.value.enrichDetails;
+
+  const enrichingStatus =
+    !enrichedOrganizations?.enrichedAt &&
+    enrichedOrganizations?.requestedAt &&
+    !enrichedOrganizations?.failedAt;
 
   useEffect(() => {
     if (isHovered && isEdit) {
@@ -55,7 +61,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
             className='text-gray-400'
             data-test='organization-website-in-all-orgs-table'
           >
-            Not set
+            {enrichingStatus ? 'Enriching...' : 'Not set'}
           </p>
         ) : (
           <Input

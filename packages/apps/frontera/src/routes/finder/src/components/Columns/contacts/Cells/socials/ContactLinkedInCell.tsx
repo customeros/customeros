@@ -23,6 +23,12 @@ export const ContactLinkedInCell = observer(
     const contact = store.contacts.value.get(contactId);
     const [metaKey, setMetaKey] = useState(false);
 
+    const enrichedContact = contact?.value.enrichDetails;
+    const enrichingStatus =
+      enrichedContact?.requestedAt &&
+      !enrichedContact?.failedAt &&
+      !enrichedContact?.enrichedAt;
+
     useEffect(() => {
       store.ui.setIsEditingTableCell(isEdit);
     }, [isEdit, store.ui]);
@@ -89,6 +95,7 @@ export const ContactLinkedInCell = observer(
           setIsEdit={setIsEdit}
           setMetaKey={setMetaKey}
           setIsHovered={setIsHovered}
+          enrichedStatus={enrichingStatus}
           handleAddSocial={handleAddSocial}
         />
       );
