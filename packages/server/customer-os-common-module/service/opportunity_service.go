@@ -28,8 +28,8 @@ type OpportunityService interface {
 	GetPaginatedOrganizationOpportunities(ctx context.Context, tenant string, page int, limit int) (*utils.Pagination, error)
 
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId, opportunityId *string, input *repository.OpportunitySaveFields) (*string, error)
-	CloseWon(ctx context.Context, tenant, opportunityId string) error
-	CloseLost(ctx context.Context, tenant, opportunityId string) error
+	CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
+	CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
 }
 
@@ -236,6 +236,22 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 			}
 		}
 
+		if input.UpdateInternalStage {
+			if input.InternalStage == neo4jenum.OpportunityInternalStageClosedWon.String() {
+				err := s.CloseWon(ctx, &tx, tenant, *opportunityId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			} else if input.InternalStage == neo4jenum.OpportunityInternalStageClosedLost.String() {
+				err := s.CloseLost(ctx, &tx, tenant, *opportunityId)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+		}
+
 		//TODO when we migrate the renewal opportunities to the new model, we will need to uncomment this
 		//if (input.UpdateAmount || input.UpdateMaxAmount) && existingOpportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
 		//	// if amount changed, recalculate organization combined ARR forecast
@@ -276,7 +292,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	return opportunityId, nil
 }
 
-func (s *opportunityService) CloseWon(ctx context.Context, tenant, opportunityId string) error {
+func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CloseWon")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -295,15 +311,12 @@ func (s *opportunityService) CloseWon(ctx context.Context, tenant, opportunityId
 
 	// check opportunity is not already closed won
 	if opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon {
-		err = fmt.Errorf("opportunity already closed won")
-		tracing.TraceErr(span, err)
-		return err
+		return nil
 	}
 
-	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
+	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		//todo use TX
-		err = s.services.Neo4jRepositories.OpportunityWriteRepository.CloseWon(ctx, tenant, opportunityId, utils.Now())
+		err = s.services.Neo4jRepositories.OpportunityWriteRepository.CloseWon(ctx, &tx, tenant, opportunityId, utils.Now())
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -381,7 +394,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, tenant, opportunityId
 	return nil
 }
 
-func (s *opportunityService) CloseLost(ctx context.Context, tenant, opportunityId string) error {
+func (s *opportunityService) CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityService.CloseLost")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -400,16 +413,16 @@ func (s *opportunityService) CloseLost(ctx context.Context, tenant, opportunityI
 
 	// check opportunity is not already closed lost
 	if opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedLost {
-		err = fmt.Errorf("opportunity already closed lost")
-		tracing.TraceErr(span, err)
-		return err
+		return nil
 	}
 
-	err = s.services.Neo4jRepositories.OpportunityWriteRepository.CloseLost(ctx, tenant, opportunityId, utils.Now())
+	err = s.services.Neo4jRepositories.OpportunityWriteRepository.CloseLost(ctx, tx, tenant, opportunityId, utils.Now())
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, "V1_OPPORTUNITY_CLOSE_LOST", s.services.GrpcClients)
 
 	return nil
 }

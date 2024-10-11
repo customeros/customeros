@@ -131,8 +131,8 @@ type OpportunityWriteRepository interface {
 	CreateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityCreateFields) (bool, error)
 	UpdateRenewal(ctx context.Context, tenant, opportunityId string, data RenewalOpportunityUpdateFields) error
 	UpdateNextRenewalDate(ctx context.Context, tenant, opportunityId string, renewedAt *time.Time) error
-	CloseWon(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
-	CloseLost(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error
+	CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error
+	CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error
 	MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error
 	Archive(ctx context.Context, tenant, opportunityId string) error
 }
@@ -599,7 +599,7 @@ func (r *opportunityWriteRepository) UpdateNextRenewalDate(ctx context.Context, 
 	return err
 }
 
-func (r *opportunityWriteRepository) CloseWon(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
+func (r *opportunityWriteRepository) CloseWon(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseWon")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -621,17 +621,23 @@ func (r *opportunityWriteRepository) CloseWon(ctx context.Context, tenant, oppor
 		"closedAt":      closedAt,
 		"internalStage": enum.OpportunityInternalStageClosedWon.String(),
 	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
-func (r *opportunityWriteRepository) CloseLost(ctx context.Context, tenant, opportunityId string, closedAt time.Time) error {
+func (r *opportunityWriteRepository) CloseLost(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, opportunityId string, closedAt time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.CloseLost")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
@@ -652,14 +658,20 @@ func (r *opportunityWriteRepository) CloseLost(ctx context.Context, tenant, oppo
 		"closedAt":      closedAt,
 		"internalStage": enum.OpportunityInternalStageClosedLost,
 	}
+
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		return nil, err
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (r *opportunityWriteRepository) MarkRenewalRequested(ctx context.Context, tenant, opportunityId string) error {

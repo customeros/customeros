@@ -151,7 +151,7 @@ type FlowActionExecutionEntity struct {
 	FlowId     string
 	ActionId   string
 	EntityId   string
-	EntityType string
+	EntityType model.EntityType
 
 	// Scheduling Info
 	ScheduledAt time.Time

@@ -59,42 +59,6 @@ func (r *mutationResolver) OpportunityArchive(ctx context.Context, id string) (*
 	return &model.ActionResponse{Accepted: true}, nil
 }
 
-// OpportunityCloseWon is the resolver for the opportunity_CloseWon field.
-func (r *mutationResolver) OpportunityCloseWon(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityCloseWon", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.opportunityID", opportunityID))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	err := r.Services.CommonServices.OpportunityService.CloseWon(ctx, tenant, opportunityID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to close opportunity %s", opportunityID)
-		return &model.ActionResponse{Accepted: false}, err
-	}
-
-	return &model.ActionResponse{Accepted: true}, nil
-}
-
-// OpportunityCloseLost is the resolver for the opportunity_CloseLost field.
-func (r *mutationResolver) OpportunityCloseLost(ctx context.Context, opportunityID string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityCloseLost", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.opportunityID", opportunityID))
-
-	err := r.Services.OpportunityService.CloseLost(ctx, opportunityID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to close opportunity %s", opportunityID)
-		return &model.ActionResponse{Accepted: false}, err
-	}
-
-	return &model.ActionResponse{Accepted: true}, nil
-}
-
 // OpportunityRenewalUpdate is the resolver for the opportunityRenewalUpdate field.
 func (r *mutationResolver) OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OpportunityRenewalUpdate", graphql.GetOperationContext(ctx))

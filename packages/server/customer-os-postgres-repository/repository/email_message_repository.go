@@ -30,7 +30,7 @@ func (repo *emailMessageRepositoryImpl) GetForSending(ctx context.Context) ([]*e
 	tracing.TagComponentPostgresRepository(span)
 
 	var entities []*entity.EmailMessage
-	err := repo.gormDb.Find(&entities).Where("sent_at is null and error is null").Order("created_at asc").Limit(25).Error
+	err := repo.gormDb.Where("sent_at is null and error is null").Order("created_at asc").Limit(25).Find(&entities).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

@@ -1,9 +1,9 @@
 package entity
 
 import (
-	"encoding/json"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"gorm.io/gorm"
 	"time"
 )
 
@@ -42,38 +42,19 @@ type EmailMessage struct {
 	ProviderReferences string `gorm:"size:255;not null;"`
 }
 
-func (e EmailMessage) MarshalJSON() ([]byte, error) {
-	type Alias EmailMessage
-	return json.Marshal(&struct {
-		*Alias
-		To  []string
-		Cc  []string
-		Bcc []string
-	}{
-		Alias: (*Alias)(&e),
-		To:    utils.StringToSlice(e.ToString),
-		Cc:    utils.StringToSlice(e.CcString),
-		Bcc:   utils.StringToSlice(e.BccString),
-	})
+// BeforeSave hook for converting slices to strings
+func (e *EmailMessage) BeforeSave(tx *gorm.DB) (err error) {
+	e.ToString = utils.SliceToString(e.To)
+	e.CcString = utils.SliceToString(e.Cc)
+	e.BccString = utils.SliceToString(e.Bcc)
+	return nil
 }
 
-func (e *EmailMessage) UnmarshalJSON(data []byte) error {
-	type Alias EmailMessage
-
-	aux := &struct {
-		*Alias
-	}{
-		Alias: (*Alias)(e),
-	}
-
-	if err := json.Unmarshal(data, aux); err != nil {
-		return err
-	}
-
-	e.ToString = utils.SliceToString(aux.To)
-	e.CcString = utils.SliceToString(aux.Cc)
-	e.BccString = utils.SliceToString(aux.Bcc)
-
+// AfterFind hook for converting strings to slices
+func (e *EmailMessage) AfterFind(tx *gorm.DB) (err error) {
+	e.To = utils.StringToSlice(e.ToString)
+	e.Cc = utils.StringToSlice(e.CcString)
+	e.Bcc = utils.StringToSlice(e.BccString)
 	return nil
 }
 

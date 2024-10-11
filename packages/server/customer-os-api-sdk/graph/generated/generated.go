@@ -1029,8 +1029,6 @@ type ComplexityRoot struct {
 		NoteUnlinkAttachment                       func(childComplexity int, noteID string, attachmentID string) int
 		NoteUpdate                                 func(childComplexity int, input model.NoteUpdateInput) int
 		OpportunityArchive                         func(childComplexity int, id string) int
-		OpportunityCloseLost                       func(childComplexity int, opportunityID string) int
-		OpportunityCloseWon                        func(childComplexity int, opportunityID string) int
 		OpportunityCreate                          func(childComplexity int, input model.OpportunityCreateInput) int
 		OpportunityRemoveOwner                     func(childComplexity int, opportunityID string) int
 		OpportunityRenewalUpdate                   func(childComplexity int, input model.OpportunityRenewalUpdateInput, ownerUserID *string) int
@@ -1814,8 +1812,6 @@ type MutationResolver interface {
 	NoteUnlinkAttachment(ctx context.Context, noteID string, attachmentID string) (*model.Note, error)
 	OpportunitySave(ctx context.Context, input model.OpportunitySaveInput) (*model.Opportunity, error)
 	OpportunityArchive(ctx context.Context, id string) (*model.ActionResponse, error)
-	OpportunityCloseWon(ctx context.Context, opportunityID string) (*model.ActionResponse, error)
-	OpportunityCloseLost(ctx context.Context, opportunityID string) (*model.ActionResponse, error)
 	OpportunityRenewalUpdate(ctx context.Context, input model.OpportunityRenewalUpdateInput, ownerUserID *string) (*model.Opportunity, error)
 	OpportunityRenewalUpdateAllForOrganization(ctx context.Context, input model.OpportunityRenewalUpdateAllForOrganizationInput) (*model.Organization, error)
 	OpportunityCreate(ctx context.Context, input model.OpportunityCreateInput) (*model.Opportunity, error)
@@ -7585,30 +7581,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.OpportunityArchive(childComplexity, args["id"].(string)), true
-
-	case "Mutation.opportunity_CloseLost":
-		if e.complexity.Mutation.OpportunityCloseLost == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_opportunity_CloseLost_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OpportunityCloseLost(childComplexity, args["opportunityId"].(string)), true
-
-	case "Mutation.opportunity_CloseWon":
-		if e.complexity.Mutation.OpportunityCloseWon == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_opportunity_CloseWon_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.OpportunityCloseWon(childComplexity, args["opportunityId"].(string)), true
 
 	case "Mutation.opportunity_Create":
 		if e.complexity.Mutation.OpportunityCreate == nil {
@@ -14034,9 +14006,10 @@ extend type Mutation {
     opportunity_Save(input: OpportunitySaveInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_Archive(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    #TODO these are not used on UI AT ALL
-    opportunity_CloseWon(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    opportunity_CloseLost(opportunityId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+#    daca pe opportunity_Save vine campul internalStage = CLOSE_WON sa apelam fubctia de close won
+#    daca pe opportunity_Save vine campul internalStage = CLOSE_LOST sa apelam fubctia de close lost
+#    stergem mutatiatile opportunity_CloseWon si opportunity_CloseLost
 
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
     opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Organization!
@@ -17995,36 +17968,6 @@ func (ec *executionContext) field_Mutation_opportunity_Archive_args(ctx context.
 		}
 	}
 	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_opportunity_CloseLost_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["opportunityId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["opportunityId"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_opportunity_CloseWon_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["opportunityId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("opportunityId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["opportunityId"] = arg0
 	return args, nil
 }
 
@@ -59799,184 +59742,6 @@ func (ec *executionContext) fieldContext_Mutation_opportunity_Archive(ctx contex
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_opportunity_Archive_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_opportunity_CloseWon(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_opportunity_CloseWon(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OpportunityCloseWon(rctx, fc.Args["opportunityId"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_opportunity_CloseWon(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_opportunity_CloseWon_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_opportunity_CloseLost(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_opportunity_CloseLost(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OpportunityCloseLost(rctx, fc.Args["opportunityId"].(string))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_opportunity_CloseLost(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_opportunity_CloseLost_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -108176,20 +107941,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "opportunity_Archive":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_opportunity_Archive(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "opportunity_CloseWon":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_opportunity_CloseWon(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "opportunity_CloseLost":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_opportunity_CloseLost(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

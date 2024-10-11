@@ -81,8 +81,8 @@ func MapOpportunitySaveInputToEntity(input model.OpportunitySaveInput) *reposito
 		mapped.UpdateInternalStage = true
 	}
 	if input.InternalType != nil {
-		mapped.InternalType = MapInternalStageFromModel(*input.InternalStage).String()
-		mapped.UpdateInternalStage = true
+		mapped.InternalType = MapInternalTypeFromModel(*input.InternalType).String()
+		mapped.UpdateInternalType = true
 	}
 	if input.NextSteps != nil {
 		mapped.NextSteps = *input.NextSteps

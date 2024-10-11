@@ -680,6 +680,10 @@ func (s *emailService) sendEmails() {
 		return // return if error
 	}
 
+	if len(emailMessages) == 0 {
+		return
+	}
+
 	for _, emailMessage := range emailMessages {
 		err := s.commonServices.MailService.SendMail(ctx, emailMessage)
 		if err != nil {
