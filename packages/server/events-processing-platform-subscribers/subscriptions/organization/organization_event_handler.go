@@ -266,19 +266,19 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 		EnrichDomain: domain,
 		EnrichSource: enrichSource,
 	}
-	if data.Employees > 0 {
+	if organizationEntity.Employees == 0 && data.Employees > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_EMPLOYEES)
 		updateGrpcRequest.Employees = data.Employees
 	}
-	if data.FoundedYear > 0 {
+	if (organizationEntity.YearFounded == nil || *organizationEntity.YearFounded < 1000) && data.FoundedYear > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_YEAR_FOUNDED)
 		updateGrpcRequest.YearFounded = &data.FoundedYear
 	}
-	if data.ShortDescription != "" {
+	if organizationEntity.ValueProposition == "" && data.ShortDescription != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_VALUE_PROPOSITION)
 		updateGrpcRequest.ValueProposition = data.ShortDescription
 	}
-	if data.LongDescription != "" {
+	if organizationEntity.Description == "" && data.LongDescription != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_DESCRIPTION)
 		updateGrpcRequest.Description = data.LongDescription
 	}
@@ -288,12 +288,14 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 	}
 
 	// Set company name
-	if data.Name != "" {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-		updateGrpcRequest.Name = data.Name
-	} else if data.Domain != "" {
-		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-		updateGrpcRequest.Name = data.Domain
+	if organizationEntity.Name == "" {
+		if data.Name != "" {
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+			updateGrpcRequest.Name = data.Name
+		} else if data.Domain != "" {
+			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
+			updateGrpcRequest.Name = data.Domain
+		}
 	}
 
 	// Set company website
@@ -308,17 +310,17 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 	}
 
 	// Set company logo and icon urls
-	if len(data.Logos) > 0 {
+	if organizationEntity.LogoUrl != "" && len(data.Logos) > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
 		updateGrpcRequest.LogoUrl = data.Logos[0]
 	}
-	if len(data.Icons) > 0 {
+	if organizationEntity.IconUrl != "" && len(data.Icons) > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICON_URL)
 		updateGrpcRequest.IconUrl = data.Icons[0]
 	}
 
 	// set industry
-	if data.Industry != "" {
+	if organizationEntity.Industry != "" && data.Industry != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
 		updateGrpcRequest.Industry = data.Industry
 	}
