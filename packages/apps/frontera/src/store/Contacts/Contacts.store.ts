@@ -298,14 +298,98 @@ export class ContactsStore implements GroupStore<Contact> {
         if (serverId) {
           this.value.get(serverId)?.invalidate();
         }
-        // invalidate 1 to get not enriched contact but give some feedback for user that contact is there
       }, 600);
       setTimeout(() => {
         if (serverId) {
           this.value.get(serverId)?.invalidate();
         }
-        // invalidate to get enriched data, 6s covers most of cases
-      }, 6000);
+      }, 2000);
+    }
+  }
+
+  async createWithoutOrg({
+    socialUrl,
+    options,
+  }: {
+    socialUrl: string;
+    options?: {
+      onSuccess?: (serverId: string) => void;
+    };
+  }) {
+    this.isLoading = true;
+
+    const newContact = new ContactStore(this.root, this.transport);
+    const tempId = newContact.value.id;
+    const socialId = crypto.randomUUID();
+    let serverId: string | undefined = undefined;
+
+    newContact.value.socials = [
+      {
+        metadata: {
+          id: socialId,
+          source: DataSource.Openline,
+          sourceOfTruth: DataSource.Openline,
+          appSource: 'organization',
+          created: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
+        },
+        id: socialId,
+        externalId: '',
+        url: socialUrl,
+        appSource: 'OPENLINE',
+        createdAt: new Date().toISOString(),
+        sourceOfTruth: DataSource.Openline,
+        source: DataSource.Openline,
+        alias: socialUrl,
+        followersCount: 0,
+        updatedAt: new Date().toISOString(),
+      },
+    ];
+
+    this.value.set(tempId, newContact);
+
+    try {
+      const { contact_Create } = await this.transport.graphql.request<
+        CREATE_CONTACT_MUTATION_WITHOUT_ORG_RESPONSE,
+        CREATE_CONTACT_MUTATION_WITHOUT_ORG_PAYLOAD
+      >(CREATE_CONTACT_MUTATION_WITHOUT_ORG, {
+        contactInput: {
+          socialUrl,
+        },
+      });
+
+      runInAction(() => {
+        serverId = contact_Create;
+        newContact.value.id = serverId;
+
+        this.value.set(serverId, newContact);
+        this.value.delete(tempId);
+
+        this.sync({ action: 'APPEND', ids: [serverId] });
+        this.isLoading = false;
+      });
+
+      this.root.ui.toastSuccess(`Contact created`, 'create-contact-success');
+    } catch (e) {
+      this.root.ui.toastError(
+        `We couldn't create this contact. Please try again.`,
+        'create-contact-error',
+      );
+      runInAction(() => {
+        this.error = (e as Error)?.message;
+      });
+    } finally {
+      serverId && options?.onSuccess?.(serverId);
+      setTimeout(() => {
+        if (serverId) {
+          this.value.get(serverId)?.invalidate();
+        }
+      }, 600);
+      setTimeout(() => {
+        if (serverId) {
+          this.value.get(serverId)?.invalidate();
+        }
+      }, 2000);
     }
   }
 
@@ -571,5 +655,18 @@ const CREATE_CONTACT_MUTATION = gql`
     ) {
       id
     }
+  }
+`;
+
+type CREATE_CONTACT_MUTATION_WITHOUT_ORG_RESPONSE = {
+  contact_Create: string;
+};
+
+type CREATE_CONTACT_MUTATION_WITHOUT_ORG_PAYLOAD = {
+  contactInput: ContactInput;
+};
+const CREATE_CONTACT_MUTATION_WITHOUT_ORG = gql`
+  mutation CreateContact($contactInput: ContactInput!) {
+    contact_Create(input: $contactInput)
   }
 `;
