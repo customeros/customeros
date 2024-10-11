@@ -354,52 +354,6 @@ func TestOpportunityEventHandler_OnUpdate_OnlyAmountIsChangedByFieldsMask(t *tes
 	require.Equal(t, float64(20000), opportunity.Amount)
 }
 
-func TestOpportunityEventHandler_OnCloseWin(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	// Prepare test data in Neo4j
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	opportunityId := neo4jtest.CreateOpportunity(ctx, testDatabase.Driver, tenantName, neo4jentity.OpportunityEntity{
-		InternalStage: neo4jenum.OpportunityInternalStageOpen,
-	})
-	now := utils.Now()
-
-	// prepare grpc mock
-	callbacks := mocked_grpc.MockEventCompletionCallbacks{
-		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
-			return &emptypb.Empty{}, nil
-		},
-	}
-	mocked_grpc.SetEventCompletionServiceCallbacks(&callbacks)
-
-	// Prepare the event handler
-	opportunityEventHandler := &OpportunityEventHandler{
-		log:         testLogger,
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-
-	closeOpportunityEvent, err := opportunityevent.NewOpportunityCloseWinEvent(aggregate.NewOpportunityAggregateWithTenantAndID(tenantName, opportunityId), now)
-	require.Nil(t, err)
-
-	// Execute the event handler
-	err = opportunityEventHandler.OnCloseWon(ctx, closeOpportunityEvent)
-	require.Nil(t, err)
-
-	// Assert Neo4j Node
-	opportunityDbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, model2.NodeLabelOpportunity, opportunityId)
-	require.Nil(t, err)
-	require.NotNil(t, opportunityDbNode)
-
-	// Validate that the opportunity next cycle date is updated in the repository
-	opportunity := neo4jmapper.MapDbNodeToOpportunityEntity(opportunityDbNode)
-	require.Equal(t, opportunityId, opportunity.Id)
-	test.AssertRecentTime(t, opportunity.UpdatedAt)
-	require.Equal(t, now, *opportunity.ClosedAt)
-	require.Equal(t, neo4jenum.OpportunityInternalStageClosedWon, opportunity.InternalStage)
-}
-
 func TestOpportunityEventHandler_OnCloseLoose(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)

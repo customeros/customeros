@@ -389,13 +389,8 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	if currentRenewalOpportunityDbNode != nil {
 		currentOpportunity := neo4jmapper.MapDbNodeToOpportunityEntity(currentRenewalOpportunityDbNode)
-		_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			return h.grpcClients.OpportunityClient.CloseWinOpportunity(ctx, &opportunitypb.CloseWinOpportunityGrpcRequest{
-				Tenant:    eventData.Tenant,
-				Id:        currentOpportunity.Id,
-				AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-			})
-		})
+
+		err := h.services.CommonServices.OpportunityService.CloseWon(ctx, eventData.Tenant, currentOpportunity.Id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("CloseWinOpportunity failed: %s", err.Error())

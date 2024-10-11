@@ -6,6 +6,7 @@ import (
 )
 
 type CustomContext struct {
+	AppSource                string
 	Tenant                   string
 	UserId                   string
 	UserEmail                string
@@ -33,6 +34,10 @@ func GetContext(ctx context.Context) *CustomContext {
 		return new(CustomContext)
 	}
 	return customContext
+}
+
+func GetAppSourceFromContext(ctx context.Context) string {
+	return GetContext(ctx).AppSource
 }
 
 func GetTenantFromContext(ctx context.Context) string {

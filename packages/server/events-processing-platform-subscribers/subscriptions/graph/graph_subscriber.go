@@ -472,9 +472,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case opportunityevent.OpportunityUpdateRenewalV1:
 		_ = s.opportunityEventHandler.OnUpdateRenewal(ctx, evt)
 		return nil
-	case opportunityevent.OpportunityCloseWinV1:
-		_ = s.opportunityEventHandler.OnCloseWon(ctx, evt)
-		return nil
 	case opportunityevent.OpportunityCloseLooseV1:
 		_ = s.opportunityEventHandler.OnCloseLost(ctx, evt)
 		return nil

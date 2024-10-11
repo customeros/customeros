@@ -190,39 +190,6 @@ func (s *opportunityService) CloseLooseOpportunity(ctx context.Context, request 
 	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.Id}, nil
 }
 
-func (s *opportunityService) CloseWinOpportunity(ctx context.Context, request *opportunitypb.CloseWinOpportunityGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.CloseWinOpportunity")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-	span.SetTag(tracing.SpanTagEntityId, request.Id)
-
-	// Check if the opportunity ID is valid
-	if request.Id == "" {
-		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("id"))
-	}
-
-	// Convert any protobuf timestamp to time.Time, if necessary
-	closedAt := utils.TimestampProtoToTimePtr(request.ClosedAt)
-
-	closeWinOpportunityCommand := command.NewCloseWinOpportunityCommand(
-		request.Id,
-		request.Tenant,
-		request.LoggedInUserId,
-		request.AppSource,
-		nil,
-		closedAt)
-
-	if err := s.opportunityCommandHandlers.CloseWinOpportunity.Handle(ctx, closeWinOpportunityCommand); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(CloseWinOpportunity.Handle) tenant:{%v}, opportunityId:{%v}, err: %s", request.Tenant, request.Id, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	// Return the ID of the newly created opportunity
-	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.Id}, nil
-}
-
 func (s *opportunityService) UpdateRenewalOpportunityNextCycleDate(ctx context.Context, request *opportunitypb.UpdateRenewalOpportunityNextCycleDateGrpcRequest) (*opportunitypb.OpportunityIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OpportunityService.UpdateRenewalOpportunityNextCycleDate")
 	defer span.Finish()

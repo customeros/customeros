@@ -157,6 +157,5 @@ service opportunityGrpcService {
   rpc UpdateRenewalOpportunity(UpdateRenewalOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateOpportunity(UpdateOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc CloseLooseOpportunity(CloseLooseOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
-  rpc CloseWinOpportunity(CloseWinOpportunityGrpcRequest) returns (OpportunityIdGrpcResponse);
   rpc UpdateRenewalOpportunityNextCycleDate(UpdateRenewalOpportunityNextCycleDateGrpcRequest) returns (OpportunityIdGrpcResponse);
 }

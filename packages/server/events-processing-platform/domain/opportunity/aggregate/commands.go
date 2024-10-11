@@ -22,8 +22,6 @@ func (a *OpportunityAggregate) HandleCommand(ctx context.Context, cmd eventstore
 	switch c := cmd.(type) {
 	case *command.UpdateRenewalOpportunityNextCycleDateCommand:
 		return a.updateRenewalOpportunityNextCycleDate(ctx, c)
-	case *command.CloseWinOpportunityCommand:
-		return a.closeWinOpportunity(ctx, c)
 	case *command.CloseLooseOpportunityCommand:
 		return a.closeLooseOpportunity(ctx, c)
 	default:
@@ -71,36 +69,6 @@ func (a *OpportunityAggregate) updateRenewalOpportunityNextCycleDate(ctx context
 	})
 
 	return a.Apply(updateRenewalNextCycleDateEvent)
-}
-
-func (a *OpportunityAggregate) closeWinOpportunity(ctx context.Context, cmd *command.CloseWinOpportunityCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OpportunityAggregate.closeWinOpportunity")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.Object("command", cmd))
-
-	// skip if opportunity is already closed won
-	if a.Opportunity.InternalStage == neo4jenum.OpportunityInternalStageClosedWon.String() {
-		span.LogFields(log.String("result", "Opportunity is already closed won"))
-		return nil
-	}
-
-	now := utils.Now()
-	closedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.ClosedAt, now)
-
-	closeWinEvent, err := opportunityevent.NewOpportunityCloseWinEvent(a, closedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOpportunityCloseWinEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&closeWinEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
-
-	return a.Apply(closeWinEvent)
 }
 
 func (a *OpportunityAggregate) closeLooseOpportunity(ctx context.Context, cmd *command.CloseLooseOpportunityCommand) error {

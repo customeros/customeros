@@ -4,14 +4,18 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	model2 "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
+	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
+	opportunitypb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/opportunity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -136,7 +140,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	}
 
 	if organizationId != nil {
-		existsById, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, *organizationId, model2.NodeLabelOrganization)
+		existsById, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, *organizationId, commonModel.NodeLabelOrganization)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -178,7 +182,7 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 			input.UpdateCurrency = true
 		}
 
-		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model2.NodeLabelOpportunity)
+		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelOpportunity)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -202,10 +206,10 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 	if organizationId != nil {
 		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, tx, tenant, repository.LinkDetails{
 			FromEntityId:   *organizationId,
-			FromEntityType: model2.ORGANIZATION,
-			Relationship:   model2.HAS_OPPORTUNITY,
+			FromEntityType: commonModel.ORGANIZATION,
+			Relationship:   commonModel.HAS_OPPORTUNITY,
 			ToEntityId:     *opportunityId,
-			ToEntityType:   model2.OPPORTUNITY,
+			ToEntityType:   commonModel.OPPORTUNITY,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -337,34 +341,34 @@ func (s *opportunityService) CloseWon(ctx context.Context, tenant, opportunityId
 
 		// create new renewal opportunity
 		if opportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
-			//TODO implement
 			// get contract id for opportunity
-			//contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, tenant, opportunityId)
-			//if err != nil {
-			//	tracing.TraceErr(span, err)
-			//	return nil, err
-			//}
-			//contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
-
+			contractDbNode, err := s.services.Neo4jRepositories.ContractReadRepository.GetContractByOpportunityId(ctx, tenant, opportunityId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+			contractEntity := neo4jmapper.MapDbNodeToContractEntity(contractDbNode)
 			// create new renewal opportunity
-			//_, err = subscriptions.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
-			//	return h.grpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
-			//		Tenant:     eventData.Tenant,
-			//		ContractId: contractEntity.Id,
-			//		SourceFields: &commonpb.SourceFields{
-			//			Source:    constants.SourceOpenline,
-			//			AppSource: constants.AppSourceEventProcessingPlatformSubscribers,
-			//		},
-			//	})
-			//})
-			//if err != nil {
-			//	tracing.TraceErr(span, err)
-			//	h.log.Errorf("CreateRenewalOpportunity failed: %s", err.Error())
-			//}
+			_, err = utils.CallEventsPlatformGRPCWithRetry[*opportunitypb.OpportunityIdGrpcResponse](func() (*opportunitypb.OpportunityIdGrpcResponse, error) {
+				return s.services.GrpcClients.OpportunityClient.CreateRenewalOpportunity(ctx, &opportunitypb.CreateRenewalOpportunityGrpcRequest{
+					Tenant:     tenant,
+					ContractId: contractEntity.Id,
+					SourceFields: &commonpb.SourceFields{
+						Source:    constants.SourceOpenline,
+						AppSource: common.GetAppSourceFromContext(ctx),
+					},
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
 		}
 
 		return nil, nil
 	})
+
+	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, "V1_OPPORTUNITY_CLOSE_WIN", s.services.GrpcClients)
 
 	return nil
 }
@@ -431,7 +435,7 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, model2.OPPORTUNITY.String(), opportunityId, "V1_OPPORTUNITY_ARCHIVE", s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, "V1_OPPORTUNITY_ARCHIVE", s.services.GrpcClients)
 
 	return nil
 }
