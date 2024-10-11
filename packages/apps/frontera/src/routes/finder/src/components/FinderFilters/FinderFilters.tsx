@@ -14,7 +14,7 @@ import {
 } from '@shared/types/__generated__/graphql.types';
 
 import { getFilterTypes as getFilterTypesForContacts } from '../Columns/contacts/filterTypes';
-import { getFilterTypes as getFilterTypesForOrganizations } from '../Columns/organizations/filtersType';
+import { getFilterTypes as getFilterTypesForOrganizations } from '../Columns/organizations/filterTypes';
 
 export const FinderFilters = observer(
   ({ tableId, type }: { type: TableViewType; tableId: TableIdType }) => {

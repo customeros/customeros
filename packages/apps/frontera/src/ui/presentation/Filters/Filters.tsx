@@ -1,7 +1,5 @@
 import { useRef, useState, useEffect } from 'react';
 
-import { FilterType } from '@finder/components/Columns/organizations/filtersType';
-
 import { Combobox } from '@ui/form/Combobox';
 import { Button } from '@ui/form/Button/Button';
 import { IconButton } from '@ui/form/IconButton';
@@ -21,6 +19,17 @@ import {
 
 import { Filter } from '../Filter/Filter';
 import { categorySelected } from '../Filter/utils/utils';
+
+type FilterType = {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  options?: any[];
+  icon: JSX.Element;
+  filterName: string;
+  filterAccesor: ColumnViewType;
+  filterOperators: ComparisonOperator[];
+  filterType: 'text' | 'date' | 'number' | 'list';
+  groupOptions?: { label: string; options: { id: string; label: string }[] };
+};
 
 interface FiltersProps {
   filters: FilterItem[];

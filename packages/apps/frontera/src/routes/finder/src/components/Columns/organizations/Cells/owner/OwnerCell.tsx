@@ -107,6 +107,7 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
         if (e.key === 'Escape') {
           close();
         }
+        e.stopPropagation();
       }}
       classNames={{
         container: ({ isFocused }) =>

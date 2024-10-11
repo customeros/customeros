@@ -93,6 +93,7 @@ export const OrganizationStageCell = observer(
           <MenuList
             side='bottom'
             align='center'
+            onKeyDown={(e) => e.stopPropagation()}
             className={cn('min-w-[280px]', {
               hidden: !applicableStageOptions.length,
             })}

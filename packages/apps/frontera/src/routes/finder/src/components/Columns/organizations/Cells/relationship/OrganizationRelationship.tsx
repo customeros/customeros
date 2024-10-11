@@ -81,7 +81,7 @@ export const OrganizationRelationshipCell = observer(
               )}
             />
           </MenuButton>
-          <MenuList>
+          <MenuList onKeyDown={(e) => e.stopPropagation()}>
             {relationshipOptions
               .filter(
                 (option) =>

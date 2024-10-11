@@ -858,7 +858,7 @@ export const columns: Record<string, Column> = {
       maxSize: 400,
       enableResizing: true,
       enableColumnFilter: true,
-      enableSorting: false,
+      enableSorting: true,
       cell: (props) => {
         const parentOrg =
           props.getValue()?.value?.parentCompanies?.[0]?.organization;

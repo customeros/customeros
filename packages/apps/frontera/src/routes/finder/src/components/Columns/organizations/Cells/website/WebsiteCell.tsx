@@ -71,6 +71,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
               if (e.key === 'Escape') {
                 inputRef.current?.blur();
               }
+              e.stopPropagation();
             }}
             onBlur={(e) => {
               const value = e.target.value;

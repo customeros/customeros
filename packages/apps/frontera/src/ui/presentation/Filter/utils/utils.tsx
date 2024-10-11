@@ -120,6 +120,9 @@ export const handlePropertyPlural = (property: string, selection: string[]) => {
     .with('Onboarding status', () =>
       selection.length === 1 ? 'onboarding status' : 'onboarding statuses',
     )
+    .with('Ownership type', () =>
+      selection.length === 1 ? 'ownership type' : 'ownership types',
+    )
     .with('Last touchpoint', () =>
       selection.length === 1 ? 'last touchpoint' : 'last touchpoints',
     )
