@@ -55,7 +55,7 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
             className='text-gray-400'
             data-test='organization-website-in-all-orgs-table'
           >
-            Unknown
+            Not set
           </p>
         ) : (
           <Input

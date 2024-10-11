@@ -12,7 +12,7 @@ interface TextCellProps {
 export const TextCell = ({
   text,
   leftIcon,
-  unknownText = 'Unknown',
+  unknownText = 'Not set',
   dataTest,
 }: TextCellProps) => {
   const itemRef = useRef<HTMLDivElement>(null);

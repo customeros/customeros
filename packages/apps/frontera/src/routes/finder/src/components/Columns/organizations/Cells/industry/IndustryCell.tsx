@@ -5,7 +5,7 @@ import { TableCellTooltip } from '@ui/presentation/Table/TableCellTooltip';
 export const IndustryCell = ({ value }: { value?: string }) => {
   const cellRef = useRef<HTMLDivElement>(null);
 
-  if (!value) return <p className='text-gray-400'>Unknown</p>;
+  if (!value) return <p className='text-gray-400'>Not set</p>;
 
   return (
     <TableCellTooltip

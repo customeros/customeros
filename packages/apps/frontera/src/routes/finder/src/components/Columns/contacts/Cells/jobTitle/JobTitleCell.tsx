@@ -58,7 +58,7 @@ export const JobTitleCell = observer(({ contactId }: JobTitleCellProps) => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div className='flex ' style={{ width: `calc(100% - 1rem)` }}>
-        {!isEdit && !jobTitle && <p className='text-gray-400'>Unknown</p>}
+        {!isEdit && !jobTitle && <p className='text-gray-400'>Not set</p>}
         {!isEdit && jobTitle && (
           <p className='overflow-ellipsis overflow-hidden'>{jobTitle}</p>
         )}

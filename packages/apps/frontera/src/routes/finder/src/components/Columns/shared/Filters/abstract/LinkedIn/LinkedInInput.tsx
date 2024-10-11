@@ -73,7 +73,7 @@ export const LinkedInInput = ({
       onKeyDown={(e) => e.metaKey && setMetaKey(true)}
     >
       {!isEdit ? (
-        <p className='text-gray-400'>Unknown</p>
+        <p className='text-gray-400'>Not set</p>
       ) : (
         <Input
           size='xs'
