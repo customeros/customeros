@@ -109,17 +109,6 @@ type CreateServiceLineItemResponse struct {
 	} `json:"contractLineItem_Create"`
 }
 
-type CreateMasterPlanResponse struct {
-	MasterPlanCreate struct {
-		Id string `json:"id"`
-	} `json:"masterPlan_Create"`
-}
-type CreateMasterPlanMilestoneResponse struct {
-	MasterPlanMilestoneCreate struct {
-		Id string `json:"id"`
-	} `json:"masterPlanMilestone_Create"`
-}
-
 type CreateMeetingResponse struct {
 	MeetingCreate struct {
 		Id string `json:"id"`

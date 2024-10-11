@@ -27,8 +27,6 @@ import (
 	jobroleevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/job_role/events"
 	locationevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/location/events"
 	logentryevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/log_entry/event"
-	masterplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/master_plan/event"
-	orgplanevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization_plan/events"
 	phonenumberevents "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/phone_number/events"
 	servicelineitemevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/event"
 	tenantevent "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/tenant/event"
@@ -41,56 +39,52 @@ import (
 )
 
 type GraphSubscriber struct {
-	log                          logger.Logger
-	db                           *esdb.Client
-	cfg                          *config.Config
-	genericEventHandler          *GenericEventHandler
-	phoneNumberEventHandler      *PhoneNumberEventHandler
-	contactEventHandler          *ContactEventHandler
-	organizationEventHandler     *OrganizationEventHandler
-	emailEventHandler            *EmailEventHandler
-	userEventHandler             *UserEventHandler
-	locationEventHandler         *LocationEventHandler
-	jobRoleEventHandler          *JobRoleEventHandler
-	logEntryEventHandler         *LogEntryEventHandler
-	issueEventHandler            *IssueEventHandler
-	commentEventHandler          *CommentEventHandler
-	opportunityEventHandler      *OpportunityEventHandler
-	contractEventHandler         *ContractEventHandler
-	serviceLineItemEventHandler  *ServiceLineItemEventHandler
-	masterPlanEventHandler       *MasterPlanEventHandler
-	invoiceEventHandler          *InvoiceEventHandler
-	tenantEventHandler           *TenantEventHandler
-	organizationPlanEventHandler *OrganizationPlanEventHandler
-	bankAccountEventHandler      *BankAccountEventHandler
-	reminderEventHandler         *ReminderEventHandler
+	log                         logger.Logger
+	db                          *esdb.Client
+	cfg                         *config.Config
+	genericEventHandler         *GenericEventHandler
+	phoneNumberEventHandler     *PhoneNumberEventHandler
+	contactEventHandler         *ContactEventHandler
+	organizationEventHandler    *OrganizationEventHandler
+	emailEventHandler           *EmailEventHandler
+	userEventHandler            *UserEventHandler
+	locationEventHandler        *LocationEventHandler
+	jobRoleEventHandler         *JobRoleEventHandler
+	logEntryEventHandler        *LogEntryEventHandler
+	issueEventHandler           *IssueEventHandler
+	commentEventHandler         *CommentEventHandler
+	opportunityEventHandler     *OpportunityEventHandler
+	contractEventHandler        *ContractEventHandler
+	serviceLineItemEventHandler *ServiceLineItemEventHandler
+	invoiceEventHandler         *InvoiceEventHandler
+	tenantEventHandler          *TenantEventHandler
+	bankAccountEventHandler     *BankAccountEventHandler
+	reminderEventHandler        *ReminderEventHandler
 }
 
 func NewGraphSubscriber(log logger.Logger, db *esdb.Client, services *service.Services, grpcClients *grpc_client.Clients, cfg *config.Config, cache caches.Cache) *GraphSubscriber {
 	return &GraphSubscriber{
-		log:                          log,
-		db:                           db,
-		cfg:                          cfg,
-		genericEventHandler:          NewGenericEventHandler(log, services, grpcClients),
-		contactEventHandler:          NewContactEventHandler(log, services, grpcClients),
-		organizationEventHandler:     NewOrganizationEventHandler(log, services, grpcClients, cache),
-		phoneNumberEventHandler:      NewPhoneNumberEventHandler(log, services, grpcClients),
-		emailEventHandler:            NewEmailEventHandler(log, services, grpcClients),
-		userEventHandler:             NewUserEventHandler(log, services),
-		locationEventHandler:         NewLocationEventHandler(services),
-		jobRoleEventHandler:          NewJobRoleEventHandler(services),
-		logEntryEventHandler:         NewLogEntryEventHandler(log, services, grpcClients),
-		issueEventHandler:            NewIssueEventHandler(log, services, grpcClients),
-		commentEventHandler:          NewCommentEventHandler(log, services),
-		opportunityEventHandler:      NewOpportunityEventHandler(log, services, grpcClients),
-		contractEventHandler:         NewContractEventHandler(log, services, grpcClients),
-		serviceLineItemEventHandler:  NewServiceLineItemEventHandler(log, services, grpcClients),
-		masterPlanEventHandler:       NewMasterPlanEventHandler(log, services),
-		invoiceEventHandler:          NewInvoiceEventHandler(log, services, grpcClients),
-		tenantEventHandler:           NewTenantEventHandler(log, services),
-		organizationPlanEventHandler: NewOrganizationPlanEventHandler(log, services),
-		bankAccountEventHandler:      NewBankAccountEventHandler(log, services),
-		reminderEventHandler:         NewReminderEventHandler(log, services),
+		log:                         log,
+		db:                          db,
+		cfg:                         cfg,
+		genericEventHandler:         NewGenericEventHandler(log, services, grpcClients),
+		contactEventHandler:         NewContactEventHandler(log, services, grpcClients),
+		organizationEventHandler:    NewOrganizationEventHandler(log, services, grpcClients, cache),
+		phoneNumberEventHandler:     NewPhoneNumberEventHandler(log, services, grpcClients),
+		emailEventHandler:           NewEmailEventHandler(log, services, grpcClients),
+		userEventHandler:            NewUserEventHandler(log, services),
+		locationEventHandler:        NewLocationEventHandler(services),
+		jobRoleEventHandler:         NewJobRoleEventHandler(services),
+		logEntryEventHandler:        NewLogEntryEventHandler(log, services, grpcClients),
+		issueEventHandler:           NewIssueEventHandler(log, services, grpcClients),
+		commentEventHandler:         NewCommentEventHandler(log, services),
+		opportunityEventHandler:     NewOpportunityEventHandler(log, services, grpcClients),
+		contractEventHandler:        NewContractEventHandler(log, services, grpcClients),
+		serviceLineItemEventHandler: NewServiceLineItemEventHandler(log, services, grpcClients),
+		invoiceEventHandler:         NewInvoiceEventHandler(log, services, grpcClients),
+		tenantEventHandler:          NewTenantEventHandler(log, services),
+		bankAccountEventHandler:     NewBankAccountEventHandler(log, services),
+		reminderEventHandler:        NewReminderEventHandler(log, services),
 	}
 }
 
@@ -514,22 +508,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		_ = s.serviceLineItemEventHandler.OnResume(ctx, evt)
 		return nil
 
-	case masterplanevent.MasterPlanCreateV1:
-		_ = s.masterPlanEventHandler.OnCreate(ctx, evt)
-		return nil
-	case masterplanevent.MasterPlanUpdateV1:
-		_ = s.masterPlanEventHandler.OnUpdate(ctx, evt)
-		return nil
-	case masterplanevent.MasterPlanMilestoneCreateV1:
-		_ = s.masterPlanEventHandler.OnCreateMilestone(ctx, evt)
-		return nil
-	case masterplanevent.MasterPlanMilestoneUpdateV1:
-		_ = s.masterPlanEventHandler.OnUpdateMilestone(ctx, evt)
-		return nil
-	case masterplanevent.MasterPlanMilestoneReorderV1:
-		_ = s.masterPlanEventHandler.OnReorderMilestones(ctx, evt)
-		return nil
-
 	case invoiceevents.InvoiceCreateForContractV1:
 		_ = s.invoiceEventHandler.OnInvoiceCreateForContractV1(ctx, evt)
 		return nil
@@ -547,22 +525,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case invoiceevents.InvoiceDeleteV1:
 		_ = s.invoiceEventHandler.OnInvoiceDeleteV1(ctx, evt)
-		return nil
-
-	case orgplanevent.OrganizationPlanCreateV1:
-		_ = s.organizationPlanEventHandler.OnCreate(ctx, evt)
-		return nil
-	case orgplanevent.OrganizationPlanUpdateV1:
-		_ = s.organizationPlanEventHandler.OnUpdate(ctx, evt)
-		return nil
-	case orgplanevent.OrganizationPlanMilestoneCreateV1:
-		_ = s.organizationPlanEventHandler.OnCreateMilestone(ctx, evt)
-		return nil
-	case orgplanevent.OrganizationPlanMilestoneUpdateV1:
-		_ = s.organizationPlanEventHandler.OnUpdateMilestone(ctx, evt)
-		return nil
-	case orgplanevent.OrganizationPlanMilestoneReorderV1:
-		_ = s.organizationPlanEventHandler.OnReorderMilestones(ctx, evt)
 		return nil
 
 	case tenantevent.TenantAddBillingProfileV1:

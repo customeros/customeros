@@ -396,41 +396,32 @@ func insertTenantDataWithNodeChecks(ctx context.Context, t *testing.T, tenant, u
 	contractId := neo4jtest.InsertContractWithActiveRenewalOpportunity(ctx, driver, tenant, organizationId, neo4jentity.ContractEntity{}, neo4jentity.OpportunityEntity{})
 	neo4jtest.CreateServiceLineItemForContract(ctx, driver, tenant, contractId, neo4jentity.ServiceLineItemEntity{})
 
-	masterPlanId := neo4jtest.CreateMasterPlan(ctx, driver, tenant, neo4jentity.MasterPlanEntity{})
-	neo4jtest.CreateMasterPlanMilestone(ctx, driver, tenant, masterPlanId, neo4jentity.MasterPlanMilestoneEntity{})
-	organizationPlanId := neo4jtest.CreateOrganizationPlan(ctx, driver, tenant, organizationId, masterPlanId, neo4jentity.OrganizationPlanEntity{})
-	neo4jtest.CreateOrganizationPlanMilestone(ctx, driver, tenant, organizationPlanId, neo4jentity.OrganizationPlanMilestoneEntity{})
-
 	tenantDataNodeChecks(ctx, t, tenant, 1)
 }
 
 func tenantDataNodeChecks(ctx context.Context, t *testing.T, tenant string, numberOfNodes int) {
 	neo4jtest.AssertNeo4jNodeCount(ctx, t, driver, map[string]int{
-		commonModel.NodeLabelExternalSystem + "_" + tenant:            numberOfNodes,
-		commonModel.NodeLabelUser + "_" + tenant:                      numberOfNodes,
-		commonModel.NodeLabelTenantBillingProfile + "_" + tenant:      numberOfNodes,
-		commonModel.NodeLabelBillingProfile + "_" + tenant:            numberOfNodes,
-		commonModel.NodeLabelBankAccount + "_" + tenant:               numberOfNodes,
-		commonModel.NodeLabelContact + "_" + tenant:                   numberOfNodes,
-		commonModel.NodeLabelSocial + "_" + tenant:                    numberOfNodes,
-		commonModel.NodeLabelEmail + "_" + tenant:                     numberOfNodes,
-		commonModel.NodeLabelLogEntry + "_" + tenant:                  numberOfNodes,
-		commonModel.NodeLabelOrganization + "_" + tenant:              numberOfNodes,
-		commonModel.NodeLabelReminder + "_" + tenant:                  numberOfNodes,
-		commonModel.NodeLabelMeeting + "_" + tenant:                   numberOfNodes,
-		commonModel.NodeLabelAttachment + "_" + tenant:                numberOfNodes,
-		commonModel.NodeLabelIssue + "_" + tenant:                     numberOfNodes,
-		commonModel.NodeLabelPhoneNumber + "_" + tenant:               numberOfNodes,
-		commonModel.NodeLabelAction + "_" + tenant:                    numberOfNodes,
-		commonModel.NodeLabelTag + "_" + tenant:                       numberOfNodes,
-		commonModel.NodeLabelContract + "_" + tenant:                  numberOfNodes,
-		commonModel.NodeLabelOpportunity + "_" + tenant:               numberOfNodes,
-		commonModel.NodeLabelServiceLineItem + "_" + tenant:           numberOfNodes,
-		commonModel.NodeLabelMasterPlan + "_" + tenant:                numberOfNodes,
-		commonModel.NodeLabelMasterPlanMilestone + "_" + tenant:       numberOfNodes,
-		commonModel.NodeLabelOrganizationPlan + "_" + tenant:          numberOfNodes,
-		commonModel.NodeLabelOrganizationPlanMilestone + "_" + tenant: numberOfNodes,
-		commonModel.NodeLabelInteractionEvent + "_" + tenant:          numberOfNodes,
-		commonModel.NodeLabelInteractionSession + "_" + tenant:        numberOfNodes,
+		commonModel.NodeLabelExternalSystem + "_" + tenant:       numberOfNodes,
+		commonModel.NodeLabelUser + "_" + tenant:                 numberOfNodes,
+		commonModel.NodeLabelTenantBillingProfile + "_" + tenant: numberOfNodes,
+		commonModel.NodeLabelBillingProfile + "_" + tenant:       numberOfNodes,
+		commonModel.NodeLabelBankAccount + "_" + tenant:          numberOfNodes,
+		commonModel.NodeLabelContact + "_" + tenant:              numberOfNodes,
+		commonModel.NodeLabelSocial + "_" + tenant:               numberOfNodes,
+		commonModel.NodeLabelEmail + "_" + tenant:                numberOfNodes,
+		commonModel.NodeLabelLogEntry + "_" + tenant:             numberOfNodes,
+		commonModel.NodeLabelOrganization + "_" + tenant:         numberOfNodes,
+		commonModel.NodeLabelReminder + "_" + tenant:             numberOfNodes,
+		commonModel.NodeLabelMeeting + "_" + tenant:              numberOfNodes,
+		commonModel.NodeLabelAttachment + "_" + tenant:           numberOfNodes,
+		commonModel.NodeLabelIssue + "_" + tenant:                numberOfNodes,
+		commonModel.NodeLabelPhoneNumber + "_" + tenant:          numberOfNodes,
+		commonModel.NodeLabelAction + "_" + tenant:               numberOfNodes,
+		commonModel.NodeLabelTag + "_" + tenant:                  numberOfNodes,
+		commonModel.NodeLabelContract + "_" + tenant:             numberOfNodes,
+		commonModel.NodeLabelOpportunity + "_" + tenant:          numberOfNodes,
+		commonModel.NodeLabelServiceLineItem + "_" + tenant:      numberOfNodes,
+		commonModel.NodeLabelInteractionEvent + "_" + tenant:     numberOfNodes,
+		commonModel.NodeLabelInteractionSession + "_" + tenant:   numberOfNodes,
 	})
 }

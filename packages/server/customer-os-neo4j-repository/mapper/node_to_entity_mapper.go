@@ -1,8 +1,6 @@
 package mapper
 
 import (
-	"encoding/json"
-
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
@@ -188,46 +186,6 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 		BilledType:              enum.DecodeBilledType(utils.GetStringPropOrEmpty(props, "billedType")),
 	}
 	return &invoiceLineEntity
-}
-
-func MapDbNodeToMasterPlanEntity(dbNode *dbtype.Node) *entity.MasterPlanEntity {
-	if dbNode == nil {
-		return &entity.MasterPlanEntity{}
-	}
-	props := utils.GetPropsFromNode(*dbNode)
-	masterPlanEntity := entity.MasterPlanEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
-	}
-	return &masterPlanEntity
-}
-
-func MapDbNodeToMasterPlanMilestoneEntity(dbNode *dbtype.Node) *entity.MasterPlanMilestoneEntity {
-	if dbNode == nil {
-		return &entity.MasterPlanMilestoneEntity{}
-	}
-	props := utils.GetPropsFromNode(*dbNode)
-	masterPlanMilestoneEntity := entity.MasterPlanMilestoneEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Order:         utils.GetInt64PropOrZero(props, "order"),
-		DurationHours: utils.GetInt64PropOrZero(props, "durationHours"),
-		Optional:      utils.GetBoolPropOrFalse(props, "optional"),
-		Items:         utils.GetListStringPropOrEmpty(props, "items"),
-		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
-	}
-	return &masterPlanMilestoneEntity
 }
 
 func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
@@ -496,74 +454,6 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 	return &contract
 }
 
-func MapDbNodeToOrganizationPlanEntity(dbNode *dbtype.Node) *entity.OrganizationPlanEntity {
-	if dbNode == nil {
-		return &entity.OrganizationPlanEntity{}
-	}
-	props := utils.GetPropsFromNode(*dbNode)
-	orgPlanEntity := entity.OrganizationPlanEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
-		StatusDetails: entity.OrganizationPlanStatusDetails{
-			Status:    utils.GetStringPropOrEmpty(props, "status"),
-			UpdatedAt: utils.GetTimePropOrEpochStart(props, "statusUpdatedAt"),
-			Comments:  utils.GetStringPropOrEmpty(props, "statusComments"),
-		},
-		MasterPlanId: utils.GetStringPropOrEmpty(props, "masterPlanId"),
-	}
-	return &orgPlanEntity
-}
-
-func MapDbNodeToOrganizationPlanMilestoneEntity(dbNode *dbtype.Node) *entity.OrganizationPlanMilestoneEntity {
-	if dbNode == nil {
-		return &entity.OrganizationPlanMilestoneEntity{}
-	}
-	props := utils.GetPropsFromNode(*dbNode)
-	orgPlanMilestoneEntity := entity.OrganizationPlanMilestoneEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		Name:          utils.GetStringPropOrEmpty(props, "name"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Order:         utils.GetInt64PropOrZero(props, "order"),
-		DueDate:       utils.GetTimePropOrEpochStart(props, "dueDate"),
-		Optional:      utils.GetBoolPropOrFalse(props, "optional"),
-		Items:         MapOrganizationPlanMilestoneItemToEntity(props),
-		Retired:       utils.GetBoolPropOrFalse(props, "retired"),
-		StatusDetails: entity.OrganizationPlanMilestoneStatusDetails{
-			Status:    utils.GetStringPropOrEmpty(props, "status"),
-			UpdatedAt: utils.GetTimePropOrEpochStart(props, "statusUpdatedAt"),
-			Comments:  utils.GetStringPropOrEmpty(props, "statusComments"),
-		},
-		Adhoc: utils.GetBoolPropOrFalse(props, "adhoc"),
-	}
-	return &orgPlanMilestoneEntity
-}
-
-func MapOrganizationPlanMilestoneItemToEntity(props map[string]any) []entity.OrganizationPlanMilestoneItem {
-	items := props["items"].([]any)
-
-	itemArray := make([]entity.OrganizationPlanMilestoneItem, 0)
-	if items == nil {
-		return itemArray
-	}
-	for _, anyitem := range items {
-		item := anyitem.(string)
-		itemEntity := entity.OrganizationPlanMilestoneItem{}
-		json.Unmarshal([]byte(item), &itemEntity)
-		itemArray = append(itemArray, itemEntity)
-	}
-	return itemArray
-}
-
 func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineItemEntity {
 	if dbNode == nil {
 		return &entity.ServiceLineItemEntity{}
@@ -828,40 +718,6 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 		},
 	}
 	return &opportunity
-}
-
-func MapDbNodeToOfferingEntity(node *dbtype.Node) *entity.OfferingEntity {
-	if node == nil {
-		return &entity.OfferingEntity{}
-	}
-	props := utils.GetPropsFromNode(*node)
-	offering := entity.OfferingEntity{
-		Id:                    utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:             utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:             utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:                entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:             utils.GetStringPropOrEmpty(props, "appSource"),
-		Name:                  utils.GetStringPropOrEmpty(props, "name"),
-		Active:                utils.GetBoolPropOrFalse(props, "active"),
-		Type:                  enum.DecodeOfferingType(utils.GetStringPropOrEmpty(props, "type")),
-		PricingModel:          enum.DecodePricingModel(utils.GetStringPropOrEmpty(props, "pricingModel")),
-		PricingPeriodInMonths: utils.GetInt64PropOrZero(props, "pricingPeriodInMonths"),
-		Currency:              enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
-		Price:                 utils.GetFloatPropOrZero(props, "price"),
-		PriceCalculated:       utils.GetBoolPropOrFalse(props, "priceCalculated"),
-		Conditional:           utils.GetBoolPropOrFalse(props, "conditional"),
-		Taxable:               utils.GetBoolPropOrFalse(props, "taxable"),
-		PriceCalculation: entity.PriceCalculation{
-			Type:                   enum.DecodePriceCalculationType(utils.GetStringPropOrEmpty(props, "priceCalculationType")),
-			RevenueSharePercentage: utils.GetFloatPropOrZero(props, "priceCalculationRevenueSharePercentage"),
-		},
-		Conditionals: entity.Conditionals{
-			MinimumChargePeriod: enum.DecodeChargePeriod(utils.GetStringPropOrEmpty(props, "conditionalsMinimumChargePeriod")),
-			MinimumChargeAmount: utils.GetFloatPropOrZero(props, "conditionalsMinimumChargeAmount"),
-		},
-	}
-	return &offering
 }
 
 func MapDbNodeToStateEntity(node dbtype.Node) *entity.StateEntity {

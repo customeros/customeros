@@ -6,7 +6,7 @@ export type SaveOpportunityMutationVariables = Types.Exact<{
 
 export type SaveOpportunityMutation = {
   __typename?: 'Mutation';
-  opportunity_save: {
+  opportunity_Save: {
     __typename?: 'Opportunity';
     metadata: { __typename?: 'Metadata'; id: string };
   };

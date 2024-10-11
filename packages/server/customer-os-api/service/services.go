@@ -56,13 +56,10 @@ type Services struct {
 	ContractService            ContractService
 	ServiceLineItemService     ServiceLineItemService
 	OpportunityService         OpportunityService
-	MasterPlanService          MasterPlanService
 	BillingProfileService      BillingProfileService
 	InvoiceService             InvoiceService
-	OrganizationPlanService    OrganizationPlanService
 	SlackService               SlackService
 	ReminderService            ReminderService
-	OfferingService            OfferingService
 	CloudflareService          CloudflareService
 	EnrichmentService          EnrichmentService
 	NamecheapService           NamecheapService
@@ -95,10 +92,7 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		BillableService:            NewBillableService(log, repositories),
 		LogEntryService:            NewLogEntryService(log, repositories),
 		CommentService:             NewCommentService(log, repositories),
-		MasterPlanService:          NewMasterPlanService(log, repositories, grpcClients),
-		OrganizationPlanService:    NewOrganizationPlanService(log, repositories, grpcClients),
 		ReminderService:            NewReminderService(log, repositories, grpcClients),
-		OfferingService:            NewOfferingService(log, repositories, grpcClients),
 	}
 	services.Repositories = repositories
 	services.IssueService = NewIssueService(log, repositories, &services)

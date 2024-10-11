@@ -51,7 +51,7 @@ func (r *mutationResolver) ReminderUpdate(ctx context.Context, input model.Remin
 
 // Reminder is the resolver for the reminder field.
 func (r *queryResolver) Reminder(ctx context.Context, id string) (*model.Reminder, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationPlan", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.Reminder", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.SetTag(tracing.SpanTagEntityId, id)
