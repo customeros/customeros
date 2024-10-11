@@ -257,40 +257,30 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		},
 	}
 	fieldsMask := make([]contactpb.ContactFieldMask, 0)
-	name := ""
-	if scrapinContactResponse.Person.FirstName != "" {
+	if strings.TrimSpace(contact.FirstName) != "" && scrapinContactResponse.Person.FirstName != "" {
 		upsertContactGrpcRequest.FirstName = scrapinContactResponse.Person.FirstName
-		name += scrapinContactResponse.Person.FirstName
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
 	}
-	if scrapinContactResponse.Person.LastName != "" {
-		if name != "" {
-			name += " "
-		}
-		name += scrapinContactResponse.Person.LastName
+	if strings.TrimSpace(contact.LastName) != "" && scrapinContactResponse.Person.LastName != "" {
 		upsertContactGrpcRequest.LastName = scrapinContactResponse.Person.LastName
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
 	}
-	if name != "" {
-		upsertContactGrpcRequest.Name = name
-		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_NAME)
-	}
-	if scrapinContactResponse.Person.PhotoUrl != "" {
+	if strings.TrimSpace(contact.ProfilePhotoUrl) != "" && scrapinContactResponse.Person.PhotoUrl != "" {
 		upsertContactGrpcRequest.ProfilePhotoUrl = scrapinContactResponse.Person.PhotoUrl
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL)
 	}
-	if scrapinContactResponse.Person.Summary != "" {
+	if strings.TrimSpace(contact.Description) != "" && scrapinContactResponse.Person.Summary != "" {
 		upsertContactGrpcRequest.Description = scrapinContactResponse.Person.Summary
 		fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION)
 	}
 
 	// add location
 	if scrapinContactResponse.Person.Location != "" {
-		location, err := h.locationEventHandler.ExtractAndEnrichLocation(ctx, tenant, scrapinContactResponse.Person.Location)
+		contactLocation, err := h.locationEventHandler.ExtractAndEnrichLocation(ctx, tenant, scrapinContactResponse.Person.Location)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "ExtractAndEnrichLocation"))
 		}
-		if location != nil {
+		if contactLocation != nil {
 			_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*locationpb.LocationIdGrpcResponse](func() (*locationpb.LocationIdGrpcResponse, error) {
 				return h.grpcClients.ContactClient.AddLocation(ctx, &contactpb.ContactAddLocationGrpcRequest{
 					ContactId: contact.Id,
@@ -301,25 +291,25 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 					},
 					LocationDetails: &locationpb.LocationDetails{
 						RawAddress:    scrapinContactResponse.Person.Location,
-						Country:       location.Country,
-						CountryCodeA2: location.CountryCodeA2,
-						CountryCodeA3: location.CountryCodeA3,
-						Region:        location.Region,
-						Locality:      location.Locality,
-						AddressLine1:  location.Address,
-						AddressLine2:  location.Address2,
-						ZipCode:       location.Zip,
-						AddressType:   location.AddressType,
-						HouseNumber:   location.HouseNumber,
-						PostalCode:    location.PostalCode,
-						Commercial:    location.Commercial,
-						Predirection:  location.Predirection,
-						District:      location.District,
-						Street:        location.Street,
-						Latitude:      utils.FloatToString(location.Latitude),
-						Longitude:     utils.FloatToString(location.Longitude),
-						TimeZone:      location.TimeZone,
-						UtcOffset:     location.UtcOffset,
+						Country:       contactLocation.Country,
+						CountryCodeA2: contactLocation.CountryCodeA2,
+						CountryCodeA3: contactLocation.CountryCodeA3,
+						Region:        contactLocation.Region,
+						Locality:      contactLocation.Locality,
+						AddressLine1:  contactLocation.Address,
+						AddressLine2:  contactLocation.Address2,
+						ZipCode:       contactLocation.Zip,
+						AddressType:   contactLocation.AddressType,
+						HouseNumber:   contactLocation.HouseNumber,
+						PostalCode:    contactLocation.PostalCode,
+						Commercial:    contactLocation.Commercial,
+						Predirection:  contactLocation.Predirection,
+						District:      contactLocation.District,
+						Street:        contactLocation.Street,
+						Latitude:      utils.FloatToString(contactLocation.Latitude),
+						Longitude:     utils.FloatToString(contactLocation.Longitude),
+						TimeZone:      contactLocation.TimeZone,
+						UtcOffset:     contactLocation.UtcOffset,
 					},
 				})
 			})
@@ -327,9 +317,9 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 				tracing.TraceErr(span, errors.Wrap(err, "ContactClient.AddLocationToContact"))
 				h.log.Errorf("Error adding location to contact: %s", err.Error())
 			}
-			// update timezone and offset on contact
-			if location.TimeZone != "" {
-				upsertContactGrpcRequest.Timezone = location.TimeZone
+			// update timezone on contact
+			if contact.Timezone != "" && contactLocation.TimeZone != "" {
+				upsertContactGrpcRequest.Timezone = contactLocation.TimeZone
 				fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_TIMEZONE)
 			}
 		}
