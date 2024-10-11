@@ -196,74 +196,82 @@ func (s *opportunityService) Save(ctx context.Context, tx *neo4j.ManagedTransact
 		input.UpdateInternalStage = true
 	}
 
-	//todo init transaction
-	err = s.services.Neo4jRepositories.OpportunityWriteRepository.Save(ctx, tx, tenant, *opportunityId, *input)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
+	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-	if organizationId != nil {
-		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, tx, tenant, repository.LinkDetails{
-			FromEntityId:   *organizationId,
-			FromEntityType: commonModel.ORGANIZATION,
-			Relationship:   commonModel.HAS_OPPORTUNITY,
-			ToEntityId:     *opportunityId,
-			ToEntityType:   commonModel.OPPORTUNITY,
-		})
+		err = s.services.Neo4jRepositories.OpportunityWriteRepository.Save(ctx, &tx, tenant, *opportunityId, *input)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-	}
 
-	//TODO use TX
-	if input.UpdateOwnerId {
-		if input.OwnerId != "" {
-			err = s.services.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, tenant, *opportunityId, input.OwnerId)
+		if organizationId != nil {
+			err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, tenant, repository.LinkDetails{
+				FromEntityId:   *organizationId,
+				FromEntityType: commonModel.ORGANIZATION,
+				Relationship:   commonModel.HAS_OPPORTUNITY,
+				ToEntityId:     *opportunityId,
+				ToEntityType:   commonModel.OPPORTUNITY,
+			})
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
-		} else {
-			if existingOpportunity != nil {
-				err = s.services.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, tenant, *opportunityId)
+		}
+
+		if input.UpdateOwnerId {
+			if input.OwnerId != "" {
+				err = s.services.Neo4jRepositories.OpportunityWriteRepository.ReplaceOwner(ctx, &tx, tenant, *opportunityId, input.OwnerId)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
 				}
+			} else {
+				if existingOpportunity != nil {
+					err = s.services.Neo4jRepositories.OpportunityWriteRepository.RemoveOwner(ctx, &tx, tenant, *opportunityId)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return nil, err
+					}
+				}
 			}
 		}
-	}
 
-	//TODO FIX
-	//if (input.UpdateAmount || input.UpdateMaxAmount) && existingOpportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
-	//	// if amount changed, recalculate organization combined ARR forecast
-	//	organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, *opportunityId)
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		return nil, err
-	//	}
-	//	if organizationDbNode == nil {
-	//		err := fmt.Errorf("organization not found")
-	//		tracing.TraceErr(span, err)
-	//		return nil, err
-	//	}
-	//	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
-	//
-	//	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	//	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-	//		return s.services.GrpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
-	//			Tenant:         tenant,
-	//			OrganizationId: organization.ID,
-	//			AppSource:      input.AppSource,
-	//		})
-	//	})
-	//	if err != nil {
-	//		tracing.TraceErr(span, err)
-	//		return nil, err
-	//	}
-	//}
+		//TODO when we migrate the renewal opportunities to the new model, we will need to uncomment this
+		//if (input.UpdateAmount || input.UpdateMaxAmount) && existingOpportunity.InternalType == neo4jenum.OpportunityInternalTypeRenewal {
+		//	// if amount changed, recalculate organization combined ARR forecast
+		//	organizationDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByOpportunityId(ctx, tenant, *opportunityId)
+		//	if err != nil {
+		//		tracing.TraceErr(span, err)
+		//		return nil, err
+		//	}
+		//	if organizationDbNode == nil {
+		//		err := fmt.Errorf("organization not found")
+		//		tracing.TraceErr(span, err)
+		//		return nil, err
+		//	}
+		//	organization := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+		//
+		//	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		//	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		//		return s.services.GrpcClients.OrganizationClient.RefreshArr(ctx, &organizationpb.OrganizationIdGrpcRequest{
+		//			Tenant:         tenant,
+		//			OrganizationId: organization.ID,
+		//			AppSource:      input.AppSource,
+		//		})
+		//	})
+		//	if err != nil {
+		//		tracing.TraceErr(span, err)
+		//		return nil, err
+		//	}
+		//}
+
+		return nil, nil
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
 	return opportunityId, nil
 }
