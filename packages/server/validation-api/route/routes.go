@@ -23,7 +23,7 @@ func RegisterRoutes(ctx context.Context, r *gin.Engine, services *service.Servic
 	r.GET("/readiness", healthCheckHandler)
 	validateAddress(ctx, r, services)
 	validatePhoneNumber(ctx, r, services)
-	validateEmailV2(ctx, r, services, logger)
+	validateEmailV2(ctx, r, services, cfg, logger)
 	validateEmailWithScrubby(ctx, r, services, logger)
 	validateEmailWithTrueInbox(ctx, r, services, logger)
 	ipLookup(ctx, r, services, logger)
@@ -33,7 +33,7 @@ func healthCheckHandler(c *gin.Context) {
 	c.JSON(200, gin.H{"status": "OK"})
 }
 
-func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Services, l logger.Logger) {
+func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Services, cfg *config.Config, l logger.Logger) {
 	r.POST("/validateEmailV2",
 		tracing.TracingEnhancer(ctx, "POST /validateEmailV2"),
 		security.ApiKeyCheckerHTTP(services.CommonServices.PostgresRepositories.TenantWebhookApiKeyRepository, services.CommonServices.PostgresRepositories.AppKeyRepository, security.VALIDATION_API, security.WithCache(caches.NewCommonCache())),
@@ -80,22 +80,25 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 			if emailValidationData != nil && emailValidationData.Syntax.IsValid && !emailValidationData.EmailData.IsRoleAccount && (emailValidationData.EmailData.Deliverable == string(model.EmailDeliverableStatusUnknown)) {
 				if request.Options.VerifyCatchAll || emailValidationData.EmailData.RetryValidation == true {
 					// Step 1 - try Enrow
-					enrowResponseStr, err := services.EmailValidationService.ValidateEmailWithEnrow(ctx, request.Email, request.Options.ExtendedWaitingTime)
-					if err != nil {
-						tracing.TraceErr(span, errors.Wrap(err, "failed to call Enrow"))
-						l.Errorf("Error on calling Enrow : %s", err.Error())
-					}
-					if enrowResponseStr != "" {
-						if enrowResponseStr == "valid" {
-							emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
-						} else if enrowResponseStr == "invalid" {
-							emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
-						} else {
-							err = errors.New("Unexpected: Enrow response: " + enrowResponseStr)
+					enrowResponseStr := ""
+					if cfg.EnrowConfig.Enabled {
+						enrowResponseStr, err = services.EmailValidationService.ValidateEmailWithEnrow(ctx, request.Email, request.Options.ExtendedWaitingTime)
+						if err != nil {
+							tracing.TraceErr(span, errors.Wrap(err, "failed to call Enrow"))
+							l.Errorf("Error on calling Enrow : %s", err.Error())
+						}
+						if enrowResponseStr != "" {
+							if enrowResponseStr == "valid" {
+								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
+							} else if enrowResponseStr == "invalid" {
+								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+							} else {
+								err = errors.New("Unexpected: Enrow response: " + enrowResponseStr)
+							}
 						}
 					}
 					// Step 2 - try TrueInbox
-					if enrowResponseStr == "" {
+					if enrowResponseStr == "" && cfg.TrueinboxConfig.Enabled {
 						trueInboxResponse, err := services.EmailValidationService.ValidateEmailWithTrueinbox(ctx, request.Email)
 						if err != nil {
 							tracing.TraceErr(span, errors.Wrap(err, "failed to call TrueInbox"))
