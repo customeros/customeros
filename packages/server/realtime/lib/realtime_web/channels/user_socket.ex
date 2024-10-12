@@ -62,8 +62,7 @@ defmodule RealtimeWeb.UserSocket do
   channel "Tags:*", RealtimeWeb.TagsChannel
   channel "WorkFlow:*", RealtimeWeb.WorkFlowChannel
   channel "WorkFlows:*", RealtimeWeb.WorkFlowsChannel
-  channel "FlowEmailVariable:*", RealtimeWeb.FlowEmailVariable
-  channel "FlowEmailVariables:*", RealtimeWeb.FlowEmailVariables
+  channel "FlowEmailVariables:*", RealtimeWeb.FlowEmailVariablesChannel
 
   # Socket params are passed from the client and can
   # be used to verify and authenticate a user. After
