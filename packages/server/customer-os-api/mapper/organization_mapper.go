@@ -238,5 +238,10 @@ func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *reposi
 		mapped.UpdateIcpFit = true
 	}
 
+	if input.OwnerID != nil {
+		mapped.OwnerId = *input.OwnerID
+		mapped.UpdateOwnerId = true
+	}
+
 	return &mapped
 }

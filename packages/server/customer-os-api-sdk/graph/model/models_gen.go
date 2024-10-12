@@ -2135,6 +2135,7 @@ type OrganizationSaveInput struct {
 	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
 	LeadSource         *string                   `json:"leadSource,omitempty"`
 	IcpFit             *bool                     `json:"icpFit,omitempty"`
+	OwnerID            *string                   `json:"ownerId,omitempty"`
 }
 
 type OrganizationTagInput struct {

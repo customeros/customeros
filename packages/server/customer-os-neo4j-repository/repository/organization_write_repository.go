@@ -113,6 +113,9 @@ type OrganizationSaveFields struct {
 	Domains        []string             `json:"domains"`
 	ExternalSystem model.ExternalSystem `json:"externalSystem"`
 
+	OwnerId       string `json:"ownerId"`
+	UpdateOwnerId bool   `json:"updateOwnerId"`
+
 	Hide               bool                               `json:"hide"`
 	Name               string                             `json:"name"`
 	Description        string                             `json:"description"`
@@ -185,7 +188,7 @@ type OrganizationWriteRepository interface {
 	UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error
 	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error
 	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
-	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
+	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, userId string) error
 	//Deprecated -> use Save with Hide property
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error
@@ -773,14 +776,15 @@ func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tena
 	return err
 }
 
-func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error {
+func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, userId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.ReplaceOwner")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
+
 	span.LogFields(log.String("organizationId", organizationId), log.String("userId", userId))
 
-	query := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
 			OPTIONAL MATCH (:User)-[rel:OWNS]->(org)
 			DELETE rel
 			WITH org, t
@@ -789,16 +793,33 @@ func (r *organizationWriteRepository) ReplaceOwner(ctx context.Context, tenant, 
 			MERGE (u)-[:OWNS]->(org)
 			SET org.updatedAt=datetime(), org.sourceOfTruth=$source`
 
-	session := utils.NewNeo4jWriteSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
-	defer session.Close(ctx)
-
-	return utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]any{
+	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"userId":         userId,
 		"source":         constants.SourceOpenline,
 		"now":            utils.Now(),
+	}
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return nil, nil
 	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *organizationWriteRepository) SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error {
