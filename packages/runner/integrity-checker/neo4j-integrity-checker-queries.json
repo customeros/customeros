@@ -225,7 +225,7 @@
         },
         {
           "name": "Orphan outdated email nodes",
-          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) WHERE e.updatedAt < datetime() - duration({days:10}) OPTIONAL MATCH (e)--(other) WHERE NOT (other:Tenant OR other:Domain) WITH t, e, other WHERE other IS NULL RETURN count(e);"
+          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) WHERE e.updatedAt < datetime() - duration({days:10}) OPTIONAL MATCH (e)--(other) WHERE NOT (other:Tenant OR other:Domain) WITH t, e, other WHERE other IS NULL RETURN count(e)"
         }
       ]
     },

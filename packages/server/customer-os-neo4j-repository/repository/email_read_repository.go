@@ -391,7 +391,7 @@ func (r *emailReadRepository) IsOrphanEmail(ctx context.Context, tenant, emailId
 
 	cypher := `MATCH (:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$emailId})
 				OPTIONAL MATCH (e)--(other) 
-				WHERE NOT (other:Tenant)
+				WHERE NOT (other:Tenant OR other:Domain)
 				WITH e, other
 				WHERE other IS NOT NULL
 				RETURN count(other) = 0`
