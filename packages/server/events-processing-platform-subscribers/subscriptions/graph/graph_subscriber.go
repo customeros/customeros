@@ -204,7 +204,9 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		invoiceevents.InvoicePayV1,
 		invoiceevents.InvoiceRemindNotificationV1,
 		emailevents.EmailCreateV1,
-		emailevents.EmailUpdateV1:
+		emailevents.EmailUpdateV1,
+		orgevents.OrganizationUpdateOwnerV1:
+
 		return nil
 	}
 
@@ -339,9 +341,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationUpdateOnboardingStatusV1:
 		_ = s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
-		return nil
-	case orgevents.OrganizationUpdateOwnerV1:
-		_ = s.organizationEventHandler.OnUpdateOwner(ctx, evt)
 		return nil
 	case orgevents.OrganizationAddTagV1:
 		_ = s.organizationEventHandler.OnAddTag(ctx, evt)

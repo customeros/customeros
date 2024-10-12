@@ -196,6 +196,14 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			}
 		}
 
+		if input.UpdateOwnerId {
+			err = s.services.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, &tx, tenant, *organizationId, input.OwnerId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+		}
+
 		return nil, nil
 	})
 

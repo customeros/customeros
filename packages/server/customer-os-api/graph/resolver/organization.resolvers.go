@@ -79,6 +79,516 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 	return mapper.MapEntityToOrganization(e), nil
 }
 
+// OrganizationArchive is the resolver for the organization_Archive field.
+func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchive", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
+		return &model.Result{
+			Result: false,
+		}, err
+	}
+	return &model.Result{
+		Result: true,
+	}, nil
+}
+
+// OrganizationArchiveAll is the resolver for the organization_ArchiveAll field.
+func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchiveAll", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.organizationIDs", ids))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	for _, id := range ids {
+		err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
+			return &model.Result{
+				Result: false,
+			}, err
+		}
+	}
+	return &model.Result{
+		Result: true,
+	}, nil
+}
+
+// OrganizationHide is the resolver for the organization_Hide field.
+func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHide", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.organizationId", id))
+
+	if id == "" {
+		tracing.TraceErr(span, errors.New("missing organization id"))
+		graphql.AddErrorf(ctx, "Missing organization id")
+		return "", nil
+	}
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: id,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
+		return response.Id, nil
+	}
+
+	return response.Id, nil
+}
+
+// OrganizationHideAll is the resolver for the organization_HideAll field.
+func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHideAll", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.organizationIds", ids))
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	for _, orgId := range ids {
+		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				OrganizationId: orgId,
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to hide organization %s", orgId)
+		}
+	}
+
+	return &model.Result{
+		Result: true,
+	}, nil
+}
+
+// OrganizationShow is the resolver for the organization_Show field.
+func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShow", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationId", id))
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: id,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
+		return response.Id, nil
+	}
+	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			OrganizationId: id,
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to refresh the last touchpoint %s", id)
+		return response.Id, nil
+	}
+
+	return response.Id, nil
+}
+
+// OrganizationShowAll is the resolver for the organization_ShowAll field.
+func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShowAll", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.organizationIds", ids))
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	for _, orgId := range ids {
+		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				OrganizationId: orgId,
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to show organization %s", orgId)
+		}
+	}
+
+	return &model.Result{
+		Result: true,
+	}, nil
+}
+
+// OrganizationMerge is the resolver for the organization_Merge field.
+func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationMerge", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.primaryOrganizationID", primaryOrganizationID), log.Object("request.mergedOrganizationIds", mergedOrganizationIds))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	for _, mergedOrganizationID := range mergedOrganizationIds {
+		err := r.Services.OrganizationService.Merge(ctx, primaryOrganizationID, mergedOrganizationID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Failed to merge organization %s into organization %s", mergedOrganizationID, primaryOrganizationID)
+			return nil, err
+		}
+	}
+
+	organizationEntityPtr, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, primaryOrganizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get organization by id %s", primaryOrganizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
+}
+
+// OrganizationAddSubsidiary is the resolver for the organization_AddSubsidiary field.
+func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSubsidiary", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	removeExisting := input.RemoveExisting != nil && *input.RemoveExisting == true
+
+	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubsidiaryID, utils.IfNotNilString(input.Type), removeExisting)
+	if err != nil {
+		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to add subsidiary"))
+		graphql.AddErrorf(ctx, "failed to add subsidiary %s to organization %s", input.SubsidiaryID, input.OrganizationID)
+		return nil, nil
+	}
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, input.OrganizationID)
+	if err != nil {
+		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to fetch organization details"))
+		graphql.AddErrorf(ctx, "failed to fetch organization details: %s", input.OrganizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationRemoveSubsidiary is the resolver for the organization_RemoveSubsidiary field.
+func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveSubsidiary", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.subsidiaryID", subsidiaryID))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.OrganizationService.RemoveSubsidiary(ctx, organizationID, subsidiaryID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove subsidiary %s from organization %s", subsidiaryID, organizationID)
+		return nil, err
+	}
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization %s", organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationAddNewLocation is the resolver for the organization_AddNewLocation field.
+func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddNewLocation", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID))
+
+	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.ORGANIZATION, organizationID, entity.SourceFields{
+		Source:        neo4jentity.DataSourceOpenline,
+		SourceOfTruth: neo4jentity.DataSourceOpenline,
+		AppSource:     constants.AppSourceCustomerOsApi,
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error creating location for organization %s", organizationID)
+		return nil, err
+	}
+	return mapper.MapEntityToLocation(locationEntity), nil
+}
+
+// OrganizationAddSocial is the resolver for the organization_AddSocial field.
+func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSocial", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID))
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	socialId := uuid.New().String()
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			OrganizationId: organizationID,
+			SocialId:       socialId,
+			Url:            input.URL,
+			SourceFields: &commonpb.SourceFields{
+				Source:    string(neo4jentity.DataSourceOpenline),
+				AppSource: constants.AppSourceCustomerOsApi,
+			},
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to add social %s from organization %s", input.URL, organizationID)
+		return nil, nil
+	}
+
+	return &model.Social{
+		ID: socialId,
+	}, nil
+}
+
+// OrganizationRemoveSocial is the resolver for the organization_RemoveSocial field.
+func (r *mutationResolver) OrganizationRemoveSocial(ctx context.Context, organizationID string, socialID string) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveSocial", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.socialID", socialID))
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
+			Tenant:         common.GetTenantFromContext(ctx),
+			LoggedInUserId: common.GetUserIdFromContext(ctx),
+			OrganizationId: organizationID,
+			SocialId:       socialID,
+			AppSource:      constants.AppSourceCustomerOsApi,
+		})
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to remove social %s from organization %s", socialID, organizationID)
+		return &model.ActionResponse{
+			Accepted: false,
+		}, nil
+	}
+
+	return &model.ActionResponse{
+		Accepted: true,
+	}, nil
+}
+
+// OrganizationUpdateOnboardingStatus is the resolver for the organization_UpdateOnboardingStatus field.
+func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdateOnboardingStatus", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, input.OrganizationID)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	tentant := common.GetTenantFromContext(ctx)
+
+	grpcRequest := organizationpb.UpdateOnboardingStatusGrpcRequest{
+		Tenant:         common.GetTenantFromContext(ctx),
+		OrganizationId: input.OrganizationID,
+		LoggedInUserId: common.GetUserIdFromContext(ctx),
+		Comments:       utils.IfNotNilString(input.Comments),
+		AppSource:      constants.AppSourceCustomerOsApi,
+	}
+	switch input.Status {
+	case model.OnboardingStatusNotApplicable:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
+	case model.OnboardingStatusNotStarted:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED
+	case model.OnboardingStatusOnTrack:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_ON_TRACK
+	case model.OnboardingStatusLate:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_LATE
+	case model.OnboardingStatusStuck:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_STUCK
+	case model.OnboardingStatusDone:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE
+	case model.OnboardingStatusSuccessful:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_SUCCESSFUL
+	default:
+		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
+	}
+
+	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+		return r.Clients.OrganizationClient.UpdateOnboardingStatus(ctx, &grpcRequest)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to update onboarding status for organization %s", input.OrganizationID)
+	}
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, input.OrganizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization %s", input.OrganizationID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntity), nil
+}
+
+// OrganizationUnlinkAllDomains is the resolver for the organization_UnlinkAllDomains field.
+func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, organizationID string) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUnlinkAllDomains", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.organizationID", organizationID))
+
+	tentant := common.GetTenantFromContext(ctx)
+
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, organizationID)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch organization %s", organizationID)
+		return nil, nil
+	}
+	outputOrganization := mapper.MapEntityToOrganization(organizationEntity)
+
+	domainEntities, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{organizationID})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to get domains for organization %s", organizationID)
+		return outputOrganization, nil
+	}
+	if domainEntities != nil {
+		for _, domainEntity := range *domainEntities {
+			_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+				return r.Clients.OrganizationClient.UnlinkDomainFromOrganization(ctx, &organizationpb.UnLinkDomainFromOrganizationGrpcRequest{
+					Tenant:         common.GetTenantFromContext(ctx),
+					OrganizationId: organizationID,
+					LoggedInUserId: common.GetUserIdFromContext(ctx),
+					Domain:         domainEntity.Domain,
+				})
+			})
+			if err != nil {
+				tracing.TraceErr(span, err)
+				graphql.AddErrorf(ctx, "Failed to unlink domain %s from organization %s", domainEntity.Domain, organizationID)
+				r.log.Errorf("Failed to unlink domain %s from organization %s: %s", domainEntity.Domain, organizationID, err.Error())
+			}
+		}
+	}
+
+	return outputOrganization, nil
+}
+
+// OrganizationAddTag is the resolver for the organization_AddTag field.
+func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	tentant := common.GetTenantFromContext(ctx)
+
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, input.OrganizationID)
+	if err != nil || organizationEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("organization %s not found", input.OrganizationID)
+		}
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Organization %s not found", input.OrganizationID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
+	if tagId == "" {
+		tagEntity, _ := CreateTag(ctx, r.Services, input.Tag.Name)
+		if tagEntity != nil {
+			tagId = tagEntity.Id
+		}
+	}
+	if tagId != "" {
+		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return r.Clients.OrganizationClient.AddTag(ctx, &organizationpb.OrganizationAddTagGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				OrganizationId: input.OrganizationID,
+				TagId:          tagId,
+				AppSource:      constants.AppSourceCustomerOsApi,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error while adding tag to organization")
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+	}
+	return &model.ActionResponse{Accepted: tagId != ""}, nil
+}
+
+// OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
+func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	tentant := common.GetTenantFromContext(ctx)
+
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, input.OrganizationID)
+	if err != nil || organizationEntity == nil {
+		if err == nil {
+			err = fmt.Errorf("organization %s not found", input.OrganizationID)
+		}
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Organization %s not found", input.OrganizationID)
+		return &model.ActionResponse{Accepted: false}, nil
+	}
+
+	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
+	if tagId != "" {
+		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return r.Clients.OrganizationClient.RemoveTag(ctx, &organizationpb.OrganizationRemoveTagGrpcRequest{
+				Tenant:         common.GetTenantFromContext(ctx),
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				OrganizationId: input.OrganizationID,
+				TagId:          tagId,
+				AppSource:      constants.AppSourceCustomerOsApi,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error removing tag from organization")
+			return &model.ActionResponse{Accepted: false}, nil
+		}
+	}
+	return &model.ActionResponse{Accepted: tagId != ""}, nil
+}
+
 // OrganizationCreate is the resolver for the organization_Create field.
 func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationCreate", graphql.GetOperationContext(ctx))
@@ -576,333 +1086,6 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	return mapper.MapEntityToOrganization(organizationEntity), nil
 }
 
-// OrganizationArchive is the resolver for the organization_Archive field.
-func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchive", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
-		return &model.Result{
-			Result: false,
-		}, err
-	}
-	return &model.Result{
-		Result: true,
-	}, nil
-}
-
-// OrganizationArchiveAll is the resolver for the organization_ArchiveAll field.
-func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationArchiveAll", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.organizationIDs", ids))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	for _, id := range ids {
-		err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
-			return &model.Result{
-				Result: false,
-			}, err
-		}
-	}
-	return &model.Result{
-		Result: true,
-	}, nil
-}
-
-// OrganizationHide is the resolver for the organization_Hide field.
-func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHide", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.organizationId", id))
-
-	if id == "" {
-		tracing.TraceErr(span, errors.New("missing organization id"))
-		graphql.AddErrorf(ctx, "Missing organization id")
-		return "", nil
-	}
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
-		return response.Id, nil
-	}
-
-	return response.Id, nil
-}
-
-// OrganizationHideAll is the resolver for the organization_HideAll field.
-func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationHideAll", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.organizationIds", ids))
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	for _, orgId := range ids {
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				OrganizationId: orgId,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to hide organization %s", orgId)
-		}
-	}
-
-	return &model.Result{
-		Result: true,
-	}, nil
-}
-
-// OrganizationShow is the resolver for the organization_Show field.
-func (r *mutationResolver) OrganizationShow(ctx context.Context, id string) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShow", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationId", id))
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
-		return response.Id, nil
-	}
-	_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to refresh the last touchpoint %s", id)
-		return response.Id, nil
-	}
-
-	return response.Id, nil
-}
-
-// OrganizationShowAll is the resolver for the organization_ShowAll field.
-func (r *mutationResolver) OrganizationShowAll(ctx context.Context, ids []string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationShowAll", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.Object("request.organizationIds", ids))
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	for _, orgId := range ids {
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return r.Clients.OrganizationClient.ShowOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				OrganizationId: orgId,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to show organization %s", orgId)
-		}
-	}
-
-	return &model.Result{
-		Result: true,
-	}, nil
-}
-
-// OrganizationMerge is the resolver for the organization_Merge field.
-func (r *mutationResolver) OrganizationMerge(ctx context.Context, primaryOrganizationID string, mergedOrganizationIds []string) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationMerge", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.primaryOrganizationID", primaryOrganizationID), log.Object("request.mergedOrganizationIds", mergedOrganizationIds))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	for _, mergedOrganizationID := range mergedOrganizationIds {
-		err := r.Services.OrganizationService.Merge(ctx, primaryOrganizationID, mergedOrganizationID)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Failed to merge organization %s into organization %s", mergedOrganizationID, primaryOrganizationID)
-			return nil, err
-		}
-	}
-
-	organizationEntityPtr, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, primaryOrganizationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get organization by id %s", primaryOrganizationID)
-		return nil, err
-	}
-	return mapper.MapEntityToOrganization(organizationEntityPtr), nil
-}
-
-// OrganizationAddSubsidiary is the resolver for the organization_AddSubsidiary field.
-func (r *mutationResolver) OrganizationAddSubsidiary(ctx context.Context, input model.LinkOrganizationsInput) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSubsidiary", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	removeExisting := input.RemoveExisting != nil && *input.RemoveExisting == true
-
-	err := r.Services.OrganizationService.AddSubsidiary(ctx, input.OrganizationID, input.SubsidiaryID, utils.IfNotNilString(input.Type), removeExisting)
-	if err != nil {
-		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to add subsidiary"))
-		graphql.AddErrorf(ctx, "failed to add subsidiary %s to organization %s", input.SubsidiaryID, input.OrganizationID)
-		return nil, nil
-	}
-	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, input.OrganizationID)
-	if err != nil {
-		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to fetch organization details"))
-		graphql.AddErrorf(ctx, "failed to fetch organization details: %s", input.OrganizationID)
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
-}
-
-// OrganizationRemoveSubsidiary is the resolver for the organization_RemoveSubsidiary field.
-func (r *mutationResolver) OrganizationRemoveSubsidiary(ctx context.Context, organizationID string, subsidiaryID string) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveSubsidiary", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.subsidiaryID", subsidiaryID))
-
-	tenant := common.GetTenantFromContext(ctx)
-
-	err := r.Services.OrganizationService.RemoveSubsidiary(ctx, organizationID, subsidiaryID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove subsidiary %s from organization %s", subsidiaryID, organizationID)
-		return nil, err
-	}
-	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch organization %s", organizationID)
-		return nil, err
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
-}
-
-// OrganizationAddNewLocation is the resolver for the organization_AddNewLocation field.
-func (r *mutationResolver) OrganizationAddNewLocation(ctx context.Context, organizationID string) (*model.Location, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddNewLocation", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-
-	locationEntity, err := r.Services.LocationService.CreateLocationForEntity(ctx, commonModel.ORGANIZATION, organizationID, entity.SourceFields{
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     constants.AppSourceCustomerOsApi,
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Error creating location for organization %s", organizationID)
-		return nil, err
-	}
-	return mapper.MapEntityToLocation(locationEntity), nil
-}
-
-// OrganizationAddSocial is the resolver for the organization_AddSocial field.
-func (r *mutationResolver) OrganizationAddSocial(ctx context.Context, organizationID string, input model.SocialInput) (*model.Social, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddSocial", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	socialId := uuid.New().String()
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			OrganizationId: organizationID,
-			SocialId:       socialId,
-			Url:            input.URL,
-			SourceFields: &commonpb.SourceFields{
-				Source:    string(neo4jentity.DataSourceOpenline),
-				AppSource: constants.AppSourceCustomerOsApi,
-			},
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to add social %s from organization %s", input.URL, organizationID)
-		return nil, nil
-	}
-
-	return &model.Social{
-		ID: socialId,
-	}, nil
-}
-
-// OrganizationRemoveSocial is the resolver for the organization_RemoveSocial field.
-func (r *mutationResolver) OrganizationRemoveSocial(ctx context.Context, organizationID string, socialID string) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveSocial", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.socialID", socialID))
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.RemoveSocial(ctx, &organizationpb.RemoveSocialGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-			OrganizationId: organizationID,
-			SocialId:       socialID,
-			AppSource:      constants.AppSourceCustomerOsApi,
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to remove social %s from organization %s", socialID, organizationID)
-		return &model.ActionResponse{
-			Accepted: false,
-		}, nil
-	}
-
-	return &model.ActionResponse{
-		Accepted: true,
-	}, nil
-}
-
 // OrganizationSetOwner is the resolver for the organization_SetOwner field.
 func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSetOwner", graphql.GetOperationContext(ctx))
@@ -933,189 +1116,6 @@ func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizat
 		return nil, nil
 	}
 	return mapper.MapEntityToOrganization(organizationEntity), nil
-}
-
-// OrganizationUpdateOnboardingStatus is the resolver for the organization_UpdateOnboardingStatus field.
-func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUpdateOnboardingStatus", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, input.OrganizationID)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	tentant := common.GetTenantFromContext(ctx)
-
-	grpcRequest := organizationpb.UpdateOnboardingStatusGrpcRequest{
-		Tenant:         common.GetTenantFromContext(ctx),
-		OrganizationId: input.OrganizationID,
-		LoggedInUserId: common.GetUserIdFromContext(ctx),
-		Comments:       utils.IfNotNilString(input.Comments),
-		AppSource:      constants.AppSourceCustomerOsApi,
-	}
-	switch input.Status {
-	case model.OnboardingStatusNotApplicable:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
-	case model.OnboardingStatusNotStarted:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_STARTED
-	case model.OnboardingStatusOnTrack:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_ON_TRACK
-	case model.OnboardingStatusLate:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_LATE
-	case model.OnboardingStatusStuck:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_STUCK
-	case model.OnboardingStatusDone:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_DONE
-	case model.OnboardingStatusSuccessful:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_SUCCESSFUL
-	default:
-		grpcRequest.OnboardingStatus = organizationpb.OnboardingStatus_ONBOARDING_STATUS_NOT_APPLICABLE
-	}
-
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.UpdateOnboardingStatus(ctx, &grpcRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to update onboarding status for organization %s", input.OrganizationID)
-	}
-	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, input.OrganizationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch organization %s", input.OrganizationID)
-		return nil, nil
-	}
-	return mapper.MapEntityToOrganization(organizationEntity), nil
-}
-
-// OrganizationUnlinkAllDomains is the resolver for the organization_UnlinkAllDomains field.
-func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, organizationID string) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationUnlinkAllDomains", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", organizationID))
-
-	tentant := common.GetTenantFromContext(ctx)
-
-	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, organizationID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to fetch organization %s", organizationID)
-		return nil, nil
-	}
-	outputOrganization := mapper.MapEntityToOrganization(organizationEntity)
-
-	domainEntities, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{organizationID})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get domains for organization %s", organizationID)
-		return outputOrganization, nil
-	}
-	if domainEntities != nil {
-		for _, domainEntity := range *domainEntities {
-			_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return r.Clients.OrganizationClient.UnlinkDomainFromOrganization(ctx, &organizationpb.UnLinkDomainFromOrganizationGrpcRequest{
-					Tenant:         common.GetTenantFromContext(ctx),
-					OrganizationId: organizationID,
-					LoggedInUserId: common.GetUserIdFromContext(ctx),
-					Domain:         domainEntity.Domain,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Failed to unlink domain %s from organization %s", domainEntity.Domain, organizationID)
-				r.log.Errorf("Failed to unlink domain %s from organization %s: %s", domainEntity.Domain, organizationID, err.Error())
-			}
-		}
-	}
-
-	return outputOrganization, nil
-}
-
-// OrganizationAddTag is the resolver for the organization_AddTag field.
-func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	tentant := common.GetTenantFromContext(ctx)
-
-	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, input.OrganizationID)
-	if err != nil || organizationEntity == nil {
-		if err == nil {
-			err = fmt.Errorf("organization %s not found", input.OrganizationID)
-		}
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Organization %s not found", input.OrganizationID)
-		return &model.ActionResponse{Accepted: false}, nil
-	}
-
-	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
-	if tagId == "" {
-		tagEntity, _ := CreateTag(ctx, r.Services, input.Tag.Name)
-		if tagEntity != nil {
-			tagId = tagEntity.Id
-		}
-	}
-	if tagId != "" {
-		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return r.Clients.OrganizationClient.AddTag(ctx, &organizationpb.OrganizationAddTagGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				OrganizationId: input.OrganizationID,
-				TagId:          tagId,
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Error while adding tag to organization")
-			return &model.ActionResponse{Accepted: false}, nil
-		}
-	}
-	return &model.ActionResponse{Accepted: tagId != ""}, nil
-}
-
-// OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
-func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationRemoveTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	tentant := common.GetTenantFromContext(ctx)
-
-	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tentant, input.OrganizationID)
-	if err != nil || organizationEntity == nil {
-		if err == nil {
-			err = fmt.Errorf("organization %s not found", input.OrganizationID)
-		}
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Organization %s not found", input.OrganizationID)
-		return &model.ActionResponse{Accepted: false}, nil
-	}
-
-	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
-	if tagId != "" {
-		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return r.Clients.OrganizationClient.RemoveTag(ctx, &organizationpb.OrganizationRemoveTagGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				OrganizationId: input.OrganizationID,
-				TagId:          tagId,
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Error removing tag from organization")
-			return &model.ActionResponse{Accepted: false}, nil
-		}
-	}
-	return &model.ActionResponse{Accepted: tagId != ""}, nil
 }
 
 // Contracts is the resolver for the contracts field.

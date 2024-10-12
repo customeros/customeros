@@ -9,27 +9,30 @@ extend type Query {
 extend type Mutation {
     organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_HideAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Show(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ShowAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddNewLocation(organizationId: ID!): Location! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSocial(organizationId: ID!, input: SocialInput!): Social! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSocial(organizationId: ID!, socialId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     organization_UpdateOnboardingStatus(input: OnboardingStatusInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnlinkAllDomains(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    #TODO: to remove after FE migration
+    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
 }
 
 type LinkedOrganization {
@@ -227,6 +230,8 @@ input OrganizationSaveInput {
     relationship:       OrganizationRelationship
     leadSource:         String
     icpFit:             Boolean
+
+    ownerId:            String
 }
 
 input OrganizationInput {

@@ -23,16 +23,6 @@ func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.Org
 	panic(fmt.Errorf("not implemented: OrganizationSave - organization_Save"))
 }
 
-// OrganizationCreate is the resolver for the organization_Create field.
-func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationCreate - organization_Create"))
-}
-
-// OrganizationUpdate is the resolver for the organization_Update field.
-func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))
-}
-
 // OrganizationArchive is the resolver for the organization_Archive field.
 func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: OrganizationArchive - organization_Archive"))
@@ -93,16 +83,6 @@ func (r *mutationResolver) OrganizationRemoveSocial(ctx context.Context, organiz
 	panic(fmt.Errorf("not implemented: OrganizationRemoveSocial - organization_RemoveSocial"))
 }
 
-// OrganizationSetOwner is the resolver for the organization_SetOwner field.
-func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationSetOwner - organization_SetOwner"))
-}
-
-// OrganizationUnsetOwner is the resolver for the organization_UnsetOwner field.
-func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationUnsetOwner - organization_UnsetOwner"))
-}
-
 // OrganizationUpdateOnboardingStatus is the resolver for the organization_UpdateOnboardingStatus field.
 func (r *mutationResolver) OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationUpdateOnboardingStatus - organization_UpdateOnboardingStatus"))
@@ -121,6 +101,26 @@ func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.O
 // OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
 func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: OrganizationRemoveTag - organization_RemoveTag"))
+}
+
+// OrganizationCreate is the resolver for the organization_Create field.
+func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationCreate - organization_Create"))
+}
+
+// OrganizationUpdate is the resolver for the organization_Update field.
+func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))
+}
+
+// OrganizationSetOwner is the resolver for the organization_SetOwner field.
+func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationSetOwner - organization_SetOwner"))
+}
+
+// OrganizationUnsetOwner is the resolver for the organization_UnsetOwner field.
+func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationUnsetOwner - organization_UnsetOwner"))
 }
 
 // Contracts is the resolver for the contracts field.

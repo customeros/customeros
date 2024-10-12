@@ -149,7 +149,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		return errors.Wrap(err, "json.Unmarshal")
 	} else {
 		if evtMetadata.UserId != "" {
-			err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, eventData.Tenant, organizationId, evtMetadata.UserId)
+			err = h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, nil, eventData.Tenant, organizationId, evtMetadata.UserId)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				h.log.Errorf("Failed to replace owner of organization %s with user %s", organizationId, evtMetadata.UserId)
@@ -986,25 +986,6 @@ func onboardingStatusReadableStringForActionMessage(status string) string {
 	default:
 		return status
 	}
-}
-
-func (h *OrganizationEventHandler) OnUpdateOwner(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnUpdateOrganizationOwner")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationOwnerUpdateEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.ReplaceOwner(ctx, eventData.Tenant, eventData.OrganizationId, eventData.OwnerUserId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), eventData.OrganizationId, h.grpcClients)
-	return nil
 }
 
 func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, evt eventstore.Event) error {
