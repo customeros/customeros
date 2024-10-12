@@ -557,7 +557,7 @@ func (h *ContactEventHandler) callApiEnrichPerson(ctx context.Context, tenant, l
 		return nil, err
 	}
 	defer response.Body.Close()
-	span.LogFields(log.Int("response.status.enrichPerson", response.StatusCode))
+	span.LogFields(log.Int("response.statusCode", response.StatusCode))
 
 	var enrichPersonApiResponse enrichmentmodel.EnrichPersonScrapinResponse
 	err = json.NewDecoder(response.Body).Decode(&enrichPersonApiResponse)

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
@@ -60,32 +61,26 @@ func (s *scrapinService) ScrapInPersonProfile(ctx context.Context, linkedInUrl s
 	var data *postgresentity.ScrapInResponseBody
 	var recordId uint64
 
-	callScrapin := false
+	callScrapInNow := false
 
 	if latestEnrichDetailsScrapInRecord == nil || latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, s.config.ScrapinConfig.TtlDays).Before(utils.Now()) {
-		callScrapin = true
+		// if no cached data found, or cache data is older than ttl (90 days), call scrapin
+		callScrapInNow = true
 	} else if latestEnrichDetailsScrapInRecord.PersonFound == false {
-		// if latest record has not found person response, check root cause
-		unmarshalledData := postgresentity.ScrapInResponseBody{}
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
-		}
-		data = &unmarshalledData
-		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
-		if unmarshalledData.CreditsLeft == 0 {
-			callScrapin = true
-		} else if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
-			callScrapin = true
+		// if last attempt was > 1 day ago, call scrapin
+		if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
+			callScrapInNow = true
 		}
 	}
 
-	// if cached data is missing or last time fetched > ttl refresh
-	if callScrapin {
+	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinPersonProfile(ctx, linkedInUrl); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
+
+		traceIfCreditsDepleting(data, span)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
@@ -129,7 +124,7 @@ func (s *scrapinService) ScrapInPersonProfile(ctx context.Context, linkedInUrl s
 	if data == nil || data.Person == nil {
 		latestEnrichDetailsScrapInRecordWithPersonFound, err := s.services.CommonServices.PostgresRepositories.EnrichDetailsScrapInRepository.GetLatestByParam1AndFlowWithPersonFound(ctx, linkedInUrl, postgresentity.ScrapInFlowPersonProfile)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get scrapin data"))
+			tracing.TraceErr(span, errors.Wrap(err, "failed to extract cached scrapin data"))
 			return 0, nil, err
 		}
 		if latestEnrichDetailsScrapInRecordWithPersonFound != nil {
@@ -204,32 +199,26 @@ func (s *scrapinService) ScrapInSearchPerson(ctx context.Context, email, firstNa
 	var data *postgresentity.ScrapInResponseBody
 	var recordId uint64
 
-	callScrapin := false
+	callScrapInNow := false
 
 	if latestEnrichDetailsScrapInRecord == nil || latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, s.config.ScrapinConfig.TtlDays).Before(utils.Now()) {
-		callScrapin = true
+		callScrapInNow = true
 	} else if latestEnrichDetailsScrapInRecord.PersonFound == false {
-		// if latest record has not found person response, check root cause
-		unmarshalledData := postgresentity.ScrapInResponseBody{}
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
-		}
-		data = &unmarshalledData
-		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
-		if data.CreditsLeft == 0 {
-			callScrapin = true
-		} else if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
-			callScrapin = true
+		// if last attempt was > 1 day ago, call scrapin
+		if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
+			callScrapInNow = true
 		}
 	}
 
 	// if cached data is missing or last time fetched > ttl refresh
-	if callScrapin {
+	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinPersonSearch(ctx, email, firstName, lastName, domain); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
+
+		traceIfCreditsDepleting(data, span)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
@@ -363,32 +352,26 @@ func (s *scrapinService) ScrapInCompanyProfile(ctx context.Context, linkedInUrl 
 	var data *postgresentity.ScrapInResponseBody
 	var recordId uint64
 
-	callScrapin := false
+	callScrapInNow := false
 
 	if latestEnrichDetailsScrapInRecord == nil || latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, s.config.ScrapinConfig.TtlDays).Before(utils.Now()) {
-		callScrapin = true
+		callScrapInNow = true
 	} else if latestEnrichDetailsScrapInRecord.CompanyFound == false {
-		// if latest record has not found company response, check root cause
-		unmarshalledData := postgresentity.ScrapInResponseBody{}
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
-		}
-		data = &unmarshalledData
-		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
-		if data.CreditsLeft == 0 {
-			callScrapin = true
-		} else if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
-			callScrapin = true
+		// if last attempt was > 1 day ago, call scrapin
+		if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
+			callScrapInNow = true
 		}
 	}
 
 	// if cached data is missing or last time fetched > ttl refresh
-	if callScrapin {
+	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinCompanyProfile(ctx, linkedInUrl); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
+
+		traceIfCreditsDepleting(data, span)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
@@ -507,32 +490,26 @@ func (s *scrapinService) ScrapInSearchCompany(ctx context.Context, domain string
 	var data *postgresentity.ScrapInResponseBody
 	var recordId uint64
 
-	callScrapin := false
+	callScrapInNow := false
 
 	if latestEnrichDetailsScrapInRecord == nil || latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, s.config.ScrapinConfig.TtlDays).Before(utils.Now()) {
-		callScrapin = true
+		callScrapInNow = true
 	} else if latestEnrichDetailsScrapInRecord.CompanyFound == false {
-		// if latest record has not found company response, check root cause
-		unmarshalledData := postgresentity.ScrapInResponseBody{}
-		if err = json.Unmarshal([]byte(latestEnrichDetailsScrapInRecord.Data), &unmarshalledData); err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to unmarshal scrapin cached data"))
-		}
-		data = &unmarshalledData
-		// if credits left is 0 or last attempt was > 1 day ago, call scrapin
-		if data.CreditsLeft == 0 {
-			callScrapin = true
-		} else if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
-			callScrapin = true
+		// if last attempt was > 1 day ago, call scrapin
+		if latestEnrichDetailsScrapInRecord.UpdatedAt.AddDate(0, 0, 1).Before(utils.Now()) {
+			callScrapInNow = true
 		}
 	}
 
 	// if cached data is missing or last time fetched > ttl refresh
-	if callScrapin {
+	if callScrapInNow {
 		// get data from scrapin
 		if data, err = s.callScrapinCompanySearch(ctx, domain); err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to call scrapin"))
 			return 0, nil, err
 		}
+
+		traceIfCreditsDepleting(data, span)
 
 		// save to db
 		dataAsString, err := json.Marshal(data)
@@ -669,4 +646,15 @@ func makeScrapInHTTPRequest(url string) (int, []byte, error) {
 		}
 	}
 	return statusCode, body, err
+}
+
+func traceIfCreditsDepleting(data *postgresentity.ScrapInResponseBody, span opentracing.Span) {
+	if data != nil {
+		if data.CreditsLeft > 0 && data.CreditsLeft < 50 {
+			tracing.TraceErr(span, errors.New(fmt.Sprintf("ScrapIn credits are depleting, only %d credits left", data.CreditsLeft)))
+		}
+		if data.RateLimitLeft > 0 && data.RateLimitLeft < 50 {
+			tracing.TraceErr(span, errors.New(fmt.Sprintf("ScrapIn rate limit is depleting, only %d requests left", data.RateLimitLeft)))
+		}
+	}
 }
