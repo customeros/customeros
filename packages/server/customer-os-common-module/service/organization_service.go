@@ -61,6 +61,41 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	var err error
 	var existing *neo4jentity.OrganizationEntity
 
+	//if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
+	if organizationId == nil {
+		domains := input.Domains
+		if input.UpdateWebsite && input.Website != "" {
+			websiteDomain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
+			if websiteDomain != "" {
+				domains = append(domains, websiteDomain)
+			}
+		}
+		domains = utils.RemoveEmpties(domains)
+
+		if len(domains) > 0 {
+			// for each domain check that no org exists with that domain
+			// if exist reject creation and return error
+			for _, domain := range domains {
+				orgDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+				if orgDbNode != nil {
+					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
+					if organizationEntity.Hide {
+						err = s.Show(ctx, tx, tenant, organizationEntity.ID)
+						if err != nil {
+							tracing.TraceErr(span, err)
+							return nil, nil
+						}
+					}
+					return &organizationEntity.ID, nil
+				}
+			}
+		}
+	}
+
 	if organizationId != nil {
 		existing, err = s.GetById(ctx, tenant, *organizationId)
 		if err != nil {
@@ -97,43 +132,9 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	if organizationId == nil {
-		//if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
-		domains := input.Domains
-		if input.UpdateWebsite && input.Website != "" {
-			websiteDomain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
-			if websiteDomain != "" {
-				domains = append(domains, websiteDomain)
-			}
-		}
-		domains = utils.RemoveEmpties(domains)
-
-		if len(domains) > 0 {
-			// for each domain check that no org exists with that domain
-			// if exist reject creation and return error
-			for _, domain := range domains {
-				orgDbNode, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return nil, err
-				}
-				if orgDbNode != nil {
-					organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(orgDbNode)
-					if organizationEntity.Hide {
-						err = s.Show(ctx, tx, tenant, organizationEntity.ID)
-						if err != nil {
-							tracing.TraceErr(span, err)
-							return nil, nil
-						}
-					}
-					return &organizationEntity.ID, nil
-				}
-			}
-		}
-
 		//if no name is provided, we try to extract if from domain
-		orgName := utils.IfNotNilString(input.Name)
-		if orgName == "" && len(domains) > 0 {
-			input.Name = domains[0]
+		if utils.IfNotNilString(input.Name) == "" && len(input.Domains) > 0 {
+			input.Name = input.Domains[0]
 			input.UpdateName = true
 		}
 

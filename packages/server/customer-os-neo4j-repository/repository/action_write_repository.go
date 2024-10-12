@@ -145,7 +145,7 @@ func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tx *neo4j
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
@@ -156,6 +156,5 @@ func (r *actionWriteRepository) MergeByActionType(ctx context.Context, tx *neo4j
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
-
 	return result.(*dbtype.Node), nil
 }
