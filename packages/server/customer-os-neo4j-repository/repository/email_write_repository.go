@@ -402,7 +402,8 @@ func (r *emailWriteRepository) DeleteEmail(ctx context.Context, tenant, emailId 
 	defer span.Finish()
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[r:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email {id:$id})
-				DELETE r,e`
+				OPTIONAL MATCH (e)-[r2]-(d:Domain)
+				DELETE r, r2, e`
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     emailId,

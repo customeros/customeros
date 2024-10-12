@@ -222,6 +222,10 @@
         {
           "name": "Duplicate emails by raw email",
           "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) where e.email <> '' AND e.email IS NOT NULL WITH t, e.email AS email, COUNT(e) AS emailCount WHERE emailCount > 1 RETURN count(email)"
+        },
+        {
+          "name": "Orphan outdated email nodes",
+          "query": "MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email) WHERE e.updatedAt < datetime() - duration({days:10}) OPTIONAL MATCH (e)--(other) WHERE NOT (other:Tenant OR other:Domain) WITH t, e, other WHERE other IS NULL RETURN count(e);"
         }
       ]
     },
