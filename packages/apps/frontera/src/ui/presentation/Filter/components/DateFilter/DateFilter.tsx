@@ -85,7 +85,7 @@ export const DateFilter = ({
     };
 
     return ComparisonOperator.Lt === operatorValue
-      ? formatDate(filterValue?.[0])
+      ? formatDate(filterValue?.[1])
       : ComparisonOperator.Gt === operatorValue
       ? formatDate(filterValue?.[0])
       : '...';

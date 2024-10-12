@@ -62,6 +62,7 @@ export const DatePicker = forwardRef(
       <Calendar
         ref={ref}
         value={value}
+        className={'test'}
         defaultValue={value}
         prevLabel={<ChevronLeft />}
         nextLabel={<ChevronRight />}
