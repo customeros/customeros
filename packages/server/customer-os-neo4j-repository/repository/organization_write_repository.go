@@ -1144,12 +1144,18 @@ func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.Man
 			SET org.archived=true, org.archivedAt=$now, org:ArchivedOrganization_%s
             DELETE currentRel
 			REMOVE org:Organization_%s`, tenant, tenant)
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"now":            utils.Now(),
+	}
 
 	span.LogFields(log.String("cypher", cypher))
+	span.LogFields(log.Object("params", params))
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		_, err := tx.Run(ctx, cypher, map[string]any{})
+		_, err := tx.Run(ctx, cypher, params)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
