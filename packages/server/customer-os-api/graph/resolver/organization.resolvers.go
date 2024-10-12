@@ -55,7 +55,7 @@ func (r *lastTouchpointResolver) LastTouchPointTimelineEvent(ctx context.Context
 
 // OrganizationSave is the resolver for the organization_Save field.
 func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.OrganizationSaveInput) (*model.Organization, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationCreate", graphql.GetOperationContext(ctx))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationSave", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.Object("request.input", input))
@@ -526,7 +526,7 @@ func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.O
 	// validate relationship and stage compatibility
 	stage := utils.FirstNotEmptyString(upsertOrganizationRequest.Stage, organizationEntity.Stage.String())
 	relationship := utils.FirstNotEmptyString(upsertOrganizationRequest.Relationship, organizationEntity.Relationship.String())
-	if !OrganizationStageAndRelationshipCompatible(stage, relationship) {
+	if !neo4jentity.OrganizationStageAndRelationshipCompatible(stage, relationship) {
 		err := errors.New("Stage and Relationship are not compatible")
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Stage and Relationship are not compatible")
@@ -585,7 +585,7 @@ func (r *mutationResolver) OrganizationArchive(ctx context.Context, id string) (
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.OrganizationService.Archive(ctx, tenant, id)
+	err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to archive organization %s", id)
@@ -608,7 +608,7 @@ func (r *mutationResolver) OrganizationArchiveAll(ctx context.Context, ids []str
 	tenant := common.GetTenantFromContext(ctx)
 
 	for _, id := range ids {
-		err := r.Services.CommonServices.OrganizationService.Archive(ctx, tenant, id)
+		err := r.Services.CommonServices.OrganizationService.Archive(ctx, nil, tenant, id)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to archive organization %s", id)

@@ -109,6 +109,10 @@ type OrganizationUpdateFields struct {
 type OrganizationSaveFields struct {
 	SourceFields model.Source `json:"sourceFields"`
 
+	//not stored directly in node
+	Domains        []string             `json:"domains"`
+	ExternalSystem model.ExternalSystem `json:"externalSystem"`
+
 	Hide               bool                               `json:"hide"`
 	Name               string                             `json:"name"`
 	Description        string                             `json:"description"`
@@ -123,6 +127,7 @@ type OrganizationSaveFields struct {
 	Market             string                             `json:"market"`
 	LastFundingRound   string                             `json:"lastFundingRound"`
 	LastFundingAmount  string                             `json:"lastFundingAmount"`
+	CustomerOsId       string                             `json:"customerOsId"`
 	ReferenceId        string                             `json:"referenceId"`
 	Note               string                             `json:"note"`
 	LogoUrl            string                             `json:"logoUrl"`
@@ -149,6 +154,7 @@ type OrganizationSaveFields struct {
 	UpdateValueProposition   bool `json:"updateValueProposition"`
 	UpdateLastFundingRound   bool `json:"updateLastFundingRound"`
 	UpdateLastFundingAmount  bool `json:"updateLastFundingAmount"`
+	UpdateCustomerOsId       bool `json:"updateCustomerOsId"`
 	UpdateReferenceId        bool `json:"updateReferenceId"`
 	UpdateNote               bool `json:"updateNote"`
 	UpdateIsPublic           bool `json:"updateIsPublic"`
@@ -177,9 +183,10 @@ type OrganizationWriteRepository interface {
 	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationCreateFields) error
 	//Deprecated
 	UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error
-	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
+	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error
 	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
 	ReplaceOwner(ctx context.Context, tenant, organizationId, userId string) error
+	//Deprecated -> use Save with Hide property
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
@@ -192,7 +199,7 @@ type OrganizationWriteRepository interface {
 	UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error
 	UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error
 	UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error
-	Archive(ctx context.Context, tenant, organizationId string) error
+	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 }
 
 type organizationWriteRepository struct {
@@ -608,6 +615,10 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			cypherUpdate += `org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,`
 			paramsUpdate["lastFundingAmount"] = data.LastFundingAmount
 		}
+		if data.UpdateCustomerOsId {
+			cypherUpdate += `org.customerOsId = $customerOsId,`
+			paramsUpdate["customerOsId"] = data.CustomerOsId
+		}
 		if data.UpdateReferenceId {
 			cypherUpdate += `org.referenceId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,`
 			paramsUpdate["referenceId"] = data.ReferenceId
@@ -694,38 +705,47 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 	return err
 }
 
-func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error {
+func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.MergeOrganizationDomain")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	cypher := `MERGE (d:Domain {domain:$domain}) 
+	cypher := fmt.Sprintf(`MERGE (d:Domain {domain:$domain}) 
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
 								d.updatedAt=datetime(),
 								d.appSource=$appSource
 				WITH d
-				MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
+				MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization_%s {id:$organizationId})
 				MERGE (org)-[rel:HAS_DOMAIN]->(d)
-				SET rel.syncedWithEventStore = true`
+				SET rel.syncedWithEventStore = true`, tenant)
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"domain":         strings.ToLower(domain),
-		"appSource":      constants.AppSourceEventProcessingPlatform,
+		"appSource":      "", //TODO
 		"now":            utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return nil, nil
+	})
+
 	if err != nil {
 		tracing.TraceErr(span, err)
+		return err
 	}
-	return err
+
+	return nil
 }
 
 func (r *organizationWriteRepository) UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error {
@@ -1114,22 +1134,34 @@ func (r *organizationWriteRepository) UpdateStringProperty(ctx context.Context, 
 	return err
 }
 
-func (r *organizationWriteRepository) Archive(ctx context.Context, tenant, organizationId string) error {
+func (r *organizationWriteRepository) Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Delete")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
-	query := fmt.Sprintf(`MATCH (org:Organization {id:$organizationId})-[currentRel:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+	cypher := fmt.Sprintf(`MATCH (org:Organization {id:$organizationId})-[currentRel:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
 			MERGE (org)-[newRel:ARCHIVED]->(t)
 			SET org.archived=true, org.archivedAt=$now, org:ArchivedOrganization_%s
             DELETE currentRel
 			REMOVE org:Organization_%s`, tenant, tenant)
-	span.LogFields(log.String("query", query))
 
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]interface{}{
-		"organizationId": organizationId,
-		"tenant":         tenant,
-		"now":            utils.Now(),
+	span.LogFields(log.String("cypher", cypher))
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		_, err := tx.Run(ctx, cypher, map[string]any{})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return nil, nil
 	})
-	return err
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

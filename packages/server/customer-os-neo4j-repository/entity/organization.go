@@ -144,3 +144,25 @@ func (o OrganizationEntity) Labels(tenant string) []string {
 		o.EntityLabel() + "_" + tenant,
 	}
 }
+
+func OrganizationStageAndRelationshipCompatible(stageStr, relationshipStr string) bool {
+	stage := enum.OrganizationStage(stageStr)
+	relationship := enum.OrganizationRelationship(relationshipStr)
+
+	if stage == "" || relationship == "" {
+		return true
+	}
+
+	if relationship == enum.NotAFit && stage != enum.Unqualified {
+		return false
+	} else if relationship == enum.FormerCustomer && stage != enum.Target {
+		return false
+	} else if relationship == enum.Prospect && stage != enum.Lead && stage != enum.Target &&
+		stage != enum.Engaged && stage != enum.ReadyToBuy && stage != enum.Trial {
+		return false
+	} else if relationship == enum.Customer && stage != enum.Onboarding && stage != enum.InitialValue &&
+		stage != enum.RecurringValue && stage != enum.MaxValue && stage != enum.PendingChurn {
+		return false
+	}
+	return true
+}

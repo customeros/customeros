@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -18,14 +17,12 @@ type DomainService interface {
 type domainService struct {
 	log      logger.Logger
 	services *Services
-	cache    *caches.Cache
 }
 
-func NewDomainService(log logger.Logger, services *Services, cache *caches.Cache) DomainService {
+func NewDomainService(log logger.Logger, services *Services) DomainService {
 	return &domainService{
 		log:      log,
 		services: services,
-		cache:    cache,
 	}
 }
 
@@ -61,7 +58,7 @@ func (s *domainService) getKnownOrganizationHostingUrlPatterns(ctx context.Conte
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.getKnownOrganizationHostingUrlPatterns")
 	defer span.Finish()
 
-	urlPatterns := s.cache.GetOrganizationWebsiteHostingUrlPatters()
+	urlPatterns := s.services.Cache.GetOrganizationWebsiteHostingUrlPatters()
 	var err error
 	if len(urlPatterns) == 0 {
 		urlPatterns, err = s.services.PostgresRepositories.OranizationWebsiteHostingPlatformRepository.GetAllUrlPatterns(ctx)
@@ -70,7 +67,7 @@ func (s *domainService) getKnownOrganizationHostingUrlPatterns(ctx context.Conte
 			s.log.Errorf("Error while getting known organization hosting url patterns: %v", err)
 			return []string{}
 		}
-		s.cache.SetOrganizationWebsiteHostingUrlPatters(urlPatterns)
+		s.services.Cache.SetOrganizationWebsiteHostingUrlPatters(urlPatterns)
 	}
 	return urlPatterns
 }

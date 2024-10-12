@@ -55,6 +55,7 @@ type eventMetadata struct {
 	UserId string `json:"user-id"`
 }
 
+// DEPRECATED
 func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationCreate")
 	defer span.Finish()
@@ -157,7 +158,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Set create action
-	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, nil, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -165,7 +166,11 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 
 	// set domain
 	if eventData.Website != "" {
-		h.addDomainToOrg(ctx, eventData.Tenant, organizationId, eventData.Website)
+		err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, eventData.Website)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to add domain from website %s: %s", eventData.Website, err.Error())
+		}
 	}
 
 	// Request last touch point update
@@ -373,7 +378,11 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	afterOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(updatedOrganization)
 
 	if beforeOrganizationEntity.Website != afterOrganizationEntity.Website {
-		h.addDomainToOrg(ctx, eventData.Tenant, organizationId, afterOrganizationEntity.Website)
+		err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, afterOrganizationEntity.Website)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to add domain from website %s: %s", afterOrganizationEntity.Website, err.Error())
+		}
 	}
 
 	if beforeOrganizationEntity.Stage != afterOrganizationEntity.Stage {
@@ -503,7 +512,7 @@ func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Cont
 		return nil
 	}
 
-	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, nil, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Error("Not linked domain to organization %s : %s", organizationId, err.Error())
@@ -1142,51 +1151,6 @@ func (h *OrganizationEventHandler) OnLocationUnlinkedFromBillingProfile(ctx cont
 	return nil
 }
 
-func (h *OrganizationEventHandler) addDomainToOrg(ctx context.Context, tenant string, organizationId string, website string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.setDomain")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("website", website))
-
-	domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, website)
-	if domain == "" {
-		return
-	}
-
-	personalEmailProviders := h.cache.GetPersonalEmailProviders()
-	if len(personalEmailProviders) == 0 {
-		personalEmailProviderEntities, err := h.services.CommonServices.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-		if err != nil {
-			h.log.Errorf("error while getting personal email providers: %v", err)
-		}
-		personalEmailProviders = make([]string, 0)
-		for _, personalEmailProvider := range personalEmailProviderEntities {
-			personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
-		}
-		h.cache.SetPersonalEmailProviders(personalEmailProviders)
-	}
-
-	if isPersonalEmailProvider(personalEmailProviders, domain) {
-		span.LogFields(log.String("result", "personal email provider"))
-		return
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organizationId,
-			Domain:         domain,
-			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while linking domain to organization: %v", err.Error())
-	}
-}
-
 func (h *OrganizationEventHandler) OnRefreshDerivedDataV1(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnRefreshDerivedDataV1")
 	defer span.Finish()
@@ -1546,13 +1510,4 @@ func (h *OrganizationEventHandler) OnLocationAddedToOrganization(ctx context.Con
 	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
-}
-
-func isPersonalEmailProvider(personalEmailProviders []string, domain string) bool {
-	for _, v := range personalEmailProviders {
-		if strings.ToLower(domain) == strings.ToLower(v) {
-			return true
-		}
-	}
-	return false
 }

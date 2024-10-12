@@ -133,6 +133,8 @@ func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *reposi
 			SourceOfTruth: constants.SourceOpenline,
 			AppSource:     constants.AppSourceCustomerOsApi,
 		},
+
+		Domains: input.Domains,
 	}
 
 	if input.ReferenceID != nil {

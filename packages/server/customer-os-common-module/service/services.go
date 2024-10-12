@@ -13,6 +13,7 @@ import (
 
 type Services struct {
 	GlobalConfig *config.GlobalConfig
+	Cache        *caches.Cache
 
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
@@ -55,12 +56,11 @@ type Services struct {
 func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.DriverWithContext, neo4jDatabase string, grpcClients *grpc_client.Clients, log logger.Logger) *Services {
 	services := &Services{
 		GlobalConfig:         globalConfig,
+		Cache:                caches.NewCommonCache(),
 		GrpcClients:          grpcClients,
 		PostgresRepositories: postgresRepository.InitRepositories(db),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
 	}
-
-	cache := caches.NewCommonCache()
 
 	services.CommonService = NewCommonService(services)
 	services.ApiCacheService = NewApiCacheService(services.Neo4jRepositories, services)
@@ -70,7 +70,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.ContactService = NewContactService(log, services)
 	services.ContractService = NewContractService(log, services)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
-	services.DomainService = NewDomainService(log, services, cache)
+	services.DomainService = NewDomainService(log, services)
 	services.EmailService = NewEmailService(services)
 	services.EmailingService = NewEmailingService(log, services)
 	services.ExternalSystemService = NewExternalSystemService(log, services)
@@ -93,6 +93,18 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.UserService = NewUserService(services)
 	services.WorkflowService = NewWorkflowService(services)
 	services.WorkspaceService = NewWorkspaceService(services)
+
+	//init app cache
+	personalEmailProviderEntities, err := services.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
+	if err != nil {
+		log.Fatalf("Error getting personal email providers: %s", err.Error())
+	}
+
+	personalEmailProviders := make([]string, 0)
+	for _, personalEmailProvider := range personalEmailProviderEntities {
+		personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
+	}
+	services.Cache.SetPersonalEmailProviders(personalEmailProviders)
 
 	return services
 }
