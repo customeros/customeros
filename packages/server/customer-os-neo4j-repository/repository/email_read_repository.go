@@ -344,7 +344,7 @@ func (r *emailReadRepository) GetOrphanEmailNodes(ctx context.Context, limit, ho
 	cypher := `MATCH (t:Tenant)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
 				WHERE e.updatedAt < datetime() - duration({hours: $hoursFromLastUpdate})
 				OPTIONAL MATCH (e)--(other) 
-				WHERE NOT (other:Tenant)
+				WHERE NOT (other:Tenant OR other:Domain)
 				WITH t, e, other
 				WHERE other IS NULL     
 				RETURN DISTINCT t.name AS tenant, e.id AS emailId
