@@ -31,6 +31,7 @@ type OrganizationEntity struct {
 	DataLoaderKey
 	ID                 string
 	CustomerOsId       string `neo4jDb:"property:customerOsId;lookupName:CUSTOMER_OS_ID;supportCaseSensitive:false"`
+	CustomId           string `neo4jDb:"property:customId;lookupName:CUSTOMER_ID;supportCaseSensitive:false"`
 	Name               string `neo4jDb:"property:name;lookupName:NAME;supportCaseSensitive:true"`
 	Description        string `neo4jDb:"property:description;lookupName:DESCRIPTION;supportCaseSensitive:true"`
 	Website            string `neo4jDb:"property:website;lookupName:WEBSITE;supportCaseSensitive:true"`
@@ -142,4 +143,26 @@ func (o OrganizationEntity) Labels(tenant string) []string {
 		o.EntityLabel(),
 		o.EntityLabel() + "_" + tenant,
 	}
+}
+
+func OrganizationStageAndRelationshipCompatible(stageStr, relationshipStr string) bool {
+	stage := enum.OrganizationStage(stageStr)
+	relationship := enum.OrganizationRelationship(relationshipStr)
+
+	if stage == "" || relationship == "" {
+		return true
+	}
+
+	if relationship == enum.NotAFit && stage != enum.Unqualified {
+		return false
+	} else if relationship == enum.FormerCustomer && stage != enum.Target {
+		return false
+	} else if relationship == enum.Prospect && stage != enum.Lead && stage != enum.Target &&
+		stage != enum.Engaged && stage != enum.ReadyToBuy && stage != enum.Trial {
+		return false
+	} else if relationship == enum.Customer && stage != enum.Onboarding && stage != enum.InitialValue &&
+		stage != enum.RecurringValue && stage != enum.MaxValue && stage != enum.PendingChurn {
+		return false
+	}
+	return true
 }

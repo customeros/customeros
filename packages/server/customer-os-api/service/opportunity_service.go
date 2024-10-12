@@ -296,7 +296,9 @@ func (s *opportunityService) UpdateRenewalsForOrganization(ctx context.Context, 
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("organizationId", organizationId), log.String("renewalLikelihood", renewalLikelihood.String()), log.Object("renewalAdjustedRate", renewalAdjustedRate))
 
-	_, err := s.services.OrganizationService.GetById(ctx, organizationId)
+	tenant := common.GetTenantFromContext(ctx)
+
+	_, err := s.services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err

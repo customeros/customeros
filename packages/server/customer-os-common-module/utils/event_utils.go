@@ -9,18 +9,17 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
-func EventCompleted(ctx context.Context, tenant, entity, entityId, entityType string, grpcClients *grpc_client.Clients) {
+func EventCompleted(ctx context.Context, tenant, entity, entityId string, grpcClients *grpc_client.Clients) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EventCompleted")
 	defer span.Finish()
-	span.LogKV("tenant", tenant, "entity", entity, "entityID", entityId, "entityType", entityType)
+	span.LogKV("tenant", tenant, "entity", entity, "entityID", entityId)
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	_, err := CallEventsPlatformGRPCWithRetry[*emptypb.Empty](func() (*emptypb.Empty, error) {
 		return grpcClients.EventCompletionClient.NotifyEventProcessed(ctx, &event_completion_grpc_service.NotifyEventProcessedRequest{
-			Tenant:    tenant,
-			EventType: entityType,
-			Entity:    entity,
-			EntityId:  entityId,
+			Tenant:   tenant,
+			Entity:   entity,
+			EntityId: entityId,
 		})
 	})
 	if err != nil {

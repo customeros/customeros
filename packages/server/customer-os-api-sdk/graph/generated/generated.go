@@ -1049,6 +1049,7 @@ type ComplexityRoot struct {
 		OrganizationRemoveSocial                   func(childComplexity int, organizationID string, socialID string) int
 		OrganizationRemoveSubsidiary               func(childComplexity int, organizationID string, subsidiaryID string) int
 		OrganizationRemoveTag                      func(childComplexity int, input model.OrganizationTagInput) int
+		OrganizationSave                           func(childComplexity int, input model.OrganizationSaveInput) int
 		OrganizationSetOwner                       func(childComplexity int, organizationID string, userID string) int
 		OrganizationShow                           func(childComplexity int, id string) int
 		OrganizationShowAll                        func(childComplexity int, ids []string) int
@@ -1196,6 +1197,7 @@ type ComplexityRoot struct {
 		Hide                          func(childComplexity int) int
 		ID                            func(childComplexity int) int
 		Icon                          func(childComplexity int) int
+		IconURL                       func(childComplexity int) int
 		IcpFit                        func(childComplexity int) int
 		InboundCommsCount             func(childComplexity int) int
 		Industry                      func(childComplexity int) int
@@ -1818,6 +1820,7 @@ type MutationResolver interface {
 	OpportunityUpdate(ctx context.Context, input model.OpportunityUpdateInput) (*model.Opportunity, error)
 	OpportunitySetOwner(ctx context.Context, opportunityID string, userID string) (*model.ActionResponse, error)
 	OpportunityRemoveOwner(ctx context.Context, opportunityID string) (*model.ActionResponse, error)
+	OrganizationSave(ctx context.Context, input model.OrganizationSaveInput) (*model.Organization, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationArchive(ctx context.Context, id string) (*model.Result, error)
@@ -7822,6 +7825,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.OrganizationRemoveTag(childComplexity, args["input"].(model.OrganizationTagInput)), true
 
+	case "Mutation.organization_Save":
+		if e.complexity.Mutation.OrganizationSave == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_organization_Save_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.OrganizationSave(childComplexity, args["input"].(model.OrganizationSaveInput)), true
+
 	case "Mutation.organization_SetOwner":
 		if e.complexity.Mutation.OrganizationSetOwner == nil {
 			break
@@ -8948,6 +8963,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.Icon(childComplexity), true
+
+	case "Organization.iconUrl":
+		if e.complexity.Organization.IconURL == nil {
+			break
+		}
+
+		return e.complexity.Organization.IconURL(childComplexity), true
 
 	case "Organization.icpFit":
 		if e.complexity.Organization.IcpFit == nil {
@@ -11360,6 +11382,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputOpportunitySaveInput,
 		ec.unmarshalInputOpportunityUpdateInput,
 		ec.unmarshalInputOrganizationInput,
+		ec.unmarshalInputOrganizationSaveInput,
 		ec.unmarshalInputOrganizationTagInput,
 		ec.unmarshalInputOrganizationUpdateInput,
 		ec.unmarshalInputPagination,
@@ -14006,11 +14029,6 @@ extend type Mutation {
     opportunity_Save(input: OpportunitySaveInput!): Opportunity! @hasRole(roles: [ADMIN, USER]) @hasTenant
     opportunity_Archive(id: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-
-#    daca pe opportunity_Save vine campul internalStage = CLOSE_WON sa apelam fubctia de close won
-#    daca pe opportunity_Save vine campul internalStage = CLOSE_LOST sa apelam fubctia de close lost
-#    stergem mutatiatile opportunity_CloseWon si opportunity_CloseLost
-
     opportunityRenewalUpdate(input: OpportunityRenewalUpdateInput!, ownerUserId: ID): Opportunity!
     opportunityRenewal_UpdateAllForOrganization(input: OpportunityRenewalUpdateAllForOrganizationInput!): Organization!
 
@@ -14177,8 +14195,11 @@ input OpportunityRenewalUpdateAllForOrganizationInput {
 }
 
 extend type Mutation {
-    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -14211,7 +14232,7 @@ type Organization implements MetadataInterface {
     opportunities:          [Opportunity!] @goField(forceResolver: true)
     customerOsId:           String!
     customFields:           [CustomField!]! @goField(forceResolver: true)
-    customId:               String
+    referenceId:            String
     description:            String
     domains:                [String!]! @goField(forceResolver: true)
     slackChannelId:         String
@@ -14224,8 +14245,10 @@ type Organization implements MetadataInterface {
     lastFundingRound:       FundingRound
     lastTouchpoint:         LastTouchpoint
     locations:              [Location!]! @goField(forceResolver: true)
-    logo:                   String
-    icon:                   String
+    logo:                   String @deprecated(reason: "Use logo")
+    logoUrl:                String
+    icon:                   String @deprecated(reason: "Use logo")
+    iconUrl:                String
     market:                 Market
     name:                   String!
     notes:                  String
@@ -14282,10 +14305,6 @@ type Organization implements MetadataInterface {
     """
     Deprecated
     """
-    logoUrl:                String @deprecated(reason: "Use logo")
-    """
-    Deprecated
-    """
     id: ID! @deprecated(reason: "Use metadata.id")
     """
     Deprecated
@@ -14310,7 +14329,7 @@ type Organization implements MetadataInterface {
     """
     Deprecated
     """
-    referenceId: String @deprecated(reason: "Use customId")
+    customId:               String @deprecated(reason: "Use referenceId")
     """
     Deprecated
     """
@@ -14366,6 +14385,36 @@ type OrganizationPage implements Pages {
     totalPages: Int!
     totalElements: Int64!
     totalAvailable: Int64!
+}
+
+input OrganizationSaveInput {
+    id:                 ID
+    referenceId:        String
+    name:               String
+    description:        String
+    notes:              String
+    domains:            [String!]
+    website:            String
+    industry:           String
+    subIndustry:        String
+    industryGroup:      String
+    public:             Boolean
+    market:             Market
+    employees:          Int64
+    targetAudience:     String
+    valueProposition:   String
+    lastFundingRound:   FundingRound
+    lastFundingAmount:  String
+    logoUrl:            String
+    iconUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
+    slackChannelId:     String
+    stage:              OrganizationStage
+    relationship:       OrganizationRelationship
+    leadSource:         String
+    icpFit:             Boolean
 }
 
 input OrganizationInput {
@@ -18278,6 +18327,21 @@ func (ec *executionContext) field_Mutation_organization_RemoveTag_args(ctx conte
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationTagInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_organization_Save_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.OrganizationSaveInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNOrganizationSaveInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationSaveInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -30966,8 +31030,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -30994,8 +31058,12 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -31074,8 +31142,6 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -31088,8 +31154,8 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -33978,8 +34044,8 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -34006,8 +34072,12 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -34086,8 +34156,6 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -34100,8 +34168,8 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -40417,8 +40485,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -40445,8 +40513,12 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -40525,8 +40597,6 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -40539,8 +40609,8 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -45510,8 +45580,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -45538,8 +45608,12 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -45618,8 +45692,6 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -45632,8 +45704,8 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -46473,8 +46545,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -46501,8 +46573,12 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -46581,8 +46657,6 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -46595,8 +46669,8 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -57540,8 +57614,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -57568,8 +57642,12 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -57648,8 +57726,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -57662,8 +57738,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -59918,8 +59994,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -59946,8 +60022,12 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -60026,8 +60106,6 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -60040,8 +60118,8 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -60546,6 +60624,239 @@ func (ec *executionContext) fieldContext_Mutation_opportunity_RemoveOwner(ctx co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_organization_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_Save(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationSave(rctx, fc.Args["input"].(model.OrganizationSaveInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Organization); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Organization`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Organization_opportunities(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "icon":
+				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_Organization_icpFit(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "fieldSets":
+				return ec.fieldContext_Organization_fieldSets(ctx, field)
+			case "entityTemplate":
+				return ec.fieldContext_Organization_entityTemplate(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
+			case "inboundCommsCount":
+				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
+			case "outboundCommsCount":
+				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_organization_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Create(ctx, field)
 	if err != nil {
@@ -60627,8 +60938,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -60655,8 +60966,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -60735,8 +61050,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -60749,8 +61062,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -60860,8 +61173,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -60888,8 +61201,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -60968,8 +61285,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -60982,8 +61297,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -61607,8 +61922,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -61635,8 +61950,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -61715,8 +62034,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -61729,8 +62046,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -61840,8 +62157,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -61868,8 +62185,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -61948,8 +62269,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -61962,8 +62281,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -62073,8 +62392,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -62101,8 +62420,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -62181,8 +62504,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -62195,8 +62516,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -62647,8 +62968,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -62675,8 +62996,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -62755,8 +63080,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -62769,8 +63092,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -62880,8 +63203,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -62908,8 +63231,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -62988,8 +63315,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -63002,8 +63327,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -63113,8 +63438,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -63141,8 +63466,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -63221,8 +63550,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -63235,8 +63562,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -63346,8 +63673,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -63374,8 +63701,12 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -63454,8 +63785,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -63468,8 +63797,8 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -70300,8 +70629,8 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -70328,8 +70657,12 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -70408,8 +70741,6 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -70422,8 +70753,8 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -71924,8 +72255,8 @@ func (ec *executionContext) fieldContext_Organization_customFields(_ context.Con
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_customId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_customId(ctx, field)
+func (ec *executionContext) _Organization_referenceId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_referenceId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -71938,7 +72269,7 @@ func (ec *executionContext) _Organization_customId(ctx context.Context, field gr
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.CustomID, nil
+		return obj.ReferenceID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -71952,7 +72283,7 @@ func (ec *executionContext) _Organization_customId(ctx context.Context, field gr
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Organization_customId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Organization_referenceId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Organization",
 		Field:      field,
@@ -72572,6 +72903,47 @@ func (ec *executionContext) fieldContext_Organization_logo(_ context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Organization_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_logoUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.LogoURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_logoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Organization_icon(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_icon(ctx, field)
 	if err != nil {
@@ -72601,6 +72973,47 @@ func (ec *executionContext) _Organization_icon(ctx context.Context, field graphq
 }
 
 func (ec *executionContext) fieldContext_Organization_icon(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Organization",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Organization_iconUrl(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_iconUrl(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.IconURL, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*string)
+	fc.Result = res
+	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Organization_iconUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Organization",
 		Field:      field,
@@ -74594,47 +75007,6 @@ func (ec *executionContext) fieldContext_Organization_note(_ context.Context, fi
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_logoUrl(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_logoUrl(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.LogoURL, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*string)
-	fc.Result = res
-	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_logoUrl(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_id(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_id(ctx, field)
 	if err != nil {
@@ -74899,8 +75271,8 @@ func (ec *executionContext) fieldContext_Organization_appSource(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_referenceId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_referenceId(ctx, field)
+func (ec *executionContext) _Organization_customId(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Organization_customId(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -74913,7 +75285,7 @@ func (ec *executionContext) _Organization_referenceId(ctx context.Context, field
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.ReferenceID, nil
+		return obj.CustomID, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -74927,7 +75299,7 @@ func (ec *executionContext) _Organization_referenceId(ctx context.Context, field
 	return ec.marshalOString2ᚖstring(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Organization_referenceId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Organization_customId(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Organization",
 		Field:      field,
@@ -75205,8 +75577,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -75233,8 +75605,12 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -75313,8 +75689,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -75327,8 +75701,8 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -75529,8 +75903,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -75557,8 +75931,12 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -75637,8 +76015,6 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -75651,8 +76027,8 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -76966,8 +77342,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -76994,8 +77370,12 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -77074,8 +77454,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -77088,8 +77466,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -80491,8 +80869,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -80519,8 +80897,12 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -80599,8 +80981,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -80613,8 +80993,8 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -80721,8 +81101,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -80749,8 +81129,12 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -80829,8 +81213,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -80843,8 +81225,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -80951,8 +81333,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -80979,8 +81361,12 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -81059,8 +81445,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -81073,8 +81457,8 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -83503,8 +83887,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -83531,8 +83915,12 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -83611,8 +83999,6 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -83625,8 +84011,8 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -85077,8 +85463,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -85105,8 +85491,12 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -85185,8 +85575,6 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -85199,8 +85587,8 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -86231,8 +86619,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_customerOsId(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
 			case "description":
 				return ec.fieldContext_Organization_description(ctx, field)
 			case "domains":
@@ -86259,8 +86647,12 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_locations(ctx, field)
 			case "logo":
 				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "icon":
 				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
 			case "market":
 				return ec.fieldContext_Organization_market(ctx, field)
 			case "name":
@@ -86339,8 +86731,6 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_isPublic(ctx, field)
 			case "note":
 				return ec.fieldContext_Organization_note(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
 			case "id":
 				return ec.fieldContext_Organization_id(ctx, field)
 			case "createdAt":
@@ -86353,8 +86743,8 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
 			case "appSource":
 				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
 			case "lastTouchPointAt":
 				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
 			case "lastTouchPointType":
@@ -96974,6 +97364,215 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.LogoURL = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputOrganizationSaveInput(ctx context.Context, obj interface{}) (model.OrganizationSaveInput, error) {
+	var it model.OrganizationSaveInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"id", "referenceId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "market", "employees", "targetAudience", "valueProposition", "lastFundingRound", "lastFundingAmount", "logoUrl", "iconUrl", "employeeGrowthRate", "headquarters", "yearFounded", "slackChannelId", "stage", "relationship", "leadSource", "icpFit"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
+		case "referenceId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("referenceId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ReferenceID = data
+		case "name":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Name = data
+		case "description":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("description"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Description = data
+		case "notes":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("notes"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Notes = data
+		case "domains":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("domains"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Domains = data
+		case "website":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("website"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Website = data
+		case "industry":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industry"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Industry = data
+		case "subIndustry":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("subIndustry"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SubIndustry = data
+		case "industryGroup":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("industryGroup"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IndustryGroup = data
+		case "public":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("public"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Public = data
+		case "market":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("market"))
+			data, err := ec.unmarshalOMarket2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐMarket(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Market = data
+		case "employees":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employees"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Employees = data
+		case "targetAudience":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("targetAudience"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TargetAudience = data
+		case "valueProposition":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("valueProposition"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ValueProposition = data
+		case "lastFundingRound":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingRound"))
+			data, err := ec.unmarshalOFundingRound2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFundingRound(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastFundingRound = data
+		case "lastFundingAmount":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("lastFundingAmount"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LastFundingAmount = data
+		case "logoUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("logoUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LogoURL = data
+		case "iconUrl":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("iconUrl"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IconURL = data
+		case "employeeGrowthRate":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("employeeGrowthRate"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EmployeeGrowthRate = data
+		case "headquarters":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("headquarters"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Headquarters = data
+		case "yearFounded":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("yearFounded"))
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.YearFounded = data
+		case "slackChannelId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("slackChannelId"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.SlackChannelID = data
+		case "stage":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("stage"))
+			data, err := ec.unmarshalOOrganizationStage2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationStage(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Stage = data
+		case "relationship":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("relationship"))
+			data, err := ec.unmarshalOOrganizationRelationship2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationRelationship(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Relationship = data
+		case "leadSource":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("leadSource"))
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.LeadSource = data
+		case "icpFit":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("icpFit"))
+			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.IcpFit = data
 		}
 	}
 
@@ -107987,6 +108586,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "organization_Save":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_Save(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "organization_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Create(ctx, field)
@@ -109188,8 +109794,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "customId":
-			out.Values[i] = ec._Organization_customId(ctx, field, obj)
+		case "referenceId":
+			out.Values[i] = ec._Organization_referenceId(ctx, field, obj)
 		case "description":
 			out.Values[i] = ec._Organization_description(ctx, field, obj)
 		case "domains":
@@ -109284,8 +109890,12 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "logo":
 			out.Values[i] = ec._Organization_logo(ctx, field, obj)
+		case "logoUrl":
+			out.Values[i] = ec._Organization_logoUrl(ctx, field, obj)
 		case "icon":
 			out.Values[i] = ec._Organization_icon(ctx, field, obj)
+		case "iconUrl":
+			out.Values[i] = ec._Organization_iconUrl(ctx, field, obj)
 		case "market":
 			out.Values[i] = ec._Organization_market(ctx, field, obj)
 		case "name":
@@ -110047,8 +110657,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			out.Values[i] = ec._Organization_isPublic(ctx, field, obj)
 		case "note":
 			out.Values[i] = ec._Organization_note(ctx, field, obj)
-		case "logoUrl":
-			out.Values[i] = ec._Organization_logoUrl(ctx, field, obj)
 		case "id":
 			out.Values[i] = ec._Organization_id(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
@@ -110079,8 +110687,8 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
-		case "referenceId":
-			out.Values[i] = ec._Organization_referenceId(ctx, field, obj)
+		case "customId":
+			out.Values[i] = ec._Organization_customId(ctx, field, obj)
 		case "lastTouchPointAt":
 			out.Values[i] = ec._Organization_lastTouchPointAt(ctx, field, obj)
 		case "lastTouchPointType":
@@ -117455,6 +118063,11 @@ func (ec *executionContext) marshalNOrganizationPage2ᚖgithubᚗcomᚋopenline�
 		return graphql.Null
 	}
 	return ec._OrganizationPage(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNOrganizationSaveInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationSaveInput(ctx context.Context, v interface{}) (model.OrganizationSaveInput, error) {
+	res, err := ec.unmarshalInputOrganizationSaveInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNOrganizationTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationTagInput(ctx context.Context, v interface{}) (model.OrganizationTagInput, error) {

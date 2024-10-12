@@ -76,7 +76,9 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	span.LogFields(log.String("request.organizationID", organizationID))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, organizationID)
+	tenant := common.GetTenantFromContext(ctx)
+
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationID)
 	if err != nil || organizationEntity == nil {
 		if err == nil {
 			err = fmt.Errorf("organization not found")

@@ -7,8 +7,11 @@ extend type Query {
 }
 
 extend type Mutation {
-    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_Save(input: OrganizationSaveInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+
     organization_Archive(id: ID!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ArchiveAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Hide(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -41,7 +44,7 @@ type Organization implements MetadataInterface {
     opportunities:          [Opportunity!] @goField(forceResolver: true)
     customerOsId:           String!
     customFields:           [CustomField!]! @goField(forceResolver: true)
-    customId:               String
+    referenceId:            String
     description:            String
     domains:                [String!]! @goField(forceResolver: true)
     slackChannelId:         String
@@ -54,8 +57,10 @@ type Organization implements MetadataInterface {
     lastFundingRound:       FundingRound
     lastTouchpoint:         LastTouchpoint
     locations:              [Location!]! @goField(forceResolver: true)
-    logo:                   String
-    icon:                   String
+    logo:                   String @deprecated(reason: "Use logo")
+    logoUrl:                String
+    icon:                   String @deprecated(reason: "Use logo")
+    iconUrl:                String
     market:                 Market
     name:                   String!
     notes:                  String
@@ -112,10 +117,6 @@ type Organization implements MetadataInterface {
     """
     Deprecated
     """
-    logoUrl:                String @deprecated(reason: "Use logo")
-    """
-    Deprecated
-    """
     id: ID! @deprecated(reason: "Use metadata.id")
     """
     Deprecated
@@ -140,7 +141,7 @@ type Organization implements MetadataInterface {
     """
     Deprecated
     """
-    referenceId: String @deprecated(reason: "Use customId")
+    customId:               String @deprecated(reason: "Use referenceId")
     """
     Deprecated
     """
@@ -196,6 +197,36 @@ type OrganizationPage implements Pages {
     totalPages: Int!
     totalElements: Int64!
     totalAvailable: Int64!
+}
+
+input OrganizationSaveInput {
+    id:                 ID
+    referenceId:        String
+    name:               String
+    description:        String
+    notes:              String
+    domains:            [String!]
+    website:            String
+    industry:           String
+    subIndustry:        String
+    industryGroup:      String
+    public:             Boolean
+    market:             Market
+    employees:          Int64
+    targetAudience:     String
+    valueProposition:   String
+    lastFundingRound:   FundingRound
+    lastFundingAmount:  String
+    logoUrl:            String
+    iconUrl:            String
+    employeeGrowthRate: String
+    headquarters:       String
+    yearFounded:        Int64
+    slackChannelId:     String
+    stage:              OrganizationStage
+    relationship:       OrganizationRelationship
+    leadSource:         String
+    icpFit:             Boolean
 }
 
 input OrganizationInput {

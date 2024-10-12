@@ -25,7 +25,6 @@ type OrganizationRepository interface {
 	CountCustomers(ctx context.Context, tenant string) (int64, error)
 	GetPaginatedOrganizations(ctx context.Context, tenant string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedOrganizationsForContact(ctx context.Context, tenant, contactId string, skip, limit int, filter *utils.CypherFilter, sorting *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
-	Archive(ctx context.Context, organizationId string) error
 	MergeOrganizationPropertiesInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string, sourceOfTruth neo4jentity.DataSource) error
 	MergeOrganizationRelationsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, primaryOrganizationId, mergedOrganizationId string) error
 	UpdateMergedOrganizationLabelsInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, mergedOrganizationId string) error
@@ -50,27 +49,6 @@ func NewOrganizationRepository(driver *neo4j.DriverWithContext, database string)
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *organizationRepository) Archive(ctx context.Context, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Delete")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	tenant := common.GetTenantFromContext(ctx)
-	query := fmt.Sprintf(`MATCH (org:Organization {id:$organizationId})-[currentRel:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
-			MERGE (org)-[newRel:ARCHIVED]->(t)
-			SET org.archived=true, org.archivedAt=$now, org:ArchivedOrganization_%s
-            DELETE currentRel
-			REMOVE org:Organization_%s`, tenant, tenant)
-	span.LogFields(log.String("query", query))
-
-	err := utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]interface{}{
-		"organizationId": organizationId,
-		"tenant":         tenant,
-		"now":            utils.Now(),
-	})
-	return err
 }
 
 func (r *organizationRepository) CountCustomers(ctx context.Context, tenant string) (int64, error) {

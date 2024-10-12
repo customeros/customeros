@@ -615,7 +615,7 @@ func ExecuteWriteInTransaction(
 	defer session.Close(ctx)
 
 	// Otherwise, create a new transaction using ExecuteWrite
-	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+	r, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		// Pass the new transaction to the action
 		result, err := action(tx)
 		if err != nil {
@@ -624,7 +624,7 @@ func ExecuteWriteInTransaction(
 		return result, nil
 	})
 
-	return nil, err
+	return r, err
 }
 
 func ExecuteWriteQueryOptionalTx(ctx context.Context, driver neo4j.DriverWithContext, tx *neo4j.ManagedTransaction, cypher string, params map[string]any) error {

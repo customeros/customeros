@@ -55,6 +55,7 @@ type eventMetadata struct {
 	UserId string `json:"user-id"`
 }
 
+// DEPRECATED
 func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationCreate")
 	defer span.Finish()
@@ -157,7 +158,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 	}
 
 	// Set create action
-	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
+	_, err = h.services.CommonServices.Neo4jRepositories.ActionWriteRepository.MergeByActionType(ctx, nil, eventData.Tenant, organizationId, commonmodel.ORGANIZATION, neo4jenum.ActionCreated, "", "", eventData.CreatedAt, constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Failed creating likelihood update action for organization %s: %s", organizationId, err.Error())
@@ -165,7 +166,11 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 
 	// set domain
 	if eventData.Website != "" {
-		h.addDomainToOrg(ctx, eventData.Tenant, organizationId, eventData.Website)
+		err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, eventData.Website)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to add domain from website %s: %s", eventData.Website, err.Error())
+		}
 	}
 
 	// Request last touch point update
@@ -182,7 +187,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		h.log.Errorf("Error while refreshing last touchpoint for organization %s: %s", organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -373,7 +378,11 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	afterOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(updatedOrganization)
 
 	if beforeOrganizationEntity.Website != afterOrganizationEntity.Website {
-		h.addDomainToOrg(ctx, eventData.Tenant, organizationId, afterOrganizationEntity.Website)
+		err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, afterOrganizationEntity.Website)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			h.log.Errorf("Failed to add domain from website %s: %s", afterOrganizationEntity.Website, err.Error())
+		}
 	}
 
 	if beforeOrganizationEntity.Stage != afterOrganizationEntity.Stage {
@@ -381,7 +390,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	}
 
 	if eventData.AppSource != constants.AppSourceCustomerOsApi {
-		utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+		utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 	}
 
 	return nil
@@ -404,7 +413,7 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -426,7 +435,7 @@ func (h *OrganizationEventHandler) OnEmailLinkToOrganization(ctx context.Context
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -451,7 +460,7 @@ func (h *OrganizationEventHandler) OnEmailUnlinkFromOrganization(ctx context.Con
 		h.log.Errorf("Error while unlinking email %s from organization %s: %s", eventData.Email, organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -473,7 +482,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Co
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return err
 }
@@ -503,13 +512,13 @@ func (h *OrganizationEventHandler) OnDomainLinkedToOrganization(ctx context.Cont
 		return nil
 	}
 
-	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
+	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, nil, eventData.Tenant, organizationId, strings.TrimSpace(eventData.Domain))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Error("Not linked domain to organization %s : %s", organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -532,7 +541,7 @@ func (h *OrganizationEventHandler) OnDomainUnlinkedFromOrganization(ctx context.
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -569,7 +578,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -602,7 +611,7 @@ func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.C
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -624,7 +633,7 @@ func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt e
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -653,7 +662,7 @@ func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt e
 		h.log.Errorf("Failed to set customer os id for tenant %s organization %s", eventData.Tenant, organizationId)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return err
 }
@@ -676,7 +685,7 @@ func (h *OrganizationEventHandler) OnRefreshArr(ctx context.Context, evt eventst
 		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -735,7 +744,7 @@ func (h *OrganizationEventHandler) OnRefreshRenewalSummaryV1(ctx context.Context
 		h.log.Errorf("Failed to update arr for tenant %s, organization %s: %s", eventData.Tenant, organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -799,7 +808,7 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 		//TODO implement update custom field
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -820,7 +829,7 @@ func (h *OrganizationEventHandler) OnLinkWithParentOrganization(ctx context.Cont
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 	return nil
 }
 
@@ -840,7 +849,7 @@ func (h *OrganizationEventHandler) OnUnlinkFromParentOrganization(ctx context.Co
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 	return nil
 }
 
@@ -893,7 +902,7 @@ func (h *OrganizationEventHandler) OnUpdateOnboardingStatus(ctx context.Context,
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -994,7 +1003,7 @@ func (h *OrganizationEventHandler) OnUpdateOwner(ctx context.Context, evt events
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), eventData.OrganizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), eventData.OrganizationId, h.grpcClients)
 	return nil
 }
 
@@ -1024,7 +1033,7 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 	return nil
 }
 
@@ -1051,7 +1060,7 @@ func (h *OrganizationEventHandler) OnUpdateBillingProfile(ctx context.Context, e
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 	return nil
 }
 
@@ -1072,7 +1081,7 @@ func (h *OrganizationEventHandler) OnEmailLinkedToBillingProfile(ctx context.Con
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -1093,7 +1102,7 @@ func (h *OrganizationEventHandler) OnEmailUnlinkedFromBillingProfile(ctx context
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -1115,7 +1124,7 @@ func (h *OrganizationEventHandler) OnLocationLinkedToBillingProfile(ctx context.
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -1137,54 +1146,9 @@ func (h *OrganizationEventHandler) OnLocationUnlinkedFromBillingProfile(ctx cont
 		h.log.Errorf("Failed to unlink location %s from billing profile %s: %s", eventData.LocationId, eventData.BillingProfileId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
-}
-
-func (h *OrganizationEventHandler) addDomainToOrg(ctx context.Context, tenant string, organizationId string, website string) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.setDomain")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("website", website))
-
-	domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, website)
-	if domain == "" {
-		return
-	}
-
-	personalEmailProviders := h.cache.GetPersonalEmailProviders()
-	if len(personalEmailProviders) == 0 {
-		personalEmailProviderEntities, err := h.services.CommonServices.PostgresRepositories.PersonalEmailProviderRepository.GetPersonalEmailProviders()
-		if err != nil {
-			h.log.Errorf("error while getting personal email providers: %v", err)
-		}
-		personalEmailProviders = make([]string, 0)
-		for _, personalEmailProvider := range personalEmailProviderEntities {
-			personalEmailProviders = append(personalEmailProviders, personalEmailProvider.ProviderDomain)
-		}
-		h.cache.SetPersonalEmailProviders(personalEmailProviders)
-	}
-
-	if isPersonalEmailProvider(personalEmailProviders, domain) {
-		span.LogFields(log.String("result", "personal email provider"))
-		return
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	_, err := subscriptions.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return h.grpcClients.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-			Tenant:         tenant,
-			OrganizationId: organizationId,
-			Domain:         domain,
-			AppSource:      constants.AppSourceEventProcessingPlatformSubscribers,
-		})
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while linking domain to organization: %v", err.Error())
-	}
 }
 
 func (h *OrganizationEventHandler) OnRefreshDerivedDataV1(ctx context.Context, evt eventstore.Event) error {
@@ -1219,7 +1183,7 @@ func (h *OrganizationEventHandler) OnRefreshDerivedDataV1(ctx context.Context, e
 		tracing.TraceErr(span, err)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -1453,7 +1417,7 @@ func (h *OrganizationEventHandler) OnAddTag(ctx context.Context, evt eventstore.
 		h.log.Errorf("error while adding tag %s to organization %s: %s", eventData.TagId, organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return err
 }
@@ -1478,7 +1442,7 @@ func (h *OrganizationEventHandler) OnRemoveTag(ctx context.Context, evt eventsto
 		h.log.Errorf("error while removing tag %s to organization %s: %s", eventData.TagId, organizationId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
 }
@@ -1543,16 +1507,7 @@ func (h *OrganizationEventHandler) OnLocationAddedToOrganization(ctx context.Con
 		return err
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
 
 	return nil
-}
-
-func isPersonalEmailProvider(personalEmailProviders []string, domain string) bool {
-	for _, v := range personalEmailProviders {
-		if strings.ToLower(domain) == strings.ToLower(v) {
-			return true
-		}
-	}
-	return false
 }

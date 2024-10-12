@@ -11,6 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/opentracing/opentracing-go/log"
 )
@@ -44,13 +45,15 @@ func (r *mutationResolver) LocationRemoveFromOrganization(ctx context.Context, o
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.locationID", locationID))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	err := r.Services.LocationService.DetachFromEntity(ctx, commonModel.ORGANIZATION, organizationID, locationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not detach location %s from organization %s", locationID, organizationID)
 		return nil, nil
 	}
-	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, organizationID)
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Could not get organization %s", organizationID)

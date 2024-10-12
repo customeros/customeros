@@ -6,6 +6,8 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	eventcompletionpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/event_completion"
+	"google.golang.org/protobuf/types/known/emptypb"
 	"testing"
 	"time"
 
@@ -1263,6 +1265,14 @@ func TestMutationResolver_OrganizationArchive(t *testing.T) {
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Location"))
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Organization"))
+
+	// prepare grpc mock
+	callbacks := events_platform.MockEventCompletionCallbacks{
+		NotifyEventProcessed: func(context context.Context, org *eventcompletionpb.NotifyEventProcessedRequest) (*emptypb.Empty, error) {
+			return &emptypb.Empty{}, nil
+		},
+	}
+	events_platform.SetEventCompletionServiceCallbacks(&callbacks)
 
 	rawResponse, err := c.RawPost(getQuery("organization/archive_organization"),
 		client.Var("organizationId", organizationId))

@@ -18,6 +18,11 @@ func (r *lastTouchpointResolver) LastTouchPointTimelineEvent(ctx context.Context
 	panic(fmt.Errorf("not implemented: LastTouchPointTimelineEvent - lastTouchPointTimelineEvent"))
 }
 
+// OrganizationSave is the resolver for the organization_Save field.
+func (r *mutationResolver) OrganizationSave(ctx context.Context, input model.OrganizationSaveInput) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: OrganizationSave - organization_Save"))
+}
+
 // OrganizationCreate is the resolver for the organization_Create field.
 func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationCreate - organization_Create"))

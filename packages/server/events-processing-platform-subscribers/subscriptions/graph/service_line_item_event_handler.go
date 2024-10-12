@@ -326,7 +326,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, h.grpcClients)
 
 	return nil
 }
@@ -523,7 +523,7 @@ func (h *ServiceLineItemEventHandler) OnUpdateV1(ctx context.Context, evt events
 	}
 
 	if eventData.Source.AppSource != constants.AppSourceCustomerOsApi {
-		utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+		utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, h.grpcClients)
 	}
 
 	return nil
@@ -622,7 +622,7 @@ func (h *ServiceLineItemEventHandler) OnDeleteV1(ctx context.Context, evt events
 		h.log.Errorf("Failed remove service line item action for contract %s: %s", contract.Id, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, h.grpcClients)
 
 	return nil
 }
@@ -665,7 +665,7 @@ func (h *ServiceLineItemEventHandler) OnClose(ctx context.Context, evt eventstor
 		contractHandler.UpdateContractLtv(ctx, eventData.Tenant, contract.Id)
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, h.grpcClients)
 
 	return nil
 }
@@ -690,7 +690,7 @@ func (h *ServiceLineItemEventHandler) OnPause(ctx context.Context, evt eventstor
 		h.log.Errorf("Error while pausing service line item %s: %s", serviceLineItemId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, h.grpcClients)
 
 	return nil
 }
@@ -715,7 +715,7 @@ func (h *ServiceLineItemEventHandler) OnResume(ctx context.Context, evt eventsto
 		h.log.Errorf("Error while resuming service line item %s: %s", serviceLineItemId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.SERVICE_LINE_ITEM.String(), serviceLineItemId, h.grpcClients)
 
 	return nil
 }
