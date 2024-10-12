@@ -42,6 +42,7 @@ type Services struct {
 	WorkspaceService          WorkspaceService
 	SocialService             SocialService
 	DomainService             DomainService
+	OrganizationService       OrganizationService
 
 	GoogleService  GoogleService
 	AzureService   AzureService
@@ -84,6 +85,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.OpportunityService = NewOpportunityService(log, services)
 	services.SocialService = NewSocialService(log, services)
 	services.MailService = NewMailService(services)
+	services.OrganizationService = NewOrganizationService(services)
 	services.OpenSrsService = NewOpenSRSService(services)
 	services.SlackChannelService = NewSlackChannelService(services.PostgresRepositories)
 	services.ServiceLineItemService = NewServiceLineItemService(log, services)

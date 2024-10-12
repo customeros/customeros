@@ -220,6 +220,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 	organizationEntity := entity.OrganizationEntity{
 		ID:                 utils.GetStringPropOrEmpty(props, "id"),
 		CustomerOsId:       utils.GetStringPropOrEmpty(props, "customerOsId"),
+		ReferenceId:        utils.GetStringPropOrEmpty(props, "referenceId"),
 		Name:               utils.GetStringPropOrEmpty(props, "name"),
 		Description:        utils.GetStringPropOrEmpty(props, "description"),
 		Website:            utils.GetStringPropOrEmpty(props, "website"),
@@ -230,7 +231,6 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		ValueProposition:   utils.GetStringPropOrEmpty(props, "valueProposition"),
 		LastFundingRound:   utils.GetStringPropOrEmpty(props, "lastFundingRound"),
 		LastFundingAmount:  utils.GetStringPropOrEmpty(props, "lastFundingAmount"),
-		ReferenceId:        utils.GetStringPropOrEmpty(props, "referenceId"),
 		Note:               utils.GetStringPropOrEmpty(props, "note"),
 		IsPublic:           utils.GetBoolPropOrFalse(props, string(entity.OrganizationPropertyIsPublic)),
 		Hide:               utils.GetBoolPropOrFalse(props, string(entity.OrganizationPropertyHide)),

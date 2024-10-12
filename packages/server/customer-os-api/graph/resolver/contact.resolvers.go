@@ -309,8 +309,10 @@ func (r *mutationResolver) ContactCreateForOrganization(ctx context.Context, inp
 	tracing.LogObjectAsJson(span, "request.input", input)
 	span.LogKV("request.organizationID", organizationID)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	// Check organization exists
-	_, err := r.Services.OrganizationService.GetById(ctx, organizationID)
+	_, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, organizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Organization with id %s not found", organizationID)
@@ -723,6 +725,9 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogKV("request.contactID", contactID)
+
+	tenant := common.GetTenantFromContext(ctx)
+
 	if organizationID != nil {
 		span.LogKV("request.organizationID", *organizationID)
 	}
@@ -751,7 +756,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 			graphql.AddErrorf(ctx, "Contact %s does not belong to organization %s", contactID, *organizationID)
 			return &model.ActionResponse{Accepted: false}, nil
 		}
-		organizationEntity, err = r.Services.OrganizationService.GetById(ctx, *organizationID)
+		organizationEntity, err = r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, *organizationID)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Organization with id %s not found", *organizationID)

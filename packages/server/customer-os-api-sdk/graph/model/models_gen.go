@@ -1948,7 +1948,7 @@ type Organization struct {
 	Opportunities            []*Opportunity                `json:"opportunities,omitempty"`
 	CustomerOsID             string                        `json:"customerOsId"`
 	CustomFields             []*CustomField                `json:"customFields"`
-	CustomID                 *string                       `json:"customId,omitempty"`
+	ReferenceID              *string                       `json:"referenceId,omitempty"`
 	Description              *string                       `json:"description,omitempty"`
 	Domains                  []string                      `json:"domains"`
 	SlackChannelID           *string                       `json:"slackChannelId,omitempty"`
@@ -1962,7 +1962,9 @@ type Organization struct {
 	LastTouchpoint           *LastTouchpoint               `json:"lastTouchpoint,omitempty"`
 	Locations                []*Location                   `json:"locations"`
 	Logo                     *string                       `json:"logo,omitempty"`
+	LogoURL                  *string                       `json:"logoUrl,omitempty"`
 	Icon                     *string                       `json:"icon,omitempty"`
+	IconURL                  *string                       `json:"iconUrl,omitempty"`
 	Market                   *Market                       `json:"market,omitempty"`
 	Name                     string                        `json:"name"`
 	Notes                    *string                       `json:"notes,omitempty"`
@@ -2007,8 +2009,6 @@ type Organization struct {
 	// Deprecated
 	Note *string `json:"note,omitempty"`
 	// Deprecated
-	LogoURL *string `json:"logoUrl,omitempty"`
-	// Deprecated
 	ID string `json:"id"`
 	// Deprecated
 	CreatedAt time.Time `json:"createdAt"`
@@ -2021,7 +2021,7 @@ type Organization struct {
 	// Deprecated
 	AppSource string `json:"appSource"`
 	// Deprecated
-	ReferenceID *string `json:"referenceId,omitempty"`
+	CustomID *string `json:"customId,omitempty"`
 	// Deprecated
 	LastTouchPointAt *time.Time `json:"lastTouchPointAt,omitempty"`
 	// Deprecated
@@ -2106,6 +2106,36 @@ func (OrganizationParticipant) IsInteractionEventParticipant() {}
 func (OrganizationParticipant) IsIssueParticipant() {}
 
 func (OrganizationParticipant) IsMeetingParticipant() {}
+
+type OrganizationSaveInput struct {
+	ID                 *string                   `json:"id,omitempty"`
+	ReferenceID        *string                   `json:"referenceId,omitempty"`
+	Name               *string                   `json:"name,omitempty"`
+	Description        *string                   `json:"description,omitempty"`
+	Notes              *string                   `json:"notes,omitempty"`
+	Domains            []string                  `json:"domains,omitempty"`
+	Website            *string                   `json:"website,omitempty"`
+	Industry           *string                   `json:"industry,omitempty"`
+	SubIndustry        *string                   `json:"subIndustry,omitempty"`
+	IndustryGroup      *string                   `json:"industryGroup,omitempty"`
+	Public             *bool                     `json:"public,omitempty"`
+	Market             *Market                   `json:"market,omitempty"`
+	Employees          *int64                    `json:"employees,omitempty"`
+	TargetAudience     *string                   `json:"targetAudience,omitempty"`
+	ValueProposition   *string                   `json:"valueProposition,omitempty"`
+	LastFundingRound   *FundingRound             `json:"lastFundingRound,omitempty"`
+	LastFundingAmount  *string                   `json:"lastFundingAmount,omitempty"`
+	LogoURL            *string                   `json:"logoUrl,omitempty"`
+	IconURL            *string                   `json:"iconUrl,omitempty"`
+	EmployeeGrowthRate *string                   `json:"employeeGrowthRate,omitempty"`
+	Headquarters       *string                   `json:"headquarters,omitempty"`
+	YearFounded        *int64                    `json:"yearFounded,omitempty"`
+	SlackChannelID     *string                   `json:"slackChannelId,omitempty"`
+	Stage              *OrganizationStage        `json:"stage,omitempty"`
+	Relationship       *OrganizationRelationship `json:"relationship,omitempty"`
+	LeadSource         *string                   `json:"leadSource,omitempty"`
+	IcpFit             *bool                     `json:"icpFit,omitempty"`
+}
 
 type OrganizationTagInput struct {
 	OrganizationID string            `json:"organizationId"`

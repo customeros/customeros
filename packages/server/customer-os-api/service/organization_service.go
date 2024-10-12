@@ -31,13 +31,11 @@ type OrganizationService interface {
 	GetOrganizationsForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetOrganizationsForSlackChannels(ctx context.Context, slackChannelIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetOrganizationsForOpportunities(ctx context.Context, opportunityIds []string) (*neo4jentity.OrganizationEntities, error)
-	GetById(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error)
 	GetByCustomerOsId(ctx context.Context, customerOsId string) (*neo4jentity.OrganizationEntity, error)
 	GetByReferenceId(ctx context.Context, referenceId string) (*neo4jentity.OrganizationEntity, error)
 	ExistsById(ctx context.Context, organizationId string) (bool, error)
 	FindAll(ctx context.Context, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
 	GetOrganizationsForContact(ctx context.Context, contactId string, page, limit int, filter *model.Filter, sortBy []*model.SortBy) (*utils.Pagination, error)
-	Archive(ctx context.Context, organizationId string) error
 	Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error
 	GetOrganizationsForEmails(ctx context.Context, emailIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetOrganizationsForPhoneNumbers(ctx context.Context, phoneNumberIds []string) (*neo4jentity.OrganizationEntities, error)
@@ -75,13 +73,15 @@ type organizationService struct {
 	log          logger.Logger
 	repositories *repository.Repositories
 	grpcClients  *grpc_client.Clients
+	services     *Services
 }
 
-func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients) OrganizationService {
+func NewOrganizationService(log logger.Logger, repositories *repository.Repositories, grpcClients *grpc_client.Clients, services *Services) OrganizationService {
 	return &organizationService{
 		log:          log,
 		repositories: repositories,
 		grpcClients:  grpcClients,
+		services:     services,
 	}
 }
 
@@ -191,20 +191,6 @@ func (s *organizationService) GetOrganizationsForJobRoles(ctx context.Context, j
 	return &organizationEntities, nil
 }
 
-func (s *organizationService) GetById(ctx context.Context, organizationId string) (*neo4jentity.OrganizationEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-
-	dbNode, err := s.repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, common.GetTenantFromContext(ctx), organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
-}
-
 func (s *organizationService) GetByCustomerOsId(ctx context.Context, customerOsId string) (*neo4jentity.OrganizationEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetByCustomerOsId")
 	defer span.Finish()
@@ -239,32 +225,20 @@ func (s *organizationService) GetByReferenceId(ctx context.Context, referenceId 
 	return neo4jmapper.MapDbNodeToOrganizationEntity(dbNode), nil
 }
 
-func (s *organizationService) Archive(ctx context.Context, organizationId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Archive")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("organizationId", organizationId))
-
-	err := s.repositories.OrganizationRepository.Archive(ctx, organizationId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(organizationService.Archive) Error archiving organization with id {%s}: {%v}", organizationId, err.Error())
-	}
-	return err
-}
-
 func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, mergedOrganizationId string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Merge")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.String("primaryOrganizationId", primaryOrganizationId), log.String("mergedOrganizationId", mergedOrganizationId))
 
-	_, err := s.GetById(ctx, primaryOrganizationId)
+	tenant := common.GetTenantFromContext(ctx)
+
+	_, err := s.services.CommonServices.OrganizationService.GetById(ctx, tenant, primaryOrganizationId)
 	if err != nil {
 		s.log.Errorf("(organizationService.Merge) Primary organization with id {%s} not found: {%v}", primaryOrganizationId, err.Error())
 		return err
 	}
-	_, err = s.GetById(ctx, mergedOrganizationId)
+	_, err = s.services.CommonServices.OrganizationService.GetById(ctx, tenant, mergedOrganizationId)
 	if err != nil {
 		s.log.Errorf("(organizationService.Merge) Organization to merge with id {%s} not found: {%v}", mergedOrganizationId, err.Error())
 		return err
@@ -273,7 +247,6 @@ func (s *organizationService) Merge(ctx context.Context, primaryOrganizationId, 
 	session := utils.NewNeo4jWriteSession(ctx, *s.repositories.Drivers.Neo4jDriver)
 	defer session.Close(ctx)
 
-	tenant := common.GetTenantFromContext(ctx)
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		err = s.repositories.OrganizationRepository.MergeOrganizationPropertiesInTx(ctx, tx, tenant, primaryOrganizationId, mergedOrganizationId, neo4jentity.DataSourceOpenline)
 		if err != nil {

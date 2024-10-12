@@ -37,8 +37,14 @@ func (r *mutationResolver) OpportunitySave(ctx context.Context, input model.Oppo
 		return nil, err
 	}
 
-	opportunityEntity, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, *id)
-	return mapper.MapEntityToOpportunity(opportunityEntity), nil
+	e, err := r.Services.CommonServices.OpportunityService.GetById(ctx, tenant, *id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Failed to fetch opportunity details")
+		return nil, err
+	}
+
+	return mapper.MapEntityToOpportunity(e), nil
 }
 
 // OpportunityArchive is the resolver for the opportunity_Archive field.
@@ -91,6 +97,8 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	if input.RenewalLikelihood != nil {
 		err := r.Services.OpportunityService.UpdateRenewalsForOrganization(ctx, input.OrganizationID, mapper.MapOpportunityRenewalLikelihoodFromModel(input.RenewalLikelihood), input.RenewalAdjustedRate)
 		if err != nil {
@@ -99,7 +107,7 @@ func (r *mutationResolver) OpportunityRenewalUpdateAllForOrganization(ctx contex
 			return nil, nil
 		}
 	}
-	organizationEntity, err := r.Services.OrganizationService.GetById(ctx, input.OrganizationID)
+	organizationEntity, err := r.Services.CommonServices.OrganizationService.GetById(ctx, tenant, input.OrganizationID)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed fetching organization details. Organization id: %s", input.OrganizationID)

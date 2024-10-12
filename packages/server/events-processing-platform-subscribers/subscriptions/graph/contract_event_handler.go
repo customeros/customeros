@@ -144,7 +144,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients)
 
 	return nil
 }
@@ -351,7 +351,7 @@ func (h *ContractEventHandler) OnUpdate(ctx context.Context, evt eventstore.Even
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
 	if eventData.AppSource != constants.AppSourceCustomerOsApi {
-		utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+		utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients)
 	}
 	return nil
 }
@@ -415,7 +415,7 @@ func (h *ContractEventHandler) OnRolloutRenewalOpportunity(ctx context.Context, 
 		h.log.Errorf("Failed creating renewed action for contract %s: %s", contractId, err.Error())
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients)
 
 	return nil
 }
@@ -560,7 +560,7 @@ func (h *ContractEventHandler) OnDeleteV1(ctx context.Context, evt eventstore.Ev
 		return err
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients)
 
 	return nil
 }
@@ -654,7 +654,7 @@ func (h *ContractEventHandler) OnRefreshStatus(ctx context.Context, evt eventsto
 
 	h.startOnboardingIfEligible(ctx, eventData.Tenant, contractId, span)
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients)
 
 	return nil
 }
@@ -808,7 +808,7 @@ func (h *ContractEventHandler) OnRefreshLtv(ctx context.Context, evt eventstore.
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, evt.GetEventType(), h.grpcClients)
+	utils.EventCompleted(ctx, eventData.Tenant, model.CONTRACT.String(), contractId, h.grpcClients)
 
 	return nil
 }

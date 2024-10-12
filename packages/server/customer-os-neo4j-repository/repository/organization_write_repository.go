@@ -15,6 +15,7 @@ import (
 	"time"
 )
 
+// DEPRECATED use save
 type OrganizationCreateFields struct {
 	AggregateVersion   int64                              `json:"aggregateVersion"`
 	SourceFields       model.Source                       `json:"sourceFields"`
@@ -47,6 +48,7 @@ type OrganizationCreateFields struct {
 	IcpFit             bool                               `json:"icpFit"`
 }
 
+// DEPRECATED use save
 type OrganizationUpdateFields struct {
 	AggregateVersion         int64                              `json:"aggregateVersion"`
 	Name                     string                             `json:"name"`
@@ -104,10 +106,76 @@ type OrganizationUpdateFields struct {
 	UpdateIcpFit             bool                               `json:"updateIcpFit"`
 }
 
+type OrganizationSaveFields struct {
+	SourceFields model.Source `json:"sourceFields"`
+
+	Hide               bool                               `json:"hide"`
+	Name               string                             `json:"name"`
+	Description        string                             `json:"description"`
+	Website            string                             `json:"website"`
+	Industry           string                             `json:"industry"`
+	SubIndustry        string                             `json:"subIndustry"`
+	IndustryGroup      string                             `json:"industryGroup"`
+	TargetAudience     string                             `json:"targetAudience"`
+	ValueProposition   string                             `json:"valueProposition"`
+	IsPublic           bool                               `json:"isPublic"`
+	Employees          int64                              `json:"employees"`
+	Market             string                             `json:"market"`
+	LastFundingRound   string                             `json:"lastFundingRound"`
+	LastFundingAmount  string                             `json:"lastFundingAmount"`
+	ReferenceId        string                             `json:"referenceId"`
+	Note               string                             `json:"note"`
+	LogoUrl            string                             `json:"logoUrl"`
+	IconUrl            string                             `json:"iconUrl"`
+	Headquarters       string                             `json:"headquarters"`
+	YearFounded        int64                              `json:"yearFounded"`
+	EmployeeGrowthRate string                             `json:"employeeGrowthRate"`
+	SlackChannelId     string                             `json:"slackChannelId"`
+	EnrichDomain       string                             `json:"enrichDomain"`
+	EnrichSource       string                             `json:"enrichSource"`
+	LeadSource         string                             `json:"leadSource"`
+	Relationship       neo4jenum.OrganizationRelationship `json:"relationship"`
+	Stage              neo4jenum.OrganizationStage        `json:"stage"`
+	IcpFit             bool                               `json:"icpFit"`
+
+	UpdateHide               bool `json:"updateHide"`
+	UpdateName               bool `json:"updateName"`
+	UpdateDescription        bool `json:"updateDescription"`
+	UpdateWebsite            bool `json:"updateWebsite"`
+	UpdateIndustry           bool `json:"updateIndustry"`
+	UpdateSubIndustry        bool `json:"updateSubIndustry"`
+	UpdateIndustryGroup      bool `json:"updateIndustryGroup"`
+	UpdateTargetAudience     bool `json:"updateTargetAudience"`
+	UpdateValueProposition   bool `json:"updateValueProposition"`
+	UpdateLastFundingRound   bool `json:"updateLastFundingRound"`
+	UpdateLastFundingAmount  bool `json:"updateLastFundingAmount"`
+	UpdateReferenceId        bool `json:"updateReferenceId"`
+	UpdateNote               bool `json:"updateNote"`
+	UpdateIsPublic           bool `json:"updateIsPublic"`
+	UpdateEmployees          bool `json:"updateEmployees"`
+	UpdateMarket             bool `json:"updateMarket"`
+	UpdateYearFounded        bool `json:"updateYearFounded"`
+	UpdateHeadquarters       bool `json:"updateHeadquarters"`
+	UpdateLogoUrl            bool `json:"updateLogoUrl"`
+	UpdateIconUrl            bool `json:"updateIconUrl"`
+	UpdateEmployeeGrowthRate bool `json:"updateEmployeeGrowthRate"`
+	UpdateSlackChannelId     bool `json:"updateSlackChannelId"`
+	UpdateLeadSource         bool `json:"updateLeadSource"`
+	UpdateRelationship       bool `json:"updateRelationship"`
+	UpdateStage              bool `json:"updateStage"`
+	UpdateIcpFit             bool `json:"updateIcpFit"`
+}
+
 type OrganizationWriteRepository interface {
+	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationSaveFields) error
+
+	//Deprecated
 	ReserveOrganizationId(ctx context.Context, tenant, organizationId string) (string, error)
+	//Deprecated
 	CreateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationCreateFields) error
+	//Deprecated
 	CreateOrganizationInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationCreateFields) error
+	//Deprecated
 	UpdateOrganization(ctx context.Context, tenant, organizationId string, data OrganizationUpdateFields) error
 	LinkWithDomain(ctx context.Context, tenant, organizationId, domain string) error
 	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
@@ -124,6 +192,7 @@ type OrganizationWriteRepository interface {
 	UpdateTimeProperty(ctx context.Context, tenant, organizationId, property string, value *time.Time) error
 	UpdateFloatProperty(ctx context.Context, tenant, organizationId, property string, value float64) error
 	UpdateStringProperty(ctx context.Context, tenant, organizationId, property string, value string) error
+	Archive(ctx context.Context, tenant, organizationId string) error
 }
 
 type organizationWriteRepository struct {
@@ -453,6 +522,175 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationSaveFields) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Save")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	tracing.LogObjectAsJson(span, "data", data)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+
+		//create if not exists
+		cypherCreate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) MERGE(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$organizationId})`, tenant)
+		paramsCreate := map[string]any{
+			"tenant":         tenant,
+			"organizationId": organizationId,
+		}
+
+		span.LogFields(log.String("cypherCreate", cypherCreate))
+		tracing.LogObjectAsJson(span, "paramsCreate", paramsCreate)
+
+		_, err := tx.Run(ctx, cypherCreate, paramsCreate)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		paramsUpdate := map[string]any{
+			"tenant":         tenant,
+			"organizationId": organizationId,
+			"source":         data.SourceFields.Source,
+			"overwrite":      data.SourceFields.Source == constants.SourceOpenline || data.SourceFields.Source == constants.SourceWebscrape,
+			"now":            utils.Now(),
+		}
+
+		cypherUpdate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$organizationId}) SET `, tenant)
+
+		if data.UpdateName {
+			cypherUpdate += `org.name = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.name = '' THEN $name ELSE org.name END,`
+			paramsUpdate["name"] = data.Name
+		}
+		if data.UpdateDescription {
+			cypherUpdate += `org.description = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.description = '' THEN $description ELSE org.description END,`
+			paramsUpdate["description"] = data.Description
+		}
+		if data.UpdateHide {
+			cypherUpdate += `org.hide = CASE WHEN $overwrite=true OR $hide = false THEN $hide ELSE org.hide END,`
+			cypherUpdate += `org.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE org.hiddenAt END,`
+			paramsUpdate["hide"] = data.Hide
+		}
+		if data.UpdateWebsite {
+			cypherUpdate += `org.website = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,`
+			paramsUpdate["website"] = data.Website
+		}
+		if data.UpdateIndustry {
+			cypherUpdate += `org.industry = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END,`
+			paramsUpdate["industry"] = data.Industry
+		}
+		if data.UpdateSubIndustry {
+			cypherUpdate += `org.subIndustry = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,`
+			paramsUpdate["subIndustry"] = data.SubIndustry
+		}
+		if data.UpdateIndustryGroup {
+			cypherUpdate += `org.industryGroup = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.industryGroup is null OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END,`
+			paramsUpdate["industryGroup"] = data.IndustryGroup
+		}
+		if data.UpdateTargetAudience {
+			cypherUpdate += `org.targetAudience = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.targetAudience is null OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END,`
+			paramsUpdate["targetAudience"] = data.TargetAudience
+		}
+		if data.UpdateValueProposition {
+			cypherUpdate += `org.valueProposition = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.valueProposition is null OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END,`
+			paramsUpdate["valueProposition"] = data.ValueProposition
+		}
+		if data.UpdateLastFundingRound {
+			cypherUpdate += `org.lastFundingRound = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.lastFundingRound is null OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END,`
+			paramsUpdate["lastFundingRound"] = data.LastFundingRound
+		}
+		if data.UpdateLastFundingAmount {
+			cypherUpdate += `org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,`
+			paramsUpdate["lastFundingAmount"] = data.LastFundingAmount
+		}
+		if data.UpdateReferenceId {
+			cypherUpdate += `org.referenceId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,`
+			paramsUpdate["referenceId"] = data.ReferenceId
+		}
+		if data.UpdateNote {
+			cypherUpdate += `org.note = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.note is null OR org.note = '' THEN $note ELSE org.note END,`
+			paramsUpdate["note"] = data.Note
+		}
+		if data.UpdateIsPublic {
+			cypherUpdate += `org.isPublic = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.isPublic is null THEN $isPublic ELSE org.isPublic END,`
+			paramsUpdate["isPublic"] = data.IsPublic
+		}
+		if data.UpdateEmployees {
+			cypherUpdate += `org.employees = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,`
+			paramsUpdate["employees"] = data.Employees
+		}
+		if data.UpdateMarket {
+			cypherUpdate += `org.market = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,`
+			paramsUpdate["market"] = data.Market
+		}
+		if data.UpdateYearFounded {
+			cypherUpdate += `org.yearFounded = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.yearFounded is null OR org.yearFounded = 0 THEN $yearFounded ELSE org.yearFounded END,`
+			paramsUpdate["yearFounded"] = data.YearFounded
+		}
+		if data.UpdateHeadquarters {
+			cypherUpdate += `org.headquarters = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.headquarters is null OR org.headquarters = '' THEN $headquarters ELSE org.headquarters END,`
+			paramsUpdate["headquarters"] = data.Headquarters
+		}
+		if data.UpdateLogoUrl {
+			cypherUpdate += `org.logoUrl = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.logoUrl is null OR org.logoUrl = '' THEN $logoUrl ELSE org.logoUrl END,`
+			paramsUpdate["logoUrl"] = data.LogoUrl
+		}
+		if data.UpdateIconUrl {
+			cypherUpdate += `org.iconUrl = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.iconUrl is null OR org.iconUrl = '' THEN $iconUrl ELSE org.iconUrl END,`
+			paramsUpdate["iconUrl"] = data.IconUrl
+		}
+		if data.UpdateEmployeeGrowthRate {
+			cypherUpdate += `org.employeeGrowthRate = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employeeGrowthRate is null OR org.employeeGrowthRate = '' THEN $employeeGrowthRate ELSE org.employeeGrowthRate END,`
+			paramsUpdate["employeeGrowthRate"] = data.EmployeeGrowthRate
+		}
+		if data.UpdateSlackChannelId {
+			cypherUpdate += `org.slackChannelId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,`
+			paramsUpdate["slackChannelId"] = data.SlackChannelId
+		}
+		if data.UpdateRelationship {
+			cypherUpdate += `org.relationship = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,`
+			paramsUpdate["relationship"] = data.Relationship.String()
+		}
+		if data.UpdateStage {
+			cypherUpdate += `org.stage = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,`
+			cypherUpdate += `org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`
+			paramsUpdate["stage"] = data.Stage.String()
+		}
+		if data.UpdateLeadSource {
+			cypherUpdate += `org.leadSource = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true THEN $leadSource ELSE org.leadSource END,`
+			paramsUpdate["leadSource"] = data.LeadSource
+		}
+		if data.UpdateIcpFit {
+			cypherUpdate += `org.icpFit = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true THEN $icpFit ELSE org.icpFit END,`
+			paramsUpdate["icpFit"] = data.IcpFit
+		}
+		if data.EnrichDomain != "" && data.EnrichSource != "" {
+			cypherUpdate += `org.enrichDomain = $enrichDomain, org.enrichSource = $enrichSource, org.enrichedAt = $enrichedAt,`
+			paramsUpdate["enrichDomain"] = data.EnrichDomain
+			paramsUpdate["enrichSource"] = data.EnrichSource
+			paramsUpdate["enrichedAt"] = utils.Now()
+		}
+		cypherUpdate += ` org.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE org.sourceOfTruth END,
+				org.updatedAt = datetime(),
+				org.syncedWithEventStore = false`
+
+		span.LogFields(log.String("cypherUpdate", cypherUpdate))
+		tracing.LogObjectAsJson(span, "paramsUpdate", paramsUpdate)
+
+		_, err = tx.Run(ctx, cypherUpdate, paramsUpdate)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		return nil, nil
+	})
+
 	return err
 }
 
@@ -873,5 +1111,25 @@ func (r *organizationWriteRepository) UpdateStringProperty(ctx context.Context, 
 	if err != nil {
 		tracing.TraceErr(span, err)
 	}
+	return err
+}
+
+func (r *organizationWriteRepository) Archive(ctx context.Context, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationRepository.Delete")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	query := fmt.Sprintf(`MATCH (org:Organization {id:$organizationId})-[currentRel:ORGANIZATION_BELONGS_TO_TENANT]->(t:Tenant {name:$tenant})
+			MERGE (org)-[newRel:ARCHIVED]->(t)
+			SET org.archived=true, org.archivedAt=$now, org:ArchivedOrganization_%s
+            DELETE currentRel
+			REMOVE org:Organization_%s`, tenant, tenant)
+	span.LogFields(log.String("query", query))
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, query, map[string]interface{}{
+		"organizationId": organizationId,
+		"tenant":         tenant,
+		"now":            utils.Now(),
+	})
 	return err
 }
