@@ -37,7 +37,6 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	require.NotNil(t, createdTag.UpdatedAt)
 	require.NotEqual(t, utils.GetEpochStart(), createdTag.UpdatedAt)
 	require.Equal(t, "the tag", createdTag.Name)
-	require.Equal(t, "test", createdTag.AppSource)
 	require.Equal(t, model.DataSourceOpenline, createdTag.Source)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))

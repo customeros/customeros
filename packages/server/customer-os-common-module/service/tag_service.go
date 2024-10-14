@@ -53,6 +53,10 @@ func (s *tagService) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, ta
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("tag", tag))
 
+	if tag.Source == "" {
+		tag.Source = constants.SourceOpenline
+	}
+
 	tagNodePtr, err := s.services.Neo4jRepositories.TagWriteRepository.Merge(ctx, tx, common.GetTenantFromContext(ctx), *tag)
 	if err != nil {
 		return nil, err
