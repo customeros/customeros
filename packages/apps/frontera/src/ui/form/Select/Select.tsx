@@ -125,8 +125,10 @@ export const Select = forwardRef<SelectInstance, SelectProps>(
         components={components}
         tabSelectsValue={false}
         onKeyDown={(e) => {
-          if (onKeyDown) onKeyDown(e);
-          e.stopPropagation();
+          if (onKeyDown) {
+            onKeyDown(e);
+            e.stopPropagation();
+          }
         }}
         {...rest}
         classNames={defaultClassNames}

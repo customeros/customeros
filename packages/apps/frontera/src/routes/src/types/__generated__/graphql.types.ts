@@ -2417,8 +2417,6 @@ export type Mutation = {
   opportunityRenewalUpdate: Opportunity;
   opportunityRenewal_UpdateAllForOrganization: Organization;
   opportunity_Archive: ActionResponse;
-  opportunity_CloseLost: ActionResponse;
-  opportunity_CloseWon: ActionResponse;
   opportunity_Create: Opportunity;
   opportunity_RemoveOwner: ActionResponse;
   opportunity_Save: Opportunity;
@@ -2437,6 +2435,7 @@ export type Mutation = {
   organization_RemoveSocial: ActionResponse;
   organization_RemoveSubsidiary: Organization;
   organization_RemoveTag: ActionResponse;
+  organization_Save: Organization;
   organization_SetOwner: Organization;
   organization_Show: Scalars['ID']['output'];
   organization_ShowAll?: Maybe<Result>;
@@ -2979,14 +2978,6 @@ export type MutationOpportunity_ArchiveArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type MutationOpportunity_CloseLostArgs = {
-  opportunityId: Scalars['ID']['input'];
-};
-
-export type MutationOpportunity_CloseWonArgs = {
-  opportunityId: Scalars['ID']['input'];
-};
-
 export type MutationOpportunity_CreateArgs = {
   input: OpportunityCreateInput;
 };
@@ -3062,6 +3053,10 @@ export type MutationOrganization_RemoveSubsidiaryArgs = {
 
 export type MutationOrganization_RemoveTagArgs = {
   input: OrganizationTagInput;
+};
+
+export type MutationOrganization_SaveArgs = {
+  input: OrganizationSaveInput;
 };
 
 export type MutationOrganization_SetOwnerArgs = {
@@ -3483,6 +3478,10 @@ export type Organization = MetadataInterface & {
    */
   createdAt: Scalars['Time']['output'];
   customFields: Array<CustomField>;
+  /**
+   * Deprecated
+   * @deprecated Use referenceId
+   */
   customId?: Maybe<Scalars['String']['output']>;
   customerOsId: Scalars['String']['output'];
   description?: Maybe<Scalars['String']['output']>;
@@ -3496,7 +3495,9 @@ export type Organization = MetadataInterface & {
   fieldSets: Array<FieldSet>;
   headquarters?: Maybe<Scalars['String']['output']>;
   hide: Scalars['Boolean']['output'];
+  /** @deprecated Use logo */
   icon?: Maybe<Scalars['String']['output']>;
+  iconUrl?: Maybe<Scalars['String']['output']>;
   icpFit: Scalars['Boolean']['output'];
   /**
    * Deprecated
@@ -3540,11 +3541,8 @@ export type Organization = MetadataInterface & {
   lastTouchpoint?: Maybe<LastTouchpoint>;
   leadSource?: Maybe<Scalars['String']['output']>;
   locations: Array<Location>;
+  /** @deprecated Use logo */
   logo?: Maybe<Scalars['String']['output']>;
-  /**
-   * Deprecated
-   * @deprecated Use logo
-   */
   logoUrl?: Maybe<Scalars['String']['output']>;
   market?: Maybe<Market>;
   metadata: Metadata;
@@ -3561,10 +3559,6 @@ export type Organization = MetadataInterface & {
   parentCompanies: Array<LinkedOrganization>;
   phoneNumbers: Array<PhoneNumber>;
   public?: Maybe<Scalars['Boolean']['output']>;
-  /**
-   * Deprecated
-   * @deprecated Use customId
-   */
   referenceId?: Maybe<Scalars['String']['output']>;
   relationship?: Maybe<OrganizationRelationship>;
   slackChannelId?: Maybe<Scalars['String']['output']>;
@@ -3688,6 +3682,37 @@ export enum OrganizationRelationship {
   NotAFit = 'NOT_A_FIT',
   Prospect = 'PROSPECT',
 }
+
+export type OrganizationSaveInput = {
+  description?: InputMaybe<Scalars['String']['input']>;
+  domains?: InputMaybe<Array<Scalars['String']['input']>>;
+  employeeGrowthRate?: InputMaybe<Scalars['String']['input']>;
+  employees?: InputMaybe<Scalars['Int64']['input']>;
+  headquarters?: InputMaybe<Scalars['String']['input']>;
+  iconUrl?: InputMaybe<Scalars['String']['input']>;
+  icpFit?: InputMaybe<Scalars['Boolean']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  industry?: InputMaybe<Scalars['String']['input']>;
+  industryGroup?: InputMaybe<Scalars['String']['input']>;
+  lastFundingAmount?: InputMaybe<Scalars['String']['input']>;
+  lastFundingRound?: InputMaybe<FundingRound>;
+  leadSource?: InputMaybe<Scalars['String']['input']>;
+  logoUrl?: InputMaybe<Scalars['String']['input']>;
+  market?: InputMaybe<Market>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  notes?: InputMaybe<Scalars['String']['input']>;
+  ownerId?: InputMaybe<Scalars['String']['input']>;
+  public?: InputMaybe<Scalars['Boolean']['input']>;
+  referenceId?: InputMaybe<Scalars['String']['input']>;
+  relationship?: InputMaybe<OrganizationRelationship>;
+  slackChannelId?: InputMaybe<Scalars['String']['input']>;
+  stage?: InputMaybe<OrganizationStage>;
+  subIndustry?: InputMaybe<Scalars['String']['input']>;
+  targetAudience?: InputMaybe<Scalars['String']['input']>;
+  valueProposition?: InputMaybe<Scalars['String']['input']>;
+  website?: InputMaybe<Scalars['String']['input']>;
+  yearFounded?: InputMaybe<Scalars['Int64']['input']>;
+};
 
 export enum OrganizationStage {
   Engaged = 'ENGAGED',

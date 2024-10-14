@@ -14,9 +14,10 @@ type Owner = Pick<User, 'id' | 'firstName' | 'lastName'> | null;
 interface OwnerProps {
   id: string;
   owner?: Owner;
+  ownerId?: string;
 }
 
-export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
+export const OwnerCell = observer(({ id, owner, ownerId: _ }: OwnerProps) => {
   const store = useStore();
   const organization = store.organizations.value.get(id);
   const [isEditing, setIsEditing] = useState(false);
@@ -94,12 +95,13 @@ export const OwnerCell = observer(({ id, owner }: OwnerProps) => {
       size='xs'
       autoFocus
       isClearable
-      value={value}
       onBlur={close}
       defaultMenuIsOpen
       options={options}
       placeholder='Owner'
+      defaultValue={value}
       backspaceRemovesValue
+      menuIsOpen={isEditing}
       openMenuOnClick={false}
       onChange={handleSelect}
       menuPortalTarget={document.body}

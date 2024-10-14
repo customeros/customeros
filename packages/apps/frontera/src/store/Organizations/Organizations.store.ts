@@ -27,6 +27,7 @@ import {
   SortingDirection,
   OrganizationInput,
   OrganizationStage,
+  OrganizationSaveInput,
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
@@ -218,10 +219,10 @@ export class OrganizationsStore extends SyncableGroup<
     this.isLoading = true;
 
     try {
-      const { organization_Create } = await this.transport.graphql.request<
-        CREATE_ORGANIZATION_RESPONSE,
-        CREATE_ORGANIZATION_PAYLOAD
-      >(CREATE_ORGANIZATION_MUTATION, {
+      const { organization_Save } = await this.transport.graphql.request<
+        SAVE_ORGANIZATION_RESPONSE,
+        SAVE_ORGANIZATION_PAYLOAD
+      >(SAVE_ORGANIZATION_MUTATION, {
         input: {
           website: payload?.website ?? '',
           name: payload?.name ?? 'Unnamed',
@@ -231,7 +232,7 @@ export class OrganizationsStore extends SyncableGroup<
       });
 
       runInAction(() => {
-        serverId = organization_Create.metadata.id;
+        serverId = organization_Save.metadata.id;
 
         newOrganization.setId(serverId);
 
@@ -762,19 +763,19 @@ const ORGANIZATIONS_QUERY = gql`
     }
   }
 `;
-type CREATE_ORGANIZATION_PAYLOAD = {
-  input: OrganizationInput;
+type SAVE_ORGANIZATION_PAYLOAD = {
+  input: OrganizationSaveInput;
 };
-type CREATE_ORGANIZATION_RESPONSE = {
-  organization_Create: {
+type SAVE_ORGANIZATION_RESPONSE = {
+  organization_Save: {
     metadata: {
       id: string;
     };
   };
 };
-const CREATE_ORGANIZATION_MUTATION = gql`
-  mutation createOrganization($input: OrganizationInput!) {
-    organization_Create(input: $input) {
+const SAVE_ORGANIZATION_MUTATION = gql`
+  mutation saveOrganization($input: OrganizationSaveInput!) {
+    organization_Save(input: $input) {
       metadata {
         id
       }
