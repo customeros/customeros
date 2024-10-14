@@ -211,8 +211,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 	switch c := cmd.(type) {
 	case *command.LinkDomainCommand:
 		return a.linkDomain(ctx, c)
-	case *command.HideOrganizationCommand:
-		return a.hideOrganization(ctx, c)
 	case *command.ShowOrganizationCommand:
 		return a.showOrganization(ctx, c)
 	case *command.UpsertCustomFieldCommand:
@@ -496,26 +494,6 @@ func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.Lin
 		UserId: cmd.LoggedInUserId,
 		App:    cmd.AppSource,
 	})
-
-	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) hideOrganization(ctx context.Context, cmd *command.HideOrganizationCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.hideOrganization")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.SetTag(tracing.SpanTagEntityId, cmd.ObjectID)
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	event, err := organizationEvents.NewHideOrganizationEventEvent(a)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewHideOrganizationEventEvent")
-	}
-
-	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
 }

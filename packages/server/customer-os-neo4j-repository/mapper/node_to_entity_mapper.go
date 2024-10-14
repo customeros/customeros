@@ -239,8 +239,6 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
 		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),

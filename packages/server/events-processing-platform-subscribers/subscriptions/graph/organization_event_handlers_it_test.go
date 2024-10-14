@@ -137,38 +137,6 @@ func TestGraphOrganizationEventHandler_OnOrganizationCreate(t *testing.T) {
 	require.Truef(t, lastTouchpointInvoked, "RefreshLastTouchpoint was not invoked")
 }
 
-func TestGraphOrganizationEventHandler_OnOrganizationHide(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	orgId := neo4jtest.CreateOrganization(ctx, testDatabase.Driver, tenantName, neo4jentity.OrganizationEntity{
-		Name: "test org",
-		Hide: false,
-	})
-	orgEventHandler := &OrganizationEventHandler{
-		services:    testDatabase.Services,
-		grpcClients: testMockedGrpcClient,
-	}
-	orgAggregate := aggregate.NewOrganizationAggregateWithTenantAndID(tenantName, orgId)
-
-	event, err := events.NewHideOrganizationEventEvent(orgAggregate)
-	require.Nil(t, err)
-	err = orgEventHandler.OnOrganizationHide(context.Background(), event)
-	require.Nil(t, err)
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"Organization": 1, "Organization_" + tenantName: 1})
-	neo4jtest.AssertNeo4jLabels(ctx, t, testDatabase.Driver, []string{"Organization", "Organization_" + tenantName, "Tenant"})
-
-	dbNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Organization_"+tenantName, orgId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNode)
-
-	organization := neo4jmapper.MapDbNodeToOrganizationEntity(dbNode)
-	require.Equal(t, orgId, organization.ID)
-	require.Equal(t, true, organization.Hide)
-}
-
 func TestGraphOrganizationEventHandler_OnOrganizationShow(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx, testDatabase)(t)

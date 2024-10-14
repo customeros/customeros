@@ -36,7 +36,8 @@ const (
 	//Deprecated
 	OrganizationRequestNextCycleDateV1 = "V1_ORGANIZATION_RECALCULATE_NEXT_CYCLE_DATE_REQUEST"
 	//Deprecated
-	OrganizationRequestScrapeByWebsiteV1           = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
+	OrganizationRequestScrapeByWebsiteV1 = "V1_ORGANIZATION_SCRAPE_BY_WEBSITE_REQUEST"
+	//Deprecated
 	OrganizationHideV1                             = "V1_ORGANIZATION_HIDE"
 	OrganizationShowV1                             = "V1_ORGANIZATION_SHOW"
 	OrganizationRefreshLastTouchpointV1            = "V1_ORGANIZATION_REFRESH_LAST_TOUCHPOINT"
@@ -162,26 +163,6 @@ func NewOrganizationRequestScrapeByWebsite(aggregate eventstore.Aggregate, websi
 	event := eventstore.NewBaseEvent(aggregate, OrganizationRequestScrapeByWebsiteV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationRequestScrapeByWebsite")
-	}
-	return event, nil
-}
-
-type HideOrganizationEvent struct {
-	Tenant string `json:"tenant" validate:"required"`
-}
-
-func NewHideOrganizationEventEvent(aggregate eventstore.Aggregate) (eventstore.Event, error) {
-	eventData := HideOrganizationEvent{
-		Tenant: aggregate.GetTenant(),
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate HideOrganizationEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationHideV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for HideOrganizationEvent")
 	}
 	return event, nil
 }

@@ -313,17 +313,6 @@ func testUpdateOrganization() {
 	print(result)
 }
 
-func testHideOrganization() {
-
-	organizationId := "ccc"
-
-	result, _ := clients.OrganizationClient.HideOrganization(context.Background(), &organizationpb.OrganizationIdGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: organizationId,
-	})
-	print(result)
-}
-
 func testShowOrganization() {
 
 	organizationId := "ccc"

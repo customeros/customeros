@@ -296,8 +296,6 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onAddSocial(event)
 	case organizationEvents.OrganizationRemoveSocialV1:
 		return a.onRemoveSocial(event)
-	case organizationEvents.OrganizationHideV1:
-		return a.onHide(event)
 	case organizationEvents.OrganizationShowV1:
 		return a.onShow(event)
 	case organizationEvents.OrganizationUpsertCustomFieldV1:
@@ -337,7 +335,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		organizationEvents.OrganizationRefreshRenewalSummaryV1,
 		organizationEvents.OrganizationRequestScrapeByWebsiteV1,
 		organizationEvents.OrganizationUpdateOwnerNotificationV1,
-		organizationEvents.OrganizationRequestEnrichV1:
+		organizationEvents.OrganizationRequestEnrichV1,
+		organizationEvents.OrganizationHideV1:
 		return nil
 	case organizationEvents.OrganizationAddLocationV1:
 		return a.onAddLocation(event)
@@ -716,15 +715,6 @@ func (a *OrganizationAggregate) onAddLocation(event eventstore.Event) error {
 		Latitude:      eventData.Latitude,
 		Longitude:     eventData.Longitude,
 	}
-	return nil
-}
-
-func (a *OrganizationAggregate) onHide(event eventstore.Event) error {
-	var eventData organizationEvents.HideOrganizationEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.Organization.Hide = true
 	return nil
 }
 

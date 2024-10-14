@@ -33,7 +33,6 @@ type OrganizationGrpcServiceClient interface {
 	LinkDomainToOrganization(ctx context.Context, in *LinkDomainToOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UnlinkDomainFromOrganization(ctx context.Context, in *UnLinkDomainFromOrganizationGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error)
-	HideOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary(ctx context.Context, in *RefreshRenewalSummaryGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
@@ -141,15 +140,6 @@ func (c *organizationGrpcServiceClient) UnlinkDomainFromOrganization(ctx context
 func (c *organizationGrpcServiceClient) UpsertCustomFieldToOrganization(ctx context.Context, in *CustomFieldForOrganizationGrpcRequest, opts ...grpc.CallOption) (*CustomFieldIdGrpcResponse, error) {
 	out := new(CustomFieldIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/UpsertCustomFieldToOrganization", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) HideOrganization(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/HideOrganization", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -367,7 +357,6 @@ type OrganizationGrpcServiceServer interface {
 	LinkDomainToOrganization(context.Context, *LinkDomainToOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UnlinkDomainFromOrganization(context.Context, *UnLinkDomainFromOrganizationGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error)
-	HideOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	ShowOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	RefreshRenewalSummary(context.Context, *RefreshRenewalSummaryGrpcRequest) (*OrganizationIdGrpcResponse, error)
@@ -422,9 +411,6 @@ func (UnimplementedOrganizationGrpcServiceServer) UnlinkDomainFromOrganization(c
 }
 func (UnimplementedOrganizationGrpcServiceServer) UpsertCustomFieldToOrganization(context.Context, *CustomFieldForOrganizationGrpcRequest) (*CustomFieldIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UpsertCustomFieldToOrganization not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) HideOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method HideOrganization not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) ShowOrganization(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method ShowOrganization not implemented")
@@ -662,24 +648,6 @@ func _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler(srv interf
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(OrganizationGrpcServiceServer).UpsertCustomFieldToOrganization(ctx, req.(*CustomFieldForOrganizationGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_HideOrganization_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationIdGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).HideOrganization(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/HideOrganization",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).HideOrganization(ctx, req.(*OrganizationIdGrpcRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1122,10 +1090,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UpsertCustomFieldToOrganization",
 			Handler:    _OrganizationGrpcService_UpsertCustomFieldToOrganization_Handler,
-		},
-		{
-			MethodName: "HideOrganization",
-			Handler:    _OrganizationGrpcService_HideOrganization_Handler,
 		},
 		{
 			MethodName: "ShowOrganization",
