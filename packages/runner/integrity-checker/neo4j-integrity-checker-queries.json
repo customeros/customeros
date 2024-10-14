@@ -440,7 +440,7 @@
     },
     {
       "name": "Check source fields",
-      "query": "MATCH (n:Organization|Contact|Contract|Email|PhoneNumber|Social) WHERE n.source IS NULL OR n.sourceOfTruth IS NULL OR n.appSource IS NULL OR n.source = '' OR n.sourceOfTruth = '' or n.appSource = '' RETURN count(n)"
+      "query": "MATCH (n:Organization|Contact|Contract|Email|PhoneNumber|Social|Tag) WHERE n.source IS NULL OR n.source = '' RETURN count(n)"
     },
     {
       "name": "Check organization derived data consistency",

@@ -81,7 +81,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 		commonservice.EmailFields{
 			Email:     strings.TrimSpace(input.Email),
 			Primary:   utils.IfNotNilBool(input.Primary),
-			Source:    neo4jentity.DataSourceOpenline.String(),
+			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, &commonservice.LinkWith{
 			Type: commonModel.CONTACT,
@@ -145,7 +145,7 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 		commonservice.EmailFields{
 			Email:     input.Email,
 			Primary:   utils.IfNotNilBool(input.Primary),
-			Source:    neo4jentity.DataSourceOpenline.String(),
+			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, commonservice.LinkWith{
 			Type: commonModel.CONTACT,
@@ -183,7 +183,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 		commonservice.EmailFields{
 			Email:     strings.TrimSpace(input.Email),
 			Primary:   utils.IfNotNilBool(input.Primary),
-			Source:    neo4jentity.DataSourceOpenline.String(),
+			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, &commonservice.LinkWith{
 			Type: commonModel.USER,
@@ -246,7 +246,7 @@ func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID strin
 		commonservice.EmailFields{
 			Email:     input.Email,
 			Primary:   utils.IfNotNilBool(input.Primary),
-			Source:    neo4jentity.DataSourceOpenline.String(),
+			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, commonservice.LinkWith{
 			Type: commonModel.USER,
@@ -284,7 +284,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 		commonservice.EmailFields{
 			Email:     strings.TrimSpace(input.Email),
 			Primary:   utils.IfNotNilBool(input.Primary),
-			Source:    neo4jentity.DataSourceOpenline.String(),
+			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, &commonservice.LinkWith{
 			Type: commonModel.ORGANIZATION,
@@ -348,7 +348,7 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 		commonservice.EmailFields{
 			Email:     input.Email,
 			Primary:   utils.IfNotNilBool(input.Primary),
-			Source:    neo4jentity.DataSourceOpenline.String(),
+			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, commonservice.LinkWith{
 			Type: commonModel.ORGANIZATION,

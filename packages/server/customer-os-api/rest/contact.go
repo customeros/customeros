@@ -114,7 +114,7 @@ func CreateContact(services *service.Services, grpcClients *grpc_client.Clients)
 				_, err := services.CommonServices.EmailService.Merge(ctx, tenant,
 					commonservice.EmailFields{
 						Email:     contactEmail,
-						Source:    neo4jentity.DataSourceOpenline.String(),
+						Source:    neo4jentity.DataSourceOpenline,
 						AppSource: constants.AppSourceCustomerOsApiRest,
 					}, &commonservice.LinkWith{
 						Type: commonModel.CONTACT,

@@ -14,7 +14,6 @@ import (
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/config"
@@ -539,9 +538,7 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		err := services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailId, neo4jrepository.EmailCreateFields{
 			RawEmail:  email,
 			CreatedAt: commonUtils.Now(),
-			SourceFields: neo4jmodel.Source{
-				AppSource: appSource,
-			},
+			Source:    neo4jentity.DataSourceOpenline,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)

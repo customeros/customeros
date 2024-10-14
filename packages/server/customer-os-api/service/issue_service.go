@@ -166,8 +166,8 @@ func (s *issueService) mapDbNodeToIssue(node dbtype.Node) *entity.IssueEntity {
 		Status:        utils.GetStringPropOrEmpty(props, "status"),
 		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
 		Description:   utils.GetStringPropOrEmpty(props, "description"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &issue

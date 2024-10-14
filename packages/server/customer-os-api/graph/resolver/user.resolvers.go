@@ -47,7 +47,7 @@ func (r *mutationResolver) UserCreate(ctx context.Context, input model.UserInput
 			commonservice.EmailFields{
 				Email:     input.Email.Email,
 				Primary:   utils.IfNotNilBool(input.Email.Primary),
-				Source:    neo4jentity.DataSourceOpenline.String(),
+				Source:    neo4jentity.DataSourceOpenline,
 				AppSource: constants.AppSourceCustomerOsApi,
 			}, &commonservice.LinkWith{
 				Type: commonModel.USER,

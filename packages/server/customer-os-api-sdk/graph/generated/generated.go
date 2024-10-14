@@ -12929,8 +12929,8 @@ type Email {
     primary: Boolean!
 
     source: DataSource!
-    sourceOfTruth: DataSource!
-    appSource: String!
+    sourceOfTruth: DataSource! @deprecated
+    appSource: String! @deprecated
 
     createdAt: Time!
     updatedAt: Time!
@@ -14203,6 +14203,7 @@ extend type Mutation {
     organization_HideAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_Show(id: ID!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ShowAll(ids: [ID!]!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
+
     organization_Merge(primaryOrganizationId: ID!, mergedOrganizationIds: [ID!]!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_AddSubsidiary(input: LinkOrganizationsInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_RemoveSubsidiary(organizationId: ID!, subsidiaryId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant

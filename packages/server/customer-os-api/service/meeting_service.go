@@ -307,8 +307,8 @@ func (s *meetingService) mapDbNodeToMeetingEntity(node dbtype.Node) *entity.Meet
 		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
 		Recording:          utils.GetStringPropOrNil(props, "recording"),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:             neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Status:             &status,
 	}
 

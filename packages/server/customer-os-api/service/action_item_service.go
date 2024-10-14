@@ -59,8 +59,8 @@ func (s *actionItemService) MapDbNodeToActionItemEntity(node dbtype.Node) *entit
 		CreatedAt:     &createdAt,
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &entity
 }

@@ -5,7 +5,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	emailevent "github.com/openline-ai/openline-customer-os/packages/server/events/event/email/event"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
@@ -106,12 +105,14 @@ func (a *EmailAggregate) UpsertEmail(ctx context.Context, request *emailpb.Upser
 	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
 	tracing.LogObjectAsJson(span, "request", request)
 
-	sourceFields := common.Source{}
-	sourceFields.FromGrpc(request.SourceFields)
+	source := request.SourceFields.Source
+	if source == "" {
+		source = constants.SourceOpenline
+	}
 
 	createdAtNotNil := utils.IfNotNilTimeWithDefault(utils.TimestampProtoToTimePtr(request.CreatedAt), utils.Now())
 
-	upsertEvent, err := emailevent.NewEmailUpsertEvent(a, request.Tenant, request.RawEmail, sourceFields, createdAtNotNil)
+	upsertEvent, err := emailevent.NewEmailUpsertEvent(a, request.Tenant, request.RawEmail, source, createdAtNotNil)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "NewEmailUpsertEvent")

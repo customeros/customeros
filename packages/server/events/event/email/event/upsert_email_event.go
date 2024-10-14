@@ -2,25 +2,24 @@ package event
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
-	"github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/pkg/errors"
 	"time"
 )
 
 type EmailUpsertEvent struct {
-	Tenant       string        `json:"tenant" validate:"required"`
-	RawEmail     string        `json:"rawEmail"`
-	SourceFields common.Source `json:"sourceFields"`
-	CreatedAt    time.Time     `json:"createdAt"`
+	Tenant    string    `json:"tenant" validate:"required"`
+	RawEmail  string    `json:"rawEmail"`
+	Source    string    `json:"source"`
+	CreatedAt time.Time `json:"createdAt"`
 }
 
-func NewEmailUpsertEvent(aggregate eventstore.Aggregate, tenant, rawEmail string, source common.Source, createdAt time.Time) (eventstore.Event, error) {
+func NewEmailUpsertEvent(aggregate eventstore.Aggregate, tenant, rawEmail, source string, createdAt time.Time) (eventstore.Event, error) {
 	eventData := EmailUpsertEvent{
-		Tenant:       tenant,
-		RawEmail:     rawEmail,
-		SourceFields: source,
-		CreatedAt:    createdAt,
+		Tenant:    tenant,
+		RawEmail:  rawEmail,
+		Source:    source,
+		CreatedAt: createdAt,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

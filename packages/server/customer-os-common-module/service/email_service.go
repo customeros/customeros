@@ -8,7 +8,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -21,10 +20,10 @@ import (
 )
 
 type EmailFields struct {
-	Email     string `json:"email"`
-	Source    string `json:"source"`
-	AppSource string `json:"appSource"`
-	Primary   bool   `json:"primary"`
+	Email     string                 `json:"email"`
+	Source    neo4jentity.DataSource `json:"source"`
+	AppSource string                 `json:"appSource"`
+	Primary   bool                   `json:"primary"`
 }
 
 type emailService struct {
@@ -81,9 +80,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 		err = s.services.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailId, neo4jrepository.EmailCreateFields{
 			RawEmail:  emailFields.Email,
 			CreatedAt: createdAt,
-			SourceFields: neo4jmodel.Source{
-				AppSource: emailFields.AppSource,
-			},
+			Source:    emailFields.Source,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -102,7 +99,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 				RawEmail:       emailFields.Email,
 				CreatedAt:      utils.ConvertTimeToTimestampPtr(&createdAt),
 				SourceFields: &commonpb.SourceFields{
-					Source:    emailFields.Source,
+					Source:    emailFields.Source.String(),
 					AppSource: emailFields.AppSource,
 				},
 			})

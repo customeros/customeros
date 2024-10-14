@@ -6,7 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"golang.org/x/net/context"
@@ -15,9 +15,9 @@ import (
 )
 
 type EmailCreateFields struct {
-	RawEmail     string       `json:"rawEmail"`
-	SourceFields model.Source `json:"sourceFields"`
-	CreatedAt    time.Time    `json:"createdAt"`
+	RawEmail  string            `json:"rawEmail"`
+	Source    entity.DataSource `json:"source"`
+	CreatedAt time.Time         `json:"createdAt"`
 }
 
 type EmailValidatedFields struct {
@@ -82,19 +82,15 @@ func (r *emailWriteRepository) CreateEmail(ctx context.Context, tenant, emailId 
               MERGE (e:Email:Email_%s {id:$id})
 				 SET e.rawEmail = $rawEmail, 
 					e.source = $source,
-					e.sourceOfTruth = $sourceOfTruth,
-					e.appSource = $appSource,
 					e.createdAt = $createdAt,
 					e.updatedAt = datetime() 
 		 MERGE (t)<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e)`, tenant)
 	params := map[string]any{
-		"id":            emailId,
-		"rawEmail":      data.RawEmail,
-		"tenant":        tenant,
-		"source":        utils.StringFirstNonEmpty(data.SourceFields.Source, constants.SourceOpenline),
-		"sourceOfTruth": utils.StringFirstNonEmpty(data.SourceFields.SourceOfTruth, constants.SourceOpenline),
-		"appSource":     data.SourceFields.AppSource,
-		"createdAt":     utils.TimeOrNow(data.CreatedAt),
+		"id":        emailId,
+		"rawEmail":  data.RawEmail,
+		"tenant":    tenant,
+		"source":    utils.StringFirstNonEmpty(data.Source.String(), constants.SourceOpenline),
+		"createdAt": utils.TimeOrNow(data.CreatedAt),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -144,8 +140,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 				ON CREATE SET 	d.id=randomUUID(), 
 								d.createdAt=$now, 
 								d.updatedAt=datetime(),
-								d.appSource=$source,
-								d.source=$appSource
+								d.source=$source
 				WITH d, e
 				MERGE (e)-[:HAS_DOMAIN]->(d)`, tenant)
 	params := map[string]any{
@@ -175,7 +170,6 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"retryValidation":    data.RetryValidation,
 		"now":                utils.Now(),
 		"source":             constants.SourceOpenline,
-		"appSource":          constants.AppSourceEventProcessingPlatform,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
