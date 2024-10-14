@@ -1,6 +1,6 @@
 extend type Mutation {
-    addTag(input: AddTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    removeTag(input: RemoveTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input AddTagInput {

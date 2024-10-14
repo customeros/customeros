@@ -17,7 +17,7 @@ import (
 )
 
 // AddTag is the resolver for the addTag field.
-func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) (*model.ActionResponse, error) {
+func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CommonResolver.AddTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -25,18 +25,18 @@ func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) 
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.EntityID, commonModel.GetEntityType(input.EntityType.String()), utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
+	tagId, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.EntityID, commonModel.GetEntityType(input.EntityType.String()), utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to entity")
-		return nil, nil
+		return "", err
 	}
 
-	return &model.ActionResponse{Accepted: true}, nil
+	return tagId, nil
 }
 
 // RemoveTag is the resolver for the removeTag field.
-func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.ActionResponse, error) {
+func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.Result, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "CommonResolver.RemoveTag", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
@@ -51,5 +51,5 @@ func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagI
 		return nil, nil
 	}
 
-	return &model.ActionResponse{Accepted: true}, nil
+	return &model.Result{Result: true}, nil
 }
