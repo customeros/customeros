@@ -31,6 +31,7 @@ const (
 	EmailPropertyPrimaryDomain         EmailProperty = "primaryDomain"
 	EmailPropertyAlternateEmail        EmailProperty = "alternateEmail"
 	EmailPropertyWork                  EmailProperty = "work"
+	EmailPropertyRetryValidation       EmailProperty = "retryValidation"
 )
 
 type EmailEntity struct {
@@ -64,6 +65,7 @@ type EmailEntity struct {
 	IsPrimaryDomain *bool
 	PrimaryDomain   *string
 	AlternateEmail  *string
+	RetryValidation *bool
 
 	EmailInternalFields EmailInternalFields
 

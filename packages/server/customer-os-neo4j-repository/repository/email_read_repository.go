@@ -243,10 +243,19 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
 				WHERE
-					e.techValidatedAt IS NULL AND
-					e.rawEmail <> '' AND
-					(e.updatedAt < datetime() - duration({minutes: $delayFromLastUpdateInMinutes})) AND
-					(e.techValidationRequestedAt IS NULL OR e.techValidationRequestedAt < datetime() - duration({minutes: $delayFromLastValidationAttemptInMinutes}))
+					e.rawEmail <> '' AND					
+					(e.updatedAt < datetime() - duration({minutes: $delayFromLastUpdateInMinutes})) AND					
+					(
+						(
+							e.techValidatedAt IS NULL AND 
+							(e.techValidationRequestedAt IS NULL OR e.techValidationRequestedAt < datetime() - duration({minutes: $delayFromLastValidationAttemptInMinutes}))
+						)
+						OR
+						(
+							e.retryValidation = true AND
+							(e.techValidationRequestedAt IS NULL OR e.techValidationRequestedAt < datetime() - duration({days: $delayForRetryValidationInDays}))
+						)
+					)
 				WITH t.name as tenant, e.id as emailId
 				ORDER BY 
     			CASE 
@@ -259,7 +268,8 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 	params := map[string]any{
 		"delayFromLastUpdateInMinutes":            delayFromLastUpdateInMinutes,
 		"delayFromLastValidationAttemptInMinutes": delayFromLastValidationAttemptInMinutes,
-		"limit": limit,
+		"delayForRetryValidationInDays":           7,
+		"limit":                                   limit,
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

@@ -63,6 +63,7 @@ func (h *EmailEventHandler) OnEmailValidatedV2(ctx context.Context, evt eventsto
 		IsPrimaryDomain: eventData.IsPrimaryDomain,
 		PrimaryDomain:   eventData.PrimaryDomain,
 		AlternateEmail:  eventData.AlternateEmail,
+		RetryValidation: eventData.RetryValidation,
 	}
 
 	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.EmailValidated(ctx, eventData.Tenant, emailId, data)

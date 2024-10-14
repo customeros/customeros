@@ -42,6 +42,7 @@ type EmailValidatedFields struct {
 	IsPrimaryDomain bool      `json:"isPrimaryDomain"`
 	PrimaryDomain   string    `json:"primaryDomain"`
 	AlternateEmail  string    `json:"alternateEmail"`
+	RetryValidation bool      `json:"retryValidation"`
 }
 
 type EmailWriteRepository interface {
@@ -135,6 +136,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 					e.isPrimaryDomain = $isPrimaryDomain,
 					e.primaryDomain = $primaryDomain,
 					e.alternateEmail = $alternateEmail,
+					e.retryValidation = $retryValidation,
 					e.work = CASE WHEN e.work IS NULL THEN NOT $isFreeAccount ELSE e.work END
 				WITH e, CASE WHEN $domain <> '' THEN true ELSE false END AS shouldMergeDomain
 				WHERE shouldMergeDomain
@@ -170,6 +172,7 @@ func (r *emailWriteRepository) EmailValidated(ctx context.Context, tenant, email
 		"isPrimaryDomain":    data.IsPrimaryDomain,
 		"primaryDomain":      data.PrimaryDomain,
 		"alternateEmail":     data.AlternateEmail,
+		"retryValidation":    data.RetryValidation,
 		"now":                utils.Now(),
 		"source":             constants.SourceOpenline,
 		"appSource":          constants.AppSourceEventProcessingPlatform,
@@ -300,6 +303,7 @@ func (r *emailWriteRepository) CleanEmailValidation(ctx context.Context, tenant,
 					e.isPrimaryDomain = null,
 					e.primaryDomain = null,
 					e.alternateEmail = null,
+					e.retryValidation = null,
 					e.work = null,
 					e.updatedAt = datetime()`, tenant)
 	params := map[string]any{

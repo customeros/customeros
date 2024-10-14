@@ -48,6 +48,7 @@ message EmailValidationGrpcRequest {
   bool isPrimaryDomain = 26;
   string primaryDomain = 27;
   string alternateEmail = 28;
+  bool retryValidation = 29;
 }
 
 message RequestEmailValidationGrpcRequest {

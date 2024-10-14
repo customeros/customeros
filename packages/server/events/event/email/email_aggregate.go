@@ -82,6 +82,7 @@ func (a *EmailAggregate) emailValidatedV2(ctx context.Context, request *emailpb.
 		request.IsPrimaryDomain,
 		request.PrimaryDomain,
 		request.AlternateEmail,
+		request.RetryValidation,
 	)
 	if err != nil {
 		tracing.TraceErr(span, err)
