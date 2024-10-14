@@ -455,22 +455,40 @@ func (r *organizationReadRepository) GetOrganizationByDomain(ctx context.Context
 }
 
 func (r *organizationReadRepository) GetOrganizationBySocialUrl(ctx context.Context, tenant, socialUrl string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationByDomain")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetOrganizationBySocialUrl")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("socialUrl", socialUrl))
+	span.LogKV("socialUrl", socialUrl)
 
-	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(:Social {url:$url}) RETURN o limit 1`
+	if socialUrl == "" || socialUrl == "/" {
+		return nil, nil
+	}
+
+	var urlWithoutSlash, urlWithSlash string
+	if len(socialUrl) > 0 && socialUrl[len(socialUrl)-1] == '/' {
+		urlWithSlash = socialUrl
+		urlWithoutSlash = socialUrl[:len(socialUrl)-1]
+	} else {
+		urlWithoutSlash = socialUrl
+		urlWithSlash = socialUrl + "/"
+	}
+	span.LogKV("urlWithoutSlash", urlWithoutSlash, "urlWithSlash", urlWithSlash)
+
+	cypher := `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization)-[:HAS]->(s:Social)
+				WHERE s.url = $urlWithoutSlash OR s.url = $urlWithSlash
+			   	RETURN o LIMIT 1`
+	params := map[string]any{
+		"tenant":          tenant,
+		"urlWithoutSlash": urlWithoutSlash,
+		"urlWithSlash":    urlWithSlash,
+	}
 
 	session := r.prepareReadSession(ctx)
 	defer session.Close(ctx)
 
 	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, cypher, map[string]any{
-			"tenant": tenant,
-			"url":    socialUrl,
-		}); err != nil {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
 			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
