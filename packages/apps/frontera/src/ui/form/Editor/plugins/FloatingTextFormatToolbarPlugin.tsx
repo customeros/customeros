@@ -165,7 +165,7 @@ export function FloatingMenu({
   return (
     <div
       ref={menuRef}
-      className='flex items-center justify-between bg-gray-700 text-gray-25 border-[1px] border-gray-200 rounded-md p-1'
+      className='flex items-center justify-between bg-gray-700 text-gray-25 border-[1px] border-gray-200 rounded-md p-1 gap-1'
     >
       {showLinkInput ? (
         <>

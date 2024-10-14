@@ -84,7 +84,7 @@ export const EmailEditorModal = observer(
               className='w-full h-full flex justify-center max-w-full top-0 cursor-default overflow-y-auto '
             >
               <div className='w-[570px] relative'>
-                <div className='flex justify-between bg-white pt-4 mb-[68px] sticky top-0 z-1'>
+                <div className='flex justify-between bg-white pt-4 pb-2 mb-[60px] sticky top-0 z-[50]'>
                   <div className='flex items-center text-sm'>
                     <span>{flow}</span>
                     <ChevronRight className='size-3 mx-1 text-gray-400' />
