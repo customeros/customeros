@@ -148,6 +148,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 	}
+	utils.EventCompleted(ctx, tenant, model.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	enrichOrganizationResponse, err := h.callApiEnrichOrganization(ctx, tenant, domain)
 	if err != nil {

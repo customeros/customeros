@@ -175,6 +175,8 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
 		}
+		utils.EventCompleted(ctx, tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
+
 		apiResponse, err := h.callApiEnrichPerson(ctx, tenant, linkedInUrl, emailAddress, firstName, lastName, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "callApiEnrichPerson"))
