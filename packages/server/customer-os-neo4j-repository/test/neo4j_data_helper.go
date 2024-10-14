@@ -1027,19 +1027,15 @@ func CreateTag(ctx context.Context, driver *neo4j.DriverWithContext, tenant stri
 				tag:Tag_%s,
 				tag.name=$name, 
 				tag.source=$source, 
-				tag.sourceOfTruth=$sourceOfTruth,
-				tag.appSource=$appSource, 
 				tag.createdAt=$createdAt, 
 				tag.updatedAt=$updatedAt`, tenant)
 	params := map[string]any{
-		"tenant":        tenant,
-		"id":            tagId,
-		"name":          tagEntity.Name,
-		"createdAt":     tagEntity.CreatedAt,
-		"updatedAt":     tagEntity.UpdatedAt,
-		"source":        tagEntity.Source,
-		"appSource":     tagEntity.AppSource,
-		"sourceOfTruth": tagEntity.SourceOfTruth,
+		"tenant":    tenant,
+		"id":        tagId,
+		"name":      tagEntity.Name,
+		"createdAt": tagEntity.CreatedAt,
+		"updatedAt": tagEntity.UpdatedAt,
+		"source":    tagEntity.Source,
 	}
 	ExecuteWriteQuery(ctx, driver, query, params)
 	return tagId

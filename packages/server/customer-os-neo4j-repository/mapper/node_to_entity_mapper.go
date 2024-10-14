@@ -491,7 +491,7 @@ func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:    entity.DataSource(utils.GetStringPropOrEmpty(props, "source")),
 	}
 	return &tag
 }
