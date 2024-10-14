@@ -18,6 +18,7 @@ export class UIStore {
   movedIcpOrganization: number = 0;
   focusRow: number | string | null = null;
   commandMenu = new CommandMenuStore();
+  selectionId: number | null = null;
   flowCommandMenu = new FlowStepCommandMenuStore();
   private activeConfirmationCallback: () => void = () => {};
 
@@ -87,5 +88,9 @@ export class UIStore {
 
   setFocusRow(value: number | string | null) {
     this.focusRow = value;
+  }
+
+  setSelectionId(value: number | null) {
+    this.selectionId = value;
   }
 }

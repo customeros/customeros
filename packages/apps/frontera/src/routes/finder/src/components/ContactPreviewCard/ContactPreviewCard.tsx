@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import set from 'lodash/set';
@@ -10,20 +10,30 @@ import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
+import { Plus } from '@ui/media/icons/Plus';
 import { Tag01 } from '@ui/media/icons/Tag01';
+import { Spinner } from '@ui/feedback/Spinner';
 import { Mail02 } from '@ui/media/icons/Mail02';
+import { Star06 } from '@ui/media/icons/Star06';
 import { getTimezone } from '@utils/getTimezone';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Archive } from '@ui/media/icons/Archive';
 import { Tags } from '@organization/components/Tabs';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { TextInput } from '@ui/media/icons/TextInput';
+import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { Tag, Social, TableViewType } from '@graphql/types';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 
 export const ContactPreviewCard = observer(() => {
   const store = useStore();
   const [searchParams] = useSearchParams();
   const [isEditName, setIsEditName] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const contactId = store.ui.focusRow;
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
@@ -53,8 +63,6 @@ export const ContactPreviewCard = observer(() => {
     ? cityTimezone.lookupViaCity(city)?.[0]?.timezone
     : null;
 
-  const email = contact?.value.emails?.[0]?.email;
-  const previousEmail = useMemo(() => email, [contact?.isLoading]);
   const validationDetails = contact?.value.emails?.[0]?.emailValidationDetails;
 
   const fromatedUrl = contact?.value?.socials?.[0]?.url.replace(
@@ -120,6 +128,8 @@ export const ContactPreviewCard = observer(() => {
       when: store.ui.contactPreviewCardOpen,
     },
   );
+
+  const userHasOrg = contact?.organization?.name;
 
   return (
     <>
@@ -204,38 +214,158 @@ export const ContactPreviewCard = observer(() => {
               </span>
             )}
           </div>
-          <div className='flex justify-between gap-1 w-full mb-4'>
-            <div className='flex items-center gap-2 mr-[70px] text-sm text-gray-500'>
-              <Mail02 className='mt-[1px] text-gray-500' />
-              Email
-            </div>
-            <Input
-              size='xs'
-              variant='unstyled'
-              placeholder='Email address'
-              onFocus={(e) => e.target.select()}
-              className='text-ellipsis ml-[-2px]'
-              value={contact?.value.emails?.[0]?.email || ''}
-              onBlur={() => {
-                contact?.updateEmail(previousEmail ?? '');
-              }}
-              onChange={(e) => {
-                contact?.update(
-                  (value) => {
-                    set(value, 'emails[0].email', e.target.value);
+          <div className='flex justify-between gap-1 w-full mb-4 flex-col'>
+            <div className='flex items-center justify-between w-full text-sm group/menu'>
+              <div className='flex items-center gap-2'>
+                <Mail02 className='mt-[1px] text-gray-500' />
+                <span className='font-medium'>
+                  Emails<span> • {contact?.value.emails.length}</span>
+                </span>
+              </div>
+              {userHasOrg && (
+                <div className='flex items-center gap-2'>
+                  <Menu>
+                    <MenuButton>
+                      <Tooltip
+                        align='end'
+                        side='bottom'
+                        label={'Add new email'}
+                      >
+                        <IconButton
+                          size='xxs'
+                          variant='ghost'
+                          icon={<Plus />}
+                          aria-label='add new email'
+                          className='group-hover/menu:opacity-100 opacity-0'
+                        />
+                      </Tooltip>
+                    </MenuButton>
+                    <MenuList>
+                      <MenuItem
+                        className='group/find-email'
+                        onClick={() => {
+                          setIsLoading(true);
+                          contact
+                            ?.findEmail()
+                            .finally(() => setIsLoading(false));
+                        }}
+                      >
+                        <div className='flex items-center gap-1'>
+                          <Star06 className='group-hover/find-email:text-gray-700 text-gray-500' />
+                          <span>{`Find email at ${userHasOrg}`}</span>
+                        </div>
+                      </MenuItem>
+                      <MenuItem
+                        className='group/add-email'
+                        onClick={() => {
+                          store.ui.setSelectionId(contact.value.emails.length);
+                          contact.update(
+                            (c) => {
+                              c.emails.push({
+                                id: crypto.randomUUID(),
+                                email: '',
+                                appSource: '',
+                                contacts: [],
+                                createdAt: new Date().toISOString(),
+                                updatedAt: new Date().toISOString(),
+                                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                              } as any);
 
-                    return value;
-                  },
-                  { mutate: false },
-                );
-              }}
-            />
-            {email && (
-              <EmailValidationMessage
-                email={email}
-                validationDetails={validationDetails}
-              />
-            )}
+                              return c;
+                            },
+                            { mutate: false },
+                          );
+                          store.ui.commandMenu.setContext({
+                            ids: [contact.value.id],
+                            entity: 'Contact',
+                            property: 'email',
+                          });
+                          store.ui.commandMenu.setType('EditEmail');
+                          store.ui.commandMenu.setOpen(true);
+                        }}
+                      >
+                        <PlusCircle className='text-gray-500 group-hover/add-email:text-gray-700' />
+                        Add new email
+                      </MenuItem>
+                    </MenuList>
+                  </Menu>
+                  {isLoading && (
+                    <Tooltip label={`Finding email at ${userHasOrg} `}>
+                      <Spinner
+                        size='sm'
+                        label='finding email'
+                        className='text-gray-400 fill-gray-700'
+                      />
+                    </Tooltip>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className='ml-6'>
+              {contact?.value.emails.map((email, idx) => (
+                <div className=' flex items-center justify-between group/menu-email'>
+                  <div key={email.id} className='flex items-center '>
+                    <span>{email.email}</span>
+                  </div>
+                  <div className='flex items-center'>
+                    {email && (
+                      <EmailValidationMessage
+                        email={email?.email || ''}
+                        validationDetails={validationDetails}
+                      />
+                    )}
+                    <Menu>
+                      <MenuButton>
+                        <IconButton
+                          size='xxs'
+                          variant='ghost'
+                          icon={<Plus />}
+                          aria-label='add new email'
+                          className='group-hover/menu-email:opacity-100 opacity-0'
+                        />
+                      </MenuButton>
+                      <MenuList>
+                        <MenuItem
+                          className='group/edit-email'
+                          onClick={() => {
+                            store.ui.setSelectionId(idx);
+                            store.ui.commandMenu.setType('EditEmail');
+                            store.ui.commandMenu.setContext({
+                              ids: [contact.value.id],
+                              entity: 'Contact',
+                              property: 'email',
+                            });
+                            store.ui.commandMenu.setOpen(true);
+                          }}
+                        >
+                          <div className='flex items-center gap-2'>
+                            <TextInput className='group-hover/edit-email:text-gray-700 text-gray-500' />
+                            <span>Edit email</span>
+                          </div>
+                        </MenuItem>
+                        <MenuItem
+                          className='group/archive-email'
+                          onClick={() => {
+                            contact.update(
+                              (c) => {
+                                c.emails.splice(idx, 1);
+
+                                return c;
+                              },
+                              { mutate: false },
+                            );
+                            contact.updateEmail(email?.email ?? '');
+                          }}
+                        >
+                          <Archive className='text-gray-500 group-hover/archive-email:text-gray-700' />
+                          Archive email
+                        </MenuItem>
+                      </MenuList>
+                    </Menu>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className='flex justify-between gap-1 w-full mb-4'>

@@ -10,17 +10,19 @@ import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
 export const EditEmail = observer(() => {
   const store = useStore();
   const context = store.ui.commandMenu.context;
+  const selectedId = store.ui.selectionId;
+
   const contact = store.contacts.value.get(context.ids?.[0] as string);
   const oldEmail = useMemo(
-    () => contact?.value?.emails?.[0]?.email,
-    [contact?.isLoading],
+    () => contact?.value?.emails?.[selectedId ?? 0]?.email,
+    [contact?.isLoading, selectedId],
   );
-  const emailAdress = contact?.value?.emails?.[0]?.email ?? '';
+  const emailAdress = contact?.value?.emails?.[selectedId ?? 0]?.email ?? '';
 
-  const label = `Contact - ${contact?.value.name}`;
+  const label = `Contact - ${contact?.name}`;
 
   const handleSaveEmail = () => {
-    contact?.updateEmail(oldEmail ?? '');
+    contact?.updateEmail(oldEmail ?? '', selectedId ?? 0);
     store.ui.commandMenu.setOpen(false);
     store.ui.commandMenu.setType('ContactCommands');
   };
@@ -39,7 +41,7 @@ export const EditEmail = observer(() => {
         onValueChange={(newValue) => {
           contact?.update(
             (value) => {
-              set(value, 'emails[0].email', newValue);
+              set(value, ['emails', selectedId ?? 0, 'email'], newValue);
 
               return value;
             },

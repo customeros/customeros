@@ -338,14 +338,23 @@ const UPDATE_SOCIAL_MUTATION = gql`
   }
 `;
 
-type FIND_EMAIL_RESPONSE = void;
+type FIND_EMAIL_RESPONSE = {
+  contact_FindWorkEmail: {
+    accepted: boolean;
+  };
+};
 type FIND_EMAIL_PAYLOAD = {
   contactId: string;
   organizationId: string;
 };
 const FIND_EMAIL_MUTATION = gql`
-  mutation findContactEmail($contactId: ID!, $organizationId: ID!) {
-    contact_FindEmail(contactId: $contactId, organizationId: $organizationId)
+  mutation findWorkContactEmail($contactId: ID!, $organizationId: ID!) {
+    contact_FindWorkEmail(
+      contactId: $contactId
+      organizationId: $organizationId
+    ) {
+      accepted
+    }
   }
 `;
 
