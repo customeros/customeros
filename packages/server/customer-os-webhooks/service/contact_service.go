@@ -263,7 +263,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			commonservice.EmailFields{
 				Email:     contactInput.Email,
 				AppSource: appSource,
-				Source:    contactInput.ExternalSystem,
+				Source:    neo4jentity.DecodeDataSource(contactInput.ExternalSystem),
 				Primary:   true,
 			},
 			&commonservice.LinkWith{
@@ -282,7 +282,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 				commonservice.EmailFields{
 					Email:     email,
 					AppSource: appSource,
-					Source:    contactInput.ExternalSystem,
+					Source:    neo4jentity.DecodeDataSource(contactInput.ExternalSystem),
 					Primary:   false,
 				},
 				&commonservice.LinkWith{
@@ -301,7 +301,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			_, err = s.services.CommonServices.SocialService.MergeSocialWithEntity(ctx, tenant, contactId, commonmodel.CONTACT,
 				neo4jentity.SocialEntity{
 					Url:       social.URL,
-					Source:    neo4jentity.GetDataSource(contactInput.ExternalSystem),
+					Source:    neo4jentity.DecodeDataSource(contactInput.ExternalSystem),
 					AppSource: appSource,
 				})
 			if err != nil {

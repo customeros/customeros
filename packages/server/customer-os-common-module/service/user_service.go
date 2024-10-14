@@ -80,7 +80,7 @@ func (s *userService) Create(ctx context.Context, input UserCreateData) (*string
 	_, err = s.services.EmailService.Merge(ctx, tenant,
 		EmailFields{
 			Email:     input.EmailInput.Email,
-			AppSource: input.EmailInput.AppSource,
+			AppSource: input.UserInput.AppSource,
 		},
 		&LinkWith{
 			Type:         commonModel.USER,

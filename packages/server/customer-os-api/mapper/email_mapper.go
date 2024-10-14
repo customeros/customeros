@@ -1,7 +1,6 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	enummapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -13,30 +12,23 @@ func MapEmailInputToEntity(input *model.EmailInput) *neo4jentity.EmailEntity {
 		return nil
 	}
 	emailEntity := neo4jentity.EmailEntity{
-		RawEmail:      input.Email,
-		Primary:       utils.IfNotNilBool(input.Primary),
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilString(input.AppSource),
-	}
-	if len(emailEntity.AppSource) == 0 {
-		emailEntity.AppSource = constants.AppSourceCustomerOsApi
+		RawEmail: input.Email,
+		Primary:  utils.IfNotNilBool(input.Primary),
+		Source:   neo4jentity.DataSourceOpenline,
 	}
 	return &emailEntity
 }
 
 func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
 	return &model.Email{
-		ID:            entity.Id,
-		Email:         utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
-		RawEmail:      utils.StringPtrNillable(entity.RawEmail),
-		Work:          entity.Work,
-		Primary:       entity.Primary,
-		Source:        MapDataSourceToModel(entity.Source),
-		SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:     entity.AppSource,
-		CreatedAt:     entity.CreatedAt,
-		UpdatedAt:     entity.UpdatedAt,
+		ID:        entity.Id,
+		Email:     utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
+		RawEmail:  utils.StringPtrNillable(entity.RawEmail),
+		Work:      entity.Work,
+		Primary:   entity.Primary,
+		Source:    MapDataSourceToModel(entity.Source),
+		CreatedAt: entity.CreatedAt,
+		UpdatedAt: entity.UpdatedAt,
 		EmailValidationDetails: &model.EmailValidationDetails{
 			Verified:          entity.EmailInternalFields.ValidatedAt != nil,
 			VerifyingCheckAll: false,
@@ -63,14 +55,9 @@ func MapEmailInputToLocalEntity(input *model.EmailInput) *neo4jentity.EmailEntit
 		return nil
 	}
 	emailEntity := neo4jentity.EmailEntity{
-		RawEmail:      input.Email,
-		Primary:       utils.IfNotNilBool(input.Primary),
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     utils.IfNotNilString(input.AppSource),
-	}
-	if len(emailEntity.AppSource) == 0 {
-		emailEntity.AppSource = constants.AppSourceCustomerOsApi
+		RawEmail: input.Email,
+		Primary:  utils.IfNotNilBool(input.Primary),
+		Source:   neo4jentity.DataSourceOpenline,
 	}
 	return &emailEntity
 }

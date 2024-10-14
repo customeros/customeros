@@ -21,8 +21,8 @@ func MapDbNodeToJobRoleEntity(dbNode *dbtype.Node) *entity.JobRoleEntity {
 		Description:   utils.GetStringPropOrNil(props, "description"),
 		Company:       utils.GetStringPropOrNil(props, "company"),
 		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -47,8 +47,8 @@ func MapDbNodeToAttachmentEntity(dbNode *dbtype.Node) *entity.AttachmentEntity {
 		BasePath:      utils.GetStringPropOrEmpty(props, "basePath"),
 		Size:          utils.GetInt64PropOrZero(props, "size"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &attachmentEntity
 }
@@ -65,8 +65,8 @@ func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *entity.WorkspaceEntity {
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &domain
 }
@@ -114,8 +114,8 @@ func MapDbNodeToInvoiceEntity(dbNode *dbtype.Node) *entity.InvoiceEntity {
 		Vat:                  utils.GetFloatPropOrZero(props, "vat"),
 		TotalAmount:          utils.GetFloatPropOrZero(props, "totalAmount"),
 		RepositoryFileId:     utils.GetStringPropOrEmpty(props, "repositoryFileId"),
-		Source:               entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:               entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:            utils.GetStringPropOrEmpty(props, "appSource"),
 		Status:               enum.DecodeInvoiceStatus(utils.GetStringPropOrEmpty(props, "status")),
 		Note:                 utils.GetStringPropOrEmpty(props, "note"),
@@ -178,8 +178,8 @@ func MapDbNodeToInvoiceLineEntity(dbNode *dbtype.Node) *entity.InvoiceLineEntity
 		Amount:                  utils.GetFloatPropOrZero(props, "amount"),
 		Vat:                     utils.GetFloatPropOrZero(props, "vat"),
 		TotalAmount:             utils.GetFloatPropOrZero(props, "totalAmount"),
-		Source:                  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:           entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:           entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:               utils.GetStringPropOrEmpty(props, "appSource"),
 		ServiceLineItemId:       utils.GetStringPropOrEmpty(props, "serviceLineItemId"),
 		ServiceLineItemParentId: utils.GetStringPropOrEmpty(props, "serviceLineItemParentId"),
@@ -200,8 +200,8 @@ func MapDbNodeToUserEntity(dbNode *dbtype.Node) *entity.UserEntity {
 		Name:            utils.GetStringPropOrEmpty(props, "name"),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		Roles:           utils.GetListStringPropOrEmpty(props, "roles"),
 		Internal:        utils.GetBoolPropOrFalse(props, "internal"),
@@ -238,7 +238,7 @@ func MapDbNodeToOrganizationEntity(dbNode *dbtype.Node) *entity.OrganizationEnti
 		Market:             utils.GetStringPropOrEmpty(props, "market"),
 		CreatedAt:          utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:          utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:             entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		LastTouchpointAt:   utils.GetTimePropOrNil(props, "lastTouchpointAt"),
 		LastTouchpointId:   utils.GetStringPropOrNil(props, "lastTouchpointId"),
 		LastTouchpointType: utils.GetStringPropOrNil(props, "lastTouchpointType"),
@@ -302,8 +302,8 @@ func MapDbNodeToBillingProfileEntity(dbNode *dbtype.Node) *entity.BillingProfile
 		TaxId:         utils.GetStringPropOrEmpty(props, "taxId"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &billingProfileEntity
@@ -320,7 +320,7 @@ func MapDbNodeToTenantEntity(dbNode *dbtype.Node) *entity.TenantEntity {
 		CreatedAt: utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt: utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource: utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:    entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		Source:    entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		Active:    utils.GetBoolPropOrTrue(props, "active"),
 	}
 	return &tenant
@@ -370,8 +370,8 @@ func MapDbNodeToTenantBillingProfileEntity(dbNode *dbtype.Node) *entity.TenantBi
 		SendInvoicesBcc:        utils.GetStringPropOrEmpty(props, "sendInvoicesBcc"),
 		CanPayWithPigeon:       utils.GetBoolPropOrFalse(props, "canPayWithPigeon"),
 		CanPayWithBankTransfer: utils.GetBoolPropOrFalse(props, "canPayWithBankTransfer"),
-		Source:                 entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                 entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:              utils.GetStringPropOrEmpty(props, "appSource"),
 		Check:                  utils.GetBoolPropOrFalse(props, "check"),
 	}
@@ -412,8 +412,8 @@ func MapDbNodeToContractEntity(dbNode *dbtype.Node) *entity.ContractEntity {
 		ContractStatus:                  enum.DecodeContractStatus(utils.GetStringPropOrEmpty(props, "status")),
 		TriggeredOnboardingStatusChange: utils.GetBoolPropOrFalse(props, "triggeredOnboardingStatusChange"),
 		NextInvoiceDate:                 utils.GetTimePropOrNil(props, "nextInvoiceDate"),
-		Source:                          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:                   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:                          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:                   entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:                       utils.GetStringPropOrEmpty(props, "appSource"),
 		InvoicingStartDate:              utils.GetTimePropOrNil(props, "invoicingStartDate"),
 		Currency:                        enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
@@ -467,8 +467,8 @@ func MapDbNodeToServiceLineItemEntity(dbNode *dbtype.Node) *entity.ServiceLineIt
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		EndedAt:       utils.GetTimePropOrNil(props, "endedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Billed:        enum.DecodeBilledType(utils.GetStringPropOrEmpty(props, "billed")),
 		Price:         utils.GetFloatPropOrZero(props, "price"),
 		Quantity:      utils.GetInt64PropOrZero(props, "quantity"),
@@ -492,8 +492,8 @@ func MapDbNodeToTagEntity(dbNode *dbtype.Node) *entity.TagEntity {
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &tag
 }
@@ -511,8 +511,8 @@ func MapDbNodeToIssueEntity(dbNode *dbtype.Node) *entity.IssueEntity {
 		Status:        utils.GetStringPropOrEmpty(props, "status"),
 		Priority:      utils.GetStringPropOrEmpty(props, "priority"),
 		Description:   utils.GetStringPropOrEmpty(props, "description"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &issue
@@ -530,8 +530,8 @@ func MapDbNodeToCommentEntity(dbNode *dbtype.Node) *entity.CommentEntity {
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &comment
 }
@@ -550,8 +550,8 @@ func MapDbNodeToSocialEntity(dbNode *dbtype.Node) *entity.SocialEntity {
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyCreatedAt)),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, string(entity.SocialPropertyUpdatedAt)),
 		AppSource:      utils.GetStringPropOrEmpty(props, string(entity.SocialPropertyAppSource)),
-		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySource))),
-		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySourceOfTruth))),
+		Source:         entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySource))),
+		SourceOfTruth:  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.SocialPropertySourceOfTruth))),
 	}
 	return &social
 }
@@ -569,8 +569,8 @@ func MapDbNodeToReminderEntity(dbNode *dbtype.Node) *entity.ReminderEntity {
 		DueDate:       utils.GetTimePropOrEpochStart(props, "dueDate"),
 		Dismissed:     utils.GetBoolPropOrFalse(props, "dismissed"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &reminder
 }
@@ -584,8 +584,8 @@ func MapDbNodeToBankAccountEntity(dbNode *dbtype.Node) *entity.BankAccountEntity
 		Id:                  utils.GetStringPropOrEmpty(props, "id"),
 		CreatedAt:           utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:           utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:              entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:       entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:              entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:       entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:           utils.GetStringPropOrEmpty(props, "appSource"),
 		BankName:            utils.GetStringPropOrEmpty(props, "bankName"),
 		Currency:            enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, "currency")),
@@ -615,9 +615,7 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Primary:       utils.GetBoolPropOrFalse(props, "primary"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		IsValidSyntax: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsValidSyntax)),
 		IsCatchAll:    utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsCatchAll)),
 		Deliverable:   utils.GetStringPropOrNil(props, string(entity.EmailPropertyDeliverable)),
@@ -654,8 +652,8 @@ func MapDbNodeToPhoneNumberEntity(node *dbtype.Node) *entity.PhoneNumberEntity {
 		E164:           utils.GetStringPropOrEmpty(props, "e164"),
 		RawPhoneNumber: utils.GetStringPropOrEmpty(props, "rawPhoneNumber"),
 		Validated:      utils.GetBoolPropOrNil(props, "validated"),
-		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:         entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 		CreatedAt:      utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:      utils.GetTimePropOrEpochStart(props, "updatedAt"),
@@ -700,8 +698,8 @@ func MapDbNodeToOpportunityEntity(node *dbtype.Node) *entity.OpportunityEntity {
 		CreatedAt:         utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:         utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:         utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:            entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:     entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:            entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:     entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		OwnerUserId:       utils.GetStringPropOrEmpty(props, "ownerUserId"),
 		Currency:          enum.DecodeCurrency(utils.GetStringPropOrEmpty(props, string(entity.OpportunityPropertyCurrency))),
 		LikelihoodRate:    utils.GetInt64PropOrDefault(props, string(entity.OpportunityPropertyLikelihoodRate), 0),
@@ -749,8 +747,8 @@ func MapDbNodeToPageView(node *dbtype.Node) *entity.PageViewEntity {
 		EngagedTime:    utils.GetInt64PropOrZero(props, "engagedTime"),
 		StartedAt:      utils.GetTimePropOrNow(props, "startedAt"),
 		EndedAt:        utils.GetTimePropOrNow(props, "endedAt"),
-		Source:         entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:  entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:         entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:  entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:      utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &pageViewAction
@@ -769,8 +767,8 @@ func MapDbNodeToLogEntryEntity(node *dbtype.Node) *entity.LogEntryEntity {
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		StartedAt:     utils.GetTimePropOrEpochStart(props, "startedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
 		},
@@ -796,8 +794,8 @@ func MapDbNodeToMeetingEntity(node *dbtype.Node) *entity.MeetingEntity {
 		EndedAt:            utils.GetTimePropOrNil(props, "endedAt"),
 		Recording:          utils.GetStringPropOrNil(props, "recording"),
 		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:             entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:      entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:             entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Status:             &status,
 	}
 	if props["createdAt"] != nil {
@@ -823,8 +821,8 @@ func MapDbNodeToActionEntity(node *dbtype.Node) *entity.ActionEntity {
 		Metadata:      utils.GetStringPropOrEmpty(props, "metadata"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &action
 }
@@ -840,8 +838,8 @@ func MapDbNodeToNoteEntity(node *dbtype.Node) *entity.NoteEntity {
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &note
@@ -869,8 +867,8 @@ func MapDbPropsToInteractionEventEntity(props map[string]interface{}) *entity.In
 		Content:       utils.GetStringPropOrEmpty(props, "content"),
 		ContentType:   utils.GetStringPropOrEmpty(props, "contentType"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionEventEntity
 }
@@ -891,8 +889,8 @@ func MapDbNodeToInteractionSessionEntity(node *dbtype.Node) *entity.InteractionS
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &interactionSession
 }
@@ -912,8 +910,8 @@ func MapDbNodeToContactEntity(dbNode *dbtype.Node) *entity.ContactEntity {
 		Hide:            utils.GetBoolPropOrFalse(props, string(entity.ContactPropertyHide)),
 		CreatedAt:       utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:       utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		Source:          entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth:   entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:          entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:   entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:       utils.GetStringPropOrEmpty(props, "appSource"),
 		EventStoreAggregate: entity.EventStoreAggregate{
 			AggregateVersion: utils.GetInt64PropOrNil(props, "aggregateVersion"),
@@ -967,8 +965,8 @@ func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		Domain:        utils.GetStringPropOrEmpty(props, "domain"),
 	}
 	return &domain
@@ -1005,8 +1003,8 @@ func MapDbNodeToLocationEntity(node *dbtype.Node) *entity.LocationEntity {
 		Longitude:     utils.GetFloatPropOrNil(props, string(entity.LocationPropertyLongitude)),
 		TimeZone:      utils.GetStringPropOrEmpty(props, string(entity.LocationPropertyTimeZone)),
 		UtcOffset:     utils.GetFloatPropOrNil(props, string(entity.LocationPropertyUtcOffset)),
-		Source:        entity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
 	}
 	return &location

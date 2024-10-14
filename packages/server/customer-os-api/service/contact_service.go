@@ -135,7 +135,7 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 			commonservice.EmailFields{
 				Email:     strings.TrimSpace(utils.FirstNotEmptyString(contactDetails.EmailEntity.Email, contactDetails.EmailEntity.RawEmail)),
 				Primary:   utils.IfNotNilBool(contactDetails.EmailEntity.Primary),
-				Source:    neo4jentity.DataSourceOpenline.String(),
+				Source:    neo4jentity.DataSourceOpenline,
 				AppSource: constants.AppSourceCustomerOsApi,
 			}, &commonservice.LinkWith{
 				Type: commonModel.CONTACT,
@@ -584,7 +584,7 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 			commonservice.EmailFields{
 				Email:     strings.TrimSpace(utils.FirstNotEmptyString(data.EmailEntity.Email, data.EmailEntity.RawEmail)),
 				Primary:   utils.IfNotNilBool(data.EmailEntity.Primary),
-				Source:    neo4jentity.DataSourceOpenline.String(),
+				Source:    neo4jentity.DataSourceOpenline,
 				AppSource: constants.AppSourceCustomerOsApi,
 			}, &commonservice.LinkWith{
 				Type: commonModel.CONTACT,

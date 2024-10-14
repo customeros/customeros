@@ -48,7 +48,7 @@ func (ds DataSource) String() string {
 	return string(ds)
 }
 
-func GetDataSource(s string) DataSource {
+func DecodeDataSource(s string) DataSource {
 	if IsValidDataSource(s) {
 		return DataSource(s)
 	}

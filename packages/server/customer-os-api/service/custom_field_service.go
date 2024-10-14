@@ -284,8 +284,8 @@ func (s *customFieldService) mapDbNodeToCustomFieldEntity(node dbtype.Node) *ent
 		Id:            utils.StringPtr(utils.GetStringPropOrEmpty(props, "id")),
 		Name:          utils.GetStringPropOrEmpty(props, "name"),
 		DataType:      utils.GetStringPropOrEmpty(props, "datatype"),
-		Source:        neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: neo4jentity.GetDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Source:        neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth: neo4jentity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		Value: model.AnyTypeValue{

@@ -394,7 +394,7 @@ func (s *organizationService) syncOrganization(ctx context.Context, syncMutex *s
 				commonservice.EmailFields{
 					Email:     orgInput.Email,
 					AppSource: orgInput.AppSource,
-					Source:    orgInput.ExternalSystem,
+					Source:    neo4jentity.DecodeDataSource(orgInput.ExternalSystem),
 					Primary:   true,
 				},
 				&commonservice.LinkWith{

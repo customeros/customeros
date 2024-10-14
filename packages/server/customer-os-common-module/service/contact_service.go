@@ -117,7 +117,7 @@ func (s *contactService) CreateContact(ctx context.Context, tenant string, conta
 		_, err := s.services.SocialService.MergeSocialWithEntity(ctx, tenant, contactId, model.CONTACT,
 			neo4jentity.SocialEntity{
 				Url:       socialUrl,
-				Source:    neo4jentity.GetDataSource(contactFields.SourceFields.Source),
+				Source:    neo4jentity.DecodeDataSource(contactFields.SourceFields.Source),
 				AppSource: contactFields.SourceFields.AppSource,
 			})
 		if err != nil {

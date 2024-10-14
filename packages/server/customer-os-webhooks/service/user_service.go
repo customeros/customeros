@@ -217,7 +217,7 @@ func (s *userService) syncUser(ctx context.Context, syncMutex *sync.Mutex, userI
 			commonservice.EmailFields{
 				Email:     userInput.Email,
 				AppSource: userInput.AppSource,
-				Source:    userInput.ExternalSystem,
+				Source:    neo4jentity.DecodeDataSource(userInput.ExternalSystem),
 				Primary:   true,
 			},
 			&commonservice.LinkWith{

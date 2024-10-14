@@ -36,16 +36,14 @@ const (
 
 type EmailEntity struct {
 	DataLoaderKey
-	Id            string
-	Email         string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`
-	RawEmail      string `neo4jDb:"property:rawEmail;lookupName:RAW_EMAIL;supportCaseSensitive:true"`
-	Work          *bool
-	Primary       bool
-	Source        DataSource
-	SourceOfTruth DataSource
-	AppSource     string
-	CreatedAt     time.Time
-	UpdatedAt     time.Time
+	Id        string
+	Email     string `neo4jDb:"property:email;lookupName:EMAIL;supportCaseSensitive:true"`
+	RawEmail  string `neo4jDb:"property:rawEmail;lookupName:RAW_EMAIL;supportCaseSensitive:true"`
+	Work      *bool
+	Primary   bool
+	Source    DataSource
+	CreatedAt time.Time
+	UpdatedAt time.Time
 
 	IsValidSyntax   *bool
 	Username        *string
