@@ -297,7 +297,8 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 			updateGrpcRequest.Name = data.Name
 		} else if data.Domain != "" {
 			organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_NAME)
-			updateGrpcRequest.Name = data.Domain
+			domainPrefixCapitalized := utils.CapitalizeAllParts(utils.GetDomainPrefix(data.Domain), []string{"-", "_"})
+			updateGrpcRequest.Name = domainPrefixCapitalized
 		}
 	}
 

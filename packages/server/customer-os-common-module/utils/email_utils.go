@@ -46,3 +46,11 @@ func GetReadableNameFromEmail(email string) string {
 
 	return strings.Join(words, " ")
 }
+
+func ExtractDomainFromEmail(email string) string {
+	emailParts := strings.Split(email, "@")
+	if len(emailParts) != 2 {
+		return ""
+	}
+	return ExtractDomain(emailParts[1])
+}
