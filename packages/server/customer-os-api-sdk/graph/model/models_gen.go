@@ -101,6 +101,12 @@ type ActionResponse struct {
 	Accepted bool `json:"accepted"`
 }
 
+type AddTagInput struct {
+	EntityID   string            `json:"entityId"`
+	EntityType EntityType        `json:"entityType"`
+	Tag        *TagIDOrNameInput `json:"tag"`
+}
+
 type Attachment struct {
 	ID            string     `json:"id"`
 	CreatedAt     time.Time  `json:"createdAt"`
@@ -708,8 +714,8 @@ func (CustomField) IsNode()            {}
 func (this CustomField) GetID() string { return this.ID }
 
 type CustomFieldEntityType struct {
-	ID         string     `json:"id"`
-	EntityType EntityType `json:"entityType"`
+	ID         string           `json:"id"`
+	EntityType CustomEntityType `json:"entityType"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact` of type String.
@@ -2322,6 +2328,12 @@ type ReminderUpdateInput struct {
 	Dismissed *bool      `json:"dismissed,omitempty"`
 }
 
+type RemoveTagInput struct {
+	EntityID   string     `json:"entityId"`
+	EntityType EntityType `json:"entityType"`
+	TagID      string     `json:"tagId"`
+}
+
 type RenewalRecord struct {
 	Organization *Organization `json:"organization"`
 	Contract     *Contract     `json:"contract"`
@@ -3572,6 +3584,47 @@ func (e Currency) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 
+type CustomEntityType string
+
+const (
+	CustomEntityTypeContact      CustomEntityType = "Contact"
+	CustomEntityTypeOrganization CustomEntityType = "Organization"
+)
+
+var AllCustomEntityType = []CustomEntityType{
+	CustomEntityTypeContact,
+	CustomEntityTypeOrganization,
+}
+
+func (e CustomEntityType) IsValid() bool {
+	switch e {
+	case CustomEntityTypeContact, CustomEntityTypeOrganization:
+		return true
+	}
+	return false
+}
+
+func (e CustomEntityType) String() string {
+	return string(e)
+}
+
+func (e *CustomEntityType) UnmarshalGQL(v interface{}) error {
+	str, ok := v.(string)
+	if !ok {
+		return fmt.Errorf("enums must be strings")
+	}
+
+	*e = CustomEntityType(str)
+	if !e.IsValid() {
+		return fmt.Errorf("%s is not a valid CustomEntityType", str)
+	}
+	return nil
+}
+
+func (e CustomEntityType) MarshalGQL(w io.Writer) {
+	fmt.Fprint(w, strconv.Quote(e.String()))
+}
+
 type CustomFieldDataType string
 
 const (
@@ -4001,18 +4054,20 @@ func (e EntityTemplateExtension) MarshalGQL(w io.Writer) {
 type EntityType string
 
 const (
-	EntityTypeContact      EntityType = "Contact"
-	EntityTypeOrganization EntityType = "Organization"
+	EntityTypeOrganization EntityType = "ORGANIZATION"
+	EntityTypeContact      EntityType = "CONTACT"
+	EntityTypeLogEntry     EntityType = "LOG_ENTRY"
 )
 
 var AllEntityType = []EntityType{
-	EntityTypeContact,
 	EntityTypeOrganization,
+	EntityTypeContact,
+	EntityTypeLogEntry,
 }
 
 func (e EntityType) IsValid() bool {
 	switch e {
-	case EntityTypeContact, EntityTypeOrganization:
+	case EntityTypeOrganization, EntityTypeContact, EntityTypeLogEntry:
 		return true
 	}
 	return false

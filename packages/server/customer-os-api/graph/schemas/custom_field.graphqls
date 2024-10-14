@@ -142,12 +142,12 @@ input FieldSetUpdateInput {
     name: String!
 }
 
-enum EntityType {
+enum CustomEntityType {
     Contact
     Organization
 }
 
 input CustomFieldEntityType {
     id:        ID!
-    entityType: EntityType!
+    entityType: CustomEntityType!
 }

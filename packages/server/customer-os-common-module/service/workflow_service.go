@@ -10,7 +10,6 @@ import (
 	neo4jrepo "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -183,15 +182,7 @@ func (s *workflowService) executeContactAction(ctx context.Context, tenant strin
 		}
 		tagEntity := neo4jmapper.MapDbNodeToTagEntity(tagDbNode)
 
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			request := contactpb.ContactAddTagGrpcRequest{
-				Tenant:    tenant,
-				ContactId: contactId,
-				TagId:     tagEntity.Id,
-				AppSource: string(workflow.WorkflowType),
-			}
-			return s.services.GrpcClients.ContactClient.AddTag(ctx, &request)
-		})
+		_, err = s.services.TagService.AddTag(ctx, nil, tenant, contactId, model.CONTACT, tagEntity.Id, "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err

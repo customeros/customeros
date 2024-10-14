@@ -38,9 +38,6 @@ extend type Mutation {
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
     contact_Hide(contactId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    contact_AddTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    contact_RemoveTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
@@ -51,6 +48,10 @@ extend type Mutation {
     contact_RemoveSocial(contactId: ID!, socialId: ID!): ActionResponse! @hasTenant
 
     contact_FindWorkEmail(contactId: ID!, organizationId: ID, domain: String, findMobileNumber: Boolean): ActionResponse!
+
+    #TODO remove after UI migration
+    contact_AddTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    contact_RemoveTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
 }
 
 type CustomerContact {

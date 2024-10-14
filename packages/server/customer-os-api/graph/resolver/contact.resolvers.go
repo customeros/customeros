@@ -166,7 +166,7 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 	var customFields []*model.CustomField
 	entityType := &model.CustomFieldEntityType{
 		ID:         obj.ID,
-		EntityType: model.EntityTypeContact,
+		EntityType: model.CustomEntityTypeContact,
 	}
 	customFieldEntities, err := r.Services.CustomFieldService.GetCustomFields(ctx, entityType)
 
@@ -183,7 +183,7 @@ func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
-	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeContact}
+	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.CustomEntityTypeContact}
 	fieldSetEntities, err := r.Services.FieldSetService.FindAll(ctx, entityType)
 	sets := mapper.MapEntitiesToFieldSets(fieldSetEntities)
 	return sets, err
@@ -196,7 +196,7 @@ func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*mo
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", obj.ID))
 
-	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.EntityTypeContact}
+	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.CustomEntityTypeContact}
 	templateEntity, err := r.Services.EntityTemplateService.FindLinked(ctx, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -494,88 +494,6 @@ func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*
 		return &model.ActionResponse{Accepted: false}, nil
 	}
 	return &model.ActionResponse{Accepted: true}, nil
-}
-
-// ContactAddTag is the resolver for the contact_AddTag field.
-func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactAddTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
-	if err != nil || contactEntity == nil {
-		if err == nil {
-			err = fmt.Errorf("contact %s not found", input.ContactID)
-		}
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Contact %s not found", input.ContactID)
-		return &model.ActionResponse{Accepted: false}, nil
-	}
-
-	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
-	if tagId == "" {
-		tagEntity, _ := CreateTag(ctx, r.Services, input.Tag.Name)
-		if tagEntity != nil {
-			tagId = tagEntity.Id
-		}
-	}
-	if tagId != "" {
-		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return r.Clients.ContactClient.AddTag(ctx, &contactpb.ContactAddTagGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				ContactId:      input.ContactID,
-				TagId:          tagId,
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Error while adding tag to contact")
-			return &model.ActionResponse{Accepted: false}, nil
-		}
-	}
-	return &model.ActionResponse{Accepted: tagId != ""}, nil
-}
-
-// ContactRemoveTag is the resolver for the contact_RemoveTag field.
-func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.ContactRemoveTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	contactEntity, err := r.Services.ContactService.GetById(ctx, input.ContactID)
-	if err != nil || contactEntity == nil {
-		if err == nil {
-			err = fmt.Errorf("contact %s not found", input.ContactID)
-		}
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Contact %s not found", input.ContactID)
-		return &model.ActionResponse{Accepted: false}, nil
-	}
-
-	tagId := r.Services.TagService.GetTagId(ctx, input.Tag.ID, input.Tag.Name)
-	if tagId != "" {
-		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return r.Clients.ContactClient.RemoveTag(ctx, &contactpb.ContactRemoveTagGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				ContactId:      input.ContactID,
-				TagId:          tagId,
-				AppSource:      constants.AppSourceCustomerOsApi,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Error removing tag from contact")
-			return &model.ActionResponse{Accepted: false}, nil
-		}
-	}
-	return &model.ActionResponse{Accepted: tagId != ""}, nil
 }
 
 // ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
@@ -928,6 +846,44 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		if err != nil {
 			tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to store billable event"))
 		}
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
+}
+
+// ContactAddTag is the resolver for the contact_AddTag field.
+func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request", input))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error adding tag to organization")
+		return nil, nil
+	}
+
+	return &model.ActionResponse{Accepted: true}, nil
+}
+
+// ContactRemoveTag is the resolver for the contact_RemoveTag field.
+func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.OrganizationAddTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request", input))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error removing tag from organization")
+		return nil, nil
 	}
 
 	return &model.ActionResponse{Accepted: true}, nil

@@ -26,6 +26,7 @@ type OrganizationService interface {
 
 	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 	Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
+
 	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 }
 

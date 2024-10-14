@@ -13,7 +13,7 @@ import (
 )
 
 type FieldSetRepository interface {
-	LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string, entityType model.EntityType) error
+	LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string, entityType model.CustomEntityType) error
 	MergeFieldSetToContactInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string, entity entity.FieldSetEntity) (*dbtype.Node, error)
 	MergeFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entity entity.FieldSetEntity) (*dbtype.Node, error)
 
@@ -32,13 +32,13 @@ func NewFieldSetRepository(driver *neo4j.DriverWithContext) FieldSetRepository {
 	}
 }
 
-func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string, entityType model.EntityType) error {
+func (r *fieldSetRepository) LinkWithFieldSetTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetId, templateId string, entityType model.CustomEntityType) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FieldSetRepository.LinkWithFieldSetTemplateInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	var rel string
-	if entityType == model.EntityTypeContact {
+	if entityType == model.CustomEntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
 	} else {
 		rel = "ORGANIZATION_BELONGS_TO_TENANT"
@@ -92,7 +92,7 @@ func (r *fieldSetRepository) MergeFieldSetInTx(ctx context.Context, tx neo4j.Man
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	var rel string
-	if obj.EntityType == model.EntityTypeContact {
+	if obj.EntityType == model.CustomEntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
 	} else {
 		rel = "ORGANIZATION_BELONGS_TO_TENANT"
@@ -168,7 +168,7 @@ func (r *fieldSetRepository) FindAll(ctx context.Context, session neo4j.SessionW
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var rel string
-		if obj.EntityType == model.EntityTypeContact {
+		if obj.EntityType == model.CustomEntityTypeContact {
 			rel = "CONTACT_BELONGS_TO_TENANT"
 		} else {
 			rel = "ORGANIZATION_BELONGS_TO_TENANT"

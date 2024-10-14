@@ -18,12 +18,14 @@ const (
 	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"
 	ContactAddSocialV1        = "V1_CONTACT_ADD_SOCIAL"
 	ContactRemoveSocialV1     = "V1_CONTACT_REMOVE_SOCIAL"
-	ContactAddTagV1           = "V1_CONTACT_ADD_TAG"
-	ContactRemoveTagV1        = "V1_CONTACT_REMOVE_TAG"
-	ContactRequestEnrichV1    = "V1_CONTACT_ENRICH"
-	ContactAddLocationV1      = "V1_CONTACT_ADD_LOCATION"
-	ContactShowV1             = "V1_CONTACT_SHOW"
-	ContactHideV1             = "V1_CONTACT_HIDE"
+	//Deprecated
+	ContactAddTagV1 = "V1_CONTACT_ADD_TAG"
+	//Deprecated
+	ContactRemoveTagV1     = "V1_CONTACT_REMOVE_TAG"
+	ContactRequestEnrichV1 = "V1_CONTACT_ENRICH"
+	ContactAddLocationV1   = "V1_CONTACT_ADD_LOCATION"
+	ContactShowV1          = "V1_CONTACT_SHOW"
+	ContactHideV1          = "V1_CONTACT_HIDE"
 )
 
 const (

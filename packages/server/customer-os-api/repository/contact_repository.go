@@ -96,7 +96,7 @@ func (r *contactRepository) LinkWithEntityTemplateInTx(ctx context.Context, tx n
 
 	var rel string
 	var extends model.EntityTemplateExtension
-	if obj.EntityType == model.EntityTypeContact {
+	if obj.EntityType == model.CustomEntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
 		extends = model.EntityTemplateExtensionContact
 	} else {

@@ -206,7 +206,13 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		emailevents.EmailCreateV1,
 		emailevents.EmailUpdateV1,
 		orgevents.OrganizationUpdateOwnerV1,
-		orgevents.OrganizationHideV1:
+		orgevents.OrganizationHideV1,
+		orgevents.OrganizationAddTagV1,
+		orgevents.OrganizationRemoveTagV1,
+		logentryevents.LogEntryAddTagV1,
+		logentryevents.LogEntryRemoveTagV1,
+		contactevent.ContactAddTagV1,
+		contactevent.ContactRemoveTagV1:
 
 		return nil
 	}
@@ -269,12 +275,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case contactevent.ContactRemoveSocialV1:
 		_ = s.contactEventHandler.OnSocialRemovedFromContactV1(ctx, evt)
-		return nil
-	case contactevent.ContactAddTagV1:
-		_ = s.contactEventHandler.OnAddTag(ctx, evt)
-		return nil
-	case contactevent.ContactRemoveTagV1:
-		_ = s.contactEventHandler.OnRemoveTag(ctx, evt)
 		return nil
 	case contactevent.ContactAddLocationV1:
 		_ = s.contactEventHandler.OnLocationAddedToContact(ctx, evt)
@@ -339,12 +339,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationUpdateOnboardingStatusV1:
 		_ = s.organizationEventHandler.OnUpdateOnboardingStatus(ctx, evt)
-		return nil
-	case orgevents.OrganizationAddTagV1:
-		_ = s.organizationEventHandler.OnAddTag(ctx, evt)
-		return nil
-	case orgevents.OrganizationRemoveTagV1:
-		_ = s.organizationEventHandler.OnRemoveTag(ctx, evt)
 		return nil
 	case orgevents.OrganizationCreateBillingProfileV1:
 		_ = s.organizationEventHandler.OnCreateBillingProfile(ctx, evt)
@@ -414,12 +408,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case logentryevents.LogEntryUpdateV1:
 		_ = s.logEntryEventHandler.OnUpdate(ctx, evt)
-		return nil
-	case logentryevents.LogEntryAddTagV1:
-		_ = s.logEntryEventHandler.OnAddTag(ctx, evt)
-		return nil
-	case logentryevents.LogEntryRemoveTagV1:
-		_ = s.logEntryEventHandler.OnRemoveTag(ctx, evt)
 		return nil
 
 	case commentevent.CommentCreateV1:

@@ -16,6 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
@@ -111,27 +112,11 @@ func (r *mutationResolver) LogEntryCreateForOrganization(ctx context.Context, or
 	}
 
 	for _, tag := range input.Tags {
-		tagId := r.Services.TagService.GetTagId(ctx, tag.ID, tag.Name)
-		if tagId == "" {
-			tagEntity, _ := CreateTag(ctx, r.Services, tag.Name)
-			if tagEntity != nil {
-				tagId = tagEntity.Id
-			}
-		}
-		if tagId != "" {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-				return r.Clients.LogEntryClient.AddTag(ctx, &logentrypb.AddTagGrpcRequest{
-					Tenant: common.GetTenantFromContext(ctx),
-					UserId: common.GetUserIdFromContext(ctx),
-					Id:     response.Id,
-					TagId:  tagId,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Error adding tag to log entry")
-				return "", nil
-			}
+		_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, response.Id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(tag.ID), utils.StringOrEmpty(tag.Name))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error adding tag to log entry")
+			return "", nil
 		}
 	}
 	return response.Id, nil
@@ -183,88 +168,6 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 	return response.Id, nil
 }
 
-// LogEntryAddTag is the resolver for the logEntry_AddTag field.
-func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryAddTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.logEntryId", id))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
-	if err != nil || logEntryEntity == nil {
-		if err == nil {
-			err = fmt.Errorf("Log entry %s not found", id)
-		}
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Log entry %s not found", id)
-		return "", nil
-	}
-
-	tagId := r.Services.TagService.GetTagId(ctx, input.ID, input.Name)
-	if tagId == "" {
-		tagEntity, _ := CreateTag(ctx, r.Services, input.Name)
-		if tagEntity != nil {
-			tagId = tagEntity.Id
-		}
-	}
-	if tagId != "" {
-		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-			return r.Clients.LogEntryClient.AddTag(ctx, &logentrypb.AddTagGrpcRequest{
-				Tenant: common.GetTenantFromContext(ctx),
-				UserId: common.GetUserIdFromContext(ctx),
-				Id:     id,
-				TagId:  tagId,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Error adding tag to log entry")
-			return id, nil
-		}
-	}
-	return id, nil
-}
-
-// LogEntryRemoveTag is the resolver for the logEntry_RemoveTag field.
-func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryAddTag", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.id", id))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
-	if err != nil || logEntryEntity == nil {
-		if err == nil {
-			err = fmt.Errorf("Log entry %s not found", id)
-		}
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Log entry %s not found", id)
-		return "", nil
-	}
-
-	tagId := r.Services.TagService.GetTagId(ctx, input.ID, input.Name)
-	if tagId != "" {
-		ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-			return r.Clients.LogEntryClient.RemoveTag(ctx, &logentrypb.RemoveTagGrpcRequest{
-				Tenant: common.GetTenantFromContext(ctx),
-				UserId: common.GetUserIdFromContext(ctx),
-				Id:     id,
-				TagId:  tagId,
-			})
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "Error removing tag from log entry")
-			return id, nil
-		}
-	}
-	return id, nil
-}
-
 // LogEntryResetTags is the resolver for the logEntry_ResetTags field.
 func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryResetTags", graphql.GetOperationContext(ctx))
@@ -273,6 +176,8 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 	tracing.LogObjectAsJson(span, "request.input", input)
 	span.LogFields(log.String("request.id", id))
 
+	tenant := common.GetTenantFromContext(ctx)
+
 	logEntryEntity, err := r.Services.LogEntryService.GetById(ctx, id)
 	if err != nil || logEntryEntity == nil {
 		if err == nil {
@@ -282,7 +187,7 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 		graphql.AddErrorf(ctx, "Log entry %s not found", id)
 		return "", nil
 	}
-	tags, err := r.Services.TagService.GetTagsForLogEntries(ctx, []string{logEntryEntity.Id})
+	tags, err := r.Services.CommonServices.TagService.GetTagsForLogEntries(ctx, []string{logEntryEntity.Id})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error getting tags for log entry")
@@ -295,12 +200,11 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 
 	newTagIds := []string{}
 	for _, inputTag := range input {
-		tagId := r.Services.TagService.GetTagId(ctx, inputTag.ID, inputTag.Name)
-		if tagId == "" {
-			tagEntity, _ := CreateTag(ctx, r.Services, inputTag.Name)
-			if tagEntity != nil {
-				tagId = tagEntity.Id
-			}
+		tagId, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(inputTag.ID), utils.StringOrEmpty(inputTag.Name))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			graphql.AddErrorf(ctx, "Error adding tag to organization")
+			return "", nil
 		}
 		if tagId != "" {
 			newTagIds = append(newTagIds, tagId)
@@ -310,38 +214,55 @@ func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, inp
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, currentTagId := range currentTagIds {
 		if !utils.Contains(newTagIds, currentTagId) {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-				return r.Clients.LogEntryClient.RemoveTag(ctx, &logentrypb.RemoveTagGrpcRequest{
-					Tenant: common.GetTenantFromContext(ctx),
-					UserId: common.GetUserIdFromContext(ctx),
-					Id:     id,
-					TagId:  currentTagId,
-				})
-			})
+			err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, currentTagId)
 			if err != nil {
 				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Error removing tag from log entry")
-				return id, nil
+				graphql.AddErrorf(ctx, "Error removing tag from organization")
+				return "", nil
 			}
 		}
 	}
-	for _, newTagId := range newTagIds {
-		if !utils.Contains(currentTagIds, newTagId) {
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*logentrypb.LogEntryIdGrpcResponse](func() (*logentrypb.LogEntryIdGrpcResponse, error) {
-				return r.Clients.LogEntryClient.AddTag(ctx, &logentrypb.AddTagGrpcRequest{
-					Tenant: common.GetTenantFromContext(ctx),
-					UserId: common.GetUserIdFromContext(ctx),
-					Id:     id,
-					TagId:  newTagId,
-				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, err)
-				graphql.AddErrorf(ctx, "Error adding tag to log entry")
-				return id, nil
-			}
-		}
+
+	return id, nil
+}
+
+// LogEntryAddTag is the resolver for the logEntry_AddTag field.
+func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryAddTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.logEntryId", id))
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(input.ID), utils.StringOrEmpty(input.Name))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error adding tag to log entry")
+		return "", nil
 	}
+
+	return id, nil
+}
+
+// LogEntryRemoveTag is the resolver for the logEntry_RemoveTag field.
+func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.LogEntryAddTag", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, id, commonmodel.LOG_ENTRY, utils.StringOrEmpty(input.ID))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error removing tag from organization")
+		return "", nil
+	}
+
 	return id, nil
 }
 

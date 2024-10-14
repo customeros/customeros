@@ -24,10 +24,6 @@ func (a *LogEntryAggregate) HandleCommand(ctx context.Context, cmd eventstore.Co
 		} else {
 			return a.updateLogEntry(ctx, c)
 		}
-	case *command.AddTagCommand:
-		return a.addTag(ctx, c)
-	case *command.RemoveTagCommand:
-		return a.removeTag(ctx, c)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidCommandType)
 		return eventstore.ErrInvalidCommandType
@@ -95,48 +91,4 @@ func (a *LogEntryAggregate) updateLogEntry(ctx context.Context, cmd *command.Ups
 	})
 
 	return a.Apply(updateEvent)
-}
-
-func (a *LogEntryAggregate) addTag(ctx context.Context, cmd *command.AddTagCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.addTag")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
-
-	taggedAtNotNil := utils.IfNotNilTimeWithDefault(cmd.TaggedAt, utils.Now())
-
-	addTagEvent, err := event.NewLogEntryAddTagEvent(a, cmd.TagId, taggedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewLogEntryAddTagEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&addTagEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    "", // TODO add appSource into grpc message
-	})
-
-	return a.Apply(addTagEvent)
-}
-
-func (a *LogEntryAggregate) removeTag(ctx context.Context, cmd *command.RemoveTagCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "LogEntryAggregate.removeTag")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("command", fmt.Sprintf("%+v", cmd)))
-
-	removeTagEvent, err := event.NewLogEntryRemoveTagEvent(a, cmd.TagId)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewLogEntryRemoveTagEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&removeTagEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    "", // TODO add appSource into grpc message
-	})
-
-	return a.Apply(removeTagEvent)
 }

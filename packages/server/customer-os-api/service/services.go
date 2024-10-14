@@ -38,7 +38,6 @@ type Services struct {
 	NoteService                NoteService
 	CalendarService            CalendarService
 	LocationService            LocationService
-	TagService                 TagService
 	SearchService              SearchService
 	QueryService               DashboardService
 	DomainService              DomainService
@@ -80,7 +79,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		FieldSetTemplateService:    NewFieldSetTemplateService(log, repositories),
 		CustomFieldTemplateService: NewCustomFieldTemplateService(log, repositories),
 		LocationService:            NewLocationService(log, repositories),
-		TagService:                 NewTagService(log, repositories),
 		DomainService:              NewDomainService(log, repositories),
 		PageViewService:            NewPageViewService(log, repositories),
 		TenantService:              NewTenantService(log, repositories, grpcClients),

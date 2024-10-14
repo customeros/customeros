@@ -93,16 +93,6 @@ func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, org
 	panic(fmt.Errorf("not implemented: OrganizationUnlinkAllDomains - organization_UnlinkAllDomains"))
 }
 
-// OrganizationAddTag is the resolver for the organization_AddTag field.
-func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: OrganizationAddTag - organization_AddTag"))
-}
-
-// OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
-func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: OrganizationRemoveTag - organization_RemoveTag"))
-}
-
 // OrganizationCreate is the resolver for the organization_Create field.
 func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationCreate - organization_Create"))
@@ -121,6 +111,16 @@ func (r *mutationResolver) OrganizationSetOwner(ctx context.Context, organizatio
 // OrganizationUnsetOwner is the resolver for the organization_UnsetOwner field.
 func (r *mutationResolver) OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationUnsetOwner - organization_UnsetOwner"))
+}
+
+// OrganizationAddTag is the resolver for the organization_AddTag field.
+func (r *mutationResolver) OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OrganizationAddTag - organization_AddTag"))
+}
+
+// OrganizationRemoveTag is the resolver for the organization_RemoveTag field.
+func (r *mutationResolver) OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: OrganizationRemoveTag - organization_RemoveTag"))
 }
 
 // Contracts is the resolver for the contracts field.

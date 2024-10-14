@@ -42,10 +42,6 @@ func (a *OrganizationAggregate) HandleGRPCRequest(ctx context.Context, request a
 	switch r := request.(type) {
 	case *organizationpb.UnLinkDomainFromOrganizationGrpcRequest:
 		return nil, a.unlinkDomain(ctx, r)
-	case *organizationpb.OrganizationAddTagGrpcRequest:
-		return nil, a.addTag(ctx, r)
-	case *organizationpb.OrganizationRemoveTagGrpcRequest:
-		return nil, a.removeTag(ctx, r)
 	case *organizationpb.AddSocialGrpcRequest:
 		return a.addSocial(ctx, r)
 	case *organizationpb.RemoveSocialGrpcRequest:
@@ -229,50 +225,6 @@ func (a *OrganizationAggregate) unlinkEmail(ctx context.Context, request *organi
 	return a.Apply(unlinkEmailEvent)
 }
 
-func (a *OrganizationAggregate) addTag(ctx context.Context, request *organizationpb.OrganizationAddTagGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.addTag")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	addTagEvent, err := organizationEvents.NewOrganizationAddTagEvent(a, request.TagId, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationAddTagEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&addTagEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(addTagEvent)
-}
-
-func (a *OrganizationAggregate) removeTag(ctx context.Context, request *organizationpb.OrganizationRemoveTagGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.removeTag")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	removeTagEvent, err := organizationEvents.NewOrganizationRemoveTagEvent(a, request.TagId, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationRemoveTagEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&removeTagEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(removeTagEvent)
-}
-
 func (a *OrganizationAggregate) When(event eventstore.Event) error {
 
 	switch event.GetEventType() {
@@ -320,10 +272,8 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		return a.onLocationLinkToBillingProfile(event)
 	case organizationEvents.OrganizationLocationUnlinkFromBillingProfileV1:
 		return a.onLocationUnlinkFromBillingProfile(event)
-	case organizationEvents.OrganizationAddTagV1:
-		return a.onOrganizationAddTag(event)
-	case organizationEvents.OrganizationRemoveTagV1:
-		return a.onOrganizationRemoveTag(event)
+	case organizationEvents.OrganizationAddLocationV1:
+		return a.onAddLocation(event)
 	case organizationEvents.OrganizationUpdateRenewalLikelihoodV1,
 		organizationEvents.OrganizationUpdateRenewalForecastV1,
 		organizationEvents.OrganizationUpdateBillingDetailsV1,
@@ -336,10 +286,10 @@ func (a *OrganizationAggregate) When(event eventstore.Event) error {
 		organizationEvents.OrganizationRequestScrapeByWebsiteV1,
 		organizationEvents.OrganizationUpdateOwnerNotificationV1,
 		organizationEvents.OrganizationRequestEnrichV1,
-		organizationEvents.OrganizationHideV1:
+		organizationEvents.OrganizationHideV1,
+		organizationEvents.OrganizationAddTagV1,
+		organizationEvents.OrganizationRemoveTagV1:
 		return nil
-	case organizationEvents.OrganizationAddLocationV1:
-		return a.onAddLocation(event)
 	default:
 		if strings.HasPrefix(event.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
@@ -948,29 +898,6 @@ func (a *OrganizationAggregate) onLocationUnlinkFromBillingProfile(event eventst
 	billingProfile.LocationIds = utils.RemoveFromList(billingProfile.LocationIds, eventData.LocationId)
 	billingProfile.UpdatedAt = eventData.UpdatedAt
 	a.Organization.BillingProfiles[eventData.BillingProfileId] = billingProfile
-
-	return nil
-}
-
-func (a *OrganizationAggregate) onOrganizationAddTag(evt eventstore.Event) error {
-	var eventData organizationEvents.OrganizationAddTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Organization.TagIds = append(a.Organization.TagIds, eventData.TagId)
-	a.Organization.TagIds = utils.RemoveDuplicates(a.Organization.TagIds)
-
-	return nil
-}
-
-func (a *OrganizationAggregate) onOrganizationRemoveTag(evt eventstore.Event) error {
-	var eventData organizationEvents.OrganizationRemoveTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Organization.TagIds = utils.RemoveFromList(a.Organization.TagIds, eventData.TagId)
 
 	return nil
 }

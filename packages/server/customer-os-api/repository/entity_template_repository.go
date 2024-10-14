@@ -103,7 +103,7 @@ func (r *entityTemplateRepository) FindById(ctx context.Context, tenant string, 
 	defer session.Close(ctx)
 
 	var rel string
-	if obj.EntityType == model.EntityTypeContact {
+	if obj.EntityType == model.CustomEntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
 	} else {
 		rel = "ORGANIZATION_BELONGS_TO_TENANT"

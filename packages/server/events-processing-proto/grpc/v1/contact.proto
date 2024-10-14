@@ -119,22 +119,6 @@ message ContactRemoveSocialGrpcRequest {
   string url = 6; // The url of the social, used to identify the social if missing socialId
 }
 
-message ContactAddTagGrpcRequest {
-  string contactId = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string tagId = 4;
-  string appSource = 5;
-}
-
-message ContactRemoveTagGrpcRequest {
-  string contactId = 1;
-  string tenant = 2;
-  string loggedInUserId = 3;
-  string tagId = 4;
-  string appSource = 5;
-}
-
 message EnrichContactGrpcRequest {
   string tenant = 1;
   string contactId = 2;
@@ -172,8 +156,6 @@ service contactGrpcService {
   rpc LinkWithOrganization(LinkWithOrganizationGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddSocial(ContactAddSocialGrpcRequest) returns (SocialIdGrpcResponse);
   rpc RemoveSocial(ContactRemoveSocialGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc AddTag(ContactAddTagGrpcRequest) returns (ContactIdGrpcResponse);
-  rpc RemoveTag(ContactRemoveTagGrpcRequest) returns (ContactIdGrpcResponse);
   rpc EnrichContact(EnrichContactGrpcRequest) returns (ContactIdGrpcResponse);
   rpc AddLocation(ContactAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
   rpc HideContact(ContactIdGrpcRequest) returns (ContactIdGrpcResponse);

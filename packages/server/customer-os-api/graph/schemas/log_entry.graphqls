@@ -5,9 +5,13 @@ extend type Query {
 extend type Mutation {
     logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    #generify in the common schema
     logEntry_ResetTags(id: ID!, input: [TagIdOrNameInput!]): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    #TODO remove after UI migration
+    logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
 }
 
 type LogEntry {

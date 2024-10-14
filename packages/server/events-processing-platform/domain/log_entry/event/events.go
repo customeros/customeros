@@ -11,9 +11,11 @@ import (
 )
 
 const (
-	LogEntryCreateV1    = "V1_LOG_ENTRY_CREATE"
-	LogEntryUpdateV1    = "V1_LOG_ENTRY_UPDATE"
-	LogEntryAddTagV1    = "V1_LOG_ENTRY_ADD_TAG"
+	LogEntryCreateV1 = "V1_LOG_ENTRY_CREATE"
+	LogEntryUpdateV1 = "V1_LOG_ENTRY_UPDATE"
+	//Deprecated
+	LogEntryAddTagV1 = "V1_LOG_ENTRY_ADD_TAG"
+	//Deprecated
 	LogEntryRemoveTagV1 = "V1_LOG_ENTRY_REMOVE_TAG"
 )
 
@@ -89,52 +91,6 @@ func NewLogEntryUpdateEvent(aggregate eventstore.Aggregate, content, contentType
 	event := eventstore.NewBaseEvent(aggregate, LogEntryUpdateV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LogEntryUpdateEvent")
-	}
-	return event, nil
-}
-
-type LogEntryAddTagEvent struct {
-	Tenant   string    `json:"tenant" validate:"required"`
-	TagId    string    `json:"tagId" validate:"required"`
-	TaggedAt time.Time `json:"taggedAt" validate:"required"`
-}
-
-func NewLogEntryAddTagEvent(aggregate eventstore.Aggregate, tagId string, taggedAt time.Time) (eventstore.Event, error) {
-	eventData := LogEntryAddTagEvent{
-		Tenant:   aggregate.GetTenant(),
-		TagId:    tagId,
-		TaggedAt: taggedAt,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate LogEntryAddTagEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, LogEntryAddTagV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LogEntryAddTagEvent")
-	}
-	return event, nil
-}
-
-type LogEntryRemoveTagEvent struct {
-	Tenant string `json:"tenant" validate:"required"`
-	TagId  string `json:"tagId" validate:"required"`
-}
-
-func NewLogEntryRemoveTagEvent(aggregate eventstore.Aggregate, tagId string) (eventstore.Event, error) {
-	eventData := LogEntryRemoveTagEvent{
-		Tenant: aggregate.GetTenant(),
-		TagId:  tagId,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate LogEntryRemoveTagEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, LogEntryRemoveTagV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for LogEntryRemoveTagEvent")
 	}
 	return event, nil
 }

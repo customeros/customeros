@@ -115,7 +115,7 @@ type Loaders struct {
 }
 
 type tagBatcher struct {
-	tagService service.TagService
+	tagService commonservice.TagService
 }
 type emailBatcher struct {
 	emailService service.EmailService
@@ -217,7 +217,7 @@ type flowBatcher struct {
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
 	tagBatcher := &tagBatcher{
-		tagService: services.TagService,
+		tagService: services.CommonServices.TagService,
 	}
 	emailBatcher := &emailBatcher{
 		emailService: services.EmailService,
