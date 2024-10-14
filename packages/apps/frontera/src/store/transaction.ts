@@ -1,3 +1,4 @@
+import localforage from 'localforage';
 import { computed, reaction, observable, makeObservable } from 'mobx';
 
 import type { RootStore } from './root';
@@ -53,25 +54,72 @@ class Transaction {
 }
 
 class TransactionQueue {
+  private id: string;
   private queue: Transaction[] = [];
 
   get hasCommits() {
     return this.queue.length > 0;
   }
 
-  constructor() {
+  get storageKey() {
+    return `tx-queue-${this.id}`;
+  }
+
+  constructor(id: string) {
+    this.id = id;
+
     makeObservable<TransactionQueue, 'queue'>(this, {
       queue: observable,
       hasCommits: computed,
     });
+
+    window.addEventListener('online', async () => {
+      const savedTxs = await this.loadSaved();
+
+      if (!savedTxs) return;
+
+      savedTxs.forEach((tx) => this.push(tx));
+
+      await this.clearSaved();
+    });
   }
 
   push(tx: Transaction) {
-    this.queue.push(tx);
+    if (navigator?.onLine) {
+      this.queue.push(tx);
+    } else {
+      this.save(tx);
+    }
   }
 
   next() {
     return this.queue.shift();
+  }
+
+  private async save(tx: Transaction) {
+    try {
+      const prev = await localforage.getItem<Transaction[]>(this.storageKey);
+
+      await localforage.setItem(this.storageKey, [...(prev ?? []), tx]);
+    } catch (err) {
+      console.error('Could not save transaction.', err);
+    }
+  }
+
+  private async loadSaved() {
+    try {
+      return await localforage.getItem<Transaction[]>(this.storageKey);
+    } catch (err) {
+      console.error('Could not load saved transactions.', err);
+    }
+  }
+
+  private async clearSaved() {
+    try {
+      await localforage.removeItem(this.storageKey);
+    } catch (err) {
+      console.error('Could not remove saved transactions', err);
+    }
   }
 }
 
@@ -89,9 +137,6 @@ class TransactionRunner {
     private retryQueue: TransactionQueue,
   ) {
     this.graphqlService = new GraphqlService(this.root, this.transport);
-    // this.processGraphqlMutation = this.processGraphqlMutation.bind(this);
-    // this.processSyncPacket = this.processSyncPacket.bind(this);
-    // this.processTransaction = this.processTransaction.bind(this);
   }
 
   // tx should contain a type property to handle group packets too
@@ -144,11 +189,13 @@ class TransactionRunner {
 
   private async processTransaction(tx: Transaction) {
     await this.processGraphqlMutation(tx);
+    console.info('processed gql mutation!');
     await this.processSyncPacket(tx);
+    console.info('processed sync packet!');
   }
 
   private async processSyncPacket(tx: Transaction) {
-    await new Promise<void>((resolve, reject) => {
+    return await new Promise<void>((resolve, reject) => {
       const channelBinding =
         tx.type === 'SINGLE' ? 'sync_packet' : 'sync_group_packet';
 
@@ -168,7 +215,7 @@ class TransactionRunner {
   }
 
   private async processGraphqlMutation(tx: Transaction) {
-    await this.graphqlService.mutate(tx.operation as Operation);
+    return await this.graphqlService.mutate(tx.operation as Operation);
   }
 
   private handleRetry(tx: Transaction) {
@@ -209,8 +256,8 @@ export class TransactionService {
   private runner: TransactionRunner;
 
   constructor(private root: RootStore, private transport: Transport) {
-    this.mainQueue = new TransactionQueue();
-    this.retryQueue = new TransactionQueue();
+    this.mainQueue = new TransactionQueue('main');
+    this.retryQueue = new TransactionQueue('retry');
     this.runner = new TransactionRunner(
       this.root,
       this.transport,
