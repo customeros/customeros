@@ -65,10 +65,11 @@ export class ContactStore implements Store<Contact> {
 
   set id(id: string) {
     this.value.id = id;
+    this.value.metadata.id = id;
   }
 
   get id() {
-    return this.value.id;
+    return this.value.id ?? this.value.metadata.id;
   }
 
   get organizationId() {
@@ -118,11 +119,12 @@ export class ContactStore implements Store<Contact> {
   }
 
   setId(id: string) {
+    this.value.id = id;
     this.value.metadata.id = id;
   }
 
   getId() {
-    return this.value.metadata.id;
+    return this.value.id ?? this.value.metadata.id;
   }
 
   deletePersona(personaId: string) {
