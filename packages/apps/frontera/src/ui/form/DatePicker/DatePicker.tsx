@@ -62,11 +62,13 @@ export const DatePicker = forwardRef(
       <Calendar
         ref={ref}
         value={value}
-        className={'test'}
         defaultValue={value}
         prevLabel={<ChevronLeft />}
         nextLabel={<ChevronRight />}
         onChange={handleDateInputChange}
+        formatMonth={(locale, date) =>
+          date.toLocaleDateString(locale, { month: 'short' })
+        }
         {...props}
       />
     );

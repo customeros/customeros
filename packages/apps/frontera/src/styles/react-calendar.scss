@@ -20,7 +20,7 @@
 }
 
 .react-calendar__month-view__weekdays {
-  @apply text-center uppercase font-bold text-xs mr-[1px];
+  @apply text-center uppercase font-bold text-xs mr-[3px];
 }
 
 .react-calendar__month-view__weekdays__weekday abbr {
@@ -45,18 +45,16 @@
 
 .react-calendar__tile:enabled:focus {
   @apply ring-[1.5px] ring-gray-700 ring-offset-2 ring-offset-white;
-  border-radius: 100%;
   border: 1px solid #344054 !important;
 }
 
 .react-calendar__tile:enabled:hover {
-  border-radius: 100%;
   border: 1px solid #344054 !important;
 }
 
-.react-calendar__tile--hasActive {
-  @apply bg-primary-50 border border-primary-200 *:text-primary-500;
-}
+// .react-calendar__tile--hasActive {
+//   @apply bg-primary-50 border border-primary-200 *:text-primary-500;
+// }
 
 .react-calendar__tile--active {
   @apply bg-gray-700 text-white;
@@ -82,8 +80,8 @@
     bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     background-color: currentColor;
     border-radius: 50%;
   }
@@ -102,8 +100,8 @@
     bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     background-color: currentColor;
     border-radius: 50%;
   }
@@ -118,8 +116,8 @@
     bottom: 4px;
     left: 50%;
     transform: translateX(-50%);
-    width: 6px;
-    height: 6px;
+    width: 4px;
+    height: 4px;
     background-color: currentColor;
     border-radius: 50%;
   }
@@ -136,7 +134,27 @@
 }
 
 .react-calendar__tile.react-calendar__year-view__months__month {
-  @apply w-full max-w-none rounded-lg border border-transparent;
+  @apply max-w-none rounded-lg border border-transparent  w-[50%] ml-[30px];
+}
+
+.react-calendar__tile--now.react-calendar__tile--hasActive.react-calendar__year-view__months__month {
+  @apply rounded-lg;
+}
+
+.react-calendar__tile.react-calendar__year-view__months__month:enabled:hover {
+  border: 1px transparent solid;
+}
+
+.react-calendar__tile--now.react-calendar__year-view__months__month:enabled:hover {
+  @apply rounded-lg;
+}
+.react-calendar__tile.react-calendar__year-view__months__month:enabled:focus {
+  @apply ring-offset-2 ring-offset-white ring-[1.5px] ring-gray-700 bg-gray-700 text-white;
+  border: 1px transparent solid;
+}
+
+.react-calendar__tile.react-calendar__tile--now.react-calendar__tile--hasActive.react-calendar__year-view__months__month {
+  @apply bg-gray-700 text-white;
 }
 
 .react-calendar__decade-view__years {
@@ -147,13 +165,24 @@
 
 .react-calendar__century-view__decades__decade,
 .react-calendar__decade-view__years__year {
-  @apply w-full max-w-none rounded-lg border border-transparent;
+  @apply max-w-none rounded-lg border border-transparent w-[50%] ml-[30px];
 }
 
 .react-calendar__century-view__decades {
   display: grid !important;
   grid-template-columns: repeat(3, 1fr);
   gap: 4px;
+}
+
+.react-calendar__tile.react-calendar__tile--now.react-calendar__decade-view__years__year {
+  @apply rounded-lg;
+}
+
+.react-calendar__tile.react-calendar__tile--now.react-calendar__tile--hasActive.react-calendar__decade-view__years__year {
+  @apply bg-gray-700 text-white;
+}
+.react-calendar__tile.react-calendar__tile--now.react-calendar__tile--hasActive.react-calendar__decade-view__years__year:enabled:hover {
+  @apply rounded-lg;
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__next2-button,
@@ -163,10 +192,6 @@
 
 .react-calendar__navigation__arrow.react-calendar__navigation__prev-button:disabled {
   display: none;
-}
-.react-calendar__navigation__arrow.react-calendar__navigation__prev-button:disabled
-  + .react-calendar__navigation__label {
-  margin-left: 103px !important;
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__prev-button,
@@ -190,6 +215,13 @@
   & :hover {
     background-color: #f7f8f9;
   }
+}
+
+.react-calendar__navigation__arrow.react-calendar__navigation__next-button {
+  margin-top: 6px;
+}
+.react-calendar__navigation__arrow.react-calendar__navigation__prev-button {
+  margin-top: 11px;
 }
 
 .react-calendar__navigation__arrow.react-calendar__navigation__next-button:after {

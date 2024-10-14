@@ -115,7 +115,7 @@ export const DateFilter = ({
         className='py-1 min-w-[254px]'
       >
         <DatePicker
-          value={filterValue?.[0]}
+          value={new Date(filterValue?.[0] || filterValue?.[1] || new Date())}
           onChange={(value) => handleDateChange(value as Date | Date[] | null)}
         />
       </PopoverContent>
