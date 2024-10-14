@@ -182,7 +182,7 @@ func (s *workflowService) executeContactAction(ctx context.Context, tenant strin
 		}
 		tagEntity := neo4jmapper.MapDbNodeToTagEntity(tagDbNode)
 
-		_, err = s.services.TagService.AddTag(ctx, nil, tenant, contactId, model.CONTACT, tagEntity.Id, "")
+		_, err = s.services.TagService.AddTag(ctx, nil, tenant, contactId, model.CONTACT, tagEntity.Id, "", "")
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return err
