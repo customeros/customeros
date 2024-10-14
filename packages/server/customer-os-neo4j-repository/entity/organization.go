@@ -54,8 +54,6 @@ type OrganizationEntity struct {
 	LastTouchpointId   *string    `neo4jDb:"property:lastTouchpointId;lookupName:LAST_TOUCHPOINT_ID;supportCaseSensitive:false"`
 	LastTouchpointType *string    `neo4jDb:"property:lastTouchpointType;lookupName:LAST_TOUCHPOINT_TYPE;supportCaseSensitive:false"`
 	Source             DataSource
-	SourceOfTruth      DataSource
-	AppSource          string
 	YearFounded        *int64
 	Headquarters       string
 	EmployeeGrowthRate string

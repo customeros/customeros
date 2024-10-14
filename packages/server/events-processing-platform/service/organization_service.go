@@ -192,27 +192,6 @@ func (s *organizationService) UnlinkDomainFromOrganization(ctx context.Context, 
 	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
 }
 
-func (s *organizationService) HideOrganization(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.HideOrganization")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	// handle deadlines
-	if err := ctx.Err(); err != nil {
-		return nil, status.Error(codes.Canceled, "Context canceled")
-	}
-
-	cmd := command.NewHideOrganizationCommand(request.Tenant, request.OrganizationId, request.LoggedInUserId)
-	if err := s.organizationCommands.HideOrganizationCommand.Handle(ctx, cmd); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("Failed hide organization with id  %s for tenant %s, err: %s", request.OrganizationId, request.Tenant, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	return &organizationpb.OrganizationIdGrpcResponse{Id: request.OrganizationId}, nil
-}
-
 func (s *organizationService) ShowOrganization(ctx context.Context, request *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "OrganizationService.ShowOrganization")
 	defer span.Finish()

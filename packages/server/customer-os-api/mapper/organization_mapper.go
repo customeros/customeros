@@ -18,13 +18,11 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 	}
 	organization := model.Organization{
 		Metadata: &model.Metadata{
-			ID:            entity.ID,
-			Created:       entity.CreatedAt,
-			LastUpdated:   entity.UpdatedAt,
-			Source:        MapDataSourceToModel(entity.Source),
-			SourceOfTruth: MapDataSourceToModel(entity.SourceOfTruth),
-			AppSource:     entity.AppSource,
-			Version:       entity.AggregateVersion,
+			ID:          entity.ID,
+			Created:     entity.CreatedAt,
+			LastUpdated: entity.UpdatedAt,
+			Source:      MapDataSourceToModel(entity.Source),
+			Version:     entity.AggregateVersion,
 		},
 		CustomID:           utils.StringPtrNillable(entity.ReferenceId),
 		CustomerOsID:       entity.CustomerOsId,
@@ -85,8 +83,6 @@ func MapEntityToOrganization(entity *neo4jentity.OrganizationEntity) *model.Orga
 		ID:                            entity.ID,
 		ReferenceID:                   utils.StringPtrNillable(entity.ReferenceId),
 		Source:                        MapDataSourceToModel(entity.Source),
-		SourceOfTruth:                 MapDataSourceToModel(entity.SourceOfTruth),
-		AppSource:                     entity.AppSource,
 		CreatedAt:                     entity.CreatedAt,
 		UpdatedAt:                     entity.UpdatedAt,
 		LastTouchPointTimelineEventID: entity.LastTouchpointId,

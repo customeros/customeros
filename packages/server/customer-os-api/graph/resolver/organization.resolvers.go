@@ -138,21 +138,14 @@ func (r *mutationResolver) OrganizationHide(ctx context.Context, id string) (str
 		return "", nil
 	}
 
-	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-		return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-			Tenant:         common.GetTenantFromContext(ctx),
-			OrganizationId: id,
-			LoggedInUserId: common.GetUserIdFromContext(ctx),
-		})
-	})
+	err := r.Services.CommonServices.OrganizationService.Hide(ctx, nil, common.GetTenantFromContext(ctx), id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to hide organization %s", id)
-		return response.Id, nil
+		return id, nil
 	}
 
-	return response.Id, nil
+	return id, nil
 }
 
 // OrganizationHideAll is the resolver for the organization_HideAll field.
@@ -164,13 +157,7 @@ func (r *mutationResolver) OrganizationHideAll(ctx context.Context, ids []string
 
 	ctx = commonTracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 	for _, orgId := range ids {
-		_, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return r.Clients.OrganizationClient.HideOrganization(ctx, &organizationpb.OrganizationIdGrpcRequest{
-				Tenant:         common.GetTenantFromContext(ctx),
-				OrganizationId: orgId,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-			})
-		})
+		err := r.Services.CommonServices.OrganizationService.Hide(ctx, nil, common.GetTenantFromContext(ctx), orgId)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to hide organization %s", orgId)

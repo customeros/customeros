@@ -66,16 +66,6 @@ func NewLinkDomainCommand(objectID, tenant, domain, loggedInUserId, appSource st
 	}
 }
 
-type HideOrganizationCommand struct {
-	eventstore.BaseCommand
-}
-
-func NewHideOrganizationCommand(tenant, orgId, userId string) *HideOrganizationCommand {
-	return &HideOrganizationCommand{
-		BaseCommand: eventstore.NewBaseCommand(orgId, tenant, userId),
-	}
-}
-
 type ShowOrganizationCommand struct {
 	eventstore.BaseCommand
 }

@@ -7,6 +7,7 @@ import (
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
@@ -23,6 +24,7 @@ type OrganizationService interface {
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId *string, input *repository.OrganizationSaveFields) (*string, error)
 	AddDomainFromWebsite(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId string, website string) error
 
+	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 	Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 }
@@ -138,6 +140,13 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			input.UpdateName = true
 		}
 
+		input.SourceFields.Source = constants.SourceOpenline
+
+		if !input.UpdateHide {
+			input.Hide = false
+			input.UpdateHide = true
+		}
+
 		generatedId, err := s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelOrganization)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -244,6 +253,35 @@ func (s *organizationService) AddDomainFromWebsite(ctx context.Context, tx *neo4
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	return nil
+}
+
+func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.Hide")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.SetTag(tracing.SpanTagEntityId, organizationId)
+
+	organization, err := s.GetById(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+	if organization == nil {
+		err = fmt.Errorf("opportunity not found")
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	fields := repository.OrganizationSaveFields{Hide: true, UpdateHide: true}
+	err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, tx, tenant, organizationId, fields)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients)
 
 	return nil
 }

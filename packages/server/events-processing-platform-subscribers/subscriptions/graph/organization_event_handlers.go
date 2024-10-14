@@ -616,34 +616,12 @@ func (h *OrganizationEventHandler) OnSocialRemovedFromOrganization(ctx context.C
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnOrganizationHide(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationHide")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.HideOrganizationEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.OrganizationWriteRepository.SetVisibility(ctx, eventData.Tenant, organizationId, true)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients)
-
-	return nil
-}
-
 func (h *OrganizationEventHandler) OnOrganizationShow(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnOrganizationShow")
 	defer span.Finish()
 	setEventSpanTagsAndLogFields(span, evt)
 
-	var eventData events.HideOrganizationEvent
+	var eventData events.ShowOrganizationEvent
 	if err := evt.GetJsonData(&eventData); err != nil {
 		tracing.TraceErr(span, err)
 		return errors.Wrap(err, "evt.GetJsonData")

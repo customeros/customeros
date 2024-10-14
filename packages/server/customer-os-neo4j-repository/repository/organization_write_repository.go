@@ -567,55 +567,54 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			"tenant":         tenant,
 			"organizationId": organizationId,
 			"source":         data.SourceFields.Source,
-			"overwrite":      data.SourceFields.Source == constants.SourceOpenline || data.SourceFields.Source == constants.SourceWebscrape,
 			"now":            utils.Now(),
 		}
 
 		cypherUpdate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$organizationId}) SET `, tenant)
 
 		if data.UpdateName {
-			cypherUpdate += `org.name = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.name = '' THEN $name ELSE org.name END,`
+			cypherUpdate += `org.name = $name,`
 			paramsUpdate["name"] = data.Name
 		}
 		if data.UpdateDescription {
-			cypherUpdate += `org.description = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.description = '' THEN $description ELSE org.description END,`
+			cypherUpdate += `org.description = $description,`
 			paramsUpdate["description"] = data.Description
 		}
 		if data.UpdateHide {
-			cypherUpdate += `org.hide = CASE WHEN $overwrite=true OR $hide = false THEN $hide ELSE org.hide END,`
-			cypherUpdate += `org.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE org.hiddenAt END,`
+			cypherUpdate += `org.hide = $hide,`
+			cypherUpdate += `org.hiddenAt = CASE WHEN $hide = true THEN datetime() ELSE null END,`
 			paramsUpdate["hide"] = data.Hide
 		}
 		if data.UpdateWebsite {
-			cypherUpdate += `org.website = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.website is null OR org.website = '' THEN $website ELSE org.website END,`
+			cypherUpdate += `org.website = org.website,`
 			paramsUpdate["website"] = data.Website
 		}
 		if data.UpdateIndustry {
-			cypherUpdate += `org.industry = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.industry is null OR org.industry = '' THEN $industry ELSE org.industry END,`
+			cypherUpdate += `org.industry = $industry,`
 			paramsUpdate["industry"] = data.Industry
 		}
 		if data.UpdateSubIndustry {
-			cypherUpdate += `org.subIndustry = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.subIndustry is null OR org.subIndustry = '' THEN $subIndustry ELSE org.subIndustry END,`
+			cypherUpdate += `org.subIndustry = $subIndustry,`
 			paramsUpdate["subIndustry"] = data.SubIndustry
 		}
 		if data.UpdateIndustryGroup {
-			cypherUpdate += `org.industryGroup = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.industryGroup is null OR org.industryGroup = '' THEN $industryGroup ELSE org.industryGroup END,`
+			cypherUpdate += `org.industryGroup = $industryGroup,`
 			paramsUpdate["industryGroup"] = data.IndustryGroup
 		}
 		if data.UpdateTargetAudience {
-			cypherUpdate += `org.targetAudience = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.targetAudience is null OR org.targetAudience = '' THEN $targetAudience ELSE org.targetAudience END,`
+			cypherUpdate += `org.targetAudience = $targetAudience,`
 			paramsUpdate["targetAudience"] = data.TargetAudience
 		}
 		if data.UpdateValueProposition {
-			cypherUpdate += `org.valueProposition = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.valueProposition is null OR org.valueProposition = '' THEN $valueProposition ELSE org.valueProposition END,`
+			cypherUpdate += `org.valueProposition = $valueProposition,`
 			paramsUpdate["valueProposition"] = data.ValueProposition
 		}
 		if data.UpdateLastFundingRound {
-			cypherUpdate += `org.lastFundingRound = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.lastFundingRound is null OR org.lastFundingRound = '' THEN $lastFundingRound ELSE org.lastFundingRound END,`
+			cypherUpdate += `org.lastFundingRound = $lastFundingRound,`
 			paramsUpdate["lastFundingRound"] = data.LastFundingRound
 		}
 		if data.UpdateLastFundingAmount {
-			cypherUpdate += `org.lastFundingAmount = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.lastFundingAmount is null OR org.lastFundingAmount = '' THEN $lastFundingAmount ELSE org.lastFundingAmount END,`
+			cypherUpdate += `org.lastFundingAmount = $lastFundingAmount,`
 			paramsUpdate["lastFundingAmount"] = data.LastFundingAmount
 		}
 		if data.UpdateCustomerOsId {
@@ -623,64 +622,64 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			paramsUpdate["customerOsId"] = data.CustomerOsId
 		}
 		if data.UpdateReferenceId {
-			cypherUpdate += `org.referenceId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.referenceId is null OR org.referenceId = '' THEN $referenceId ELSE org.referenceId END,`
+			cypherUpdate += `org.referenceId = $referenceId,`
 			paramsUpdate["referenceId"] = data.ReferenceId
 		}
 		if data.UpdateNote {
-			cypherUpdate += `org.note = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.note is null OR org.note = '' THEN $note ELSE org.note END,`
+			cypherUpdate += `org.note = $note,`
 			paramsUpdate["note"] = data.Note
 		}
 		if data.UpdateIsPublic {
-			cypherUpdate += `org.isPublic = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.isPublic is null THEN $isPublic ELSE org.isPublic END,`
+			cypherUpdate += `org.isPublic = $isPublic,`
 			paramsUpdate["isPublic"] = data.IsPublic
 		}
 		if data.UpdateEmployees {
-			cypherUpdate += `org.employees = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employees is null THEN $employees ELSE org.employees END,`
+			cypherUpdate += `org.employees = $employees,`
 			paramsUpdate["employees"] = data.Employees
 		}
 		if data.UpdateMarket {
-			cypherUpdate += `org.market = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.market is null OR org.market = '' THEN $market ELSE org.market END,`
+			cypherUpdate += `org.market = $market,`
 			paramsUpdate["market"] = data.Market
 		}
 		if data.UpdateYearFounded {
-			cypherUpdate += `org.yearFounded = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.yearFounded is null OR org.yearFounded = 0 THEN $yearFounded ELSE org.yearFounded END,`
+			cypherUpdate += `org.yearFounded = $yearFounded,`
 			paramsUpdate["yearFounded"] = data.YearFounded
 		}
 		if data.UpdateHeadquarters {
-			cypherUpdate += `org.headquarters = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.headquarters is null OR org.headquarters = '' THEN $headquarters ELSE org.headquarters END,`
+			cypherUpdate += `org.headquarters = $headquarters,`
 			paramsUpdate["headquarters"] = data.Headquarters
 		}
 		if data.UpdateLogoUrl {
-			cypherUpdate += `org.logoUrl = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.logoUrl is null OR org.logoUrl = '' THEN $logoUrl ELSE org.logoUrl END,`
+			cypherUpdate += `org.logoUrl = $logoUrl,`
 			paramsUpdate["logoUrl"] = data.LogoUrl
 		}
 		if data.UpdateIconUrl {
-			cypherUpdate += `org.iconUrl = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.iconUrl is null OR org.iconUrl = '' THEN $iconUrl ELSE org.iconUrl END,`
+			cypherUpdate += `org.iconUrl = $iconUrl,`
 			paramsUpdate["iconUrl"] = data.IconUrl
 		}
 		if data.UpdateEmployeeGrowthRate {
-			cypherUpdate += `org.employeeGrowthRate = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.employeeGrowthRate is null OR org.employeeGrowthRate = '' THEN $employeeGrowthRate ELSE org.employeeGrowthRate END,`
+			cypherUpdate += `org.employeeGrowthRate = $employeeGrowthRate,`
 			paramsUpdate["employeeGrowthRate"] = data.EmployeeGrowthRate
 		}
 		if data.UpdateSlackChannelId {
-			cypherUpdate += `org.slackChannelId = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.slackChannelId is null OR org.slackChannelId = '' THEN $slackChannelId ELSE org.slackChannelId END,`
+			cypherUpdate += `org.slackChannelId = $slackChannelId,`
 			paramsUpdate["slackChannelId"] = data.SlackChannelId
 		}
 		if data.UpdateRelationship {
-			cypherUpdate += `org.relationship = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.relationship is null OR org.relationship = '' THEN $relationship ELSE org.relationship END,`
+			cypherUpdate += `org.relationship = $relationship,`
 			paramsUpdate["relationship"] = data.Relationship.String()
 		}
 		if data.UpdateStage {
-			cypherUpdate += `org.stage = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '' THEN $stage ELSE org.stage END,`
-			cypherUpdate += `org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$source OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`
+			cypherUpdate += `org.stage = $stage,`
+			cypherUpdate += `org.stageUpdatedAt = CASE WHEN (org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN $now ELSE org.stageUpdatedAt END,`
 			paramsUpdate["stage"] = data.Stage.String()
 		}
 		if data.UpdateLeadSource {
-			cypherUpdate += `org.leadSource = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true THEN $leadSource ELSE org.leadSource END,`
+			cypherUpdate += `org.leadSource = $leadSource,`
 			paramsUpdate["leadSource"] = data.LeadSource
 		}
 		if data.UpdateIcpFit {
-			cypherUpdate += `org.icpFit = CASE WHEN org.sourceOfTruth=$source OR $overwrite=true THEN $icpFit ELSE org.icpFit END,`
+			cypherUpdate += `org.icpFit = $icpFit,`
 			paramsUpdate["icpFit"] = data.IcpFit
 		}
 		if data.EnrichDomain != "" && data.EnrichSource != "" {
@@ -689,9 +688,7 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 			paramsUpdate["enrichSource"] = data.EnrichSource
 			paramsUpdate["enrichedAt"] = utils.Now()
 		}
-		cypherUpdate += ` org.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE org.sourceOfTruth END,
-				org.updatedAt = datetime(),
-				org.syncedWithEventStore = false`
+		cypherUpdate += `org.updatedAt = datetime()`
 
 		span.LogFields(log.String("cypherUpdate", cypherUpdate))
 		tracing.LogObjectAsJson(span, "paramsUpdate", paramsUpdate)
