@@ -23,13 +23,16 @@ export class GraphqlService {
       return;
     }
 
-    match(operation.entity)
+    return match(operation.entity)
       .with('Organization', async () => {
         const store = this.getStore(operation, 'organizations');
 
         if (!store) return;
 
-        await this.organizationsService.mutateOperation(operation, store);
+        return await this.organizationsService.mutateOperation(
+          operation,
+          store,
+        );
       })
       .otherwise(() => {});
   }

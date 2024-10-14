@@ -206,7 +206,7 @@ export class OrganizationsService {
       return;
     }
 
-    match(path)
+    return match(path)
       .with(['owner', ...P.array()], () => {
         if (type === 'update') {
           match(value)
@@ -327,7 +327,7 @@ export class OrganizationsService {
       .otherwise(async () => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
 
-        await this.updateOrganization({
+        return await this.updateOrganization({
           input: { ...payload, id: organizationId, patch: true },
         });
       });
