@@ -505,12 +505,10 @@ func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
 	primary := true
 	email := "email@website.com"
 	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
-		Email:         email,
-		RawEmail:      email,
-		Primary:       primary,
-		Source:        constants.SourceOpenline,
-		SourceOfTruth: constants.SourceOpenline,
-		AppSource:     constants.SourceOpenline,
+		Email:    email,
+		RawEmail: email,
+		Primary:  primary,
+		Source:   constants.SourceOpenline,
 	})
 
 	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)

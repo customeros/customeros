@@ -215,12 +215,10 @@ func TestGraphContactEventHandler_OnEmailLinkToContactLinkToContact(t *testing.T
 
 	email := "email@website.com"
 	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
-		Email:         email,
-		RawEmail:      email,
-		Primary:       true,
-		Source:        constants.SourceOpenline,
-		SourceOfTruth: constants.SourceOpenline,
-		AppSource:     constants.SourceOpenline,
+		Email:    email,
+		RawEmail: email,
+		Primary:  true,
+		Source:   constants.SourceOpenline,
 	})
 
 	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
