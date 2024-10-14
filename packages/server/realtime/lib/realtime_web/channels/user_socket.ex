@@ -22,6 +22,8 @@ defmodule RealtimeWeb.UserSocket do
   channel "Flows:*", RealtimeWeb.FlowsChannel
   channel "FlowContact:*", RealtimeWeb.FlowContactChannel
   channel "FlowContacts:*", RealtimeWeb.FlowContactsChannel
+  channel "FlowSender:*", RealtimeWeb.FlowSenderChannel
+  channel "FlowSenders:*", RealtimeWeb.FlowSendersChannel
   channel "ContractLineItem:*", RealtimeWeb.ContractLineItemChannel
   channel "ContractLineItems:*", RealtimeWeb.ContractLineItemsChannel
   channel "Opportunities:*", RealtimeWeb.OpportunitiesChannel

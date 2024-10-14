@@ -11,6 +11,15 @@ export type GetFlowsQuery = {
     nodes: string;
     status: Types.FlowStatus;
     metadata: { __typename?: 'Metadata'; id: string };
+    senders: Array<{
+      __typename?: 'FlowSender';
+      metadata: { __typename?: 'Metadata'; id: string };
+      user?: { __typename?: 'User'; id: string } | null;
+      flow?: {
+        __typename?: 'Flow';
+        metadata: { __typename?: 'Metadata'; id: string };
+      } | null;
+    }>;
     statistics: {
       __typename?: 'FlowStatistics';
       total: any;

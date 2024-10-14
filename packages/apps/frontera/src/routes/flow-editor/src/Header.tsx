@@ -11,7 +11,9 @@ import { cn } from '@ui/utils/cn';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Button } from '@ui/form/Button/Button';
 import { User01 } from '@ui/media/icons/User01';
+import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
+import { Settings03 } from '@ui/media/icons/Settings03.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { ViewSettings } from '@shared/components/ViewSettings';
 import { TableViewType } from '@shared/types/__generated__/graphql.types';
@@ -24,8 +26,10 @@ export const Header = observer(
   ({
     hasChanges,
     onToggleHasChanges,
+    onToggleSidePanel,
   }: {
     hasChanges: boolean;
+    onToggleSidePanel: () => void;
     onToggleHasChanges: (status: boolean) => void;
   }) => {
     const id = useParams().id as string;
@@ -33,6 +37,7 @@ export const Header = observer(
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
     const { getNodes, getEdges } = useReactFlow();
+
     const saveFlag = useFeatureIsOn('flow-editor-save-button_1');
 
     const flow = store.flows.value.get(id) as FlowStore;
@@ -162,6 +167,13 @@ export const Header = observer(
               </Button>
             )}
             <FlowStatusMenu id={id} />
+            <IconButton
+              size='xs'
+              variant='ghost'
+              icon={<Settings03 />}
+              onClick={onToggleSidePanel}
+              aria-label={'Toggle Settings'}
+            />
           </div>
         </div>
       </div>
