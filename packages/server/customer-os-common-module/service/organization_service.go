@@ -222,6 +222,18 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		return nil, err
 	}
 
+	if input.SourceFields.AppSource != constants.AppSourceCustomerOsApi {
+		details := utils.NewEventCompletedDetails()
+
+		if existing == nil {
+			details.WithCreate()
+		} else {
+			details.WithUpdate()
+		}
+
+		utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, details)
+	}
+
 	return organizationId, nil
 }
 

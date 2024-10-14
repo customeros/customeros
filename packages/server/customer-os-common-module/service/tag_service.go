@@ -19,8 +19,8 @@ import (
 
 type TagService interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tag *neo4jentity.TagEntity) (*neo4jentity.TagEntity, error)
-	AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) (string, error)
-	RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId string) error
+	AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName, appSource string) (string, error)
+	RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error
 	Update(ctx context.Context, tagId, name string) error
 	UnlinkAndDelete(ctx context.Context, id string) (bool, error)
 
@@ -65,7 +65,7 @@ func (s *tagService) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, ta
 	return neo4jmapper.MapDbNodeToTagEntity(tagNodePtr), nil
 }
 
-func (s *tagService) AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName string) (string, error) {
+func (s *tagService) AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, tagName, appSource string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.AddTag")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -84,12 +84,14 @@ func (s *tagService) AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, t
 		return "", err
 	}
 
-	utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	if appSource != constants.AppSourceCustomerOsApi {
+		utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	}
 
 	return tagId, nil
 }
 
-func (s *tagService) RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId string) error {
+func (s *tagService) RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, entityId string, entityType model.EntityType, tagId, appSource string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.RemoveTag")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -101,7 +103,9 @@ func (s *tagService) RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	if appSource != constants.AppSourceCustomerOsApi {
+		utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	}
 
 	return nil
 }

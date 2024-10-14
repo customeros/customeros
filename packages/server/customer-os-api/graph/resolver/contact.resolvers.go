@@ -860,7 +860,7 @@ func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.Contac
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name))
+	_, err := r.Services.CommonServices.TagService.AddTag(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID), utils.StringOrEmpty(input.Tag.Name), constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error adding tag to organization")
@@ -879,7 +879,7 @@ func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.Con
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID))
+	err := r.Services.CommonServices.TagService.RemoveTag(ctx, nil, tenant, input.ContactID, commonmodel.CONTACT, utils.StringOrEmpty(input.Tag.ID), constants.AppSourceCustomerOsApi)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Error removing tag from organization")
