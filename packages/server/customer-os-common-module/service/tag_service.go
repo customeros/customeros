@@ -80,7 +80,7 @@ func (s *tagService) AddTag(ctx context.Context, tx *neo4j.ManagedTransaction, t
 		return "", err
 	}
 
-	utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return tagId, nil
 }
@@ -97,7 +97,7 @@ func (s *tagService) RemoveTag(ctx context.Context, tx *neo4j.ManagedTransaction
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, entityType.String(), entityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
