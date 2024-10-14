@@ -32,14 +32,14 @@ func NewLogEntryAggregateWithTenantAndID(tenant, id string) *LogEntryAggregate {
 
 func (a *LogEntryAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
+	case event.LogEntryAddTagV1,
+		event.LogEntryRemoveTagV1:
+		return nil
+
 	case event.LogEntryCreateV1:
 		return a.onLogEntryCreate(evt)
 	case event.LogEntryUpdateV1:
 		return a.onLogEntryUpdate(evt)
-	case event.LogEntryAddTagV1:
-		return a.onLogEntryAddTag(evt)
-	case event.LogEntryRemoveTagV1:
-		return a.onLogEntryRemoveTag(evt)
 	default:
 		if strings.HasPrefix(evt.GetEventType(), constants.EsInternalStreamPrefix) {
 			return nil
@@ -92,28 +92,5 @@ func (a *LogEntryAggregate) onLogEntryUpdate(evt eventstore.Event) error {
 	if eventData.SourceOfTruth != "" {
 		a.LogEntry.Source.SourceOfTruth = eventData.SourceOfTruth
 	}
-	return nil
-}
-
-func (a *LogEntryAggregate) onLogEntryAddTag(evt eventstore.Event) error {
-	var eventData event.LogEntryAddTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.LogEntry.TagIds = append(a.LogEntry.TagIds, eventData.TagId)
-	a.LogEntry.TagIds = utils.RemoveDuplicates(a.LogEntry.TagIds)
-
-	return nil
-}
-
-func (a *LogEntryAggregate) onLogEntryRemoveTag(evt eventstore.Event) error {
-	var eventData event.LogEntryRemoveTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.LogEntry.TagIds = utils.RemoveFromList(a.LogEntry.TagIds, eventData.TagId)
-
 	return nil
 }

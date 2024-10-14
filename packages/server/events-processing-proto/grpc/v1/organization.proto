@@ -421,8 +421,6 @@ service organizationGrpcService {
   rpc UnlinkEmailFromBillingProfile(UnlinkEmailFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc LinkLocationToBillingProfile(LinkLocationToBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
   rpc UnlinkLocationFromBillingProfile(UnlinkLocationFromBillingProfileGrpcRequest) returns (BillingProfileIdGrpcResponse);
-  rpc AddTag(OrganizationAddTagGrpcRequest) returns (OrganizationIdGrpcResponse);
-  rpc RemoveTag(OrganizationRemoveTagGrpcRequest) returns (OrganizationIdGrpcResponse);
   rpc AddLocation(OrganizationAddLocationGrpcRequest) returns (LocationIdGrpcResponse);
   rpc AdjustIndustry(OrganizationIdGrpcRequest) returns (OrganizationIdGrpcResponse);
 }

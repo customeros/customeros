@@ -112,10 +112,11 @@ type Loaders struct {
 	FlowActionsForFlow                          *dataloader.Loader
 	FlowSendersForFlow                          *dataloader.Loader
 	FlowsWithContact                            *dataloader.Loader
+	FlowsWithSender                             *dataloader.Loader
 }
 
 type tagBatcher struct {
-	tagService service.TagService
+	tagService commonservice.TagService
 }
 type emailBatcher struct {
 	emailService service.EmailService
@@ -217,7 +218,7 @@ type flowBatcher struct {
 // NewDataLoader returns the instantiated Loaders struct for use in a request
 func NewDataLoader(services *service.Services) *Loaders {
 	tagBatcher := &tagBatcher{
-		tagService: services.TagService,
+		tagService: services.CommonServices.TagService,
 	}
 	emailBatcher := &emailBatcher{
 		emailService: services.EmailService,
@@ -406,6 +407,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		FlowActionsForFlow:                          dataloader.NewBatchedLoader(flowBatcher.getFlowActionsForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowSendersForFlow:                          dataloader.NewBatchedLoader(flowBatcher.getFlowSendersForFlow, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		FlowsWithContact:                            dataloader.NewBatchedLoader(flowBatcher.getFlowsWithContact, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		FlowsWithSender:                             dataloader.NewBatchedLoader(flowBatcher.getFlowsWithSender, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 	}
 }
 

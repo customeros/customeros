@@ -63,38 +63,6 @@ func (s *logEntryService) UpsertLogEntry(ctx context.Context, request *logentryp
 	return &logentrypb.LogEntryIdGrpcResponse{Id: logEntryId}, nil
 }
 
-func (s *logEntryService) AddTag(ctx context.Context, request *logentrypb.AddTagGrpcRequest) (*logentrypb.LogEntryIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.Addtag")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	cmd := command.NewAddTagCommand(request.Id, request.Tenant, request.UserId, request.TagId, utils.TimePtr(utils.Now()))
-	if err := s.logEntryCommands.AddTag.Handle(ctx, cmd); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddTag.Handle) tenant:%s, logEntryId: %s, tagId , err: %s", request.Tenant, request.Id, request.TagId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	return &logentrypb.LogEntryIdGrpcResponse{Id: request.Id}, nil
-}
-
-func (s *logEntryService) RemoveTag(ctx context.Context, request *logentrypb.RemoveTagGrpcRequest) (*logentrypb.LogEntryIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "LogEntryService.RemoveTag")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.UserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	cmd := command.NewRemoveTagCommand(request.Id, request.Tenant, request.UserId, request.TagId)
-	if err := s.logEntryCommands.RemoveTag.Handle(ctx, cmd); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(RemoveTag.Handle) tenant:%s, logEntryId: %s, tagId , err: %s", request.Tenant, request.Id, request.TagId, err.Error())
-		return nil, s.errResponse(err)
-	}
-
-	return &logentrypb.LogEntryIdGrpcResponse{Id: request.Id}, nil
-}
-
 func (s *logEntryService) errResponse(err error) error {
 	return grpcerr.ErrResponse(err)
 }

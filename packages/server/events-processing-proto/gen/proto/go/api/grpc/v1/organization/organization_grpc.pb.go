@@ -51,8 +51,6 @@ type OrganizationGrpcServiceClient interface {
 	UnlinkEmailFromBillingProfile(ctx context.Context, in *UnlinkEmailFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(ctx context.Context, in *LinkLocationToBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(ctx context.Context, in *UnlinkLocationFromBillingProfileGrpcRequest, opts ...grpc.CallOption) (*BillingProfileIdGrpcResponse, error)
-	AddTag(ctx context.Context, in *OrganizationAddTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
-	RemoveTag(ctx context.Context, in *OrganizationRemoveTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 	AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error)
 	AdjustIndustry(ctx context.Context, in *OrganizationIdGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error)
 }
@@ -308,24 +306,6 @@ func (c *organizationGrpcServiceClient) UnlinkLocationFromBillingProfile(ctx con
 	return out, nil
 }
 
-func (c *organizationGrpcServiceClient) AddTag(ctx context.Context, in *OrganizationAddTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddTag", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *organizationGrpcServiceClient) RemoveTag(ctx context.Context, in *OrganizationRemoveTagGrpcRequest, opts ...grpc.CallOption) (*OrganizationIdGrpcResponse, error) {
-	out := new(OrganizationIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/organizationGrpcService/RemoveTag", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *organizationGrpcServiceClient) AddLocation(ctx context.Context, in *OrganizationAddLocationGrpcRequest, opts ...grpc.CallOption) (*location.LocationIdGrpcResponse, error) {
 	out := new(location.LocationIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/organizationGrpcService/AddLocation", in, out, opts...)
@@ -375,8 +355,6 @@ type OrganizationGrpcServiceServer interface {
 	UnlinkEmailFromBillingProfile(context.Context, *UnlinkEmailFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	LinkLocationToBillingProfile(context.Context, *LinkLocationToBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
 	UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error)
-	AddTag(context.Context, *OrganizationAddTagGrpcRequest) (*OrganizationIdGrpcResponse, error)
-	RemoveTag(context.Context, *OrganizationRemoveTagGrpcRequest) (*OrganizationIdGrpcResponse, error)
 	AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error)
 	AdjustIndustry(context.Context, *OrganizationIdGrpcRequest) (*OrganizationIdGrpcResponse, error)
 }
@@ -465,12 +443,6 @@ func (UnimplementedOrganizationGrpcServiceServer) LinkLocationToBillingProfile(c
 }
 func (UnimplementedOrganizationGrpcServiceServer) UnlinkLocationFromBillingProfile(context.Context, *UnlinkLocationFromBillingProfileGrpcRequest) (*BillingProfileIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method UnlinkLocationFromBillingProfile not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) AddTag(context.Context, *OrganizationAddTagGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method AddTag not implemented")
-}
-func (UnimplementedOrganizationGrpcServiceServer) RemoveTag(context.Context, *OrganizationRemoveTagGrpcRequest) (*OrganizationIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method RemoveTag not implemented")
 }
 func (UnimplementedOrganizationGrpcServiceServer) AddLocation(context.Context, *OrganizationAddLocationGrpcRequest) (*location.LocationIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddLocation not implemented")
@@ -976,42 +948,6 @@ func _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler(srv inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _OrganizationGrpcService_AddTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationAddTagGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).AddTag(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/AddTag",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).AddTag(ctx, req.(*OrganizationAddTagGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _OrganizationGrpcService_RemoveTag_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(OrganizationRemoveTagGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(OrganizationGrpcServiceServer).RemoveTag(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/organizationGrpcService/RemoveTag",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(OrganizationGrpcServiceServer).RemoveTag(ctx, req.(*OrganizationRemoveTagGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _OrganizationGrpcService_AddLocation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(OrganizationAddLocationGrpcRequest)
 	if err := dec(in); err != nil {
@@ -1162,14 +1098,6 @@ var OrganizationGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "UnlinkLocationFromBillingProfile",
 			Handler:    _OrganizationGrpcService_UnlinkLocationFromBillingProfile_Handler,
-		},
-		{
-			MethodName: "AddTag",
-			Handler:    _OrganizationGrpcService_AddTag_Handler,
-		},
-		{
-			MethodName: "RemoveTag",
-			Handler:    _OrganizationGrpcService_RemoveTag_Handler,
 		},
 		{
 			MethodName: "AddLocation",

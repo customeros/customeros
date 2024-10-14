@@ -37,6 +37,11 @@ func (r *mutationResolver) LogEntryUpdate(ctx context.Context, id string, input 
 	panic(fmt.Errorf("not implemented: LogEntryUpdate - logEntry_Update"))
 }
 
+// LogEntryResetTags is the resolver for the logEntry_ResetTags field.
+func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error) {
+	panic(fmt.Errorf("not implemented: LogEntryResetTags - logEntry_ResetTags"))
+}
+
 // LogEntryAddTag is the resolver for the logEntry_AddTag field.
 func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error) {
 	panic(fmt.Errorf("not implemented: LogEntryAddTag - logEntry_AddTag"))
@@ -45,11 +50,6 @@ func (r *mutationResolver) LogEntryAddTag(ctx context.Context, id string, input 
 // LogEntryRemoveTag is the resolver for the logEntry_RemoveTag field.
 func (r *mutationResolver) LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error) {
 	panic(fmt.Errorf("not implemented: LogEntryRemoveTag - logEntry_RemoveTag"))
-}
-
-// LogEntryResetTags is the resolver for the logEntry_ResetTags field.
-func (r *mutationResolver) LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error) {
-	panic(fmt.Errorf("not implemented: LogEntryResetTags - logEntry_ResetTags"))
 }
 
 // LogEntry is the resolver for the logEntry field.

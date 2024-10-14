@@ -22,7 +22,7 @@ func (r *mutationResolver) TagCreate(ctx context.Context, input model.TagInput) 
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	createdTag, err := r.Services.TagService.Merge(ctx, mapper.MapTagInputToEntity(input))
+	createdTag, err := r.Services.CommonServices.TagService.Merge(ctx, nil, mapper.MapTagInputToEntity(input))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to create tag %s", input.Name)
@@ -38,7 +38,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	err := r.Services.TagService.Update(ctx, input.ID, input.Name)
+	err := r.Services.CommonServices.TagService.Update(ctx, input.ID, input.Name)
 	if err != nil {
 		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to update tag"))
 		r.log.Errorf("failed to update tag: %s", err)
@@ -46,7 +46,7 @@ func (r *mutationResolver) TagUpdate(ctx context.Context, input model.TagUpdateI
 		return nil, err
 	}
 
-	tagEntity, err := r.Services.TagService.GetById(ctx, input.ID)
+	tagEntity, err := r.Services.CommonServices.TagService.GetById(ctx, input.ID)
 	if err != nil {
 		tracing.TraceErr(span, pkgerrors.Wrap(err, "failed to fetch tag"))
 		r.log.Errorf("failed to fetch tag: %s", err)
@@ -64,7 +64,7 @@ func (r *mutationResolver) TagDelete(ctx context.Context, id string) (*model.Res
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.tagID", id))
 
-	result, err := r.Services.TagService.UnlinkAndDelete(ctx, id)
+	result, err := r.Services.CommonServices.TagService.UnlinkAndDelete(ctx, id)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to delete tag %s", id)
@@ -81,7 +81,7 @@ func (r *queryResolver) Tags(ctx context.Context) ([]*model.Tag, error) {
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	tags, err := r.Services.TagService.GetAll(ctx)
+	tags, err := r.Services.CommonServices.TagService.GetAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to fetch tags")

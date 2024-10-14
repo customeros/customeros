@@ -68,6 +68,7 @@ type FlowContact implements MetadataInterface {
 type FlowSender implements MetadataInterface {
     metadata: Metadata!
 
+    flow: Flow @goField(forceResolver: true)
     user: User @goField(forceResolver: true)
 }
 

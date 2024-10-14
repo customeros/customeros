@@ -40,10 +40,6 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 	defer span.Finish()
 
 	switch r := request.(type) {
-	case *contactpb.ContactAddTagGrpcRequest:
-		return nil, a.addTag(ctx, r)
-	case *contactpb.ContactRemoveTagGrpcRequest:
-		return nil, a.removeTag(ctx, r)
 	case *contactpb.ContactAddSocialGrpcRequest:
 		return a.addSocial(ctx, r)
 	case *contactpb.ContactRemoveSocialGrpcRequest:
@@ -70,50 +66,6 @@ func (a *ContactAggregate) HandleGRPCRequest(ctx context.Context, request any, p
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *ContactAggregate) addTag(ctx context.Context, request *contactpb.ContactAddTagGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.addTag")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	addTagEvent, err := event.NewContactAddTagEvent(a, request.TagId, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContactAddTagEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&addTagEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(addTagEvent)
-}
-
-func (a *ContactAggregate) removeTag(ctx context.Context, request *contactpb.ContactRemoveTagGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "ContactAggregate.removeTag")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	removeTagEvent, err := event.NewContactRemoveTagEvent(a, request.TagId, utils.Now())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewContactRemoveTagEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&removeTagEvent, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(removeTagEvent)
 }
 
 func (a *ContactAggregate) addSocial(ctx context.Context, request *contactpb.ContactAddSocialGrpcRequest) (string, error) {
@@ -301,6 +253,10 @@ func (a *ContactAggregate) unlinkEmail(ctx context.Context, request *contactpb.U
 
 func (a *ContactAggregate) When(evt eventstore.Event) error {
 	switch evt.GetEventType() {
+	case event.ContactAddTagV1,
+		event.ContactRemoveTagV1:
+		return nil
+
 	case event.ContactCreateV1:
 		return a.onContactCreate(evt)
 	case event.ContactUpdateV1:
@@ -319,10 +275,6 @@ func (a *ContactAggregate) When(evt eventstore.Event) error {
 		return a.onAddSocial(evt)
 	case event.ContactRemoveSocialV1:
 		return a.onRemoveSocial(evt)
-	case event.ContactAddTagV1:
-		return a.onContactAddTag(evt)
-	case event.ContactRemoveTagV1:
-		return a.onContactRemoveTag(evt)
 	case event.ContactAddLocationV1:
 		return a.onAddLocation(evt)
 	default:
@@ -546,29 +498,6 @@ func (a *ContactAggregate) onRemoveSocial(evt eventstore.Event) error {
 		a.Contact.Socials = make(map[string]cmnmod.Social)
 	}
 	delete(a.Contact.Socials, eventData.SocialId)
-	return nil
-}
-
-func (a *ContactAggregate) onContactAddTag(evt eventstore.Event) error {
-	var eventData event.ContactAddTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Contact.TagIds = append(a.Contact.TagIds, eventData.TagId)
-	a.Contact.TagIds = utils.RemoveDuplicates(a.Contact.TagIds)
-
-	return nil
-}
-
-func (a *ContactAggregate) onContactRemoveTag(evt eventstore.Event) error {
-	var eventData event.ContactRemoveTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-
-	a.Contact.TagIds = utils.RemoveFromList(a.Contact.TagIds, eventData.TagId)
-
 	return nil
 }
 

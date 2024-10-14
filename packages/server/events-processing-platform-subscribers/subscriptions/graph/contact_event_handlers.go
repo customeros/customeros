@@ -374,56 +374,6 @@ func (h *ContactEventHandler) OnSocialRemovedFromContactV1(ctx context.Context, 
 	return nil
 }
 
-func (h *ContactEventHandler) OnAddTag(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnAddTag")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContactAddTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
-	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.LinkTagByIdToEntity(ctx, eventData.Tenant, eventData.TagId, contactId, model.NodeLabelContact, eventData.TaggedAt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while adding tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return err
-}
-
-func (h *ContactEventHandler) OnRemoveTag(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnRemoveTag")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContactRemoveTagEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	span.SetTag(tracing.SpanTagEntityId, contactId)
-	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
-
-	err := h.services.CommonServices.Neo4jRepositories.TagWriteRepository.UnlinkTagByIdFromEntity(ctx, eventData.Tenant, eventData.TagId, contactId, model.NodeLabelContact)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("error while removing tag %s to contact %s: %s", eventData.TagId, contactId, err.Error())
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return err
-}
-
 func (h *ContactEventHandler) OnLocationAddedToContact(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnLocationAddedToContact")
 	defer span.Finish()

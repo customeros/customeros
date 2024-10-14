@@ -15,6 +15,7 @@ import (
 type FlowReadRepository interface {
 	GetList(ctx context.Context) ([]*dbtype.Node, error)
 	GetListWithContact(ctx context.Context, contactIds []string) ([]*utils.DbNodeAndId, error)
+	GetListWithSender(ctx context.Context, senderIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, id string) (*dbtype.Node, error)
 }
 
@@ -72,6 +73,47 @@ func (r flowReadRepositoryImpl) GetListWithContact(ctx context.Context, contactI
 
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fc:FlowParticipant_%s)-[:HAS]->(c:Contact_%s) `, tenant, tenant, tenant)
 	cypher += "where c.id in $contactIds RETURN f, c.id"
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	if len(result.([]*utils.DbNodeAndId)) == 0 {
+		return nil, nil
+	}
+	return result.([]*utils.DbNodeAndId), err
+}
+
+func (r flowReadRepositoryImpl) GetListWithSender(ctx context.Context, senderIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowReadRepository.GetListWithSender")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.Object("senderIds", senderIds))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	params := map[string]any{
+		"tenant":    tenant,
+		"senderIds": senderIds,
+	}
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s)-[:HAS]->(fs:FlowSender_%s) `, tenant, tenant)
+	cypher += "where fs.id in $senderIds RETURN f, fs.id"
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)

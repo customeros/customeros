@@ -23,6 +23,7 @@ type FlowService interface {
 	FlowGetByActionId(ctx context.Context, flowActionId string) (*neo4jentity.FlowEntity, error)
 	FlowGetByParticipant(ctx context.Context, entityId string, entityType model.EntityType) (*neo4jentity.FlowEntity, error)
 	FlowsGetListWithContact(ctx context.Context, contactIds []string) (*neo4jentity.FlowEntities, error)
+	FlowsGetListWithSender(ctx context.Context, senderIds []string) (*neo4jentity.FlowEntities, error)
 	FlowMerge(ctx context.Context, entity *neo4jentity.FlowEntity) (*neo4jentity.FlowEntity, error)
 	FlowChangeStatus(ctx context.Context, id string, status neo4jentity.FlowStatus) (*neo4jentity.FlowEntity, error)
 
@@ -139,6 +140,29 @@ func (s *flowService) FlowsGetListWithContact(ctx context.Context, contactIds []
 	span.LogFields(log.Object("contactIds", contactIds))
 
 	data, err := s.services.Neo4jRepositories.FlowReadRepository.GetListWithContact(ctx, contactIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	entities := make(neo4jentity.FlowEntities, 0)
+	for _, v := range data {
+		e := mapper.MapDbNodeToFlowEntity(v.Node)
+		e.DataloaderKey = v.LinkedNodeId
+		entities = append(entities, *e)
+	}
+
+	return &entities, nil
+}
+
+func (s *flowService) FlowsGetListWithSender(ctx context.Context, senderIds []string) (*neo4jentity.FlowEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowService.FlowsGetListWithSender")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	span.LogFields(log.Object("senderIds", senderIds))
+
+	data, err := s.services.Neo4jRepositories.FlowReadRepository.GetListWithSender(ctx, senderIds)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err

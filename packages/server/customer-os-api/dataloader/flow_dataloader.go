@@ -51,6 +51,16 @@ func (i *Loaders) GetFlowsWithContact(ctx context.Context, contactId string) (*n
 	return &resultObj, nil
 }
 
+func (i *Loaders) GetFlowsWithSender(ctx context.Context, senderId string) (*neo4jentity.FlowEntities, error) {
+	thunk := i.FlowsWithSender.Load(ctx, dataloader.StringKey(senderId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	resultObj := result.(neo4jentity.FlowEntities)
+	return &resultObj, nil
+}
+
 func (b *flowBatcher) getFlowContactsForFlow(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowDataLoader.getFlowContactsForFlow")
 	defer span.Finish()
@@ -218,6 +228,55 @@ func (b *flowBatcher) getFlowsWithContact(ctx context.Context, keys dataloader.K
 
 	entitiesByContactId := make(map[string]neo4jentity.FlowEntities)
 	for _, val := range *flowSequenceEntitiesPtr {
+		if list, ok := entitiesByContactId[val.DataloaderKey]; ok {
+			entitiesByContactId[val.DataloaderKey] = append(list, val)
+		} else {
+			entitiesByContactId[val.DataloaderKey] = neo4jentity.FlowEntities{val}
+		}
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for id, record := range entitiesByContactId {
+		if ix, ok := keyOrder[id]; ok {
+			results[ix] = &dataloader.Result{Data: record, Error: nil}
+			delete(keyOrder, id)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: neo4jentity.FlowEntities{}, Error: nil}
+	}
+
+	if err = assertEntitiesType(results, reflect.TypeOf(neo4jentity.FlowEntities{})); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Int("results_length", len(results)))
+
+	return results
+}
+
+func (b *flowBatcher) getFlowsWithSender(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowDataLoader.getFlowsWithSender")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	flowEntitiesPtr, err := b.flowService.FlowsGetListWithSender(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if ctx.Err() == context.DeadlineExceeded {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get flow sequece steps for contact")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	entitiesByContactId := make(map[string]neo4jentity.FlowEntities)
+	for _, val := range *flowEntitiesPtr {
 		if list, ok := entitiesByContactId[val.DataloaderKey]; ok {
 			entitiesByContactId[val.DataloaderKey] = append(list, val)
 		} else {

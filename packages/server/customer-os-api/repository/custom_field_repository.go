@@ -72,7 +72,7 @@ func (r *customFieldRepository) MergeCustomFieldInTx(ctx context.Context, tx neo
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	var rel string
-	if obj.EntityType == model.EntityTypeContact {
+	if obj.EntityType == model.CustomEntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
 	} else {
 		rel = "ORGANIZATION_BELONGS_TO_TENANT"
@@ -102,7 +102,7 @@ func (r *customFieldRepository) MergeCustomFieldToFieldSetInTx(ctx context.Conte
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	var rel string
-	if obj.EntityType == model.EntityTypeContact {
+	if obj.EntityType == model.CustomEntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
 	} else {
 		rel = "ORGANIZATION_BELONGS_TO_TENANT"
@@ -203,7 +203,7 @@ func (r *customFieldRepository) FindAll(ctx context.Context, session neo4j.Sessi
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	var rel string
-	if obj.EntityType == model.EntityTypeContact {
+	if obj.EntityType == model.CustomEntityTypeContact {
 		rel = "CONTACT_BELONGS_TO_TENANT"
 	} else {
 		rel = "ORGANIZATION_BELONGS_TO_TENANT"
@@ -232,7 +232,7 @@ func (r *customFieldRepository) GetCustomFields(ctx context.Context, session neo
 
 	records, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		var rel string
-		if obj.EntityType == model.EntityTypeContact {
+		if obj.EntityType == model.CustomEntityTypeContact {
 			rel = "CONTACT_BELONGS_TO_TENANT"
 		} else {
 			rel = "ORGANIZATION_BELONGS_TO_TENANT"

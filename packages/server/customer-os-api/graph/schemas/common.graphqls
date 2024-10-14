@@ -1,0 +1,22 @@
+extend type Mutation {
+    addTag(input: AddTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    removeTag(input: RemoveTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input AddTagInput {
+    entityId: ID!
+    entityType: EntityType!
+    tag: TagIdOrNameInput!
+}
+
+input RemoveTagInput {
+    entityId: ID!
+    entityType: EntityType!
+    tagId: ID!
+}
+
+enum EntityType {
+    ORGANIZATION
+    CONTACT
+    LOG_ENTRY
+}

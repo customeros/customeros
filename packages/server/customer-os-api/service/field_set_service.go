@@ -62,7 +62,7 @@ func (s *fieldSetService) MergeFieldSetToContact(ctx context.Context, contactId 
 	var fieldSetDbNode *dbtype.Node
 	entityType := &model.CustomFieldEntityType{
 		ID:         contactId,
-		EntityType: model.EntityTypeOrganization,
+		EntityType: model.CustomEntityTypeOrganization,
 	}
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		var err error

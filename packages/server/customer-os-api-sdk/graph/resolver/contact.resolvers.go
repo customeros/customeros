@@ -136,16 +136,6 @@ func (r *mutationResolver) ContactHide(ctx context.Context, contactID string) (*
 	panic(fmt.Errorf("not implemented: ContactHide - contact_Hide"))
 }
 
-// ContactAddTag is the resolver for the contact_AddTag field.
-func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: ContactAddTag - contact_AddTag"))
-}
-
-// ContactRemoveTag is the resolver for the contact_RemoveTag field.
-func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
-	panic(fmt.Errorf("not implemented: ContactRemoveTag - contact_RemoveTag"))
-}
-
 // ContactAddOrganizationByID is the resolver for the contact_AddOrganizationById field.
 func (r *mutationResolver) ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error) {
 	panic(fmt.Errorf("not implemented: ContactAddOrganizationByID - contact_AddOrganizationById"))
@@ -179,6 +169,16 @@ func (r *mutationResolver) ContactRemoveSocial(ctx context.Context, contactID st
 // ContactFindWorkEmail is the resolver for the contact_FindWorkEmail field.
 func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID string, organizationID *string, domain *string, findMobileNumber *bool) (*model.ActionResponse, error) {
 	panic(fmt.Errorf("not implemented: ContactFindWorkEmail - contact_FindWorkEmail"))
+}
+
+// ContactAddTag is the resolver for the contact_AddTag field.
+func (r *mutationResolver) ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactAddTag - contact_AddTag"))
+}
+
+// ContactRemoveTag is the resolver for the contact_RemoveTag field.
+func (r *mutationResolver) ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error) {
+	panic(fmt.Errorf("not implemented: ContactRemoveTag - contact_RemoveTag"))
 }
 
 // Contact is the resolver for the contact field.

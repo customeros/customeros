@@ -5,6 +5,5 @@ query {
     createdAt
     updatedAt
     source
-    appSource
   }
 }

@@ -37,7 +37,6 @@ func TestMutationResolver_TagCreate(t *testing.T) {
 	require.NotNil(t, createdTag.UpdatedAt)
 	require.NotEqual(t, utils.GetEpochStart(), createdTag.UpdatedAt)
 	require.Equal(t, "the tag", createdTag.Name)
-	require.Equal(t, "test", createdTag.AppSource)
 	require.Equal(t, model.DataSourceOpenline, createdTag.Source)
 
 	require.Equal(t, 1, neo4jtest.GetCountOfNodes(ctx, driver, "Tag"))
@@ -52,11 +51,9 @@ func TestMutationResolver_TagUpdate(t *testing.T) {
 	defer tearDownTestCase(ctx)(t)
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	tagId := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
-		Name:          "original tag",
-		CreatedAt:     utils.Now(),
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     "test",
+		Name:      "original tag",
+		CreatedAt: utils.Now(),
+		Source:    neo4jentity.DataSourceOpenline,
 	})
 
 	rawResponse, err := c.RawPost(getQuery("tag/update_tag"),
@@ -121,20 +118,16 @@ func TestQueryResolver_Tags(t *testing.T) {
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 	neo4jtest.CreateTenant(ctx, driver, "other")
 	tagId1 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
-		Name:          "tag B",
-		CreatedAt:     utils.Now(),
-		UpdatedAt:     utils.Now(),
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     "test",
+		Name:      "tag B",
+		CreatedAt: utils.Now(),
+		UpdatedAt: utils.Now(),
+		Source:    neo4jentity.DataSourceOpenline,
 	})
 	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
-		Name:          "tag A",
-		CreatedAt:     utils.Now(),
-		UpdatedAt:     utils.Now(),
-		Source:        neo4jentity.DataSourceOpenline,
-		SourceOfTruth: neo4jentity.DataSourceOpenline,
-		AppSource:     "test",
+		Name:      "tag A",
+		CreatedAt: utils.Now(),
+		UpdatedAt: utils.Now(),
+		Source:    neo4jentity.DataSourceOpenline,
 	})
 	neo4jtest.CreateTag(ctx, driver, "other", neo4jentity.TagEntity{Name: "contact type for other tenant"})
 

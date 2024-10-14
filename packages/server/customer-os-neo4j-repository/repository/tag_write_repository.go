@@ -4,15 +4,19 @@ import (
 	"context"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
-	"time"
 )
 
 type TagWriteRepository interface {
-	LinkTagByIdToEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string, taggedAt time.Time) error
-	UnlinkTagByIdFromEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string) error
+	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error)
+	LinkTagByIdToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, linkedEntityId string, entityType model.EntityType) error
+	UnlinkTagByIdFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, entityId string, entityType model.EntityType) error
 	UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error
 	UpdateName(ctx context.Context, tenant, tagId, name string) error
 }
@@ -29,46 +33,121 @@ func NewTagWriteRepository(driver *neo4j.DriverWithContext, database string) Tag
 	}
 }
 
-func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string, taggedAt time.Time) error {
+func (r *tagWriteRepository) Merge(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, tag neo4jentity.TagEntity) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.Merge")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	session := utils.NewNeo4jWriteSession(ctx, *r.driver)
+	defer session.Close(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) 
+		 MERGE (t)<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {name:$name}) 
+		 ON CREATE SET 
+		  tag.id=randomUUID(),
+		  tag.createdAt=$now,
+		  tag.updatedAt=datetime(),
+		  tag.source=$source,
+		  tag:Tag_%s
+		 RETURN tag`, tenant)
+	params := map[string]any{
+		"tenant": tenant,
+		"name":   tag.Name,
+		"source": tag.Source,
+		"now":    utils.Now(),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return result.(*dbtype.Node), nil
+}
+
+func (r *tagWriteRepository) LinkTagByIdToEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, entityId string, entityType model.EntityType) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.LinkTagByIdToEntity")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("tagId", tagId), log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel), log.Object("taggedAt", taggedAt))
+	span.LogFields(log.String("tagId", tagId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
 
 	cypher := fmt.Sprintf(`
 		MATCH (e:%s {id:$entityId}),
 			(t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})
 		MERGE (e)-[rel:TAGGED]->(tag)
 		ON CREATE SET
-			rel.taggedAt=$taggedAt `, linkedEntityNodeLabel+"_"+tenant)
+			rel.taggedAt=$taggedAt `, entityType.Neo4jLabel()+"_"+tenant)
 	params := map[string]any{
 		"tenant":   tenant,
 		"id":       tagId,
-		"taggedAt": taggedAt,
-		"entityId": linkedEntityId,
+		"taggedAt": utils.Now(),
+		"entityId": entityId,
 	}
 
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
-func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tenant, tagId, linkedEntityId, linkedEntityNodeLabel string) error {
+func (r *tagWriteRepository) UnlinkTagByIdFromEntity(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, tagId, entityId string, entityType model.EntityType) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagWriteRepository.UnlinkTagByIdFromEntity")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
-	span.LogFields(log.String("tagId", tagId), log.String("linkedEntityId", linkedEntityId), log.String("linkedEntityNodeLabel", linkedEntityNodeLabel))
+	span.LogFields(log.String("tagId", tagId), log.String("entityId", entityId), log.String("entityType", entityType.String()))
 
 	cypher := fmt.Sprintf(`
 		MATCH (t:Tenant {name:$tenant})<-[:TAG_BELONGS_TO_TENANT]-(tag:Tag {id:$id})<-[rel:TAGGED]-(e:%s {id:$entityId})
-		DELETE rel`, linkedEntityNodeLabel+"_"+tenant)
+		DELETE rel`, entityType.Neo4jLabel()+"_"+tenant)
 	params := map[string]any{
 		"tenant":   tenant,
 		"id":       tagId,
-		"entityId": linkedEntityId,
+		"entityId": entityId,
 	}
 
-	return LogAndExecuteWriteQuery(ctx, *r.driver, cypher, params, span)
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+		return nil, nil
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *tagWriteRepository) UnlinkAllAndDelete(ctx context.Context, tenant, tagId string) error {

@@ -589,6 +589,7 @@ type ComplexityRoot struct {
 	}
 
 	FlowSender struct {
+		Flow     func(childComplexity int) int
 		Metadata func(childComplexity int) int
 		User     func(childComplexity int) int
 	}
@@ -924,6 +925,7 @@ type ComplexityRoot struct {
 	}
 
 	Mutation struct {
+		AddTag                                     func(childComplexity int, input model.AddTagInput) int
 		AttachmentCreate                           func(childComplexity int, input model.AttachmentInput) int
 		BankAccountCreate                          func(childComplexity int, input *model.BankAccountCreateInput) int
 		BankAccountDelete                          func(childComplexity int, id string) int
@@ -1072,6 +1074,7 @@ type ComplexityRoot struct {
 		PhoneNumberUpdateInUser                    func(childComplexity int, userID string, input model.PhoneNumberRelationUpdateInput) int
 		ReminderCreate                             func(childComplexity int, input model.ReminderInput) int
 		ReminderUpdate                             func(childComplexity int, input model.ReminderUpdateInput) int
+		RemoveTag                                  func(childComplexity int, input model.RemoveTagInput) int
 		ServiceLineItemBulkUpdate                  func(childComplexity int, input model.ServiceLineItemBulkUpdateInput) int
 		ServiceLineItemDelete                      func(childComplexity int, id string) int
 		SocialRemove                               func(childComplexity int, socialID string) int
@@ -1653,6 +1656,7 @@ type FlowContactResolver interface {
 	Contact(ctx context.Context, obj *model.FlowContact) (*model.Contact, error)
 }
 type FlowSenderResolver interface {
+	Flow(ctx context.Context, obj *model.FlowSender) (*model.Flow, error)
 	User(ctx context.Context, obj *model.FlowSender) (*model.User, error)
 }
 type InteractionEventResolver interface {
@@ -1725,6 +1729,8 @@ type MutationResolver interface {
 	BillingProfileUnlinkEmail(ctx context.Context, input model.BillingProfileLinkEmailInput) (string, error)
 	BillingProfileLinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
 	BillingProfileUnlinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
+	AddTag(ctx context.Context, input model.AddTagInput) (*model.ActionResponse, error)
+	RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.ActionResponse, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (string, error)
 	ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error)
 	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
@@ -1734,8 +1740,6 @@ type MutationResolver interface {
 	ContactRestoreFromArchive(ctx context.Context, contactID string) (*model.Result, error)
 	ContactMerge(ctx context.Context, primaryContactID string, mergedContactIds []string) (*model.Contact, error)
 	ContactHide(ctx context.Context, contactID string) (*model.ActionResponse, error)
-	ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error)
-	ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error)
 	ContactAddOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactRemoveOrganizationByID(ctx context.Context, input model.ContactOrganizationInput) (*model.Contact, error)
 	ContactAddNewLocation(ctx context.Context, contactID string) (*model.Location, error)
@@ -1743,6 +1747,8 @@ type MutationResolver interface {
 	ContactAddSocial(ctx context.Context, contactID string, input model.SocialInput) (*model.Social, error)
 	ContactRemoveSocial(ctx context.Context, contactID string, socialID string) (*model.ActionResponse, error)
 	ContactFindWorkEmail(ctx context.Context, contactID string, organizationID *string, domain *string, findMobileNumber *bool) (*model.ActionResponse, error)
+	ContactAddTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error)
+	ContactRemoveTag(ctx context.Context, input model.ContactTagInput) (*model.ActionResponse, error)
 	ContractCreate(ctx context.Context, input model.ContractInput) (*model.Contract, error)
 	ContractUpdate(ctx context.Context, input model.ContractUpdateInput) (*model.Contract, error)
 	ContractDelete(ctx context.Context, id string) (*model.DeleteResponse, error)
@@ -1795,9 +1801,9 @@ type MutationResolver interface {
 	LocationUpdate(ctx context.Context, input model.LocationUpdateInput) (*model.Location, error)
 	LogEntryCreateForOrganization(ctx context.Context, organizationID string, input model.LogEntryInput) (string, error)
 	LogEntryUpdate(ctx context.Context, id string, input model.LogEntryUpdateInput) (string, error)
+	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	LogEntryAddTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
 	LogEntryRemoveTag(ctx context.Context, id string, input model.TagIDOrNameInput) (string, error)
-	LogEntryResetTags(ctx context.Context, id string, input []*model.TagIDOrNameInput) (string, error)
 	MeetingCreate(ctx context.Context, meeting model.MeetingInput) (*model.Meeting, error)
 	MeetingUpdate(ctx context.Context, meetingID string, meeting model.MeetingUpdateInput) (*model.Meeting, error)
 	MeetingLinkAttendedBy(ctx context.Context, meetingID string, participant model.MeetingParticipantInput) (*model.Meeting, error)
@@ -1835,12 +1841,12 @@ type MutationResolver interface {
 	OrganizationRemoveSocial(ctx context.Context, organizationID string, socialID string) (*model.ActionResponse, error)
 	OrganizationUpdateOnboardingStatus(ctx context.Context, input model.OnboardingStatusInput) (*model.Organization, error)
 	OrganizationUnlinkAllDomains(ctx context.Context, organizationID string) (*model.Organization, error)
-	OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error)
-	OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error)
 	OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error)
 	OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error)
 	OrganizationSetOwner(ctx context.Context, organizationID string, userID string) (*model.Organization, error)
 	OrganizationUnsetOwner(ctx context.Context, organizationID string) (*model.Organization, error)
+	OrganizationAddTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error)
+	OrganizationRemoveTag(ctx context.Context, input model.OrganizationTagInput) (*model.ActionResponse, error)
 	PhoneNumberMergeToContact(ctx context.Context, contactID string, input model.PhoneNumberInput) (*model.PhoneNumber, error)
 	PhoneNumberUpdateInContact(ctx context.Context, contactID string, input model.PhoneNumberRelationUpdateInput) (*model.PhoneNumber, error)
 	PhoneNumberRemoveFromContactByE164(ctx context.Context, contactID string, e164 string) (*model.Result, error)
@@ -4526,6 +4532,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FlowContact.Status(childComplexity), true
 
+	case "FlowSender.flow":
+		if e.complexity.FlowSender.Flow == nil {
+			break
+		}
+
+		return e.complexity.FlowSender.Flow(childComplexity), true
+
 	case "FlowSender.metadata":
 		if e.complexity.FlowSender.Metadata == nil {
 			break
@@ -6325,6 +6338,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Metadata.Version(childComplexity), true
 
+	case "Mutation.addTag":
+		if e.complexity.Mutation.AddTag == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_addTag_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.AddTag(childComplexity, args["input"].(model.AddTagInput)), true
+
 	case "Mutation.attachment_Create":
 		if e.complexity.Mutation.AttachmentCreate == nil {
 			break
@@ -8100,6 +8125,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ReminderUpdate(childComplexity, args["input"].(model.ReminderUpdateInput)), true
+
+	case "Mutation.removeTag":
+		if e.complexity.Mutation.RemoveTag == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_removeTag_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.RemoveTag(childComplexity, args["input"].(model.RemoveTagInput)), true
 
 	case "Mutation.serviceLineItem_BulkUpdate":
 		if e.complexity.Mutation.ServiceLineItemBulkUpdate == nil {
@@ -11321,6 +11358,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 	rc := graphql.GetOperationContext(ctx)
 	ec := executionContext{rc, e, 0, 0, make(chan graphql.DeferredResult)}
 	inputUnmarshalMap := graphql.BuildUnmarshalerMap(
+		ec.unmarshalInputAddTagInput,
 		ec.unmarshalInputAttachmentInput,
 		ec.unmarshalInputBankAccountCreateInput,
 		ec.unmarshalInputBankAccountUpdateInput,
@@ -11391,6 +11429,7 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputPhoneNumberUpdateInput,
 		ec.unmarshalInputReminderInput,
 		ec.unmarshalInputReminderUpdateInput,
+		ec.unmarshalInputRemoveTagInput,
 		ec.unmarshalInputServiceLineItemBulkUpdateInput,
 		ec.unmarshalInputServiceLineItemBulkUpdateItem,
 		ec.unmarshalInputServiceLineItemCloseInput,
@@ -11742,6 +11781,28 @@ enum CalendarType {
     appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }`, BuiltIn: false},
+	{Name: "../../../customer-os-api/graph/schemas/common.graphqls", Input: `extend type Mutation {
+    addTag(input: AddTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    removeTag(input: RemoveTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+input AddTagInput {
+    entityId: ID!
+    entityType: EntityType!
+    tag: TagIdOrNameInput!
+}
+
+input RemoveTagInput {
+    entityId: ID!
+    entityType: EntityType!
+    tagId: ID!
+}
+
+enum EntityType {
+    ORGANIZATION
+    CONTACT
+    LOG_ENTRY
+}`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/contact.graphqls", Input: `extend type Query {
     """
     Fetch a single contact from customerOS by contact ID.
@@ -11782,9 +11843,6 @@ extend type Mutation {
     contact_Merge(primaryContactId: ID!, mergedContactIds: [ID!]!): Contact!
     contact_Hide(contactId: ID!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
-    contact_AddTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    contact_RemoveTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-
     contact_AddOrganizationById(input: ContactOrganizationInput!): Contact!
     contact_RemoveOrganizationById(input: ContactOrganizationInput!): Contact!
 
@@ -11795,6 +11853,10 @@ extend type Mutation {
     contact_RemoveSocial(contactId: ID!, socialId: ID!): ActionResponse! @hasTenant
 
     contact_FindWorkEmail(contactId: ID!, organizationId: ID, domain: String, findMobileNumber: Boolean): ActionResponse!
+
+    #TODO remove after UI migration
+    contact_AddTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    contact_RemoveTag(input: ContactTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
 }
 
 type CustomerContact {
@@ -12651,14 +12713,14 @@ input FieldSetUpdateInput {
     name: String!
 }
 
-enum EntityType {
+enum CustomEntityType {
     Contact
     Organization
 }
 
 input CustomFieldEntityType {
     id:        ID!
-    entityType: EntityType!
+    entityType: CustomEntityType!
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/custom_field_template.graphqls", Input: `extend type Mutation {
     customFieldTemplate_Create(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -13280,6 +13342,7 @@ type FlowContact implements MetadataInterface {
 type FlowSender implements MetadataInterface {
     metadata: Metadata!
 
+    flow: Flow @goField(forceResolver: true)
     user: User @goField(forceResolver: true)
 }
 
@@ -13825,9 +13888,13 @@ input LocationUpdateInput {
 extend type Mutation {
     logEntry_CreateForOrganization(organizationId : ID!, input: LogEntryInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     logEntry_Update(id: ID!, input: LogEntryUpdateInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    #generify in the common schema
     logEntry_ResetTags(id: ID!, input: [TagIdOrNameInput!]): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+
+    #TODO remove after UI migration
+    logEntry_AddTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    logEntry_RemoveTag(id: ID!, input: TagIdOrNameInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
 }
 
 type LogEntry {
@@ -14213,14 +14280,14 @@ extend type Mutation {
 
     organization_UpdateOnboardingStatus(input: OnboardingStatusInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_UnlinkAllDomains(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_AddTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    organization_RemoveTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     #TODO: to remove after FE migration
     organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
     organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
     organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
     organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_AddTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_RemoveTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
 }
 
 type LinkedOrganization {
@@ -15841,6 +15908,21 @@ func (ec *executionContext) field_Contact_timelineEvents_args(ctx context.Contex
 		}
 	}
 	args["timelineEventTypes"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_addTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.AddTagInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNAddTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐAddTagInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
 	return args, nil
 }
 
@@ -18794,6 +18876,21 @@ func (ec *executionContext) field_Mutation_reminder_Update_args(ctx context.Cont
 	if tmp, ok := rawArgs["input"]; ok {
 		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
 		arg0, err = ec.unmarshalNReminderUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐReminderUpdateInput(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["input"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_removeTag_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 model.RemoveTagInput
+	if tmp, ok := rawArgs["input"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
+		arg0, err = ec.unmarshalNRemoveTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRemoveTagInput(ctx, tmp)
 		if err != nil {
 			return nil, err
 		}
@@ -36990,6 +37087,8 @@ func (ec *executionContext) fieldContext_Flow_senders(_ context.Context, field g
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_FlowSender_metadata(ctx, field)
+			case "flow":
+				return ec.fieldContext_FlowSender_flow(ctx, field)
 			case "user":
 				return ec.fieldContext_FlowSender_user(ctx, field)
 			}
@@ -37408,6 +37507,67 @@ func (ec *executionContext) fieldContext_FlowSender_metadata(_ context.Context, 
 				return ec.fieldContext_Metadata_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowSender_flow(ctx context.Context, field graphql.CollectedField, obj *model.FlowSender) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowSender_flow(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FlowSender().Flow(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Flow)
+	fc.Result = res
+	return ec.marshalOFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFlow(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowSender_flow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowSender",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "name":
+				return ec.fieldContext_Flow_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Flow_description(ctx, field)
+			case "nodes":
+				return ec.fieldContext_Flow_nodes(ctx, field)
+			case "edges":
+				return ec.fieldContext_Flow_edges(ctx, field)
+			case "status":
+				return ec.fieldContext_Flow_status(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "senders":
+				return ec.fieldContext_Flow_senders(ctx, field)
+			case "statistics":
+				return ec.fieldContext_Flow_statistics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Flow", field.Name)
 		},
 	}
 	return fc, nil
@@ -50888,6 +51048,184 @@ func (ec *executionContext) fieldContext_Mutation_billingProfile_UnlinkLocation(
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_addTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_addTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().AddTag(rctx, fc.Args["input"].(model.AddTagInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_addTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_addTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_removeTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_removeTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().RemoveTag(rctx, fc.Args["input"].(model.RemoveTagInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_removeTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_removeTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_contact_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_contact_Create(ctx, field)
 	if err != nil {
@@ -51645,184 +51983,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Hide(ctx context.Conte
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_contact_AddTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_AddTag(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ContactAddTag(rctx, fc.Args["input"].(model.ContactTagInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contact_AddTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_AddTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_contact_RemoveTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_contact_RemoveTag(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().ContactRemoveTag(rctx, fc.Args["input"].(model.ContactTagInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_contact_RemoveTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_contact_RemoveTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_contact_AddOrganizationById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_contact_AddOrganizationById(ctx, field)
 	if err != nil {
@@ -52542,6 +52702,184 @@ func (ec *executionContext) fieldContext_Mutation_contact_FindWorkEmail(ctx cont
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_contact_FindWorkEmail_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_AddTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_AddTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContactAddTag(rctx, fc.Args["input"].(model.ContactTagInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_AddTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_AddTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_contact_RemoveTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_contact_RemoveTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().ContactRemoveTag(rctx, fc.Args["input"].(model.ContactTagInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_contact_RemoveTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_contact_RemoveTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -56341,6 +56679,8 @@ func (ec *executionContext) fieldContext_Mutation_flowSender_Merge(ctx context.C
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_FlowSender_metadata(ctx, field)
+			case "flow":
+				return ec.fieldContext_FlowSender_flow(ctx, field)
 			case "user":
 				return ec.fieldContext_FlowSender_user(ctx, field)
 			}
@@ -58056,6 +58396,91 @@ func (ec *executionContext) fieldContext_Mutation_logEntry_Update(ctx context.Co
 	return fc, nil
 }
 
+func (ec *executionContext) _Mutation_logEntry_ResetTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_logEntry_ResetTags(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().LogEntryResetTags(rctx, fc.Args["id"].(string), fc.Args["input"].([]*model.TagIDOrNameInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(string); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(string)
+	fc.Result = res
+	return ec.marshalNID2string(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_logEntry_ResetTags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type ID does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_logEntry_ResetTags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Mutation_logEntry_AddTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_logEntry_AddTag(ctx, field)
 	if err != nil {
@@ -58220,91 +58645,6 @@ func (ec *executionContext) fieldContext_Mutation_logEntry_RemoveTag(ctx context
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_logEntry_RemoveTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_logEntry_ResetTags(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_logEntry_ResetTags(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().LogEntryResetTags(rctx, fc.Args["id"].(string), fc.Args["input"].([]*model.TagIDOrNameInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(string); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_logEntry_ResetTags(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_logEntry_ResetTags_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -62894,184 +63234,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_organization_AddTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_AddTag(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationAddTag(rctx, fc.Args["input"].(model.OrganizationTagInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_AddTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_AddTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_organization_RemoveTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_organization_RemoveTag(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().OrganizationRemoveTag(rctx, fc.Args["input"].(model.OrganizationTagInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.ActionResponse)
-	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_organization_RemoveTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_organization_RemoveTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Mutation_organization_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Mutation_organization_Create(ctx, field)
 	if err != nil {
@@ -64006,6 +64168,184 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_organization_UnsetOwner_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_AddTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_AddTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationAddTag(rctx, fc.Args["input"].(model.OrganizationTagInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_AddTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_AddTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_organization_RemoveTag(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_organization_RemoveTag(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().OrganizationRemoveTag(rctx, fc.Args["input"].(model.OrganizationTagInput))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.ActionResponse); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.ActionResponse)
+	fc.Result = res
+	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_organization_RemoveTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "accepted":
+				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_organization_RemoveTag_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -93165,6 +93505,47 @@ func (ec *executionContext) fieldContext___Type_specifiedByURL(_ context.Context
 
 // region    **************************** input.gotpl *****************************
 
+func (ec *executionContext) unmarshalInputAddTagInput(ctx context.Context, obj interface{}) (model.AddTagInput, error) {
+	var it model.AddTagInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"entityId", "entityType", "tag"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "entityId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityID = data
+		case "entityType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+			data, err := ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityType = data
+		case "tag":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tag"))
+			data, err := ec.unmarshalNTagIdOrNameInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐTagIDOrNameInput(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.Tag = data
+		}
+	}
+
+	return it, nil
+}
+
 func (ec *executionContext) unmarshalInputAttachmentInput(ctx context.Context, obj interface{}) (model.AttachmentInput, error) {
 	var it model.AttachmentInput
 	asMap := map[string]interface{}{}
@@ -94649,7 +95030,7 @@ func (ec *executionContext) unmarshalInputCustomFieldEntityType(ctx context.Cont
 			it.ID = data
 		case "entityType":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
-			data, err := ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx, v)
+			data, err := ec.unmarshalNCustomEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomEntityType(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -98139,6 +98520,47 @@ func (ec *executionContext) unmarshalInputReminderUpdateInput(ctx context.Contex
 				return it, err
 			}
 			it.Dismissed = data
+		}
+	}
+
+	return it, nil
+}
+
+func (ec *executionContext) unmarshalInputRemoveTagInput(ctx context.Context, obj interface{}) (model.RemoveTagInput, error) {
+	var it model.RemoveTagInput
+	asMap := map[string]interface{}{}
+	for k, v := range obj.(map[string]interface{}) {
+		asMap[k] = v
+	}
+
+	fieldsInOrder := [...]string{"entityId", "entityType", "tagId"}
+	for _, k := range fieldsInOrder {
+		v, ok := asMap[k]
+		if !ok {
+			continue
+		}
+		switch k {
+		case "entityId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityID = data
+		case "entityType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+			data, err := ec.unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityType = data
+		case "tagId":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("tagId"))
+			data, err := ec.unmarshalNID2string(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.TagID = data
 		}
 	}
 
@@ -104800,6 +105222,39 @@ func (ec *executionContext) _FlowSender(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "flow":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FlowSender_flow(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "user":
 			field := field
 
@@ -107941,6 +108396,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "addTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_addTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "removeTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_removeTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "contact_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_Create(ctx, field)
@@ -108004,20 +108473,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "contact_AddTag":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_AddTag(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "contact_RemoveTag":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_contact_RemoveTag(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "contact_AddOrganizationById":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_AddOrganizationById(ctx, field)
@@ -108063,6 +108518,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "contact_FindWorkEmail":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_FindWorkEmail(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contact_AddTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_AddTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "contact_RemoveTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_contact_RemoveTag(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -108425,6 +108894,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "logEntry_ResetTags":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_logEntry_ResetTags(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "logEntry_AddTag":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_logEntry_AddTag(ctx, field)
@@ -108435,13 +108911,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "logEntry_RemoveTag":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_logEntry_RemoveTag(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "logEntry_ResetTags":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_logEntry_ResetTags(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -108693,20 +109162,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "organization_AddTag":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_AddTag(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "organization_RemoveTag":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_organization_RemoveTag(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "organization_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_Create(ctx, field)
@@ -108731,6 +109186,20 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "organization_UnsetOwner":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_organization_UnsetOwner(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organization_AddTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_AddTag(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "organization_RemoveTag":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_organization_RemoveTag(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
@@ -114678,6 +115147,11 @@ func (ec *executionContext) marshalNActionType2githubᚗcomᚋopenlineᚑaiᚋop
 	return v
 }
 
+func (ec *executionContext) unmarshalNAddTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐAddTagInput(ctx context.Context, v interface{}) (model.AddTagInput, error) {
+	res, err := ec.unmarshalInputAddTagInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) unmarshalNAny2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚐAnyTypeValue(ctx context.Context, v interface{}) (graph.AnyTypeValue, error) {
 	res, err := graph.UnmarshalAnyTypeValue(v)
 	return res, graphql.ErrorOnPath(ctx, err)
@@ -115280,6 +115754,16 @@ func (ec *executionContext) marshalNCountry2ᚖgithubᚗcomᚋopenlineᚑaiᚋop
 		return graphql.Null
 	}
 	return ec._Country(ctx, sel, v)
+}
+
+func (ec *executionContext) unmarshalNCustomEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomEntityType(ctx context.Context, v interface{}) (model.CustomEntityType, error) {
+	var res model.CustomEntityType
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalNCustomEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomEntityType(ctx context.Context, sel ast.SelectionSet, v model.CustomEntityType) graphql.Marshaler {
+	return v
 }
 
 func (ec *executionContext) marshalNCustomField2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomField(ctx context.Context, sel ast.SelectionSet, v model.CustomField) graphql.Marshaler {
@@ -118240,6 +118724,11 @@ func (ec *executionContext) unmarshalNReminderUpdateInput2githubᚗcomᚋopenlin
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
+func (ec *executionContext) unmarshalNRemoveTagInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRemoveTagInput(ctx context.Context, v interface{}) (model.RemoveTagInput, error) {
+	res, err := ec.unmarshalInputRemoveTagInput(ctx, v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
 func (ec *executionContext) marshalNRenewalRecord2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRenewalRecordᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.RenewalRecord) graphql.Marshaler {
 	ret := make(graphql.Array, len(v))
 	var wg sync.WaitGroup
@@ -120294,6 +120783,13 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) marshalOFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v *model.Flow) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Flow(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFlowActionInputDataEmail(ctx context.Context, v interface{}) (*model.FlowActionInputDataEmail, error) {

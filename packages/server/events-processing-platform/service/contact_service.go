@@ -375,42 +375,6 @@ func normalizeTimezone(timezone string) string {
 	return output
 }
 
-func (s *contactService) AddTag(ctx context.Context, request *contactpb.ContactAddTagGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.AddTag")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(AddTag.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
-func (s *contactService) RemoveTag(ctx context.Context, request *contactpb.ContactRemoveTagGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.RemoveTag")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(RemoveTag.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
 func (s *contactService) EnrichContact(ctx context.Context, request *contactpb.EnrichContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.EnrichContact")
 	defer span.Finish()
