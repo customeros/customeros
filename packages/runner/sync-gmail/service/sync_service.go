@@ -128,7 +128,7 @@ func (s *syncService) GetEmailIdForEmail(ctx context.Context, tx neo4j.ManagedTr
 	if utils.Contains(s.services.Cache.GetPersonalEmailProviders(), domain) {
 		emailIdPtr, err := s.services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
 			Email:     email,
-			Source:    source,
+			Source:    neo4jentity.DecodeDataSource(source),
 			AppSource: AppSource,
 		}, nil)
 		if err != nil {

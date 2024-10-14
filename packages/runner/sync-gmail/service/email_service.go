@@ -463,7 +463,7 @@ func (s *emailService) createUserSourceAsEmailNode(tenant, userSource, externalS
 	emailId, err := s.services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
 		Email:     userSource,
 		AppSource: AppSource,
-		Source:    externalSystem,
+		Source:    neo4jentity.DecodeDataSource(externalSystem),
 	}, nil)
 	if err != nil {
 		return "", fmt.Errorf("unable to create email: %v", err)
