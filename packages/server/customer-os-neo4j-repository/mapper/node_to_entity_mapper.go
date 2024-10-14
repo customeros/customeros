@@ -642,6 +642,7 @@ func MapDbNodeToEmailEntity(node *dbtype.Node) *entity.EmailEntity {
 		IsPrimaryDomain: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyIsPrimaryDomain)),
 		PrimaryDomain:   utils.GetStringPropOrNil(props, string(entity.EmailPropertyPrimaryDomain)),
 		AlternateEmail:  utils.GetStringPropOrNil(props, string(entity.EmailPropertyAlternateEmail)),
+		RetryValidation: utils.GetBoolPropOrNil(props, string(entity.EmailPropertyRetryValidation)),
 	}
 }
 

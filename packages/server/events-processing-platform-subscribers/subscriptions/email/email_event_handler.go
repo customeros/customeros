@@ -86,10 +86,10 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 		span.LogFields(log.Bool("result.skippedValidation", true))
 		h.log.Warnf("Email %s for tenant %s skipped validation", emailId, tenant)
 		return nil
-	} else if emailValidationResponse.Data.EmailData.RetryValidation {
+	}
+	if emailValidationResponse.Data.EmailData.RetryValidation {
 		span.LogFields(log.Bool("result.retryValidation", true))
 		h.log.Warnf("Email %s for tenant %s need retry validation", emailId, tenant)
-		return nil
 	}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
@@ -123,6 +123,7 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 			IsPrimaryDomain: emailValidationResponse.Data.DomainData.IsPrimaryDomain,
 			PrimaryDomain:   emailValidationResponse.Data.DomainData.PrimaryDomain,
 			AlternateEmail:  emailValidationResponse.Data.EmailData.AlternateEmail,
+			RetryValidation: emailValidationResponse.Data.EmailData.RetryValidation,
 		}
 		return h.grpcClients.EmailClient.UpdateEmailValidation(ctx, &request)
 	})
@@ -136,8 +137,8 @@ func (h *EmailEventHandler) validateEmail(ctx context.Context, tenant, emailId, 
 func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, emailAddress string) (*validationmodel.ValidateEmailResponse, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailEventHandler.callApiValidateEmail")
 	defer span.Finish()
-	span.LogFields(log.String("emailAddress", emailAddress))
 	span.SetTag(tracing.SpanTagTenant, tenant)
+	span.LogKV("emailAddress", emailAddress)
 
 	// prepare validation api request
 	requestJSON, err := json.Marshal(validationmodel.ValidateEmailRequestWithOptions{
@@ -189,5 +190,6 @@ func (h *EmailEventHandler) callApiValidateEmail(ctx context.Context, tenant, em
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
+	tracing.LogObjectAsJson(span, "email validation response", validationResponse)
 	return &validationResponse, nil
 }

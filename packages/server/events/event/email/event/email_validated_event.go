@@ -32,12 +32,13 @@ type EmailValidatedEventV2 struct {
 	IsPrimaryDomain bool      `json:"isPrimaryDomain"`
 	PrimaryDomain   string    `json:"primaryDomain"`
 	AlternateEmail  string    `json:"alternateEmail"`
+	RetryValidation bool      `json:"retryValidation"`
 }
 
 func NewEmailValidatedEventV2(aggregate eventstore.Aggregate, tenant, rawEmail, email, domain, username string,
 	isValidSyntax, risky, firewalled bool, provider, firewall, deliverable string,
 	isCatchAll, isMailboxFull, isRoleAccount, isFreeAccount, smtpSuccess bool,
-	responseCode, errorCode, description string, isPrimaryDomain bool, primaryDomain, alternateEmail string) (eventstore.Event, error) {
+	responseCode, errorCode, description string, isPrimaryDomain bool, primaryDomain, alternateEmail string, retryValidation bool) (eventstore.Event, error) {
 	eventData := EmailValidatedEventV2{
 		Tenant:          tenant,
 		RawEmail:        rawEmail,
@@ -62,6 +63,7 @@ func NewEmailValidatedEventV2(aggregate eventstore.Aggregate, tenant, rawEmail, 
 		IsPrimaryDomain: isPrimaryDomain,
 		PrimaryDomain:   primaryDomain,
 		AlternateEmail:  alternateEmail,
+		RetryValidation: retryValidation,
 	}
 
 	if err := validator.GetValidator().Struct(eventData); err != nil {

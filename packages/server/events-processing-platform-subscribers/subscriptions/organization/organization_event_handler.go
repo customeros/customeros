@@ -312,17 +312,17 @@ func (h *organizationEventHandler) updateOrganizationFromEnrichmentResponse(ctx 
 	}
 
 	// Set company logo and icon urls
-	if organizationEntity.LogoUrl != "" && len(data.Logos) > 0 {
+	if organizationEntity.LogoUrl == "" && len(data.Logos) > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_LOGO_URL)
 		updateGrpcRequest.LogoUrl = data.Logos[0]
 	}
-	if organizationEntity.IconUrl != "" && len(data.Icons) > 0 {
+	if organizationEntity.IconUrl == "" && len(data.Icons) > 0 {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_ICON_URL)
 		updateGrpcRequest.IconUrl = data.Icons[0]
 	}
 
 	// set industry
-	if organizationEntity.Industry != "" && data.Industry != "" {
+	if organizationEntity.Industry == "" && data.Industry != "" {
 		organizationFieldsMask = append(organizationFieldsMask, organizationpb.OrganizationMaskField_ORGANIZATION_PROPERTY_INDUSTRY)
 		updateGrpcRequest.Industry = data.Industry
 	}
