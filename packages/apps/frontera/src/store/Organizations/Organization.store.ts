@@ -25,6 +25,7 @@ import {
   SocialUpdateInput,
   LastTouchpointType,
   OrganizationTagInput,
+  OrganizationSaveInput,
   LinkOrganizationsInput,
   OrganizationUpdateInput,
   OrganizationRelationship,
@@ -225,11 +226,13 @@ export class OrganizationStore extends Syncable<Organization> {
   private async updateOwner() {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<unknown, UPDATE_OWNER_PAYLOAD>(
-        UPDATE_OWNER_MUTATION,
+      await this.transport.graphql.request<unknown, SAVE_ORGANIZATION_PAYLOAD>(
+        SAVE_ORGANIZATION_MUTATION,
         {
-          organizationId: this.id,
-          userId: this.value.owner?.id || '',
+          input: {
+            id: this.id,
+            ownerId: this.value.owner?.id || '',
+          },
         },
       );
 
@@ -249,26 +252,6 @@ export class OrganizationStore extends Syncable<Organization> {
           );
         }
       });
-    } catch (e) {
-      runInAction(() => {
-        this.error = (e as Error)?.message;
-      });
-    } finally {
-      runInAction(() => {
-        this.isLoading = false;
-      });
-    }
-  }
-
-  private async removeOwner() {
-    try {
-      this.isLoading = true;
-      await this.transport.graphql.request<unknown, REMOVE_OWNER_PAYLOAD>(
-        REMOVE_OWNER_MUTATION,
-        {
-          organizationId: this.id,
-        },
-      );
     } catch (e) {
       runInAction(() => {
         this.error = (e as Error)?.message;
@@ -315,16 +298,15 @@ export class OrganizationStore extends Syncable<Organization> {
   private async updateOrganization(payload: OrganizationUpdateInput) {
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<
-        unknown,
-        UPDATE_ORGANIZATION_PAYLOAD
-      >(UPDATE_ORGANIZATION_MUTATION, {
-        input: {
-          ...payload,
-          id: this.id,
-          patch: true,
+      await this.transport.graphql.request<unknown, SAVE_ORGANIZATION_PAYLOAD>(
+        SAVE_ORGANIZATION_MUTATION,
+        {
+          input: {
+            ...payload,
+            id: this.id,
+          },
         },
-      });
+      );
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -585,15 +567,7 @@ export class OrganizationStore extends Syncable<Organization> {
 
     match(path)
       .with(['owner', ...P.array()], () => {
-        if (type === 'update') {
-          match(value)
-            .with(null, () => {
-              this.removeOwner();
-            })
-            .otherwise(() => {
-              this.updateOwner();
-            });
-        }
+        this.updateOwner();
       })
       .with(['contracts', ...P.array()], () => {})
       .with(['accountDetails', 'renewalSummary', ...P.array()], () => {
@@ -890,29 +864,7 @@ export const ORGANIZATION_QUERY = gql`
     }
   }
 `;
-type UPDATE_OWNER_PAYLOAD = {
-  userId: string;
-  organizationId: string;
-};
 
-const UPDATE_OWNER_MUTATION = gql`
-  mutation setOrganizationOwner($organizationId: ID!, $userId: ID!) {
-    organization_SetOwner(organizationId: $organizationId, userId: $userId) {
-      id
-    }
-  }
-`;
-type REMOVE_OWNER_PAYLOAD = {
-  organizationId: string;
-};
-
-const REMOVE_OWNER_MUTATION = gql`
-  mutation setOrganizationOwner($organizationId: ID!) {
-    organization_UnsetOwner(organizationId: $organizationId) {
-      id
-    }
-  }
-`;
 type UPDATE_ALL_OPPORTUNITY_RENEWALS_PAYLOAD = {
   input: OpportunityRenewalUpdateAllForOrganizationInput;
 };
@@ -928,13 +880,13 @@ const UPDATE_ALL_OPPORTUNITY_RENEWAlS_MUTATION = gql`
     }
   }
 `;
-type UPDATE_ORGANIZATION_PAYLOAD = {
-  input: OrganizationUpdateInput;
+type SAVE_ORGANIZATION_PAYLOAD = {
+  input: OrganizationSaveInput;
 };
 
-const UPDATE_ORGANIZATION_MUTATION = gql`
-  mutation updateOrganization($input: OrganizationUpdateInput!) {
-    organization_Update(input: $input) {
+const SAVE_ORGANIZATION_MUTATION = gql`
+  mutation saveOrganization($input: OrganizationSaveInput!) {
+    organization_Save(input: $input) {
       metadata {
         id
       }
