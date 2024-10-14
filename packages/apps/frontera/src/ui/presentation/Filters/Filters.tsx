@@ -124,6 +124,7 @@ export const Filters = ({
     operation: string,
     filter: FilterItem,
     index: number,
+    filterType: string,
   ) => {
     const newValue = filter.value;
     const selectedOperation =
@@ -144,6 +145,32 @@ export const Filters = ({
       },
       index,
     );
+
+    if (filterType === 'date') {
+      if (ComparisonOperator.Lt === operation) {
+        setFilters(
+          {
+            ...filter,
+            value: [null, filter.value[0]],
+            property: filter.property,
+            operation: (operation as ComparisonOperator) || '',
+          },
+          index,
+        );
+      } else {
+        if (ComparisonOperator.Gt === operation) {
+          setFilters(
+            {
+              ...filter,
+              value: [filter.value[1], null],
+              property: filter.property,
+              operation: (operation as ComparisonOperator) || '',
+            },
+            index,
+          );
+        }
+      }
+    }
   };
 
   const handleChangeFilterValue = (
@@ -263,9 +290,6 @@ export const Filters = ({
             onChangeFilterValue={(value) =>
               handleChangeFilterValue(value, f, idx)
             }
-            onChangeOperator={(operator) =>
-              handleChangeOperator(operator, f, idx)
-            }
             icon={
               availableFilters.find(
                 (filter) => filter?.columnType === f.property,
@@ -276,6 +300,14 @@ export const Filters = ({
                 label: string;
                 options: { id: string; label: string }[];
               }[]
+            }
+            onChangeOperator={(operator) =>
+              handleChangeOperator(
+                operator,
+                f,
+                idx,
+                getFilterTypes(f.property) || '',
+              )
             }
           />
         );

@@ -66,6 +66,9 @@ export const DatePicker = forwardRef(
         prevLabel={<ChevronLeft />}
         nextLabel={<ChevronRight />}
         onChange={handleDateInputChange}
+        formatMonth={(locale, date) =>
+          date.toLocaleDateString(locale, { month: 'short' })
+        }
         {...props}
       />
     );
