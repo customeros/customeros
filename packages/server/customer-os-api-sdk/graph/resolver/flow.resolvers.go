@@ -27,6 +27,11 @@ func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContac
 	panic(fmt.Errorf("not implemented: Contact - contact"))
 }
 
+// Flow is the resolver for the flow field.
+func (r *flowSenderResolver) Flow(ctx context.Context, obj *model.FlowSender) (*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: Flow - flow"))
+}
+
 // User is the resolver for the user field.
 func (r *flowSenderResolver) User(ctx context.Context, obj *model.FlowSender) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: User - user"))

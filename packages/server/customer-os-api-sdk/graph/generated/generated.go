@@ -589,6 +589,7 @@ type ComplexityRoot struct {
 	}
 
 	FlowSender struct {
+		Flow     func(childComplexity int) int
 		Metadata func(childComplexity int) int
 		User     func(childComplexity int) int
 	}
@@ -1655,6 +1656,7 @@ type FlowContactResolver interface {
 	Contact(ctx context.Context, obj *model.FlowContact) (*model.Contact, error)
 }
 type FlowSenderResolver interface {
+	Flow(ctx context.Context, obj *model.FlowSender) (*model.Flow, error)
 	User(ctx context.Context, obj *model.FlowSender) (*model.User, error)
 }
 type InteractionEventResolver interface {
@@ -4529,6 +4531,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.FlowContact.Status(childComplexity), true
+
+	case "FlowSender.flow":
+		if e.complexity.FlowSender.Flow == nil {
+			break
+		}
+
+		return e.complexity.FlowSender.Flow(childComplexity), true
 
 	case "FlowSender.metadata":
 		if e.complexity.FlowSender.Metadata == nil {
@@ -13333,6 +13342,7 @@ type FlowContact implements MetadataInterface {
 type FlowSender implements MetadataInterface {
     metadata: Metadata!
 
+    flow: Flow @goField(forceResolver: true)
     user: User @goField(forceResolver: true)
 }
 
@@ -37077,6 +37087,8 @@ func (ec *executionContext) fieldContext_Flow_senders(_ context.Context, field g
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_FlowSender_metadata(ctx, field)
+			case "flow":
+				return ec.fieldContext_FlowSender_flow(ctx, field)
 			case "user":
 				return ec.fieldContext_FlowSender_user(ctx, field)
 			}
@@ -37495,6 +37507,67 @@ func (ec *executionContext) fieldContext_FlowSender_metadata(_ context.Context, 
 				return ec.fieldContext_Metadata_version(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type Metadata", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowSender_flow(ctx context.Context, field graphql.CollectedField, obj *model.FlowSender) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowSender_flow(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.FlowSender().Flow(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Flow)
+	fc.Result = res
+	return ec.marshalOFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFlow(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowSender_flow(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowSender",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "name":
+				return ec.fieldContext_Flow_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Flow_description(ctx, field)
+			case "nodes":
+				return ec.fieldContext_Flow_nodes(ctx, field)
+			case "edges":
+				return ec.fieldContext_Flow_edges(ctx, field)
+			case "status":
+				return ec.fieldContext_Flow_status(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "senders":
+				return ec.fieldContext_Flow_senders(ctx, field)
+			case "statistics":
+				return ec.fieldContext_Flow_statistics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Flow", field.Name)
 		},
 	}
 	return fc, nil
@@ -56606,6 +56679,8 @@ func (ec *executionContext) fieldContext_Mutation_flowSender_Merge(ctx context.C
 			switch field.Name {
 			case "metadata":
 				return ec.fieldContext_FlowSender_metadata(ctx, field)
+			case "flow":
+				return ec.fieldContext_FlowSender_flow(ctx, field)
 			case "user":
 				return ec.fieldContext_FlowSender_user(ctx, field)
 			}
@@ -105147,6 +105222,39 @@ func (ec *executionContext) _FlowSender(ctx context.Context, sel ast.SelectionSe
 			if out.Values[i] == graphql.Null {
 				atomic.AddUint32(&out.Invalids, 1)
 			}
+		case "flow":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._FlowSender_flow(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "user":
 			field := field
 
@@ -120675,6 +120783,13 @@ func (ec *executionContext) marshalOFloat2ᚖfloat64(ctx context.Context, sel as
 	}
 	res := graphql.MarshalFloatContext(*v)
 	return graphql.WrapContextMarshaler(ctx, res)
+}
+
+func (ec *executionContext) marshalOFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFlow(ctx context.Context, sel ast.SelectionSet, v *model.Flow) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Flow(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOFlowActionInputDataEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFlowActionInputDataEmail(ctx context.Context, v interface{}) (*model.FlowActionInputDataEmail, error) {

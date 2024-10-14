@@ -463,21 +463,18 @@ func TestQueryResolver_Contact_WithTags_ById(t *testing.T) {
 		CreatedAt: utils.Now(),
 		UpdatedAt: utils.Now(),
 		Source:    neo4jentity.DataSourceOpenline,
-		AppSource: "test",
 	})
 	tagId2 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
 		Name:      "tag2",
 		CreatedAt: utils.Now(),
 		UpdatedAt: utils.Now(),
 		Source:    neo4jentity.DataSourceOpenline,
-		AppSource: "test",
 	})
 	tagId3 := neo4jtest.CreateTag(ctx, driver, tenantName, neo4jentity.TagEntity{
 		Name:      "tag3",
 		CreatedAt: utils.Now(),
 		UpdatedAt: utils.Now(),
 		Source:    neo4jentity.DataSourceOpenline,
-		AppSource: "test",
 	})
 	neo4jt.TagContact(ctx, driver, contactId, tagId1)
 	neo4jt.TagContact(ctx, driver, contactId, tagId2)

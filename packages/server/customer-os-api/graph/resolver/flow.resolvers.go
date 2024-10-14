@@ -6,6 +6,7 @@ package resolver
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -70,6 +71,25 @@ func (r *flowContactResolver) Contact(ctx context.Context, obj *model.FlowContac
 	}
 
 	return mapper.MapEntityToContact(contactEntity), nil
+}
+
+// Flow is the resolver for the flow field.
+func (r *flowSenderResolver) Flow(ctx context.Context, obj *model.FlowSender) (*model.Flow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Flow", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := dataloader.For(ctx).GetFlowsWithSender(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		graphql.AddErrorf(ctx, "Failed to get flow sender users")
+		return nil, nil
+	}
+
+	if entities == nil || len(*entities) == 0 {
+		return nil, fmt.Errorf("Flow not found")
+	}
+	return mapper.MapEntitiesToFlows(entities)[0], nil
 }
 
 // User is the resolver for the user field.

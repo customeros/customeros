@@ -1196,6 +1196,7 @@ type FlowMergeInput struct {
 
 type FlowSender struct {
 	Metadata *Metadata `json:"metadata"`
+	Flow     *Flow     `json:"flow,omitempty"`
 	User     *User     `json:"user,omitempty"`
 }
 
