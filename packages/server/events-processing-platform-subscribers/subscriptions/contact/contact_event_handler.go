@@ -13,6 +13,8 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	enrichmentmodel "github.com/openline-ai/openline-customer-os/packages/server/enrichment-api/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform-subscribers/config"
@@ -406,7 +408,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 			h.log.Errorf("Error getting organization by social url: %s", err.Error())
 		}
 
-		// step 2 - check org exists by domain
+		// step 2 - check org exists by social url
 		if organizationDbNode == nil {
 			// step 2 - find by domain
 			domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
@@ -438,39 +440,35 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 
 		// step 3 if not found - create organization
 		if organizationDbNode == nil {
-			upsertOrganizationRequest := organizationpb.UpsertOrganizationGrpcRequest{
-				Tenant:       tenant,
+			orgId, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, nil, &neo4jrepository.OrganizationSaveFields{
 				Name:         scrapinContactResponse.Company.Name,
 				Website:      scrapinContactResponse.Company.WebsiteUrl,
-				Relationship: neo4jenum.Prospect.String(),
-				Stage:        neo4jenum.Lead.String(),
-				SourceFields: &commonpb.SourceFields{
+				Relationship: neo4jenum.Prospect,
+				Stage:        neo4jenum.Lead,
+				SourceFields: neo4jmodel.Source{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppScrapin,
 				},
-			}
-
-			organizationCreateResponse, err := utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-				return h.grpcClients.OrganizationClient.UpsertOrganization(ctx, &upsertOrganizationRequest)
 			})
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.UpsertOrganization"))
-				h.log.Errorf("Error upserting organization: %s", err.Error())
-				return err
-			}
-
-			time.Sleep(2 * time.Second)
-			_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
-				return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
-					Tenant:         tenant,
-					OrganizationId: organizationCreateResponse.Id,
-					Url:            scrapinContactResponse.Company.LinkedInUrl,
-					FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
+				h.log.Errorf("Error creating organization: %s", err.Error())
+			} else if orgId == nil {
+				tracing.TraceErr(span, errors.New("organization id is nil"))
+				return errors.New("organization id is nil")
+			} else {
+				_, err = utils.CallEventsPlatformGRPCWithRetry[*socialpb.SocialIdGrpcResponse](func() (*socialpb.SocialIdGrpcResponse, error) {
+					return h.grpcClients.OrganizationClient.AddSocial(ctx, &organizationpb.AddSocialGrpcRequest{
+						Tenant:         tenant,
+						OrganizationId: *orgId,
+						Url:            scrapinContactResponse.Company.LinkedInUrl,
+						FollowersCount: int64(scrapinContactResponse.Company.FollowerCount),
+					})
 				})
-			})
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.AddSocial"))
-				h.log.Errorf("Error adding social profile: %s", err.Error())
+				if err != nil {
+					tracing.TraceErr(span, errors.Wrap(err, "OrganizationClient.AddSocial"))
+					h.log.Errorf("Error adding social profile: %s", err.Error())
+				}
 			}
 		}
 	}
