@@ -22,6 +22,9 @@ type Event struct {
 	EventType string `json:"eventType"`
 	Entity    string `json:"entity"`
 	EntityID  string `json:"entityId"`
+	Create    bool   `json:"create"`
+	Update    bool   `json:"update"`
+	Delete    bool   `json:"delete"`
 }
 
 type eventCompletionService struct {
@@ -73,6 +76,9 @@ func (s *eventCompletionService) NotifyEventProcessed(ctx context.Context, reque
 		EventType: request.EventType,
 		Entity:    request.Entity,
 		EntityID:  request.EntityId,
+		Create:    request.Create,
+		Update:    request.Update,
+		Delete:    request.Delete,
 	}
 
 	aggr := eventstore.NewCommonAggregateWithId(aggregateType, request.Tenant)

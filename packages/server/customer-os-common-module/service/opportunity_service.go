@@ -389,7 +389,7 @@ func (s *opportunityService) CloseWon(ctx context.Context, tx *neo4j.ManagedTran
 		return nil, nil
 	})
 
-	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -422,7 +422,7 @@ func (s *opportunityService) CloseLost(ctx context.Context, tx *neo4j.ManagedTra
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }
@@ -456,7 +456,7 @@ func (s *opportunityService) Archive(ctx context.Context, tenant, opportunityId 
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, commonModel.OPPORTUNITY.String(), opportunityId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }

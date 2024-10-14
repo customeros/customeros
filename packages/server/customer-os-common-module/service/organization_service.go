@@ -281,7 +281,7 @@ func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransac
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }
@@ -310,7 +310,7 @@ func (s *organizationService) Show(ctx context.Context, tx *neo4j.ManagedTransac
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithCreate())
 
 	return nil
 }
@@ -338,7 +338,7 @@ func (s *organizationService) Archive(ctx context.Context, tx *neo4j.ManagedTran
 		return err
 	}
 
-	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients)
+	utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), organizationId, s.services.GrpcClients, utils.NewEventCompletedDetails().WithDelete())
 
 	return nil
 }

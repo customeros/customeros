@@ -9,6 +9,9 @@ message NotifyEventProcessedRequest {
   string entity = 2;
   string entityId = 3;
   string eventType = 4;
+  bool create = 5;
+  bool update = 6;
+  bool delete = 7;
 }
 
 service EventCompletionGrpcService {
