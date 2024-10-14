@@ -49,7 +49,6 @@ export class OrganizationStore extends Syncable<Organization> {
     makeObservable<
       OrganizationStore,
       | 'updateOwner'
-      | 'removeOwner'
       | 'addSubsidiary'
       | 'addSocialMedia'
       | 'removeSubsidiary'
@@ -69,7 +68,6 @@ export class OrganizationStore extends Syncable<Organization> {
       contacts: computed,
       contracts: computed,
       updateOwner: action,
-      removeOwner: action,
       addSubsidiary: action,
       addSocialMedia: action,
       subsidiaries: computed,
