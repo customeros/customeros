@@ -166,7 +166,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 
 	// set domain
 	if eventData.Website != "" {
-		err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, eventData.Website)
+		_, err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, eventData.Website)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to add domain from website %s: %s", eventData.Website, err.Error())
@@ -378,7 +378,7 @@ func (h *OrganizationEventHandler) OnOrganizationUpdate(ctx context.Context, evt
 	afterOrganizationEntity = *neo4jmapper.MapDbNodeToOrganizationEntity(updatedOrganization)
 
 	if beforeOrganizationEntity.Website != afterOrganizationEntity.Website {
-		err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, afterOrganizationEntity.Website)
+		_, err := h.services.CommonServices.OrganizationService.AddDomainFromWebsite(ctx, nil, eventData.Tenant, organizationId, afterOrganizationEntity.Website)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to add domain from website %s: %s", afterOrganizationEntity.Website, err.Error())

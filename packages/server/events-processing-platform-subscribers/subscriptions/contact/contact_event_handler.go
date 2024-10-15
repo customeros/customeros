@@ -441,10 +441,14 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		// step 3 if not found - create organization
 		if organizationDbNode == nil {
 			orgId, err := h.services.CommonServices.OrganizationService.Save(ctx, nil, tenant, nil, &neo4jrepository.OrganizationSaveFields{
-				Name:         scrapinContactResponse.Company.Name,
-				Website:      scrapinContactResponse.Company.WebsiteUrl,
-				Relationship: neo4jenum.Prospect,
-				Stage:        neo4jenum.Lead,
+				Name:               scrapinContactResponse.Company.Name,
+				Website:            scrapinContactResponse.Company.WebsiteUrl,
+				Relationship:       neo4jenum.Prospect,
+				Stage:              neo4jenum.Lead,
+				UpdateName:         true,
+				UpdateWebsite:      true,
+				UpdateRelationship: true,
+				UpdateStage:        true,
 				SourceFields: neo4jmodel.Source{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppScrapin,
