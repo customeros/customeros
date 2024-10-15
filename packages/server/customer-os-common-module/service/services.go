@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	rabbimq "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/rabbitmq"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/repository"
 	"gorm.io/gorm"
@@ -18,7 +19,8 @@ type Services struct {
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
 
-	GrpcClients *grpc_client.Clients
+	RabbitMQService *rabbimq.RabbitMQService
+	GrpcClients     *grpc_client.Clients
 
 	AttachmentService         AttachmentService
 	ContactService            ContactService
@@ -61,6 +63,10 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 		GrpcClients:          grpcClients,
 		PostgresRepositories: postgresRepository.InitRepositories(db),
 		Neo4jRepositories:    neo4jRepository.InitNeo4jRepositories(driver, neo4jDatabase),
+	}
+
+	if globalConfig.RabbitMQConfig != nil {
+		services.RabbitMQService = rabbimq.NewRabbitMQService(globalConfig.RabbitMQConfig.Url)
 	}
 
 	services.CommonService = NewCommonService(services)

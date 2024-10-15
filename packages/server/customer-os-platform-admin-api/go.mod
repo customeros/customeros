@@ -108,6 +108,7 @@ require (
 	github.com/prometheus/client_model v0.5.0 // indirect
 	github.com/prometheus/common v0.46.0 // indirect
 	github.com/prometheus/procfs v0.12.0 // indirect
+	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
 	github.com/rivo/uniseg v0.4.3 // indirect
 	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
