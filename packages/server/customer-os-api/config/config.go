@@ -26,6 +26,7 @@ type Config struct {
 	GrpcClientConfig config.GrpcClientConfig
 	Postgres         config.PostgresConfig
 	Neo4j            config.Neo4jConfig
+	RabbitMQConfig   config.RabbitMQConfig
 	Jaeger           tracing.JaegerConfig
 	Metrics          metrics.Config
 	AppConfig        struct {

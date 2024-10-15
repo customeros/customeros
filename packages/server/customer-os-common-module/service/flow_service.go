@@ -517,6 +517,14 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
+		err := s.services.RabbitMQService.Publish("customeros", "test", map[string]interface{}{
+			"flowId": flow.Id,
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
 		//if status == neo4jentity.FlowStatusActive {
 		//	flowParticipants, err := s.FlowParticipantGetList(ctx, []string{flow.Id})
 		//	if err != nil {

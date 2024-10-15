@@ -7,6 +7,7 @@ type GlobalConfig struct {
 	AzureOAuthConfig  *AzureOAuthConfig
 	GrpcClientConfig  *GrpcClientConfig
 	TemporalConfig    *TemporalConfig
+	RabbitMQConfig    *RabbitMQConfig
 
 	// Customer OS
 	InternalServices struct {

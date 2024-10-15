@@ -4,6 +4,7 @@ networks:
   openline:
 
 volumes:
+  rabbitmq_data:
   postgres_data:
   neo4j_data:
   eventstore-volume-data:
@@ -11,6 +12,15 @@ volumes:
   provision:
 
 services:
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - 5672:5672
+      - 15672:15672
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
 
   jaeger:
     image: jaegertracing/all-in-one:latest
