@@ -8,7 +8,7 @@ COPY events-processing-proto/. ./events-processing-proto/
 COPY customer-os-api-sdk/. ./customer-os-api-sdk/
 COPY events-subscribers/. ./events-subscribers
 
-WORKDIR /app/user-admin-api
+WORKDIR /app/events-subscribers
 RUN go build -v -o /go/bin/app
 
 FROM alpine:3.14
