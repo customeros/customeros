@@ -34,6 +34,7 @@ type InvoiceReadRepository interface {
 	GetInvoicesForOnHold(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetInvoicesForScheduled(ctx context.Context) ([]*utils.DbNodeAndTenant, error)
 	GetReadyInvoicesForFinalizedEvent(ctx context.Context, delayInMinutes int, referenceTime time.Time, limit int) ([]*utils.DbNodeAndTenant, error)
+	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error)
 }
 
 type invoiceReadRepository struct {
@@ -808,4 +809,46 @@ func (r *invoiceReadRepository) GetReadyInvoicesForFinalizedEvent(ctx context.Co
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndTenant))))
 	return result.([]*utils.DbNodeAndTenant), err
+}
+
+func (r *invoiceReadRepository) GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceReadRepository.GetNonDryRunInvoicesForOrganization")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("organizationId", organizationId))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$organizationId})-[:HAS_CONTRACT]->(c:Contract)-[:HAS_INVOICE]->(i:Invoice)
+			WHERE i.dryRun = false AND i.status IN $acceptedStatuses
+			RETURN i`
+	params := map[string]any{
+		"tenant":         tenant,
+		"organizationId": organizationId,
+		"acceptedStatuses": []string{
+			neo4jenum.InvoiceStatusDue.String(),
+			neo4jenum.InvoiceStatusOverdue.String(),
+			neo4jenum.InvoiceStatusPaid.String(),
+			neo4jenum.InvoiceStatusVoid.String(),
+			neo4jenum.InvoiceStatusOnHold.String(),
+		},
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	return result.([]*dbtype.Node), nil
 }
