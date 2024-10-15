@@ -1,9 +1,16 @@
 package rabbimq
 
 import (
+	"context"
 	"encoding/json"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 	"github.com/rabbitmq/amqp091-go"
 	"log"
+	"reflect"
 	"sync"
 	"time"
 )
@@ -61,8 +68,8 @@ func (r *RabbitMQService) reconnect() {
 	for {
 		log.Println("Attempting to reconnect to RabbitMQ...")
 
-		// Try reconnecting every 5 seconds
-		time.Sleep(5 * time.Second)
+		// Try reconnecting every 1 seconds
+		time.Sleep(1 * time.Second)
 
 		r.connect() // Re-establish connection
 		if r.conn != nil && r.conn.IsClosed() == false {
@@ -73,12 +80,29 @@ func (r *RabbitMQService) reconnect() {
 }
 
 // Publish publishes a message to the given exchange and routing key with automatic reconnection
-func (r *RabbitMQService) Publish(exchange string, routingKey string, message interface{}) error {
+func (r *RabbitMQService) Publish(ctx context.Context, exchange string, routingKey string, message interface{}) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.Publish")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	tracing.LogObjectAsJson(span, "message", message)
+
 	r.mu.Lock()
 	defer r.mu.Unlock()
 
+	eventMessage := make(map[string]interface{})
+	eventMessage["event"] = make(map[string]interface{})
+	eventMessage["event"].(map[string]interface{})["type"] = reflect.TypeOf(message).Name()
+	eventMessage["event"].(map[string]interface{})["data"] = message
+	eventMessage["metadata"] = tracing.ExtractTextMapCarrier((span).Context())
+	eventMessage["metadata"].(opentracing.TextMapCarrier)["appSource"] = common.GetAppSourceFromContext(ctx)
+	eventMessage["metadata"].(opentracing.TextMapCarrier)["tenant"] = common.GetTenantFromContext(ctx)
+	eventMessage["metadata"].(opentracing.TextMapCarrier)["userId"] = common.GetUserIdFromContext(ctx)
+	eventMessage["metadata"].(opentracing.TextMapCarrier)["userEmail"] = common.GetUserEmailFromContext(ctx)
+	eventMessage["metadata"].(opentracing.TextMapCarrier)["timestamp"] = utils.Now().String()
+
 	// Convert the message to JSON
-	jsonBody, err := json.Marshal(message)
+	jsonBody, err := json.Marshal(eventMessage)
 	if err != nil {
 		return err
 	}
@@ -87,7 +111,7 @@ func (r *RabbitMQService) Publish(exchange string, routingKey string, message in
 	for {
 		// Ensure the connection and channel are open
 		if r.conn.IsClosed() {
-			log.Println("Connection lost, attempting to reconnect before publishing...")
+			tracing.TraceErr(span, errors.New("RabbitMQ connection is closed"))
 			r.reconnect()
 		}
 
@@ -103,7 +127,7 @@ func (r *RabbitMQService) Publish(exchange string, routingKey string, message in
 			})
 
 		if err != nil {
-			log.Printf("Failed to publish message: %v. Retrying...", err)
+			tracing.TraceErr(span, err)
 			r.reconnect()
 		} else {
 			break // Message sent successfully, exit retry loop

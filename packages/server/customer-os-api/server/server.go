@@ -303,6 +303,8 @@ func (server *server) graphqlHandler(grpcContainer *grpc_client.Clients, service
 			customCtx.IdentityId = c.Keys[security.KEY_IDENTITY_ID].(string)
 		}
 
+		customCtx.AppSource = constants.AppSourceCustomerOsApi
+
 		graphqlOperationName := extractGraphQLMethodName(c.Request)
 		c.Request.Header.Set("X-GraphQL-Operation-Name", graphqlOperationName)
 		customCtx.GraphqlRootOperationName = graphqlOperationName

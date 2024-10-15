@@ -25,6 +25,7 @@ const (
 	KEY_USER_EMAIL  = "UserEmail"
 	KEY_USER_ROLES  = "UserRoles"
 	KEY_IDENTITY_ID = "IdentityId"
+	KEY_APP_SOURCE  = "AppSource"
 )
 
 const UsernameHeader = "X-Openline-USERNAME"
