@@ -13,6 +13,8 @@ import '@xyflow/react/dist/style.css';
 export const FlowEditor = () => {
   const [searchParams] = useSearchParams();
   const [hasNewChanges, setHasNewChanges] = useState(false);
+  const [isSidePanelOpen, setIsSidePanelOpen] = useState<boolean>(false);
+
   const allowExploration = useFeatureIsOn('flow-editor-poc');
 
   const showFinder = searchParams.get('show') === 'finder';
@@ -27,11 +29,16 @@ export const FlowEditor = () => {
         <Header
           hasChanges={hasNewChanges}
           onToggleHasChanges={setHasNewChanges}
+          onToggleSidePanel={() => setIsSidePanelOpen(!isSidePanelOpen)}
         />
         {showFinder ? (
           <FinderTable isSidePanelOpen={false} />
         ) : (
-          <FlowBuilder onHasNewChanges={() => setHasNewChanges(true)} />
+          <FlowBuilder
+            showSidePanel={isSidePanelOpen}
+            onToggleSidePanel={setIsSidePanelOpen}
+            onHasNewChanges={() => setHasNewChanges(true)}
+          />
         )}
       </div>
     </ReactFlowProvider>

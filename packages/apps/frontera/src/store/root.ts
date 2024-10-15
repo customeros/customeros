@@ -2,6 +2,7 @@ import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
 import { FlowsStore } from '@store/Flows/Flows.store';
 import { configurePersistable } from 'mobx-persist-store';
+import { FlowSendersStore } from '@store/FlowSenders/FlowSenders.store.ts';
 import { FlowContactsStore } from '@store/FlowContacts/FlowContacts.store';
 
 import { UIStore } from './UI/UI.store';
@@ -53,6 +54,7 @@ export class RootStore {
   invoices: InvoicesStore;
   contacts: ContactsStore;
   flows: FlowsStore;
+  flowSenders: FlowSendersStore;
   flowContacts: FlowContactsStore;
   contracts: ContractsStore;
   reminders: RemindersStore;
@@ -91,6 +93,7 @@ export class RootStore {
     this.flowContacts = new FlowContactsStore(this, this.transport);
     this.flowEmailVariables = new FlowEmailVariablesStore(this, this.transport);
     this.flows = new FlowsStore(this, this.transport);
+    this.flowSenders = new FlowSendersStore(this, this.transport);
 
     this.externalSystemInstances = new ExternalSystemInstancesStore(
       this,

@@ -7,6 +7,20 @@ query getFlows {
     edges
     nodes
     status
+    senders {
+        metadata {
+            id
+        }
+        user {
+           id
+
+        }
+      flow {
+        metadata {
+            id
+        }
+      }
+    }
     statistics {
       total
       pending

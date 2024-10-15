@@ -79,6 +79,12 @@ export enum ActionType {
   ServiceLineItemRemoved = 'SERVICE_LINE_ITEM_REMOVED',
 }
 
+export type AddTagInput = {
+  entityId: Scalars['ID']['input'];
+  entityType: EntityType;
+  tag: TagIdOrNameInput;
+};
+
 export type Attachment = Node & {
   __typename?: 'Attachment';
   appSource: Scalars['String']['output'];
@@ -947,6 +953,11 @@ export enum Currency {
   Zar = 'ZAR',
 }
 
+export enum CustomEntityType {
+  Contact = 'Contact',
+  Organization = 'Organization',
+}
+
 /**
  * Describes a custom, user-defined field associated with a `Contact`.
  * **A `return` object.**
@@ -989,7 +1000,7 @@ export enum CustomFieldDataType {
 }
 
 export type CustomFieldEntityType = {
-  entityType: EntityType;
+  entityType: CustomEntityType;
   id: Scalars['ID']['input'];
 };
 
@@ -1286,6 +1297,7 @@ export type DeleteResponse = {
  */
 export type Email = {
   __typename?: 'Email';
+  /** @deprecated No longer supported */
   appSource: Scalars['String']['output'];
   contacts: Array<Contact>;
   createdAt: Scalars['Time']['output'];
@@ -1310,6 +1322,7 @@ export type Email = {
   primary: Scalars['Boolean']['output'];
   rawEmail?: Maybe<Scalars['String']['output']>;
   source: DataSource;
+  /** @deprecated No longer supported */
   sourceOfTruth: DataSource;
   updatedAt: Scalars['Time']['output'];
   users: Array<User>;
@@ -1457,8 +1470,9 @@ export type EntityTemplateInput = {
 };
 
 export enum EntityType {
-  Contact = 'Contact',
-  Organization = 'Organization',
+  Contact = 'CONTACT',
+  LogEntry = 'LOG_ENTRY',
+  Organization = 'ORGANIZATION',
 }
 
 export type ExtensibleEntity = {
@@ -1643,6 +1657,7 @@ export enum FlowParticipantStatus {
 
 export type FlowSender = MetadataInterface & {
   __typename?: 'FlowSender';
+  flow?: Maybe<Flow>;
   metadata: Metadata;
   user?: Maybe<User>;
 };
@@ -2308,6 +2323,7 @@ export type MetadataInterface = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  addTag: ActionResponse;
   attachment_Create: Attachment;
   bankAccount_Create: BankAccount;
   bankAccount_Delete: DeleteResponse;
@@ -2458,6 +2474,7 @@ export type Mutation = {
   phoneNumber_Update: PhoneNumber;
   reminder_Create?: Maybe<Scalars['ID']['output']>;
   reminder_Update?: Maybe<Scalars['ID']['output']>;
+  removeTag: ActionResponse;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
@@ -2484,6 +2501,10 @@ export type Mutation = {
   user_Update: User;
   workflow_Create: Workflow;
   workflow_Update: ActionResponse;
+};
+
+export type MutationAddTagArgs = {
+  input: AddTagInput;
 };
 
 export type MutationAttachment_CreateArgs = {
@@ -3158,6 +3179,10 @@ export type MutationReminder_CreateArgs = {
 
 export type MutationReminder_UpdateArgs = {
   input: ReminderUpdateInput;
+};
+
+export type MutationRemoveTagArgs = {
+  input: RemoveTagInput;
 };
 
 export type MutationServiceLineItem_BulkUpdateArgs = {
@@ -4239,6 +4264,12 @@ export type ReminderUpdateInput = {
   dismissed?: InputMaybe<Scalars['Boolean']['input']>;
   dueDate?: InputMaybe<Scalars['Time']['input']>;
   id: Scalars['ID']['input'];
+};
+
+export type RemoveTagInput = {
+  entityId: Scalars['ID']['input'];
+  entityType: EntityType;
+  tagId: Scalars['ID']['input'];
 };
 
 export type RenewalRecord = {

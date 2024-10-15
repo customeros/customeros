@@ -3,8 +3,8 @@ import React, { useState, MouseEvent, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { OnConnect } from '@xyflow/system';
-import { FlowActionType } from '@store/Flows/types.ts';
-import { FlowStore } from '@store/Flows/Flow.store.ts';
+import { FlowActionType } from '@store/Flows/types';
+import { FlowStore } from '@store/Flows/Flow.store';
 import {
   Edge,
   Node,
@@ -34,7 +34,11 @@ import { nodeTypes } from './nodes';
 import { BasicEdge } from './edges';
 import { getHelperLines } from './utils';
 import { useUndoRedo, useKeyboardShortcuts } from './hooks';
-import { HelperLines, FlowBuilderToolbar } from './components';
+import {
+  HelperLines,
+  FlowSettingsPanel,
+  FlowBuilderToolbar,
+} from './components';
 
 import '@xyflow/react/dist/style.css';
 const edgeTypes = {
@@ -42,7 +46,15 @@ const edgeTypes = {
 };
 
 export const FlowBuilder = observer(
-  ({ onHasNewChanges }: { onHasNewChanges: () => void }) => {
+  ({
+    onHasNewChanges,
+    showSidePanel,
+    onToggleSidePanel,
+  }: {
+    showSidePanel: boolean;
+    onHasNewChanges: () => void;
+    onToggleSidePanel: (newState: boolean) => void;
+  }) => {
     const store = useStore();
     const id = useParams().id as string;
 
@@ -221,6 +233,52 @@ export const FlowBuilder = observer(
       takeSnapshot();
     }, [takeSnapshot]);
 
+    const onNodesChangeHandler = useCallback(
+      (changes: NodeChange[]) => {
+        // this is hack to prevent removing initial edges automatically for some unknown yet reason
+
+        const shouldProhibitChanges =
+          changes.every((change) => change.type === 'remove') &&
+          nodes.length === changes.length;
+
+        if (shouldProhibitChanges) return;
+        onNodesChange(changes);
+
+        if (
+          changes.some(
+            (e) =>
+              e.type === 'add' || e.type === 'remove' || e.type === 'replace',
+          )
+        ) {
+          onHasNewChanges();
+        }
+
+        // Check if we need to open the side panel
+        const shouldOpenSidePanel = changes.some((change) => {
+          if (
+            change.type === 'add' &&
+            change.item.type === 'action' &&
+            change.item.data.action === 'EMAIL_NEW'
+          ) {
+            // Check if this is the first email action
+            const existingEmailNodes = nodes.filter(
+              (node) =>
+                node.type === 'action' && node.data.action === 'EMAIL_NEW',
+            );
+
+            return existingEmailNodes.length === 0;
+          }
+
+          return false;
+        });
+
+        if (shouldOpenSidePanel) {
+          onToggleSidePanel(true);
+        }
+      },
+      [nodes, onNodesChange],
+    );
+
     return (
       <>
         <ReactFlow
@@ -239,6 +297,8 @@ export const FlowBuilder = observer(
           onNodeDragStart={onNodeDragStart}
           onEdgeMouseLeave={onEdgeMouseLeave}
           onEdgeMouseEnter={onEdgeMouseEnter}
+          // onConnectEnd={onConnectEnd}
+          onNodesChange={onNodesChangeHandler}
           zoomOnPinch={!ui.flowCommandMenu.isOpen}
           zoomOnScroll={!ui.flowCommandMenu.isOpen}
           onSelectionDragStart={onSelectionDragStart}
@@ -247,16 +307,20 @@ export const FlowBuilder = observer(
           proOptions={{
             hideAttribution: true,
           }}
-          onClick={() => {
-            if (ui.flowCommandMenu.isOpen) {
-              ui.flowCommandMenu.setOpen(false);
-            }
-          }}
           fitViewOptions={{
             padding: 0.95,
             includeHiddenNodes: false,
             minZoom: 0.1,
             maxZoom: 5,
+          }}
+          onClick={() => {
+            if (ui.flowCommandMenu.isOpen) {
+              ui.flowCommandMenu.setOpen(false);
+            }
+
+            if (showSidePanel) {
+              onToggleSidePanel(false);
+            }
           }}
           onInit={(instance) => {
             const fitViewOptions: FitViewOptions = {
@@ -280,28 +344,6 @@ export const FlowBuilder = observer(
               return;
             }
             onEdgesChange(changes);
-          }}
-          // onConnectEnd={onConnectEnd}
-          onNodesChange={(changes) => {
-            // this is hack to prevent removing initial edges automatically for some unknown yet reason
-
-            const shouldProhibitChanges =
-              changes.every((change) => change.type === 'remove') &&
-              nodes.length === changes.length;
-
-            if (shouldProhibitChanges) return;
-            onNodesChange(changes);
-
-            if (
-              changes.some(
-                (e) =>
-                  e.type === 'add' ||
-                  e.type === 'remove' ||
-                  e.type === 'replace',
-              )
-            ) {
-              onHasNewChanges();
-            }
           }}
           onNodeDoubleClick={(_event, node) => {
             if (node.type === 'wait' || node.type === 'action') {
@@ -335,6 +377,7 @@ export const FlowBuilder = observer(
           <Background />
           <FlowBuilderToolbar />
         </ReactFlow>
+        {showSidePanel && <FlowSettingsPanel id={id} nodes={nodes} />}
       </>
     );
   },

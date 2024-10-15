@@ -1,0 +1,5 @@
+mutation flowSenderDelete($id: ID!) {
+  flowSender_Delete(id: $id) {
+    result
+  }
+}

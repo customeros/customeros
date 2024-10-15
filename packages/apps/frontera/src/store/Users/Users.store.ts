@@ -33,6 +33,12 @@ export class UsersStore implements GroupStore<User> {
     makeAutoObservable(this);
   }
 
+  get usersWithMailboxes() {
+    return this.toComputedArray((users) =>
+      users.filter((user) => user.value.mailboxes.length > 0),
+    );
+  }
+
   async bootstrap() {
     if (this.root.demoMode) {
       this.load(mock.data.users.content as unknown as User[]);
@@ -99,6 +105,12 @@ const USERS_QUERY = gql`
         lastName
         name
         profilePhotoUrl
+        mailboxes
+        bot
+        timezone
+        emails {
+          email
+        }
       }
       totalElements
     }

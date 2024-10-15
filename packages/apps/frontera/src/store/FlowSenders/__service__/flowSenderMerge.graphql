@@ -1,0 +1,10 @@
+mutation flowSenderMerge($flowId:ID!, $input: FlowSenderMergeInput!) {
+  flowSender_Merge(flowId: $flowId, input: $input) {
+    metadata {
+      id
+    }
+    user {
+      id
+    }
+  }
+}
