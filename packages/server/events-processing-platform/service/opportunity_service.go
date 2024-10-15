@@ -7,7 +7,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/opportunity/command_handler"
-	organizationaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
@@ -46,16 +45,6 @@ func (s *opportunityService) CreateOpportunity(ctx context.Context, request *opp
 	if request.OrganizationId == "" {
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationId"))
 	}
-	// Check if the organization aggregate exists
-	orgExists, err := s.checkOrganizationExists(ctx, request.Tenant, request.OrganizationId)
-	if err != nil {
-		s.log.Error(err, "error checking organization existence")
-		return nil, status.Errorf(codes.Internal, "error checking organization existence: %v", err)
-	}
-	if !orgExists {
-		return nil, status.Errorf(codes.NotFound, "organization with ID %s not found", request.OrganizationId)
-	}
-
 	opportunityId := uuid.New().String()
 	span.SetTag(tracing.SpanTagEntityId, opportunityId)
 
@@ -218,20 +207,6 @@ func (s *opportunityService) UpdateRenewalOpportunityNextCycleDate(ctx context.C
 
 	// Return the ID of the newly created opportunity
 	return &opportunitypb.OpportunityIdGrpcResponse{Id: request.OpportunityId}, nil
-}
-
-func (s *opportunityService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {
-	organizationAggregate := organizationaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
-	err := s.aggregateStore.Exists(ctx, organizationAggregate.GetID())
-	if err != nil {
-		if errors.Is(err, eventstore.ErrAggregateNotFound) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
-
-	return true, nil // The organization exists
 }
 
 func (s *opportunityService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {

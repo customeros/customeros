@@ -3,16 +3,12 @@ package service
 import (
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
-	organizationaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/organization/aggregate"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/tracing"
 	contractpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contract"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
-	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
@@ -40,16 +36,6 @@ func (s *contractService) CreateContract(ctx context.Context, request *contractp
 	// Validate organization ID
 	if request.OrganizationId == "" {
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("organizationId"))
-	}
-
-	// Check if the organization aggregate exists
-	orgExists, err := s.checkOrganizationExists(ctx, request.Tenant, request.OrganizationId)
-	if err != nil {
-		s.log.Error(err, "error checking organization existence")
-		return nil, status.Errorf(codes.Internal, "error checking organization existence: %v", err)
-	}
-	if !orgExists {
-		return nil, status.Errorf(codes.NotFound, "organization with ID %s not found", request.OrganizationId)
 	}
 
 	contractId := uuid.New().String()
@@ -158,20 +144,6 @@ func (s *contractService) RolloutRenewalOpportunityOnExpiration(ctx context.Cont
 	}
 
 	return &contractpb.ContractIdGrpcResponse{Id: request.Id}, nil
-}
-
-func (s *contractService) checkOrganizationExists(ctx context.Context, tenant, organizationId string) (bool, error) {
-	organizationAggregate := organizationaggregate.NewOrganizationAggregateWithTenantAndID(tenant, organizationId)
-	err := s.aggregateStore.Exists(ctx, organizationAggregate.GetID())
-	if err != nil {
-		if errors.Is(err, eventstore.ErrAggregateNotFound) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
-
-	return true, nil // The organization exists
 }
 
 func (s *contractService) SoftDeleteContract(ctx context.Context, request *contractpb.SoftDeleteContractGrpcRequest) (*emptypb.Empty, error) {
