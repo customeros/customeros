@@ -1,5 +1,5 @@
-import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useRef, Fragment, useState } from 'react';
 
 import set from 'lodash/set';
 import { useKeyBindings } from 'rooks';
@@ -15,6 +15,7 @@ import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Mail02 } from '@ui/media/icons/Mail02';
 import { Star06 } from '@ui/media/icons/Star06';
+import { Button } from '@ui/form/Button/Button';
 import { getTimezone } from '@utils/getTimezone';
 import { IconButton } from '@ui/form/IconButton';
 import { useStore } from '@shared/hooks/useStore';
@@ -25,9 +26,21 @@ import { TextInput } from '@ui/media/icons/TextInput';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { getFormattedLink } from '@utils/getExternalLink';
 import { Tag, Social, TableViewType } from '@graphql/types';
+import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { LinkedInSolid02 } from '@ui/media/icons/LinkedInSolid02';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
+import {
+  Modal,
+  ModalBody,
+  ModalClose,
+  ModalPortal,
+  ModalFooter,
+  ModalOverlay,
+  ModalCloseButton,
+  ModalFeaturedHeader,
+  ModalFeaturedContent,
+} from '@ui/overlay/Modal';
 
 export const ContactPreviewCard = observer(() => {
   const store = useStore();
@@ -38,6 +51,7 @@ export const ContactPreviewCard = observer(() => {
   const preset = searchParams?.get('preset');
   const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
   const tableType = tableViewDef?.value?.tableType;
+  const [isOpen, setIsOpen] = useState(false);
 
   if (tableType !== TableViewType.Contacts && !contactId) {
     store.ui.setContactPreviewCardOpen(false);
@@ -53,7 +67,10 @@ export const ContactPreviewCard = observer(() => {
 
   const fullName = contact?.name || 'Unnamed';
   const src = contact?.value?.profilePhotoUrl;
-  const company = contact?.value.organizations?.content?.[0]?.name;
+  const activeCompany =
+    (contact?.value?.organizations?.content?.length ?? 1) - 1;
+  const company = contact?.value.organizations?.content?.[activeCompany]?.name;
+
   const role = contact?.value.jobRoles?.[0]?.jobTitle;
   const countryA3 = contact?.value.locations?.[0]?.countryCodeA3;
   const countryA2 = contact?.value.locations?.[0]?.countryCodeA2;
@@ -131,6 +148,12 @@ export const ContactPreviewCard = observer(() => {
 
   const userHasOrg = contact?.organization?.name;
 
+  const userBeenEnriched =
+    contact?.value?.enrichDetails.enrichedAt ||
+    contact?.value?.enrichDetails.failedAt;
+
+  const requestedEnrichment = contact?.value?.enrichDetails.requestedAt;
+
   return (
     <>
       {store.ui.contactPreviewCardOpen && (
@@ -138,13 +161,33 @@ export const ContactPreviewCard = observer(() => {
           data-state={store.ui.contactPreviewCardOpen ? 'open' : 'closed'}
           className='data-[state=open]:animate-slideLeftAndFade data-[state=closed]:animate-slideRightAndFade flex flex-col absolute right-[12px] -top-[-53px] p-4 max-w-[390px] min-w-[350px] border border-gray-200 rounded-lg z-50 bg-white'
         >
-          <Avatar
-            size='sm'
-            textSize='xs'
-            name={fullName}
-            variant='circle'
-            src={src || undefined}
-          />
+          <div className='flex justify-between items-start'>
+            <Avatar
+              size='sm'
+              textSize='xs'
+              name={fullName}
+              variant='circle'
+              src={src || undefined}
+            />
+            {!userBeenEnriched && (
+              <Tooltip label='Enrich this contact'>
+                {!requestedEnrichment ? (
+                  <IconButton
+                    size='xxs'
+                    icon={<Star06 />}
+                    onClick={() => setIsOpen(true)}
+                    aria-label='enrich this contact'
+                  />
+                ) : (
+                  <Spinner
+                    size='sm'
+                    label='enriching'
+                    className='text-gray-400 fill-gray-700'
+                  />
+                )}
+              </Tooltip>
+            )}
+          </div>
           <div className='flex items-center gap-1'>
             {isEditName ? (
               <Input
@@ -218,11 +261,9 @@ export const ContactPreviewCard = observer(() => {
             <div className='flex items-center justify-between w-full text-sm group/menu'>
               <div className='flex items-center gap-2'>
                 <Mail02 className='mt-[1px] text-gray-500' />
-                <span className='font-medium'>
-                  Emails<span> • {contact?.value.emails.length}</span>
-                </span>
+                <span className='text-gray-500'>Emails</span>
               </div>
-              {userHasOrg && (
+              {company && (
                 <div className='flex items-center gap-2'>
                   <Menu>
                     <MenuButton>
@@ -252,7 +293,7 @@ export const ContactPreviewCard = observer(() => {
                       >
                         <div className='flex items-center gap-1'>
                           <Star06 className='group-hover/find-email:text-gray-700 text-gray-500' />
-                          <span>{`Find email at ${userHasOrg}`}</span>
+                          <span>{`Find email at ${company}`}</span>
                         </div>
                       </MenuItem>
                       <MenuItem
@@ -303,67 +344,69 @@ export const ContactPreviewCard = observer(() => {
             </div>
             <div className='ml-6'>
               {contact?.value.emails.map((email, idx) => (
-                <div className=' flex items-center justify-between group/menu-email'>
-                  <div key={email.id} className='flex items-center '>
-                    <span>{email.email}</span>
-                  </div>
-                  <div className='flex items-center'>
-                    {email && (
-                      <EmailValidationMessage
-                        email={email?.email || ''}
-                        validationDetails={validationDetails}
-                      />
-                    )}
-                    <Menu>
-                      <MenuButton>
-                        <IconButton
-                          size='xxs'
-                          variant='ghost'
-                          icon={<Plus />}
-                          aria-label='add new email'
-                          className='group-hover/menu-email:opacity-100 opacity-0'
+                <Fragment key={email.id}>
+                  <div className=' flex items-center justify-between group/menu-email'>
+                    <div key={email.id} className='flex items-center '>
+                      <span>{email.email}</span>
+                    </div>
+                    <div className='flex items-center'>
+                      {email && (
+                        <EmailValidationMessage
+                          email={email?.email || ''}
+                          validationDetails={validationDetails}
                         />
-                      </MenuButton>
-                      <MenuList>
-                        <MenuItem
-                          className='group/edit-email'
-                          onClick={() => {
-                            store.ui.setSelectionId(idx);
-                            store.ui.commandMenu.setType('EditEmail');
-                            store.ui.commandMenu.setContext({
-                              ids: [contact.value.id],
-                              entity: 'Contact',
-                              property: 'email',
-                            });
-                            store.ui.commandMenu.setOpen(true);
-                          }}
-                        >
-                          <div className='flex items-center gap-2'>
-                            <TextInput className='group-hover/edit-email:text-gray-700 text-gray-500' />
-                            <span>Edit email</span>
-                          </div>
-                        </MenuItem>
-                        <MenuItem
-                          className='group/archive-email'
-                          onClick={() => {
-                            contact.update(
-                              (c) => {
-                                c.emails.splice(idx, 1);
+                      )}
+                      <Menu>
+                        <MenuButton>
+                          <IconButton
+                            size='xxs'
+                            variant='ghost'
+                            icon={<DotsVertical />}
+                            aria-label='add new email'
+                            className='group-hover/menu-email:opacity-100 opacity-0'
+                          />
+                        </MenuButton>
+                        <MenuList>
+                          <MenuItem
+                            className='group/edit-email'
+                            onClick={() => {
+                              store.ui.setSelectionId(idx);
+                              store.ui.commandMenu.setType('EditEmail');
+                              store.ui.commandMenu.setContext({
+                                ids: [contact.value.id],
+                                entity: 'Contact',
+                                property: 'email',
+                              });
+                              store.ui.commandMenu.setOpen(true);
+                            }}
+                          >
+                            <div className='flex items-center gap-2'>
+                              <TextInput className='group-hover/edit-email:text-gray-700 text-gray-500' />
+                              <span>Edit email</span>
+                            </div>
+                          </MenuItem>
+                          <MenuItem
+                            className='group/archive-email'
+                            onClick={() => {
+                              contact.update(
+                                (c) => {
+                                  c.emails.splice(idx, 1);
 
-                                return c;
-                              },
-                              { mutate: false },
-                            );
-                            contact.updateEmail(email?.email ?? '');
-                          }}
-                        >
-                          <Archive className='text-gray-500 group-hover/archive-email:text-gray-700' />
-                          Archive email
-                        </MenuItem>
-                      </MenuList>
-                    </Menu>
+                                  return c;
+                                },
+                                { mutate: false },
+                              );
+                              contact.updateEmail(email?.email ?? '');
+                            }}
+                          >
+                            <Archive className='text-gray-500 group-hover/archive-email:text-gray-700' />
+                            Archive email
+                          </MenuItem>
+                        </MenuList>
+                      </Menu>
+                    </div>
                   </div>
-                </div>
+                </Fragment>
               ))}
             </div>
           </div>
@@ -446,6 +489,138 @@ export const ContactPreviewCard = observer(() => {
           </div>
         </div>
       )}
+      <EnrichContactModal
+        isModalOpen={isOpen}
+        contactId={contactId}
+        onClose={() => {
+          setIsOpen(false);
+        }}
+      />
     </>
   );
 });
+
+const EnrichContactModal = observer(
+  ({
+    isModalOpen = false,
+    onClose,
+    contactId,
+  }: {
+    onClose: () => void;
+    isModalOpen: boolean;
+    contactId: string | number;
+  }) => {
+    const store = useStore();
+    const hasSubmitedRef = useRef(false);
+    const [linkedin, setLinkedin] = useState(
+      () => store.contacts.value.get(String(contactId))?.value.socials[0]?.url,
+    );
+    const [validation, setValidation] = useState<Record<'linkedin', boolean>>({
+      linkedin: false,
+    });
+
+    const contactStore = store.contacts.value.get(String(contactId));
+
+    const validate = () => {
+      setValidation(() => ({
+        linkedin: !linkedin,
+      }));
+
+      return linkedin;
+    };
+
+    const reset = () => {
+      setLinkedin('');
+      setValidation({
+        linkedin: false,
+      });
+      hasSubmitedRef.current = false;
+    };
+
+    const handleSubmit = () => {
+      hasSubmitedRef.current = true;
+
+      if (!validate()) return;
+
+      contactStore?.addSocial(linkedin || '', {
+        onSuccess: () => {
+          onClose();
+          reset();
+        },
+      });
+    };
+
+    return (
+      <Modal
+        open={isModalOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            reset();
+            onClose();
+          }
+        }}
+      >
+        <ModalPortal>
+          <ModalOverlay className='z-[999]' />
+          <ModalFeaturedContent className='z-[9999]'>
+            <ModalFeaturedHeader>
+              <p className='text-lg font-semibold mb-1'>
+                What’s this contact’s LinkedIn?
+              </p>
+              <p className='text-sm'>
+                To enrich this contact, we need their LinkedIn URL
+              </p>
+            </ModalFeaturedHeader>
+            <ModalCloseButton />
+            <ModalBody className='flex flex-col gap-4'>
+              <div className='flex flex-col'>
+                <Input
+                  id='linkedin'
+                  value={linkedin}
+                  placeholder='LinkedIn profile link'
+                  className={cn(validation.linkedin && 'border-error-500')}
+                  onChange={(e) => {
+                    setLinkedin(e.target.value);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Escape') {
+                      onClose(); // Close on escape key
+                    }
+                    e.stopPropagation();
+                  }}
+                />
+                {validation.linkedin && (
+                  <p className='text-sm text-error-500 mt-1'>
+                    One does not simply skip LinkedIn
+                  </p>
+                )}
+              </div>
+            </ModalBody>
+            <ModalFooter className='flex gap-3'>
+              <ModalClose className='w-full'>
+                <Button className='w-full'>Cancel</Button>
+              </ModalClose>
+
+              <Button
+                className='w-full'
+                colorScheme='primary'
+                onClick={handleSubmit}
+                loadingText='Creating contact'
+                isLoading={store.contacts.isLoading}
+                rightSpinner={
+                  <Spinner
+                    size='sm'
+                    label='loading'
+                    className='text-primary-500 fill-primary-200'
+                  />
+                }
+              >
+                Enrich contact
+              </Button>
+            </ModalFooter>
+          </ModalFeaturedContent>
+        </ModalPortal>
+      </Modal>
+    );
+  },
+);

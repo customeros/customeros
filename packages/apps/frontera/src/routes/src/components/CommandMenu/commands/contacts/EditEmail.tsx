@@ -32,7 +32,7 @@ export const EditEmail = observer(() => {
       <CommandInput
         label={label}
         value={emailAdress}
-        placeholder='Edit email'
+        placeholder={emailAdress.length > 0 ? 'Edit email' : 'Add new email'}
         onKeyDownCapture={(e) => {
           if (e.key === ' ') {
             e.stopPropagation();
@@ -50,10 +50,11 @@ export const EditEmail = observer(() => {
         }}
       />
       <Command.List>
-        <CommandItem
-          leftAccessory={<Edit03 />}
-          onSelect={handleSaveEmail}
-        >{`Rename email to "${emailAdress}"`}</CommandItem>
+        <CommandItem leftAccessory={<Edit03 />} onSelect={handleSaveEmail}>
+          {(oldEmail ?? '').length > 0
+            ? `Rename email to "${emailAdress}"`
+            : `Add new email "${emailAdress}"`}
+        </CommandItem>
       </Command.List>
     </Command>
   );

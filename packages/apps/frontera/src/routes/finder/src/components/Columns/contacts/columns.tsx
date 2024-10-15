@@ -112,7 +112,10 @@ const columns: Record<string, Column> = {
     enableColumnFilter: true,
     enableSorting: true,
     cell: (props) => {
-      const organization = props.getValue()?.value?.organizations?.content?.[0];
+      const lastOrg =
+        props.getValue()?.value?.organizations?.content?.length - 1;
+      const organization =
+        props.getValue()?.value?.organizations?.content?.[lastOrg];
 
       if (!organization) return '-';
 

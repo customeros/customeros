@@ -350,7 +350,10 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
-  async addSocial(url: string) {
+  async addSocial(
+    url: string,
+    options?: { onSuccess?: (serverId: string) => void },
+  ) {
     try {
       const { contact_AddSocial } = await this.service.addSocial({
         contactId: this.getId(),
@@ -368,6 +371,8 @@ export class ContactStore implements Store<Contact> {
       runInAction(() => {
         this.error = (e as Error).message;
       });
+    } finally {
+      options?.onSuccess?.(this.value.socials?.[0]?.id);
     }
   }
 
@@ -582,6 +587,11 @@ const CONTACT_QUERY = gql`
       }
       connectedUsers {
         id
+      }
+      enrichDetails {
+        enrichedAt
+        failedAt
+        requestedAt
       }
       profilePhotoUrl
     }
