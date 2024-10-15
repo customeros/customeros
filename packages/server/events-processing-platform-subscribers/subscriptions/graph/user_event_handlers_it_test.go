@@ -378,7 +378,7 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	require.Nil(t, err)
 
 	userProps := utils.GetPropsFromNode(*user)
-	require.Equal(t, 15, len(userProps))
+	require.Equal(t, 14, len(userProps))
 
 	userId = utils.GetStringPropOrEmpty(userProps, "id")
 	require.NotNil(t, userId)
