@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -512,34 +513,35 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	//	return flow, nil
 	//}
 
+	//if status == neo4jentity.FlowStatusActive {
+	//	flowParticipants, err := s.FlowParticipantGetList(ctx, []string{flow.Id})
+	//	if err != nil {
+	//		tracing.TraceErr(span, err)
+	//		return nil, err
+	//	}
+	//
+	//	for _, v := range *flowParticipants {
+	//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, &v)
+	//		if err != nil {
+	//			tracing.TraceErr(span, err)
+	//			return nil, err
+	//		}
+	//	}
+	//}
+
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		err := s.services.RabbitMQService.Publish("customeros", "test", map[string]interface{}{
-			"flowId": flow.Id,
+		err := s.services.RabbitMQService.Publish(ctx, "customeros", "test", dto.FlowInitialSchedule{
+			Tenant: common.GetTenantFromContext(ctx),
+			FlowId: flow.Id,
 		})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-
-		//if status == neo4jentity.FlowStatusActive {
-		//	flowParticipants, err := s.FlowParticipantGetList(ctx, []string{flow.Id})
-		//	if err != nil {
-		//		tracing.TraceErr(span, err)
-		//		return nil, err
-		//	}
-		//
-		//	for _, v := range *flowParticipants {
-		//		err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flow.Id, &v)
-		//		if err != nil {
-		//			tracing.TraceErr(span, err)
-		//			return nil, err
-		//		}
-		//	}
-		//}
 
 		flow.Status = status
 
