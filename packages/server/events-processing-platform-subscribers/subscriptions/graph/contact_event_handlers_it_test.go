@@ -456,7 +456,6 @@ func TestGraphContactEventHandler_OnContactUpdate(t *testing.T) {
 	require.Equal(t, descriptionUpdate, utils.GetStringPropOrEmpty(contactProps, "description"))
 	require.Less(t, now, utils.GetTimePropOrNow(contactProps, "updatedAt"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(contactProps, "sourceOfTruth"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(contactProps, "syncedWithEventStore"))
 }
 
 func TestGraphContactEventHandler_OnSocialAddedToContactV1(t *testing.T) {

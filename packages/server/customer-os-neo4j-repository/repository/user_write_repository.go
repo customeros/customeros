@@ -114,8 +114,7 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 						u.roles = $roles,
 						u.bot = $bot,
 						u.profilePhotoUrl = $profilePhotoUrl,
-						u.timezone = $timezone,
-						u.syncedWithEventStore = true 
+						u.timezone = $timezone
 		 ON MATCH SET 	u.name = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.name is null OR u.name = '' THEN $name ELSE u.name END,
 						u.firstName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.firstName is null OR u.firstName = '' THEN $firstName ELSE u.firstName END,
 						u.lastName = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.lastName is null OR u.lastName = '' THEN $lastName ELSE u.lastName END,
@@ -125,8 +124,7 @@ func (r *userWriteRepository) CreateUserInTx(c context.Context, tx neo4j.Managed
 						u.internal = $internal,
 						u.bot = $bot,
 						u.updatedAt = datetime(),
-						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
-						u.syncedWithEventStore = true`, tenant)
+						u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END`, tenant)
 	params := map[string]any{
 		"tenant":          tenant,
 		"id":              input.Id,
@@ -168,8 +166,7 @@ func (r *userWriteRepository) UpdateUser(c context.Context, tenant, userId strin
 				u.timezone = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.timezone is null OR u.timezone = '' THEN $timezone ELSE u.timezone END,
 				u.profilePhotoUrl = CASE WHEN u.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR u.profilePhotoUrl is null OR u.profilePhotoUrl = '' THEN $profilePhotoUrl ELSE u.profilePhotoUrl END,
 				u.updatedAt = datetime(),
-				u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END,
-				u.syncedWithEventStore = true`, tenant)
+				u.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE u.sourceOfTruth END`, tenant)
 	params := map[string]any{
 		"id":              userId,
 		"tenant":          tenant,

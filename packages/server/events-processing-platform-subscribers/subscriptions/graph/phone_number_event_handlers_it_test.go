@@ -214,7 +214,6 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 
 	require.Less(t, *creationUpdatedAt, utils.GetTimePropOrNow(phoneUpdateProps, "updatedAt"))
 	require.Equal(t, creationTime, utils.GetTimePropOrNow(phoneUpdateProps, "createdAt"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(phoneUpdateProps, "syncedWithEventStore"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "source"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "sourceOfTruth"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(phoneUpdateProps, "appSource"))

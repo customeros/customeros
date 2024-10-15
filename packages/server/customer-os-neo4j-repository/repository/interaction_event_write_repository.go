@@ -89,8 +89,7 @@ func (r *interactionEventWriteRepository) CreateInTx(ctx context.Context, tx neo
 								i.eventType = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
 								i.hide = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
 								i.updatedAt = datetime(),
-								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
-								i.syncedWithEventStore = true
+								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END
 							`, tenant, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
@@ -139,8 +138,7 @@ func (r *interactionEventWriteRepository) Update(ctx context.Context, tenant, in
 				i.eventType= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.eventType is null OR i.eventType = '' THEN $eventType ELSE i.eventType END,
 				i.hide= CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true THEN $hide ELSE i.hide END,
 				i.updatedAt = datetime(),
-				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
-				i.syncedWithEventStore = true`, tenant)
+				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END`, tenant)
 	params := map[string]any{
 		"tenant":             tenant,
 		"interactionEventId": interactionEventId,

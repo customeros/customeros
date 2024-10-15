@@ -435,10 +435,6 @@
       "query": "MATCH (n) WHERE NOT (n)--() AND NOT n:Country AND NOT n:Domain AND NOT n:TechnicalNode AND NOT n:Attachment return count(n)"
     },
     {
-      "name": "Check synced with event store",
-      "query": "MATCH (n:User|Organization) WHERE n.updatedAt < datetime() - duration({minutes:15}) AND n.syncedWithEventStore is null or n.syncedWithEventStore = false return count(n)"
-    },
-    {
       "name": "Check source fields",
       "query": "MATCH (n:Organization|Contact|Contract|Email|PhoneNumber|Social|Tag) WHERE n.source IS NULL OR n.source = '' RETURN count(n)"
     },

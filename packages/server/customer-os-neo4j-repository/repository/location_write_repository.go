@@ -109,9 +109,7 @@ func (r *locationRepository) CreateLocation(ctx context.Context, tenant, locatio
 						l.sourceOfTruth = $sourceOfTruth,
 						l.appSource = $appSource,
 						l.createdAt = $createdAt,
-						l.updatedAt = datetime(),
-						l.syncedWithEventStore = true 
-		 ON MATCH SET 	l.syncedWithEventStore = true`, tenant)
+						l.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":            locationId,
 		"tenant":        tenant,
@@ -164,7 +162,6 @@ func (r *locationRepository) UpdateLocation(ctx context.Context, tenant, locatio
 			WHERE l:Location_%s
 		 SET l.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE l.sourceOfTruth END,
 			l.updatedAt = datetime(),
-			l.syncedWithEventStore = true,
 			l.rawAddress = $rawAddress,
 			l.name = $name,
 			l.country = $country,

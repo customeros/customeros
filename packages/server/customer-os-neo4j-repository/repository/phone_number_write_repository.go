@@ -66,9 +66,7 @@ func (r *phoneNumberWriteRepository) CreatePhoneNumber(ctx context.Context, tena
 						p.sourceOfTruth = $sourceOfTruth,
 						p.appSource = $appSource,
 						p.createdAt = $createdAt,
-						p.updatedAt = datetime(),
-						p.syncedWithEventStore = true 
-		 ON MATCH SET 	p.syncedWithEventStore = true`, tenant)
+						p.updatedAt = datetime()`, tenant)
 	params := map[string]any{
 		"id":             phoneNumberId,
 		"rawPhoneNumber": data.RawPhoneNumber,
@@ -100,8 +98,7 @@ func (r *phoneNumberWriteRepository) UpdatePhoneNumber(ctx context.Context, tena
 				WHERE p:PhoneNumber_%s
 		 SET 	p.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE p.sourceOfTruth END,
 				p.updatedAt = datetime(),
-				p.rawPhoneNumber = $rawPhoneNumber,
-				p.syncedWithEventStore = true`, tenant)
+				p.rawPhoneNumber = $rawPhoneNumber`, tenant)
 	params := map[string]any{
 		"id":             phoneNumberId,
 		"tenant":         tenant,
@@ -211,8 +208,7 @@ func (r *phoneNumberWriteRepository) LinkWithContact(ctx context.Context, tenant
 		MERGE (c)-[rel:HAS]->(p)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			c.updatedAt = datetime(),
-			rel.syncedWithEventStore = true`
+			c.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":        tenant,
 		"contactId":     contactId,
@@ -243,8 +239,7 @@ func (r *phoneNumberWriteRepository) LinkWithOrganization(ctx context.Context, t
 		MERGE (org)-[rel:HAS]->(p)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			org.updatedAt = datetime(),
-			rel.syncedWithEventStore = true`
+			org.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
@@ -275,8 +270,7 @@ func (r *phoneNumberWriteRepository) LinkWithUser(ctx context.Context, tenant, u
 		MERGE (u)-[rel:HAS]->(p)
 		SET	rel.primary = $primary,
 			rel.label = $label,	
-			u.updatedAt = datetime(),
-			rel.syncedWithEventStore = true`
+			u.updatedAt = datetime()`
 	params := map[string]any{
 		"tenant":        tenant,
 		"userId":        userId,
