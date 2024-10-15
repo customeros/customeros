@@ -21,6 +21,7 @@ import { useUndoRedo } from '../hooks';
 
 interface EmailEditorModalProps {
   isEditorOpen: boolean;
+  handleCancel: () => void;
   data: { subject: string; bodyTemplate: string; action: FlowActionType };
   handleEmailDataChange: (args: {
     subject: string;
@@ -29,14 +30,18 @@ interface EmailEditorModalProps {
 }
 
 export const EmailEditorModal = observer(
-  ({ isEditorOpen, handleEmailDataChange, data }: EmailEditorModalProps) => {
+  ({
+    isEditorOpen,
+    handleEmailDataChange,
+    data,
+    handleCancel,
+  }: EmailEditorModalProps) => {
     const id = useParams().id as string;
     const inputRef = useRef<HTMLInputElement>(null);
 
     const [subject, setSubject] = useState(data?.subject ?? '');
     const [bodyTemplate, setBodyTemplate] = useState(data?.bodyTemplate ?? '');
     const { takeSnapshot } = useUndoRedo();
-    const [variablesQuery, setVariablesQuery] = useState<string | null>('');
 
     useEffect(() => {
       if (isEditorOpen) {
@@ -67,13 +72,7 @@ export const EmailEditorModal = observer(
       }, 0);
     };
 
-    const variables = store.flowEmailVariables?.value
-      .get('CONTACT')
-      ?.variables.filter((t) =>
-        variablesQuery
-          ? t.toLowerCase().includes(variablesQuery?.toLowerCase())
-          : true,
-      );
+    const variables = store.flowEmailVariables?.value.get('CONTACT')?.variables;
 
     return (
       <Modal open={isEditorOpen}>
@@ -94,14 +93,27 @@ export const EmailEditorModal = observer(
                         : 'Reply to Email'}
                     </span>
                   </div>
-                  <Button
-                    size='xs'
-                    variant='ghost'
-                    leftIcon={<Check />}
-                    onClick={handleSave}
-                  >
-                    Done
-                  </Button>
+                  <div className='flex items-center gap-2'>
+                    <Button
+                      size='xs'
+                      variant='ghost'
+                      onClick={() => {
+                        setSubject(data.subject);
+                        setBodyTemplate(data.bodyTemplate);
+                        handleCancel();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      size='xs'
+                      variant='outline'
+                      leftIcon={<Check />}
+                      onClick={handleSave}
+                    >
+                      Done
+                    </Button>
+                  </div>
                 </div>
 
                 <Input
@@ -120,7 +132,6 @@ export const EmailEditorModal = observer(
                     dataTest='flow-email-editor'
                     namespace='flow-email-editor'
                     defaultHtmlValue={bodyTemplate}
-                    onVariableSearch={setVariablesQuery}
                     onChange={(e) => setBodyTemplate(e)}
                     className='text-base cursor-text email-editor h-full'
                   ></Editor>

@@ -95,7 +95,6 @@ interface EditorProps extends VariantProps<typeof contentEditableVariants> {
   onChange?: (html: string) => void;
   onHashtagCreate?: (hashtag: string) => void;
   onHashtagSearch?: (q: string | null) => void;
-  onVariableSearch?: (q: string | null) => void;
   onMentionsSearch?: (q: string | null) => void;
   onHashtagsChange?: (hashtags: SelectOption[]) => void;
   onBlur?: (e: React.FocusEvent<HTMLDivElement>) => void;
@@ -116,7 +115,6 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
       onHashtagCreate,
       onHashtagsChange,
       onMentionsSearch,
-      onVariableSearch,
       defaultHtmlValue,
       hashtagsOptions = [],
       mentionsOptions = [],
@@ -209,11 +207,8 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
 
           <LinkPastePlugin />
 
-          {onVariableSearch && (
-            <VariablesPlugin
-              options={variableOptions}
-              onSearch={onVariableSearch}
-            />
+          {variableOptions?.length > 0 && (
+            <VariablesPlugin options={variableOptions} />
           )}
 
           {onHashtagSearch && (
@@ -227,7 +222,10 @@ export const Editor = forwardRef<LexicalEditor | null, EditorProps>(
           {floatingAnchorElem && (
             <>
               <FloatingLinkEditorPlugin anchorElem={floatingAnchorElem} />
-              <FloatingMenuPlugin element={floatingAnchorElem} />
+              <FloatingMenuPlugin
+                element={floatingAnchorElem}
+                variableOptions={variableOptions}
+              />
             </>
           )}
           <EditorPlugin

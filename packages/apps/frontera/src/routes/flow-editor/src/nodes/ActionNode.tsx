@@ -72,6 +72,24 @@ export const ActionNode = ({
     );
   };
 
+  const handleCancel = () => {
+    setNodes((nds) =>
+      nds.map((node) => {
+        if (node.id === id) {
+          return {
+            ...node,
+            data: {
+              ...node.data,
+              isEditing: false,
+            },
+          };
+        }
+
+        return node;
+      }),
+    );
+  };
+
   const parsedTemplate = useMemo(
     () => htmlToText(data?.bodyTemplate).trim(),
     [data?.bodyTemplate],
@@ -124,6 +142,7 @@ export const ActionNode = ({
         </div>
         <EmailEditorModal
           data={data}
+          handleCancel={handleCancel}
           isEditorOpen={data.isEditing || false}
           handleEmailDataChange={handleEmailDataChange}
         />

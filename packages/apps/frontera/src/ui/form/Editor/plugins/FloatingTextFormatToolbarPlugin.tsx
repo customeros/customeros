@@ -28,8 +28,9 @@ import { Divider } from '@ui/presentation/Divider';
 import { Italic01 } from '@ui/media/icons/Italic01';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { BlockQuote } from '@ui/media/icons/BlockQuote';
-import { getExternalUrl } from '@utils/getExternalLink.ts';
-import { sanitizeUrl } from '@ui/form/Editor/utils/url.ts';
+import { getExternalUrl } from '@utils/getExternalLink';
+import { sanitizeUrl } from '@ui/form/Editor/utils/url';
+import { BracketsPlus } from '@ui/media/icons/BracketsPlus';
 import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { Strikethrough01 } from '@ui/media/icons/Strikethrough01';
 import { FloatingToolbarButton } from '@ui/form/Editor/components';
@@ -37,9 +38,11 @@ import { $isExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode';
 
 import { usePointerInteractions } from './../utils/usePointerInteractions';
 import {
+  INSERT_VARIABLE_NODE,
   registerEnterQuoteCommand,
   TOGGLE_BLOCKQUOTE_COMMAND,
   registerToggleQuoteCommand,
+  registerInsertVariableNodeCommand,
 } from './../commands';
 
 const DEFAULT_DOM_ELEMENT = document.body;
@@ -48,16 +51,19 @@ type FloatingMenuCoords = { x: number; y: number } | undefined;
 
 export type FloatingMenuComponentProps = {
   shouldShow: boolean;
+  variableOptions: string[];
   editor: ReturnType<typeof useLexicalComposerContext>[0];
 };
 
 export type FloatingMenuPluginProps = {
   element?: HTMLElement;
+  variableOptions: string[];
 };
 
 export function FloatingMenu({
   editor,
   shouldShow,
+  variableOptions,
 }: FloatingMenuComponentProps) {
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isLink, setIsLink] = useState(false);
@@ -254,13 +260,31 @@ export function FloatingMenu({
               />
             </div>
           </Tooltip>
+          <Tooltip label='Add variable: {'>
+            <div>
+              <FloatingToolbarButton
+                active={isBlockquote}
+                aria-label='Add variable'
+                icon={<BracketsPlus className='text-inherit' />}
+                onClick={() => {
+                  editor.dispatchCommand(INSERT_VARIABLE_NODE, {
+                    label: variableOptions?.[0].toLowerCase(),
+                    value: variableOptions?.[0].toLowerCase(),
+                  });
+                }}
+              />
+            </div>
+          </Tooltip>
         </>
       )}
     </div>
   );
 }
 
-export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
+export function FloatingMenuPlugin({
+  element,
+  variableOptions,
+}: FloatingMenuPluginProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [coords, setCoords] = useState<FloatingMenuCoords>(undefined);
   const show = coords !== undefined;
@@ -342,6 +366,12 @@ export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
   );
 
   useEffect(() => {
+    const unregisterInsertVariableCommand = registerInsertVariableNodeCommand(
+      editor,
+      () => {
+        setCoords(undefined);
+      },
+    );
     const unregisterCommand = editor.registerCommand(
       ON_SELECTION_CHANGE,
       $handleSelectionChange,
@@ -352,6 +382,7 @@ export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
 
     return () => {
       unregisterCommand();
+      unregisterInsertVariableCommand();
       document.removeEventListener('mousedown', handleClickOutside);
     };
   }, [editor, $handleSelectionChange, handleClickOutside]);
@@ -429,7 +460,11 @@ export function FloatingMenuPlugin({ element }: FloatingMenuPluginProps) {
         opacity: show ? 1 : 0,
       }}
     >
-      <FloatingMenu editor={editor} shouldShow={show} />
+      <FloatingMenu
+        editor={editor}
+        shouldShow={show}
+        variableOptions={variableOptions}
+      />
     </div>,
     element ?? DEFAULT_DOM_ELEMENT,
   );
