@@ -6,6 +6,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"github.com/opentracing/opentracing-go"
@@ -548,10 +549,16 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		//create if not exists
-		cypherCreate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) MERGE(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$organizationId})`, tenant)
+		cypherCreate := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant}) MERGE(t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization:Organization_%s {id:$organizationId})
+				ON CREATE SET
+					org.source = $source,
+					org.createdAt = datetime(),
+					org.updatedAt = datetime(),
+					org.hide=false`, tenant)
 		paramsCreate := map[string]any{
 			"tenant":         tenant,
 			"organizationId": organizationId,
+			"source":         utils.FirstNotEmptyString(data.SourceFields.Source, neo4jentity.DataSourceOpenline.String()),
 		}
 
 		span.LogFields(log.String("cypherCreate", cypherCreate))
@@ -566,7 +573,6 @@ func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.Manage
 		paramsUpdate := map[string]any{
 			"tenant":         tenant,
 			"organizationId": organizationId,
-			"source":         data.SourceFields.Source,
 			"now":            utils.Now(),
 		}
 
