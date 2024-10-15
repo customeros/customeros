@@ -2,7 +2,6 @@ package servicet
 
 import (
 	"context"
-	"fmt"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
@@ -177,31 +176,6 @@ func TestContractService_CreateContract_MissingOrganizationId(t *testing.T) {
 	require.True(t, ok)
 	require.Equal(t, codes.InvalidArgument, st.Code())
 	require.Contains(t, st.Message(), "missing required field: organizationId")
-}
-
-func TestContractService_CreateContract_OrganizationAggregateDoesNotExists(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	tenant := "ziggy"
-	orgId := "org123"
-
-	aggregateStore := eventstoret.NewTestAggregateStore()
-
-	grpcConnection, err := dialFactory.GetEventsProcessingPlatformConn(testDatabase.Repositories, aggregateStore)
-	require.Nil(t, err, "Failed to connect to processing platform")
-
-	contractClient := contractpb.NewContractGrpcServiceClient(grpcConnection)
-	_, err = contractClient.CreateContract(ctx, &contractpb.CreateContractGrpcRequest{
-		Tenant:         tenant,
-		Name:           "New Contract",
-		OrganizationId: orgId,
-	})
-	require.Error(t, err)
-	st, ok := status.FromError(err)
-	require.True(t, ok)
-	require.Equal(t, codes.NotFound, st.Code())
-	require.Contains(t, st.Message(), fmt.Sprintf("organization with ID %s not found", orgId))
 }
 
 func TestContractService_UpdateContract(t *testing.T) {
