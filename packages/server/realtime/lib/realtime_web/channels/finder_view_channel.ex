@@ -44,7 +44,6 @@ defmodule RealtimeWeb.FinderChannel do
 
   @impl true
   def terminate(_, socket) do
-    Logger.info("User #{socket.assigns.user_id} left the channel")
     {:ok, socket}
   end
 

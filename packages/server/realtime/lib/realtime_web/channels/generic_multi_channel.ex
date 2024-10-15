@@ -39,7 +39,6 @@ defmodule RealtimeWeb.GenericMultiChannel do
 
   @impl true
   def handle_info(:after_join, socket) do
-    Logger.info("User #{socket.assigns.user_id} joined the Organizations channel")
     {:noreply, socket}
   end
 
@@ -61,7 +60,6 @@ defmodule RealtimeWeb.GenericMultiChannel do
 
   @impl true
   def terminate(_, socket) do
-    Logger.info("User #{socket.assigns.user_id} left the Organizations channel")
     {:ok, socket}
   end
 
