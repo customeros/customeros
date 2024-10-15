@@ -75,7 +75,6 @@ func TestGraphUserEventHandler_OnUserCreate(t *testing.T) {
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(props, "source"))
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(props, "appSource"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "bot"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(props, "profilePhotoUrl"))
@@ -143,7 +142,6 @@ func TestGraphUserEventHandler_OnUserCreate_WithExternalSystem(t *testing.T) {
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(props, "source"))
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(props, "sourceOfTruth"))
 	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(props, "appSource"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "syncedWithEventStore"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "internal"))
 	require.Equal(t, true, utils.GetBoolPropOrFalse(props, "bot"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(props, "profilePhotoUrl"))
@@ -223,7 +221,6 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRole(t *testing.T) {
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(userProps, "source"))
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(userProps, "sourceOfTruth"))
 	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(userProps, "appSource"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
 	require.Equal(t, "https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png", utils.GetStringPropOrEmpty(userProps, "profilePhotoUrl"))
 	require.Equal(t, "Africa/Abidjan", utils.GetStringPropOrEmpty(userProps, "timezone"))
 
@@ -308,7 +305,6 @@ func TestGraphUserEventHandler_OnUserCreateWithJobRoleOutOfOrder(t *testing.T) {
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(userProps, "source"))
 	require.Equal(t, "openline", utils.GetStringPropOrEmpty(userProps, "sourceOfTruth"))
 	require.Equal(t, "event-processing-platform", utils.GetStringPropOrEmpty(userProps, "appSource"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
 
 	dbJobRoleNode, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "JobRole_"+tenantName, myJobRoleId.String())
 	if err != nil {
@@ -393,7 +389,6 @@ func TestGraphUserEventHandler_OnUserUpdate(t *testing.T) {
 	require.Equal(t, userProfilePhotoUrlUpdate, utils.GetStringPropOrEmpty(userProps, "profilePhotoUrl"))
 	require.Less(t, userCreateTime, utils.GetTimePropOrNow(userProps, "updatedAt"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(userProps, "sourceOfTruth"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(userProps, "syncedWithEventStore"))
 	require.Equal(t, 2, len(utils.GetListStringPropOrEmpty(userProps, "roles")))
 	require.Contains(t, utils.GetListStringPropOrEmpty(userProps, "roles"), "OWNER")
 	require.Contains(t, utils.GetListStringPropOrEmpty(userProps, "roles"), "USER")
@@ -469,7 +464,6 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 	userPhoneRelationProps := utils.GetPropsFromRelationship(*userPhoneRelation)
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userPhoneRelationProps, "primary"))
 	require.Equal(t, phoneNumberLabel, utils.GetStringPropOrEmpty(userPhoneRelationProps, "label"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(userPhoneRelationProps, "syncedWithEventStore"))
 }
 
 func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {

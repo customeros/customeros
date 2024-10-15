@@ -67,8 +67,7 @@ func (r *jobRoleWriteRepository) CreateJobRole(ctx context.Context, tenant, jobR
  						jr.endedAt = $endedAt,
 						jr.sourceOfTruth = $sourceOfTruth,
 						jr.source = $source,
-						jr.appSource = $appSource,
-						jr.syncedWithEventStore = true`, tenant)
+						jr.appSource = $appSource`, tenant)
 	params := map[string]any{
 		"id":            jobRoleId,
 		"jobTitle":      data.JobTitle,
@@ -100,7 +99,6 @@ func (r *jobRoleWriteRepository) LinkWithUser(ctx context.Context, tenant, userI
 
 	cypher := fmt.Sprintf(`MATCH (u:User_%s {id: $userId})
               MERGE (jr:JobRole:JobRole_%s {id: $jobRoleId})
-              ON CREATE SET jr.syncedWithEventStore = true
               MERGE (u)-[r:WORKS_AS]->(jr)
 			  SET u.updatedAt = datetime()`, tenant, tenant)
 	params := map[string]any{

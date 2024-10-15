@@ -92,8 +92,7 @@ func (r *issueWriteRepository) Create(ctx context.Context, tenant, issueId strin
 								i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
 								i.priority = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.priority is null OR i.priority = '' THEN $priority ELSE i.priority END,
 								i.updatedAt = datetime(),
-								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
-								i.syncedWithEventStore = true
+								i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END
 							WITH i, t
 							OPTIONAL MATCH (t)<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {id:$reportedByOrganizationId}) 
 							WHERE $reportedByOrganizationId <> ""
@@ -153,8 +152,7 @@ func (r *issueWriteRepository) Update(ctx context.Context, tenant, issueId strin
 				i.status = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.status is null OR i.status = '' THEN $status ELSE i.status END,
 				i.priority = CASE WHEN i.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR i.priority is null OR i.priority = '' THEN $priority ELSE i.priority END,
 				i.updatedAt = datetime(),
-				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END,
-				i.syncedWithEventStore = true`
+				i.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE i.sourceOfTruth END`
 	params := map[string]any{
 		"tenant":        tenant,
 		"issueId":       issueId,

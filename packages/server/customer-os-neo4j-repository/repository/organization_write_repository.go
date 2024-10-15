@@ -305,7 +305,6 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.stage = $stage,
 						org.stageUpdatedAt = datetime(),
 						org.slackChannelId = $slackChannelId,
-						org.syncedWithEventStore = true,
 						org.leadSource = $leadSource,
 						org.icpFit = $icpFit,
 						org.aggregateVersion = $aggregateVersion,
@@ -345,8 +344,7 @@ func (r *organizationWriteRepository) CreateOrganizationInTx(ctx context.Context
 						org.stageUpdatedAt = CASE WHEN (org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.stage is null OR org.stage = '') AND (org.stage is null OR org.stage <> $stage) THEN datetime() ELSE org.stageUpdatedAt END,
 						org.icpFit = CASE WHEN org.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR org.icpFit IS NULL THEN $icpFit ELSE org.icpFit END,
 						org.aggregateVersion = $aggregateVersion,
-						org.updatedAt=datetime(),
-						org.syncedWithEventStore = true`, tenant)
+						org.updatedAt=datetime()`, tenant)
 	params := map[string]any{
 		"id":                 organizationId,
 		"name":               data.Name,
@@ -523,8 +521,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 	}
 	cypher += ` org.sourceOfTruth = case WHEN $overwrite=true THEN $source ELSE org.sourceOfTruth END,
 				org.updatedAt = datetime(),
-				org.aggregateVersion = $aggregateVersion,
-				org.syncedWithEventStore = true`
+				org.aggregateVersion = $aggregateVersion`
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
@@ -725,8 +722,7 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 								d.appSource=$appSource
 				WITH d
 				MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization_%s {id:$organizationId})
-				MERGE (org)-[rel:HAS_DOMAIN]->(d)
-				SET rel.syncedWithEventStore = true`, tenant)
+				MERGE (org)-[rel:HAS_DOMAIN]->(d)`, tenant)
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,

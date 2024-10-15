@@ -14,7 +14,6 @@ import (
 	"time"
 )
 
-// TODO syncedWithEventStore to be removed from code and from neo4j DB
 type ContactFields struct {
 	//Deprecated, TODO remove aggregate version once contact update is moved to sync. Clean code and neo4j db
 	AggregateVersion      int64        `json:"aggregateVersion"`
@@ -97,8 +96,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.createdAt = $createdAt,
 						c.updatedAt = datetime(),
 						c.aggregateVersion = $aggregateVersion,
-						c.hide = $hide,
-						c.syncedWithEventStore = true
+						c.hide = $hide
 				ON MATCH SET
 						c.name = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.name is null OR c.name = '' THEN $name ELSE c.name END,
 						c.firstName = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.firstName is null OR c.firstName = '' THEN $firstName ELSE c.firstName END,
@@ -110,8 +108,7 @@ func (r *contactWriteRepository) CreateContactInTx(ctx context.Context, tx neo4j
 						c.description = CASE WHEN c.sourceOfTruth=$sourceOfTruth OR $overwrite=true OR c.description is null OR c.description = '' THEN $description ELSE c.description END,
 						c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
 						c.aggregateVersion = $aggregateVersion,
-						c.updatedAt = datetime(),
-						c.syncedWithEventStore = true
+						c.updatedAt = datetime()
 				`, tenant)
 	params := map[string]any{
 		"id":               contactId,
@@ -152,8 +149,7 @@ func (r *contactWriteRepository) UpdateContact(ctx context.Context, tenant, cont
 	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact:Contact_%s {id:$id})
 		 SET	c.updatedAt = datetime(),
 				c.sourceOfTruth = case WHEN $overwrite=true THEN $sourceOfTruth ELSE c.sourceOfTruth END,
-				c.aggregateVersion = $aggregateVersion,
-				c.syncedWithEventStore = true`, tenant)
+				c.aggregateVersion = $aggregateVersion`, tenant)
 
 	params := map[string]any{
 		"id":               contactId,

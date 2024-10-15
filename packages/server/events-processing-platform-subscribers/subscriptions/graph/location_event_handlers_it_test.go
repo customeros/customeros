@@ -526,7 +526,6 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	require.Equal(t, &locationAddressUtcOffsetUpdate, utils.GetFloatPropOrNil(locationUpdateProps, "utcOffset"))
 	require.Equal(t, name, utils.GetStringPropOrEmpty(locationUpdateProps, "name"))
 	require.Equal(t, locationAddressCountryUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "country"))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(locationUpdateProps, "syncedWithEventStore"))
 	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
 	require.Equal(t, creationTime, utils.GetTimePropOrNow(locationUpdateProps, "createdAt"))
 	require.Equal(t, locationAddressTimeZoneUpdate, utils.GetStringPropOrEmpty(locationUpdateProps, "timeZone"))
