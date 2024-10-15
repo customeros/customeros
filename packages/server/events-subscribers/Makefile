@@ -1,12 +1,18 @@
-clean:
-	rm -rf bin
+run: build
+	go run events_subscribers.go
 
+generate:
+
+build: generate
+	go build -v
+
+.PHONY: test
 test:
 	go test -v ./... -cover
 
-build: bin/user-admin-api
+install:
+	go install gotest.tools/gotestsum@latest
 
-bin/user-admin-api:
-	go build -v -o bin/user-admin-api
+clean:
 
-all: clean build
+all: install build
