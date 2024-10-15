@@ -279,8 +279,8 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
-  async updateEmail(previousEmail: string) {
-    const email = this.value.emails?.[0].email ?? '';
+  async updateEmail(previousEmail: string, index?: number) {
+    const email = this.value.emails?.[index ?? 0]?.email ?? '';
 
     try {
       this.isLoading = true;
@@ -352,7 +352,10 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
-  async addSocial(url: string) {
+  async addSocial(
+    url: string,
+    options?: { onSuccess?: (serverId: string) => void },
+  ) {
     try {
       const { contact_AddSocial } = await this.service.addSocial({
         contactId: this.getId(),
@@ -370,6 +373,8 @@ export class ContactStore implements Store<Contact> {
       runInAction(() => {
         this.error = (e as Error).message;
       });
+    } finally {
+      options?.onSuccess?.(this.value.socials?.[0]?.id);
     }
   }
 
@@ -390,7 +395,10 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
-  async findEmail() {
+  async findEmail(isLoading?: (isLoading: boolean) => void) {
+    this.isLoading = true;
+    isLoading?.(this.isLoading);
+
     try {
       await this.service.findEmail({
         contactId: this.getId(),
@@ -400,6 +408,12 @@ export class ContactStore implements Store<Contact> {
       runInAction(() => {
         this.error = (e as Error).message;
       });
+    } finally {
+      this.isLoading = false;
+      setTimeout(() => {
+        this.root.contacts.value.get(this.getId())?.invalidate();
+        isLoading?.(this.isLoading);
+      }, 1000);
     }
   }
 
@@ -575,6 +589,11 @@ const CONTACT_QUERY = gql`
       }
       connectedUsers {
         id
+      }
+      enrichDetails {
+        enrichedAt
+        failedAt
+        requestedAt
       }
       profilePhotoUrl
     }

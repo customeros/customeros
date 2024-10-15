@@ -627,6 +627,11 @@ const CONTACTS_QUERY = gql`
           alias
           followersCount
         }
+        enrichDetails {
+          enrichedAt
+          failedAt
+          requestedAt
+        }
         connectedUsers {
           id
         }

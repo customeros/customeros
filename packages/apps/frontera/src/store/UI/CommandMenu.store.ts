@@ -53,6 +53,7 @@ export type CommandMenuType =
 export type Context = {
   ids: Array<string>;
   callback?: () => void;
+  selectId?: string | null;
   property?: string | null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   meta?: Record<string, any>;

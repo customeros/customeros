@@ -24,7 +24,7 @@ export const ContactCommands = observer(() => {
   const store = useStore();
   const id = (store.ui.commandMenu.context.ids as string[])?.[0];
   const contact = store.contacts.value.get(id);
-  const label = `Contact - ${contact?.value.name}`;
+  const label = `Contact - ${contact?.name}`;
 
   return (
     <CommandsContainer label={label}>
