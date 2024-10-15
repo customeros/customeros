@@ -233,7 +233,8 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		return nil, err
 	}
 
-	// create events
+	// create events section
+	// completion event
 	if input.SourceFields.AppSource != constants.AppSourceCustomerOsApi {
 		details := utils.NewEventCompletedDetails()
 
@@ -246,6 +247,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, details)
 	}
 
+	// request organization enriching by domain event
 	if domainForEnrich != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
@@ -253,6 +255,22 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				Tenant:         tenant,
 				OrganizationId: *organizationId,
 				Url:            domainForEnrich,
+				LoggedInUserId: common.GetUserIdFromContext(ctx),
+				AppSource:      input.SourceFields.AppSource,
+			})
+		})
+		if err != nil {
+			tracing.TraceErr(span, err)
+		}
+	}
+
+	// request last touchpoint refresh for new organizations
+	if existing == nil {
+		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
+		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
+			return s.services.GrpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{
+				Tenant:         tenant,
+				OrganizationId: *organizationId,
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      input.SourceFields.AppSource,
 			})
