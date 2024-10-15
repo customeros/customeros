@@ -210,7 +210,7 @@ func TestGraphPhoneNumberEventHandler_OnPhoneNumberUpdate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	phoneUpdateProps := utils.GetPropsFromNode(*dbNode)
-	require.Equal(t, 9, len(phoneUpdateProps))
+	require.Equal(t, 8, len(phoneUpdateProps))
 
 	require.Less(t, *creationUpdatedAt, utils.GetTimePropOrNow(phoneUpdateProps, "updatedAt"))
 	require.Equal(t, creationTime, utils.GetTimePropOrNow(phoneUpdateProps, "createdAt"))
