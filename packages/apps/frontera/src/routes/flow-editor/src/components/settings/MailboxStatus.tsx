@@ -1,32 +1,40 @@
-export const MailboxStatus = ({
-  hasSenders,
-  totalMailboxes,
-}: {
-  hasSenders: boolean;
-  totalMailboxes: number;
-}) => {
-  const renderContent = () => {
-    if (!hasSenders) {
-      return 'Add one or more senders to start sending emails in this flow';
+import { observer } from 'mobx-react-lite';
+
+import { useStore } from '@shared/hooks/useStore';
+
+export const MailboxStatus = observer(({ id }: { id: string }) => {
+  const store = useStore();
+  const flow = store.flows.value.get(id);
+
+  const hasSenders =
+    !!flow?.value?.senders?.length && flow?.value?.senders?.length > 0;
+
+  if (!hasSenders) {
+    return (
+      <p className='text-sm'>
+        Add one or more senders to start sending emails in this flow
+      </p>
+    );
+  }
+
+  const totalMailboxes = flow?.value.senders.reduce((total, sender) => {
+    const user = sender?.user?.id && store.users.value.get(sender.user.id);
+
+    if (user) {
+      return total + (user?.value?.mailboxes?.length ?? 0);
     }
 
-    if (totalMailboxes > 0) {
-      return (
-        <>
-          You have{' '}
-          <span className='font-medium'>
-            {totalMailboxes} {totalMailboxes === 1 ? 'mailbox' : 'mailboxes'}
-          </span>{' '}
-          available allowing you to send up to{' '}
-          <span className='font-medium'>
-            {totalMailboxes * 6} emails per day.
-          </span>
-        </>
-      );
-    }
+    return total;
+  }, 0);
 
-    return "You haven't set up any mailboxes yet. Add some to start sending emails.";
-  };
-
-  return <p className='text-sm'>{renderContent()}</p>;
-};
+  return (
+    <p className='text-sm'>
+      You have{' '}
+      <span className='font-medium'>
+        {totalMailboxes} {totalMailboxes === 1 ? 'mailbox' : 'mailboxes'}
+      </span>{' '}
+      available allowing you to send up to{' '}
+      <span className='font-medium'>{totalMailboxes * 6} emails per day.</span>
+    </p>
+  );
+});
