@@ -4,7 +4,6 @@ import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
-import { FlowSender as TFlowSender } from '@graphql/types';
 
 import { FlowSender } from './FlowSender';
 import { SenderDropdown } from './SenderDropdown';
@@ -17,17 +16,12 @@ export const EmailSettings = observer(({ id }: { id: string }) => {
   const hasSenders =
     !!flow?.value?.senders?.length && flow?.value?.senders?.length > 0;
 
-  const totalMailboxes = getTotalMailboxes(flow?.value.senders ?? []);
-
   return (
     <>
       <h2 className='text-base font-medium'>Flow Settings</h2>
       <div className='flex flex-col gap-2'>
         <h3 className='text-sm font-medium'>Senders</h3>
-        <MailboxStatus
-          hasSenders={hasSenders}
-          totalMailboxes={totalMailboxes}
-        />
+        <MailboxStatus id={id} />
         <div className='flex flex-col gap-2 '>
           {hasSenders &&
             flow?.value.senders.map((e) => (
@@ -59,13 +53,3 @@ export const EmailSettings = observer(({ id }: { id: string }) => {
     </>
   );
 });
-
-function getTotalMailboxes(senders: TFlowSender[]): number {
-  return senders.reduce((total, sender) => {
-    if (sender.user) {
-      return total + sender.user.mailboxes.length;
-    }
-
-    return total;
-  }, 0);
-}
