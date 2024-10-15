@@ -28,30 +28,8 @@ type Config struct {
 	}
 
 	GrpcClientConfig commconf.GrpcClientConfig
-	SyncToEventStore struct {
-		BatchSize           int  `env:"SYNC_TO_EVENT_STORE_BATCH_SIZE" envDefault:"100"`
-		Enabled             bool `env:"SYNC_TO_EVENT_STORE_ENABLED" envDefault:"false"`
-		TimeoutAfterTaskRun int  `env:"SYNC_TO_EVENT_STORE_TIMEOUT_AFTER_TASK_RUN_SEC" envDefault:"30"`
-		PhoneNumbers        struct {
-			Enabled   bool `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_ENABLED" envDefault:"true"`
-			BatchSize int  `env:"SYNC_TO_EVENT_STORE_PHONE_NUMBERS_BATCH_SIZE" envDefault:"-1"`
-		}
-		Locations struct {
-			Enabled   bool `env:"SYNC_TO_EVENT_STORE_LOCATIONS_ENABLED" envDefault:"true"`
-			BatchSize int  `env:"SYNC_TO_EVENT_STORE_LOCATIONS_BATCH_SIZE" envDefault:"-1"`
-		}
-		Contacts struct {
-			Enabled   bool `env:"SYNC_TO_EVENT_STORE_CONTACTS_ENABLED" envDefault:"true"`
-			BatchSize int  `env:"SYNC_TO_EVENT_STORE_CONTACTS_BATCH_SIZE" envDefault:"-1"`
-		}
-		Organizations struct {
-			Enabled                      bool `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_ENABLED" envDefault:"true"`
-			BatchSize                    int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_BATCH_SIZE" envDefault:"-1"`
-			OrganizationDomainsBatchSize int  `env:"SYNC_TO_EVENT_STORE_ORGANIZATIONS_DOMAINS_BATCH_SIZE" envDefault:"20"`
-		}
-	}
-	Logger  logger.Config
-	Service struct {
+	Logger           logger.Config
+	Service          struct {
 		CustomerOsWebhooksAPI    string `env:"CUSTOMER_OS_WEBHOOKS_API,required"`
 		CustomerOsWebhooksAPIKey string `env:"CUSTOMER_OS_WEBHOOKS_API_KEY,required"`
 	}

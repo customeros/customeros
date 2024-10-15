@@ -93,7 +93,7 @@ func (h *ContactEventHandler) OnSocialAddedToContact(ctx context.Context, evt ev
 	span.SetTag(tracing.SpanTagEntityId, contactId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	if strings.Contains(eventData.Url, ".linkedin.com") || strings.Contains(eventData.Url, "/linkedin.com") {
+	if strings.Contains(eventData.Url, "linkedin.com") {
 		return h.enrichContact(ctx, eventData.Tenant, contactId, eventData.Url)
 	}
 
@@ -144,7 +144,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 		} else {
 			for _, socialDbNode := range socialDbNodes {
 				socialEntity := neo4jmapper.MapDbNodeToSocialEntity(socialDbNode.Node)
-				if strings.Contains(socialEntity.Url, ".linkedin.com") || strings.Contains(socialEntity.Url, "/linkedin.com") {
+				if strings.Contains(socialEntity.Url, "linkedin.com") {
 					linkedInUrl = socialEntity.Url
 					break
 				}
@@ -172,6 +172,7 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 		firstName, lastName = contactEntity.DeriveFirstAndLastNames()
 	}
 
+	span.LogFields(log.String("emailAddress", emailAddress), log.String("firstName", firstName), log.String("lastName", lastName), log.String("domain", domain))
 	if linkedInUrl != "" || emailAddress != "" || (firstName != "" && lastName != "" && domain != "") {
 		err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelContact, contactEntity.Id, string(neo4jentity.ContactPropertyEnrichRequestedAt), utils.NowPtr())
 		if err != nil {
@@ -192,6 +193,8 @@ func (h *ContactEventHandler) enrichContact(ctx context.Context, tenant, contact
 				tracing.TraceErr(span, errors.Wrap(err, "enrichContactWithScrapInEnrichDetails"))
 			}
 		}
+	} else {
+		span.LogFields(log.String("result", "no linkedInUrl, email or name"))
 	}
 
 	return nil

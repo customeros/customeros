@@ -11,7 +11,6 @@ import (
 
 type Services struct {
 	SyncCustomerOsDataService          SyncCustomerOsDataService
-	SyncToEventStoreService            SyncToEventStoreService
 	InitService                        InitService
 	OrganizationService                OrganizationService
 	ContactService                     ContactService
@@ -45,7 +44,6 @@ func InitServices(cfg *config.Config, log logger.Logger, driver *neo4j.DriverWit
 	services.EmailMessageDefaultSyncService = NewDefaultEmailMessageSyncService(repositories, services, log)
 	services.InteractionEventDefaultSyncService = NewDefaultInteractionEventSyncService(repositories, cfg, log)
 
-	services.SyncToEventStoreService = NewSyncToEventStoreService(repositories, services, grpcClients, log)
 	services.SyncCustomerOsDataService = NewSyncCustomerOsDataService(repositories, services, cfg, log)
 	return services
 }
