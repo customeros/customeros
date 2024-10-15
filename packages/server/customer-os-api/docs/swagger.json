@@ -12,6 +12,58 @@
     "host": "api.customeros.ai",
     "basePath": "/",
     "paths": {
+        "/billing/v1/organizations/{id}/invoices": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves a list of invoices for the organization with the given ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Billing API"
+                ],
+                "summary": "Get organization invoices",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID or Organization COS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of invoices for the organization",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/billing.InvoiceResponse"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid organization ID"
+                    },
+                    "401": {
+                        "description": "Unauthorized"
+                    },
+                    "404": {
+                        "description": "Organization not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
+                    }
+                }
+            }
+        },
         "/customerbase/v1/organizations": {
             "post": {
                 "security": [
@@ -772,6 +824,57 @@
         }
     },
     "definitions": {
+        "billing.InvoiceResponse": {
+            "description": "Invoice details",
+            "type": "object",
+            "properties": {
+                "PublicUrl": {
+                    "description": "PublicUrl represents the public URL where the PDF version of the invoice can be accessed\nExample: https://example.com/invoices/12345.pdf",
+                    "type": "string",
+                    "example": "https://example.com/invoices/12345.pdf"
+                },
+                "amount": {
+                    "description": "Amount represents the total amount due for the invoice\nExample: 1500.50",
+                    "type": "number",
+                    "example": 1500.5
+                },
+                "currency": {
+                    "description": "Currency represents the currency used for the invoice\nExample: USD",
+                    "type": "string",
+                    "example": "USD"
+                },
+                "dueDate": {
+                    "description": "DueDate represents the date the invoice is due\nExample: 2024-12-01T00:00:00Z",
+                    "type": "string",
+                    "example": "2024-12-01T00:00:00Z"
+                },
+                "id": {
+                    "description": "ID is the unique identifier for the invoice, uuid format\nExample: 123e4567-e89b-12d3-a456-426614174000",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "invoiceStatus": {
+                    "description": "Status represents the payment status of the invoice\nExample: PAID",
+                    "type": "string",
+                    "example": "PAID"
+                },
+                "message": {
+                    "description": "Message provides additional information about the action\nExample: Invoices retrieved successfully",
+                    "type": "string",
+                    "example": "Invoices retrieved successfully"
+                },
+                "number": {
+                    "description": "Number represents the invoice number\nExample: ABC-12345",
+                    "type": "string",
+                    "example": "ABC-12345"
+                },
+                "status": {
+                    "description": "Status indicates the result of the action\nExample: success",
+                    "type": "string",
+                    "example": "success"
+                }
+            }
+        },
         "rest.CreateOrganizationRequest": {
             "description": "Request to create an organization",
             "type": "object",
@@ -1374,10 +1477,6 @@
         "restmailstack.MailboxRequest": {
             "description": "Request body for adding and configuring a new mailbox",
             "type": "object",
-            "required": [
-                "password",
-                "username"
-            ],
             "properties": {
                 "forwardingEnabled": {
                     "description": "Specifies if email forwarding is enabled\nExample: true",
@@ -1396,7 +1495,7 @@
                     ]
                 },
                 "password": {
-                    "description": "Password for the mailbox (e.g., \"SecurePassword123!\")\nRequired: true\nExample: SecurePassword123!",
+                    "description": "Password for the mailbox (e.g., \"SecurePassword123!\")\nRequired: false\nExample: SecurePassword123!",
                     "type": "string",
                     "example": "SecurePassword123!"
                 },

@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
+	restbilling "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/billing"
 	restenrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/enrich"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
@@ -20,6 +21,7 @@ import (
 const (
 	outreachV1Path     = "/outreach/v1"
 	customerBaseV1Path = "/customerbase/v1"
+	billingV1Path      = "/billing/v1"
 	verifyV1Path       = "/verify/v1"
 	enrichV1Path       = "/enrich/v1"
 	mailStackV1Path    = "/mailstack/v1"
@@ -33,6 +35,7 @@ func RegisterRestRoutes(ctx context.Context, r *gin.Engine, grpcClients *grpc_cl
 	registerVerifyRoutes(ctx, r, services, cache)
 	registerEnrichRoutes(ctx, r, services, cache)
 	registerMailStackRoutes(ctx, r, services, cache)
+	registerBillingRoutes(ctx, r, services, grpcClients, cache)
 }
 
 func registerPublicRoutes(ctx context.Context, r *gin.Engine, services *service.Services) {
@@ -61,12 +64,20 @@ func registerCustomerBaseRoutes(ctx context.Context, r *gin.Engine, services *se
 	registerContactRoutes(ctx, r, services, grpcClients, cache)
 }
 
+func registerBillingRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
+	registerInvoiceRoutes(ctx, r, services, grpcClients, cache)
+}
+
 func registerOrganizationRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, rest.CreateOrganization(services, grpcClients))
 }
 
 func registerContactRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
 	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/contacts", customerBaseV1Path), services, cache, rest.CreateContact(services, grpcClients))
+}
+
+func registerInvoiceRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organizations/:id/invoices", billingV1Path), services, cache, restbilling.GetInvoicesForOrganization(services))
 }
 
 func registerOutreachRoutes(ctx context.Context, r *gin.Engine, services *service.Services, cache *commoncaches.Cache) {

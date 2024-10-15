@@ -29,6 +29,7 @@ type InvoiceService interface {
 	GetByNumber(ctx context.Context, number string) (*neo4jentity.InvoiceEntity, error)
 	GetInvoiceLinesForInvoices(ctx context.Context, invoiceIds []string) (*neo4jentity.InvoiceLineEntities, error)
 	GetInvoicesForContracts(ctx context.Context, contractIds []string) (*neo4jentity.InvoiceEntities, error)
+	GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) (*neo4jentity.InvoiceEntities, error)
 	SimulateInvoice(ctx context.Context, invoiceData *SimulateInvoiceRequestData) ([]*SimulateInvoiceResponseData, error)
 	NextInvoiceDryRun(ctx context.Context, contractId, appSource string) (string, error)
 	PayInvoice(ctx context.Context, invoiceId, appSource string) error
@@ -156,6 +157,7 @@ func (s *invoiceService) GetInvoicesForContracts(ctx context.Context, contractId
 
 	invoices, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetAllForContracts(ctx, common.GetTenantFromContext(ctx), contractIds)
 	if err != nil {
+		tracing.TraceErr(span, err)
 		return nil, err
 	}
 	invoiceEntities := make(neo4jentity.InvoiceEntities, 0, len(invoices))
@@ -1023,4 +1025,23 @@ func prorateAnnualSLIAmount(startDate, endDate time.Time, amount float64) float6
 		return 0
 	}
 	return proratedAmount
+}
+
+func (s *invoiceService) GetNonDryRunInvoicesForOrganization(ctx context.Context, tenant, organizationId string) (*neo4jentity.InvoiceEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "InvoiceService.GetNonDryRunInvoicesForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	invoiceDbNodes, err := s.services.Neo4jRepositories.InvoiceReadRepository.GetNonDryRunInvoicesForOrganization(ctx, tenant, organizationId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	invoiceEntities := make(neo4jentity.InvoiceEntities, 0, len(invoiceDbNodes))
+	for _, v := range invoiceDbNodes {
+		invoiceEntity := mapper.MapDbNodeToInvoiceEntity(v)
+		invoiceEntities = append(invoiceEntities, *invoiceEntity)
+	}
+	return &invoiceEntities, nil
 }

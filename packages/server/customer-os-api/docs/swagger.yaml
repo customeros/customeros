@@ -1,5 +1,63 @@
 basePath: /
 definitions:
+  billing.InvoiceResponse:
+    description: Invoice details
+    properties:
+      PublicUrl:
+        description: |-
+          PublicUrl represents the public URL where the PDF version of the invoice can be accessed
+          Example: https://example.com/invoices/12345.pdf
+        example: https://example.com/invoices/12345.pdf
+        type: string
+      amount:
+        description: |-
+          Amount represents the total amount due for the invoice
+          Example: 1500.50
+        example: 1500.5
+        type: number
+      currency:
+        description: |-
+          Currency represents the currency used for the invoice
+          Example: USD
+        example: USD
+        type: string
+      dueDate:
+        description: |-
+          DueDate represents the date the invoice is due
+          Example: 2024-12-01T00:00:00Z
+        example: "2024-12-01T00:00:00Z"
+        type: string
+      id:
+        description: |-
+          ID is the unique identifier for the invoice, uuid format
+          Example: 123e4567-e89b-12d3-a456-426614174000
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      invoiceStatus:
+        description: |-
+          Status represents the payment status of the invoice
+          Example: PAID
+        example: PAID
+        type: string
+      message:
+        description: |-
+          Message provides additional information about the action
+          Example: Invoices retrieved successfully
+        example: Invoices retrieved successfully
+        type: string
+      number:
+        description: |-
+          Number represents the invoice number
+          Example: ABC-12345
+        example: ABC-12345
+        type: string
+      status:
+        description: |-
+          Status indicates the result of the action
+          Example: success
+        example: success
+        type: string
+    type: object
   rest.CreateOrganizationRequest:
     description: Request to create an organization
     properties:
@@ -545,7 +603,7 @@ definitions:
       password:
         description: |-
           Password for the mailbox (e.g., "SecurePassword123!")
-          Required: true
+          Required: false
           Example: SecurePassword123!
         example: SecurePassword123!
         type: string
@@ -562,9 +620,6 @@ definitions:
           Example: true
         example: true
         type: boolean
-    required:
-    - password
-    - username
     type: object
   restmailstack.MailboxResponse:
     description: Mailbox object in the response
@@ -931,6 +986,40 @@ info:
   title: CustomerOS API
   version: "1.0"
 paths:
+  /billing/v1/organizations/{id}/invoices:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves a list of invoices for the organization with the given
+        ID
+      parameters:
+      - description: Organization ID or Organization COS ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of invoices for the organization
+          schema:
+            items:
+              $ref: '#/definitions/billing.InvoiceResponse'
+            type: array
+        "400":
+          description: Invalid organization ID
+        "401":
+          description: Unauthorized
+        "404":
+          description: Organization not found
+        "500":
+          description: Internal server error
+      security:
+      - ApiKeyAuth: []
+      summary: Get organization invoices
+      tags:
+      - Billing API
   /customerbase/v1/organizations:
     post:
       consumes:
