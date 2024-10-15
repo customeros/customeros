@@ -504,7 +504,7 @@ func TestGraphLocationEventHandler_OnLocationUpdate(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, dbNode)
 	locationUpdateProps := utils.GetPropsFromNode(*dbNode)
-	require.Equal(t, 27, len(locationUpdateProps))
+	require.Equal(t, 26, len(locationUpdateProps))
 
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(locationUpdateProps, "appSource"))
 	require.Equal(t, constants.SourceOpenline, utils.GetStringPropOrEmpty(locationUpdateProps, "source"))
