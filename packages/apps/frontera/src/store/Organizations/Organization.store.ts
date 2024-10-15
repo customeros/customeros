@@ -191,7 +191,7 @@ export class OrganizationStore extends Syncable<Organization> {
   }
 
   getChannelName() {
-    return `Organization:${this.id}`;
+    return 'Organization';
   }
 
   deleteTag(tagId: string) {

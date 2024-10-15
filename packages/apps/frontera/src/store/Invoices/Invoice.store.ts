@@ -66,7 +66,7 @@ export class InvoiceStore extends Syncable<Invoice> {
   }
 
   getChannelName() {
-    return `Invoice:${this.id}`;
+    return 'Invoice';
   }
 
   async invalidate() {

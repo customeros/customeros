@@ -19,9 +19,13 @@ export const ArrEstimate = observer(({ opportunityId }: ArrEstimateProps) => {
   const [value, setValue] = useState(defaultValue.toString());
 
   const handleAccept = (unmaskedValue: string) => {
+    const parsedValue = unmaskedValue ? parseFloat(unmaskedValue) : 0;
+
+    if (opportunity?.value?.maxAmount === parseFloat(unmaskedValue)) return;
+
     opportunity?.update(
       (value) => {
-        value.maxAmount = unmaskedValue ? parseFloat(unmaskedValue) : 0;
+        value.maxAmount = parsedValue;
 
         return value;
       },

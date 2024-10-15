@@ -83,7 +83,6 @@ defmodule RealtimeWeb.OrganizationViewChannel do
 
   @impl true
   def terminate(_reason, socket) do
-    Logger.info("User #{socket.assigns.user_id} left the channel")
     {:ok, socket}
   end
 
