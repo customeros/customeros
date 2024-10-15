@@ -9,7 +9,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/service"
 	"github.com/openline-ai/openline-customer-os/packages/runner/sync-customer-os-data/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
 	"github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -103,7 +102,6 @@ func main() {
 
 	// Task queues
 	var taskQueueSyncCustomerOsData = &TaskQueue{name: "Sync Customer OS Data"}
-	var taskQueueSyncToEventStore = &TaskQueue{name: "Sync Neo4j Data to EventStore"}
 
 	go runTaskQueue(appLogger, taskQueueSyncCustomerOsData, cfg.SyncCustomerOsData.TimeoutAfterTaskRun, []func(){
 		func() {
@@ -113,60 +111,6 @@ func main() {
 			appLogger.Infof("run id: %s sync completed at %v", runId.String(), time.Now().UTC())
 		},
 	})
-
-	if cfg.SyncToEventStore.Enabled {
-		syncTasks := []func(){}
-		if cfg.SyncToEventStore.PhoneNumbers.Enabled {
-			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
-				defer cancel()
-				services.SyncToEventStoreService.SyncPhoneNumbers(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.PhoneNumbers.BatchSize))
-				select {
-				case <-ctxWithTimeout.Done():
-					appLogger.Error("Timeout reached for syncing phone numbers to event store")
-				default:
-				}
-			})
-		}
-		if cfg.SyncToEventStore.Locations.Enabled {
-			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
-				defer cancel()
-				services.SyncToEventStoreService.SyncLocations(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Locations.BatchSize))
-				select {
-				case <-ctxWithTimeout.Done():
-					appLogger.Error("Timeout reached for syncing locations to event store")
-				default:
-				}
-			})
-		}
-		if cfg.SyncToEventStore.Contacts.Enabled {
-			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
-				defer cancel()
-				services.SyncToEventStoreService.SyncContacts(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Contacts.BatchSize))
-				select {
-				case <-ctxWithTimeout.Done():
-					appLogger.Error("Timeout reached for syncing contacts to event store")
-				default:
-				}
-			})
-		}
-		if cfg.SyncToEventStore.Organizations.Enabled {
-			syncTasks = append(syncTasks, func() {
-				ctxWithTimeout, cancel := utils.GetLongLivedContext(context.Background())
-				defer cancel()
-				services.SyncToEventStoreService.SyncOrganizations(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Organizations.BatchSize))
-				services.SyncToEventStoreService.SyncOrganizationsLinksWithDomains(ctxWithTimeout, syncToEventStoreBatchSize(cfg, cfg.SyncToEventStore.Organizations.OrganizationDomainsBatchSize))
-				select {
-				case <-ctxWithTimeout.Done():
-					appLogger.Error("Timeout reached for syncing organizations to event store")
-				default:
-				}
-			})
-		}
-		go runTaskQueue(appLogger, taskQueueSyncToEventStore, cfg.SyncToEventStore.TimeoutAfterTaskRun, syncTasks)
-	}
 
 	select {}
 
@@ -194,11 +138,4 @@ func initLogger(cfg *config.Config) logger.Logger {
 	appLogger.InitLogger()
 	appLogger.WithName(constants.ServiceName)
 	return appLogger
-}
-
-func syncToEventStoreBatchSize(cfg *config.Config, batchSize int) int {
-	if batchSize == -1 {
-		return cfg.SyncToEventStore.BatchSize
-	}
-	return batchSize
 }
