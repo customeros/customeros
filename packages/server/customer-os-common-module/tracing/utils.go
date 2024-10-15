@@ -59,6 +59,23 @@ func StartHttpServerTracerSpanWithHeader(ctx context.Context, operationName stri
 	return opentracing.ContextWithSpan(ctx, serverSpan), serverSpan
 }
 
+func StartRabbitMQMessageTracerSpanWithHeader(ctx context.Context, operationName string, uberTraceId string) (context.Context, opentracing.Span) {
+	textMapCarrierFromMetaData := make(opentracing.TextMapCarrier)
+	textMapCarrierFromMetaData.Set("uber-trace-id", uberTraceId)
+
+	span, err := opentracing.GlobalTracer().Extract(opentracing.TextMap, textMapCarrierFromMetaData)
+	if err != nil {
+		serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
+		ctx = opentracing.ContextWithSpan(ctx, serverSpan)
+		return ctx, serverSpan
+	}
+
+	serverSpan := opentracing.GlobalTracer().StartSpan(operationName, ext.RPCServerOption(span))
+	ctx = opentracing.ContextWithSpan(ctx, serverSpan)
+	return ctx, serverSpan
+
+}
+
 func StartTracerSpan(ctx context.Context, operationName string) (opentracing.Span, context.Context) {
 	serverSpan := opentracing.GlobalTracer().StartSpan(operationName)
 	return serverSpan, opentracing.ContextWithSpan(ctx, serverSpan)

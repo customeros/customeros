@@ -4,8 +4,12 @@ import (
 	"context"
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
+	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/listeners"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/logger"
 	"github.com/opentracing/opentracing-go"
 	"io"
@@ -45,6 +49,14 @@ func main() {
 	}
 	ctx := context.Background()
 	defer neo4jDriver.Close(ctx)
+
+	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{RabbitMQConfig: &cfg.RabbitMQ}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
+
+	//Register listeners
+	commonServices.RabbitMQService.RegisterHandler(dto.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
+
+	// Listen for messages
+	commonServices.RabbitMQService.Listen()
 
 	// Block the main thread from exiting
 	forever := make(chan bool)

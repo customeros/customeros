@@ -6,7 +6,7 @@ COPY customer-os-neo4j-repository/. ./customer-os-neo4j-repository/
 COPY customer-os-postgres-repository/. ./customer-os-postgres-repository/
 COPY events-processing-proto/. ./events-processing-proto/
 COPY customer-os-api-sdk/. ./customer-os-api-sdk/
-COPY user-admin-api/. ./user-admin-api
+COPY events-subscribers/. ./events-subscribers
 
 WORKDIR /app/user-admin-api
 RUN go build -v -o /go/bin/app
@@ -14,7 +14,7 @@ RUN go build -v -o /go/bin/app
 FROM alpine:3.14
 
 COPY --chown=65534:65534 --from=builder /go/bin/app .
-COPY --chown=65534:65534 --from=builder /app/user-admin-api/.env .env
+COPY --chown=65534:65534 --from=builder /app/events-subscribers/.env .env
 USER 65534
 
 ENTRYPOINT [ "./app" ]
