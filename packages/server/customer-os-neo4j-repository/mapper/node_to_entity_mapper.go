@@ -39,17 +39,18 @@ func MapDbNodeToAttachmentEntity(dbNode *dbtype.Node) *entity.AttachmentEntity {
 	props := utils.GetPropsFromNode(*dbNode)
 	createdAt := utils.GetTimePropOrEpochStart(props, "createdAt")
 	attachmentEntity := entity.AttachmentEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     &createdAt,
-		FileName:      utils.GetStringPropOrEmpty(props, "fileName"),
-		MimeType:      utils.GetStringPropOrEmpty(props, "mimeType"),
-		CdnUrl:        utils.GetStringPropOrEmpty(props, "cdnUrl"),
-		PublicUrl:     utils.GetStringPropOrEmpty(props, string(entity.AttachmentPropertyPublicUrl)),
-		BasePath:      utils.GetStringPropOrEmpty(props, "basePath"),
-		Size:          utils.GetInt64PropOrZero(props, "size"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
+		Id:                 utils.GetStringPropOrEmpty(props, "id"),
+		CreatedAt:          &createdAt,
+		FileName:           utils.GetStringPropOrEmpty(props, "fileName"),
+		MimeType:           utils.GetStringPropOrEmpty(props, "mimeType"),
+		CdnUrl:             utils.GetStringPropOrEmpty(props, "cdnUrl"),
+		PublicUrl:          utils.GetStringPropOrEmpty(props, string(entity.AttachmentPropertyPublicUrl)),
+		PublicUrlExpiresAt: utils.GetTimePropOrNil(props, string(entity.AttachmentPropertyPublicUrlExpiresAt)),
+		BasePath:           utils.GetStringPropOrEmpty(props, "basePath"),
+		Size:               utils.GetInt64PropOrZero(props, "size"),
+		AppSource:          utils.GetStringPropOrEmpty(props, "appSource"),
+		Source:             entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
+		SourceOfTruth:      entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
 	return &attachmentEntity
 }

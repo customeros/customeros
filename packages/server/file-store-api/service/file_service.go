@@ -580,7 +580,7 @@ func (s *fileService) GetFilePublicUrl(ctx context.Context, tenant, fileId strin
 		return "", err
 	}
 	attachmentEntity := neo4jmapper.MapDbNodeToAttachmentEntity(attachmentDbNode)
-	if attachmentEntity.PublicUrl != "" {
+	if attachmentEntity.PublicUrl != "" && attachmentEntity.PublicUrlExpiresAt != nil && attachmentEntity.PublicUrlExpiresAt.After(utils.Now()) {
 		return attachmentEntity.PublicUrl, nil
 	}
 
@@ -610,16 +610,25 @@ func (s *fileService) GetFilePublicUrl(ctx context.Context, tenant, fileId strin
 	})
 
 	// Presign the URL with the expiration time
-	expiration := 99 * 365 * 24 * time.Hour // 99 years
+	expiration := 7 * 24 * time.Hour // 7 days
 	publicUrl, err := req.Presign(expiration)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error presigning request"))
 		return "", fmt.Errorf("failed to presign request: %v", err)
 	}
 
+	// set public url and expiration time
 	err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, tenant, commonmodel.ATTACHMENT.Neo4jLabel(), fileId, string(neo4jentity.AttachmentPropertyPublicUrl), publicUrl)
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "Error updating attachment public url"))
 	}
+
+	// set expiration time to 6 days and 23 hours
+	expiredAt := utils.Now().Add(7 * 24 * time.Hour).Add(-1 * time.Hour)
+	err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, commonmodel.ATTACHMENT.Neo4jLabel(), fileId, string(neo4jentity.AttachmentPropertyPublicUrlExpiresAt), &expiredAt)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error updating attachment public url expiration time"))
+	}
+
 	return publicUrl, nil
 }

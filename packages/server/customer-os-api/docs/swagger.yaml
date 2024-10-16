@@ -4,63 +4,44 @@ definitions:
     description: Invoice details
     properties:
       amount:
-        description: |-
-          Amount represents the total amount due for the invoice
-          Example: 1500.50
+        description: Amount represents the total amount due for the invoice.
         example: 1500.5
         type: number
       currency:
-        description: |-
-          Currency represents the currency used for the invoice
-          Example: USD
+        description: Currency represents the currency used for the invoice.
         example: USD
         type: string
       dueDate:
-        description: |-
-          DueDate represents the date the invoice is due
-          Example: 2024-12-01T00:00:00Z
+        description: DueDate represents the date the invoice is due.
         example: "2024-12-01T00:00:00Z"
         type: string
       id:
-        description: |-
-          ID is the unique identifier for the invoice, uuid format
-          Example: 123e4567-e89b-12d3-a456-426614174000
+        description: ID is the unique identifier for the invoice, uuid format.
         example: 123e4567-e89b-12d3-a456-426614174000
         type: string
       invoiceStatus:
-        description: |-
-          Status represents the payment status of the invoice
-          Example: PAID
+        description: Status represents the payment status of the invoice.
         example: PAID
         type: string
       message:
-        description: |-
-          Message provides additional information about the action
-          Example: Invoices retrieved successfully
+        description: Message provides additional information about the action.
         example: Invoices retrieved successfully
         type: string
       number:
-        description: |-
-          Number represents the invoice number
-          Example: ABC-12345
+        description: Number represents the invoice number.
         example: ABC-12345
         type: string
       paymentLink:
-        description: |-
-          PaymentLink represents the URL where the invoice can be paid
-          Example: https://example.com/payments/12345
+        description: PaymentLink represents the URL where the invoice can be paid.
         example: https://example.com/payments/12345
         type: string
       publicUrl:
-        description: |-
-          PublicUrl represents the public URL where the PDF version of the invoice can be accessed
-          Example: https://example.com/invoices/12345.pdf
+        description: PublicUrl represents the public URL where the PDF version of
+          the invoice can be accessed.
         example: https://example.com/invoices/12345.pdf
         type: string
       status:
-        description: |-
-          Status indicates the result of the action
-          Example: success
+        description: Status indicates the result of the action.
         example: success
         type: string
     type: object

@@ -7,7 +7,8 @@ import (
 type AttachmentProperty string
 
 const (
-	AttachmentPropertyPublicUrl AttachmentProperty = "publicUrl"
+	AttachmentPropertyPublicUrl          AttachmentProperty = "publicUrl"
+	AttachmentPropertyPublicUrlExpiresAt AttachmentProperty = "publicUrlExpiresAt"
 )
 
 type AttachmentEntity struct {
@@ -16,12 +17,13 @@ type AttachmentEntity struct {
 	Id        string
 	CreatedAt *time.Time
 
-	CdnUrl    string
-	PublicUrl string
-	BasePath  string
-	FileName  string
-	MimeType  string
-	Size      int64
+	CdnUrl             string
+	BasePath           string
+	FileName           string
+	MimeType           string
+	Size               int64
+	PublicUrl          string
+	PublicUrlExpiresAt *time.Time
 
 	Source        DataSource
 	SourceOfTruth DataSource

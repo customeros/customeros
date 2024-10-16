@@ -829,52 +829,52 @@
             "type": "object",
             "properties": {
                 "amount": {
-                    "description": "Amount represents the total amount due for the invoice\nExample: 1500.50",
+                    "description": "Amount represents the total amount due for the invoice.",
                     "type": "number",
                     "example": 1500.5
                 },
                 "currency": {
-                    "description": "Currency represents the currency used for the invoice\nExample: USD",
+                    "description": "Currency represents the currency used for the invoice.",
                     "type": "string",
                     "example": "USD"
                 },
                 "dueDate": {
-                    "description": "DueDate represents the date the invoice is due\nExample: 2024-12-01T00:00:00Z",
+                    "description": "DueDate represents the date the invoice is due.",
                     "type": "string",
                     "example": "2024-12-01T00:00:00Z"
                 },
                 "id": {
-                    "description": "ID is the unique identifier for the invoice, uuid format\nExample: 123e4567-e89b-12d3-a456-426614174000",
+                    "description": "ID is the unique identifier for the invoice, uuid format.",
                     "type": "string",
                     "example": "123e4567-e89b-12d3-a456-426614174000"
                 },
                 "invoiceStatus": {
-                    "description": "Status represents the payment status of the invoice\nExample: PAID",
+                    "description": "Status represents the payment status of the invoice.",
                     "type": "string",
                     "example": "PAID"
                 },
                 "message": {
-                    "description": "Message provides additional information about the action\nExample: Invoices retrieved successfully",
+                    "description": "Message provides additional information about the action.",
                     "type": "string",
                     "example": "Invoices retrieved successfully"
                 },
                 "number": {
-                    "description": "Number represents the invoice number\nExample: ABC-12345",
+                    "description": "Number represents the invoice number.",
                     "type": "string",
                     "example": "ABC-12345"
                 },
                 "paymentLink": {
-                    "description": "PaymentLink represents the URL where the invoice can be paid\nExample: https://example.com/payments/12345",
+                    "description": "PaymentLink represents the URL where the invoice can be paid.",
                     "type": "string",
                     "example": "https://example.com/payments/12345"
                 },
                 "publicUrl": {
-                    "description": "PublicUrl represents the public URL where the PDF version of the invoice can be accessed\nExample: https://example.com/invoices/12345.pdf",
+                    "description": "PublicUrl represents the public URL where the PDF version of the invoice can be accessed.",
                     "type": "string",
                     "example": "https://example.com/invoices/12345.pdf"
                 },
                 "status": {
-                    "description": "Status indicates the result of the action\nExample: success",
+                    "description": "Status indicates the result of the action.",
                     "type": "string",
                     "example": "success"
                 }
