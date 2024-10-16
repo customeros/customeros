@@ -243,6 +243,7 @@ export const ListFilter = ({
           options={getOptions()}
           closeMenuOnSelect={false}
           formatGroupLabel={formatGroupLabel}
+          noOptionsMessage={() => 'Nothing in sight...'}
           onChange={(value) => handleItemClick(value.id)}
           components={{
             Option: Options,

@@ -121,7 +121,12 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
           ?.join(' ');
 
         if (!filter.active) return true;
-        if (value.length < 1) return false;
+
+        if (value.length < 1) {
+          return ComparisonOperator.IsEmpty === filter.operation;
+        } else {
+          if (!filter.value) return true;
+        }
 
         return filterTypeText(filter, value ?? undefined);
       },
