@@ -134,7 +134,7 @@ type calendarBatcher struct {
 	calendarService service.CalendarService
 }
 type domainBatcher struct {
-	domainService service.DomainService
+	domainService commonservice.DomainService
 }
 type interactionEventBatcher struct {
 	interactionEventService commonservice.InteractionEventService
@@ -236,7 +236,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		calendarService: services.CalendarService,
 	}
 	domainBatcher := &domainBatcher{
-		domainService: services.DomainService,
+		domainService: services.CommonServices.DomainService,
 	}
 	interactionEventBatcher := &interactionEventBatcher{
 		interactionEventService: services.CommonServices.InteractionEventService,

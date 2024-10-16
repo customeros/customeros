@@ -1,4 +1,4 @@
-package rest
+package customerbase
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,9 +8,11 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/grpc_client"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
 	socialpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/social"
@@ -18,59 +20,6 @@ import (
 	"github.com/pkg/errors"
 	"net/http"
 )
-
-// CreateOrganizationRequest represents the request body for creating a new organization
-// @Description Request to create an organization
-type CreateOrganizationRequest struct {
-	// Organization's name
-	// Example: Openline
-	Name string `json:"name"`
-
-	// Custom ID provided by the user
-	// Example: 12345
-	CustomId string `json:"customId"`
-
-	// Organization's website URL
-	// Example: https://openline.com
-	Website string `json:"website"`
-
-	// Organization's LinkedIn profile URL
-	// Example: https://linkedin.com/company/openline
-	LinkedinUrl string `json:"linkedinUrl"`
-
-	// Lead source of the organization
-	// Example: Web Search
-	LeadSource string `json:"leadSource"`
-
-	// Relationship status of the organization
-	// Example: customer
-	Relationship string `json:"relationship"`
-
-	// Indicates if the organization is an ICP (Ideal Customer Profile) fit
-	// Example: true
-	IcpFit bool `json:"icpFit"`
-}
-
-// CreateOrganizationResponse represents the response returned after creating an organization
-// @Description The response structure after an organization is successfully created.
-// @example 201 {object} CreateOrganizationResponse
-type CreateOrganizationResponse struct {
-	// Status indicates the status of the creation process (e.g., "success" or "partial_success")
-	// Example: success
-	Status string `json:"status" example:"success"`
-
-	// Message provides additional information regarding the creation process
-	// Example: Organization created successfully
-	Message string `json:"message" example:"Organization created successfully"`
-
-	// ID is the unique identifier of the created organization
-	// Example: 1234567890
-	ID string `json:"id" example:"1234567890"`
-
-	// PartialSuccess indicates whether the creation process encountered partial success (e.g., when some fields failed to process)
-	// Example: false
-	PartialSuccess bool `json:"partialSuccess,omitempty" example:"false"`
-}
 
 // @Summary Create a new organization
 // @Description Creates an organization in the system if it doesn't already exist based on website, custom ID, or LinkedIn URL
@@ -257,5 +206,108 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 				Message: "Organization created successfully",
 				ID:      newOrgId,
 			})
+	}
+}
+
+// @Summary Get an organization
+// @Description Retrieves an organization by its ID or COS ID
+// @Tags CustomerBASE API
+// @Accept  json
+// @Produce  json
+// @Param   id   path     string  true  "Organization ID or Organization COS ID"
+// @Success 200 {object} OrganizationResponse "Organization retrieved successfully"
+// @Failure 400  "Invalid organization ID"
+// @Failure 401  "Unauthorized access"
+// @Failure 404  "Organization not found"
+// @Failure 500  "Internal server error"
+// @Router /customerbase/v1/organizations/{id} [get]
+// @Security ApiKeyAuth
+func GetOrganization(services *service.Services) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		ctx, span := tracing.StartHttpServerTracerSpanWithHeader(c.Request.Context(), "GetOrganization", c.Request.Header)
+		defer span.Finish()
+		tracing.TagComponentRest(span)
+		tracing.TagTenant(span, common.GetTenantFromContext(ctx))
+
+		tenant := common.GetTenantFromContext(ctx)
+		// if tenant missing return auth error
+		if tenant == "" {
+			c.JSON(http.StatusUnauthorized, gin.H{"status": "error", "message": "API key invalid or expired"})
+			span.LogFields(tracingLog.String("result", "Missing tenant in context"))
+			return
+		}
+
+		// Extract organization ID from the path
+		orgID := c.Param("id")
+		if orgID == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"status": "error", "message": "Invalid organization ID"})
+			span.LogFields(tracingLog.String("result", "Invalid organization ID"))
+			return
+		}
+
+		// Check organization exists
+		organizationDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByIdOrCustomerOsId(ctx, tenant, orgID)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Organization not found"})
+			return
+		}
+		if organizationDbNode == nil {
+			c.JSON(http.StatusNotFound, gin.H{"status": "error", "message": "Organization not found"})
+			return
+		}
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
+
+		response := OrganizationResponse{
+			Status:        "success",
+			Message:       "Organization retrieved successfully",
+			ID:            organizationEntity.ID,
+			CustomId:      organizationEntity.ReferenceId,
+			CosId:         organizationEntity.CustomerOsId,
+			Name:          organizationEntity.Name,
+			Website:       organizationEntity.Website,
+			LeadSource:    organizationEntity.LeadSource,
+			Relationship:  organizationEntity.Relationship.String(),
+			IcpFit:        organizationEntity.IcpFit,
+			Stage:         organizationEntity.Stage.String(),
+			Domains:       []string{},
+			ExternalLinks: []ExternalLink{},
+		}
+
+		// Fetch domains associated with the organization
+		partialSuccess := false
+		domainEntities, err := services.CommonServices.DomainService.GetDomainsForOrganizations(ctx, []string{organizationEntity.ID})
+		if err != nil {
+			partialSuccess = true
+			tracing.TraceErr(span, errors.Wrap(err, "Failed to retrieve domains"))
+		} else {
+			for _, domain := range *domainEntities {
+				response.Domains = append(response.Domains, domain.Domain)
+			}
+		}
+
+		// Fetch external links associated with the organization
+		externalSystemEntities, err := services.ExternalSystemService.GetExternalSystemsForEntities(ctx, []string{organizationEntity.ID}, commonmodel.ORGANIZATION)
+		if err != nil {
+			partialSuccess = true
+			tracing.TraceErr(span, errors.Wrap(err, "Failed to retrieve external links"))
+		} else {
+			for _, externalSystemEntity := range *externalSystemEntities {
+				if externalSystemEntity.Relationship.ExternalId != "" {
+					response.ExternalLinks = append(response.ExternalLinks, ExternalLink{
+						Name: externalSystemEntity.ExternalSystemId.String(),
+						Id:   externalSystemEntity.Relationship.ExternalId,
+					})
+				}
+			}
+		}
+
+		if partialSuccess {
+			response.Status = "partial_success"
+			response.Message = "Failed to retrieve completed organization data"
+			c.JSON(http.StatusPartialContent, response)
+		} else {
+			c.JSON(http.StatusOK, response)
+		}
 	}
 }

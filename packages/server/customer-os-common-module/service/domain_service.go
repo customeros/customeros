@@ -2,16 +2,22 @@ package service
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"strings"
 )
 
 type DomainService interface {
 	ExtractDomainFromOrganizationWebsite(ctx context.Context, websiteUrl string) string
 	IsKnownCompanyHostingUrl(ctx context.Context, website string) bool
+	GetDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.DomainEntities, error)
 }
 
 type domainService struct {
@@ -70,4 +76,30 @@ func (s *domainService) getKnownOrganizationHostingUrlPatterns(ctx context.Conte
 		s.services.Cache.SetOrganizationWebsiteHostingUrlPatters(urlPatterns)
 	}
 	return urlPatterns
+}
+
+func (s *domainService) GetDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.DomainEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.GetDomainsForOrganizations")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("organizationIds", strings.Join(organizationIds, ",")))
+
+	if common.GetTenantFromContext(ctx) == "" {
+		err := errors.New("missing tenant on context")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	domainsDbResponse, err := s.services.Neo4jRepositories.DomainReadRepository.GetForOrganizations(ctx, common.GetTenantFromContext(ctx), organizationIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	domainEntities := neo4jentity.DomainEntities{}
+	for _, v := range domainsDbResponse {
+		domainEntity := neo4jmapper.MapDbNodeToDomainEntity(v.Node)
+		domainEntity.DataloaderKey = v.LinkedNodeId
+		domainEntities = append(domainEntities, *domainEntity)
+	}
+	return &domainEntities, nil
 }

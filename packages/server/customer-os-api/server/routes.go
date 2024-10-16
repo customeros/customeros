@@ -7,6 +7,7 @@ import (
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	restbilling "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/billing"
+	restcustomerbase "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/customerbase"
 	restenrich "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/enrich"
 	restmailstack "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/mailstack"
 	restoutreach "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/outreach"
@@ -69,7 +70,8 @@ func registerBillingRoutes(ctx context.Context, r *gin.Engine, services *service
 }
 
 func registerOrganizationRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
-	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, rest.CreateOrganization(services, grpcClients))
+	setupRestRoute(ctx, r, "POST", fmt.Sprintf("%s/organizations", customerBaseV1Path), services, cache, restcustomerbase.CreateOrganization(services, grpcClients))
+	setupRestRoute(ctx, r, "GET", fmt.Sprintf("%s/organizations/:id", customerBaseV1Path), services, cache, restcustomerbase.GetOrganization(services))
 }
 
 func registerContactRoutes(ctx context.Context, r *gin.Engine, services *service.Services, grpcClients *grpc_client.Clients, cache *commoncaches.Cache) {
