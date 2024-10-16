@@ -17,6 +17,7 @@ export type SerializedVariableNode = Spread<
   {
     variableId: string;
     variableName: string;
+    isNewlyInserted: boolean;
   },
   SerializedTextNode
 >;
@@ -40,20 +41,29 @@ function $convertVariableElement(
 
 export class VariableNode extends TextNode {
   __variable: SelectOption;
+  __isNewlyInserted: boolean;
 
   static getType(): string {
     return 'variable';
   }
 
   static clone(node: VariableNode): VariableNode {
-    return new VariableNode(node.__variable, node.__text, node.__key);
+    return new VariableNode(
+      node.__variable,
+      node.__isNewlyInserted,
+      node.__text,
+      node.__key,
+    );
   }
 
   static importJSON(serializedNode: SerializedVariableNode): VariableNode {
-    const node = $createVariableNode({
-      label: serializedNode.variableName,
-      value: serializedNode.variableId,
-    });
+    const node = $createVariableNode(
+      {
+        label: serializedNode.variableName,
+        value: serializedNode.variableId,
+      },
+      serializedNode.isNewlyInserted,
+    );
 
     node.setTextContent(serializedNode.text);
     node.setFormat(serializedNode.format);
@@ -64,9 +74,15 @@ export class VariableNode extends TextNode {
     return node;
   }
 
-  constructor(variable: SelectOption, text?: string, key?: NodeKey) {
+  constructor(
+    variable: SelectOption,
+    isNewlyInserted: boolean = true,
+    text?: string,
+    key?: NodeKey,
+  ) {
     super(text ?? `{{${variable.label}}}`, key);
     this.__variable = variable;
+    this.__isNewlyInserted = isNewlyInserted;
   }
 
   exportJSON(): SerializedVariableNode {
@@ -74,6 +90,7 @@ export class VariableNode extends TextNode {
       ...super.exportJSON(),
       variableName: this.__variable.label,
       variableId: this.__variable.value,
+      isNewlyInserted: this.__isNewlyInserted,
       type: 'variable',
       version: 1,
     };
@@ -82,10 +99,38 @@ export class VariableNode extends TextNode {
   createDOM(config: EditorConfig): HTMLElement {
     const dom = super.createDOM(config);
 
-    dom.className = 'variable text-gray-500';
+    dom.className = `variable border-dotted ${
+      this.__isNewlyInserted
+        ? ' text-gray-400  hover:text-gray-400 newly-inserted'
+        : ' text-gray-500  hover:text-gray-700 hover:border-gray-700'
+    }`;
     dom.setAttribute('data-variable-id', this.__variable.value);
+    dom.setAttribute('data-lexical-variable', 'true');
 
     return dom;
+  }
+
+  updateDOM(prevNode: VariableNode, dom: HTMLElement): boolean {
+    const isUpdated = super.updateDOM(prevNode, dom, {
+      namespace: 'data-lexical-variable',
+      theme: {},
+    });
+
+    if (
+      prevNode.__variable.value !== this.__variable.value ||
+      prevNode.__isNewlyInserted !== this.__isNewlyInserted
+    ) {
+      dom.setAttribute('data-variable-id', this.__variable.value);
+      dom.className = `variable border-dotted ${
+        this.__isNewlyInserted
+          ? ' text-gray-400 hover:text-gray-400 newly-inserted'
+          : ' text-gray-500 hover:text-gray-700 hover:border-gray-700'
+      }`;
+
+      return true;
+    }
+
+    return isUpdated;
   }
 
   exportDOM(): DOMExportOutput {
@@ -124,10 +169,24 @@ export class VariableNode extends TextNode {
   canInsertTextAfter(): boolean {
     return false;
   }
+
+  setSelected() {
+    if (this.__isNewlyInserted) {
+      this.__isNewlyInserted = false;
+      this.getWritable().__isNewlyInserted = false;
+    }
+  }
+
+  getLength(): number {
+    return this.__text.length;
+  }
 }
 
-export function $createVariableNode(variable: SelectOption): VariableNode {
-  const variableNode = new VariableNode(variable);
+export function $createVariableNode(
+  variable: SelectOption,
+  isNewlyInserted: boolean = true,
+): VariableNode {
+  const variableNode = new VariableNode(variable, isNewlyInserted);
 
   variableNode.setMode('segmented').toggleDirectionless();
 
