@@ -4,7 +4,7 @@ import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react';
 
 import { computePosition } from '@floating-ui/dom';
 import { $findMatchingParent } from '@lexical/utils';
-import { $isLinkNode, $toggleLink, TOGGLE_LINK_COMMAND } from '@lexical/link';
+import { $isLinkNode, $toggleLink } from '@lexical/link';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
@@ -160,7 +160,7 @@ export function FloatingMenu({
             />
           </div>
         </Tooltip>
-        <Tooltip label='Insert or remove link'>
+        <Tooltip label='Insert or remove link: ⌘ + K'>
           <FloatingToolbarButton
             active={isLink}
             onClick={toggleLink}
@@ -347,8 +347,13 @@ export function FloatingMenuPlugin({
         }
 
         if (event.key === 'k' && (event.metaKey || event.ctrlKey)) {
-          editor.dispatchCommand(TOGGLE_LINK_COMMAND, 'https://example.com');
-          // calculatePosition();
+          editor.update(() => {
+            const selection = $getSelection();
+
+            if ($isRangeSelection(selection)) {
+              $toggleLink('');
+            }
+          });
 
           return true;
         }
