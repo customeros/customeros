@@ -11,6 +11,7 @@ import { Input } from '@ui/form/Input';
 import { flags } from '@ui/media/flags';
 import { Avatar } from '@ui/media/Avatar';
 import { Plus } from '@ui/media/icons/Plus';
+import { DateTimeUtils } from '@utils/date';
 import { Tag01 } from '@ui/media/icons/Tag01';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Mail02 } from '@ui/media/icons/Mail02';
@@ -486,6 +487,12 @@ export const ContactPreviewCard = observer(() => {
               >
                 {contact?.value?.connectedUsers?.[0]?.name || 'No one yet'}
               </span>
+            </div>
+            <div className='bg-grayModern-50 w-full rounded-[4px] border-[1px] border-grayModern-100 px-2 py-1'>
+              <p className='text-sm font-medium text-center'>{`Last enriched on ${DateTimeUtils.format(
+                contact?.value.enrichDetails.enrichedAt,
+                DateTimeUtils.dateWithHourWithQomma,
+              )} `}</p>
             </div>
           </div>
         </div>
