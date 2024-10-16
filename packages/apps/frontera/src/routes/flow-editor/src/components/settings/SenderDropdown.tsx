@@ -32,6 +32,12 @@ export const SenderDropdown = observer(({ flowId }: SenderDropdownProps) => {
 
   const options = users
     .filter((e) => !selectedSenders.includes(e.id))
+    .sort((a, b) => {
+      const aMailboxesCount = a?.value?.mailboxes.length ?? 0;
+      const bMailboxesCount = b?.value?.mailboxes.length ?? 0;
+
+      return bMailboxesCount - aMailboxesCount;
+    })
     .map((user) => ({
       label: user?.name,
       value: user?.id,

@@ -6,8 +6,8 @@ import { useStore } from '@shared/hooks/useStore';
 import { Divider } from '@ui/presentation/Divider';
 
 import { FlowSender } from './FlowSender';
+import { MailboxStatus } from './MailboxStatus';
 import { SenderDropdown } from './SenderDropdown';
-import { MailboxStatus } from './MailboxStatus.tsx';
 
 export const EmailSettings = observer(({ id }: { id: string }) => {
   const store = useStore();
@@ -38,18 +38,18 @@ export const EmailSettings = observer(({ id }: { id: string }) => {
           contact’s timezone
         </p>
       </div>
-      <Divider />
-      <div className='flex flex-col gap-1'>
-        <h3 className='text-sm font-medium'>Opt-out link</h3>
-        <p className='text-sm'>
-          Opt-out links let recipients easily unsubscribe, helping prevent spam
-          reports and keeping communication respectful
-        </p>
-        <div className='text-sm border px-2 py-2 rounded-md mt-2'>
-          If I missed the mark, please{' '}
-          <span className='underline'>let me know</span>
-        </div>
-      </div>
+      {/*<Divider />*/}
+      {/*<div className='flex flex-col gap-1'>*/}
+      {/*  <h3 className='text-sm font-medium'>Opt-out link</h3>*/}
+      {/*  <p className='text-sm'>*/}
+      {/*    Opt-out links let recipients easily unsubscribe, helping prevent spam*/}
+      {/*    reports and keeping communication respectful*/}
+      {/*  </p>*/}
+      {/*  <div className='text-sm border px-2 py-2 rounded-md mt-2'>*/}
+      {/*    If I missed the mark, please{' '}*/}
+      {/*    <span className='underline'>let me know</span>*/}
+      {/*  </div>*/}
+      {/*</div>*/}
     </>
   );
 });

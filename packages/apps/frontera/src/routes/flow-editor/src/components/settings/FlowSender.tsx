@@ -34,16 +34,15 @@ export const FlowSender = observer(
           <span className='flex-1 text-sm'>{flowSender?.user?.name}</span>
         </div>
         <div className='flex'>
-          <FlowSenderMenu senderId={id} flowId={flowId}>
-            <Button
-              size='xxs'
-              variant='ghost'
-              leftIcon={<Mail01 className='text-inherit ' />}
-            >
-              {userMailboxes?.length ?? 0}{' '}
-              {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
-            </Button>
-          </FlowSenderMenu>
+          <Button
+            size='xxs'
+            isDisabled
+            variant='ghost'
+            leftIcon={<Mail01 className='text-inherit ' />}
+          >
+            {userMailboxes?.length ?? 0}{' '}
+            {userMailboxes?.length === 1 ? 'mailbox' : 'mailboxes'}
+          </Button>
 
           <FlowSenderMenu senderId={id} flowId={flowId}>
             <IconButton
