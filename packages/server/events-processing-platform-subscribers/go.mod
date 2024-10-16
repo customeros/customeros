@@ -119,7 +119,7 @@ require (
 	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/time v0.7.0 // indirect
-	google.golang.org/api v0.200.0 // indirect
+	google.golang.org/api v0.201.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20240930140551-af27646dc61f // indirect
 )
 
