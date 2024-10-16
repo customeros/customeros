@@ -92,27 +92,27 @@ export const EmailEditorModal = observer(
                       : 'Reply to Email'}
                   </span>
                 </div>
-                  <div className='flex items-center gap-2'>
-                      <Button
-                          size='xs'
-                          variant='ghost'
-                          onClick={() => {
-                              setSubject(data.subject);
-                              setBodyTemplate(data.bodyTemplate);
-                              handleCancel();
-                          }}
-                      >
-                          Cancel
-                      </Button>
-                      <Button
-                          size='xs'
-                          variant='outline'
-                          leftIcon={<Check />}
-                          onClick={handleSave}
-                      >
-                          Done
-                      </Button>
-                  </div>
+                <div className='flex items-center gap-2'>
+                  <Button
+                    size='xs'
+                    variant='ghost'
+                    onClick={() => {
+                      setSubject(data.subject);
+                      setBodyTemplate(data.bodyTemplate);
+                      handleCancel();
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size='xs'
+                    variant='outline'
+                    leftIcon={<Check />}
+                    onClick={handleSave}
+                  >
+                    Done
+                  </Button>
+                </div>
               </div>
               <div className='w-[570px] relative'>
                 <Input
