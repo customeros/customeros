@@ -262,6 +262,9 @@ export const ContactPreviewCard = observer(() => {
               <div className='flex items-center gap-2'>
                 <Mail02 className='mt-[1px] text-gray-500' />
                 <span className='text-gray-500'>Emails</span>
+                {contact?.value.emails.length === 0 && (
+                  <span className='text-gray-400 ml-[57px]'>No emails yet</span>
+                )}
               </div>
               {company && (
                 <div className='flex items-center gap-2'>
@@ -277,13 +280,12 @@ export const ContactPreviewCard = observer(() => {
                           variant='ghost'
                           icon={<Plus />}
                           aria-label='add new email'
-                          className='group-hover/menu:opacity-100 opacity-0'
                         />
                       </Tooltip>
                     </MenuButton>
                     <MenuList>
                       <MenuItem
-                        className='group/find-email'
+                        className='group/find-email '
                         onClick={() => {
                           setIsLoading(true);
                           contact
@@ -293,7 +295,7 @@ export const ContactPreviewCard = observer(() => {
                       >
                         <div className='flex items-center gap-1'>
                           <Star06 className='group-hover/find-email:text-gray-700 text-gray-500' />
-                          <span>{`Find email at ${company}`}</span>
+                          <span className='max-w-[150px] text-ellipsis overflow-hidden whitespace-nowrap'>{`Find email at ${company}`}</span>
                         </div>
                       </MenuItem>
                       <MenuItem
@@ -345,11 +347,11 @@ export const ContactPreviewCard = observer(() => {
             <div className='ml-6'>
               {contact?.value.emails.map((email, idx) => (
                 <Fragment key={email.id}>
-                  <div className=' flex items-center justify-between group/menu-email'>
+                  <div className=' flex items-center justify-between '>
                     <div key={email.id} className='flex items-center '>
-                      <span>{email.email}</span>
+                      <span className='text-sm'>{email.email}</span>
                     </div>
-                    <div className='flex items-center'>
+                    <div className='flex items-center gap-2'>
                       {email && (
                         <EmailValidationMessage
                           email={email?.email || ''}
@@ -363,7 +365,6 @@ export const ContactPreviewCard = observer(() => {
                             variant='ghost'
                             icon={<DotsVertical />}
                             aria-label='add new email'
-                            className='group-hover/menu-email:opacity-100 opacity-0'
                           />
                         </MenuButton>
                         <MenuList>
