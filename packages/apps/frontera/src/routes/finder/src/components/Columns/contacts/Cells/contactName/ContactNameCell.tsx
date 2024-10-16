@@ -1,8 +1,6 @@
-import { useNavigate } from 'react-router-dom';
 import { useRef, useState, useEffect, KeyboardEvent } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { useLocalStorage } from 'usehooks-ts';
 
 import { cn } from '@ui/utils/cn';
 import { Input } from '@ui/form/Input';
@@ -24,14 +22,6 @@ export const ContactNameCell = observer(
 
     const contactStore = store.contacts.value.get(contactId);
     const contactName = contactStore?.name;
-    const navigate = useNavigate();
-    const [tabs] = useLocalStorage<{
-      [key: string]: string;
-    }>(`customeros-player-last-position`, { root: 'organization' });
-
-    const lastPositionParams = contactStore?.organizationId
-      ? tabs[contactStore?.organizationId]
-      : undefined;
 
     const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
@@ -60,21 +50,6 @@ export const ContactNameCell = observer(
       }
     };
 
-    const handleNavigate = () => {
-      if (!canNavigate) return;
-
-      const href = contactStore?.organizationId
-        ? getHref(
-            contactStore?.organizationId,
-            'tab=people' || lastPositionParams,
-          )
-        : null;
-
-      if (!href) return;
-
-      navigate(href);
-    };
-
     return (
       <div
         ref={ref}
@@ -88,8 +63,8 @@ export const ContactNameCell = observer(
         {!isEdit && contactName && (
           <p
             role='button'
-            onClick={handleNavigate}
             data-test={`contact-name-in-contacts-table`}
+            onClick={() => store.ui.setContactPreviewCardOpen(true)}
             className={cn(
               'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer',
               !canNavigate && 'cursor-default',
@@ -141,7 +116,3 @@ export const ContactNameCell = observer(
     );
   },
 );
-
-function getHref(id: string, lastPositionParams: string | undefined) {
-  return `/organization/${id}?${lastPositionParams || 'tab=people'}`;
-}
