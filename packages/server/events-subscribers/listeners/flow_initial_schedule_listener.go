@@ -15,9 +15,9 @@ func Handle_FlowInitialSchedule(ctx context.Context, services *service.Services,
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", input)
 
-	message := input.(*dto.FlowInitialSchedule)
+	message := input.(*dto.Event)
 
-	flow, err := services.FlowService.FlowGetById(ctx, message.FlowId)
+	flow, err := services.FlowService.FlowGetById(ctx, message.Event.EntityId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
