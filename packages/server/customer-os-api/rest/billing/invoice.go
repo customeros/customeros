@@ -5,6 +5,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
+	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	tracingLog "github.com/opentracing/opentracing-go/log"
 	"net/http"
@@ -87,6 +88,10 @@ func GetInvoicesForOrganization(services *service.Services) gin.HandlerFunc {
 				Amount:        invoiceEntity.TotalAmount,
 				Currency:      invoiceEntity.Currency.String(),
 				PublicUrl:     "Coming soon",
+			}
+			if (invoiceEntity.Status == neo4jenum.InvoiceStatusDue || invoiceEntity.Status == neo4jenum.InvoiceStatusOverdue) &&
+				(invoiceEntity.PaymentDetails.PaymentLink != "") {
+				invoiceResponse.PaymentLink = services.Cfg.InternalServices.CustomerOsApiUrl + "/invoice/" + invoiceEntity.Id + "/pay"
 			}
 			response.Invoices = append(response.Invoices, invoiceResponse)
 		}
