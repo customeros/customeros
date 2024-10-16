@@ -57,6 +57,7 @@ export class DateTimeUtils {
   public static timeWithGMT = 'Kbbb (z)'; // Output: "2pm GMT"
   public static usaTimeFormatString = 'Kbbb';
   public static defaultDurationFormat = { format: ['minutes'] };
+  public static dateWithHourWithQomma = 'd MMM yyyy, HH:mm'; // Output: "19 Jun 2023, 14:34"
 
   private static getDate(date: string | number): Date {
     return new Date(new Date(date).toUTCString());
