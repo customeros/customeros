@@ -51,6 +51,12 @@ definitions:
           Example: ABC-12345
         example: ABC-12345
         type: string
+      paymentLink:
+        description: |-
+          PaymentLink represents the URL where the invoice can be paid
+          Example: https://example.com/payments/12345
+        example: https://example.com/payments/12345
+        type: string
       status:
         description: |-
           Status indicates the result of the action

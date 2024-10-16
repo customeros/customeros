@@ -871,6 +871,11 @@ const docTemplate = `{
                     "type": "string",
                     "example": "ABC-12345"
                 },
+                "paymentLink": {
+                    "description": "PaymentLink represents the URL where the invoice can be paid\nExample: https://example.com/payments/12345",
+                    "type": "string",
+                    "example": "https://example.com/payments/12345"
+                },
                 "status": {
                     "description": "Status indicates the result of the action\nExample: success",
                     "type": "string",

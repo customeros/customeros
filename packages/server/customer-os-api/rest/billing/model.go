@@ -7,11 +7,11 @@ import "time"
 type InvoiceResponse struct {
 	// Status indicates the result of the action
 	// Example: success
-	Status string `json:"status" example:"success"`
+	Status string `json:"status,omitempty" example:"success"`
 
 	// Message provides additional information about the action
 	// Example: Invoices retrieved successfully
-	Message string `json:"message" example:"Invoices retrieved successfully"`
+	Message string `json:"message,omitempty" example:"Invoices retrieved successfully"`
 
 	// ID is the unique identifier for the invoice, uuid format
 	// Example: 123e4567-e89b-12d3-a456-426614174000
@@ -37,6 +37,10 @@ type InvoiceResponse struct {
 	// Example: USD
 	Currency string `json:"currency" example:"USD"`
 
+	// PaymentLink represents the URL where the invoice can be paid
+	// Example: https://example.com/payments/12345
+	PaymentLink string `json:"paymentLink" example:"https://example.com/payments/12345"`
+
 	// PublicUrl represents the public URL where the PDF version of the invoice can be accessed
 	// Example: https://example.com/invoices/12345.pdf
 	PublicUrl string `json:"PublicUrl" example:"https://example.com/invoices/12345.pdf"`
@@ -47,11 +51,11 @@ type InvoiceResponse struct {
 type InvoicesResponse struct {
 	// Status indicates the result of the action
 	// Example: success
-	Status string `json:"status" example:"success"`
+	Status string `json:"status,omitempty" example:"success"`
 
 	// Message provides additional information about the action
 	// Example: Invoices retrieved successfully
-	Message string `json:"message" example:"Invoices retrieved successfully"`
+	Message string `json:"message,omitempty" example:"Invoices retrieved successfully"`
 
 	Invoices []InvoiceResponse `json:"invoices"`
 }
