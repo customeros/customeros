@@ -4,6 +4,7 @@ import { set } from 'date-fns/set';
 import { addDays } from 'date-fns/addDays';
 import { getHours } from 'date-fns/getHours';
 import { getMinutes } from 'date-fns/getMinutes';
+import { toZonedTime, fromZonedTime } from 'date-fns-tz';
 
 import { DateTimeUtils } from '@utils/date';
 import { Button } from '@ui/form/Button/Button';
@@ -27,21 +28,12 @@ export const ReminderDueDatePicker = ({
 }: DueDatePickerProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
+  const localDate = fromZonedTime(new Date(value), timeZone);
   const time = (() => {
-    const dateStr = value;
-    const date = dateStr ? new Date(dateStr) : new Date();
-
-    const hours = (() => {
-      const h = String(getHours(date));
-
-      return h.length === 1 ? `0${h}` : h;
-    })();
-    const minutes = (() => {
-      const h = String(getMinutes(date));
-
-      return h.length === 1 ? `0${h}` : h;
-    })();
+    const hours = String(getHours(localDate)).padStart(2, '0');
+    const minutes = String(getMinutes(localDate)).padStart(2, '0');
 
     return `${hours}:${minutes}`;
   })();
@@ -49,9 +41,15 @@ export const ReminderDueDatePicker = ({
   const handleChange = (date: Date | null) => {
     if (!date) return;
     const [hours, minutes] = time.split(':').map(Number);
-    const _date = set(date, { hours, minutes, seconds: 0, milliseconds: 0 });
+    const updatedLocalDate = set(date, {
+      hours,
+      minutes,
+      seconds: 0,
+      milliseconds: 0,
+    });
+    const utcDate = toZonedTime(updatedLocalDate, timeZone);
 
-    onChange(_date.toISOString());
+    onChange(utcDate.toISOString());
   };
 
   const handleClickTomorrow = () => {
@@ -61,18 +59,18 @@ export const ReminderDueDatePicker = ({
       seconds: 0,
       milliseconds: 0,
     });
+    const utcDate = toZonedTime(date, timeZone);
 
-    onChange(date.toISOString());
+    onChange(utcDate.toISOString());
   };
 
   return (
     <div ref={containerRef} className='flex flex-start items-center'>
       <Popover open={isOpen} onOpenChange={(value) => setIsOpen(value)}>
         <PopoverTrigger className='data-[state=open]:text-gray-700 data-[state=closed]:text-gray-500'>
-          <span className=' cursor-pointer whitespace-pre pb-[1px] text-sm border-t-[1px] border-transparent hover:text-gray-700'>{`${DateTimeUtils.format(
-            value,
-            DateTimeUtils.date,
-          )} • `}</span>
+          <span className='cursor-pointer whitespace-pre pb-[1px] text-sm border-t-[1px] border-transparent hover:text-gray-700'>
+            {`${DateTimeUtils.format(value, DateTimeUtils.date)} • `}
+          </span>
         </PopoverTrigger>
         <PopoverContent
           side='top'
@@ -83,15 +81,13 @@ export const ReminderDueDatePicker = ({
           onOpenAutoFocus={(el) => el.preventDefault()}
         >
           <DatePicker
+            value={localDate}
             minDate={new Date()}
-            value={new Date(value)}
-            defaultValue={new Date(value)}
             onChange={(date) => {
               handleChange(date as Date);
               setIsOpen(false);
             }}
           />
-
           <Divider className='my-2' />
           <Button
             variant='outline'
@@ -109,9 +105,10 @@ export const ReminderDueDatePicker = ({
         value={time}
         onChange={(v) => {
           const [hours, minutes] = v.split(':').map(Number);
-          const date = set(new Date(value), { hours, minutes });
+          const date = set(localDate, { hours, minutes });
+          const utcDate = toZonedTime(date, timeZone);
 
-          onChange(date.toISOString());
+          onChange(utcDate.toISOString());
         }}
       />
     </div>
