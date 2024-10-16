@@ -1,102 +1,51 @@
 import * as React from 'react';
 import { createPortal } from 'react-dom';
-import { useRef, Dispatch, useState, useEffect, useCallback } from 'react';
+import { useRef, useState, useEffect, useCallback } from 'react';
 
-import { $isLinkNode, $createLinkNode } from '@lexical/link';
-import { mergeRegister, $findMatchingParent } from '@lexical/utils';
-import { flip, shift, offset, computePosition } from '@floating-ui/dom';
+import { $findMatchingParent } from '@lexical/utils';
+import { offset, computePosition } from '@floating-ui/dom';
+import { $isLinkNode, $toggleLink, $createLinkNode } from '@lexical/link';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
-  BaseSelection,
-  CLICK_COMMAND,
-  LexicalEditor,
   $setSelection,
+  CLICK_COMMAND,
+  $createTextNode,
   $isRangeSelection,
-  KEY_ESCAPE_COMMAND,
-  COMMAND_PRIORITY_LOW,
   COMMAND_PRIORITY_HIGH,
-  $createRangeSelection,
+  COMMAND_PRIORITY_NORMAL,
   SELECTION_CHANGE_COMMAND,
-  COMMAND_PRIORITY_NORMAL as NORMAL_PRIORITY,
-  SELECTION_CHANGE_COMMAND as ON_SELECTION_CHANGE,
 } from 'lexical';
 
 import { Input } from '@ui/form/Input';
 import { Trash01 } from '@ui/media/icons/Trash01';
 import { Divider } from '@ui/presentation/Divider';
-import { getExternalUrl } from '@utils/getExternalLink.ts';
+import { getExternalUrl } from '@utils/getExternalLink';
+import { LinkExternal02 } from '@ui/media/icons/LinkExternal02';
 import { FloatingToolbarButton } from '@ui/form/Editor/components';
-import { LinkExternal02 } from '@ui/media/icons/LinkExternal02.tsx';
 
 import { sanitizeUrl } from '../utils/url';
 import { getSelectedNode } from '../utils/getSelectedNode';
+import { usePointerInteractions } from '../utils/usePointerInteractions';
 
-function FloatingLinkEditor({
+const DEFAULT_DOM_ELEMENT = document.body;
+
+type FloatingLinkEditorComponentProps = {
+  isLink: boolean;
+  editor: ReturnType<typeof useLexicalComposerContext>[0];
+  setIsLink: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
+export function FloatingLinkEditor({
   editor,
   isLink,
   setIsLink,
-  anchorElem,
-}: {
-  isLink: boolean;
-  editor: LexicalEditor;
-  anchorElem: HTMLElement;
-  setIsLink: Dispatch<boolean>;
-}): JSX.Element {
-  const editorRef = useRef<HTMLDivElement | null>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+}: FloatingLinkEditorComponentProps) {
   const [linkUrl, setLinkUrl] = useState('');
-  const [lastSelection, setLastSelection] = useState<BaseSelection | null>(
-    null,
-  );
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const updateLinkEditor = useCallback(() => {
-    const selection = $getSelection();
-
-    if ($isRangeSelection(selection)) {
-      const node = getSelectedNode(selection);
-      const linkParent = $findMatchingParent(node, $isLinkNode);
-
-      if (linkParent) {
-        setLinkUrl(linkParent.getURL());
-      } else if ($isLinkNode(node)) {
-        setLinkUrl(node.getURL());
-      } else {
-        setLinkUrl('');
-      }
-    }
-
-    const editorElem = editorRef.current;
-    const nativeSelection = window.getSelection();
-
-    if (editorElem === null || !isLink) {
-      return;
-    }
-
-    const domSelection = getSelection();
-    const domRange =
-      domSelection?.rangeCount !== 0 && domSelection?.getRangeAt(0);
-
-    if (
-      selection !== null &&
-      !!domRange &&
-      nativeSelection !== null &&
-      editor.isEditable()
-    ) {
-      computePosition(domRange, editorElem, {
-        placement: 'top-start',
-        middleware: [offset(4), flip(), shift()],
-      }).then(({ x, y }) => {
-        editorElem.style.top = `${y}px`;
-        editorElem.style.left = `${x}px`;
-      });
-
-      setLastSelection(selection);
-    }
-  }, [anchorElem, editor, isLink]);
-
-  const handleDeleteLink = useCallback(() => {
-    editor.update(() => {
+  useEffect(() => {
+    editor.getEditorState().read(() => {
       const selection = $getSelection();
 
       if ($isRangeSelection(selection)) {
@@ -104,318 +53,329 @@ function FloatingLinkEditor({
         const parent = node.getParent();
 
         if ($isLinkNode(parent)) {
-          const children = parent.getChildren();
-
-          for (const child of children) {
-            parent.insertBefore(child);
-          }
-          parent.remove();
+          setLinkUrl(parent.getURL());
         } else if ($isLinkNode(node)) {
-          const children = node.getChildren();
-
-          for (const child of children) {
-            node.insertBefore(child);
-          }
-          node.remove();
+          setLinkUrl(node.getURL());
         }
       }
     });
-
-    setIsLink(false);
-  }, [editor, setIsLink]);
+  }, [editor, isLink]);
 
   useEffect(() => {
-    const scrollerElem = anchorElem.parentElement;
-
-    const update = () => {
-      editor.getEditorState().read(() => {
-        updateLinkEditor();
-      });
-    };
-
-    window.addEventListener('resize', update);
-
-    if (scrollerElem) {
-      scrollerElem.addEventListener('scroll', update);
+    if (isLink && inputRef.current) {
+      inputRef.current.focus();
     }
-
-    return () => {
-      window.removeEventListener('resize', update);
-
-      if (scrollerElem) {
-        scrollerElem.removeEventListener('scroll', update);
-      }
-    };
-  }, [anchorElem.parentElement, editor, updateLinkEditor]);
-
-  useEffect(() => {
-    return mergeRegister(
-      editor.registerUpdateListener(({ editorState }) => {
-        editorState.read(() => {
-          updateLinkEditor();
-        });
-      }),
-
-      editor.registerCommand(
-        SELECTION_CHANGE_COMMAND,
-        () => {
-          updateLinkEditor();
-
-          return true;
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
-      editor.registerCommand(
-        KEY_ESCAPE_COMMAND,
-        () => {
-          if (isLink) {
-            setIsLink(false);
-
-            return true;
-          }
-
-          return false;
-        },
-        COMMAND_PRIORITY_HIGH,
-      ),
-    );
-  }, [editor, updateLinkEditor, setIsLink, isLink]);
-
-  useEffect(() => {
-    editor.getEditorState().read(() => {
-      updateLinkEditor();
-    });
-  }, [editor, updateLinkEditor]);
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        editorRef.current &&
-        !editorRef.current.contains(event.target as Node)
-      ) {
-        setIsLink(false);
-      }
-    };
-
-    if (isLink) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isLink, setIsLink]);
+  }, [isLink]);
 
   const handleLinkSubmission = useCallback(() => {
-    if (lastSelection !== null) {
+    editor.update(() => {
+      const selection = $getSelection();
+
+      if ($isRangeSelection(selection)) {
+        const node = getSelectedNode(selection);
+        const parent = node.getParent();
+
+        if (linkUrl.trim() === '') {
+          if ($isLinkNode(parent)) {
+            const children = parent.getChildren();
+
+            for (const child of children) {
+              parent.insertBefore(child);
+            }
+            parent.remove();
+          } else if ($isLinkNode(node)) {
+            node.remove();
+          }
+        } else {
+          let linkNode;
+
+          if ($isLinkNode(parent)) {
+            parent.setURL(sanitizeUrl(linkUrl));
+            linkNode = parent;
+          } else if ($isLinkNode(node)) {
+            node.setURL(sanitizeUrl(linkUrl));
+            linkNode = node;
+          } else {
+            linkNode = $createLinkNode(sanitizeUrl(linkUrl));
+            selection.insertNodes([linkNode]);
+          }
+
+          // Insert space node after the link if it has no next sibling
+          if (!linkNode.getNextSibling()) {
+            const spaceNode = $createTextNode(' ');
+
+            linkNode.insertAfter(spaceNode);
+          }
+        }
+
+        $setSelection(null);
+        setIsLink(false);
+      }
+    });
+    setIsLink(false);
+  }, [editor, linkUrl, setIsLink]);
+
+  const handleDeleteLink = useCallback(() => {
+    editor.update(() => {
+      const selection = $getSelection();
+
+      if ($isRangeSelection(selection)) {
+        $toggleLink(null);
+        setTimeout(() => {
+          setIsLink(false);
+        }, 0);
+      }
+    });
+  }, [editor, setIsLink]);
+
+  return (
+    <div className='bg-gray-700 flex items-center min-w-[auto] max-w-[800px] p-1 pl-3 shadow-lg rounded-md'>
+      <Input
+        size='sm'
+        ref={inputRef}
+        value={linkUrl}
+        variant='unstyled'
+        placeholder='Enter a URL'
+        onChange={(event) => setLinkUrl(event.target.value)}
+        className='leading-none min-h-0 pointer-events-auto text-gray-25 overflow-ellipsis'
+        onKeyDown={(event) => {
+          if (event.key === 'Enter') {
+            event.preventDefault();
+            handleLinkSubmission();
+          }
+        }}
+      />
+
+      <Divider className='w-[1px] h-3 border-b-0 border-l-[1px] border-gray-500 mx-2' />
+
+      <FloatingToolbarButton
+        aria-label='Open link'
+        icon={<LinkExternal02 className='text-inherit' />}
+        onClick={() => {
+          const link = getExternalUrl(sanitizeUrl(linkUrl));
+
+          window.open(link, '_blank', 'noopener,noreferrer');
+        }}
+      />
+      <FloatingToolbarButton
+        aria-label='Delete link'
+        onClick={handleDeleteLink}
+        icon={<Trash01 className='text-inherit' />}
+      />
+    </div>
+  );
+}
+
+export function FloatingLinkEditorPlugin({
+  anchorElem = DEFAULT_DOM_ELEMENT,
+}: {
+  anchorElem?: HTMLElement;
+}): JSX.Element | null {
+  const [editor] = useLexicalComposerContext();
+  const [isLink, setIsLink] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+  const [menuPosition, setMenuPosition] = useState<{
+    top: number;
+    left: number;
+  } | null>(null);
+  const anchorRef = useRef<HTMLElement | null>(null);
+  const { isPointerDown, isPointerReleased } = usePointerInteractions();
+  const closeTimeoutRef = useRef<number | null>(null);
+
+  const updateMenuPosition = useCallback(() => {
+    if (anchorRef.current && ref.current && !isPointerDown) {
+      computePosition(anchorRef.current, ref.current, {
+        placement: 'top-start',
+        middleware: [
+          offset({
+            mainAxis: (anchorRef.current?.offsetHeight ?? 0) + 18,
+            crossAxis: 0,
+          }),
+        ],
+      }).then(({ x, y }) => {
+        setMenuPosition({ top: y, left: x });
+      });
+    }
+  }, [anchorRef, ref, isPointerDown]);
+
+  const $handleSelectionChange = useCallback(() => {
+    if (editor.isComposing()) return false;
+
+    if (editor.getRootElement() !== document.activeElement) {
+      setMenuPosition(null);
+
+      return false;
+    }
+
+    const selection = $getSelection();
+
+    if ($isRangeSelection(selection)) {
+      const node = getSelectedNode(selection);
+      const linkParent = $findMatchingParent(node, $isLinkNode);
+      const linkNode = $isLinkNode(linkParent)
+        ? linkParent
+        : $isLinkNode(node)
+        ? node
+        : null;
+
+      if (linkNode) {
+        setIsLink(true);
+
+        const element = editor.getElementByKey(
+          linkNode.getKey(),
+        ) as HTMLElement;
+
+        if (element) {
+          anchorRef.current = element;
+          requestAnimationFrame(updateMenuPosition);
+        }
+      } else {
+        setIsLink(false);
+        anchorRef.current = null;
+        setMenuPosition(null);
+      }
+    } else {
+      setIsLink(false);
+      anchorRef.current = null;
+      setMenuPosition(null);
+    }
+
+    return false;
+  }, [editor, updateMenuPosition]);
+
+  useEffect(() => {
+    return editor.registerCommand(
+      SELECTION_CHANGE_COMMAND,
+      $handleSelectionChange,
+      COMMAND_PRIORITY_HIGH,
+    );
+  }, [editor, $handleSelectionChange]);
+
+  useEffect(() => {
+    if (!isLink && isPointerReleased) {
+      editor.getEditorState().read(() => {
+        $handleSelectionChange();
+      });
+    }
+  }, [isPointerReleased, $handleSelectionChange, editor, isLink]);
+
+  const closeMenu = useCallback(() => {
+    if (closeTimeoutRef.current === null) {
+      closeTimeoutRef.current = window.setTimeout(() => {
+        setIsLink(false);
+        setMenuPosition(null);
+        closeTimeoutRef.current = null;
+      }, 100);
+    }
+  }, []);
+
+  useEffect(() => {
+    return editor.registerCommand(
+      CLICK_COMMAND,
+      () => {
+        if (isLink) {
+          return true;
+        }
+        const selection = $getSelection();
+
+        if ($isRangeSelection(selection)) {
+          const node = getSelectedNode(selection);
+          const linkNode = $findMatchingParent(node, $isLinkNode);
+
+          linkNode?.select(0, linkNode?.getTextContentSize());
+        }
+
+        return false;
+      },
+      COMMAND_PRIORITY_NORMAL,
+    );
+  }, [editor]);
+  useEffect(() => {
+    const rootElement = editor.getRootElement();
+
+    if (!rootElement) {
+      return;
+    }
+
+    const handleDoubleClick = (event: MouseEvent) => {
+      event.preventDefault();
+
       editor.update(() => {
         const selection = $getSelection();
 
         if ($isRangeSelection(selection)) {
           const node = getSelectedNode(selection);
-          const parent = node.getParent();
+          const linkNode = $findMatchingParent(node, $isLinkNode);
 
-          if (linkUrl.trim() === '') {
-            // Remove the link if URL is empty
-            if ($isLinkNode(parent)) {
-              const children = parent.getChildren();
-
-              for (const child of children) {
-                parent.insertBefore(child);
-              }
-              parent.remove();
-            } else if ($isLinkNode(node)) {
-              node.remove();
-            }
-          } else {
-            // Existing logic for creating or updating links
-            if ($isLinkNode(parent)) {
-              parent.setURL(sanitizeUrl(linkUrl));
-            } else if ($isLinkNode(node)) {
-              node.setURL(sanitizeUrl(linkUrl));
-            } else {
-              const linkNode = $createLinkNode(sanitizeUrl(linkUrl));
-
-              selection.insertNodes([linkNode]);
-            }
+          if (linkNode) {
+            linkNode.select(0, linkNode.getTextContentSize());
+            setIsLink(true);
+            updateMenuPosition();
           }
         }
       });
-      setIsLink(false);
-    }
-  }, [editor, linkUrl, lastSelection, setIsLink]);
+    };
 
-  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
-    if (event.key === 'Tab') {
-      event.preventDefault();
+    rootElement.addEventListener('dblclick', handleDoubleClick);
 
-      const focusableElements =
-        editorRef.current?.querySelectorAll('input, button') || [];
-      const firstElement = focusableElements[0] as HTMLElement;
-      const lastElement = focusableElements[
-        focusableElements.length - 1
-      ] as HTMLElement;
-
-      if (event.shiftKey) {
-        if (document.activeElement === firstElement) {
-          lastElement.focus();
-        } else {
-          (
-            document.activeElement?.previousElementSibling as HTMLElement
-          )?.focus();
-        }
-      } else {
-        if (document.activeElement === lastElement) {
-          firstElement.focus();
-        } else {
-          (document.activeElement?.nextElementSibling as HTMLElement)?.focus();
-        }
-      }
-    }
-  }, []);
-
-  return createPortal(
-    <div
-      ref={editorRef}
-      onKeyDown={handleKeyDown}
-      className='absolute top-0 left-0 z-[99999] pointer-events-auto'
-    >
-      {isLink && (
-        <div className='bg-gray-700 flex items-center min-w-[auto] max-w-[800px] p-1 pl-3 shadow-lg rounded-md'>
-          <Input
-            size='sm'
-            ref={inputRef}
-            value={linkUrl}
-            variant='unstyled'
-            placeholder='Enter a URL'
-            className='leading-none min-h-0 pointer-events-auto text-gray-25 overflow-ellipsis'
-            onChange={(event) => {
-              setLinkUrl(event.target.value);
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault();
-                handleLinkSubmission();
-              }
-            }}
-          />
-
-          <Divider className='w-[1px] h-3 border-b-0 border-l-[1px] border-gray-500 mx-2' />
-
-          <FloatingToolbarButton
-            aria-label='Open link'
-            icon={<LinkExternal02 className='text-inherit' />}
-            onClick={() => {
-              const link = getExternalUrl(sanitizeUrl(linkUrl));
-
-              window.open(link, '_blank', 'noopener,noreferrer');
-            }}
-          />
-          <FloatingToolbarButton
-            aria-label='Delete link'
-            onClick={handleDeleteLink}
-            icon={<Trash01 className='text-inherit' />}
-          />
-        </div>
-      )}
-    </div>,
-    anchorElem,
-  );
-}
-
-function useFloatingLinkEditorToolbar(
-  editor: LexicalEditor,
-  anchorElem: HTMLElement,
-): JSX.Element | null {
-  const [isLink, setIsLink] = useState(false);
-
+    return () => {
+      rootElement.removeEventListener('dblclick', handleDoubleClick);
+    };
+  }, [editor, updateMenuPosition]);
   useEffect(() => {
-    return mergeRegister(
-      editor.registerCommand(
-        CLICK_COMMAND,
-        (e) => {
-          const selection = $getSelection();
+    if (!isLink && isPointerReleased) {
+      editor.getEditorState().read(() => {
+        $handleSelectionChange();
+      });
+    }
+  }, [isPointerReleased, $handleSelectionChange, editor, isLink]);
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        ref.current &&
+        !ref.current.contains(event.target as Node) &&
+        anchorRef.current &&
+        !anchorRef.current.contains(event.target as Node)
+      ) {
+        closeMenu();
+      }
+    };
 
-          if ($isRangeSelection(selection)) {
-            const node = selection.getNodes()[0];
-            const linkNode = $findMatchingParent(node, $isLinkNode);
+    document.addEventListener('mousedown', handleClickOutside);
 
-            if ($isLinkNode(linkNode)) {
-              const domSelection = window.getSelection();
-              const domRange = domSelection?.getRangeAt(0);
-              const clickOffset = domRange?.startOffset;
-
-              // Check if the click is at the end of the link
-              if (clickOffset === linkNode.getTextContent().length) {
-                // Click is at the end, don't select or open toolbar
-                return false;
-              }
-
-              // Click is not at the end, proceed with link selection
-              e.preventDefault();
-              setIsLink(true);
-
-              const newSelection = $createRangeSelection();
-
-              newSelection.anchor.set(linkNode.getKey(), 0, 'element');
-              newSelection.focus.set(
-                linkNode.getKey(),
-                linkNode.getChildrenSize(),
-                'element',
-              );
-
-              editor.update(() => {
-                newSelection.dirty = true;
-                $setSelection(newSelection);
-              });
-
-              return true;
-            }
-          }
-
-          return false;
-        },
-        COMMAND_PRIORITY_LOW,
-      ),
-      editor.registerCommand(
-        ON_SELECTION_CHANGE,
-        () => {
-          const selection = $getSelection();
-
-          if (
-            $isRangeSelection(selection) &&
-            !selection.anchor.is(selection.focus)
-          ) {
-            const node = selection.getNodes()[0];
-            const linkNode = $findMatchingParent(node, $isLinkNode);
-
-            if ($isLinkNode(linkNode)) {
-              return true;
-            }
-          }
-
-          return false;
-        },
-        NORMAL_PRIORITY,
-      ),
-    );
-  }, [editor]);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [closeMenu]);
 
   return (
-    <FloatingLinkEditor
-      isLink={isLink}
-      editor={editor}
-      setIsLink={setIsLink}
-      anchorElem={anchorElem}
-    />
+    <>
+      {isLink &&
+        createPortal(
+          <div
+            ref={ref}
+            tabIndex={-1}
+            aria-hidden={!isLink}
+            style={{
+              position: 'absolute',
+              top: menuPosition?.top ?? 0,
+              left: menuPosition?.left ?? 0,
+              visibility: isLink && menuPosition ? 'visible' : 'hidden',
+              opacity: isLink && menuPosition ? 1 : 0,
+              pointerEvents: 'all',
+            }}
+          >
+            {isLink && menuPosition && (
+              <FloatingLinkEditor
+                editor={editor}
+                isLink={isLink}
+                setIsLink={setIsLink}
+              />
+            )}
+          </div>,
+          anchorElem,
+        )}
+    </>
   );
 }
-
-export default function FloatingLinkEditorPlugin({
-  anchorElem = document.body,
-}: {
-  anchorElem?: HTMLElement;
-}): JSX.Element | null {
-  const [editor] = useLexicalComposerContext();
-
-  return useFloatingLinkEditorToolbar(editor, anchorElem);
-}
+export default FloatingLinkEditorPlugin;

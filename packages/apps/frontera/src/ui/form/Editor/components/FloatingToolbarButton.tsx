@@ -18,6 +18,7 @@ export const FloatingToolbarButton = ({
       icon={icon}
       variant='ghost'
       onClick={onClick}
+      style={{ pointerEvents: 'all' }}
       className={cn(
         'rounded-sm text-gray-100 hover:text-inherit focus:text-inherit hover:bg-gray-600 focus:bg-gray-600 focus:text-gray-100 hover:text-gray-100',
         {
