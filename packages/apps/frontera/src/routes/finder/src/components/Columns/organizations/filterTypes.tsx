@@ -38,6 +38,7 @@ export type FilterType = {
 import { uniqBy } from 'lodash';
 import { type RootStore } from '@store/root';
 
+import { Globe04 } from '@ui/media/icons/Globe04';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline';
 
 export const getFilterTypes = (store?: RootStore) => {
@@ -358,39 +359,18 @@ export const getFilterTypes = (store?: RootStore) => {
         label: tag.value.name,
       })),
     },
-    [ColumnViewType.OrganizationsCity]: {
-      filterType: 'list',
-      filterName: 'Country',
-      filterAccesor: ColumnViewType.OrganizationsCity,
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
-      icon: <Building07 className='mb-0.5' />,
-      options: uniqBy(
-        store?.organizations
-          .toArray()
-          .map((org) => ({
-            id: org.value.locations?.[0]?.countryCodeA2,
-            label: org.value.locations?.[0]?.country,
-          }))
-          .sort((a, b) => (a.label ?? '').localeCompare(b.label ?? '')),
-        'id',
-      ),
-    },
+
     [ColumnViewType.OrganizationsHeadquarters]: {
       filterType: 'list',
       filterName: 'Country',
-      filterAccesor: ColumnViewType.OrganizationsCity,
+      filterAccesor: ColumnViewType.OrganizationsHeadquarters,
       filterOperators: [
         ComparisonOperator.Contains,
         ComparisonOperator.NotContains,
         ComparisonOperator.IsEmpty,
         ComparisonOperator.IsNotEmpty,
       ],
-      icon: <Building07 className='mb-0.5' />,
+      icon: <Globe04 className='mb-0.5' />,
       options: uniqBy(
         store?.organizations.toArray().map((org) => ({
           id: org.value.locations?.[0]?.countryCodeA2,
