@@ -534,10 +534,7 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 
 	_, err = session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
-		err := s.services.RabbitMQService.Publish(ctx, "customeros", "event", dto.FlowInitialSchedule{
-			Tenant: common.GetTenantFromContext(ctx),
-			FlowId: flow.Id,
-		})
+		err := s.services.RabbitMQService.Publish(ctx, flow.Id, model.FLOW, dto.FlowInitialSchedule{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err

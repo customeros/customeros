@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"github.com/mitchellh/mapstructure"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -16,24 +18,32 @@ import (
 	"time"
 )
 
-type Event struct {
-	Event    EventDetails  `json:"event"`
-	Metadata EventMetadata `json:"metadata"`
-}
+const (
+	EventsExchangeName        = "customeros"
+	EventsRoutingKey          = "events"
+	EventsQueueName           = "events"
+	EventsOpensearchQueueName = "events-opensearch"
+)
 
-type EventDetails struct {
-	Type string      `json:"type"`
-	Data interface{} `json:"data"`
-}
-
-type EventMetadata struct {
-	UberTraceId string `json:"uber-trace-id"`
-	AppSource   string `json:"appSource"`
-	Tenant      string `json:"tenant"`
-	UserId      string `json:"userId"`
-	UserEmail   string `json:"userEmail"`
-	Timestamp   string `json:"timestamp"`
-}
+//{
+//	event: {
+//		id: "123",
+//		entity: "flow",
+//		tenant: "tenant",
+//		type: "FlowInitialSchedule",
+//
+//		data: {
+//			flowId: "123",
+//		}
+//	},
+//	metadata: {
+//		appSource: "customer-os",
+//		uber-trace-id: "123",
+//		userId: "ABC",
+//		userEmail: ""
+//		timestamp: "2021-09-01T12:00:00Z"
+//	}
+//}
 
 type EventHandler struct {
 	HandlerFunc func(ctx context.Context, services *Services, event any) error
@@ -67,6 +77,10 @@ func NewRabbitMQService(url string, services *Services) *RabbitMQService {
 		handlerRegistry: make(map[string]EventHandler),
 	}
 	rabbitMQService.connect()
+
+	//TODO sigterm
+	//defer rabbitMQService.Close()
+
 	return rabbitMQService
 }
 
@@ -112,7 +126,7 @@ func (r *RabbitMQService) reconnect() {
 }
 
 // Publish publishes a message to the given exchange and routing key with automatic reconnection
-func (r *RabbitMQService) Publish(ctx context.Context, exchange string, routingKey string, message interface{}) error {
+func (r *RabbitMQService) Publish(ctx context.Context, entityId string, entityType model.EntityType, message interface{}) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "RabbitMQService.Publish")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -124,15 +138,18 @@ func (r *RabbitMQService) Publish(ctx context.Context, exchange string, routingK
 
 	tracingData := tracing.ExtractTextMapCarrier((span).Context())
 
-	eventMessage := Event{
-		Event: EventDetails{
-			Type: reflect.TypeOf(message).Name(),
-			Data: message,
+	eventMessage := dto.Event{
+		Event: dto.EventDetails{
+			Id:         utils.GenerateRandomString(32),
+			EntityId:   entityId,
+			EntityType: entityType.String(),
+			Tenant:     common.GetTenantFromContext(ctx),
+			EventType:  reflect.TypeOf(message).Name(),
+			Data:       message,
 		},
-		Metadata: EventMetadata{
+		Metadata: dto.EventMetadata{
 			UberTraceId: tracingData["uber-trace-id"],
 			AppSource:   common.GetAppSourceFromContext(ctx),
-			Tenant:      common.GetTenantFromContext(ctx),
 			UserId:      common.GetUserIdFromContext(ctx),
 			UserEmail:   common.GetUserEmailFromContext(ctx),
 			Timestamp:   utils.Now().String(),
@@ -155,13 +172,14 @@ func (r *RabbitMQService) Publish(ctx context.Context, exchange string, routingK
 
 		// Try publishing the message
 		err = r.channel.Publish(
-			exchange,   // Exchange name
-			routingKey, // Routing key
-			false,      // Mandatory
-			false,      // Immediate
+			EventsExchangeName, // Exchange name
+			EventsRoutingKey,   // Routing key
+			false,              // Mandatory
+			false,              // Immediate
 			amqp091.Publishing{
-				ContentType: "application/json",
-				Body:        jsonBody,
+				DeliveryMode: amqp091.Persistent,
+				ContentType:  "application/json",
+				Body:         jsonBody,
 			})
 
 		if err != nil {
@@ -172,7 +190,7 @@ func (r *RabbitMQService) Publish(ctx context.Context, exchange string, routingK
 		}
 	}
 
-	log.Printf(" [x] Sent message to exchange %s with routing key %s", exchange, routingKey)
+	log.Printf(" [x] Sent message to exchange %s with routing key %s", EventsExchangeName, EventsRoutingKey)
 	return nil
 }
 
@@ -197,13 +215,13 @@ func (r *RabbitMQService) Listen() {
 
 	// Start consuming messages
 	msgs, err := r.channel.Consume(
-		"events", // queue
-		"",       // consumer tag
-		false,    // auto-ack
-		false,    // exclusive
-		false,    // no-local
-		false,    // no-wait
-		nil,      // args
+		EventsQueueName, // queue
+		"",              // consumer tag
+		false,           // auto-ack
+		false,           // exclusive
+		false,           // no-local
+		false,           // no-wait
+		nil,             // args
 	)
 	failOnError(err, "Failed to register consumer")
 
@@ -218,14 +236,14 @@ func (r *RabbitMQService) Listen() {
 func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 	ctx := context.Background()
 
-	var event Event
+	var event dto.Event
 	if err := json.Unmarshal(d.Body, &event); err != nil {
 		log.Printf("Failed to unmarshal message: %s", err)
 		return
 	}
 
 	ctx = common.WithCustomContext(ctx, &common.CustomContext{
-		Tenant:    event.Metadata.Tenant,
+		Tenant:    event.Event.Tenant,
 		AppSource: event.Metadata.AppSource,
 		UserId:    event.Metadata.UserId,
 		UserEmail: event.Metadata.UserEmail,
@@ -244,9 +262,9 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 	}
 
 	// Invoke the appropriate handler based on the event type
-	eventHandler, found := r.handlerRegistry[event.Event.Type]
+	eventHandler, found := r.handlerRegistry[event.Event.EventType]
 	if !found {
-		log.Printf("No handler registered for event type: %s", event.Event.Type)
+		log.Printf("No handler registered for event type: %s", event.Event.EventType)
 		return
 	}
 
@@ -260,14 +278,16 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 
 	eventDataPtr := reflect.New(eventHandler.DataType).Interface()
 	if err := mapstructure.Decode(data, eventDataPtr); err != nil {
-		log.Printf("Failed to decode data for event type %s: %s", event.Event.Type, err)
+		log.Printf("Failed to decode data for event type %s: %s", event.Event.EventType, err)
 		if err := d.Nack(false, false); err != nil {
 			log.Printf("Failed to negatively acknowledge message: %s", err)
 		}
 		return
 	}
 
-	err := eventHandler.HandlerFunc(ctx, r.services, eventDataPtr) // Pass the entire delivery struct to the handler
+	event.Event.Data = eventDataPtr
+
+	err := eventHandler.HandlerFunc(ctx, r.services, &event) // Pass the entire delivery struct to the handler
 	if err != nil {
 		log.Printf("Failed to handle message: %s", err)
 		if err := d.Nack(false, false); err != nil {
