@@ -8,7 +8,6 @@ import { $isLinkNode, $toggleLink, $createLinkNode } from '@lexical/link';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
   $getSelection,
-  $setSelection,
   CLICK_COMMAND,
   $createTextNode,
   $isRangeSelection,
@@ -100,15 +99,12 @@ export function FloatingLinkEditor({
             selection.insertNodes([linkNode]);
           }
 
-          // Insert space node after the link if it has no next sibling
-          if (!linkNode.getNextSibling()) {
-            const spaceNode = $createTextNode(' ');
+          const spaceNode = $createTextNode(' ');
 
-            linkNode.insertAfter(spaceNode);
-          }
+          linkNode.insertAfter(spaceNode);
+          spaceNode.select(0, 0);
         }
 
-        $setSelection(null);
         setIsLink(false);
       }
     });
