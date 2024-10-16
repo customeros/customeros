@@ -113,7 +113,7 @@ func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeI
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 
-	entity, err := r.Services.CommonServices.FlowService.FlowMerge(ctx, mapper.MapFlowMergeInputToEntity(input))
+	entity, err := r.Services.CommonServices.FlowService.FlowMerge(ctx, nil, mapper.MapFlowMergeInputToEntity(input))
 	if err != nil || entity == nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "")

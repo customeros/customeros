@@ -4220,14 +4220,16 @@ func (e FlowParticipantStatus) MarshalGQL(w io.Writer) {
 type FlowStatus string
 
 const (
-	FlowStatusInactive FlowStatus = "INACTIVE"
-	FlowStatusActive   FlowStatus = "ACTIVE"
-	FlowStatusPaused   FlowStatus = "PAUSED"
-	FlowStatusArchived FlowStatus = "ARCHIVED"
+	FlowStatusInactive   FlowStatus = "INACTIVE"
+	FlowStatusScheduling FlowStatus = "SCHEDULING"
+	FlowStatusActive     FlowStatus = "ACTIVE"
+	FlowStatusPaused     FlowStatus = "PAUSED"
+	FlowStatusArchived   FlowStatus = "ARCHIVED"
 )
 
 var AllFlowStatus = []FlowStatus{
 	FlowStatusInactive,
+	FlowStatusScheduling,
 	FlowStatusActive,
 	FlowStatusPaused,
 	FlowStatusArchived,
@@ -4235,7 +4237,7 @@ var AllFlowStatus = []FlowStatus{
 
 func (e FlowStatus) IsValid() bool {
 	switch e {
-	case FlowStatusInactive, FlowStatusActive, FlowStatusPaused, FlowStatusArchived:
+	case FlowStatusInactive, FlowStatusScheduling, FlowStatusActive, FlowStatusPaused, FlowStatusArchived:
 		return true
 	}
 	return false

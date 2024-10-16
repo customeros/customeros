@@ -41,75 +41,84 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 
 	now := utils.Now()
 
-	flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
+	_, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if len(flowExecutions) == 0 {
+			startAction, err := s.services.FlowService.FlowActionGetStart(ctx, flowId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, startAction.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			for _, nextAction := range nextActions {
+
+				scheduleAt := now.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
+
+				err := s.scheduleNextAction(ctx, &tx, flowId, flowParticipant, scheduleAt, *nextAction)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+
+		} else {
+			lastActionExecution := flowExecutions[len(flowExecutions)-1]
+			lastActionExecutedAt := lastActionExecution.ScheduledAt
+
+			lastAction, err := s.services.FlowService.FlowActionGetById(ctx, lastActionExecution.ActionId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, lastAction.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			for _, nextAction := range nextActions {
+
+				//marking the flow as completed if the next action is FLOW_END
+				if nextAction.Data.Action == entity.FlowActionTypeFlowEnd {
+					flowParticipant.Status = entity.FlowParticipantStatusCompleted
+
+					_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, &tx, flowParticipant)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return nil, err
+					}
+
+					return nil, nil
+				}
+
+				scheduleAt := lastActionExecutedAt.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
+
+				err := s.scheduleNextAction(ctx, &tx, flowId, flowParticipant, scheduleAt, *nextAction)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+
+		}
+
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
-	}
-
-	if len(flowExecutions) == 0 {
-		startAction, err := s.services.FlowService.FlowActionGetStart(ctx, flowId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, startAction.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		for _, nextAction := range nextActions {
-
-			scheduleAt := now.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
-
-			err := s.scheduleNextAction(ctx, tx, flowId, flowParticipant, scheduleAt, *nextAction)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-		}
-
-	} else {
-		lastActionExecution := flowExecutions[len(flowExecutions)-1]
-		lastActionExecutedAt := lastActionExecution.ScheduledAt
-
-		lastAction, err := s.services.FlowService.FlowActionGetById(ctx, lastActionExecution.ActionId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, lastAction.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		for _, nextAction := range nextActions {
-
-			//marking the flow as completed if the next action is FLOW_END
-			if nextAction.Data.Action == entity.FlowActionTypeFlowEnd {
-				flowParticipant.Status = entity.FlowParticipantStatusCompleted
-
-				_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, tx, flowParticipant)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				return nil
-			}
-
-			scheduleAt := lastActionExecutedAt.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
-
-			err := s.scheduleNextAction(ctx, tx, flowId, flowParticipant, scheduleAt, *nextAction)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-		}
 	}
 
 	return nil
