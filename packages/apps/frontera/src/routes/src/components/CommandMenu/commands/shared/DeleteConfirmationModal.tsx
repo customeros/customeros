@@ -186,7 +186,7 @@ export const DeleteConfirmationModal = observer(() => {
     .with('Contact', () =>
       context.ids?.length > 1
         ? `Archive ${context.ids?.length} contacts?`
-        : `Archive ${(entity as ContactStore)?.value.name}?`,
+        : `Archive ${(entity as ContactStore)?.name}?`,
     )
     .with(
       'TableViewDef',
