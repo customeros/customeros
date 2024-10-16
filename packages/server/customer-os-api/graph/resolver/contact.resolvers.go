@@ -680,7 +680,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 			graphql.AddErrorf(ctx, "Organization with id %s not found", *organizationID)
 			return &model.ActionResponse{Accepted: false}, nil
 		}
-		domains, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{organizationEntity.ID})
+		domains, err := r.Services.CommonServices.DomainService.GetDomainsForOrganizations(ctx, []string{organizationEntity.ID})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			graphql.AddErrorf(ctx, "Failed to get domains for organization %s", *organizationID)
@@ -701,7 +701,7 @@ func (r *mutationResolver) ContactFindWorkEmail(ctx context.Context, contactID s
 		}
 		if len(*paginatedResult.Rows.(*neo4jentity.OrganizationEntities)) > 0 {
 			for _, orgEntity := range *paginatedResult.Rows.(*neo4jentity.OrganizationEntities) {
-				domains, err := r.Services.DomainService.GetDomainsForOrganizations(ctx, []string{orgEntity.ID})
+				domains, err := r.Services.CommonServices.DomainService.GetDomainsForOrganizations(ctx, []string{orgEntity.ID})
 				if err != nil {
 					tracing.TraceErr(span, err)
 					graphql.AddErrorf(ctx, "Failed to get domains for organization %s", orgEntity.ID)

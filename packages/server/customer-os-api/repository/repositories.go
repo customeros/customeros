@@ -46,8 +46,6 @@ type Repositories struct {
 	//Deprecated
 	DashboardRepository DashboardRepository
 	//Deprecated
-	DomainRepository DomainRepository
-	//Deprecated
 	IssueRepository IssueRepository
 	//Deprecated
 	MeetingRepository MeetingRepository
@@ -87,7 +85,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB
 	repositories.TagRepository = NewTagRepository(driver)
 	repositories.SearchRepository = NewSearchRepository(driver)
 	repositories.DashboardRepository = NewDashboardRepository(driver)
-	repositories.DomainRepository = NewDomainRepository(driver, database)
 	repositories.IssueRepository = NewIssueRepository(driver, database)
 	repositories.MeetingRepository = NewMeetingRepository(driver)
 	repositories.ActionRepository = NewActionRepository(driver)
