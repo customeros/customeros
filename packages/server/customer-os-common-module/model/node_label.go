@@ -10,6 +10,7 @@ const (
 	NodeLabelTimelineEvent         = "TimelineEvent"
 	NodeLabelContact               = "Contact"
 	NodeLabelCustomField           = "CustomField"
+	NodeLabelCustomFieldTemplate   = "CustomFieldTemplate"
 	NodeLabelJobRole               = "JobRole"
 	NodeLabelEmail                 = "Email"
 	NodeLabelLocation              = "Location"

@@ -5,19 +5,19 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type CustomFieldTemplateRepository interface {
-	Merge(ctx context.Context, tenant string, inputEntity entity.CustomFieldTemplateEntity) (*dbtype.Node, error)
+	Merge(ctx context.Context, tenant string, inputEntity neo4jentity.CustomFieldTemplateEntity) (*dbtype.Node, error)
 	GetById(ctx context.Context, id string) (*dbtype.Node, error)
-	createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error
-	createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error
+	createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *neo4jentity.CustomFieldTemplateEntity) error
+	createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *neo4jentity.CustomFieldTemplateEntity) error
 	FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error)
 	FindAllByEntityFieldSetTemplateId(ctx context.Context, fieldSetTemplateId string) (any, error)
 	FindByCustomFieldId(ctx context.Context, fieldSetId string) (any, error)
@@ -35,7 +35,7 @@ func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext, database 
 	}
 }
 
-func (r *customFieldTemplateRepository) Merge(ctx context.Context, tenant string, inputEntity entity.CustomFieldTemplateEntity) (*dbtype.Node, error) {
+func (r *customFieldTemplateRepository) Merge(ctx context.Context, tenant string, inputEntity neo4jentity.CustomFieldTemplateEntity) (*dbtype.Node, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.Create")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -79,7 +79,7 @@ func (r *customFieldTemplateRepository) Merge(ctx context.Context, tenant string
 	}
 }
 
-func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *neo4jentity.CustomFieldTemplateEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.createCustomFieldTemplateForEntityInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
@@ -112,7 +112,7 @@ func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(c
 	return err
 }
 
-func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *entity.CustomFieldTemplateEntity) error {
+func (r *customFieldTemplateRepository) createCustomFieldTemplateForFieldSetInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, fieldSetTemplateId string, entity *neo4jentity.CustomFieldTemplateEntity) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.createCustomFieldTemplateForFieldSetInTx")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
