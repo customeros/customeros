@@ -188,7 +188,7 @@ export const ContactAvatarHeader = observer(() => {
               />
               {validation.linkedin && (
                 <p className='text-sm text-error-500 mt-1'>
-                  Please insert a LinkedIn URL
+                  One does not simply skip LinkedIn
                 </p>
               )}
             </div>
