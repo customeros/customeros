@@ -18,8 +18,12 @@ import (
 	"github.com/h2non/filetype/types"
 	"github.com/machinebox/graphql"
 	graph_model "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/file-store-api/mapper"
@@ -47,19 +51,22 @@ type FileService interface {
 	UploadSingleFile(ctx context.Context, userEmail, tenantName, basePath, fileId string, multipartFileHeader *multipart.FileHeader, cdnUpload bool) (*model.File, error)
 	DownloadSingleFile(ctx context.Context, userEmail, tenantName, id string, context *gin.Context, inline bool) (*model.File, error)
 	Base64Image(ctx context.Context, userEmail, tenantName string, id string) (*string, error)
+	GetFilePublicUrl(ctx context.Context, tenantName, id string) (string, error)
 }
 
 type fileService struct {
-	cfg           *config.Config
-	graphqlClient *graphql.Client
-	log           logger.Logger
+	cfg            *config.Config
+	graphqlClient  *graphql.Client
+	log            logger.Logger
+	commonServices *commonService.Services
 }
 
-func NewFileService(cfg *config.Config, graphqlClient *graphql.Client, log logger.Logger) FileService {
+func NewFileService(cfg *config.Config, commonServices *commonService.Services, graphqlClient *graphql.Client, log logger.Logger) FileService {
 	return &fileService{
-		cfg:           cfg,
-		graphqlClient: graphqlClient,
-		log:           log,
+		cfg:            cfg,
+		graphqlClient:  graphqlClient,
+		log:            log,
+		commonServices: commonServices,
 	}
 }
 
@@ -559,4 +566,60 @@ func generateSignedURL(imageDeliveryURL, key string) string {
 	parsedURL.RawQuery = q.Encode()
 
 	return parsedURL.String()
+}
+
+func (s *fileService) GetFilePublicUrl(ctx context.Context, tenant, fileId string) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FileService.GetFilePublicUrl")
+	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	span.LogKV("fileId", fileId)
+
+	attachmentDbNode, err := s.commonServices.Neo4jRepositories.AttachmentReadRepository.GetById(ctx, tenant, fileId)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error getting attachment by id"))
+		return "", err
+	}
+	attachmentEntity := neo4jmapper.MapDbNodeToAttachmentEntity(attachmentDbNode)
+	if attachmentEntity.PublicUrl != "" {
+		return attachmentEntity.PublicUrl, nil
+	}
+
+	// generate public url and store it
+	extension := filepath.Ext(attachmentEntity.FileName)
+	if extension == "" {
+		span.LogKV("message", "No file extension found.")
+	} else {
+		span.LogKV("extension", extension)
+		extension = extension[1:]
+	}
+	awsBucket := aws.String(s.cfg.AWS.Bucket)
+	awsS3ObjectKey := aws.String(tenant + attachmentEntity.BasePath + "/" + attachmentEntity.Id + "." + extension)
+
+	// Initialize the S3 service client
+	session, err := awsSes.NewSession(&aws.Config{Region: aws.String(s.cfg.AWS.Region)})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error creating aws session"))
+		s.log.Fatal(err)
+	}
+	svc := s3.New(session)
+
+	// Create a request to get a presigned URL for the object
+	req, _ := svc.GetObjectRequest(&s3.GetObjectInput{
+		Bucket: awsBucket,
+		Key:    awsS3ObjectKey,
+	})
+
+	// Presign the URL with the expiration time
+	expiration := 99 * 365 * 24 * time.Hour // 99 years
+	publicUrl, err := req.Presign(expiration)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error presigning request"))
+		return "", fmt.Errorf("failed to presign request: %v", err)
+	}
+
+	err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, tenant, commonmodel.ATTACHMENT.Neo4jLabel(), fileId, string(neo4jentity.AttachmentPropertyPublicUrl), publicUrl)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "Error updating attachment public url"))
+	}
+	return publicUrl, nil
 }

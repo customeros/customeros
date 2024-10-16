@@ -3,12 +3,6 @@ definitions:
   billing.InvoiceResponse:
     description: Invoice details
     properties:
-      PublicUrl:
-        description: |-
-          PublicUrl represents the public URL where the PDF version of the invoice can be accessed
-          Example: https://example.com/invoices/12345.pdf
-        example: https://example.com/invoices/12345.pdf
-        type: string
       amount:
         description: |-
           Amount represents the total amount due for the invoice
@@ -56,6 +50,12 @@ definitions:
           PaymentLink represents the URL where the invoice can be paid
           Example: https://example.com/payments/12345
         example: https://example.com/payments/12345
+        type: string
+      publicUrl:
+        description: |-
+          PublicUrl represents the public URL where the PDF version of the invoice can be accessed
+          Example: https://example.com/invoices/12345.pdf
+        example: https://example.com/invoices/12345.pdf
         type: string
       status:
         description: |-

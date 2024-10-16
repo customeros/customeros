@@ -76,7 +76,7 @@ func main() {
 	commonServices := commonservice.InitServices(&commonconf.GlobalConfig{}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
 
 	graphqlClient := graphql.NewClient(cfg.Service.CustomerOsAPI)
-	services := service.InitServices(cfg, graphqlClient, appLogger)
+	services := service.InitServices(cfg, commonServices, graphqlClient, appLogger)
 
 	jwtTennantUserService := service.NewJWTTenantUserService(cfg)
 
@@ -185,6 +185,27 @@ func main() {
 
 			bytes := []byte(*base64Encoded)
 			ctx.Writer.Write(bytes)
+		})
+	r.GET("/file/:id/public-url",
+		tracing.TracingEnhancer(ctx, "GET /file/:id/public-url"),
+		jwtTennantUserService.GetJWTTenantUserEnhancer(),
+		security.TenantUserContextEnhancer(security.USERNAME_OR_TENANT, commonServices.Neo4jRepositories, security.WithCache(commonCache)),
+		security.ApiKeyCheckerHTTP(commonServices.PostgresRepositories.TenantWebhookApiKeyRepository, commonServices.PostgresRepositories.AppKeyRepository, security.FILE_STORE_API, security.WithCache(commonCache)),
+		func(ctx *gin.Context) {
+			tenantName, _ := ctx.Keys["TenantName"].(string)
+
+			publicUrl, err := services.FileService.GetFilePublicUrl(ctx, tenantName, ctx.Param("id"))
+			if err != nil && err.Error() != "record not found" {
+				ctx.JSON(500, gin.H{"error": "Internal Server Error"})
+				return
+			}
+			if err != nil && err.Error() == "record not found" {
+				ctx.JSON(404, gin.H{"error": "File not found"})
+				return
+			}
+
+			// return public url
+			ctx.JSON(200, gin.H{"publicUrl": publicUrl})
 		})
 
 	r.GET("/health", healthCheckHandler)

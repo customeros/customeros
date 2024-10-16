@@ -831,11 +831,6 @@ const docTemplate = `{
             "description": "Invoice details",
             "type": "object",
             "properties": {
-                "PublicUrl": {
-                    "description": "PublicUrl represents the public URL where the PDF version of the invoice can be accessed\nExample: https://example.com/invoices/12345.pdf",
-                    "type": "string",
-                    "example": "https://example.com/invoices/12345.pdf"
-                },
                 "amount": {
                     "description": "Amount represents the total amount due for the invoice\nExample: 1500.50",
                     "type": "number",
@@ -875,6 +870,11 @@ const docTemplate = `{
                     "description": "PaymentLink represents the URL where the invoice can be paid\nExample: https://example.com/payments/12345",
                     "type": "string",
                     "example": "https://example.com/payments/12345"
+                },
+                "publicUrl": {
+                    "description": "PublicUrl represents the public URL where the PDF version of the invoice can be accessed\nExample: https://example.com/invoices/12345.pdf",
+                    "type": "string",
+                    "example": "https://example.com/invoices/12345.pdf"
                 },
                 "status": {
                     "description": "Status indicates the result of the action\nExample: success",

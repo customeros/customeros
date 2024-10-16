@@ -44,6 +44,7 @@ func MapDbNodeToAttachmentEntity(dbNode *dbtype.Node) *entity.AttachmentEntity {
 		FileName:      utils.GetStringPropOrEmpty(props, "fileName"),
 		MimeType:      utils.GetStringPropOrEmpty(props, "mimeType"),
 		CdnUrl:        utils.GetStringPropOrEmpty(props, "cdnUrl"),
+		PublicUrl:     utils.GetStringPropOrEmpty(props, string(entity.AttachmentPropertyPublicUrl)),
 		BasePath:      utils.GetStringPropOrEmpty(props, "basePath"),
 		Size:          utils.GetInt64PropOrZero(props, "size"),
 		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
