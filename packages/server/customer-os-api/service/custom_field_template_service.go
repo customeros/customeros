@@ -4,22 +4,22 @@ import (
 	"context"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 )
 
 type CustomFieldTemplateService interface {
-	Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error)
-	GetById(ctx context.Context, id string) (*entity.CustomFieldTemplateEntity, error)
-	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*entity.CustomFieldTemplateEntities, error)
-	FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error)
-	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*entity.CustomFieldTemplateEntity, error)
+	Merge(ctx context.Context, inputEntity *neo4jentity.CustomFieldTemplateEntity) (*neo4jentity.CustomFieldTemplateEntity, error)
+	GetById(ctx context.Context, id string) (*neo4jentity.CustomFieldTemplateEntity, error)
+	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error)
+	FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error)
+	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*neo4jentity.CustomFieldTemplateEntity, error)
 }
 
 type customFieldTemplateService struct {
@@ -34,31 +34,31 @@ func NewCustomFieldTemplateService(log logger.Logger, repositories *repository.R
 	}
 }
 
-func (s *customFieldTemplateService) FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*entity.CustomFieldTemplateEntities, error) {
+func (s *customFieldTemplateService) FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error) {
 	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityTemplateId(ctx, entityTemplateId)
 	if err != nil {
 		return nil, err
 	}
-	customFieldTemplateEntities := entity.CustomFieldTemplateEntities{}
+	customFieldTemplateEntities := neo4jentity.CustomFieldTemplateEntities{}
 	for _, dbRecord := range all.([]*db.Record) {
 		customFieldTemplateEntities = append(customFieldTemplateEntities, *s.mapDbNodeToCustomFieldTemplate(dbRecord.Values[0].(dbtype.Node)))
 	}
 	return &customFieldTemplateEntities, nil
 }
 
-func (s *customFieldTemplateService) FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*entity.CustomFieldTemplateEntities, error) {
+func (s *customFieldTemplateService) FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error) {
 	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityFieldSetTemplateId(ctx, fieldSetTemplateId)
 	if err != nil {
 		return nil, err
 	}
-	customFieldTemplateEntities := entity.CustomFieldTemplateEntities{}
+	customFieldTemplateEntities := neo4jentity.CustomFieldTemplateEntities{}
 	for _, dbRecord := range all.([]*db.Record) {
 		customFieldTemplateEntities = append(customFieldTemplateEntities, *s.mapDbNodeToCustomFieldTemplate(dbRecord.Values[0].(dbtype.Node)))
 	}
 	return &customFieldTemplateEntities, nil
 }
 
-func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*entity.CustomFieldTemplateEntity, error) {
+func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*neo4jentity.CustomFieldTemplateEntity, error) {
 	queryResult, err := s.repositories.CustomFieldTemplateRepository.FindByCustomFieldId(ctx, customFieldId)
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Conte
 	return s.mapDbNodeToCustomFieldTemplate((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node)), nil
 }
 
-func (s *customFieldTemplateService) Merge(ctx context.Context, inputEntity *entity.CustomFieldTemplateEntity) (*entity.CustomFieldTemplateEntity, error) {
+func (s *customFieldTemplateService) Merge(ctx context.Context, inputEntity *neo4jentity.CustomFieldTemplateEntity) (*neo4jentity.CustomFieldTemplateEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateService.Merge")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -83,7 +83,7 @@ func (s *customFieldTemplateService) Merge(ctx context.Context, inputEntity *ent
 	return s.mapDbNodeToCustomFieldTemplate(*customFieldTemplateNodePtr), nil
 }
 
-func (s *customFieldTemplateService) GetById(ctx context.Context, id string) (*entity.CustomFieldTemplateEntity, error) {
+func (s *customFieldTemplateService) GetById(ctx context.Context, id string) (*neo4jentity.CustomFieldTemplateEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetById")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -97,9 +97,9 @@ func (s *customFieldTemplateService) GetById(ctx context.Context, id string) (*e
 	return s.mapDbNodeToCustomFieldTemplate(*customFieldTemplateDbNode), nil
 }
 
-func (s *customFieldTemplateService) mapDbNodeToCustomFieldTemplate(dbNode dbtype.Node) *entity.CustomFieldTemplateEntity {
+func (s *customFieldTemplateService) mapDbNodeToCustomFieldTemplate(dbNode dbtype.Node) *neo4jentity.CustomFieldTemplateEntity {
 	props := utils.GetPropsFromNode(dbNode)
-	customFieldTemplate := entity.CustomFieldTemplateEntity{
+	customFieldTemplate := neo4jentity.CustomFieldTemplateEntity{
 		Id:        utils.GetStringPropOrEmpty(props, "id"),
 		Name:      utils.GetStringPropOrEmpty(props, "name"),
 		Order:     utils.GetIntPropOrMinusOne(props, "order"),

@@ -1,13 +1,13 @@
 package mapper
 
 import (
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *entity.CustomFieldTemplateEntity {
-	templateEntity := entity.CustomFieldTemplateEntity{
+func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *neo4jentity.CustomFieldTemplateEntity {
+	templateEntity := neo4jentity.CustomFieldTemplateEntity{
 		Name:      input.Name,
 		Type:      input.Type.String(),
 		Order:     int64(input.Order),
@@ -19,7 +19,7 @@ func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *
 	return &templateEntity
 }
 
-func MapEntityToCustomFieldTemplate(entity *entity.CustomFieldTemplateEntity) *model.CustomFieldTemplate {
+func MapEntityToCustomFieldTemplate(entity *neo4jentity.CustomFieldTemplateEntity) *model.CustomFieldTemplate {
 	fieldType := model.CustomFieldTemplateType(entity.Type)
 	if !fieldType.IsValid() {
 		fieldType = model.CustomFieldTemplateTypeText
@@ -39,7 +39,7 @@ func MapEntityToCustomFieldTemplate(entity *entity.CustomFieldTemplateEntity) *m
 	return &output
 }
 
-func MapEntitiesToCustomFieldTemplates(entities *entity.CustomFieldTemplateEntities) []*model.CustomFieldTemplate {
+func MapEntitiesToCustomFieldTemplates(entities *neo4jentity.CustomFieldTemplateEntities) []*model.CustomFieldTemplate {
 	var customFieldTemplates []*model.CustomFieldTemplate
 	for _, v := range *entities {
 		customFieldTemplates = append(customFieldTemplates, MapEntityToCustomFieldTemplate(&v))

@@ -2,6 +2,7 @@ package entity
 
 import (
 	"fmt"
+	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"time"
 )
 
@@ -12,7 +13,7 @@ type EntityTemplateEntity struct {
 	Version      int64
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
-	CustomFields []*CustomFieldTemplateEntity
+	CustomFields []*neo4jentity.CustomFieldTemplateEntity
 	FieldSets    []*FieldSetTemplateEntity
 }
 

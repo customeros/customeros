@@ -1,7 +1,7 @@
 package entity
 
 import (
-	"fmt"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"time"
 )
 
@@ -10,7 +10,7 @@ type CustomFieldTemplateEntity struct {
 	CreatedAt time.Time
 	UpdatedAt time.Time
 	Name      string
-	Type      string
+	Type      string // TODO convert to enum
 	Order     int64
 	Mandatory bool
 	Length    *int64
@@ -18,12 +18,8 @@ type CustomFieldTemplateEntity struct {
 	Max       *int64
 }
 
-func (template CustomFieldTemplateEntity) ToString() string {
-	return fmt.Sprintf("id: %s\nname: %s\ntype: %s", template.Id, template.Name, template.Type)
-}
-
 type CustomFieldTemplateEntities []CustomFieldTemplateEntity
 
-func (template CustomFieldTemplateEntity) Labels() []string {
-	return []string{"CustomFieldTemplate"}
+func (cft CustomFieldTemplateEntity) EntityLabel() []string {
+	return []string{model.NodeLabelCustomFieldTemplate}
 }

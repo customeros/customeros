@@ -3,29 +3,31 @@ package model
 type EntityType string
 
 const (
-	TENANT              EntityType = "TENANT"
-	CONTACT             EntityType = "CONTACT"
-	USER                EntityType = "USER"
-	ORGANIZATION        EntityType = "ORGANIZATION"
-	EMAIL               EntityType = "EMAIL"
-	PHONE_NUMBER        EntityType = "PHONE_NUMBER"
-	MEETING             EntityType = "MEETING"
-	CONTRACT            EntityType = "CONTRACT"
-	INVOICE             EntityType = "INVOICE"
-	INTERACTION_EVENT   EntityType = "INTERACTION_EVENT"
-	INTERACTION_SESSION EntityType = "INTERACTION_SESSION"
-	COMMENT             EntityType = "COMMENT"
-	ISSUE               EntityType = "ISSUE"
-	LOG_ENTRY           EntityType = "LOG_ENTRY"
-	OPPORTUNITY         EntityType = "OPPORTUNITY"
-	SERVICE_LINE_ITEM   EntityType = "SERVICE_LINE_ITEM"
-	REMINDER            EntityType = "REMINDER"
-	ATTACHMENT          EntityType = "ATTACHMENT"
-	NOTE                EntityType = "NOTE"
-	FLOW                EntityType = "FLOW"
-	FLOW_ACTION         EntityType = "FLOW_ACTION"
-	FLOW_PARTICIPANT    EntityType = "FLOW_PARTICIPANT"
-	FLOW_SENDER         EntityType = "FLOW_SENDER"
+	TENANT                EntityType = "TENANT"
+	CONTACT               EntityType = "CONTACT"
+	USER                  EntityType = "USER"
+	ORGANIZATION          EntityType = "ORGANIZATION"
+	EMAIL                 EntityType = "EMAIL"
+	PHONE_NUMBER          EntityType = "PHONE_NUMBER"
+	MEETING               EntityType = "MEETING"
+	CONTRACT              EntityType = "CONTRACT"
+	INVOICE               EntityType = "INVOICE"
+	INTERACTION_EVENT     EntityType = "INTERACTION_EVENT"
+	INTERACTION_SESSION   EntityType = "INTERACTION_SESSION"
+	COMMENT               EntityType = "COMMENT"
+	ISSUE                 EntityType = "ISSUE"
+	LOG_ENTRY             EntityType = "LOG_ENTRY"
+	OPPORTUNITY           EntityType = "OPPORTUNITY"
+	SERVICE_LINE_ITEM     EntityType = "SERVICE_LINE_ITEM"
+	REMINDER              EntityType = "REMINDER"
+	ATTACHMENT            EntityType = "ATTACHMENT"
+	NOTE                  EntityType = "NOTE"
+	FLOW                  EntityType = "FLOW"
+	FLOW_ACTION           EntityType = "FLOW_ACTION"
+	FLOW_PARTICIPANT      EntityType = "FLOW_PARTICIPANT"
+	FLOW_SENDER           EntityType = "FLOW_SENDER"
+	CUSTOM_FIELD          EntityType = "CUSTOM_FIELD"
+	CUSTOM_FIELD_TEMPLATE EntityType = "CUSTOM_FIELD_TEMPLATE"
 )
 
 func (entityType EntityType) String() string {
@@ -78,6 +80,10 @@ func (entityType EntityType) Neo4jLabel() string {
 		return NodeLabelFlowParticipant
 	case FLOW_SENDER:
 		return NodeLabelFlowSender
+	case CUSTOM_FIELD:
+		return NodeLabelCustomField
+	case CUSTOM_FIELD_TEMPLATE:
+		return NodeLabelCustomFieldTemplate
 	}
 	return "Unknown"
 }
