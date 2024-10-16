@@ -92,7 +92,7 @@ const docTemplate = `{
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/rest.CreateOrganizationRequest"
+                            "$ref": "#/definitions/customerbase.CreateOrganizationRequest"
                         }
                     }
                 ],
@@ -100,13 +100,13 @@ const docTemplate = `{
                     "201": {
                         "description": "Organization created successfully",
                         "schema": {
-                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
+                            "$ref": "#/definitions/customerbase.CreateOrganizationResponse"
                         }
                     },
                     "206": {
                         "description": "Partial success - failed to add linkedin url",
                         "schema": {
-                            "$ref": "#/definitions/rest.CreateOrganizationResponse"
+                            "$ref": "#/definitions/customerbase.CreateOrganizationResponse"
                         }
                     },
                     "400": {
@@ -120,6 +120,55 @@ const docTemplate = `{
                     },
                     "500": {
                         "description": "Failed to create organization"
+                    }
+                }
+            }
+        },
+        "/customerbase/v1/organizations/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Retrieves an organization by its ID or COS ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "CustomerBASE API"
+                ],
+                "summary": "Get an organization",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Organization ID or Organization COS ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Organization retrieved successfully",
+                        "schema": {
+                            "$ref": "#/definitions/customerbase.OrganizationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid organization ID"
+                    },
+                    "401": {
+                        "description": "Unauthorized access"
+                    },
+                    "404": {
+                        "description": "Organization not found"
+                    },
+                    "500": {
+                        "description": "Internal server error"
                     }
                 }
             }
@@ -837,7 +886,7 @@ const docTemplate = `{
                     "example": 1500.5
                 },
                 "currency": {
-                    "description": "Currency represents the currency used for the invoice.",
+                    "description": "Currency represents the currency used for the invoice, e.g. USD, EUR, etc.",
                     "type": "string",
                     "example": "USD"
                 },
@@ -883,63 +932,164 @@ const docTemplate = `{
                 }
             }
         },
-        "rest.CreateOrganizationRequest": {
+        "customerbase.CreateOrganizationRequest": {
             "description": "Request to create an organization",
             "type": "object",
             "properties": {
                 "customId": {
-                    "description": "Custom ID provided by the user\nExample: 12345",
-                    "type": "string"
+                    "description": "Custom ID provided by the user.",
+                    "type": "string",
+                    "example": "12345"
                 },
                 "icpFit": {
-                    "description": "Indicates if the organization is an ICP (Ideal Customer Profile) fit\nExample: true",
-                    "type": "boolean"
+                    "description": "Indicates if the organization is an ICP (Ideal Customer Profile) fit.",
+                    "type": "boolean",
+                    "example": true
                 },
                 "leadSource": {
-                    "description": "Lead source of the organization\nExample: Web Search",
-                    "type": "string"
+                    "description": "Lead source of the organization.",
+                    "type": "string",
+                    "example": "Web Search"
                 },
                 "linkedinUrl": {
-                    "description": "Organization's LinkedIn profile URL\nExample: https://linkedin.com/company/openline",
-                    "type": "string"
+                    "description": "Organization's LinkedIn profile URL.",
+                    "type": "string",
+                    "example": "https://linkedin.com/company/openline"
                 },
                 "name": {
-                    "description": "Organization's name\nExample: Openline",
-                    "type": "string"
+                    "description": "Organization's name.",
+                    "type": "string",
+                    "example": "CustomerOS"
                 },
                 "relationship": {
-                    "description": "Relationship status of the organization\nExample: customer",
-                    "type": "string"
+                    "description": "Relationship status of the organization.",
+                    "type": "string",
+                    "example": "customer"
                 },
                 "website": {
-                    "description": "Organization's website URL\nExample: https://openline.com",
-                    "type": "string"
+                    "description": "Organization's website URL.",
+                    "type": "string",
+                    "example": "https://customeros.ai"
                 }
             }
         },
-        "rest.CreateOrganizationResponse": {
+        "customerbase.CreateOrganizationResponse": {
             "description": "The response structure after an organization is successfully created.",
             "type": "object",
             "properties": {
                 "id": {
-                    "description": "ID is the unique identifier of the created organization\nExample: 1234567890",
+                    "description": "ID is the unique identifier of the created organization.",
                     "type": "string",
                     "example": "1234567890"
                 },
                 "message": {
-                    "description": "Message provides additional information regarding the creation process\nExample: Organization created successfully",
+                    "description": "Message provides additional information regarding the creation process.",
                     "type": "string",
                     "example": "Organization created successfully"
                 },
                 "partialSuccess": {
-                    "description": "PartialSuccess indicates whether the creation process encountered partial success (e.g., when some fields failed to process)\nExample: false",
+                    "description": "PartialSuccess indicates whether the creation process encountered partial success (e.g., when some fields failed to process).",
                     "type": "boolean",
                     "example": false
                 },
                 "status": {
-                    "description": "Status indicates the status of the creation process (e.g., \"success\" or \"partial_success\")\nExample: success",
+                    "description": "Status indicates the status of the creation process (e.g., \"success\" or \"partial_success\").",
                     "type": "string",
                     "example": "success"
+                }
+            }
+        },
+        "customerbase.ExternalLink": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "description": "External app id",
+                    "type": "string",
+                    "example": "cos-12345"
+                },
+                "name": {
+                    "description": "External app identified",
+                    "type": "string",
+                    "example": "stripe"
+                }
+            }
+        },
+        "customerbase.OrganizationResponse": {
+            "description": "Organization details",
+            "type": "object",
+            "properties": {
+                "cosId": {
+                    "description": "COS ID is the unique identifier for the organization in the Customer OS system.",
+                    "type": "string",
+                    "example": "C-A12-B45"
+                },
+                "customId": {
+                    "description": "Custom ID provided by the user.",
+                    "type": "string",
+                    "example": "12345"
+                },
+                "domains": {
+                    "description": "Domains associated with the organization.",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    },
+                    "example": [
+                        "customeros.com",
+                        " customeros.ai"
+                    ]
+                },
+                "externalLinks": {
+                    "description": "External links associated with the organization.",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/customerbase.ExternalLink"
+                    }
+                },
+                "icpFit": {
+                    "description": "Indicates if the organization is an ICP (Ideal Customer Profile) fit.",
+                    "type": "boolean",
+                    "example": true
+                },
+                "id": {
+                    "description": "ID is the unique identifier for the organization, uuid format.",
+                    "type": "string",
+                    "example": "123e4567-e89b-12d3-a456-426614174000"
+                },
+                "leadSource": {
+                    "description": "Lead source of the organization.",
+                    "type": "string",
+                    "example": "Web Search"
+                },
+                "message": {
+                    "description": "Message provides additional information about the action.",
+                    "type": "string",
+                    "example": "Organization retrieved successfully"
+                },
+                "name": {
+                    "description": "Organization name.",
+                    "type": "string",
+                    "example": "CustomerOS"
+                },
+                "relationship": {
+                    "description": "Relationship status of the organization.",
+                    "type": "string",
+                    "example": "customer"
+                },
+                "stage": {
+                    "description": "Stage of the organization.",
+                    "type": "string",
+                    "example": "lead"
+                },
+                "status": {
+                    "description": "Status indicates the result of the action.",
+                    "type": "string",
+                    "example": "success"
+                },
+                "website": {
+                    "description": "Organization's website URL.",
+                    "type": "string",
+                    "example": "https://customeros.ai"
                 }
             }
         },

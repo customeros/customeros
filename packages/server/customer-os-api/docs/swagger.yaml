@@ -8,7 +8,8 @@ definitions:
         example: 1500.5
         type: number
       currency:
-        description: Currency represents the currency used for the invoice.
+        description: Currency represents the currency used for the invoice, e.g. USD,
+          EUR, etc.
         example: USD
         type: string
       dueDate:
@@ -45,71 +46,134 @@ definitions:
         example: success
         type: string
     type: object
-  rest.CreateOrganizationRequest:
+  customerbase.CreateOrganizationRequest:
     description: Request to create an organization
     properties:
       customId:
-        description: |-
-          Custom ID provided by the user
-          Example: 12345
+        description: Custom ID provided by the user.
+        example: "12345"
         type: string
       icpFit:
-        description: |-
-          Indicates if the organization is an ICP (Ideal Customer Profile) fit
-          Example: true
+        description: Indicates if the organization is an ICP (Ideal Customer Profile)
+          fit.
+        example: true
         type: boolean
       leadSource:
-        description: |-
-          Lead source of the organization
-          Example: Web Search
+        description: Lead source of the organization.
+        example: Web Search
         type: string
       linkedinUrl:
-        description: |-
-          Organization's LinkedIn profile URL
-          Example: https://linkedin.com/company/openline
+        description: Organization's LinkedIn profile URL.
+        example: https://linkedin.com/company/openline
         type: string
       name:
-        description: |-
-          Organization's name
-          Example: Openline
+        description: Organization's name.
+        example: CustomerOS
         type: string
       relationship:
-        description: |-
-          Relationship status of the organization
-          Example: customer
+        description: Relationship status of the organization.
+        example: customer
         type: string
       website:
-        description: |-
-          Organization's website URL
-          Example: https://openline.com
+        description: Organization's website URL.
+        example: https://customeros.ai
         type: string
     type: object
-  rest.CreateOrganizationResponse:
+  customerbase.CreateOrganizationResponse:
     description: The response structure after an organization is successfully created.
     properties:
       id:
-        description: |-
-          ID is the unique identifier of the created organization
-          Example: 1234567890
+        description: ID is the unique identifier of the created organization.
         example: "1234567890"
         type: string
       message:
-        description: |-
-          Message provides additional information regarding the creation process
-          Example: Organization created successfully
+        description: Message provides additional information regarding the creation
+          process.
         example: Organization created successfully
         type: string
       partialSuccess:
-        description: |-
-          PartialSuccess indicates whether the creation process encountered partial success (e.g., when some fields failed to process)
-          Example: false
+        description: PartialSuccess indicates whether the creation process encountered
+          partial success (e.g., when some fields failed to process).
         example: false
         type: boolean
       status:
-        description: |-
-          Status indicates the status of the creation process (e.g., "success" or "partial_success")
-          Example: success
+        description: Status indicates the status of the creation process (e.g., "success"
+          or "partial_success").
         example: success
+        type: string
+    type: object
+  customerbase.ExternalLink:
+    properties:
+      id:
+        description: External app id
+        example: cos-12345
+        type: string
+      name:
+        description: External app identified
+        example: stripe
+        type: string
+    type: object
+  customerbase.OrganizationResponse:
+    description: Organization details
+    properties:
+      cosId:
+        description: COS ID is the unique identifier for the organization in the Customer
+          OS system.
+        example: C-A12-B45
+        type: string
+      customId:
+        description: Custom ID provided by the user.
+        example: "12345"
+        type: string
+      domains:
+        description: Domains associated with the organization.
+        example:
+        - customeros.com
+        - ' customeros.ai'
+        items:
+          type: string
+        type: array
+      externalLinks:
+        description: External links associated with the organization.
+        items:
+          $ref: '#/definitions/customerbase.ExternalLink'
+        type: array
+      icpFit:
+        description: Indicates if the organization is an ICP (Ideal Customer Profile)
+          fit.
+        example: true
+        type: boolean
+      id:
+        description: ID is the unique identifier for the organization, uuid format.
+        example: 123e4567-e89b-12d3-a456-426614174000
+        type: string
+      leadSource:
+        description: Lead source of the organization.
+        example: Web Search
+        type: string
+      message:
+        description: Message provides additional information about the action.
+        example: Organization retrieved successfully
+        type: string
+      name:
+        description: Organization name.
+        example: CustomerOS
+        type: string
+      relationship:
+        description: Relationship status of the organization.
+        example: customer
+        type: string
+      stage:
+        description: Stage of the organization.
+        example: lead
+        type: string
+      status:
+        description: Status indicates the result of the action.
+        example: success
+        type: string
+      website:
+        description: Organization's website URL.
+        example: https://customeros.ai
         type: string
     type: object
   rest.ErrorResponse:
@@ -1019,18 +1083,18 @@ paths:
         name: body
         required: true
         schema:
-          $ref: '#/definitions/rest.CreateOrganizationRequest'
+          $ref: '#/definitions/customerbase.CreateOrganizationRequest'
       produces:
       - application/json
       responses:
         "201":
           description: Organization created successfully
           schema:
-            $ref: '#/definitions/rest.CreateOrganizationResponse'
+            $ref: '#/definitions/customerbase.CreateOrganizationResponse'
         "206":
           description: Partial success - failed to add linkedin url
           schema:
-            $ref: '#/definitions/rest.CreateOrganizationResponse'
+            $ref: '#/definitions/customerbase.CreateOrganizationResponse'
         "400":
           description: Invalid request body or missing input fields
         "401":
@@ -1042,6 +1106,37 @@ paths:
       security:
       - ApiKeyAuth: []
       summary: Create a new organization
+      tags:
+      - CustomerBASE API
+  /customerbase/v1/organizations/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieves an organization by its ID or COS ID
+      parameters:
+      - description: Organization ID or Organization COS ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Organization retrieved successfully
+          schema:
+            $ref: '#/definitions/customerbase.OrganizationResponse'
+        "400":
+          description: Invalid organization ID
+        "401":
+          description: Unauthorized access
+        "404":
+          description: Organization not found
+        "500":
+          description: Internal server error
+      security:
+      - ApiKeyAuth: []
+      summary: Get an organization
       tags:
       - CustomerBASE API
   /enrich/v1/organization:
