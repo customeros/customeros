@@ -83,7 +83,7 @@ export const TextFilter = ({
           size='xs'
           colorScheme='grayModern'
           onClick={() => setIsOpen(!isOpen)}
-          className='rounded-none text-gray-700 bg-white font-normal'
+          className='rounded-none text-gray-700 bg-white font-normal border-l-0'
         >
           <span className='max-w-[160px] text-ellipsis whitespace-nowrap overflow-hidden'>
             {filterValue ? filterValue : '...'}
