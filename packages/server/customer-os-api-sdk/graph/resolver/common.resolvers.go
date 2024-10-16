@@ -12,11 +12,11 @@ import (
 )
 
 // AddTag is the resolver for the addTag field.
-func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) (*model.ActionResponse, error) {
+func (r *mutationResolver) AddTag(ctx context.Context, input model.AddTagInput) (string, error) {
 	panic(fmt.Errorf("not implemented: AddTag - addTag"))
 }
 
 // RemoveTag is the resolver for the removeTag field.
-func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.ActionResponse, error) {
+func (r *mutationResolver) RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: RemoveTag - removeTag"))
 }

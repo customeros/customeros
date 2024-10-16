@@ -43,7 +43,7 @@ type InvoiceResponse struct {
 
 	// PublicUrl represents the public URL where the PDF version of the invoice can be accessed
 	// Example: https://example.com/invoices/12345.pdf
-	PublicUrl string `json:"PublicUrl" example:"https://example.com/invoices/12345.pdf"`
+	PublicUrl string `json:"publicUrl" example:"https://example.com/invoices/12345.pdf"`
 }
 
 // InvoicesResponse defines the response structure for multiple invoices in the response

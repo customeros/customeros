@@ -1729,8 +1729,8 @@ type MutationResolver interface {
 	BillingProfileUnlinkEmail(ctx context.Context, input model.BillingProfileLinkEmailInput) (string, error)
 	BillingProfileLinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
 	BillingProfileUnlinkLocation(ctx context.Context, input model.BillingProfileLinkLocationInput) (string, error)
-	AddTag(ctx context.Context, input model.AddTagInput) (*model.ActionResponse, error)
-	RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.ActionResponse, error)
+	AddTag(ctx context.Context, input model.AddTagInput) (string, error)
+	RemoveTag(ctx context.Context, input model.RemoveTagInput) (*model.Result, error)
 	ContactCreate(ctx context.Context, input model.ContactInput) (string, error)
 	ContactCreateForOrganization(ctx context.Context, input model.ContactInput, organizationID string) (*model.Contact, error)
 	CustomerContactCreate(ctx context.Context, input model.CustomerContactInput) (*model.CustomerContact, error)
@@ -11782,8 +11782,8 @@ enum CalendarType {
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/common.graphqls", Input: `extend type Mutation {
-    addTag(input: AddTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    removeTag(input: RemoveTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 input AddTagInput {
@@ -51089,10 +51089,10 @@ func (ec *executionContext) _Mutation_addTag(ctx context.Context, field graphql.
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
+		if data, ok := tmp.(string); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be string`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -51104,9 +51104,9 @@ func (ec *executionContext) _Mutation_addTag(ctx context.Context, field graphql.
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.ActionResponse)
+	res := resTmp.(string)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalNID2string(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_addTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -51116,11 +51116,7 @@ func (ec *executionContext) fieldContext_Mutation_addTag(ctx context.Context, fi
 		IsMethod:   true,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+			return nil, errors.New("field of type ID does not have child fields")
 		},
 	}
 	defer func() {
@@ -51178,24 +51174,21 @@ func (ec *executionContext) _Mutation_removeTag(ctx context.Context, field graph
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.ActionResponse); ok {
+		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.ActionResponse`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.ActionResponse)
+	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNActionResponse2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐActionResponse(ctx, field.Selections, res)
+	return ec.marshalOResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_removeTag(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -51206,10 +51199,10 @@ func (ec *executionContext) fieldContext_Mutation_removeTag(ctx context.Context,
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "accepted":
-				return ec.fieldContext_ActionResponse_accepted(ctx, field)
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type ActionResponse", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
 		},
 	}
 	defer func() {
@@ -108407,9 +108400,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_removeTag(ctx, field)
 			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "contact_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_contact_Create(ctx, field)
