@@ -30,8 +30,9 @@ import { inputVariants } from '../Input';
 
 type Size = 'xs' | 'sm' | 'md' | 'lg';
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
+export interface CreatableSelectProps
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  extends AsyncCreatableProps<any, any, any> {
   size?: Size;
   name?: string;
   formId?: string;
@@ -46,7 +47,7 @@ export interface FormSelectProps extends AsyncCreatableProps<any, any, any> {
   onKeyDown?: (e: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
-export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
+export const CreatableSelect = forwardRef<SelectInstance, CreatableSelectProps>(
   (
     {
       name,
@@ -205,8 +206,10 @@ export const CreatableSelect = forwardRef<SelectInstance, FormSelectProps>(
         classNames={defaultClassNames}
         loadOptions={props?.loadOptions}
         onKeyDown={(e) => {
-          if (onKeyDown) onKeyDown(e);
-          e.stopPropagation();
+          if (onKeyDown) {
+            onKeyDown(e);
+            e.stopPropagation();
+          }
         }}
       />
     );
@@ -325,7 +328,7 @@ export const getContainerClassNames = (
     className: cn(
       'flex items-center cursor-pointer overflow-visible',
       props?.isReadOnly && 'pointer-events-none',
-      props?.isFocused && 'border-primary-500',
+      props?.isFocused && 'border-primary-500 hover:border-primary-600',
     ),
   });
 

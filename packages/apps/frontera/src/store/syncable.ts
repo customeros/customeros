@@ -46,6 +46,7 @@ export class Syncable<T extends object> {
       history: observable,
       channel: observable,
       version: observable,
+      snapshot: observable,
       isLoading: observable,
       getChannelName: action,
       initChannelConnection: action,
@@ -185,6 +186,8 @@ export class Syncable<T extends object> {
       onFailled: () => {},
       onCompleted: () => {},
     });
+
+    Object.assign(this.snapshot, toJS(this.value));
   }
 
   public save(_operation: Operation) {
@@ -196,8 +199,8 @@ export class Syncable<T extends object> {
   }
 
   private makeChangesetOperation() {
-    const lhs = toJS(this.value);
-    const rhs = this.snapshot;
+    const lhs = toJS(this.snapshot);
+    const rhs = toJS(this.value);
     const diff = getDiff(lhs, rhs, true);
 
     const operation: Operation = {

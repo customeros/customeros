@@ -144,6 +144,10 @@ export class TagsStore implements GroupStore<Tag> {
 
     return compute(arr);
   }
+
+  getById(id: string) {
+    return this.value.get(id);
+  }
 }
 
 type TAG_QUERY_RESPONSE = {

@@ -46,6 +46,10 @@ export class TagStore implements Store<Tag> {
     return this.value.name;
   }
 
+  get id() {
+    return this.value.id;
+  }
+
   set id(id: string) {
     this.value.id = id;
   }

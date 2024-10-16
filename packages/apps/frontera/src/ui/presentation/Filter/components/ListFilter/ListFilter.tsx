@@ -238,7 +238,6 @@ export const ListFilter = ({
         className='py-1 min-w-[254px]'
       >
         <Combobox
-          size='xs'
           escapeClearsValue
           options={getOptions()}
           closeMenuOnSelect={false}

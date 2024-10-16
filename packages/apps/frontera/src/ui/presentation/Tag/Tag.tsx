@@ -1,8 +1,9 @@
-import { forwardRef, cloneElement, isValidElement } from 'react';
+import { useMemo, forwardRef, cloneElement, isValidElement } from 'react';
 
 import { twMerge } from 'tailwind-merge';
 import { VariantProps } from 'class-variance-authority';
 
+import { cn } from '@ui/utils/cn';
 import { useSlots } from '@ui/utils/hooks';
 import { XClose } from '@ui/media/icons/XClose';
 
@@ -44,9 +45,10 @@ export const Tag = forwardRef<HTMLDivElement, TagProps>(
     return (
       <div
         ref={ref}
-        className={twMerge(
+        className={cn(
           tagVariant({ colorScheme }),
           tagSizeVariant({ size }),
+          closeButtonSlot && 'pr-0',
           className,
         )}
         {...props}
@@ -54,7 +56,7 @@ export const Tag = forwardRef<HTMLDivElement, TagProps>(
         {leftIconSlot}
         {labelSlot}
         {rightIconSlot}
-        {closeButtonSlot}
+        {closeButtonSlot && cloneElement(closeButtonSlot, { size })}
       </div>
     );
   },
@@ -100,6 +102,43 @@ export const TagLabel = forwardRef<
   });
 });
 
-export const TagCloseButton = (props: React.HTMLAttributes<SVGAElement>) => {
-  return <XClose {...props} />;
+interface TagCloseButtonProps extends React.HTMLAttributes<HTMLDivElement> {
+  size?: 'sm' | 'md' | 'lg';
+}
+
+export const TagCloseButton = ({
+  size = 'md',
+  className,
+  ...props
+}: TagCloseButtonProps) => {
+  const iconStyle = useMemo(
+    () => ({
+      sm: 'size-3',
+      md: 'size-4',
+      lg: 'size-5',
+    }),
+    [size],
+  )[size];
+
+  const wrapperStyle = useMemo(
+    () => ({
+      sm: 'size-4',
+      md: 'size-5',
+      lg: 'size-6',
+    }),
+    [size],
+  )[size];
+
+  return (
+    <span
+      className={cn(
+        wrapperStyle,
+        'flex items-center ml-1 cursor-pointer text-grayModern-400 mr-0 bg-grayModern-100 rounded-e-md px-0.5 hover:bg-grayModern-200 hover:text-grayModern-500 transition ease-in-out',
+        className,
+      )}
+      {...props}
+    >
+      <XClose className={iconStyle} />
+    </span>
+  );
 };

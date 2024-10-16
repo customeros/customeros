@@ -37,9 +37,7 @@ export const SocialIconInput = ({
   onKeyDown,
   ...rest
 }: SocialIconInputProps) => {
-  // const store = useStore();
   const [socialIconValue, setSocialIconValue] = useState('');
-  // const organization = store.organizations.value.get(organizationId);
   const _leftElement = useMemo(() => leftElement, [leftElement]);
   const newInputRef = useRef<HTMLInputElement>(null);
 
