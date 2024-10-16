@@ -488,7 +488,7 @@ export const ContactPreviewCard = observer(() => {
                 {contact?.value?.connectedUsers?.[0]?.name || 'No one yet'}
               </span>
             </div>
-            {contact.value?.enrichDetails.enrichedAt && (
+            {contact?.value?.enrichDetails.enrichedAt && (
               <div className='bg-grayModern-50 w-full rounded-[4px] border-[1px] border-grayModern-100 px-2 py-1'>
                 <p className='text-sm font-medium text-center'>{`Last enriched on ${DateTimeUtils.format(
                   contact?.value.enrichDetails.enrichedAt,
