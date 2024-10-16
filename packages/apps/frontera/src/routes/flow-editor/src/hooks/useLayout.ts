@@ -19,7 +19,7 @@ const elkOptions: LayoutOptions = {
   'elk.direction': 'DOWN',
 };
 
-const ANIMATION_DURATION = 300;
+const ANIMATION_DURATION = 200;
 
 const nodeCountSelector = (state: ReactFlowState) => state.nodeLookup.size;
 
@@ -88,7 +88,7 @@ export const useLayout = () => {
           setNodes(targetNodes);
 
           if (!isInitialLayout.current) {
-            fitView({ duration: 200, padding: 0.2, maxZoom: 1, minZoom: 0.5 });
+            // fitView({ duration: 200, padding: 0.2, maxZoom: 1, minZoom: 0.5 });
           }
           isInitialLayout.current = false;
         }

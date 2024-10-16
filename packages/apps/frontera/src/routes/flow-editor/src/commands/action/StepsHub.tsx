@@ -96,8 +96,8 @@ export const StepsHub = observer(() => {
       id: `${type}-${nodes.length + 1}`,
       type: type === 'WAIT' ? 'wait' : 'action',
       position: {
-        x: type === 'WAIT' ? 96 : 12,
-        y: sourceNode.position.y + 10,
+        x: type === 'WAIT' ? 96.5 : 12,
+        y: sourceNode.position.y + 56,
       },
       data: {
         action: type,
@@ -113,8 +113,8 @@ export const StepsHub = observer(() => {
         id: `WAIT-${nodes.length + 2}`,
         type: 'wait',
         position: {
-          x: 87,
-          y: sourceNode.position.y + 5,
+          x: 96.5,
+          y: sourceNode.position.y + 56,
         },
         data: {
           action: 'WAIT',
