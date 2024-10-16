@@ -35,17 +35,13 @@ export const OwnerInput = observer(({ id, owner, dataTest }: OwnerProps) => {
 
   const handleSelect = (option: SelectOption) => {
     const organization = store.organizations.value.get(id);
+
+    if (!organization) return;
+
     const targetOwner = store.users.value.get(option?.value);
 
-    organization?.update((value) => {
-      if (!option || !option?.value) {
-        value.owner = null;
-      } else {
-        value.owner = targetOwner?.value;
-      }
-
-      return value;
-    });
+    organization.value.owner = option?.value ? targetOwner?.value : null;
+    organization.commit();
   };
 
   return (

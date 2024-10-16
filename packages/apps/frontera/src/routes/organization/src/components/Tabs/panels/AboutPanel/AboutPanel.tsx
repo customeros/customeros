@@ -32,8 +32,9 @@ import {
   OrganizationRelationship,
 } from '@graphql/types';
 
+import { Tags } from './components/tags';
+import { SocialIconInput } from '../../shared';
 import { OwnerInput } from './components/owner';
-import { Tags, SocialIconInput } from '../../shared';
 import { Branches, ParentOrgInput } from './components/branches';
 import {
   stageOptions,
@@ -86,44 +87,16 @@ export const AboutPanel = observer(() => {
     organization?.value?.relationship,
   );
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
-  ) => {
-    const { name, value } = e.target;
-
-    organization?.update((org) => {
-      // @ts-expect-error fixme
-      org[name] = value;
-
-      return org;
-    });
-  };
-
-  const menuHandleChange = (name: string, value: string) => {
-    organization?.update((org) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (org as any)[name] = value;
-
-      return org;
-    });
-  };
-
   const handleSocialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const id = (e.target as HTMLInputElement).id;
     const value = e.target.value;
 
     if (organization) {
-      organization.update((org) => {
-        const idx = organization?.value.socialMedia.findIndex(
-          (s) => s.id === id,
-        );
+      const idx = organization?.value.socialMedia.findIndex((s) => s.id === id);
 
-        if (idx !== -1) {
-          org.socialMedia[idx].url = value;
-        }
+      if (idx < 0) return;
 
-        return org;
-      });
+      organization.value.socialMedia[idx].url = value;
     }
   };
 
@@ -133,16 +106,14 @@ export const AboutPanel = observer(() => {
   ) => {
     const id = (e.target as HTMLInputElement).id;
 
-    organization?.update((org) => {
-      const idx = organization?.value.socialMedia.findIndex((s) => s.id === id);
+    const idx = organization?.value.socialMedia.findIndex((s) => s.id === id);
 
-      if (org.socialMedia[idx].url === '') {
-        org.socialMedia.splice(idx, 1);
-        newInputRef.current?.focus();
-      }
+    if (organization.value.socialMedia[idx].url === '') {
+      organization.value.socialMedia.splice(idx, 1);
+      newInputRef.current?.focus();
+    }
 
-      return org;
-    });
+    organization.commit();
   };
 
   const handleSocialKeyDown = (
@@ -151,30 +122,25 @@ export const AboutPanel = observer(() => {
   ) => {
     const id = (e.target as HTMLInputElement).id;
 
-    organization?.update((org) => {
-      const idx = org.socialMedia.findIndex((s) => s.id === id);
-      const social = org.socialMedia[idx];
+    const idx = organization.value.socialMedia.findIndex((s) => s.id === id);
+    const social = organization.value.socialMedia[idx];
 
-      if (!social) return org;
+    if (!social) return;
 
-      if (social.url === '') {
-        org.socialMedia.splice(idx, 1);
-        newInputRef.current?.focus();
-      }
+    if (social.url === '') {
+      organization.value.socialMedia.splice(idx, 1);
+      newInputRef.current?.focus();
+    }
 
-      return org;
-    });
+    organization.commit();
   };
 
   const handleCreateSocial = (value: string) => {
-    organization?.update((org) => {
-      org.socialMedia.push({
-        id: crypto.randomUUID(),
-        url: value,
-      } as Social);
-
-      return org;
-    });
+    organization.value.socialMedia.push({
+      id: crypto.randomUUID(),
+      url: value,
+    } as Social);
+    organization.commit();
   };
 
   const handleCreateOption = (value: string) => {
@@ -204,12 +170,6 @@ export const AboutPanel = observer(() => {
       return org;
     });
   };
-  const filteredTags = organization?.value.tags
-    ?.filter((e) => e.id)
-    ?.map((tag) => ({
-      label: tag.name,
-      value: tag.id,
-    }));
 
   const enrichedOrg = organization?.value.enrichDetails;
   const enrichingStatus =
@@ -239,12 +199,17 @@ export const AboutPanel = observer(() => {
             ref={nameRef}
             autoComplete='off'
             variant='unstyled'
-            onChange={handleChange}
             dataTest='org-about-name'
             placeholder='Company name'
             disabled={orgNameReadOnly}
             onFocus={(e) => e.target.select()}
             value={organization?.value.name || ''}
+            onBlur={() => {
+              organization.commit();
+            }}
+            onChange={(e) => {
+              organization.value.name = e.target.value;
+            }}
             className='font-semibold text-[16px] mt-0.5 border-none overflow-hidden overflow-ellipsis'
           />
           {organization?.value.referenceId && (
@@ -271,39 +236,56 @@ export const AboutPanel = observer(() => {
           name='website'
           autoComplete='off'
           placeholder='www.'
-          onChange={handleChange}
           dataTest='org-about-www'
           value={organization?.value?.website || ''}
+          onBlur={() => {
+            organization.commit();
+          }}
+          onChange={(e) => {
+            organization.value.website = e.target.value;
+          }}
         />
         <Textarea
           size='md'
           spellCheck={false}
           className='mb-6 mt-2'
           name='valueProposition'
-          onChange={handleChange}
           data-test='org-about-description'
           placeholder={placeholders.valueProposition}
           value={organization?.value?.valueProposition || ''}
-        />
-        <Tags
-          dataTest='org-about-tags'
-          value={filteredTags || []}
-          placeholder='Organization tags'
-          onCreateOption={handleCreateOption}
-          icon={
-            <Tag01 className='text-gray-500 min-w-[18px] min-h-4 mr-[10px] mt-[6px]' />
-          }
+          onBlur={() => {
+            organization.commit();
+          }}
           onChange={(e) => {
-            organization?.update((org) => {
-              org.tags =
-                (e
-                  .map((tag) => store.tags?.value.get(tag.value)?.value)
-                  .filter(Boolean) as Array<TagType>) ?? [];
-
-              return org;
-            });
+            organization.value.valueProposition = e.target.value;
           }}
         />
+        <Tags
+          className='min-h-10 py-2'
+          inputPlaceholder='Search...'
+          onCreate={handleCreateOption}
+          placeholder='Organization tags'
+          leftAccessory={<Tag01 className='mr-3 text-gray-500' />}
+          options={store.tags.toArray().map((t) => ({
+            value: t.id,
+            label: t.value?.name,
+          }))}
+          value={
+            organization.value.tags?.map((t) => ({
+              value: t.id,
+              label: t.name,
+            })) ?? []
+          }
+          onChange={(selection) => {
+            const tags = selection
+              .map((o) => store.tags.getById(o.value)?.value)
+              .filter(Boolean) as TagType[];
+
+            organization.value.tags = tags;
+            organization.commit();
+          }}
+        />
+
         {showParentRelationshipSelector && (
           <ParentOrgInput id={id} isReadOnly={parentRelationshipReadOnly} />
         )}
@@ -340,7 +322,8 @@ export const AboutPanel = observer(() => {
                     <MenuItem
                       key={option.value}
                       onClick={() => {
-                        menuHandleChange('relationship', option.value);
+                        organization.value.relationship = option.value;
+                        organization.commit();
                       }}
                       disabled={
                         (selectedRelationshipOption?.label === 'Customer' ||
@@ -375,7 +358,8 @@ export const AboutPanel = observer(() => {
                     <MenuItem
                       key={option.value}
                       onClick={() => {
-                        menuHandleChange('stage', option.value);
+                        organization.value.stage = option.value;
+                        organization.commit();
                       }}
                     >
                       {iconMap[option.label as keyof typeof iconMap]}
@@ -395,12 +379,9 @@ export const AboutPanel = observer(() => {
             options={industryOptions}
             dataTest='org-about-industry'
             leftElement={<Building07 className='text-gray-500 mr-3' />}
-            onChange={(value) => {
-              organization?.update((org) => {
-                org.industry = value.value;
-
-                return org;
-              });
+            onChange={(option) => {
+              organization.value.industry = option?.value;
+              organization.commit();
             }}
             value={
               industryOptions
@@ -420,17 +401,13 @@ export const AboutPanel = observer(() => {
             options={businessTypeOptions}
             dataTest='org-about-business-type'
             leftElement={<Briefcase02 className='text-gray-500 mr-3' />}
+            onChange={(option) => {
+              organization.value.market = option?.value;
+              organization.commit();
+            }}
             value={businessTypeOptions.map((option) =>
               option.value === organization?.value.market ? option : null,
             )}
-            onChange={(value) => {
-              organization?.update((org) => {
-                if (value === null) org.market = null;
-                else org.market = value.value;
-
-                return org;
-              });
-            }}
           />
 
           <div className='flex items-center justify-center w-full'>
@@ -444,19 +421,15 @@ export const AboutPanel = observer(() => {
                 leftElement={
                   <HorizontalBarChart03 className='text-gray-500 mr-3' />
                 }
+                onChange={(option) => {
+                  organization.value.lastFundingRound = option?.value;
+                  organization.commit();
+                }}
                 value={lastFundingRoundOptions.map((option) =>
                   option.value === organization?.value.lastFundingRound
                     ? option
                     : null,
                 )}
-                onChange={(value) => {
-                  organization?.update((org) => {
-                    if (value === null) org.lastFundingRound = null;
-                    else org.lastFundingRound = value.value;
-
-                    return org;
-                  });
-                }}
               />
             </div>
           </div>
@@ -471,12 +444,9 @@ export const AboutPanel = observer(() => {
             value={employeesOptions.map((option) =>
               option.value === organization?.value.employees ? option : null,
             )}
-            onChange={(value) => {
-              organization?.update((org) => {
-                org.employees = value.value;
-
-                return org;
-              });
+            onChange={(option) => {
+              organization.value.employees = option.value;
+              organization.commit();
             }}
           />
 

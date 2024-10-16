@@ -200,6 +200,10 @@ export class OrganizationsService {
     const organizationId = operation?.entityId;
     const oldValue = (diff as rdiffResult & { oldVal: unknown })?.oldVal;
 
+    if (!operation.diff.length) {
+      return;
+    }
+
     if (!organizationId) {
       console.error('Missing entityId in Operation! Mutations will not fire.');
 
@@ -271,6 +275,14 @@ export class OrganizationsService {
           );
       })
       .with(['subsidiaries', ...P.array()], async () => {
+        if (type === 'delete') {
+          const subsidiaryId = oldValue?.organization?.metadata?.id;
+
+          await this.removeSubsidiary({ organizationId, subsidiaryId });
+
+          return;
+        }
+
         const subsidiaryId = match(typeof value)
           .with('string', () => value)
           .otherwise(
@@ -279,17 +291,20 @@ export class OrganizationsService {
               value?.organization?.metadata?.id,
           );
 
+        if (typeof value === 'string' && type === 'update') {
+          this.removeSubsidiary({
+            organizationId: value,
+            subsidiaryId: oldValue,
+          });
+
+          return;
+        }
+
         await this.addSubsidiary({
           input: { organizationId, subsidiaryId, removeExisting: false },
         });
       })
-      .with(['parentCompanies', ...P.array()], async () => {
-        if (type === 'delete') {
-          const subsidiaryId = oldValue?.organization?.metadata?.id;
-
-          await this.removeSubsidiary({ organizationId, subsidiaryId });
-        }
-      })
+      .with(['parentCompanies', ...P.array()], async () => {})
       .with(['tags', ...P.array()], () => {
         match(type)
           .with('add', async () => {

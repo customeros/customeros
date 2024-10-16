@@ -4,20 +4,21 @@ import { useStore } from '@shared/hooks/useStore';
 import { SelectOption } from '@shared/types/SelectOptions';
 import {
   CreatableSelect,
+  CreatableSelectProps,
   getMenuListClassNames,
-  getContainerClassNames,
   getMultiValueClassNames,
 } from '@ui/form/CreatableSelect';
 
 interface TagsProps {
   dataTest?: string;
+  onBlur?: () => void;
   placeholder: string;
   autofocus?: boolean;
-  hideBorder?: boolean;
   value: SelectOption[];
   icon?: React.ReactNode;
   closeMenuOnSelect?: boolean;
   menuPortalTarget?: HTMLElement;
+  size?: CreatableSelectProps['size'];
   onCreateOption?: (value: string) => void;
   onChange: (value: [SelectOption]) => void;
 }
@@ -25,14 +26,15 @@ interface TagsProps {
 export const Tags = observer(
   ({
     icon,
+    size,
     dataTest,
     placeholder,
     onCreateOption,
     value,
+    onBlur,
     onChange,
     menuPortalTarget,
     autofocus,
-    hideBorder,
     closeMenuOnSelect,
   }: TagsProps) => {
     const store = useStore();
@@ -52,10 +54,11 @@ export const Tags = observer(
 
     return (
       <CreatableSelect
-        size='xs'
         cacheOptions
         value={value}
+        onBlur={onBlur}
         leftElement={icon}
+        size={size ?? 'xs'}
         onChange={onChange}
         dataTest={dataTest}
         autoFocus={autofocus}
@@ -87,15 +90,6 @@ export const Tags = observer(
             getMultiValueClassNames(
               'border-1 border-gray-300 flex items-center rounded-md bg-gray-100 px-0.75 text-gray-500',
             ),
-          container: () =>
-            hideBorder
-              ? getContainerClassNames('', 'unstyled', {
-                  size: 'xs',
-                })
-              : getContainerClassNames(
-                  'border-b border-gray-300 hover:border-primary-600 focus:border-primary-600 focus-within:border-primary-600',
-                  'flushed',
-                ),
           multiValueRemove: () => 'max-h-4',
           control: () => 'max-h-4',
         }}
