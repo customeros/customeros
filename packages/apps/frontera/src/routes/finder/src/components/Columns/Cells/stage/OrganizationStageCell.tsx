@@ -73,7 +73,7 @@ export const OrganizationStageCell = observer(
           {selectedStageOption?.label ?? 'Not applicable'}
         </p>
         <Menu open={isEdit} onOpenChange={setIsEdit}>
-          <MenuButton>
+          <MenuButton asChild>
             {!!applicableStageOptions.length && (
               <IconButton
                 size='xxs'
