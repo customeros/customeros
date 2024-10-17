@@ -103,7 +103,7 @@ export class OrganizationsPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Create?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
@@ -212,7 +212,7 @@ export class OrganizationsPage {
             .locator(this.organizationOwnerInAllOrgsTable)
             .innerText();
 
-          expect(owner).toBe('customeros.fe.testing');
+          expect(owner).toBe('No owner');
         });
       },
       maxAttempts,

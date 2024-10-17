@@ -94,7 +94,7 @@ export class OrganizationPeoplePage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'jobRole_Create?.id',
+      'jobRole_Update?.id',
       undefined,
     );
 
