@@ -1,5 +1,4 @@
-import { useParams } from 'react-router-dom';
-import { useMemo, useState, useEffect, forwardRef, useCallback } from 'react';
+import { useMemo, forwardRef, useCallback } from 'react';
 import {
   GroupBase,
   OptionProps,
@@ -10,27 +9,18 @@ import {
 } from 'react-select';
 
 import merge from 'lodash/merge';
-import AsyncCreatableSelect from 'react-select/async-creatable';
 
 import { SelectOption } from '@ui/utils/types.ts';
 import { Copy01 } from '@ui/media/icons/Copy01.tsx';
-import { getName } from '@utils/getParticipantsName.ts';
-import { Contact, ComparisonOperator } from '@graphql/types';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
-import { getGraphQLClient } from '@shared/util/getGraphQLClient.ts';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import {
+  CreatableSelect,
   getDefaultClassNames,
-  getMultiValueLabelClassNames,
 } from '@ui/form/CreatableSelect';
-import {
-  GetContactsEmailListDocument,
-  useGetContactsEmailListQuery,
-} from '@organization/graphql/getContactsEmailList.generated.ts';
 
 import { MultiValueWithActionMenu } from './MultiValueWithActionMenu.tsx';
 
-type ExistingContact = { id: string; label: string; value?: string | null };
 export const EmailMultiCreatableSelect = forwardRef<
   SelectInstance,
   {
@@ -41,6 +31,7 @@ export const EmailMultiCreatableSelect = forwardRef<
     navigateAfterAddingToPeople: boolean;
     onChange: (value: SelectOption<string>[]) => void;
     onKeyDown: (e: React.KeyboardEvent<HTMLDivElement>) => void;
+    options: Array<{ id: string; value: string; label: string }>;
   }
 >(
   (
@@ -50,123 +41,33 @@ export const EmailMultiCreatableSelect = forwardRef<
       navigateAfterAddingToPeople,
       isMulti,
       onKeyDown,
+      options,
       ...rest
     },
     ref,
   ) => {
-    const client = getGraphQLClient();
-    const organizationId = useParams()?.id as string;
-    const [existingContacts, setExistingContacts] = useState<
-      Array<ExistingContact>
-    >([]);
-
-    const [isFocused, setIsFocused] = useState<boolean>(false);
-
-    const { data } = useGetContactsEmailListQuery(client, {
-      id: organizationId,
-      pagination: {
-        page: 1,
-        limit: 100,
-      },
-    });
-
-    useEffect(() => {
-      if (data?.organization?.contacts?.content?.length) {
-        const organizationContacts = (
-          (data?.organization?.contacts?.content || []) as Array<Contact>
-        )
-          .map((e: Contact) => {
-            if (e.emails.some((e) => !!e.email)) {
-              return e.emails.map((email) => ({
-                id: e.id,
-                value: email.email,
-                label: `${e.firstName} ${e.lastName}`,
-              }));
-            }
-
-            return [
-              {
-                id: e.id,
-                label: getName(e),
-                value: '',
-              },
-            ];
-          })
-          .flat();
-
-        setExistingContacts(organizationContacts);
-      }
-    }, [data]);
-
     const [_, copyToClipboard] = useCopyToClipboard();
 
-    const getFilteredSuggestions = async (
+    const getFilteredSuggestions = (
       filterString: string,
-      callback: (
-        options: OptionsOrGroups<SelectOption, GroupBase<SelectOption>>,
-      ) => void,
+      callback: (options: OptionsOrGroups<unknown, GroupBase<unknown>>) => void,
     ) => {
-      try {
-        const results = await client.request<{
-          organization: {
-            contacts: { content: Contact[] };
-          };
-        }>(GetContactsEmailListDocument, {
-          id: organizationId,
-          pagination: {
-            page: 1,
-            limit: 5,
-          },
-          where: {
-            OR: [
-              {
-                filter: {
-                  property: 'FIRST_NAME',
-                  value: filterString,
-                  operation: ComparisonOperator.Contains,
-                },
-              },
-              {
-                filter: {
-                  property: 'LAST_NAME',
-                  value: filterString,
-                  operation: ComparisonOperator.Contains,
-                },
-              },
-              {
-                filter: {
-                  property: 'NAME',
-                  value: filterString,
-                  operation: ComparisonOperator.Contains,
-                },
-              },
-            ],
-          },
-        });
-        const options = (results?.organization?.contacts?.content || [])
-          .map((e: Contact) => {
-            if (e.emails.some((e) => !!e.email)) {
-              return e.emails.map((email) => ({
-                value: email.email,
-                label: `${e.firstName} ${e.lastName}`,
-              }));
-            }
-
-            return [
-              {
-                label: getName(e),
-                value: '',
-              },
-            ];
-          })
-          .flat() as OptionsOrGroups<SelectOption, GroupBase<SelectOption>>;
-
+      if (!filterString.slice(1).length) {
         callback(options);
-      } catch (error) {
-        callback([]);
-      }
-    };
 
+        return;
+      }
+
+      const opt: OptionsOrGroups<unknown, GroupBase<unknown>> = options.filter(
+        (e) =>
+          e.label
+            .toLowerCase()
+            .includes(filterString.slice(1)?.toLowerCase()) ||
+          e.value.toLowerCase().includes(filterString.slice(1)?.toLowerCase()),
+      );
+
+      callback(opt);
+    };
     const Option = useCallback((rest: OptionProps<SelectOption>) => {
       const fullLabel =
         rest?.data?.label.length > 1 &&
@@ -211,7 +112,7 @@ export const EmailMultiCreatableSelect = forwardRef<
             {...multiValueProps}
             value={value}
             onChange={onChange}
-            existingContacts={existingContacts}
+            existingContacts={options}
             navigateAfterAddingToPeople={navigateAfterAddingToPeople}
           />
         );
@@ -235,29 +136,23 @@ export const EmailMultiCreatableSelect = forwardRef<
     );
 
     return (
-      <AsyncCreatableSelect
+      <CreatableSelect
         unstyled
         menuIsOpen
-        cacheOptions
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ref={ref as any}
-        isMulti={isMulti}
         defaultMenuIsOpen
+        options={options}
         isClearable={false}
-        // @ts-expect-error fix me later
         onChange={onChange}
         tabSelectsValue={true}
         components={components}
-        closeMenuOnSelect={false}
-        onFocus={() => setIsFocused(true)}
-        onBlur={() => setIsFocused(false)}
         id={'email-multi-creatable-select'}
+        classNames={{
+          ...defaultClassNames,
+        }}
         formatCreateLabel={(input: string) => {
           return input;
-        }}
-        onKeyDown={(e) => {
-          if (onKeyDown) onKeyDown(e);
-          e.stopPropagation();
         }}
         loadOptions={(inputValue: string, callback) => {
           getFilteredSuggestions(inputValue, callback);
@@ -267,12 +162,16 @@ export const EmailMultiCreatableSelect = forwardRef<
           label: e.label.length > 1 ? e.label : e.value,
           value: e.value,
         }))}
-        classNames={{
-          ...defaultClassNames,
-          singleValue: () =>
-            isFocused
-              ? getMultiValueLabelClassNames('', 'md')
-              : 'text-gray-500',
+        onKeyDown={(e) => {
+          if (!isMulti && e.key !== 'Backspace' && value.length > 0) {
+            e.stopPropagation();
+            e.preventDefault();
+
+            return;
+          }
+
+          if (onKeyDown) onKeyDown(e);
+          e.stopPropagation();
         }}
         {...rest}
       />

@@ -1,18 +1,20 @@
+import { useParams } from 'react-router-dom';
 import React, { useState, useEffect } from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { ContractStore } from '@store/Contracts/Contract.store.ts';
+import { ContractStore } from '@store/Contracts/Contract.store';
 
-import { cn } from '@ui/utils/cn.ts';
+import { cn } from '@ui/utils/cn';
+import { Contact } from '@graphql/types';
 import { InputProps } from '@ui/form/Input';
+import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
-import { Button } from '@ui/form/Button/Button.tsx';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
-import { SelectOption } from '@shared/types/SelectOptions.ts';
-import { Divider } from '@ui/presentation/Divider/Divider.tsx';
-import { validateEmail } from '@shared/util/emailValidation.ts';
-import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
-import { EmailSelect } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/EmailsInputGroup/EmailSelect.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { SelectOption } from '@shared/types/SelectOptions';
+import { Divider } from '@ui/presentation/Divider/Divider';
+import { validateEmail } from '@shared/util/emailValidation';
+import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick';
+import { EmailSelect } from '@organization/components/Tabs/panels/AccountPanel/Contract/ContractBillingDetailsModal/components/EmailsInputGroup/EmailSelect';
 
 interface EmailsInputGroupProps extends InputProps {
   contractId: string;
@@ -51,7 +53,9 @@ export const EmailsInputGroup = observer(
       contractId,
     ) as ContractStore;
     const billingDetails = contractStore?.tempValue?.billingDetails;
+    const organizationId = useParams()?.id as string;
 
+    const [showTo, setShowTo] = useState(false);
     const [showCC, setShowCC] = useState(false);
     const [showBCC, setShowBCC] = useState(false);
     const [isFocused, setIsFocused] = useState(false);
@@ -59,14 +63,43 @@ export const EmailsInputGroup = observer(
       false,
     );
     const ref = React.useRef(null);
+    const toInputRef = React.useRef(null);
+
+    const organizationContacts: {
+      id: string;
+      label: string;
+      value: string;
+    }[] = (store.organizations.value.get(organizationId)?.contacts ?? [])
+      .map((e: Contact) => {
+        const contactName = store.contacts.value.get(e.id)?.name;
+
+        if (e.emails.some((e) => !!e.email)) {
+          return e.emails.map((email) => ({
+            id: e.id as string,
+            value: email.email as string,
+            label: contactName || '',
+          }));
+        }
+
+        return [];
+      })
+      .flat();
 
     useOutsideClick({
       ref: ref,
       handler: () => {
         setIsFocused(false);
         setFocusedItemIndex(false);
+        setShowTo(false);
         setShowCC(false);
         setShowBCC(false);
+      },
+    });
+    useOutsideClick({
+      ref: toInputRef,
+      handler: () => {
+        setFocusedItemIndex(false);
+        setShowTo(false);
       },
     });
 
@@ -103,6 +136,15 @@ export const EmailsInputGroup = observer(
         },
       }));
     };
+
+    const valueTO =
+      Array.isArray(billingDetails?.billingEmail) &&
+      !!billingDetails?.billingEmail?.[0]?.length
+        ? billingDetails.billingEmail
+        : typeof billingDetails?.billingEmail === 'string' &&
+          !!billingDetails?.billingEmail?.length
+        ? [billingDetails.billingEmail]
+        : [];
 
     return (
       <div ref={ref}>
@@ -144,18 +186,35 @@ export const EmailsInputGroup = observer(
             )}
           </div>
         </div>
-        <EmailSelect
-          entryType='To'
-          isMulti={false}
-          placeholder='To email address'
-          autofocus={focusedItemIndex === 0}
-          value={
-            billingDetails?.billingEmail ? [billingDetails.billingEmail] : []
-          }
-          onChange={(value: SelectOption<string>[]) =>
-            handleUpdateBillingEmailData('billingEmail', value)
-          }
-        />
+
+        {showTo || !billingDetails?.billingEmail?.length ? (
+          <EmailSelect
+            entryType='To'
+            isMulti={false}
+            value={valueTO}
+            ref={toInputRef}
+            placeholder='To email address'
+            options={organizationContacts}
+            autofocus={focusedItemIndex === 0}
+            onChange={(value: SelectOption<string>[]) =>
+              handleUpdateBillingEmailData('billingEmail', value)
+            }
+          />
+        ) : (
+          <div
+            role='button'
+            aria-label='Click to input participant data'
+            onClick={() => {
+              setShowTo(true);
+            }}
+            className={cn('overflow-hidden', {
+              'flex-1': !billingDetails?.billingEmailBCC?.length,
+            })}
+          >
+            <span className='text-sm font-semibold text-gray-700 mr-1'>To</span>
+            <EmailList emailList={valueTO} />{' '}
+          </div>
+        )}
 
         <div className='flex-col flex-1 w-full gap-4'>
           {isFocused && (
@@ -164,6 +223,7 @@ export const EmailsInputGroup = observer(
                 <EmailSelect
                   isMulti
                   entryType='CC'
+                  options={organizationContacts}
                   placeholder='CC email addresses'
                   autofocus={focusedItemIndex === 1}
                   value={billingDetails?.billingEmailCC ?? []}
@@ -176,6 +236,7 @@ export const EmailsInputGroup = observer(
                 <EmailSelect
                   isMulti
                   entryType='BCC'
+                  options={organizationContacts}
                   placeholder='BCC email addresses'
                   autofocus={focusedItemIndex === 2}
                   value={billingDetails?.billingEmailBCC ?? []}

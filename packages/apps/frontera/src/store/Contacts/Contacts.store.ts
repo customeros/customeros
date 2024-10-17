@@ -147,6 +147,7 @@ export class ContactsStore implements GroupStore<Contact> {
   async create(
     organizationId: string,
     options?: { onSuccess?: (serverId: string) => void },
+    input?: ContactInput,
   ) {
     const newContact = new ContactStore(this.root, this.transport);
     const tempId = newContact.value.metadata?.id;
@@ -174,7 +175,7 @@ export class ContactsStore implements GroupStore<Contact> {
           CREATE_CONTACT_MUTATION_PAYLOAD
         >(CREATE_CONTACT_MUTATION, {
           organizationId,
-          input: {},
+          input: input || {},
         });
 
       runInAction(() => {
