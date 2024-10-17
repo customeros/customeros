@@ -42,6 +42,11 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 	panic(fmt.Errorf("not implemented: EmailReplaceForContact - emailReplaceForContact"))
 }
 
+// EmailSetPrimaryForContact is the resolver for the emailSetPrimaryForContact field.
+func (r *mutationResolver) EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Email, error) {
+	panic(fmt.Errorf("not implemented: EmailSetPrimaryForContact - emailSetPrimaryForContact"))
+}
+
 // EmailMergeToUser is the resolver for the emailMergeToUser field.
 func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, input model.EmailInput) (*model.Email, error) {
 	panic(fmt.Errorf("not implemented: EmailMergeToUser - emailMergeToUser"))

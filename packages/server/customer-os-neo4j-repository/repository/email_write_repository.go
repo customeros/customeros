@@ -3,6 +3,7 @@ package repository
 import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/constants"
@@ -55,6 +56,7 @@ type EmailWriteRepository interface {
 	UnlinkFromUser(ctx context.Context, tenant, usedId, email string) error
 	UnlinkFromContact(ctx context.Context, tenant, contactId, email string) error
 	UnlinkFromOrganization(ctx context.Context, tenant, organizationId, email string) error
+	SetPrimaryForEntity(ctx context.Context, tenant, entityId, email string, entityType model.EntityType) error
 	DeleteEmail(ctx context.Context, tenant, emailId string) error
 }
 
@@ -405,6 +407,37 @@ func (r *emailWriteRepository) DeleteEmail(ctx context.Context, tenant, emailId 
 	params := map[string]any{
 		"tenant": tenant,
 		"id":     emailId,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *emailWriteRepository) SetPrimaryForEntity(ctx context.Context, tenant, entityId, email string, entityType model.EntityType) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailWriteRepository.SetPrimaryForEntity")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogKV("entityId", entityId, "email", email, "entityType", entityType.String())
+
+	cypher := fmt.Sprintf(`MATCH (entity:%s {id:$entityId})-[rel:HAS]->(e:Email)
+				WHERE e.email = $email OR e.rawEmail = $email
+				SET rel.primary = true,
+					entity.updatedAt = datetime()
+				WITH entity
+				MATCH (entity)-[r:HAS]->(e:Email)
+				WHERE e.email <> $email AND e.rawEmail <> $email
+				SET r.primary = false`, entityType.Neo4jLabel()+"+"+tenant)
+
+	params := map[string]any{
+		"entityId": entityId,
+		"email":    email,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

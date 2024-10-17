@@ -962,6 +962,7 @@ type ComplexityRoot struct {
 		EmailReplaceForContact                     func(childComplexity int, contactID string, previousEmail *string, input model.EmailInput) int
 		EmailReplaceForOrganization                func(childComplexity int, organizationID string, previousEmail *string, input model.EmailInput) int
 		EmailReplaceForUser                        func(childComplexity int, userID string, previousEmail *string, input model.EmailInput) int
+		EmailSetPrimaryForContact                  func(childComplexity int, contactID string, email string) int
 		EmailValidate                              func(childComplexity int, id string) int
 		EntityTemplateCreate                       func(childComplexity int, input model.EntityTemplateInput) int
 		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
@@ -1730,6 +1731,7 @@ type MutationResolver interface {
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
 	EmailReplaceForContact(ctx context.Context, contactID string, previousEmail *string, input model.EmailInput) (*model.Email, error)
+	EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Email, error)
 	EmailMergeToUser(ctx context.Context, userID string, input model.EmailInput) (*model.Email, error)
 	EmailRemoveFromUser(ctx context.Context, userID string, email string) (*model.Result, error)
 	EmailReplaceForUser(ctx context.Context, userID string, previousEmail *string, input model.EmailInput) (*model.Email, error)
@@ -6902,6 +6904,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.EmailReplaceForUser(childComplexity, args["userId"].(string), args["previousEmail"].(*string), args["input"].(model.EmailInput)), true
+
+	case "Mutation.emailSetPrimaryForContact":
+		if e.complexity.Mutation.EmailSetPrimaryForContact == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_emailSetPrimaryForContact_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.EmailSetPrimaryForContact(childComplexity, args["contactId"].(string), args["email"].(string)), true
 
 	case "Mutation.email_Validate":
 		if e.complexity.Mutation.EmailValidate == nil {
@@ -12716,6 +12730,7 @@ extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailReplaceForContact(contactId : ID!, previousEmail: String, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailSetPrimaryForContact(contactId : ID!, email: String!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailMergeToUser(userId: ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromUser(userId: ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -16781,6 +16796,30 @@ func (ec *executionContext) field_Mutation_emailReplaceForUser_args(ctx context.
 		}
 	}
 	args["input"] = arg2
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_emailSetPrimaryForContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["contactId"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["contactId"] = arg0
+	var arg1 string
+	if tmp, ok := rawArgs["email"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
+		arg1, err = ec.unmarshalNString2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["email"] = arg1
 	return args, nil
 }
 
@@ -53683,6 +53722,123 @@ func (ec *executionContext) fieldContext_Mutation_emailReplaceForContact(ctx con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_emailReplaceForContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_emailSetPrimaryForContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_emailSetPrimaryForContact(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().EmailSetPrimaryForContact(rctx, fc.Args["contactId"].(string), fc.Args["email"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Email); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Email`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Email)
+	fc.Result = res
+	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_emailSetPrimaryForContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Email_id(ctx, field)
+			case "email":
+				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
+			case "work":
+				return ec.fieldContext_Email_work(ctx, field)
+			case "label":
+				return ec.fieldContext_Email_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_Email_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_Email_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Email_appSource(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Email_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_emailSetPrimaryForContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -106775,6 +106931,13 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 		case "emailReplaceForContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailReplaceForContact(ctx, field)
+			})
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "emailSetPrimaryForContact":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_emailSetPrimaryForContact(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++

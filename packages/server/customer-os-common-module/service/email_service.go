@@ -36,8 +36,8 @@ type EmailService interface {
 	LinkEmail(ctx context.Context, tenant, emailId, email, appSource string, primary bool, linkWith LinkWith) error
 	UnlinkEmail(ctx context.Context, tenant, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
-
 	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
+	SetPrimary(ctx context.Context, email string, forEntity LinkWith) error
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -371,6 +371,7 @@ func (s *emailService) DeleteOrphanEmail(ctx context.Context, tenant, emailId, a
 func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetAllEmailsForEntityIds")
 	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, entityType, entityIds)
 	if err != nil {
@@ -385,4 +386,51 @@ func (s *emailService) GetAllEmailsForEntityIds(ctx context.Context, tenant stri
 		emailEntities = append(emailEntities, *emailEntity)
 	}
 	return &emailEntities, nil
+}
+
+func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity LinkWith) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.SetPrimary")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogKV("email", email)
+
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	if forEntity.Id == "" {
+		tracing.TraceErr(span, errors.New("forEntity id is required"))
+		return errors.New("forEntity id is required")
+	}
+	if forEntity.Type == "" {
+		tracing.TraceErr(span, errors.New("forEntity type is required"))
+		return errors.New("forEntity type is required")
+	}
+
+	// check linked entity exists
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, common.GetTenantFromContext(ctx), forEntity.Id, forEntity.Type.Neo4jLabel())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+		return err
+	}
+	if !exists {
+		err = errors.Errorf("linked entity %s with id %s not found", forEntity.Type.String(), forEntity.Id)
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.Neo4jRepositories.EmailWriteRepository.SetPrimaryForEntity(ctx, common.GetTenantFromContext(ctx), forEntity.Id, email, forEntity.Type)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	switch forEntity.Type.String() {
+	case commonmodel.CONTACT.String():
+		utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonmodel.CONTACT.String(), forEntity.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
+	}
+
+	return nil
 }
