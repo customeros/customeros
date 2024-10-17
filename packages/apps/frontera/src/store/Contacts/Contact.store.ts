@@ -413,7 +413,7 @@ export class ContactStore implements Store<Contact> {
       setTimeout(() => {
         this.root.contacts.value.get(this.getId())?.invalidate();
         isLoading?.(this.isLoading);
-      }, 1000);
+      }, 60000);
     }
   }
 

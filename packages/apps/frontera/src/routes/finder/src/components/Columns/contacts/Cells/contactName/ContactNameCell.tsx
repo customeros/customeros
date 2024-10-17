@@ -64,11 +64,15 @@ export const ContactNameCell = observer(
           <p
             role='button'
             data-test={`contact-name-in-contacts-table`}
-            onClick={() => store.ui.setContactPreviewCardOpen(true)}
             className={cn(
               'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer',
               !canNavigate && 'cursor-default',
             )}
+            onClick={() =>
+              store.ui.contactPreviewCardOpen
+                ? store.ui.setContactPreviewCardOpen(false)
+                : store.ui.setContactPreviewCardOpen(true)
+            }
           >
             {contactName}
           </p>

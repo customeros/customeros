@@ -254,7 +254,7 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
     return () => {
       store.ui.setContactPreviewCardOpen(false);
     };
-  }, []);
+  }, [preset]);
 
   useKeyBindings(
     {
