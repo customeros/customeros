@@ -11,7 +11,9 @@ type EmailMessage struct {
 	ID        uuid.UUID `gorm:"type:uuid;default:gen_random_uuid();primaryKey"`
 	CreatedAt time.Time `gorm:"column:created_at;type:timestamp;DEFAULT:current_timestamp"`
 
-	SentAt *time.Time `gorm:"column:sent_at;type:timestamp;DEFAULT:current_timestamp"`
+	Status EmailMessageStatus `gorm:"size:50;not null;"`
+
+	SentAt *time.Time `gorm:"column:sent_at;type:timestamp;"`
 	Error  *string    `gorm:"column:error;type:text"`
 
 	UniqueInternalIdentifier *string `gorm:"size:255;index:unique_internal_identifier"`
@@ -41,6 +43,15 @@ type EmailMessage struct {
 	ProviderInReplyTo  string `gorm:"size:255;not null;"`
 	ProviderReferences string `gorm:"size:255;not null;"`
 }
+
+type EmailMessageStatus string
+
+const (
+	EmailMessageStatusScheduled EmailMessageStatus = "SCHEDULED"
+	EmailMessageStatusSent      EmailMessageStatus = "SENT"
+	EmailMessageStatusProcessed EmailMessageStatus = "PROCESSED"
+	EmailMessageStatusError     EmailMessageStatus = "ERROR"
+)
 
 // BeforeSave hook for converting slices to strings
 func (e *EmailMessage) BeforeSave(tx *gorm.DB) (err error) {
