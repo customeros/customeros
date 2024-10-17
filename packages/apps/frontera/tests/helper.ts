@@ -164,8 +164,8 @@ export async function clickLocatorThatIsVisibleAndHasText(
 
 export function createRequestPromise(
   page: Page,
-  requestsKey: string,
-  requestValue: string | number,
+  expectedKey: string,
+  expectedValue: string | number,
 ) {
   return page.waitForRequest(
     (request) => {
@@ -177,8 +177,12 @@ export function createRequestPromise(
 
         if (postData) {
           const parsedData = JSON.parse(postData);
+          // const actualValue = parsedData.variables?.input?.[expectedKey];
 
-          return parsedData.variables?.input?.[requestsKey] === requestValue;
+          // console.log('Request actualValue: ', actualValue);
+          // console.log('Request expectedValue: ', expectedValue);
+
+          return parsedData.variables?.input?.[expectedKey] === expectedValue;
         }
       }
 
@@ -190,8 +194,8 @@ export function createRequestPromise(
 
 export function createResponsePromise(
   page: Page,
-  responseKey: string,
-  responseValue: string | undefined,
+  expectedKey: string,
+  expectedValue: string | undefined,
 ) {
   return page.waitForResponse(async (response) => {
     if (
@@ -214,9 +218,12 @@ export function createResponsePromise(
         }, obj);
       };
 
-      const actualValue = getNestedProperty(responseBody.data, responseKey);
+      const actualValue = getNestedProperty(responseBody.data, expectedKey);
 
-      return actualValue !== responseValue;
+      // console.log('Response actualValue: ', actualValue);
+      // console.log('Response expectedValue: ', expectedValue);
+
+      return actualValue !== expectedValue;
     }
 
     return false;

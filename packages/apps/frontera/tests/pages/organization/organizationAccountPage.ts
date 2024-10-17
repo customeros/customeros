@@ -210,7 +210,7 @@ export class OrganizationAccountPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Update?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 

@@ -138,7 +138,12 @@ export class OpportunitiesKanbanPage {
   async addOpportunity(organizationName: string) {
     await this.page.locator(this.addOppPlusIdentified).click();
 
-    const responsePromise = createResponsePromise(
+    const responseMutationPromise = createResponsePromise(
+      this.page,
+      'opportunity_Create?.metadata?.id',
+      undefined,
+    );
+    const responseQueryPromise = createResponsePromise(
       this.page,
       'opportunity?.metadata?.id',
       undefined,
@@ -148,7 +153,7 @@ export class OpportunitiesKanbanPage {
       .locator(this.oppKanbanChooseOrganization)
       .pressSequentially(organizationName);
     await this.page.locator(this.oppKanbanChooseOrganization).press('Enter');
-    await Promise.all([responsePromise]);
+    await Promise.all([responseMutationPromise, responseQueryPromise]);
   }
 
   async moveOpportunityCard(
@@ -336,6 +341,8 @@ export class OpportunitiesKanbanPage {
 
     const opportunityName = randomUUID();
 
+    expect(1, 'opportunityName: ' + opportunityName).toBe(1);
+
     const requestPromise = createRequestPromise(
       this.page,
       'name',
@@ -353,6 +360,7 @@ export class OpportunitiesKanbanPage {
     await nameInput.dblclick();
     await nameInput.pressSequentially(opportunityName, { delay: 200 });
 
+    expect(1, 'ONE IS ONE').toBe(1);
     await Promise.all([requestPromise, responsePromise]);
 
     return opportunityName;
