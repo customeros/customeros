@@ -7,7 +7,7 @@ export class TargetsPage {
     this.page = page;
   }
 
-  sideNavItemTargets = 'button[data-test="side-nav-item-Targets"]';
+  sideNavItemTargets = 'div[data-test="side-nav-item-Targets"]';
   sideNavItemTargetsSelected =
-    'button[data-test="side-nav-item-Targets"] div[aria-selected="true"]';
+    'div[data-test="side-nav-item-Targets"] div[aria-selected="true"]';
 }
