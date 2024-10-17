@@ -43,7 +43,7 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 }
 
 // EmailSetPrimaryForContact is the resolver for the emailSetPrimaryForContact field.
-func (r *mutationResolver) EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Email, error) {
+func (r *mutationResolver) EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Result, error) {
 	panic(fmt.Errorf("not implemented: EmailSetPrimaryForContact - emailSetPrimaryForContact"))
 }
 
