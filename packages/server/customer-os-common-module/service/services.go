@@ -21,31 +21,32 @@ type Services struct {
 	RabbitMQService *RabbitMQService
 	GrpcClients     *grpc_client.Clients
 
-	AttachmentService         AttachmentService
-	ContactService            ContactService
-	ContractService           ContractService
-	CommonService             CommonService
-	CurrencyService           CurrencyService
-	EmailService              EmailService
-	EmailingService           EmailingService
-	ExternalSystemService     ExternalSystemService
-	FlowService               FlowService
-	FlowExecutionService      FlowExecutionService
-	JobRoleService            JobRoleService
-	InvoiceService            InvoiceService
-	InteractionSessionService InteractionSessionService
-	InteractionEventService   InteractionEventService
-	OpportunityService        OpportunityService
-	SlackChannelService       SlackChannelService
-	ServiceLineItemService    ServiceLineItemService
-	TenantService             TenantService
-	UserService               UserService
-	WorkflowService           WorkflowService
-	WorkspaceService          WorkspaceService
-	SocialService             SocialService
-	DomainService             DomainService
-	OrganizationService       OrganizationService
-	TagService                TagService
+	AttachmentService          AttachmentService
+	ContactService             ContactService
+	ContractService            ContractService
+	CommonService              CommonService
+	CurrencyService            CurrencyService
+	CustomFieldTemplateService CustomFieldTemplateService
+	EmailService               EmailService
+	EmailingService            EmailingService
+	ExternalSystemService      ExternalSystemService
+	FlowService                FlowService
+	FlowExecutionService       FlowExecutionService
+	JobRoleService             JobRoleService
+	InvoiceService             InvoiceService
+	InteractionSessionService  InteractionSessionService
+	InteractionEventService    InteractionEventService
+	OpportunityService         OpportunityService
+	SlackChannelService        SlackChannelService
+	ServiceLineItemService     ServiceLineItemService
+	TenantService              TenantService
+	UserService                UserService
+	WorkflowService            WorkflowService
+	WorkspaceService           WorkspaceService
+	SocialService              SocialService
+	DomainService              DomainService
+	OrganizationService        OrganizationService
+	TagService                 TagService
 
 	GoogleService  GoogleService
 	AzureService   AzureService
@@ -76,6 +77,7 @@ func InitServices(globalConfig *config.GlobalConfig, db *gorm.DB, driver *neo4j.
 	services.ContactService = NewContactService(log, services)
 	services.ContractService = NewContractService(log, services)
 	services.CurrencyService = NewCurrencyService(services.PostgresRepositories)
+	services.CustomFieldTemplateService = NewCustomFieldTemplateService(log, services)
 	services.DomainService = NewDomainService(log, services)
 	services.EmailService = NewEmailService(services)
 	services.EmailingService = NewEmailingService(log, services)

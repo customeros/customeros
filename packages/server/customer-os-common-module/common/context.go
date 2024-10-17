@@ -2,6 +2,7 @@ package common
 
 import (
 	"context"
+	"github.com/pkg/errors"
 	"net/http"
 )
 
@@ -58,4 +59,11 @@ func GetUserEmailFromContext(ctx context.Context) string {
 
 func GetIdentityIdFromContext(ctx context.Context) string {
 	return GetContext(ctx).IdentityId
+}
+
+func ValidateTenant(ctx context.Context) error {
+	if GetTenantFromContext(ctx) == "" {
+		return errors.New("tenant is missing")
+	}
+	return nil
 }

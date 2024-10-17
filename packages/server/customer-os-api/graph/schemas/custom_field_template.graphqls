@@ -1,39 +1,42 @@
 extend type Mutation {
-    customFieldTemplate_Create(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    customFieldTemplate_Save(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    customFieldTemplate_Delete(id: ID!): Boolean @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    customFieldTemplate_List: [CustomFieldTemplate!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type CustomFieldTemplate  implements Node {
-    id: ID!
-    createdAt: Time!
-    updatedAt: Time!
-    name: String!
-    type: CustomFieldTemplateType!
-    order: Int!
-    mandatory: Boolean!
-    length: Int
-    min: Int
-    max: Int
+    id:         ID!
+    createdAt:  Time!
+    updatedAt:  Time!
+    name:       String!
+    type:       CustomFieldTemplateType!
+    validValues: [String!]!
+    entityType: EntityType!
+    order:      Int64
+    required:   Boolean
+    length:     Int64
+    min:        Int64
+    max:        Int64
 }
 
 input CustomFieldTemplateInput {
-    name:      String!
-    type:      CustomFieldTemplateType!
-    order:     Int!
-    mandatory: Boolean
-    length:    Int
-    min:       Int
-    max:       Int
+    id:         ID
+    name:       String
+    type:       CustomFieldTemplateType
+    validValues: [String!]
+    entityType: EntityType
+    order:      Int64
+    required:   Boolean
+    length:     Int64
+    min:        Int64
+    max:        Int64
 }
 
 enum CustomFieldTemplateType {
-    TEXT
-    LINK
-    #    INTEGER
-    #    DECIMAL
-    #    DATE
-    #    DATETIME
-    #    TIME
-    #    BOOL
-    #    ENUM
-    #    ENTITY
+    FREE_TEXT
+    SINGLE_SELECT
+    NUMBER
 }

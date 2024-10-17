@@ -5,17 +5,37 @@ import (
 	"time"
 )
 
+type CustomFieldTemplateProperty string
+
+const (
+	CustomFieldTemplatePropertyId          CustomFieldTemplateProperty = "id"
+	CustomFieldTemplatePropertyName        CustomFieldTemplateProperty = "name"
+	CustomFieldTemplatePropertyEntityType  CustomFieldTemplateProperty = "entityType"
+	CustomFieldTemplatePropertyType        CustomFieldTemplateProperty = "type"
+	CustomFieldTemplatePropertyValidValues CustomFieldTemplateProperty = "validValues"
+	CustomFieldTemplatePropertyOrder       CustomFieldTemplateProperty = "order"
+	CustomFieldTemplatePropertyRequired    CustomFieldTemplateProperty = "required"
+	CustomFieldTemplatePropertyLength      CustomFieldTemplateProperty = "length"
+	CustomFieldTemplatePropertyMin         CustomFieldTemplateProperty = "min"
+	CustomFieldTemplatePropertyMax         CustomFieldTemplateProperty = "max"
+	CustomFieldTemplatePropertyCreatedAt   CustomFieldTemplateProperty = "createdAt"
+	CustomFieldTemplatePropertyUpdatedAt   CustomFieldTemplateProperty = "updatedAt"
+)
+
 type CustomFieldTemplateEntity struct {
-	Id        string
-	CreatedAt time.Time
-	UpdatedAt time.Time
-	Name      string
-	Type      string // TODO convert to enum
-	Order     int64
-	Mandatory bool
-	Length    *int64
-	Min       *int64
-	Max       *int64
+	DataLoaderKey
+	Id          string
+	Name        string
+	EntityType  model.EntityType
+	Type        string
+	ValidValues []string
+	Order       *int64
+	Required    *bool
+	Length      *int64
+	Min         *int64
+	Max         *int64
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type CustomFieldTemplateEntities []CustomFieldTemplateEntity
