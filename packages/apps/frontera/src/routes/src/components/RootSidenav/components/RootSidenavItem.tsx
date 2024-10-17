@@ -1,11 +1,12 @@
-import React, { useState, ReactElement, MouseEventHandler } from 'react';
+import { useState, ReactElement, MouseEventHandler } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
-import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
+import { buttonSize } from '@ui/form/Button/Button';
 import { LayersTwo01 } from '@ui/media/icons/LayersTwo01.tsx';
+import { ghostButton } from '@ui/form/Button/Button.variants';
 import { DotsVertical } from '@ui/media/icons/DotsVertical.tsx';
 import {
   Menu,
@@ -26,7 +27,14 @@ interface SidenavItemProps {
 }
 
 export const RootSidenavItem = observer(
-  ({ label, icon, onClick, isActive, dataTest, id }: SidenavItemProps) => {
+  ({
+    label,
+    icon,
+    onClick,
+    isActive = false,
+    dataTest,
+    id,
+  }: SidenavItemProps) => {
     const [isEditing, setIsEditing] = useState(false);
     const store = useStore();
 
@@ -60,15 +68,18 @@ export const RootSidenavItem = observer(
     };
 
     return (
-      <Button
-        size='sm'
-        variant='ghost'
-        dataTest={dataTest}
+      <div
         onClick={handleClick}
-        colorScheme='grayModern'
-        leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
-        className={`w-full justify-start px-3 text-gray-700 hover:bg-grayModern-100 *:hover:text-gray-700  group focus:shadow-EditableSideNavItemFocus mb-[2px] ${dynamicClasses}`}
+        data-test-id={dataTest}
+        className={cn(
+          buttonSize({ size: 'sm' }),
+          (ghostButton({ colorScheme: 'grayModern' }),
+          `flex w-full justify-start gap-2 px-3 text-gray-700 cursor-pointer hover:bg-grayModern-100 *:hover:text-gray-700  group focus:shadow-EditableSideNavItemFocus mb-[2px] rounded-md ${dynamicClasses}`),
+        )}
       >
+        <div className='mt-[-1px]'>
+          {typeof icon === 'function' ? icon(isActive!) : icon}
+        </div>
         <div
           aria-selected={isActive}
           className={cn(
@@ -99,7 +110,7 @@ export const RootSidenavItem = observer(
             </MenuList>
           </Menu>
         </div>
-      </Button>
+      </div>
     );
   },
 );

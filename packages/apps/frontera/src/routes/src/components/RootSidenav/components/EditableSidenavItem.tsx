@@ -3,12 +3,13 @@ import React, { useState, ReactElement, MouseEventHandler } from 'react';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
-import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
+import { buttonSize } from '@ui/form/Button/Button';
 import { Archive } from '@ui/media/icons/Archive.tsx';
 import { TextInput } from '@ui/media/icons/TextInput';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
 import { LayersTwo01 } from '@ui/media/icons/LayersTwo01.tsx';
+import { ghostButton } from '@ui/form/Button/Button.variants';
 import {
   Menu,
   MenuItem,
@@ -50,15 +51,18 @@ export const EditableSideNavItem = observer(
     );
 
     return (
-      <Button
-        size='sm'
-        variant='ghost'
-        data-test={dataTest}
+      <div
         onClick={handleClick}
-        colorScheme='grayModern'
-        leftIcon={typeof icon === 'function' ? icon(!!isActive) : icon}
-        className={`w-full justify-start px-3 text-gray-700 group hover:bg-grayModern-100 *:hover:text-gray-700 focus:shadow-EditableSideNavItemFocus ${dynamicClasses}`}
+        data-test-id={dataTest}
+        className={cn(
+          buttonSize({ size: 'sm' }),
+          (ghostButton({ colorScheme: 'grayModern' }),
+          `flex w-full justify-start items-center gap-2 px-3 text-gray-700 cursor-pointer hover:bg-grayModern-100 *:hover:text-gray-700  group focus:shadow-EditableSideNavItemFocus mb-[2px] rounded-md ${dynamicClasses}`),
+        )}
       >
+        <div className='mt-[-1px]'>
+          {typeof icon === 'function' ? icon(isActive!) : icon}
+        </div>
         <div
           className={cn(
             'w-full text-justify overflow-hidden overflow-ellipsis',
@@ -132,7 +136,7 @@ export const EditableSideNavItem = observer(
             </MenuList>
           </Menu>
         </div>
-      </Button>
+      </div>
     );
   },
 );
