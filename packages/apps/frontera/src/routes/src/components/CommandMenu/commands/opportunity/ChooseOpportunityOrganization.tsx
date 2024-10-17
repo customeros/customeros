@@ -39,10 +39,7 @@ export const ChooseOpportunityOrganization = observer(() => {
   }, [organizationsList]);
 
   const handleSearch = (v: string) => {
-    const normalizedValue = v
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '');
+    const normalizedValue = v.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
 
     setSearch(normalizedValue);
 
