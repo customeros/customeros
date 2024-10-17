@@ -1,8 +1,6 @@
-import { observer } from 'mobx-react-lite';
-
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
-export const ContactHub = observer(() => {
+export const ContactHub = () => {
   const label = `Contact`;
 
   return (
@@ -10,4 +8,4 @@ export const ContactHub = observer(() => {
       <></>
     </CommandsContainer>
   );
-});
+};
