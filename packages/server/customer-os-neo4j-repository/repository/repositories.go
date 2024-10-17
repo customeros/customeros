@@ -27,6 +27,8 @@ type Repositories struct {
 	CountryReadRepository                 CountryReadRepository
 	CountryWriteRepository                CountryWriteRepository
 	CustomFieldWriteRepository            CustomFieldWriteRepository
+	CustomFieldTemplateReadRepository     CustomFieldTemplateReadRepository
+	CustomFieldTemplateWriteRepository    CustomFieldTemplateWriteRepository
 	DomainReadRepository                  DomainReadRepository
 	DomainWriteRepository                 DomainWriteRepository
 	EmailReadRepository                   EmailReadRepository
@@ -110,6 +112,8 @@ func InitNeo4jRepositories(driver *neo4j.DriverWithContext, neo4jDatabase string
 		CountryReadRepository:                 NewCountryReadRepository(driver, neo4jDatabase),
 		CountryWriteRepository:                NewCountryWriteRepository(driver, neo4jDatabase),
 		CustomFieldWriteRepository:            NewCustomFieldWriteRepository(driver, neo4jDatabase),
+		CustomFieldTemplateReadRepository:     NewCustomFieldTemplateReadRepository(driver, neo4jDatabase),
+		CustomFieldTemplateWriteRepository:    NewCustomFieldTemplateWriteRepository(driver, neo4jDatabase),
 		DomainReadRepository:                  NewDomainReadRepository(driver, neo4jDatabase),
 		DomainWriteRepository:                 NewDomainWriteRepository(driver, neo4jDatabase),
 		EmailReadRepository:                   NewEmailReadRepository(driver, neo4jDatabase),

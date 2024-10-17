@@ -17,6 +17,7 @@ input RemoveTagInput {
 
 enum EntityType {
     ORGANIZATION
+    OPPORTUNITY
     CONTACT
     LOG_ENTRY
 }

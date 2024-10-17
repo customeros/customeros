@@ -734,29 +734,34 @@ type CustomFieldInput struct {
 }
 
 type CustomFieldTemplate struct {
-	ID        string                  `json:"id"`
-	CreatedAt time.Time               `json:"createdAt"`
-	UpdatedAt time.Time               `json:"updatedAt"`
-	Name      string                  `json:"name"`
-	Type      CustomFieldTemplateType `json:"type"`
-	Order     int                     `json:"order"`
-	Mandatory bool                    `json:"mandatory"`
-	Length    *int                    `json:"length,omitempty"`
-	Min       *int                    `json:"min,omitempty"`
-	Max       *int                    `json:"max,omitempty"`
+	ID          string                  `json:"id"`
+	CreatedAt   time.Time               `json:"createdAt"`
+	UpdatedAt   time.Time               `json:"updatedAt"`
+	Name        string                  `json:"name"`
+	Type        CustomFieldTemplateType `json:"type"`
+	ValidValues []string                `json:"validValues"`
+	EntityType  EntityType              `json:"entityType"`
+	Order       *int64                  `json:"order,omitempty"`
+	Required    *bool                   `json:"required,omitempty"`
+	Length      *int64                  `json:"length,omitempty"`
+	Min         *int64                  `json:"min,omitempty"`
+	Max         *int64                  `json:"max,omitempty"`
 }
 
 func (CustomFieldTemplate) IsNode()            {}
 func (this CustomFieldTemplate) GetID() string { return this.ID }
 
 type CustomFieldTemplateInput struct {
-	Name      string                  `json:"name"`
-	Type      CustomFieldTemplateType `json:"type"`
-	Order     int                     `json:"order"`
-	Mandatory *bool                   `json:"mandatory,omitempty"`
-	Length    *int                    `json:"length,omitempty"`
-	Min       *int                    `json:"min,omitempty"`
-	Max       *int                    `json:"max,omitempty"`
+	ID          *string                  `json:"id,omitempty"`
+	Name        *string                  `json:"name,omitempty"`
+	Type        *CustomFieldTemplateType `json:"type,omitempty"`
+	ValidValues []string                 `json:"validValues,omitempty"`
+	EntityType  *EntityType              `json:"entityType,omitempty"`
+	Order       *int64                   `json:"order,omitempty"`
+	Required    *bool                    `json:"required,omitempty"`
+	Length      *int64                   `json:"length,omitempty"`
+	Min         *int64                   `json:"min,omitempty"`
+	Max         *int64                   `json:"max,omitempty"`
 }
 
 // Describes a custom, user-defined field associated with a `Contact`.
@@ -3676,18 +3681,20 @@ func (e CustomFieldDataType) MarshalGQL(w io.Writer) {
 type CustomFieldTemplateType string
 
 const (
-	CustomFieldTemplateTypeText CustomFieldTemplateType = "TEXT"
-	CustomFieldTemplateTypeLink CustomFieldTemplateType = "LINK"
+	CustomFieldTemplateTypeFreeText     CustomFieldTemplateType = "FREE_TEXT"
+	CustomFieldTemplateTypeSingleSelect CustomFieldTemplateType = "SINGLE_SELECT"
+	CustomFieldTemplateTypeNumber       CustomFieldTemplateType = "NUMBER"
 )
 
 var AllCustomFieldTemplateType = []CustomFieldTemplateType{
-	CustomFieldTemplateTypeText,
-	CustomFieldTemplateTypeLink,
+	CustomFieldTemplateTypeFreeText,
+	CustomFieldTemplateTypeSingleSelect,
+	CustomFieldTemplateTypeNumber,
 }
 
 func (e CustomFieldTemplateType) IsValid() bool {
 	switch e {
-	case CustomFieldTemplateTypeText, CustomFieldTemplateTypeLink:
+	case CustomFieldTemplateTypeFreeText, CustomFieldTemplateTypeSingleSelect, CustomFieldTemplateTypeNumber:
 		return true
 	}
 	return false
@@ -4056,19 +4063,21 @@ type EntityType string
 
 const (
 	EntityTypeOrganization EntityType = "ORGANIZATION"
+	EntityTypeOpportunity  EntityType = "OPPORTUNITY"
 	EntityTypeContact      EntityType = "CONTACT"
 	EntityTypeLogEntry     EntityType = "LOG_ENTRY"
 )
 
 var AllEntityType = []EntityType{
 	EntityTypeOrganization,
+	EntityTypeOpportunity,
 	EntityTypeContact,
 	EntityTypeLogEntry,
 }
 
 func (e EntityType) IsValid() bool {
 	switch e {
-	case EntityTypeOrganization, EntityTypeContact, EntityTypeLogEntry:
+	case EntityTypeOrganization, EntityTypeOpportunity, EntityTypeContact, EntityTypeLogEntry:
 		return true
 	}
 	return false

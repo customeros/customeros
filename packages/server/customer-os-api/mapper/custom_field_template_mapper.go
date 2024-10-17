@@ -2,39 +2,61 @@ package mapper
 
 import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 )
 
-func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) *neo4jentity.CustomFieldTemplateEntity {
-	templateEntity := neo4jentity.CustomFieldTemplateEntity{
-		Name:      input.Name,
-		Type:      input.Type.String(),
-		Order:     int64(input.Order),
-		Mandatory: utils.IfNotNilBool(input.Mandatory),
-		Length:    utils.IntPtrToInt64Ptr(input.Length),
-		Min:       utils.IntPtrToInt64Ptr(input.Min),
-		Max:       utils.IntPtrToInt64Ptr(input.Max),
+func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) neo4jrepository.CustomFieldTemplateSaveFields {
+	fields := neo4jrepository.CustomFieldTemplateSaveFields{}
+	if input.Name != nil {
+		fields.Name = *input.Name
+		fields.UpdateName = true
 	}
-	return &templateEntity
+	if input.EntityType != nil {
+		fields.EntityType = commonmodel.DecodeEntityType(input.EntityType.String())
+	}
+	if input.Type != nil {
+		fields.Type = input.Type.String()
+		fields.UpdateType = true
+	}
+	if input.Order != nil {
+		fields.Order = input.Order
+		fields.UpdateOrder = true
+	}
+	if input.Required != nil {
+		fields.Required = input.Required
+		fields.UpdateRequired = true
+	}
+	if input.Length != nil {
+		fields.Length = input.Length
+		fields.UpdateLength = true
+	}
+	if input.Min != nil {
+		fields.Min = input.Min
+		fields.UpdateMin = true
+	}
+	if input.Max != nil {
+		fields.Max = input.Max
+		fields.UpdateMax = true
+	}
+
+	return fields
 }
 
 func MapEntityToCustomFieldTemplate(entity *neo4jentity.CustomFieldTemplateEntity) *model.CustomFieldTemplate {
-	fieldType := model.CustomFieldTemplateType(entity.Type)
-	if !fieldType.IsValid() {
-		fieldType = model.CustomFieldTemplateTypeText
-	}
 	output := model.CustomFieldTemplate{
-		ID:        entity.Id,
-		Name:      entity.Name,
-		Type:      fieldType,
-		Order:     int(entity.Order),
-		Mandatory: entity.Mandatory,
-		Length:    utils.Int64PtrToIntPtr(entity.Length),
-		Min:       utils.Int64PtrToIntPtr(entity.Min),
-		Max:       utils.Int64PtrToIntPtr(entity.Max),
-		CreatedAt: entity.CreatedAt,
-		UpdatedAt: entity.UpdatedAt,
+		ID:         entity.Id,
+		Name:       entity.Name,
+		EntityType: model.EntityType(entity.EntityType.String()),
+		Type:       model.CustomFieldTemplateType(entity.Type),
+		Order:      entity.Order,
+		Required:   entity.Required,
+		Length:     entity.Length,
+		Min:        entity.Min,
+		Max:        entity.Max,
+		CreatedAt:  entity.CreatedAt,
+		UpdatedAt:  entity.UpdatedAt,
 	}
 	return &output
 }
@@ -45,15 +67,4 @@ func MapEntitiesToCustomFieldTemplates(entities *neo4jentity.CustomFieldTemplate
 		customFieldTemplates = append(customFieldTemplates, MapEntityToCustomFieldTemplate(&v))
 	}
 	return customFieldTemplates
-}
-
-func MapTemplateTypeToFieldDataType(templateType string) *model.CustomFieldDataType {
-	switch templateType {
-	case model.CustomFieldTemplateTypeText.String():
-		return utils.ToPtr(model.CustomFieldDataTypeText)
-	case model.CustomFieldTemplateTypeLink.String():
-		return utils.ToPtr(model.CustomFieldDataTypeText)
-	default:
-		return utils.ToPtr(model.CustomFieldDataTypeText)
-	}
 }

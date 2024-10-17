@@ -326,16 +326,18 @@ type ComplexityRoot struct {
 	}
 
 	CustomFieldTemplate struct {
-		CreatedAt func(childComplexity int) int
-		ID        func(childComplexity int) int
-		Length    func(childComplexity int) int
-		Mandatory func(childComplexity int) int
-		Max       func(childComplexity int) int
-		Min       func(childComplexity int) int
-		Name      func(childComplexity int) int
-		Order     func(childComplexity int) int
-		Type      func(childComplexity int) int
-		UpdatedAt func(childComplexity int) int
+		CreatedAt   func(childComplexity int) int
+		EntityType  func(childComplexity int) int
+		ID          func(childComplexity int) int
+		Length      func(childComplexity int) int
+		Max         func(childComplexity int) int
+		Min         func(childComplexity int) int
+		Name        func(childComplexity int) int
+		Order       func(childComplexity int) int
+		Required    func(childComplexity int) int
+		Type        func(childComplexity int) int
+		UpdatedAt   func(childComplexity int) int
+		ValidValues func(childComplexity int) int
 	}
 
 	CustomerContact struct {
@@ -970,7 +972,8 @@ type ComplexityRoot struct {
 		CustomFieldDeleteFromFieldSetByID          func(childComplexity int, contactID string, fieldSetID string, id string) int
 		CustomFieldMergeToContact                  func(childComplexity int, contactID string, input model.CustomFieldInput) int
 		CustomFieldMergeToFieldSet                 func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
-		CustomFieldTemplateCreate                  func(childComplexity int, input model.CustomFieldTemplateInput) int
+		CustomFieldTemplateDelete                  func(childComplexity int, id string) int
+		CustomFieldTemplateSave                    func(childComplexity int, input model.CustomFieldTemplateInput) int
 		CustomFieldUpdateInContact                 func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
 		CustomFieldUpdateInFieldSet                func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
 		CustomFieldsMergeAndUpdateInContact        func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
@@ -1313,6 +1316,7 @@ type ComplexityRoot struct {
 		Contacts                           func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		Contract                           func(childComplexity int, id string) int
 		Contracts                          func(childComplexity int, pagination *model.Pagination) int
+		CustomFieldTemplateList            func(childComplexity int) int
 		DashboardARRBreakdown              func(childComplexity int, period *model.DashboardPeriodInput) int
 		DashboardCustomerMap               func(childComplexity int) int
 		DashboardGrossRevenueRetention     func(childComplexity int, period *model.DashboardPeriodInput) int
@@ -1766,7 +1770,8 @@ type MutationResolver interface {
 	FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error)
 	FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error)
 	FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error)
-	CustomFieldTemplateCreate(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error)
+	CustomFieldTemplateSave(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error)
+	CustomFieldTemplateDelete(ctx context.Context, id string) (*bool, error)
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
 	EmailReplaceForContact(ctx context.Context, contactID string, previousEmail *string, input model.EmailInput) (*model.Email, error)
@@ -1963,6 +1968,7 @@ type QueryResolver interface {
 	ContactByPhone(ctx context.Context, e164 string) (*model.Contact, error)
 	Contract(ctx context.Context, id string) (*model.Contract, error)
 	Contracts(ctx context.Context, pagination *model.Pagination) (*model.ContractPage, error)
+	CustomFieldTemplateList(ctx context.Context) ([]*model.CustomFieldTemplate, error)
 	DashboardViewOrganizations(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.OrganizationPage, error)
 	DashboardViewRenewals(ctx context.Context, pagination model.Pagination, where *model.Filter, sort *model.SortBy) (*model.RenewalsPage, error)
 	DashboardCustomerMap(ctx context.Context) ([]*model.DashboardCustomerMap, error)
@@ -3433,6 +3439,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CustomFieldTemplate.CreatedAt(childComplexity), true
 
+	case "CustomFieldTemplate.entityType":
+		if e.complexity.CustomFieldTemplate.EntityType == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldTemplate.EntityType(childComplexity), true
+
 	case "CustomFieldTemplate.id":
 		if e.complexity.CustomFieldTemplate.ID == nil {
 			break
@@ -3446,13 +3459,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomFieldTemplate.Length(childComplexity), true
-
-	case "CustomFieldTemplate.mandatory":
-		if e.complexity.CustomFieldTemplate.Mandatory == nil {
-			break
-		}
-
-		return e.complexity.CustomFieldTemplate.Mandatory(childComplexity), true
 
 	case "CustomFieldTemplate.max":
 		if e.complexity.CustomFieldTemplate.Max == nil {
@@ -3482,6 +3488,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.CustomFieldTemplate.Order(childComplexity), true
 
+	case "CustomFieldTemplate.required":
+		if e.complexity.CustomFieldTemplate.Required == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldTemplate.Required(childComplexity), true
+
 	case "CustomFieldTemplate.type":
 		if e.complexity.CustomFieldTemplate.Type == nil {
 			break
@@ -3495,6 +3508,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.CustomFieldTemplate.UpdatedAt(childComplexity), true
+
+	case "CustomFieldTemplate.validValues":
+		if e.complexity.CustomFieldTemplate.ValidValues == nil {
+			break
+		}
+
+		return e.complexity.CustomFieldTemplate.ValidValues(childComplexity), true
 
 	case "CustomerContact.email":
 		if e.complexity.CustomerContact.Email == nil {
@@ -6878,17 +6898,29 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CustomFieldMergeToFieldSet(childComplexity, args["contactId"].(string), args["fieldSetId"].(string), args["input"].(model.CustomFieldInput)), true
 
-	case "Mutation.customFieldTemplate_Create":
-		if e.complexity.Mutation.CustomFieldTemplateCreate == nil {
+	case "Mutation.customFieldTemplate_Delete":
+		if e.complexity.Mutation.CustomFieldTemplateDelete == nil {
 			break
 		}
 
-		args, err := ec.field_Mutation_customFieldTemplate_Create_args(context.TODO(), rawArgs)
+		args, err := ec.field_Mutation_customFieldTemplate_Delete_args(context.TODO(), rawArgs)
 		if err != nil {
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CustomFieldTemplateCreate(childComplexity, args["input"].(model.CustomFieldTemplateInput)), true
+		return e.complexity.Mutation.CustomFieldTemplateDelete(childComplexity, args["id"].(string)), true
+
+	case "Mutation.customFieldTemplate_Save":
+		if e.complexity.Mutation.CustomFieldTemplateSave == nil {
+			break
+		}
+
+		args, err := ec.field_Mutation_customFieldTemplate_Save_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Mutation.CustomFieldTemplateSave(childComplexity, args["input"].(model.CustomFieldTemplateInput)), true
 
 	case "Mutation.customFieldUpdateInContact":
 		if e.complexity.Mutation.CustomFieldUpdateInContact == nil {
@@ -9711,6 +9743,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.Contracts(childComplexity, args["pagination"].(*model.Pagination)), true
 
+	case "Query.customFieldTemplate_List":
+		if e.complexity.Query.CustomFieldTemplateList == nil {
+			break
+		}
+
+		return e.complexity.Query.CustomFieldTemplateList(childComplexity), true
+
 	case "Query.dashboard_ARRBreakdown":
 		if e.complexity.Query.DashboardARRBreakdown == nil {
 			break
@@ -11800,6 +11839,7 @@ input RemoveTagInput {
 
 enum EntityType {
     ORGANIZATION
+    OPPORTUNITY
     CONTACT
     LOG_ENTRY
 }`, BuiltIn: false},
@@ -12723,43 +12763,46 @@ input CustomFieldEntityType {
     entityType: CustomEntityType!
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/custom_field_template.graphqls", Input: `extend type Mutation {
-    customFieldTemplate_Create(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    customFieldTemplate_Save(input: CustomFieldTemplateInput!): CustomFieldTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    customFieldTemplate_Delete(id: ID!): Boolean @hasRole(roles: [ADMIN, USER]) @hasTenant
+}
+
+extend type Query {
+    customFieldTemplate_List: [CustomFieldTemplate!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 type CustomFieldTemplate  implements Node {
-    id: ID!
-    createdAt: Time!
-    updatedAt: Time!
-    name: String!
-    type: CustomFieldTemplateType!
-    order: Int!
-    mandatory: Boolean!
-    length: Int
-    min: Int
-    max: Int
+    id:         ID!
+    createdAt:  Time!
+    updatedAt:  Time!
+    name:       String!
+    type:       CustomFieldTemplateType!
+    validValues: [String!]!
+    entityType: EntityType!
+    order:      Int64
+    required:   Boolean
+    length:     Int64
+    min:        Int64
+    max:        Int64
 }
 
 input CustomFieldTemplateInput {
-    name:      String!
-    type:      CustomFieldTemplateType!
-    order:     Int!
-    mandatory: Boolean
-    length:    Int
-    min:       Int
-    max:       Int
+    id:         ID
+    name:       String
+    type:       CustomFieldTemplateType
+    validValues: [String!]
+    entityType: EntityType
+    order:      Int64
+    required:   Boolean
+    length:     Int64
+    min:        Int64
+    max:        Int64
 }
 
 enum CustomFieldTemplateType {
-    TEXT
-    LINK
-    #    INTEGER
-    #    DECIMAL
-    #    DATE
-    #    DATETIME
-    #    TIME
-    #    BOOL
-    #    ENUM
-    #    ENTITY
+    FREE_TEXT
+    SINGLE_SELECT
+    NUMBER
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/dashboard.graphqls", Input: `extend type Query {
     """
@@ -16739,7 +16782,22 @@ func (ec *executionContext) field_Mutation_customFieldMergeToFieldSet_args(ctx c
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_customFieldTemplate_Create_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+func (ec *executionContext) field_Mutation_customFieldTemplate_Delete_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
+	return args, nil
+}
+
+func (ec *executionContext) field_Mutation_customFieldTemplate_Save_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
 	var arg0 model.CustomFieldTemplateInput
@@ -29815,10 +29873,14 @@ func (ec *executionContext) fieldContext_CustomField_template(_ context.Context,
 				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
 			case "type":
 				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
+			case "validValues":
+				return ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
+			case "entityType":
+				return ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
 			case "order":
 				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
-			case "mandatory":
-				return ec.fieldContext_CustomFieldTemplate_mandatory(ctx, field)
+			case "required":
+				return ec.fieldContext_CustomFieldTemplate_required(ctx, field)
 			case "length":
 				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
 			case "min":
@@ -30052,6 +30114,94 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_type(_ context.Cont
 	return fc, nil
 }
 
+func (ec *executionContext) _CustomFieldTemplate_validValues(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.ValidValues, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]string)
+	fc.Result = res
+	return ec.marshalNString2ᚕstringᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldTemplate_validValues(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type String does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _CustomFieldTemplate_entityType(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.EntityType, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(model.EntityType)
+	fc.Result = res
+	return ec.marshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_CustomFieldTemplate_entityType(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "CustomFieldTemplate",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type EntityType does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _CustomFieldTemplate_order(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldTemplate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_CustomFieldTemplate_order(ctx, field)
 	if err != nil {
@@ -30073,14 +30223,11 @@ func (ec *executionContext) _CustomFieldTemplate_order(ctx context.Context, fiel
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(int)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomFieldTemplate_order(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30090,14 +30237,14 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_order(_ context.Con
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
 }
 
-func (ec *executionContext) _CustomFieldTemplate_mandatory(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_CustomFieldTemplate_mandatory(ctx, field)
+func (ec *executionContext) _CustomFieldTemplate_required(ctx context.Context, field graphql.CollectedField, obj *model.CustomFieldTemplate) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_CustomFieldTemplate_required(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -30110,24 +30257,21 @@ func (ec *executionContext) _CustomFieldTemplate_mandatory(ctx context.Context, 
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Mandatory, nil
+		return obj.Required, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
 		return graphql.Null
 	}
 	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
 		return graphql.Null
 	}
-	res := resTmp.(bool)
+	res := resTmp.(*bool)
 	fc.Result = res
-	return ec.marshalNBoolean2bool(ctx, field.Selections, res)
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_CustomFieldTemplate_mandatory(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_CustomFieldTemplate_required(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "CustomFieldTemplate",
 		Field:      field,
@@ -30163,9 +30307,9 @@ func (ec *executionContext) _CustomFieldTemplate_length(ctx context.Context, fie
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomFieldTemplate_length(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30175,7 +30319,7 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_length(_ context.Co
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -30204,9 +30348,9 @@ func (ec *executionContext) _CustomFieldTemplate_min(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomFieldTemplate_min(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30216,7 +30360,7 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_min(_ context.Conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -30245,9 +30389,9 @@ func (ec *executionContext) _CustomFieldTemplate_max(ctx context.Context, field 
 	if resTmp == nil {
 		return graphql.Null
 	}
-	res := resTmp.(*int)
+	res := resTmp.(*int64)
 	fc.Result = res
-	return ec.marshalOInt2ᚖint(ctx, field.Selections, res)
+	return ec.marshalOInt642ᚖint64(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_CustomFieldTemplate_max(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -30257,7 +30401,7 @@ func (ec *executionContext) fieldContext_CustomFieldTemplate_max(_ context.Conte
 		IsMethod:   false,
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
+			return nil, errors.New("field of type Int64 does not have child fields")
 		},
 	}
 	return fc, nil
@@ -35641,10 +35785,14 @@ func (ec *executionContext) fieldContext_EntityTemplate_customFieldTemplates(_ c
 				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
 			case "type":
 				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
+			case "validValues":
+				return ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
+			case "entityType":
+				return ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
 			case "order":
 				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
-			case "mandatory":
-				return ec.fieldContext_CustomFieldTemplate_mandatory(ctx, field)
+			case "required":
+				return ec.fieldContext_CustomFieldTemplate_required(ctx, field)
 			case "length":
 				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
 			case "min":
@@ -36693,10 +36841,14 @@ func (ec *executionContext) fieldContext_FieldSetTemplate_customFieldTemplates(_
 				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
 			case "type":
 				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
+			case "validValues":
+				return ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
+			case "entityType":
+				return ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
 			case "order":
 				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
-			case "mandatory":
-				return ec.fieldContext_CustomFieldTemplate_mandatory(ctx, field)
+			case "required":
+				return ec.fieldContext_CustomFieldTemplate_required(ctx, field)
 			case "length":
 				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
 			case "min":
@@ -54674,8 +54826,8 @@ func (ec *executionContext) fieldContext_Mutation_fieldSetDeleteFromContact(ctx 
 	return fc, nil
 }
 
-func (ec *executionContext) _Mutation_customFieldTemplate_Create(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_customFieldTemplate_Create(ctx, field)
+func (ec *executionContext) _Mutation_customFieldTemplate_Save(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_customFieldTemplate_Save(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -54689,7 +54841,7 @@ func (ec *executionContext) _Mutation_customFieldTemplate_Create(ctx context.Con
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		directive0 := func(rctx context.Context) (interface{}, error) {
 			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().CustomFieldTemplateCreate(rctx, fc.Args["input"].(model.CustomFieldTemplateInput))
+			return ec.resolvers.Mutation().CustomFieldTemplateSave(rctx, fc.Args["input"].(model.CustomFieldTemplateInput))
 		}
 		directive1 := func(ctx context.Context) (interface{}, error) {
 			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
@@ -54735,7 +54887,7 @@ func (ec *executionContext) _Mutation_customFieldTemplate_Create(ctx context.Con
 	return ec.marshalNCustomFieldTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplate(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Create(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Save(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "Mutation",
 		Field:      field,
@@ -54753,10 +54905,14 @@ func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Create(ctx
 				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
 			case "type":
 				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
+			case "validValues":
+				return ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
+			case "entityType":
+				return ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
 			case "order":
 				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
-			case "mandatory":
-				return ec.fieldContext_CustomFieldTemplate_mandatory(ctx, field)
+			case "required":
+				return ec.fieldContext_CustomFieldTemplate_required(ctx, field)
 			case "length":
 				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
 			case "min":
@@ -54774,7 +54930,89 @@ func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Create(ctx
 		}
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_customFieldTemplate_Create_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+	if fc.Args, err = ec.field_Mutation_customFieldTemplate_Save_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Mutation_customFieldTemplate_Delete(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Mutation_customFieldTemplate_Delete(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Mutation().CustomFieldTemplateDelete(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*bool); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *bool`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*bool)
+	fc.Result = res
+	return ec.marshalOBoolean2ᚖbool(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Mutation_customFieldTemplate_Delete(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Mutation",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Boolean does not have child fields")
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Mutation_customFieldTemplate_Delete_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -78967,6 +79205,106 @@ func (ec *executionContext) fieldContext_Query_contracts(ctx context.Context, fi
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_customFieldTemplate_List(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_customFieldTemplate_List(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().CustomFieldTemplateList(rctx)
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.([]*model.CustomFieldTemplate); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be []*github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.CustomFieldTemplate`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.([]*model.CustomFieldTemplate)
+	fc.Result = res
+	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_customFieldTemplate_List(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
+			case "name":
+				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
+			case "type":
+				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
+			case "validValues":
+				return ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
+			case "entityType":
+				return ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
+			case "order":
+				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
+			case "required":
+				return ec.fieldContext_CustomFieldTemplate_required(ctx, field)
+			case "length":
+				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
+			case "min":
+				return ec.fieldContext_CustomFieldTemplate_min(ctx, field)
+			case "max":
+				return ec.fieldContext_CustomFieldTemplate_max(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type CustomFieldTemplate", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_dashboardView_Organizations(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_dashboardView_Organizations(ctx, field)
 	if err != nil {
@@ -95096,58 +95434,79 @@ func (ec *executionContext) unmarshalInputCustomFieldTemplateInput(ctx context.C
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "type", "order", "mandatory", "length", "min", "max"}
+	fieldsInOrder := [...]string{"id", "name", "type", "validValues", "entityType", "order", "required", "length", "min", "max"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
 			continue
 		}
 		switch k {
+		case "id":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ID = data
 		case "name":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
+			data, err := ec.unmarshalOString2ᚖstring(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Name = data
 		case "type":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("type"))
-			data, err := ec.unmarshalNCustomFieldTemplateType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateType(ctx, v)
+			data, err := ec.unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateType(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Type = data
+		case "validValues":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("validValues"))
+			data, err := ec.unmarshalOString2ᚕstringᚄ(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.ValidValues = data
+		case "entityType":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("entityType"))
+			data, err := ec.unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx, v)
+			if err != nil {
+				return it, err
+			}
+			it.EntityType = data
 		case "order":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Order = data
-		case "mandatory":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("mandatory"))
+		case "required":
+			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("required"))
 			data, err := ec.unmarshalOBoolean2ᚖbool(ctx, v)
 			if err != nil {
 				return it, err
 			}
-			it.Mandatory = data
+			it.Required = data
 		case "length":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("length"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Length = data
 		case "min":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("min"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
 			it.Min = data
 		case "max":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("max"))
-			data, err := ec.unmarshalOInt2ᚖint(ctx, v)
+			data, err := ec.unmarshalOInt642ᚖint64(ctx, v)
 			if err != nil {
 				return it, err
 			}
@@ -102997,16 +103356,20 @@ func (ec *executionContext) _CustomFieldTemplate(ctx context.Context, sel ast.Se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "validValues":
+			out.Values[i] = ec._CustomFieldTemplate_validValues(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "entityType":
+			out.Values[i] = ec._CustomFieldTemplate_entityType(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		case "order":
 			out.Values[i] = ec._CustomFieldTemplate_order(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "mandatory":
-			out.Values[i] = ec._CustomFieldTemplate_mandatory(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
+		case "required":
+			out.Values[i] = ec._CustomFieldTemplate_required(ctx, field, obj)
 		case "length":
 			out.Values[i] = ec._CustomFieldTemplate_length(ctx, field, obj)
 		case "min":
@@ -108639,13 +109002,17 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "customFieldTemplate_Create":
+		case "customFieldTemplate_Save":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_customFieldTemplate_Create(ctx, field)
+				return ec._Mutation_customFieldTemplate_Save(ctx, field)
 			})
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
+		case "customFieldTemplate_Delete":
+			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
+				return ec._Mutation_customFieldTemplate_Delete(ctx, field)
+			})
 		case "emailMergeToContact":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_emailMergeToContact(ctx, field)
@@ -111924,6 +112291,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_contracts(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "customFieldTemplate_List":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_customFieldTemplate_List(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -120382,6 +120771,22 @@ func (ec *executionContext) unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗco
 	return res, nil
 }
 
+func (ec *executionContext) unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateType(ctx context.Context, v interface{}) (*model.CustomFieldTemplateType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.CustomFieldTemplateType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateType(ctx context.Context, sel ast.SelectionSet, v *model.CustomFieldTemplateType) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
 func (ec *executionContext) marshalODashboardARRBreakdown2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDashboardARRBreakdown(ctx context.Context, sel ast.SelectionSet, v *model.DashboardARRBreakdown) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
@@ -120648,6 +121053,22 @@ func (ec *executionContext) unmarshalOEntityTemplateExtension2ᚖgithubᚗcomᚋ
 }
 
 func (ec *executionContext) marshalOEntityTemplateExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateExtension(ctx context.Context, sel ast.SelectionSet, v *model.EntityTemplateExtension) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return v
+}
+
+func (ec *executionContext) unmarshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx context.Context, v interface{}) (*model.EntityType, error) {
+	if v == nil {
+		return nil, nil
+	}
+	var res = new(model.EntityType)
+	err := res.UnmarshalGQL(v)
+	return res, graphql.ErrorOnPath(ctx, err)
+}
+
+func (ec *executionContext) marshalOEntityType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx context.Context, sel ast.SelectionSet, v *model.EntityType) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

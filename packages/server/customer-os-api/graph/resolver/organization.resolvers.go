@@ -555,7 +555,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 				field.Name = &customFieldTemplate.Name
 			}
 			if field.Datatype == nil {
-				field.Datatype = mapper.MapTemplateTypeToFieldDataType(customFieldTemplate.Type)
+				field.Datatype = enummapper.MapTemplateTypeToFieldDataType(customFieldTemplate.Type)
 			}
 		}
 	}

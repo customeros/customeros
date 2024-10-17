@@ -16,9 +16,9 @@ func MapEntityTemplateInputToEntity(input model.EntityTemplateInput) *entity.Ent
 	for _, v := range input.FieldSetTemplateInputs {
 		templateEntity.FieldSets = append(templateEntity.FieldSets, MapFieldSetTemplateInputToEntity(*v))
 	}
-	for _, v := range input.CustomFieldTemplateInputs {
-		templateEntity.CustomFields = append(templateEntity.CustomFields, MapCustomFieldTemplateInputToEntity(*v))
-	}
+	//for _, v := range input.CustomFieldTemplateInputs {
+	//templateEntity.CustomFields = append(templateEntity.CustomFields, enummapper.MapCustomFieldTemplateInputToEntity(*v))
+	//}
 	return &templateEntity
 }
 

@@ -88,6 +88,6 @@ func (entityType EntityType) Neo4jLabel() string {
 	return "Unknown"
 }
 
-func GetEntityType(s string) EntityType {
+func DecodeEntityType(s string) EntityType {
 	return EntityType(s)
 }

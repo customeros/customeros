@@ -6,25 +6,43 @@ package resolver
 
 import (
 	"context"
-
+	"fmt"
 	"github.com/99designs/gqlgen/graphql"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 )
 
-// CustomFieldTemplateCreate is the resolver for the customFieldTemplate_Create field.
-func (r *mutationResolver) CustomFieldTemplateCreate(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldTemplateCreate", graphql.GetOperationContext(ctx))
+// CustomFieldTemplateSave is the resolver for the customFieldTemplate_Save field.
+func (r *mutationResolver) CustomFieldTemplateSave(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error) {
+	// TODO alexb implement
+	panic(fmt.Errorf("not implemented: CustomFieldTemplateSave - customFieldTemplate_Save"))
+}
+
+// CustomFieldTemplateDelete is the resolver for the customFieldTemplate_Delete field.
+func (r *mutationResolver) CustomFieldTemplateDelete(ctx context.Context, id string) (*bool, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldTemplateDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "request.input", input)
 
-	customFieldTemplateEntity, err := r.Services.CustomFieldTemplateService.Merge(ctx, mapper.MapCustomFieldTemplateInputToEntity(input))
+	// TODO alexb implement
+	graphql.AddErrorf(ctx, "not implemented yet")
+	return nil, nil
+}
+
+// CustomFieldTemplateList is the resolver for the customFieldTemplate_List field.
+func (r *queryResolver) CustomFieldTemplateList(ctx context.Context) ([]*model.CustomFieldTemplate, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.CustomFieldTemplateList", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entities, err := r.Services.CommonServices.CustomFieldTemplateService.GetAll(ctx)
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to create custom field template %s", input.Name)
-		return nil, nil
+		graphql.AddErrorf(ctx, "error getting custom field templates: %s", err.Error())
+		return nil, err
 	}
-	return mapper.MapEntityToCustomFieldTemplate(customFieldTemplateEntity), nil
+
+	return mapper.MapEntitiesToCustomFieldTemplates(entities), nil
 }

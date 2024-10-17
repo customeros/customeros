@@ -1041,7 +1041,7 @@ func MapDbNodeToFlowParticipantEntity(node *dbtype.Node) *entity.FlowParticipant
 		CreatedAt:  utils.GetTimePropOrEpochStart(props, "createdAt"),
 		UpdatedAt:  utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		EntityId:   utils.GetStringPropOrEmpty(props, "entityId"),
-		EntityType: model.GetEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
+		EntityType: model.DecodeEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
 		Status:     entity.GetFlowContactStatus(utils.GetStringPropOrEmpty(props, "status")),
 	}
 	return &e
@@ -1117,7 +1117,7 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		UpdatedAt:   utils.GetTimePropOrEpochStart(props, "updatedAt"),
 		FlowId:      utils.GetStringPropOrEmpty(props, "flowId"),
 		EntityId:    utils.GetStringPropOrEmpty(props, "entityId"),
-		EntityType:  model.GetEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
+		EntityType:  model.DecodeEntityType(utils.GetStringPropOrEmpty(props, "entityType")),
 		ActionId:    utils.GetStringPropOrEmpty(props, "actionId"),
 		ScheduledAt: utils.GetTimePropOrNow(props, "scheduledAt"),
 		ExecutedAt:  utils.GetTimePropOrNil(props, "executedAt"),
@@ -1135,4 +1135,26 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 		Bcc:     utils.GetListStringPropOrEmpty(props, "bcc"),
 	}
 	return &e
+}
+
+func MapDbNodeToCustomFieldTemplateEntity(node *dbtype.Node) *entity.CustomFieldTemplateEntity {
+	if node == nil {
+		return &entity.CustomFieldTemplateEntity{}
+	}
+	props := utils.GetPropsFromNode(*node)
+	customFieldTemplateEntity := entity.CustomFieldTemplateEntity{
+		Id:          utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyId)),
+		Name:        utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyName)),
+		EntityType:  model.DecodeEntityType(utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyEntityType))),
+		Type:        utils.GetStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyType)),
+		ValidValues: utils.GetListStringPropOrEmpty(props, string(entity.CustomFieldTemplatePropertyValidValues)),
+		Order:       utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyOrder)),
+		Required:    utils.GetBoolPropOrNil(props, string(entity.CustomFieldTemplatePropertyRequired)),
+		Length:      utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyLength)),
+		Min:         utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyMin)),
+		Max:         utils.GetInt64PropOrNil(props, string(entity.CustomFieldTemplatePropertyMax)),
+		CreatedAt:   utils.GetTimePropOrEpochStart(props, string(entity.CustomFieldTemplatePropertyCreatedAt)),
+		UpdatedAt:   utils.GetTimePropOrEpochStart(props, string(entity.CustomFieldTemplatePropertyUpdatedAt)),
+	}
+	return &customFieldTemplateEntity
 }
