@@ -175,6 +175,7 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tenant stri
 			Tenant:                  tenant,
 			MailboxUsername:         input.MailboxUsername,
 			MailboxPassword:         input.MailboxPassword,
+			Username:                input.Username,
 			Domain:                  input.Domain,
 			MinMinutesBetweenEmails: input.MinMinutesBetweenEmails,
 			MaxMinutesBetweenEmails: input.MaxMinutesBetweenEmails,

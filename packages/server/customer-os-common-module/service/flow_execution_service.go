@@ -17,7 +17,10 @@ import (
 	"time"
 )
 
-const numberOfEmailsPerDay = 2
+const (
+	workingDayStart = 9
+	workingDayEnd   = 18
+)
 
 type FlowExecutionService interface {
 	ScheduleFlow(ctx context.Context, tx *neo4j.ManagedTransaction, flowId string, flowParticipant *entity.FlowParticipantEntity) error
@@ -41,75 +44,84 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 
 	now := utils.Now()
 
-	flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
+	_, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
+		flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if len(flowExecutions) == 0 {
+			startAction, err := s.services.FlowService.FlowActionGetStart(ctx, flowId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, startAction.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			for _, nextAction := range nextActions {
+
+				scheduleAt := now.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
+
+				err := s.scheduleNextAction(ctx, &tx, flowId, flowParticipant, scheduleAt, *nextAction)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+
+		} else {
+			lastActionExecution := flowExecutions[len(flowExecutions)-1]
+			lastActionExecutedAt := lastActionExecution.ScheduledAt
+
+			lastAction, err := s.services.FlowService.FlowActionGetById(ctx, lastActionExecution.ActionId)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, lastAction.Id)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return nil, err
+			}
+
+			for _, nextAction := range nextActions {
+
+				//marking the flow as completed if the next action is FLOW_END
+				if nextAction.Data.Action == entity.FlowActionTypeFlowEnd {
+					flowParticipant.Status = entity.FlowParticipantStatusCompleted
+
+					_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, &tx, flowParticipant)
+					if err != nil {
+						tracing.TraceErr(span, err)
+						return nil, err
+					}
+
+					return nil, nil
+				}
+
+				scheduleAt := lastActionExecutedAt.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
+
+				err := s.scheduleNextAction(ctx, &tx, flowId, flowParticipant, scheduleAt, *nextAction)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
+				}
+			}
+
+		}
+
+		return nil, nil
+	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
-	}
-
-	if len(flowExecutions) == 0 {
-		startAction, err := s.services.FlowService.FlowActionGetStart(ctx, flowId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, startAction.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		for _, nextAction := range nextActions {
-
-			scheduleAt := now.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
-
-			err := s.scheduleNextAction(ctx, tx, flowId, flowParticipant, scheduleAt, *nextAction)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-		}
-
-	} else {
-		lastActionExecution := flowExecutions[len(flowExecutions)-1]
-		lastActionExecutedAt := lastActionExecution.ScheduledAt
-
-		lastAction, err := s.services.FlowService.FlowActionGetById(ctx, lastActionExecution.ActionId)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		nextActions, err := s.services.FlowService.FlowActionGetNext(ctx, lastAction.Id)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-
-		for _, nextAction := range nextActions {
-
-			//marking the flow as completed if the next action is FLOW_END
-			if nextAction.Data.Action == entity.FlowActionTypeFlowEnd {
-				flowParticipant.Status = entity.FlowParticipantStatusCompleted
-
-				_, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, tx, flowParticipant)
-				if err != nil {
-					tracing.TraceErr(span, err)
-					return err
-				}
-
-				return nil
-			}
-
-			scheduleAt := lastActionExecutedAt.Add(time.Duration(nextAction.Data.WaitBefore) * time.Minute)
-
-			err := s.scheduleNextAction(ctx, tx, flowId, flowParticipant, scheduleAt, *nextAction)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return err
-			}
-		}
 	}
 
 	return nil
@@ -247,7 +259,7 @@ func (s *flowExecutionService) scheduleEmailAction(ctx context.Context, tx *neo4
 		return err
 	}
 
-	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant, flowExecutionSettings.Mailbox, *actualScheduleAt)
+	err = s.storeNextActionExecutionEntity(ctx, tx, flowId, nextAction.Id, flowParticipant, flowExecutionSettings.Mailbox, actualScheduleAt)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
@@ -268,49 +280,82 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	startDate := utils.StartOfDayInUTC(scheduleAt)
-	endDate := utils.EndOfDayInUTC(scheduleAt)
-
-	emailsScheduledAlready, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay(ctx, tx, mailbox, startDate, endDate)
+	mailboxEntity, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, mailbox)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
 
-	if emailsScheduledAlready >= numberOfEmailsPerDay {
-		// If the mailbox has already reached the daily limit, schedule the next email for the next day
-		scheduleAt = startDate.Add(24 * time.Hour)
-		// todo break recursive based on index or smth
-		return s.getFirstAvailableSlotForMailbox(ctx, tx, tenant, mailbox, scheduleAt)
-	} else {
-		lastScheduledExecutionNode, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetLastScheduledForMailbox(ctx, tx, mailbox)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		lastScheduledExecution := mapper.MapDbNodeToFlowActionExecutionEntity(lastScheduledExecutionNode)
+	//minTimeBetweenEmails := time.Duration(mailboxEntity.MinMinutesBetweenEmails) * time.Minute
 
-		mailboxEntity, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, mailbox)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-
-		//this is a bit wrong as will ocupy all the space in between the last scheduled email and the current schedule time
-		if lastScheduledExecution != nil {
-			if lastScheduledExecution.ScheduledAt.After(scheduleAt) {
-				// If the last scheduled email is after the current schedule time, use the last scheduled time
-				scheduleAt = lastScheduledExecution.ScheduledAt.Add(time.Duration(utils.GenerateRandomInt(mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)) * time.Minute)
-				return &scheduleAt, nil
-			} else {
-				// If the last scheduled email is before the current schedule time, use the current schedule time
-				return &scheduleAt, nil
-			}
-		} else {
-			scheduleAt = scheduleAt.Add(time.Duration(utils.GenerateRandomInt(mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)) * time.Minute)
-			return &scheduleAt, nil
-		}
+	// Get the last scheduled execution for this mailbox
+	lastScheduledExecutionNode, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetLastScheduledForMailbox(ctx, tx, mailbox)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
+
+	var possibleScheduledAt time.Time
+	if lastScheduledExecutionNode != nil {
+		lastScheduledExecution := mapper.MapDbNodeToFlowActionExecutionEntity(lastScheduledExecutionNode)
+		possibleScheduledAt = lastScheduledExecution.ScheduledAt
+	} else {
+		possibleScheduledAt = scheduleAt
+	}
+
+	// Ensure possibleScheduledAt is not in the past and within working hours
+	possibleScheduledAt = nextWorkingTime(maxTime(possibleScheduledAt, time.Now().UTC()))
+
+	randomMinutes := time.Duration(utils.GenerateRandomInt(mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)) * time.Minute
+	possibleScheduledAt = possibleScheduledAt.Add(randomMinutes)
+
+	// Ensure the scheduled time is within working hours
+	possibleScheduledAt = nextWorkingTime(possibleScheduledAt)
+
+	//Add random seconds and miliseconds to not have 00:00:00 as the scheduled time
+	randomSeconds := time.Duration(utils.GenerateRandomInt(0, 60)) * time.Second
+	randomMiliseconds := time.Duration(utils.GenerateRandomInt(0, 1000)) * time.Millisecond
+	randomMicroseconds := time.Duration(utils.GenerateRandomInt(0, 1000)) * time.Microsecond
+	possibleScheduledAt = possibleScheduledAt.Add(randomSeconds).Add(randomMiliseconds).Add(randomMicroseconds)
+
+	return &possibleScheduledAt, nil
+
+	//TODO V2
+	//for {
+	//	endTime := possibleScheduledAt.Add(minTimeBetweenEmails)
+	//
+	//	// Check if there's any scheduled execution within the interval
+	//	ee, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetByMailboxAndTimeInterval(ctx, tx, mailbox, possibleScheduledAt, endTime)
+	//	if err != nil {
+	//		tracing.TraceErr(span, err)
+	//		return nil, err
+	//	}
+	//
+	//	existingExecution := mapper.MapDbNodeToFlowActionExecutionEntity(ee)
+	//
+	//	if existingExecution == nil {
+	//		// No execution found in the interval, so this slot is available
+	//		// Add a random duration within the min-max range
+	//		randomDuration := time.Duration(utils.GenerateRandomInt(mailboxEntity.MinMinutesBetweenEmails, mailboxEntity.MaxMinutesBetweenEmails)) * time.Minute
+	//		scheduledTime := possibleScheduledAt.Add(randomDuration)
+	//
+	//		// Ensure the scheduled time is within working hours
+	//		scheduledTime = nextWorkingTime(scheduledTime)
+	//
+	//		return &scheduledTime, nil
+	//	}
+	//
+	//	// Move the start time to just after the found execution
+	//	possibleScheduledAt = possibleScheduledAt.Add(time.Minute)
+	//	possibleScheduledAt = nextWorkingTime(possibleScheduledAt)
+	//}
+}
+
+func maxTime(a, b time.Time) time.Time {
+	if a.After(b) {
+		return a
+	}
+	return b
 }
 
 func (s *flowExecutionService) getFlowExecutionSettings(ctx context.Context, flowId, entityId string, entityType model.EntityType) (*entity.FlowExecutionSettingsEntity, error) {
@@ -327,7 +372,7 @@ func (s *flowExecutionService) getFlowExecutionSettings(ctx context.Context, flo
 	return mapper.MapDbNodeToFlowExecutionSettingsEntity(node), nil
 }
 
-func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId string, flowParticipant *entity.FlowParticipantEntity, mailbox *string, executionTime time.Time) error {
+func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, actionId string, flowParticipant *entity.FlowParticipantEntity, mailbox *string, executionTime *time.Time) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.storeNextActionExecutionEntity")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
@@ -347,7 +392,7 @@ func (s *flowExecutionService) storeNextActionExecutionEntity(ctx context.Contex
 		EntityId:    flowParticipant.EntityId,
 		EntityType:  flowParticipant.EntityType,
 		Mailbox:     mailbox,
-		ScheduledAt: executionTime,
+		ScheduledAt: *executionTime,
 		Status:      entity.FlowActionExecutionStatusScheduled,
 	})
 	if err != nil {
@@ -472,4 +517,34 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	}
 
 	return nil
+}
+
+func isWorkingDay(t time.Time) bool {
+	weekday := t.Weekday()
+	return weekday >= time.Monday && weekday <= time.Friday
+}
+
+func isWithinWorkingHours(t time.Time) bool {
+	if !isWorkingDay(t) {
+		return false
+	}
+	hour := t.UTC().Hour()
+	return hour >= workingDayStart && hour < workingDayEnd
+}
+
+func nextWorkingTime(t time.Time) time.Time {
+	t = t.UTC()
+	for !isWithinWorkingHours(t) {
+		if !isWorkingDay(t) {
+			// Move to next day at 9:00 UTC
+			t = time.Date(t.Year(), t.Month(), t.Day()+1, workingDayStart, 0, 0, 0, time.UTC)
+		} else if t.Hour() < workingDayStart {
+			// Move to 9:00 UTC same day
+			t = time.Date(t.Year(), t.Month(), t.Day(), workingDayStart, 0, 0, 0, time.UTC)
+		} else {
+			// Move to 9:00 UTC next day
+			t = time.Date(t.Year(), t.Month(), t.Day()+1, workingDayStart, 0, 0, 0, time.UTC)
+		}
+	}
+	return t
 }

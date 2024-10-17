@@ -61,7 +61,7 @@ func TestFlowService_FlowMerge1(t *testing.T) {
 
 	neo4jtest.CreateTenant(ctx, driver, tenantName)
 
-	_, err := CommonServices.FlowService.FlowMerge(ctx, &neo4jentity.FlowEntity{
+	_, err := CommonServices.FlowService.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
 		Name:  "flow1",
 		Nodes: ONE_EMAIL_FLOW,
 		Edges: ONE_EMAIL_FLOW_EDGES,

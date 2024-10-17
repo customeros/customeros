@@ -13094,6 +13094,7 @@ input FlowMergeInput {
 
 enum FlowStatus {
     INACTIVE
+    SCHEDULING
     ACTIVE
     PAUSED
     ARCHIVED

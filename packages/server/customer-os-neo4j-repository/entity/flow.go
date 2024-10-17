@@ -89,10 +89,11 @@ type FlowSenderEntities []FlowSenderEntity
 type FlowStatus string
 
 const (
-	FlowStatusInactive FlowStatus = "INACTIVE"
-	FlowStatusActive   FlowStatus = "ACTIVE"
-	FlowStatusPaused   FlowStatus = "PAUSED"
-	FlowStatusArchived FlowStatus = "ARCHIVED"
+	FlowStatusInactive   FlowStatus = "INACTIVE"
+	FlowStatusScheduling FlowStatus = "SCHEDULING"
+	FlowStatusActive     FlowStatus = "ACTIVE"
+	FlowStatusPaused     FlowStatus = "PAUSED"
+	FlowStatusArchived   FlowStatus = "ARCHIVED"
 )
 
 func GetFlowStatus(s string) FlowStatus {
