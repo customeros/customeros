@@ -12,6 +12,7 @@ import (
 
 type EmailMessageRepository interface {
 	GetForSending(ctx context.Context) ([]*entity.EmailMessage, error)
+	GetForProcessing(ctx context.Context) ([]*entity.EmailMessage, error)
 	Store(ctx context.Context, tenant string, input *entity.EmailMessage) error
 	DeleteByProducerId(ctx context.Context, tenant, producerId string) error
 }
@@ -30,7 +31,22 @@ func (repo *emailMessageRepositoryImpl) GetForSending(ctx context.Context) ([]*e
 	tracing.TagComponentPostgresRepository(span)
 
 	var entities []*entity.EmailMessage
-	err := repo.gormDb.Where("sent_at is null and error is null").Order("created_at asc").Limit(25).Find(&entities).Error
+	err := repo.gormDb.Where("status = ?", entity.EmailMessageStatusScheduled).Order("created_at asc").Limit(25).Find(&entities).Error
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return entities, nil
+}
+
+func (repo *emailMessageRepositoryImpl) GetForProcessing(ctx context.Context) ([]*entity.EmailMessage, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailMessageRepository.GetForProcessing")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var entities []*entity.EmailMessage
+	err := repo.gormDb.Where("status = ?", entity.EmailMessageStatusSent).Order("created_at asc").Limit(25).Find(&entities).Error
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -45,7 +61,7 @@ func (repo *emailMessageRepositoryImpl) Store(ctx context.Context, tenant string
 	tracing.TagComponentPostgresRepository(span)
 	tracing.TagTenant(span, tenant)
 
-	if input.ProducerId == "" || input.ProducerType == "" || input.From == "" || len(input.To) == 0 || input.Subject == "" || input.Content == "" {
+	if input.Status == "" || input.ProducerId == "" || input.ProducerType == "" || input.From == "" || len(input.To) == 0 || input.Subject == "" || input.Content == "" {
 		err := errors.New("params missing")
 		tracing.TraceErr(span, err)
 		return err

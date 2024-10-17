@@ -1126,13 +1126,6 @@ func MapDbNodeToFlowActionExecutionEntity(node *dbtype.Node) *entity.FlowActionE
 
 		Mailbox: utils.GetStringPropOrNil(props, "mailbox"),
 		UserId:  utils.GetStringPropOrNil(props, "userId"),
-
-		Subject: utils.GetStringPropOrNil(props, "subject"),
-		Body:    utils.GetStringPropOrNil(props, "body"),
-		From:    utils.GetStringPropOrNil(props, "from"),
-		To:      utils.GetListStringPropOrEmpty(props, "to"),
-		Cc:      utils.GetListStringPropOrEmpty(props, "cc"),
-		Bcc:     utils.GetListStringPropOrEmpty(props, "bcc"),
 	}
 	return &e
 }

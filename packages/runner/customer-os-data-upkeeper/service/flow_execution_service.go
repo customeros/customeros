@@ -68,11 +68,6 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 				tracing.TraceErr(span, err)
 			}
 
-			err := s.commonServices.PostgresRepositories.EmailMessageRepository.DeleteByProducerId(ctx, tenant, actionExecution.Id)
-			if err != nil {
-				tracing.TraceErr(span, err)
-			}
-
 			continue
 		}
 	}

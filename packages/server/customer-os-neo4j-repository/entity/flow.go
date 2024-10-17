@@ -163,14 +163,6 @@ type FlowActionExecutionEntity struct {
 	Mailbox *string
 	UserId  *string
 
-	// Execution details for email
-	Subject *string
-	Body    *string
-	From    *string
-	To      []string
-	Cc      []string
-	Bcc     []string
-
 	// Additional metadata
 	Error *string // If execution fails, store the error message
 }

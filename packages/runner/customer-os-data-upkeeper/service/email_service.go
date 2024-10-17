@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/config"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/constants"
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	fsc "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/file_store_client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
@@ -45,6 +46,7 @@ type EmailService interface {
 	CheckEnrowRequestsWithoutResponse()
 	CleanEmails()
 	SendEmails()
+	ProcessSentEmails()
 }
 
 type emailService struct {
@@ -685,11 +687,66 @@ func (s *emailService) sendEmails() {
 	}
 
 	for _, emailMessage := range emailMessages {
-		err := s.commonServices.MailService.SendMail(ctx, emailMessage)
+		localCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    emailMessage.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		err := s.commonServices.MailService.SendMail(localCtx, emailMessage)
 		if err != nil {
 			tracing.TraceErr(span, err)
 
 			s2 := err.Error()
+
+			emailMessage.Status = postgresentity.EmailMessageStatusError
+			emailMessage.Error = &s2
+
+			err := s.commonServices.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				break
+			}
+
+			continue
+		}
+	}
+}
+
+func (s *emailService) ProcessSentEmails() {
+	s.processSentEmails()
+}
+
+func (s *emailService) processSentEmails() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "EmailService.processSentEmails")
+	defer span.Finish()
+	tracing.TagComponentCronJob(span)
+
+	emailMessages, err := s.commonServices.PostgresRepositories.EmailMessageRepository.GetForProcessing(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return // return if error
+	}
+
+	if len(emailMessages) == 0 {
+		return
+	}
+
+	for _, emailMessage := range emailMessages {
+		localCtx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    emailMessage.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
+		_, err := s.commonServices.MailService.ProcessSentEmail(localCtx, nil, emailMessage)
+		if err != nil {
+			tracing.TraceErr(span, err)
+
+			s2 := err.Error()
+
+			emailMessage.Status = postgresentity.EmailMessageStatusError
 			emailMessage.Error = &s2
 
 			err := s.commonServices.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)

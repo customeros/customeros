@@ -336,7 +336,7 @@ func (s *interactionEventService) CreateInTx(ctx context.Context, tx neo4j.Manag
 			FromEntityId:   interactionEventId,
 			FromEntityType: commonModel.INTERACTION_EVENT,
 			Relationship:   commonModel.REPLIES_TO,
-			ToEntityId:     *newInteractionEvent.MeetingIdentifier,
+			ToEntityId:     *newInteractionEvent.RepliesTo,
 			ToEntityType:   commonModel.INTERACTION_EVENT,
 		})
 		if err != nil {

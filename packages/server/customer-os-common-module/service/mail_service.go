@@ -92,6 +92,7 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMe
 		return fmt.Errorf("failed to send email: %v", err)
 	}
 
+	emailMessage.Status = entity.EmailMessageStatusSent
 	emailMessage.SentAt = utils.TimePtr(utils.Now())
 
 	err = s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, tenant, emailMessage)
@@ -108,34 +109,23 @@ func (s *mailService) ProcessSentEmail(ctx context.Context, tx *neo4j.ManagedTra
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
-	interactionEventId := ""
+	id, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		return s.saveEmailInTx(ctx, tx, emailMessage)
+	})
 
-	if tx == nil {
-		session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
-		defer session.Close(ctx)
-
-		id, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			return s.saveEmailInTx(ctx, tx, emailMessage)
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		if id != nil {
-			interactionEventId = *id.(*string)
-		}
-	} else {
-		id, err := s.saveEmailInTx(ctx, *tx, emailMessage)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		if id != nil {
-			interactionEventId = *id.(*string)
-		}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
 
-	return &interactionEventId, nil
+	emailMessage.Status = entity.EmailMessageStatusProcessed
+	err = s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, emailMessage.Tenant, emailMessage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, fmt.Errorf("failed to store email message: %v", err)
+	}
+
+	return id.(*string), nil
 }
 
 func (s *mailService) saveEmailInTx(ctx context.Context, tx neo4j.ManagedTransaction, emailMessage *entity.EmailMessage) (any, error) {

@@ -54,14 +54,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 				fae.status = $status,
 
 				fae.mailbox = $mailbox,
-				fae.userId = $userId,
-
-				fae.subject = $subject,
-				fae.body = $body,
-				fae.from = $from,
-				fae.to = $to,
-				fae.cc = $cc,
-				fae.bcc = $bcc
+				fae.userId = $userId
 			
 			WITH f, fa, fae
 			MERGE (fa)-[:HAS_EXECUTION]->(fae)
@@ -82,44 +75,25 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 		"userId":      entity.UserId,
 		"executedAt":  entity.ExecutedAt,
 		"error":       entity.Error,
-
-		//data
-		"subject": entity.Subject,
-		"body":    entity.Body,
-		"from":    entity.From,
-		"to":      entity.To,
-		"cc":      entity.Cc,
-		"bcc":     entity.Bcc,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
-	if tx == nil {
-		session := utils.NewNeo4jWriteSession(ctx, *r.driver)
-		defer session.Close(ctx)
-
-		queryResult, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-			qr, err := tx.Run(ctx, cypher, params)
-			if err != nil {
-				return nil, err
-			}
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
-		})
+	queryResult, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		qr, err := tx.Run(ctx, cypher, params)
 		if err != nil {
-			tracing.TraceErr(span, err)
 			return nil, err
 		}
+		return utils.ExtractSingleRecordFirstValueAsNode(ctx, qr, err)
+	})
 
-		return queryResult.(*neo4j.Node), nil
-	} else {
-		queryResult, err := (*tx).Run(ctx, cypher, params)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
 	}
+
+	return queryResult.(*neo4j.Node), nil
 }
 
 func (r *flowActionExecutionWriteRepositoryImpl) Delete(ctx context.Context, id string) error {
