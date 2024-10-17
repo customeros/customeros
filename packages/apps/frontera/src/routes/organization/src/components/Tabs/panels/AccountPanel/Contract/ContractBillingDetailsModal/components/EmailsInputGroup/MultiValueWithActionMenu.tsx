@@ -5,20 +5,14 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { observer } from 'mobx-react-lite';
 import { useLocalStorage } from 'usehooks-ts';
 
-import { cn } from '@ui/utils/cn.ts';
-import { DataSource } from '@graphql/types';
+import { cn } from '@ui/utils/cn';
+import { SelectOption } from '@ui/utils/types';
+import { Copy01 } from '@ui/media/icons/Copy01';
 import { useStore } from '@shared/hooks/useStore';
-import { SelectOption } from '@ui/utils/types.ts';
-import { Copy01 } from '@ui/media/icons/Copy01.tsx';
-import { validateEmail } from '@shared/util/emailValidation.ts';
+import { validateEmail } from '@shared/util/emailValidation';
 import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
-import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom.ts';
-import {
-  Menu,
-  MenuItem,
-  MenuList,
-  MenuButton,
-} from '@ui/overlay/Menu/Menu.tsx';
+import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
+import { useContactCardMeta } from '@organization/state/ContactCardMeta.atom';
 
 interface MultiValueWithActionMenuProps extends MultiValueProps<SelectOption> {
   value: Array<SelectOption>;
@@ -45,6 +39,7 @@ export const MultiValueWithActionMenu = observer(
       `customeros-player-last-position`,
       { [organizationId as string]: 'tab=about' },
     );
+
     const isContactInOrg = existingContacts.find(
       (data: SelectOption | unknown) => {
         return rest?.data?.value
@@ -89,49 +84,18 @@ export const MultiValueWithActionMenu = observer(
               )
               .join(' ');
 
-      store.contacts.create(organizationId, {
-        onSuccess: (newContactId) => {
-          const contact = store.contacts.value.get(newContactId);
-
-          contact?.update((d) => {
-            d.name = name;
-            d.emails = [
-              {
-                email: rest?.data?.value,
-                appSource: '',
-                contacts: [],
-                createdAt: undefined,
-                emailValidationDetails: {
-                  __typename: undefined,
-                  verified: false,
-                  verifyingCheckAll: false,
-                  isValidSyntax: undefined,
-                  isRisky: undefined,
-                  isFirewalled: undefined,
-                  provider: undefined,
-                  firewall: undefined,
-                  isCatchAll: undefined,
-                  canConnectSmtp: undefined,
-                  isDeliverable: undefined,
-                  isMailboxFull: undefined,
-                  isRoleAccount: undefined,
-                  isFreeAccount: undefined,
-                  smtpSuccess: undefined,
-                },
-                id: '',
-                organizations: [],
-                primary: false,
-                source: DataSource.Openline,
-                sourceOfTruth: DataSource.Openline,
-                updatedAt: undefined,
-                users: [],
-              },
-            ];
-
-            return d;
-          });
+      store.contacts.create(
+        organizationId,
+        {
+          onSuccess: () => {},
         },
-      });
+        {
+          name,
+          email: {
+            email: rest?.data?.value,
+          },
+        },
+      );
     };
 
     return (
@@ -143,7 +107,7 @@ export const MultiValueWithActionMenu = observer(
               : 'text-base [&_.multiValueClass]:data-[state=closed]:bg-gray-50 [&_.multiValueClass]:data-[state=closed]:text-gray-700 [&_.multiValueClass]:data-[state=closed]:border-gray-200 [&_.multiValueClass]:data-[state=open]:bg-primary-50 [&_.multiValueClass]:data-[state=open]:text-primary-700 [&_.multiValueClass]:data-[state=open]:last:border-primary-200',
           )}
         >
-          <components.MultiValue {...rest} className='text-base'>
+          <components.MultiValue {...rest} className='text-base min-h-3'>
             {rest.children}
           </components.MultiValue>
         </MenuButton>

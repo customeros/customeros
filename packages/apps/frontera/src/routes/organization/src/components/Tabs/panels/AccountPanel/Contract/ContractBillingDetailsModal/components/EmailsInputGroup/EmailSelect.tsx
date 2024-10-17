@@ -12,11 +12,19 @@ interface EmailParticipantSelect {
   autofocus?: boolean;
   placeholder?: string;
   onChange: (value: SelectOption<string>[]) => void;
+  options: Array<{ id: string; value: string; label: string }>;
 }
 
 export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
   (
-    { entryType, isMulti, placeholder = 'Enter email', value, onChange },
+    {
+      entryType,
+      isMulti,
+      options,
+      placeholder = 'Enter email',
+      value,
+      onChange,
+    },
     ref,
   ) => {
     return (
@@ -25,6 +33,7 @@ export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
         <EmailMultiCreatableSelect
           ref={ref}
           isMulti={isMulti}
+          options={options}
           onChange={onChange}
           placeholder={placeholder}
           noOptionsMessage={() => null}
@@ -32,7 +41,7 @@ export const EmailSelect = forwardRef<SelectInstance, EmailParticipantSelect>(
           value={value?.map((e) => ({ label: e, value: e }))}
           // @ts-expect-error fix later
           getOptionLabel={(d) => {
-            if (d?.__isNew__ || d.label === d.value) {
+            if (d?.__isNew__ || d.label === d.value || !d.value) {
               return `${d.label}`;
             }
 
