@@ -77,18 +77,16 @@ export class OauthTokenStore {
         email: email,
       },
       {
-        onSuccess: () => this.onDisableSuccess(provider),
+        onSuccess: () => this.onDisableSuccess(email),
         onError: (err) => this.onDisableError(err, provider),
       },
     );
   }
 
-  private onDisableSuccess(provider: string) {
-    const providerLabel = provider === 'google' ? 'Google' : 'Microsoft 365';
-
+  private onDisableSuccess(email: string) {
     this.isLoading = false;
     this.root.ui.toastSuccess(
-      `We have successfully disabled the ${providerLabel} sync!`,
+      `We have unlinked ${email}`,
       'disable-google-sync',
     );
     setTimeout(() => this.load(), 500);
