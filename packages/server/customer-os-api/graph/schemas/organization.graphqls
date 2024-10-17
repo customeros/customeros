@@ -91,7 +91,6 @@ type Organization implements MetadataInterface {
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     suggestedMergeTo: [SuggestedMergeOrganization!]! @goField(forceResolver: true)
-    fieldSets: [FieldSet!]! @goField(forceResolver: true)
     entityTemplate: EntityTemplate @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
@@ -267,10 +266,6 @@ input OrganizationInput {
     Deprecated, use relationship instead
     """
     isCustomer:    Boolean @deprecated(reason: "Use relationship")
-    """
-    Deprecated
-    """
-    fieldSets:     [FieldSetInput!] @deprecated
     """
     Deprecated
     """

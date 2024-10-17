@@ -59,7 +59,6 @@ type OrganizationService interface {
 type OrganizationCreateData struct {
 	OrganizationEntity *neo4jentity.OrganizationEntity
 	CustomFields       *entity.CustomFieldEntities
-	FieldSets          *entity.FieldSetEntities
 	TemplateId         *string
 	Domains            []string
 }

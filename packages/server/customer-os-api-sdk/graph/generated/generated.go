@@ -47,8 +47,6 @@ type ResolverRoot interface {
 	DashboardCustomerMap() DashboardCustomerMapResolver
 	Email() EmailResolver
 	EntityTemplate() EntityTemplateResolver
-	FieldSet() FieldSetResolver
-	FieldSetTemplate() FieldSetTemplateResolver
 	Flow() FlowResolver
 	FlowContact() FlowContactResolver
 	FlowSender() FlowSenderResolver
@@ -208,7 +206,6 @@ type ComplexityRoot struct {
 		Description              func(childComplexity int) int
 		Emails                   func(childComplexity int) int
 		EnrichDetails            func(childComplexity int) int
-		FieldSets                func(childComplexity int) int
 		FirstName                func(childComplexity int) int
 		Flows                    func(childComplexity int) int
 		Hide                     func(childComplexity int) int
@@ -527,7 +524,6 @@ type ComplexityRoot struct {
 		CreatedAt            func(childComplexity int) int
 		CustomFieldTemplates func(childComplexity int) int
 		Extends              func(childComplexity int) int
-		FieldSetTemplates    func(childComplexity int) int
 		ID                   func(childComplexity int) int
 		Name                 func(childComplexity int) int
 		UpdatedAt            func(childComplexity int) int
@@ -549,25 +545,6 @@ type ComplexityRoot struct {
 
 	ExternalSystemStripeDetails struct {
 		PaymentMethodTypes func(childComplexity int) int
-	}
-
-	FieldSet struct {
-		CreatedAt    func(childComplexity int) int
-		CustomFields func(childComplexity int) int
-		ID           func(childComplexity int) int
-		Name         func(childComplexity int) int
-		Source       func(childComplexity int) int
-		Template     func(childComplexity int) int
-		UpdatedAt    func(childComplexity int) int
-	}
-
-	FieldSetTemplate struct {
-		CreatedAt            func(childComplexity int) int
-		CustomFieldTemplates func(childComplexity int) int
-		ID                   func(childComplexity int) int
-		Name                 func(childComplexity int) int
-		Order                func(childComplexity int) int
-		UpdatedAt            func(childComplexity int) int
 	}
 
 	Flow struct {
@@ -969,14 +946,11 @@ type ComplexityRoot struct {
 		ContractUpdate                             func(childComplexity int, input model.ContractUpdateInput) int
 		CustomFieldDeleteFromContactByID           func(childComplexity int, contactID string, id string) int
 		CustomFieldDeleteFromContactByName         func(childComplexity int, contactID string, fieldName string) int
-		CustomFieldDeleteFromFieldSetByID          func(childComplexity int, contactID string, fieldSetID string, id string) int
 		CustomFieldMergeToContact                  func(childComplexity int, contactID string, input model.CustomFieldInput) int
-		CustomFieldMergeToFieldSet                 func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldInput) int
 		CustomFieldTemplateDelete                  func(childComplexity int, id string) int
 		CustomFieldTemplateSave                    func(childComplexity int, input model.CustomFieldTemplateInput) int
 		CustomFieldUpdateInContact                 func(childComplexity int, contactID string, input model.CustomFieldUpdateInput) int
-		CustomFieldUpdateInFieldSet                func(childComplexity int, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) int
-		CustomFieldsMergeAndUpdateInContact        func(childComplexity int, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) int
+		CustomFieldsMergeAndUpdateInContact        func(childComplexity int, contactID string, customFields []*model.CustomFieldInput) int
 		CustomerContactCreate                      func(childComplexity int, input model.CustomerContactInput) int
 		CustomerUserAddJobRole                     func(childComplexity int, id string, jobRoleInput model.JobRoleInput) int
 		EmailMergeToContact                        func(childComplexity int, contactID string, input model.EmailInput) int
@@ -991,9 +965,6 @@ type ComplexityRoot struct {
 		EmailValidate                              func(childComplexity int, id string) int
 		EntityTemplateCreate                       func(childComplexity int, input model.EntityTemplateInput) int
 		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
-		FieldSetDeleteFromContact                  func(childComplexity int, contactID string, id string) int
-		FieldSetMergeToContact                     func(childComplexity int, contactID string, input model.FieldSetInput) int
-		FieldSetUpdateInContact                    func(childComplexity int, contactID string, input model.FieldSetUpdateInput) int
 		FlowChangeStatus                           func(childComplexity int, id string, status model.FlowStatus) int
 		FlowContactAdd                             func(childComplexity int, flowID string, contactID string) int
 		FlowContactAddBulk                         func(childComplexity int, flowID string, contactID []string) int
@@ -1198,7 +1169,6 @@ type ComplexityRoot struct {
 		EnrichDetails                 func(childComplexity int) int
 		EntityTemplate                func(childComplexity int) int
 		ExternalLinks                 func(childComplexity int) int
-		FieldSets                     func(childComplexity int) int
 		Headquarters                  func(childComplexity int) int
 		Hide                          func(childComplexity int) int
 		ID                            func(childComplexity int) int
@@ -1608,7 +1578,6 @@ type ContactResolver interface {
 	Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error)
 	ConnectedUsers(ctx context.Context, obj *model.Contact) ([]*model.User, error)
 	CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error)
-	FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error)
 	Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error)
 	Owner(ctx context.Context, obj *model.Contact) (*model.User, error)
 	Flows(ctx context.Context, obj *model.Contact) ([]*model.Flow, error)
@@ -1642,15 +1611,7 @@ type EmailResolver interface {
 	Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error)
 }
 type EntityTemplateResolver interface {
-	FieldSetTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.FieldSetTemplate, error)
 	CustomFieldTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error)
-}
-type FieldSetResolver interface {
-	CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error)
-	Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error)
-}
-type FieldSetTemplateResolver interface {
-	CustomFieldTemplates(ctx context.Context, obj *model.FieldSetTemplate) ([]*model.CustomFieldTemplate, error)
 }
 type FlowResolver interface {
 	Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error)
@@ -1759,17 +1720,11 @@ type MutationResolver interface {
 	ContractRenew(ctx context.Context, input model.ContractRenewalInput) (*model.Contract, error)
 	ContractAddAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error)
 	ContractRemoveAttachment(ctx context.Context, contractID string, attachmentID string) (*model.Contract, error)
-	CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error)
+	CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput) (*model.Contact, error)
 	CustomFieldMergeToContact(ctx context.Context, contactID string, input model.CustomFieldInput) (*model.CustomField, error)
 	CustomFieldUpdateInContact(ctx context.Context, contactID string, input model.CustomFieldUpdateInput) (*model.CustomField, error)
 	CustomFieldDeleteFromContactByName(ctx context.Context, contactID string, fieldName string) (*model.Result, error)
 	CustomFieldDeleteFromContactByID(ctx context.Context, contactID string, id string) (*model.Result, error)
-	CustomFieldMergeToFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldInput) (*model.CustomField, error)
-	CustomFieldUpdateInFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) (*model.CustomField, error)
-	CustomFieldDeleteFromFieldSetByID(ctx context.Context, contactID string, fieldSetID string, id string) (*model.Result, error)
-	FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error)
-	FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error)
-	FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error)
 	CustomFieldTemplateSave(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error)
 	CustomFieldTemplateDelete(ctx context.Context, id string) (*bool, error)
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
@@ -1936,7 +1891,6 @@ type OrganizationResolver interface {
 	Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
 	SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error)
-	FieldSets(ctx context.Context, obj *model.Organization) ([]*model.FieldSet, error)
 	EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
@@ -2737,13 +2691,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.EnrichDetails(childComplexity), true
-
-	case "Contact.fieldSets":
-		if e.complexity.Contact.FieldSets == nil {
-			break
-		}
-
-		return e.complexity.Contact.FieldSets(childComplexity), true
 
 	case "Contact.firstName":
 		if e.complexity.Contact.FirstName == nil {
@@ -4272,13 +4219,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.EntityTemplate.Extends(childComplexity), true
 
-	case "EntityTemplate.fieldSetTemplates":
-		if e.complexity.EntityTemplate.FieldSetTemplates == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.FieldSetTemplates(childComplexity), true
-
 	case "EntityTemplate.id":
 		if e.complexity.EntityTemplate.ID == nil {
 			break
@@ -4362,97 +4302,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.ExternalSystemStripeDetails.PaymentMethodTypes(childComplexity), true
-
-	case "FieldSet.createdAt":
-		if e.complexity.FieldSet.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.CreatedAt(childComplexity), true
-
-	case "FieldSet.customFields":
-		if e.complexity.FieldSet.CustomFields == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.CustomFields(childComplexity), true
-
-	case "FieldSet.id":
-		if e.complexity.FieldSet.ID == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.ID(childComplexity), true
-
-	case "FieldSet.name":
-		if e.complexity.FieldSet.Name == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.Name(childComplexity), true
-
-	case "FieldSet.source":
-		if e.complexity.FieldSet.Source == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.Source(childComplexity), true
-
-	case "FieldSet.template":
-		if e.complexity.FieldSet.Template == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.Template(childComplexity), true
-
-	case "FieldSet.updatedAt":
-		if e.complexity.FieldSet.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.FieldSet.UpdatedAt(childComplexity), true
-
-	case "FieldSetTemplate.createdAt":
-		if e.complexity.FieldSetTemplate.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.FieldSetTemplate.CreatedAt(childComplexity), true
-
-	case "FieldSetTemplate.customFieldTemplates":
-		if e.complexity.FieldSetTemplate.CustomFieldTemplates == nil {
-			break
-		}
-
-		return e.complexity.FieldSetTemplate.CustomFieldTemplates(childComplexity), true
-
-	case "FieldSetTemplate.id":
-		if e.complexity.FieldSetTemplate.ID == nil {
-			break
-		}
-
-		return e.complexity.FieldSetTemplate.ID(childComplexity), true
-
-	case "FieldSetTemplate.name":
-		if e.complexity.FieldSetTemplate.Name == nil {
-			break
-		}
-
-		return e.complexity.FieldSetTemplate.Name(childComplexity), true
-
-	case "FieldSetTemplate.order":
-		if e.complexity.FieldSetTemplate.Order == nil {
-			break
-		}
-
-		return e.complexity.FieldSetTemplate.Order(childComplexity), true
-
-	case "FieldSetTemplate.updatedAt":
-		if e.complexity.FieldSetTemplate.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.FieldSetTemplate.UpdatedAt(childComplexity), true
 
 	case "Flow.contacts":
 		if e.complexity.Flow.Contacts == nil {
@@ -6862,18 +6711,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CustomFieldDeleteFromContactByName(childComplexity, args["contactId"].(string), args["fieldName"].(string)), true
 
-	case "Mutation.customFieldDeleteFromFieldSetById":
-		if e.complexity.Mutation.CustomFieldDeleteFromFieldSetByID == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_customFieldDeleteFromFieldSetById_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CustomFieldDeleteFromFieldSetByID(childComplexity, args["contactId"].(string), args["fieldSetId"].(string), args["id"].(string)), true
-
 	case "Mutation.customFieldMergeToContact":
 		if e.complexity.Mutation.CustomFieldMergeToContact == nil {
 			break
@@ -6885,18 +6722,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.CustomFieldMergeToContact(childComplexity, args["contactId"].(string), args["input"].(model.CustomFieldInput)), true
-
-	case "Mutation.customFieldMergeToFieldSet":
-		if e.complexity.Mutation.CustomFieldMergeToFieldSet == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_customFieldMergeToFieldSet_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CustomFieldMergeToFieldSet(childComplexity, args["contactId"].(string), args["fieldSetId"].(string), args["input"].(model.CustomFieldInput)), true
 
 	case "Mutation.customFieldTemplate_Delete":
 		if e.complexity.Mutation.CustomFieldTemplateDelete == nil {
@@ -6934,18 +6759,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.CustomFieldUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.CustomFieldUpdateInput)), true
 
-	case "Mutation.customFieldUpdateInFieldSet":
-		if e.complexity.Mutation.CustomFieldUpdateInFieldSet == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_customFieldUpdateInFieldSet_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.CustomFieldUpdateInFieldSet(childComplexity, args["contactId"].(string), args["fieldSetId"].(string), args["input"].(model.CustomFieldUpdateInput)), true
-
 	case "Mutation.customFieldsMergeAndUpdateInContact":
 		if e.complexity.Mutation.CustomFieldsMergeAndUpdateInContact == nil {
 			break
@@ -6956,7 +6769,7 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 			return 0, false
 		}
 
-		return e.complexity.Mutation.CustomFieldsMergeAndUpdateInContact(childComplexity, args["contactId"].(string), args["customFields"].([]*model.CustomFieldInput), args["fieldSets"].([]*model.FieldSetInput)), true
+		return e.complexity.Mutation.CustomFieldsMergeAndUpdateInContact(childComplexity, args["contactId"].(string), args["customFields"].([]*model.CustomFieldInput)), true
 
 	case "Mutation.customer_contact_Create":
 		if e.complexity.Mutation.CustomerContactCreate == nil {
@@ -7125,42 +6938,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Mutation.ExternalSystemCreate(childComplexity, args["input"].(model.ExternalSystemInput)), true
-
-	case "Mutation.fieldSetDeleteFromContact":
-		if e.complexity.Mutation.FieldSetDeleteFromContact == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_fieldSetDeleteFromContact_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FieldSetDeleteFromContact(childComplexity, args["contactId"].(string), args["id"].(string)), true
-
-	case "Mutation.fieldSetMergeToContact":
-		if e.complexity.Mutation.FieldSetMergeToContact == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_fieldSetMergeToContact_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FieldSetMergeToContact(childComplexity, args["contactId"].(string), args["input"].(model.FieldSetInput)), true
-
-	case "Mutation.fieldSetUpdateInContact":
-		if e.complexity.Mutation.FieldSetUpdateInContact == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_fieldSetUpdateInContact_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.FieldSetUpdateInContact(childComplexity, args["contactId"].(string), args["input"].(model.FieldSetUpdateInput)), true
 
 	case "Mutation.flow_ChangeStatus":
 		if e.complexity.Mutation.FlowChangeStatus == nil {
@@ -8997,13 +8774,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Organization.ExternalLinks(childComplexity), true
-
-	case "Organization.fieldSets":
-		if e.complexity.Organization.FieldSets == nil {
-			break
-		}
-
-		return e.complexity.Organization.FieldSets(childComplexity), true
 
 	case "Organization.headquarters":
 		if e.complexity.Organization.Headquarters == nil {
@@ -11426,9 +11196,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEntityTemplateInput,
 		ec.unmarshalInputExternalSystemInput,
 		ec.unmarshalInputExternalSystemReferenceInput,
-		ec.unmarshalInputFieldSetInput,
-		ec.unmarshalInputFieldSetTemplateInput,
-		ec.unmarshalInputFieldSetUpdateInput,
 		ec.unmarshalInputFilter,
 		ec.unmarshalInputFilterItem,
 		ec.unmarshalInputFlowActionInputData,
@@ -11998,8 +11765,6 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     """
     customFields: [CustomField!]! @goField(forceResolver: true)
 
-    fieldSets: [FieldSet!]! @goField(forceResolver: true)
-
     """
     Template of the contact in customerOS.
     """
@@ -12084,11 +11849,6 @@ input ContactInput {
     Deprecated
     """
     customFields: [CustomFieldInput!] @deprecated(reason: "Not supported in create flow yet")
-
-    """
-    Deprecated
-    """
-    fieldSets: [FieldSetInput!] @deprecated(reason: "Not supported in create flow yet")
 
     "An email addresses associated with the contact."
     email: EmailInput
@@ -12610,20 +12370,12 @@ enum ContractStatus {
     ZAR
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/custom_field.graphqls", Input: `extend type Mutation {
-    customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!], fieldSets: [FieldSetInput!]): Contact!
+    customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!]): Contact!
 
     customFieldMergeToContact(contactId : ID!, input: CustomFieldInput!): CustomField!
     customFieldUpdateInContact(contactId : ID!, input: CustomFieldUpdateInput!): CustomField!
     customFieldDeleteFromContactByName(contactId : ID!, fieldName: String!): Result!
     customFieldDeleteFromContactById(contactId : ID!, id: ID!): Result!
-
-    customFieldMergeToFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldInput!): CustomField!
-    customFieldUpdateInFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldUpdateInput!): CustomField!
-    customFieldDeleteFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): Result!
-
-    fieldSetMergeToContact(contactId : ID!, input: FieldSetInput!): FieldSet
-    fieldSetUpdateInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
-    fieldSetDeleteFromContact(contactId : ID!, id: ID!):Result!
 }
 
 """
@@ -12729,28 +12481,6 @@ enum CustomFieldDataType {
     DATETIME
     INTEGER
     DECIMAL
-}
-
-type FieldSet {
-    id: ID!
-    name: String!
-    createdAt: Time!
-    updatedAt: Time!
-    customFields: [CustomField!]! @goField(forceResolver: true)
-    template: FieldSetTemplate @goField(forceResolver: true)
-    source: DataSource!
-}
-
-input FieldSetInput {
-    id: ID
-    name: String!
-    customFields: [CustomFieldInput!]
-    templateId: ID
-}
-
-input FieldSetUpdateInput {
-    id: ID!
-    name: String!
 }
 
 enum CustomEntityType {
@@ -13155,31 +12885,14 @@ type EntityTemplate implements Node {
     version: Int!
     name: String!
     extends: EntityTemplateExtension
-    fieldSetTemplates: [FieldSetTemplate!]! @goField(forceResolver: true)
     customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
     createdAt: Time!
     updatedAt: Time!
-}
-
-type FieldSetTemplate  implements Node {
-    id: ID!
-    createdAt: Time!
-    updatedAt: Time!
-    name: String!
-    order: Int!
-    customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
 }
 
 input EntityTemplateInput {
     name: String!
     extends: EntityTemplateExtension
-    fieldSetTemplateInputs: [FieldSetTemplateInput!]
-    customFieldTemplateInputs: [CustomFieldTemplateInput!]
-}
-
-input FieldSetTemplateInput {
-    name: String!
-    order: Int!
     customFieldTemplateInputs: [CustomFieldTemplateInput!]
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/external_system.graphqls", Input: `extend type Query {
@@ -14389,7 +14102,6 @@ type Organization implements MetadataInterface {
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     suggestedMergeTo: [SuggestedMergeOrganization!]! @goField(forceResolver: true)
-    fieldSets: [FieldSet!]! @goField(forceResolver: true)
     entityTemplate: EntityTemplate @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
@@ -14565,10 +14277,6 @@ input OrganizationInput {
     Deprecated, use relationship instead
     """
     isCustomer:    Boolean @deprecated(reason: "Use relationship")
-    """
-    Deprecated
-    """
-    fieldSets:     [FieldSetInput!] @deprecated
     """
     Deprecated
     """
@@ -16692,39 +16400,6 @@ func (ec *executionContext) field_Mutation_customFieldDeleteFromContactByName_ar
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_customFieldDeleteFromFieldSetById_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["fieldSetId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSetId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["fieldSetId"] = arg1
-	var arg2 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg2, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg2
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_customFieldMergeToContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -16746,39 +16421,6 @@ func (ec *executionContext) field_Mutation_customFieldMergeToContact_args(ctx co
 		}
 	}
 	args["input"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_customFieldMergeToFieldSet_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["fieldSetId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSetId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["fieldSetId"] = arg1
-	var arg2 model.CustomFieldInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg2, err = ec.unmarshalNCustomFieldInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg2
 	return args, nil
 }
 
@@ -16836,39 +16478,6 @@ func (ec *executionContext) field_Mutation_customFieldUpdateInContact_args(ctx c
 	return args, nil
 }
 
-func (ec *executionContext) field_Mutation_customFieldUpdateInFieldSet_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["fieldSetId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSetId"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["fieldSetId"] = arg1
-	var arg2 model.CustomFieldUpdateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg2, err = ec.unmarshalNCustomFieldUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg2
-	return args, nil
-}
-
 func (ec *executionContext) field_Mutation_customFieldsMergeAndUpdateInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
 	var err error
 	args := map[string]interface{}{}
@@ -16890,15 +16499,6 @@ func (ec *executionContext) field_Mutation_customFieldsMergeAndUpdateInContact_a
 		}
 	}
 	args["customFields"] = arg1
-	var arg2 []*model.FieldSetInput
-	if tmp, ok := rawArgs["fieldSets"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
-		arg2, err = ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["fieldSets"] = arg2
 	return args, nil
 }
 
@@ -17226,78 +16826,6 @@ func (ec *executionContext) field_Mutation_externalSystem_Create_args(ctx contex
 		}
 	}
 	args["input"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_fieldSetDeleteFromContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 string
-	if tmp, ok := rawArgs["id"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-		arg1, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["id"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_fieldSetMergeToContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 model.FieldSetInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNFieldSetInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg1
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_fieldSetUpdateInContact_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 string
-	if tmp, ok := rawArgs["contactId"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("contactId"))
-		arg0, err = ec.unmarshalNID2string(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["contactId"] = arg0
-	var arg1 model.FieldSetUpdateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg1, err = ec.unmarshalNFieldSetUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetUpdateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg1
 	return args, nil
 }
 
@@ -25790,66 +25318,6 @@ func (ec *executionContext) fieldContext_Contact_customFields(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_fieldSets(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_fieldSets(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().FieldSets(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.FieldSet)
-	fc.Result = res
-	return ec.marshalNFieldSet2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_fieldSets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FieldSet_id(ctx, field)
-			case "name":
-				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_FieldSet_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
-			case "customFields":
-				return ec.fieldContext_FieldSet_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_FieldSet_template(ctx, field)
-			case "source":
-				return ec.fieldContext_FieldSet_source(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contact_template(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_template(ctx, field)
 	if err != nil {
@@ -25894,8 +25362,6 @@ func (ec *executionContext) fieldContext_Contact_template(_ context.Context, fie
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplates":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
 			case "customFieldTemplates":
 				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
@@ -26309,8 +25775,6 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(_
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -26464,8 +25928,6 @@ func (ec *executionContext) fieldContext_ContactsPage_content(_ context.Context,
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -31362,8 +30824,6 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -34218,8 +33678,6 @@ func (ec *executionContext) fieldContext_Email_contacts(_ context.Context, field
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -34376,8 +33834,6 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -35678,64 +35134,6 @@ func (ec *executionContext) fieldContext_EntityTemplate_extends(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _EntityTemplate_fieldSetTemplates(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.EntityTemplate().FieldSetTemplates(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.FieldSetTemplate)
-	fc.Result = res
-	return ec.marshalNFieldSetTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplateᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_fieldSetTemplates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FieldSetTemplate_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_FieldSetTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_FieldSetTemplate_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
-			case "order":
-				return ec.fieldContext_FieldSetTemplate_order(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_FieldSetTemplate_customFieldTemplates(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _EntityTemplate_customFieldTemplates(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 	if err != nil {
@@ -36230,633 +35628,6 @@ func (ec *executionContext) fieldContext_ExternalSystemStripeDetails_paymentMeth
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSet_id(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSet_name(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSet_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSet_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSet_customFields(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_customFields(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FieldSet().CustomFields(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.CustomField)
-	fc.Result = res
-	return ec.marshalNCustomField2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_customFields(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_CustomField_id(ctx, field)
-			case "name":
-				return ec.fieldContext_CustomField_name(ctx, field)
-			case "datatype":
-				return ec.fieldContext_CustomField_datatype(ctx, field)
-			case "value":
-				return ec.fieldContext_CustomField_value(ctx, field)
-			case "source":
-				return ec.fieldContext_CustomField_source(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_CustomField_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_CustomField_updatedAt(ctx, field)
-			case "template":
-				return ec.fieldContext_CustomField_template(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CustomField", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSet_template(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_template(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FieldSet().Template(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.FieldSetTemplate)
-	fc.Result = res
-	return ec.marshalOFieldSetTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplate(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_template(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FieldSetTemplate_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_FieldSetTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_FieldSetTemplate_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_FieldSetTemplate_name(ctx, field)
-			case "order":
-				return ec.fieldContext_FieldSetTemplate_order(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_FieldSetTemplate_customFieldTemplates(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FieldSetTemplate", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSet_source(ctx context.Context, field graphql.CollectedField, obj *model.FieldSet) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSet_source(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Source, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(model.DataSource)
-	fc.Result = res
-	return ec.marshalNDataSource2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐDataSource(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSet_source(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSet",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type DataSource does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSetTemplate_id(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSetTemplate_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSetTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSetTemplate_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSetTemplate_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSetTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSetTemplate_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSetTemplate_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSetTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSetTemplate_name(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSetTemplate_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSetTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSetTemplate_order(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_order(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Order, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSetTemplate_order(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSetTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _FieldSetTemplate_customFieldTemplates(ctx context.Context, field graphql.CollectedField, obj *model.FieldSetTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FieldSetTemplate_customFieldTemplates(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.FieldSetTemplate().CustomFieldTemplates(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.CustomFieldTemplate)
-	fc.Result = res
-	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_FieldSetTemplate_customFieldTemplates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "FieldSetTemplate",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
-			case "type":
-				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
-			case "validValues":
-				return ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
-			case "entityType":
-				return ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
-			case "order":
-				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
-			case "required":
-				return ec.fieldContext_CustomFieldTemplate_required(ctx, field)
-			case "length":
-				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
-			case "min":
-				return ec.fieldContext_CustomFieldTemplate_min(ctx, field)
-			case "max":
-				return ec.fieldContext_CustomFieldTemplate_max(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CustomFieldTemplate", field.Name)
 		},
 	}
 	return fc, nil
@@ -37457,8 +36228,6 @@ func (ec *executionContext) fieldContext_FlowContact_contact(_ context.Context, 
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -40888,8 +39657,6 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -45983,8 +44750,6 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -46130,8 +44895,6 @@ func (ec *executionContext) fieldContext_JobRole_contact(_ context.Context, fiel
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -46948,8 +45711,6 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -51519,8 +50280,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_CreateForOrganization(
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -51705,8 +50464,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -52007,8 +50764,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -52221,8 +50976,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -52346,8 +51099,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -52584,8 +51335,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx con
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -54051,7 +52800,7 @@ func (ec *executionContext) _Mutation_customFieldsMergeAndUpdateInContact(ctx co
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CustomFieldsMergeAndUpdateInContact(rctx, fc.Args["contactId"].(string), fc.Args["customFields"].([]*model.CustomFieldInput), fc.Args["fieldSets"].([]*model.FieldSetInput))
+		return ec.resolvers.Mutation().CustomFieldsMergeAndUpdateInContact(rctx, fc.Args["contactId"].(string), fc.Args["customFields"].([]*model.CustomFieldInput))
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -54130,8 +52879,6 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -54420,406 +53167,6 @@ func (ec *executionContext) fieldContext_Mutation_customFieldDeleteFromContactBy
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_customFieldDeleteFromContactById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_customFieldMergeToFieldSet(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_customFieldMergeToFieldSet(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CustomFieldMergeToFieldSet(rctx, fc.Args["contactId"].(string), fc.Args["fieldSetId"].(string), fc.Args["input"].(model.CustomFieldInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.CustomField)
-	fc.Result = res
-	return ec.marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomField(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_customFieldMergeToFieldSet(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_CustomField_id(ctx, field)
-			case "name":
-				return ec.fieldContext_CustomField_name(ctx, field)
-			case "datatype":
-				return ec.fieldContext_CustomField_datatype(ctx, field)
-			case "value":
-				return ec.fieldContext_CustomField_value(ctx, field)
-			case "source":
-				return ec.fieldContext_CustomField_source(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_CustomField_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_CustomField_updatedAt(ctx, field)
-			case "template":
-				return ec.fieldContext_CustomField_template(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CustomField", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_customFieldMergeToFieldSet_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_customFieldUpdateInFieldSet(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_customFieldUpdateInFieldSet(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CustomFieldUpdateInFieldSet(rctx, fc.Args["contactId"].(string), fc.Args["fieldSetId"].(string), fc.Args["input"].(model.CustomFieldUpdateInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.CustomField)
-	fc.Result = res
-	return ec.marshalNCustomField2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomField(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_customFieldUpdateInFieldSet(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_CustomField_id(ctx, field)
-			case "name":
-				return ec.fieldContext_CustomField_name(ctx, field)
-			case "datatype":
-				return ec.fieldContext_CustomField_datatype(ctx, field)
-			case "value":
-				return ec.fieldContext_CustomField_value(ctx, field)
-			case "source":
-				return ec.fieldContext_CustomField_source(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_CustomField_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_CustomField_updatedAt(ctx, field)
-			case "template":
-				return ec.fieldContext_CustomField_template(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CustomField", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_customFieldUpdateInFieldSet_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_customFieldDeleteFromFieldSetById(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_customFieldDeleteFromFieldSetById(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().CustomFieldDeleteFromFieldSetByID(rctx, fc.Args["contactId"].(string), fc.Args["fieldSetId"].(string), fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_customFieldDeleteFromFieldSetById(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_customFieldDeleteFromFieldSetById_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_fieldSetMergeToContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_fieldSetMergeToContact(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().FieldSetMergeToContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.FieldSetInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.FieldSet)
-	fc.Result = res
-	return ec.marshalOFieldSet2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSet(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_fieldSetMergeToContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FieldSet_id(ctx, field)
-			case "name":
-				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_FieldSet_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
-			case "customFields":
-				return ec.fieldContext_FieldSet_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_FieldSet_template(ctx, field)
-			case "source":
-				return ec.fieldContext_FieldSet_source(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_fieldSetMergeToContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_fieldSetUpdateInContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_fieldSetUpdateInContact(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().FieldSetUpdateInContact(rctx, fc.Args["contactId"].(string), fc.Args["input"].(model.FieldSetUpdateInput))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.FieldSet)
-	fc.Result = res
-	return ec.marshalOFieldSet2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSet(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_fieldSetUpdateInContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FieldSet_id(ctx, field)
-			case "name":
-				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_FieldSet_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
-			case "customFields":
-				return ec.fieldContext_FieldSet_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_FieldSet_template(ctx, field)
-			case "source":
-				return ec.fieldContext_FieldSet_source(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_fieldSetUpdateInContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_fieldSetDeleteFromContact(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_fieldSetDeleteFromContact(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Mutation().FieldSetDeleteFromContact(rctx, fc.Args["contactId"].(string), fc.Args["id"].(string))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.Result)
-	fc.Result = res
-	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_fieldSetDeleteFromContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "result":
-				return ec.fieldContext_Result_result(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_fieldSetDeleteFromContact_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -56154,8 +54501,6 @@ func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx conte
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplates":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
 			case "customFieldTemplates":
 				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
@@ -58077,8 +56422,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -58276,8 +56619,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -60656,8 +58997,6 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -61367,8 +59706,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -62116,8 +60453,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -62351,8 +60686,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -62586,8 +60919,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -63162,8 +61493,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -63397,8 +61726,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -63632,8 +61959,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -63867,8 +62192,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -64102,8 +62425,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -64337,8 +62658,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -71293,8 +69612,6 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -74930,66 +73247,6 @@ func (ec *executionContext) fieldContext_Organization_suggestedMergeTo(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_fieldSets(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_fieldSets(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().FieldSets(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.FieldSet)
-	fc.Result = res
-	return ec.marshalNFieldSet2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_fieldSets(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_FieldSet_id(ctx, field)
-			case "name":
-				return ec.fieldContext_FieldSet_name(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_FieldSet_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_FieldSet_updatedAt(ctx, field)
-			case "customFields":
-				return ec.fieldContext_FieldSet_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_FieldSet_template(ctx, field)
-			case "source":
-				return ec.fieldContext_FieldSet_source(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type FieldSet", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_entityTemplate(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_entityTemplate(ctx, field)
 	if err != nil {
@@ -75034,8 +73291,6 @@ func (ec *executionContext) fieldContext_Organization_entityTemplate(_ context.C
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplates":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
 			case "customFieldTemplates":
 				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
@@ -76241,8 +74496,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -76567,8 +74820,6 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -77848,8 +76099,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(_ context.Context,
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -78006,8 +76255,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -78225,8 +76472,6 @@ func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Conte
 				return ec.fieldContext_EntityTemplate_name(ctx, field)
 			case "extends":
 				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "fieldSetTemplates":
-				return ec.fieldContext_EntityTemplate_fieldSetTemplates(ctx, field)
 			case "customFieldTemplates":
 				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
 			case "createdAt":
@@ -78582,8 +76827,6 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -78770,8 +77013,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -78895,8 +77136,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Contact_fieldSets(ctx, field)
 			case "template":
 				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
@@ -81633,8 +79872,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -81865,8 +80102,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -82097,8 +80332,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -84651,8 +82884,6 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -86227,8 +84458,6 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -87383,8 +85612,6 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "fieldSets":
-				return ec.fieldContext_Organization_fieldSets(ctx, field)
 			case "entityTemplate":
 				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
@@ -94568,7 +92795,7 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "profilePhotoUrl", "username", "createdAt", "customFields", "fieldSets", "email", "phoneNumber", "ownerId", "externalReference", "appSource", "socialUrl"}
+	fieldsInOrder := [...]string{"templateId", "prefix", "firstName", "lastName", "name", "description", "timezone", "profilePhotoUrl", "username", "createdAt", "customFields", "email", "phoneNumber", "ownerId", "externalReference", "appSource", "socialUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -94652,13 +92879,6 @@ func (ec *executionContext) unmarshalInputContactInput(ctx context.Context, obj 
 				return it, err
 			}
 			it.CustomFields = data
-		case "fieldSets":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
-			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FieldSets = data
 		case "email":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("email"))
 			data, err := ec.unmarshalOEmailInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEmailInput(ctx, v)
@@ -95819,7 +94039,7 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"name", "extends", "fieldSetTemplateInputs", "customFieldTemplateInputs"}
+	fieldsInOrder := [...]string{"name", "extends", "customFieldTemplateInputs"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -95840,13 +94060,6 @@ func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Contex
 				return it, err
 			}
 			it.Extends = data
-		case "fieldSetTemplateInputs":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSetTemplateInputs"))
-			data, err := ec.unmarshalOFieldSetTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplateInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FieldSetTemplateInputs = data
 		case "customFieldTemplateInputs":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFieldTemplateInputs"))
 			data, err := ec.unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx, v)
@@ -95936,129 +94149,6 @@ func (ec *executionContext) unmarshalInputExternalSystemReferenceInput(ctx conte
 				return it, err
 			}
 			it.ExternalSource = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputFieldSetInput(ctx context.Context, obj interface{}) (model.FieldSetInput, error) {
-	var it model.FieldSetInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "name", "customFields", "templateId"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "customFields":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFields"))
-			data, err := ec.unmarshalOCustomFieldInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CustomFields = data
-		case "templateId":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
-			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.TemplateID = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputFieldSetTemplateInput(ctx context.Context, obj interface{}) (model.FieldSetTemplateInput, error) {
-	var it model.FieldSetTemplateInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "order", "customFieldTemplateInputs"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "order":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("order"))
-			data, err := ec.unmarshalNInt2int(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Order = data
-		case "customFieldTemplateInputs":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFieldTemplateInputs"))
-			data, err := ec.unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CustomFieldTemplateInputs = data
-		}
-	}
-
-	return it, nil
-}
-
-func (ec *executionContext) unmarshalInputFieldSetUpdateInput(ctx context.Context, obj interface{}) (model.FieldSetUpdateInput, error) {
-	var it model.FieldSetUpdateInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"id", "name"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "id":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
-			data, err := ec.unmarshalNID2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.ID = data
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
 		}
 	}
 
@@ -97887,7 +95977,7 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 		asMap[k] = v
 	}
 
-	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "customFields", "market", "logo", "icon", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "slackChannelId", "appSource", "stage", "relationship", "leadSource", "isCustomer", "fieldSets", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
+	fieldsInOrder := [...]string{"customId", "name", "description", "notes", "domains", "website", "industry", "subIndustry", "industryGroup", "public", "customFields", "market", "logo", "icon", "employeeGrowthRate", "headquarters", "yearFounded", "employees", "slackChannelId", "appSource", "stage", "relationship", "leadSource", "isCustomer", "templateId", "isPublic", "referenceId", "note", "logoUrl"}
 	for _, k := range fieldsInOrder {
 		v, ok := asMap[k]
 		if !ok {
@@ -98062,13 +96152,6 @@ func (ec *executionContext) unmarshalInputOrganizationInput(ctx context.Context,
 				return it, err
 			}
 			it.IsCustomer = data
-		case "fieldSets":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("fieldSets"))
-			data, err := ec.unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.FieldSets = data
 		case "templateId":
 			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("templateId"))
 			data, err := ec.unmarshalOID2ᚖstring(ctx, v)
@@ -100881,13 +98964,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Location(ctx, sel, obj)
-	case model.EntityTemplate:
-		return ec._EntityTemplate(ctx, sel, &obj)
-	case *model.EntityTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._EntityTemplate(ctx, sel, obj)
 	case model.SourceFields:
 		if obj == nil {
 			return graphql.Null
@@ -100898,34 +98974,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._ExtensibleEntity(ctx, sel, obj)
-	case model.InteractionEvent:
-		return ec._InteractionEvent(ctx, sel, &obj)
-	case *model.InteractionEvent:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionEvent(ctx, sel, obj)
-	case model.InteractionSession:
-		return ec._InteractionSession(ctx, sel, &obj)
-	case *model.InteractionSession:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionSession(ctx, sel, obj)
-	case model.Meeting:
-		return ec._Meeting(ctx, sel, &obj)
-	case *model.Meeting:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Meeting(ctx, sel, obj)
-	case model.FieldSetTemplate:
-		return ec._FieldSetTemplate(ctx, sel, &obj)
-	case *model.FieldSetTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._FieldSetTemplate(ctx, sel, obj)
 	case model.Attachment:
 		return ec._Attachment(ctx, sel, &obj)
 	case *model.Attachment:
@@ -100933,6 +98981,34 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Attachment(ctx, sel, obj)
+	case model.InteractionEvent:
+		return ec._InteractionEvent(ctx, sel, &obj)
+	case *model.InteractionEvent:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionEvent(ctx, sel, obj)
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Meeting(ctx, sel, obj)
+	case model.InteractionSession:
+		return ec._InteractionSession(ctx, sel, &obj)
+	case *model.InteractionSession:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionSession(ctx, sel, obj)
+	case model.EntityTemplate:
+		return ec._EntityTemplate(ctx, sel, &obj)
+	case *model.EntityTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._EntityTemplate(ctx, sel, obj)
 	case model.CustomFieldTemplate:
 		return ec._CustomFieldTemplate(ctx, sel, &obj)
 	case *model.CustomFieldTemplate:
@@ -102282,42 +100358,6 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 					}
 				}()
 				res = ec._Contact_customFields(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "fieldSets":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Contact_fieldSets(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -104882,42 +102922,6 @@ func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.Selecti
 			}
 		case "extends":
 			out.Values[i] = ec._EntityTemplate_extends(ctx, field, obj)
-		case "fieldSetTemplates":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._EntityTemplate_fieldSetTemplates(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "customFieldTemplates":
 			field := field
 
@@ -105091,229 +103095,6 @@ func (ec *executionContext) _ExternalSystemStripeDetails(ctx context.Context, se
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var fieldSetImplementors = []string{"FieldSet"}
-
-func (ec *executionContext) _FieldSet(ctx context.Context, sel ast.SelectionSet, obj *model.FieldSet) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, fieldSetImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("FieldSet")
-		case "id":
-			out.Values[i] = ec._FieldSet_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._FieldSet_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdAt":
-			out.Values[i] = ec._FieldSet_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._FieldSet_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "customFields":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._FieldSet_customFields(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "template":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._FieldSet_template(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "source":
-			out.Values[i] = ec._FieldSet_source(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var fieldSetTemplateImplementors = []string{"FieldSetTemplate", "Node"}
-
-func (ec *executionContext) _FieldSetTemplate(ctx context.Context, sel ast.SelectionSet, obj *model.FieldSetTemplate) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, fieldSetTemplateImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("FieldSetTemplate")
-		case "id":
-			out.Values[i] = ec._FieldSetTemplate_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "createdAt":
-			out.Values[i] = ec._FieldSetTemplate_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._FieldSetTemplate_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._FieldSetTemplate_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "order":
-			out.Values[i] = ec._FieldSetTemplate_order(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "customFieldTemplates":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._FieldSetTemplate_customFieldTemplates(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -108966,42 +106747,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "customFieldMergeToFieldSet":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_customFieldMergeToFieldSet(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "customFieldUpdateInFieldSet":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_customFieldUpdateInFieldSet(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "customFieldDeleteFromFieldSetById":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_customFieldDeleteFromFieldSetById(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "fieldSetMergeToContact":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_fieldSetMergeToContact(ctx, field)
-			})
-		case "fieldSetUpdateInContact":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_fieldSetUpdateInContact(ctx, field)
-			})
-		case "fieldSetDeleteFromContact":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_fieldSetDeleteFromContact(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "customFieldTemplate_Save":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_customFieldTemplate_Save(ctx, field)
@@ -111139,42 +108884,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 					}
 				}()
 				res = ec._Organization_suggestedMergeTo(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "fieldSets":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Organization_fieldSets(ctx, field, obj)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
@@ -117120,134 +114829,6 @@ func (ec *executionContext) marshalNExternalSystemType2githubᚗcomᚋopenline�
 	return v
 }
 
-func (ec *executionContext) marshalNFieldSet2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FieldSet) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNFieldSet2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSet(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNFieldSet2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSet(ctx context.Context, sel ast.SelectionSet, v *model.FieldSet) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._FieldSet(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNFieldSetInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInput(ctx context.Context, v interface{}) (model.FieldSetInput, error) {
-	res, err := ec.unmarshalInputFieldSetInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNFieldSetInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInput(ctx context.Context, v interface{}) (*model.FieldSetInput, error) {
-	res, err := ec.unmarshalInputFieldSetInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalNFieldSetTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.FieldSetTemplate) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNFieldSetTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplate(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNFieldSetTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplate(ctx context.Context, sel ast.SelectionSet, v *model.FieldSetTemplate) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._FieldSetTemplate(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNFieldSetTemplateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplateInput(ctx context.Context, v interface{}) (*model.FieldSetTemplateInput, error) {
-	res, err := ec.unmarshalInputFieldSetTemplateInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) unmarshalNFieldSetUpdateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetUpdateInput(ctx context.Context, v interface{}) (model.FieldSetUpdateInput, error) {
-	res, err := ec.unmarshalInputFieldSetUpdateInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNFilter2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFilter(ctx context.Context, v interface{}) (*model.Filter, error) {
 	res, err := ec.unmarshalInputFilter(ctx, v)
 	return &res, graphql.ErrorOnPath(ctx, err)
@@ -121088,60 +118669,6 @@ func (ec *executionContext) marshalOExternalSystemStripeDetails2ᚖgithubᚗcom�
 		return graphql.Null
 	}
 	return ec._ExternalSystemStripeDetails(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalOFieldSet2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSet(ctx context.Context, sel ast.SelectionSet, v *model.FieldSet) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._FieldSet(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOFieldSetInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInputᚄ(ctx context.Context, v interface{}) ([]*model.FieldSetInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.FieldSetInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNFieldSetInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
-func (ec *executionContext) marshalOFieldSetTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplate(ctx context.Context, sel ast.SelectionSet, v *model.FieldSetTemplate) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._FieldSetTemplate(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOFieldSetTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplateInputᚄ(ctx context.Context, v interface{}) ([]*model.FieldSetTemplateInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.FieldSetTemplateInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNFieldSetTemplateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFieldSetTemplateInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
 }
 
 func (ec *executionContext) unmarshalOFilter2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFilterᚄ(ctx context.Context, v interface{}) ([]*model.Filter, error) {

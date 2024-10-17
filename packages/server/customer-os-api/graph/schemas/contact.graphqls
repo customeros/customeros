@@ -153,8 +153,6 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     """
     customFields: [CustomField!]! @goField(forceResolver: true)
 
-    fieldSets: [FieldSet!]! @goField(forceResolver: true)
-
     """
     Template of the contact in customerOS.
     """
@@ -239,11 +237,6 @@ input ContactInput {
     Deprecated
     """
     customFields: [CustomFieldInput!] @deprecated(reason: "Not supported in create flow yet")
-
-    """
-    Deprecated
-    """
-    fieldSets: [FieldSetInput!] @deprecated(reason: "Not supported in create flow yet")
 
     "An email addresses associated with the contact."
     email: EmailInput

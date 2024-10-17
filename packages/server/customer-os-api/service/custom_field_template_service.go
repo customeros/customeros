@@ -17,7 +17,6 @@ import (
 type CustomFieldTemplateService interface {
 	GetById(ctx context.Context, id string) (*neo4jentity.CustomFieldTemplateEntity, error)
 	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error)
-	FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error)
 	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*neo4jentity.CustomFieldTemplateEntity, error)
 }
 
@@ -35,18 +34,6 @@ func NewCustomFieldTemplateService(log logger.Logger, repositories *repository.R
 
 func (s *customFieldTemplateService) FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error) {
 	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityTemplateId(ctx, entityTemplateId)
-	if err != nil {
-		return nil, err
-	}
-	customFieldTemplateEntities := neo4jentity.CustomFieldTemplateEntities{}
-	for _, dbRecord := range all.([]*db.Record) {
-		customFieldTemplateEntities = append(customFieldTemplateEntities, *s.mapDbNodeToCustomFieldTemplate(dbRecord.Values[0].(dbtype.Node)))
-	}
-	return &customFieldTemplateEntities, nil
-}
-
-func (s *customFieldTemplateService) FindAllForFieldSetTemplate(ctx context.Context, fieldSetTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error) {
-	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityFieldSetTemplateId(ctx, fieldSetTemplateId)
 	if err != nil {
 		return nil, err
 	}

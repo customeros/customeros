@@ -176,19 +176,6 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 	return customFields, err
 }
 
-// FieldSets is the resolver for the fieldSets field.
-func (r *contactResolver) FieldSets(ctx context.Context, obj *model.Contact) ([]*model.FieldSet, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.FieldSets", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
-	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.CustomEntityTypeContact}
-	fieldSetEntities, err := r.Services.FieldSetService.FindAll(ctx, entityType)
-	sets := mapper.MapEntitiesToFieldSets(fieldSetEntities)
-	return sets, err
-}
-
 // Template is the resolver for the template field.
 func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Template", graphql.GetOperationContext(ctx))
