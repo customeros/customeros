@@ -176,26 +176,6 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 	return customFields, err
 }
 
-// Template is the resolver for the template field.
-func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Template", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", obj.ID))
-
-	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.CustomEntityTypeContact}
-	templateEntity, err := r.Services.EntityTemplateService.FindLinked(ctx, entityType)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get contact template for contact %s", obj.ID)
-		return nil, err
-	}
-	if templateEntity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToEntityTemplate(templateEntity), err
-}
-
 // Owner is the resolver for the owner field.
 func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model.User, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Owner", graphql.GetOperationContext(ctx))

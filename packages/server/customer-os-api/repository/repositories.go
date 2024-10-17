@@ -21,8 +21,6 @@ type Repositories struct {
 	//Deprecated
 	CustomFieldRepository CustomFieldRepository
 	//Deprecated
-	EntityTemplateRepository EntityTemplateRepository
-	//Deprecated
 	UserRepository UserRepository
 	//Deprecated
 	ExternalSystemRepository ExternalSystemRepository
@@ -68,7 +66,6 @@ func InitRepos(driver *neo4j.DriverWithContext, database string, gormDb *gorm.DB
 	repositories.ContactRepository = NewContactRepository(driver, database)
 	repositories.CustomFieldTemplateRepository = NewCustomFieldTemplateRepository(driver, database)
 	repositories.CustomFieldRepository = NewCustomFieldRepository(driver, database)
-	repositories.EntityTemplateRepository = NewEntityTemplateRepository(driver, &repositories)
 	repositories.UserRepository = NewUserRepository(driver, database)
 	repositories.ExternalSystemRepository = NewExternalSystemRepository(driver)
 	repositories.NoteRepository = NewNoteRepository(driver)

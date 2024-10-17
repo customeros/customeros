@@ -58,11 +58,6 @@ func (r *contactResolver) CustomFields(ctx context.Context, obj *model.Contact) 
 	panic(fmt.Errorf("not implemented: CustomFields - customFields"))
 }
 
-// Template is the resolver for the template field.
-func (r *contactResolver) Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error) {
-	panic(fmt.Errorf("not implemented: Template - template"))
-}
-
 // Owner is the resolver for the owner field.
 func (r *contactResolver) Owner(ctx context.Context, obj *model.Contact) (*model.User, error) {
 	panic(fmt.Errorf("not implemented: Owner - owner"))

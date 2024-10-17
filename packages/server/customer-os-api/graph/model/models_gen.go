@@ -11,13 +11,6 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-type ExtensibleEntity interface {
-	IsNode()
-	IsExtensibleEntity()
-	GetID() string
-	GetTemplate() *EntityTemplate
-}
-
 type InteractionEventParticipant interface {
 	IsInteractionEventParticipant()
 }
@@ -369,8 +362,6 @@ type Contact struct {
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
-	// Template of the contact in customerOS.
-	Template *EntityTemplate `json:"template,omitempty"`
 	// Contact owner (user)
 	Owner                    *User           `json:"owner,omitempty"`
 	Flows                    []*Flow         `json:"flows"`
@@ -379,14 +370,11 @@ type Contact struct {
 	EnrichDetails            *EnrichDetails  `json:"enrichDetails"`
 }
 
-func (Contact) IsExtensibleEntity()               {}
-func (this Contact) GetID() string                { return this.ID }
-func (this Contact) GetTemplate() *EntityTemplate { return this.Template }
-
-func (Contact) IsNode() {}
-
 func (Contact) IsMetadataInterface()        {}
 func (this Contact) GetMetadata() *Metadata { return this.Metadata }
+
+func (Contact) IsNode()            {}
+func (this Contact) GetID() string { return this.ID }
 
 // Create an individual in customerOS.
 // **A `create` object.**
@@ -1030,25 +1018,6 @@ type EnrichDetails struct {
 	RequestedAt *time.Time `json:"requestedAt,omitempty"`
 	EnrichedAt  *time.Time `json:"enrichedAt,omitempty"`
 	FailedAt    *time.Time `json:"failedAt,omitempty"`
-}
-
-type EntityTemplate struct {
-	ID                   string                   `json:"id"`
-	Version              int                      `json:"version"`
-	Name                 string                   `json:"name"`
-	Extends              *EntityTemplateExtension `json:"extends,omitempty"`
-	CustomFieldTemplates []*CustomFieldTemplate   `json:"customFieldTemplates"`
-	CreatedAt            time.Time                `json:"createdAt"`
-	UpdatedAt            time.Time                `json:"updatedAt"`
-}
-
-func (EntityTemplate) IsNode()            {}
-func (this EntityTemplate) GetID() string { return this.ID }
-
-type EntityTemplateInput struct {
-	Name                      string                      `json:"name"`
-	Extends                   *EntityTemplateExtension    `json:"extends,omitempty"`
-	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
 type ExternalSystem struct {
@@ -1958,7 +1927,6 @@ type Organization struct {
 	Emails                   []*Email                      `json:"emails"`
 	PhoneNumbers             []*PhoneNumber                `json:"phoneNumbers"`
 	SuggestedMergeTo         []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
-	EntityTemplate           *EntityTemplate               `json:"entityTemplate,omitempty"`
 	TimelineEventsTotalCount int64                         `json:"timelineEventsTotalCount"`
 	ExternalLinks            []*ExternalSystem             `json:"externalLinks"`
 	IssueSummaryByStatus     []*IssueSummaryByStatus       `json:"issueSummaryByStatus"`
@@ -3967,47 +3935,6 @@ func (e *EmailVariableName) UnmarshalGQL(v interface{}) error {
 }
 
 func (e EmailVariableName) MarshalGQL(w io.Writer) {
-	fmt.Fprint(w, strconv.Quote(e.String()))
-}
-
-type EntityTemplateExtension string
-
-const (
-	EntityTemplateExtensionContact      EntityTemplateExtension = "CONTACT"
-	EntityTemplateExtensionOrganization EntityTemplateExtension = "ORGANIZATION"
-)
-
-var AllEntityTemplateExtension = []EntityTemplateExtension{
-	EntityTemplateExtensionContact,
-	EntityTemplateExtensionOrganization,
-}
-
-func (e EntityTemplateExtension) IsValid() bool {
-	switch e {
-	case EntityTemplateExtensionContact, EntityTemplateExtensionOrganization:
-		return true
-	}
-	return false
-}
-
-func (e EntityTemplateExtension) String() string {
-	return string(e)
-}
-
-func (e *EntityTemplateExtension) UnmarshalGQL(v interface{}) error {
-	str, ok := v.(string)
-	if !ok {
-		return fmt.Errorf("enums must be strings")
-	}
-
-	*e = EntityTemplateExtension(str)
-	if !e.IsValid() {
-		return fmt.Errorf("%s is not a valid EntityTemplateExtension", str)
-	}
-	return nil
-}
-
-func (e EntityTemplateExtension) MarshalGQL(w io.Writer) {
 	fmt.Fprint(w, strconv.Quote(e.String()))
 }
 

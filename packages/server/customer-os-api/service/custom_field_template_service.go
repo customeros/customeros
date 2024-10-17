@@ -6,17 +6,12 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // TODO alexb deprecate and remove
 type CustomFieldTemplateService interface {
-	GetById(ctx context.Context, id string) (*neo4jentity.CustomFieldTemplateEntity, error)
-	FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error)
 	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*neo4jentity.CustomFieldTemplateEntity, error)
 }
 
@@ -32,18 +27,6 @@ func NewCustomFieldTemplateService(log logger.Logger, repositories *repository.R
 	}
 }
 
-func (s *customFieldTemplateService) FindAllForEntityTemplate(ctx context.Context, entityTemplateId string) (*neo4jentity.CustomFieldTemplateEntities, error) {
-	all, err := s.repositories.CustomFieldTemplateRepository.FindAllByEntityTemplateId(ctx, entityTemplateId)
-	if err != nil {
-		return nil, err
-	}
-	customFieldTemplateEntities := neo4jentity.CustomFieldTemplateEntities{}
-	for _, dbRecord := range all.([]*db.Record) {
-		customFieldTemplateEntities = append(customFieldTemplateEntities, *s.mapDbNodeToCustomFieldTemplate(dbRecord.Values[0].(dbtype.Node)))
-	}
-	return &customFieldTemplateEntities, nil
-}
-
 func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*neo4jentity.CustomFieldTemplateEntity, error) {
 	queryResult, err := s.repositories.CustomFieldTemplateRepository.FindByCustomFieldId(ctx, customFieldId)
 	if err != nil {
@@ -53,20 +36,6 @@ func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Conte
 		return nil, nil
 	}
 	return s.mapDbNodeToCustomFieldTemplate((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node)), nil
-}
-
-func (s *customFieldTemplateService) GetById(ctx context.Context, id string) (*neo4jentity.CustomFieldTemplateEntity, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "TagService.GetById")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	span.LogFields(log.String("customFieldTemplateId", id))
-
-	customFieldTemplateDbNode, err := s.repositories.CustomFieldTemplateRepository.GetById(ctx, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, err
-	}
-	return s.mapDbNodeToCustomFieldTemplate(*customFieldTemplateDbNode), nil
 }
 
 // TODO alexb delete it

@@ -46,7 +46,6 @@ type ResolverRoot interface {
 	CustomField() CustomFieldResolver
 	DashboardCustomerMap() DashboardCustomerMapResolver
 	Email() EmailResolver
-	EntityTemplate() EntityTemplateResolver
 	Flow() FlowResolver
 	FlowContact() FlowContactResolver
 	FlowSender() FlowSenderResolver
@@ -225,7 +224,6 @@ type ComplexityRoot struct {
 		Source                   func(childComplexity int) int
 		SourceOfTruth            func(childComplexity int) int
 		Tags                     func(childComplexity int) int
-		Template                 func(childComplexity int) int
 		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
 		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
 		Timezone                 func(childComplexity int) int
@@ -518,16 +516,6 @@ type ComplexityRoot struct {
 		EnrichedAt  func(childComplexity int) int
 		FailedAt    func(childComplexity int) int
 		RequestedAt func(childComplexity int) int
-	}
-
-	EntityTemplate struct {
-		CreatedAt            func(childComplexity int) int
-		CustomFieldTemplates func(childComplexity int) int
-		Extends              func(childComplexity int) int
-		ID                   func(childComplexity int) int
-		Name                 func(childComplexity int) int
-		UpdatedAt            func(childComplexity int) int
-		Version              func(childComplexity int) int
 	}
 
 	ExternalSystem struct {
@@ -964,7 +952,6 @@ type ComplexityRoot struct {
 		EmailReplaceForUser                        func(childComplexity int, userID string, previousEmail *string, input model.EmailInput) int
 		EmailSetPrimaryForContact                  func(childComplexity int, contactID string, email string) int
 		EmailValidate                              func(childComplexity int, id string) int
-		EntityTemplateCreate                       func(childComplexity int, input model.EntityTemplateInput) int
 		ExternalSystemCreate                       func(childComplexity int, input model.ExternalSystemInput) int
 		FlowChangeStatus                           func(childComplexity int, id string, status model.FlowStatus) int
 		FlowContactAdd                             func(childComplexity int, flowID string, contactID string) int
@@ -1168,7 +1155,6 @@ type ComplexityRoot struct {
 		EmployeeGrowthRate            func(childComplexity int) int
 		Employees                     func(childComplexity int) int
 		EnrichDetails                 func(childComplexity int) int
-		EntityTemplate                func(childComplexity int) int
 		ExternalLinks                 func(childComplexity int) int
 		Headquarters                  func(childComplexity int) int
 		Hide                          func(childComplexity int) int
@@ -1300,7 +1286,6 @@ type ComplexityRoot struct {
 		DashboardViewOrganizations         func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		DashboardViewRenewals              func(childComplexity int, pagination model.Pagination, where *model.Filter, sort *model.SortBy) int
 		Email                              func(childComplexity int, id string) int
-		EntityTemplates                    func(childComplexity int, extends *model.EntityTemplateExtension) int
 		ExternalMeetings                   func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		ExternalSystemInstances            func(childComplexity int) int
 		FlowEmailVariables                 func(childComplexity int) int
@@ -1579,7 +1564,6 @@ type ContactResolver interface {
 	Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error)
 	ConnectedUsers(ctx context.Context, obj *model.Contact) ([]*model.User, error)
 	CustomFields(ctx context.Context, obj *model.Contact) ([]*model.CustomField, error)
-	Template(ctx context.Context, obj *model.Contact) (*model.EntityTemplate, error)
 	Owner(ctx context.Context, obj *model.Contact) (*model.User, error)
 	Flows(ctx context.Context, obj *model.Contact) ([]*model.Flow, error)
 	TimelineEvents(ctx context.Context, obj *model.Contact, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) ([]model.TimelineEvent, error)
@@ -1610,9 +1594,6 @@ type EmailResolver interface {
 	Users(ctx context.Context, obj *model.Email) ([]*model.User, error)
 	Contacts(ctx context.Context, obj *model.Email) ([]*model.Contact, error)
 	Organizations(ctx context.Context, obj *model.Email) ([]*model.Organization, error)
-}
-type EntityTemplateResolver interface {
-	CustomFieldTemplates(ctx context.Context, obj *model.EntityTemplate) ([]*model.CustomFieldTemplate, error)
 }
 type FlowResolver interface {
 	Contacts(ctx context.Context, obj *model.Flow) ([]*model.FlowContact, error)
@@ -1739,7 +1720,6 @@ type MutationResolver interface {
 	EmailRemoveFromOrganization(ctx context.Context, organizationID string, email string) (*model.Result, error)
 	EmailReplaceForOrganization(ctx context.Context, organizationID string, previousEmail *string, input model.EmailInput) (*model.Email, error)
 	EmailValidate(ctx context.Context, id string) (*model.ActionResponse, error)
-	EntityTemplateCreate(ctx context.Context, input model.EntityTemplateInput) (*model.EntityTemplate, error)
 	ExternalSystemCreate(ctx context.Context, input model.ExternalSystemInput) (string, error)
 	FlowMerge(ctx context.Context, input model.FlowMergeInput) (*model.Flow, error)
 	FlowChangeStatus(ctx context.Context, id string, status model.FlowStatus) (*model.Flow, error)
@@ -1893,7 +1873,6 @@ type OrganizationResolver interface {
 	Emails(ctx context.Context, obj *model.Organization) ([]*model.Email, error)
 	PhoneNumbers(ctx context.Context, obj *model.Organization) ([]*model.PhoneNumber, error)
 	SuggestedMergeTo(ctx context.Context, obj *model.Organization) ([]*model.SuggestedMergeOrganization, error)
-	EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error)
 	TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error)
 	ExternalLinks(ctx context.Context, obj *model.Organization) ([]*model.ExternalSystem, error)
 	IssueSummaryByStatus(ctx context.Context, obj *model.Organization) ([]*model.IssueSummaryByStatus, error)
@@ -1914,7 +1893,6 @@ type PhoneNumberResolver interface {
 	Organizations(ctx context.Context, obj *model.PhoneNumber) ([]*model.Organization, error)
 }
 type QueryResolver interface {
-	EntityTemplates(ctx context.Context, extends *model.EntityTemplateExtension) ([]*model.EntityTemplate, error)
 	Attachment(ctx context.Context, id string) (*model.Attachment, error)
 	BankAccounts(ctx context.Context) ([]*model.BankAccount, error)
 	GlobalCache(ctx context.Context) (*model.GlobalCache, error)
@@ -2831,13 +2809,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Tags(childComplexity), true
-
-	case "Contact.template":
-		if e.complexity.Contact.Template == nil {
-			break
-		}
-
-		return e.complexity.Contact.Template(childComplexity), true
 
 	case "Contact.timelineEvents":
 		if e.complexity.Contact.TimelineEvents == nil {
@@ -4199,55 +4170,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.EnrichDetails.RequestedAt(childComplexity), true
-
-	case "EntityTemplate.createdAt":
-		if e.complexity.EntityTemplate.CreatedAt == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.CreatedAt(childComplexity), true
-
-	case "EntityTemplate.customFieldTemplates":
-		if e.complexity.EntityTemplate.CustomFieldTemplates == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.CustomFieldTemplates(childComplexity), true
-
-	case "EntityTemplate.extends":
-		if e.complexity.EntityTemplate.Extends == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.Extends(childComplexity), true
-
-	case "EntityTemplate.id":
-		if e.complexity.EntityTemplate.ID == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.ID(childComplexity), true
-
-	case "EntityTemplate.name":
-		if e.complexity.EntityTemplate.Name == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.Name(childComplexity), true
-
-	case "EntityTemplate.updatedAt":
-		if e.complexity.EntityTemplate.UpdatedAt == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.UpdatedAt(childComplexity), true
-
-	case "EntityTemplate.version":
-		if e.complexity.EntityTemplate.Version == nil {
-			break
-		}
-
-		return e.complexity.EntityTemplate.Version(childComplexity), true
 
 	case "ExternalSystem.externalId":
 		if e.complexity.ExternalSystem.ExternalID == nil {
@@ -6929,18 +6851,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Mutation.EmailValidate(childComplexity, args["id"].(string)), true
 
-	case "Mutation.entityTemplateCreate":
-		if e.complexity.Mutation.EntityTemplateCreate == nil {
-			break
-		}
-
-		args, err := ec.field_Mutation_entityTemplateCreate_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Mutation.EntityTemplateCreate(childComplexity, args["input"].(model.EntityTemplateInput)), true
-
 	case "Mutation.externalSystem_Create":
 		if e.complexity.Mutation.ExternalSystemCreate == nil {
 			break
@@ -8775,13 +8685,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Organization.EnrichDetails(childComplexity), true
 
-	case "Organization.entityTemplate":
-		if e.complexity.Organization.EntityTemplate == nil {
-			break
-		}
-
-		return e.complexity.Organization.EntityTemplate(childComplexity), true
-
 	case "Organization.externalLinks":
 		if e.complexity.Organization.ExternalLinks == nil {
 			break
@@ -9672,18 +9575,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Query.Email(childComplexity, args["id"].(string)), true
-
-	case "Query.entityTemplates":
-		if e.complexity.Query.EntityTemplates == nil {
-			break
-		}
-
-		args, err := ec.field_Query_entityTemplates_args(context.TODO(), rawArgs)
-		if err != nil {
-			return 0, false
-		}
-
-		return e.complexity.Query.EntityTemplates(childComplexity, args["extends"].(*model.EntityTemplateExtension)), true
 
 	case "Query.externalMeetings":
 		if e.complexity.Query.ExternalMeetings == nil {
@@ -11207,7 +11098,6 @@ func (e *executableSchema) Exec(ctx context.Context) graphql.ResponseHandler {
 		ec.unmarshalInputEmailInput,
 		ec.unmarshalInputEmailRelationUpdateInput,
 		ec.unmarshalInputEmailUpdateAddressInput,
-		ec.unmarshalInputEntityTemplateInput,
 		ec.unmarshalInputExternalSystemInput,
 		ec.unmarshalInputExternalSystemReferenceInput,
 		ec.unmarshalInputFilter,
@@ -11601,7 +11491,10 @@ enum CalendarType {
     appSource: String!
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
 }`, BuiltIn: false},
-	{Name: "../../../customer-os-api/graph/schemas/common.graphqls", Input: `extend type Mutation {
+	{Name: "../../../customer-os-api/graph/schemas/common.graphqls", Input: `type Mutation
+type Query
+
+extend type Mutation {
     addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -11689,7 +11582,7 @@ type CustomerContact {
 A contact represents an individual in customerOS.
 **A ` + "`" + `response` + "`" + ` object.**
 """
-type Contact implements ExtensibleEntity & MetadataInterface & Node {
+type Contact implements MetadataInterface & Node {
     metadata: Metadata!
     """
     Deprecated, use metadata instead
@@ -11779,10 +11672,6 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     """
     customFields: [CustomField!]! @goField(forceResolver: true)
 
-    """
-    Template of the contact in customerOS.
-    """
-    template: EntityTemplate @goField(forceResolver: true)
 
     "Contact owner (user)"
     owner: User @goField(forceResolver: true)
@@ -12886,30 +12775,6 @@ enum EmailLabel {
     OTHER
 }
 `, BuiltIn: false},
-	{Name: "../../../customer-os-api/graph/schemas/entity_template.graphqls", Input: `extend type Mutation {
-    entityTemplateCreate(input: EntityTemplateInput!): EntityTemplate! @hasRole(roles: [ADMIN, USER]) @hasTenant
-}
-
-enum EntityTemplateExtension {
-    CONTACT
-    ORGANIZATION
-}
-
-type EntityTemplate implements Node {
-    id: ID!
-    version: Int!
-    name: String!
-    extends: EntityTemplateExtension
-    customFieldTemplates: [CustomFieldTemplate!]! @goField(forceResolver: true)
-    createdAt: Time!
-    updatedAt: Time!
-}
-
-input EntityTemplateInput {
-    name: String!
-    extends: EntityTemplateExtension
-    customFieldTemplateInputs: [CustomFieldTemplateInput!]
-}`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/external_system.graphqls", Input: `extend type Query {
     externalSystemInstances: [ExternalSystemInstance!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -13307,11 +13172,6 @@ interface SourceFieldsInterface {
     source:         DataSource!
     sourceOfTruth:  DataSource!
     appSource:      String!
-}
-
-interface ExtensibleEntity implements Node {
-    id: ID!
-    template: EntityTemplate
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/invoice.graphqls", Input: `extend type Query {
     invoice(id: ID!): Invoice!
@@ -13820,9 +13680,6 @@ type Meeting implements Node {
     """
     version:        Int64
 }`, BuiltIn: false},
-	{Name: "../../../customer-os-api/graph/schemas/mutation.graphqls", Input: `type Mutation
-
-`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/note.graphqls", Input: `extend type Mutation {
     note_Update(input: NoteUpdateInput!): Note!
     note_Delete(id: ID!): Result!
@@ -14118,7 +13975,6 @@ type Organization implements MetadataInterface {
     emails: [Email!]! @goField(forceResolver: true)
     phoneNumbers: [PhoneNumber!]! @goField(forceResolver: true)
     suggestedMergeTo: [SuggestedMergeOrganization!]! @goField(forceResolver: true)
-    entityTemplate: EntityTemplate @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     externalLinks: [ExternalSystem!]! @goField(forceResolver: true)
     issueSummaryByStatus: [IssueSummaryByStatus!]! @goField(forceResolver: true)
@@ -14623,9 +14479,6 @@ enum PhoneNumberLabel {
     OTHER
 }
 `, BuiltIn: false},
-	{Name: "../../../customer-os-api/graph/schemas/query.graphqls", Input: `type Query {
-    entityTemplates(extends: EntityTemplateExtension) :[EntityTemplate!]!
-}`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/reminders.graphqls", Input: `extend type Mutation {
     reminder_Create(input: ReminderInput!): ID  @hasRole(roles: [ADMIN, USER]) @hasTenant
     reminder_Update(input: ReminderUpdateInput!): ID  @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -16836,21 +16689,6 @@ func (ec *executionContext) field_Mutation_email_Validate_args(ctx context.Conte
 		}
 	}
 	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Mutation_entityTemplateCreate_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 model.EntityTemplateInput
-	if tmp, ok := rawArgs["input"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("input"))
-		arg0, err = ec.unmarshalNEntityTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateInput(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["input"] = arg0
 	return args, nil
 }
 
@@ -19404,21 +19242,6 @@ func (ec *executionContext) field_Query_email_args(ctx context.Context, rawArgs 
 		}
 	}
 	args["id"] = arg0
-	return args, nil
-}
-
-func (ec *executionContext) field_Query_entityTemplates_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
-	var err error
-	args := map[string]interface{}{}
-	var arg0 *model.EntityTemplateExtension
-	if tmp, ok := rawArgs["extends"]; ok {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extends"))
-		arg0, err = ec.unmarshalOEntityTemplateExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateExtension(ctx, tmp)
-		if err != nil {
-			return nil, err
-		}
-	}
-	args["extends"] = arg0
 	return args, nil
 }
 
@@ -25358,63 +25181,6 @@ func (ec *executionContext) fieldContext_Contact_customFields(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_template(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_template(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().Template(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.EntityTemplate)
-	fc.Result = res
-	return ec.marshalOEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_template(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityTemplate_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityTemplate_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityTemplate_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contact_owner(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_owner(ctx, field)
 	if err != nil {
@@ -25815,8 +25581,6 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(_
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -25968,8 +25732,6 @@ func (ec *executionContext) fieldContext_ContactsPage_content(_ context.Context,
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -30864,8 +30626,6 @@ func (ec *executionContext) fieldContext_DashboardCustomerMap_organization(_ con
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -33718,8 +33478,6 @@ func (ec *executionContext) fieldContext_Email_contacts(_ context.Context, field
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -33874,8 +33632,6 @@ func (ec *executionContext) fieldContext_Email_organizations(_ context.Context, 
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -35001,337 +34757,6 @@ func (ec *executionContext) fieldContext_EnrichDetails_failedAt(_ context.Contex
 	return fc, nil
 }
 
-func (ec *executionContext) _EntityTemplate_id(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_id(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.ID, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNID2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_id(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type ID does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EntityTemplate_version(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_version(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Version, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(int)
-	fc.Result = res
-	return ec.marshalNInt2int(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_version(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Int does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EntityTemplate_name(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_name(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Name, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_name(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EntityTemplate_extends(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_extends(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.Extends, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.EntityTemplateExtension)
-	fc.Result = res
-	return ec.marshalOEntityTemplateExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateExtension(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_extends(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type EntityTemplateExtension does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EntityTemplate_customFieldTemplates(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.EntityTemplate().CustomFieldTemplates(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.CustomFieldTemplate)
-	fc.Result = res
-	return ec.marshalNCustomFieldTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_customFieldTemplates(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_CustomFieldTemplate_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_CustomFieldTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_CustomFieldTemplate_updatedAt(ctx, field)
-			case "name":
-				return ec.fieldContext_CustomFieldTemplate_name(ctx, field)
-			case "type":
-				return ec.fieldContext_CustomFieldTemplate_type(ctx, field)
-			case "validValues":
-				return ec.fieldContext_CustomFieldTemplate_validValues(ctx, field)
-			case "entityType":
-				return ec.fieldContext_CustomFieldTemplate_entityType(ctx, field)
-			case "order":
-				return ec.fieldContext_CustomFieldTemplate_order(ctx, field)
-			case "required":
-				return ec.fieldContext_CustomFieldTemplate_required(ctx, field)
-			case "length":
-				return ec.fieldContext_CustomFieldTemplate_length(ctx, field)
-			case "min":
-				return ec.fieldContext_CustomFieldTemplate_min(ctx, field)
-			case "max":
-				return ec.fieldContext_CustomFieldTemplate_max(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type CustomFieldTemplate", field.Name)
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EntityTemplate_createdAt(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.CreatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_createdAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _EntityTemplate_updatedAt(ctx context.Context, field graphql.CollectedField, obj *model.EntityTemplate) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.UpdatedAt, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(time.Time)
-	fc.Result = res
-	return ec.marshalNTime2timeᚐTime(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_EntityTemplate_updatedAt(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "EntityTemplate",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type Time does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _ExternalSystem_type(ctx context.Context, field graphql.CollectedField, obj *model.ExternalSystem) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_ExternalSystem_type(ctx, field)
 	if err != nil {
@@ -36268,8 +35693,6 @@ func (ec *executionContext) fieldContext_FlowContact_contact(_ context.Context, 
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -39697,8 +39120,6 @@ func (ec *executionContext) fieldContext_Invoice_organization(_ context.Context,
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -44790,8 +44211,6 @@ func (ec *executionContext) fieldContext_JobRole_organization(_ context.Context,
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -44935,8 +44354,6 @@ func (ec *executionContext) fieldContext_JobRole_contact(_ context.Context, fiel
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -45751,8 +45168,6 @@ func (ec *executionContext) fieldContext_LinkedOrganization_organization(_ conte
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -50320,8 +49735,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_CreateForOrganization(
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -50504,8 +49917,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -50804,8 +50215,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -51016,8 +50425,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -51139,8 +50546,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -51375,8 +50780,6 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx con
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -52919,8 +52322,6 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -54547,107 +53948,6 @@ func (ec *executionContext) fieldContext_Mutation_email_Validate(ctx context.Con
 	}()
 	ctx = graphql.WithFieldContext(ctx, fc)
 	if fc.Args, err = ec.field_Mutation_email_Validate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Mutation_entityTemplateCreate(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Mutation_entityTemplateCreate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		directive0 := func(rctx context.Context) (interface{}, error) {
-			ctx = rctx // use context from middleware stack in children
-			return ec.resolvers.Mutation().EntityTemplateCreate(rctx, fc.Args["input"].(model.EntityTemplateInput))
-		}
-		directive1 := func(ctx context.Context) (interface{}, error) {
-			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
-			if err != nil {
-				return nil, err
-			}
-			if ec.directives.HasRole == nil {
-				return nil, errors.New("directive hasRole is not implemented")
-			}
-			return ec.directives.HasRole(ctx, nil, directive0, roles)
-		}
-		directive2 := func(ctx context.Context) (interface{}, error) {
-			if ec.directives.HasTenant == nil {
-				return nil, errors.New("directive hasTenant is not implemented")
-			}
-			return ec.directives.HasTenant(ctx, nil, directive1)
-		}
-
-		tmp, err := directive2(rctx)
-		if err != nil {
-			return nil, graphql.ErrorOnPath(ctx, err)
-		}
-		if tmp == nil {
-			return nil, nil
-		}
-		if data, ok := tmp.(*model.EntityTemplate); ok {
-			return data, nil
-		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.EntityTemplate`, tmp)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(*model.EntityTemplate)
-	fc.Result = res
-	return ec.marshalNEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Mutation_entityTemplateCreate(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Mutation",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityTemplate_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityTemplate_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityTemplate_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Mutation_entityTemplateCreate_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
 	}
@@ -56551,8 +55851,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -56748,8 +56046,6 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromOrganizatio
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -59126,8 +58422,6 @@ func (ec *executionContext) fieldContext_Mutation_opportunityRenewal_UpdateAllFo
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -59835,8 +59129,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Save(ctx context.
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -60582,8 +59874,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Merge(ctx context
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -60815,8 +60105,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_AddSubsidiary(ctx
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -61048,8 +60336,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_RemoveSubsidiary(
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -61622,8 +60908,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UpdateOnboardingS
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -61855,8 +61139,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnlinkAllDomains(
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -62088,8 +61370,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Create(ctx contex
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -62321,8 +61601,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_Update(ctx contex
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -62554,8 +61832,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_SetOwner(ctx cont
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -62787,8 +62063,6 @@ func (ec *executionContext) fieldContext_Mutation_organization_UnsetOwner(ctx co
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -69741,8 +69015,6 @@ func (ec *executionContext) fieldContext_Opportunity_organization(_ context.Cont
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -73376,63 +72648,6 @@ func (ec *executionContext) fieldContext_Organization_suggestedMergeTo(_ context
 	return fc, nil
 }
 
-func (ec *executionContext) _Organization_entityTemplate(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Organization_entityTemplate(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Organization().EntityTemplate(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.EntityTemplate)
-	fc.Result = res
-	return ec.marshalOEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Organization_entityTemplate(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Organization",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityTemplate_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityTemplate_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityTemplate_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Organization_timelineEventsTotalCount(ctx context.Context, field graphql.CollectedField, obj *model.Organization) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 	if err != nil {
@@ -74625,8 +73840,6 @@ func (ec *executionContext) fieldContext_OrganizationPage_content(_ context.Cont
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -74949,8 +74162,6 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_organizationPar
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -76228,8 +75439,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(_ context.Context,
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -76384,8 +75593,6 @@ func (ec *executionContext) fieldContext_PhoneNumber_organizations(_ context.Con
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -76550,77 +75757,6 @@ func (ec *executionContext) fieldContext_PhoneNumberParticipant_type(_ context.C
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type String does not have child fields")
 		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Query_entityTemplates(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Query().EntityTemplates(rctx, fc.Args["extends"].(*model.EntityTemplateExtension))
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.([]*model.EntityTemplate)
-	fc.Result = res
-	return ec.marshalNEntityTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateᚄ(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Query_entityTemplates(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Query",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "id":
-				return ec.fieldContext_EntityTemplate_id(ctx, field)
-			case "version":
-				return ec.fieldContext_EntityTemplate_version(ctx, field)
-			case "name":
-				return ec.fieldContext_EntityTemplate_name(ctx, field)
-			case "extends":
-				return ec.fieldContext_EntityTemplate_extends(ctx, field)
-			case "customFieldTemplates":
-				return ec.fieldContext_EntityTemplate_customFieldTemplates(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_EntityTemplate_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_EntityTemplate_updatedAt(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type EntityTemplate", field.Name)
-		},
-	}
-	defer func() {
-		if r := recover(); r != nil {
-			err = ec.Recover(ctx, r)
-			ec.Error(ctx, err)
-		}
-	}()
-	ctx = graphql.WithFieldContext(ctx, fc)
-	if fc.Args, err = ec.field_Query_entityTemplates_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
-		ec.Error(ctx, err)
-		return fc, err
 	}
 	return fc, nil
 }
@@ -76956,8 +76092,6 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -77142,8 +76276,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -77265,8 +76397,6 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_connectedUsers(ctx, field)
 			case "customFields":
 				return ec.fieldContext_Contact_customFields(ctx, field)
-			case "template":
-				return ec.fieldContext_Contact_template(ctx, field)
 			case "owner":
 				return ec.fieldContext_Contact_owner(ctx, field)
 			case "flows":
@@ -80001,8 +79131,6 @@ func (ec *executionContext) fieldContext_Query_organization(ctx context.Context,
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -80231,8 +79359,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomerOsId(ctx c
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -80461,8 +79587,6 @@ func (ec *executionContext) fieldContext_Query_organization_ByCustomId(ctx conte
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -83013,8 +82137,6 @@ func (ec *executionContext) fieldContext_RenewalRecord_organization(_ context.Co
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -84587,8 +83709,6 @@ func (ec *executionContext) fieldContext_SlackChannel_organization(_ context.Con
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -85741,8 +84861,6 @@ func (ec *executionContext) fieldContext_SuggestedMergeOrganization_organization
 				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
 			case "suggestedMergeTo":
 				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "entityTemplate":
-				return ec.fieldContext_Organization_entityTemplate(ctx, field)
 			case "timelineEventsTotalCount":
 				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
 			case "externalLinks":
@@ -94161,47 +93279,6 @@ func (ec *executionContext) unmarshalInputEmailUpdateAddressInput(ctx context.Co
 	return it, nil
 }
 
-func (ec *executionContext) unmarshalInputEntityTemplateInput(ctx context.Context, obj interface{}) (model.EntityTemplateInput, error) {
-	var it model.EntityTemplateInput
-	asMap := map[string]interface{}{}
-	for k, v := range obj.(map[string]interface{}) {
-		asMap[k] = v
-	}
-
-	fieldsInOrder := [...]string{"name", "extends", "customFieldTemplateInputs"}
-	for _, k := range fieldsInOrder {
-		v, ok := asMap[k]
-		if !ok {
-			continue
-		}
-		switch k {
-		case "name":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("name"))
-			data, err := ec.unmarshalNString2string(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Name = data
-		case "extends":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("extends"))
-			data, err := ec.unmarshalOEntityTemplateExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateExtension(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.Extends = data
-		case "customFieldTemplateInputs":
-			ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("customFieldTemplateInputs"))
-			data, err := ec.unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx, v)
-			if err != nil {
-				return it, err
-			}
-			it.CustomFieldTemplateInputs = data
-		}
-	}
-
-	return it, nil
-}
-
 func (ec *executionContext) unmarshalInputExternalSystemInput(ctx context.Context, obj interface{}) (model.ExternalSystemInput, error) {
 	var it model.ExternalSystemInput
 	asMap := map[string]interface{}{}
@@ -98769,22 +97846,6 @@ func (ec *executionContext) unmarshalInputWorkflowUpdateInput(ctx context.Contex
 
 // region    ************************** interface.gotpl ***************************
 
-func (ec *executionContext) _ExtensibleEntity(ctx context.Context, sel ast.SelectionSet, obj model.ExtensibleEntity) graphql.Marshaler {
-	switch obj := (obj).(type) {
-	case nil:
-		return graphql.Null
-	case model.Contact:
-		return ec._Contact(ctx, sel, &obj)
-	case *model.Contact:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Contact(ctx, sel, obj)
-	default:
-		panic(fmt.Errorf("unexpected type %T", obj))
-	}
-}
-
 func (ec *executionContext) _InteractionEventParticipant(ctx context.Context, sel ast.SelectionSet, obj model.InteractionEventParticipant) graphql.Marshaler {
 	switch obj := (obj).(type) {
 	case nil:
@@ -99037,6 +98098,13 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 	switch obj := (obj).(type) {
 	case nil:
 		return graphql.Null
+	case model.PageView:
+		return ec._PageView(ctx, sel, &obj)
+	case *model.PageView:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._PageView(ctx, sel, obj)
 	case model.Contact:
 		return ec._Contact(ctx, sel, &obj)
 	case *model.Contact:
@@ -99051,13 +98119,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Issue(ctx, sel, obj)
-	case model.BillingProfile:
-		return ec._BillingProfile(ctx, sel, &obj)
-	case *model.BillingProfile:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._BillingProfile(ctx, sel, obj)
 	case model.TenantBillingProfile:
 		return ec._TenantBillingProfile(ctx, sel, &obj)
 	case *model.TenantBillingProfile:
@@ -99065,27 +98126,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._TenantBillingProfile(ctx, sel, obj)
-	case model.Social:
-		return ec._Social(ctx, sel, &obj)
-	case *model.Social:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Social(ctx, sel, obj)
-	case model.PageView:
-		return ec._PageView(ctx, sel, &obj)
-	case *model.PageView:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._PageView(ctx, sel, obj)
-	case model.Metadata:
-		return ec._Metadata(ctx, sel, &obj)
-	case *model.Metadata:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Metadata(ctx, sel, obj)
 	case model.Location:
 		return ec._Location(ctx, sel, &obj)
 	case *model.Location:
@@ -99093,16 +98133,53 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._Location(ctx, sel, obj)
+	case model.BillingProfile:
+		return ec._BillingProfile(ctx, sel, &obj)
+	case *model.BillingProfile:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._BillingProfile(ctx, sel, obj)
+	case model.Social:
+		return ec._Social(ctx, sel, &obj)
+	case *model.Social:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Social(ctx, sel, obj)
+	case model.Metadata:
+		return ec._Metadata(ctx, sel, &obj)
+	case *model.Metadata:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._Metadata(ctx, sel, obj)
+	case model.InteractionSession:
+		return ec._InteractionSession(ctx, sel, &obj)
+	case *model.InteractionSession:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._InteractionSession(ctx, sel, obj)
+	case model.CustomFieldTemplate:
+		return ec._CustomFieldTemplate(ctx, sel, &obj)
+	case *model.CustomFieldTemplate:
+		if obj == nil {
+			return graphql.Null
+		}
+		return ec._CustomFieldTemplate(ctx, sel, obj)
 	case model.SourceFields:
 		if obj == nil {
 			return graphql.Null
 		}
 		return ec._SourceFields(ctx, sel, obj)
-	case model.ExtensibleEntity:
+	case model.Meeting:
+		return ec._Meeting(ctx, sel, &obj)
+	case *model.Meeting:
 		if obj == nil {
 			return graphql.Null
 		}
-		return ec._ExtensibleEntity(ctx, sel, obj)
+		return ec._Meeting(ctx, sel, obj)
 	case model.Attachment:
 		return ec._Attachment(ctx, sel, &obj)
 	case *model.Attachment:
@@ -99117,34 +98194,6 @@ func (ec *executionContext) _Node(ctx context.Context, sel ast.SelectionSet, obj
 			return graphql.Null
 		}
 		return ec._InteractionEvent(ctx, sel, obj)
-	case model.Meeting:
-		return ec._Meeting(ctx, sel, &obj)
-	case *model.Meeting:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._Meeting(ctx, sel, obj)
-	case model.InteractionSession:
-		return ec._InteractionSession(ctx, sel, &obj)
-	case *model.InteractionSession:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._InteractionSession(ctx, sel, obj)
-	case model.EntityTemplate:
-		return ec._EntityTemplate(ctx, sel, &obj)
-	case *model.EntityTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._EntityTemplate(ctx, sel, obj)
-	case model.CustomFieldTemplate:
-		return ec._CustomFieldTemplate(ctx, sel, &obj)
-	case *model.CustomFieldTemplate:
-		if obj == nil {
-			return graphql.Null
-		}
-		return ec._CustomFieldTemplate(ctx, sel, obj)
 	case model.CustomField:
 		return ec._CustomField(ctx, sel, &obj)
 	case *model.CustomField:
@@ -100127,7 +99176,7 @@ func (ec *executionContext) _Comment(ctx context.Context, sel ast.SelectionSet, 
 	return out
 }
 
-var contactImplementors = []string{"Contact", "ExtensibleEntity", "MetadataInterface", "Node"}
+var contactImplementors = []string{"Contact", "MetadataInterface", "Node"}
 
 func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, obj *model.Contact) graphql.Marshaler {
 	fields := graphql.CollectFields(ec.OperationContext, sel, contactImplementors)
@@ -100490,39 +99539,6 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "template":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Contact_template(ctx, field, obj)
 				return res
 			}
 
@@ -103000,103 +102016,6 @@ func (ec *executionContext) _EnrichDetails(ctx context.Context, sel ast.Selectio
 			out.Values[i] = ec._EnrichDetails_enrichedAt(ctx, field, obj)
 		case "failedAt":
 			out.Values[i] = ec._EnrichDetails_failedAt(ctx, field, obj)
-		default:
-			panic("unknown field " + strconv.Quote(field.Name))
-		}
-	}
-	out.Dispatch(ctx)
-	if out.Invalids > 0 {
-		return graphql.Null
-	}
-
-	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
-
-	for label, dfs := range deferred {
-		ec.processDeferredGroup(graphql.DeferredGroup{
-			Label:    label,
-			Path:     graphql.GetPath(ctx),
-			FieldSet: dfs,
-			Context:  ctx,
-		})
-	}
-
-	return out
-}
-
-var entityTemplateImplementors = []string{"EntityTemplate", "Node"}
-
-func (ec *executionContext) _EntityTemplate(ctx context.Context, sel ast.SelectionSet, obj *model.EntityTemplate) graphql.Marshaler {
-	fields := graphql.CollectFields(ec.OperationContext, sel, entityTemplateImplementors)
-
-	out := graphql.NewFieldSet(fields)
-	deferred := make(map[string]*graphql.FieldSet)
-	for i, field := range fields {
-		switch field.Name {
-		case "__typename":
-			out.Values[i] = graphql.MarshalString("EntityTemplate")
-		case "id":
-			out.Values[i] = ec._EntityTemplate_id(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "version":
-			out.Values[i] = ec._EntityTemplate_version(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "name":
-			out.Values[i] = ec._EntityTemplate_name(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "extends":
-			out.Values[i] = ec._EntityTemplate_extends(ctx, field, obj)
-		case "customFieldTemplates":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._EntityTemplate_customFieldTemplates(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "createdAt":
-			out.Values[i] = ec._EntityTemplate_createdAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
-		case "updatedAt":
-			out.Values[i] = ec._EntityTemplate_updatedAt(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				atomic.AddUint32(&out.Invalids, 1)
-			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -106964,13 +105883,6 @@ func (ec *executionContext) _Mutation(ctx context.Context, sel ast.SelectionSet)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "entityTemplateCreate":
-			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
-				return ec._Mutation_entityTemplateCreate(ctx, field)
-			})
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
 		case "externalSystem_Create":
 			out.Values[i] = ec.OperationContext.RootResolverMiddleware(innerCtx, func(ctx context.Context) (res graphql.Marshaler) {
 				return ec._Mutation_externalSystem_Create(ctx, field)
@@ -109046,39 +107958,6 @@ func (ec *executionContext) _Organization(ctx context.Context, sel ast.Selection
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "entityTemplate":
-			field := field
-
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Organization_entityTemplate(ctx, field, obj)
-				return res
-			}
-
-			if field.Deferrable != nil {
-				dfs, ok := deferred[field.Deferrable.Label]
-				di := 0
-				if ok {
-					dfs.AddField(field)
-					di = len(dfs.Values) - 1
-				} else {
-					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
-					deferred[field.Deferrable.Label] = dfs
-				}
-				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
-					return innerFunc(ctx, dfs)
-				})
-
-				// don't run the out.Concurrently() call below
-				out.Values[i] = graphql.Null
-				continue
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "timelineEventsTotalCount":
 			field := field
 
@@ -109931,28 +108810,6 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 		switch field.Name {
 		case "__typename":
 			out.Values[i] = graphql.MarshalString("Query")
-		case "entityTemplates":
-			field := field
-
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
-				defer func() {
-					if r := recover(); r != nil {
-						ec.Error(ctx, ec.Recover(ctx, r))
-					}
-				}()
-				res = ec._Query_entityTemplates(ctx, field)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
-				return res
-			}
-
-			rrm := func(ctx context.Context) graphql.Marshaler {
-				return ec.OperationContext.RootResolverMiddleware(ctx,
-					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-			}
-
-			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
 		case "attachment":
 			field := field
 
@@ -114131,11 +112988,6 @@ func (ec *executionContext) unmarshalNCustomFieldTemplateInput2githubᚗcomᚋop
 	return res, graphql.ErrorOnPath(ctx, err)
 }
 
-func (ec *executionContext) unmarshalNCustomFieldTemplateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx context.Context, v interface{}) (*model.CustomFieldTemplateInput, error) {
-	res, err := ec.unmarshalInputCustomFieldTemplateInput(ctx, v)
-	return &res, graphql.ErrorOnPath(ctx, err)
-}
-
 func (ec *executionContext) unmarshalNCustomFieldTemplateType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateType(ctx context.Context, v interface{}) (model.CustomFieldTemplateType, error) {
 	var res model.CustomFieldTemplateType
 	err := res.UnmarshalGQL(v)
@@ -114767,69 +113619,6 @@ func (ec *executionContext) marshalNEnrichDetails2ᚖgithubᚗcomᚋopenlineᚑa
 		return graphql.Null
 	}
 	return ec._EnrichDetails(ctx, sel, v)
-}
-
-func (ec *executionContext) marshalNEntityTemplate2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx context.Context, sel ast.SelectionSet, v model.EntityTemplate) graphql.Marshaler {
-	return ec._EntityTemplate(ctx, sel, &v)
-}
-
-func (ec *executionContext) marshalNEntityTemplate2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateᚄ(ctx context.Context, sel ast.SelectionSet, v []*model.EntityTemplate) graphql.Marshaler {
-	ret := make(graphql.Array, len(v))
-	var wg sync.WaitGroup
-	isLen1 := len(v) == 1
-	if !isLen1 {
-		wg.Add(len(v))
-	}
-	for i := range v {
-		i := i
-		fc := &graphql.FieldContext{
-			Index:  &i,
-			Result: &v[i],
-		}
-		ctx := graphql.WithFieldContext(ctx, fc)
-		f := func(i int) {
-			defer func() {
-				if r := recover(); r != nil {
-					ec.Error(ctx, ec.Recover(ctx, r))
-					ret = nil
-				}
-			}()
-			if !isLen1 {
-				defer wg.Done()
-			}
-			ret[i] = ec.marshalNEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx, sel, v[i])
-		}
-		if isLen1 {
-			f(i)
-		} else {
-			go f(i)
-		}
-
-	}
-	wg.Wait()
-
-	for _, e := range ret {
-		if e == graphql.Null {
-			return graphql.Null
-		}
-	}
-
-	return ret
-}
-
-func (ec *executionContext) marshalNEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx context.Context, sel ast.SelectionSet, v *model.EntityTemplate) graphql.Marshaler {
-	if v == nil {
-		if !graphql.HasFieldError(ctx, graphql.GetFieldContext(ctx)) {
-			ec.Errorf(ctx, "the requested element is null which the schema does not allow")
-		}
-		return graphql.Null
-	}
-	return ec._EntityTemplate(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalNEntityTemplateInput2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateInput(ctx context.Context, v interface{}) (model.EntityTemplateInput, error) {
-	res, err := ec.unmarshalInputEntityTemplateInput(ctx, v)
-	return res, graphql.ErrorOnPath(ctx, err)
 }
 
 func (ec *executionContext) unmarshalNEntityType2githubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityType(ctx context.Context, v interface{}) (model.EntityType, error) {
@@ -118468,26 +117257,6 @@ func (ec *executionContext) marshalOCustomFieldTemplate2ᚖgithubᚗcomᚋopenli
 	return ec._CustomFieldTemplate(ctx, sel, v)
 }
 
-func (ec *executionContext) unmarshalOCustomFieldTemplateInput2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateInputᚄ(ctx context.Context, v interface{}) ([]*model.CustomFieldTemplateInput, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var vSlice []interface{}
-	if v != nil {
-		vSlice = graphql.CoerceList(v)
-	}
-	var err error
-	res := make([]*model.CustomFieldTemplateInput, len(vSlice))
-	for i := range vSlice {
-		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithIndex(i))
-		res[i], err = ec.unmarshalNCustomFieldTemplateInput2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateInput(ctx, vSlice[i])
-		if err != nil {
-			return nil, err
-		}
-	}
-	return res, nil
-}
-
 func (ec *executionContext) unmarshalOCustomFieldTemplateType2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐCustomFieldTemplateType(ctx context.Context, v interface{}) (*model.CustomFieldTemplateType, error) {
 	if v == nil {
 		return nil, nil
@@ -118747,29 +117516,6 @@ func (ec *executionContext) unmarshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑai
 }
 
 func (ec *executionContext) marshalOEmailLabel2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEmailLabel(ctx context.Context, sel ast.SelectionSet, v *model.EmailLabel) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return v
-}
-
-func (ec *executionContext) marshalOEntityTemplate2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplate(ctx context.Context, sel ast.SelectionSet, v *model.EntityTemplate) graphql.Marshaler {
-	if v == nil {
-		return graphql.Null
-	}
-	return ec._EntityTemplate(ctx, sel, v)
-}
-
-func (ec *executionContext) unmarshalOEntityTemplateExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateExtension(ctx context.Context, v interface{}) (*model.EntityTemplateExtension, error) {
-	if v == nil {
-		return nil, nil
-	}
-	var res = new(model.EntityTemplateExtension)
-	err := res.UnmarshalGQL(v)
-	return res, graphql.ErrorOnPath(ctx, err)
-}
-
-func (ec *executionContext) marshalOEntityTemplateExtension2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEntityTemplateExtension(ctx context.Context, sel ast.SelectionSet, v *model.EntityTemplateExtension) graphql.Marshaler {
 	if v == nil {
 		return graphql.Null
 	}

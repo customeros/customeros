@@ -6,7 +6,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -22,8 +21,6 @@ type ContactRepository interface {
 	SetOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId, userId string) error
 	// Deprecated, use events-platform
 	RemoveOwner(ctx context.Context, tx neo4j.ManagedTransaction, tenant, contactId string) error
-	// Deprecated, use events-platform
-	LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entityTemplateId string) error
 	GetPaginatedContacts(ctx context.Context, session neo4j.SessionWithContext, tenant string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetPaginatedContactsForOrganization(ctx context.Context, session neo4j.SessionWithContext, tenant, organizationId string, skip, limit int, filter *utils.CypherFilter, sort *utils.CypherSort) (*utils.DbNodesWithTotalCount, error)
 	GetAllForJobRoles(ctx context.Context, tenant string, jobRoleIds []string) ([]*utils.DbNodeAndId, error)
@@ -86,39 +83,6 @@ func (r *contactRepository) RemoveOwner(ctx context.Context, tx neo4j.ManagedTra
 			"tenant":    tenant,
 			"contactId": contactId,
 		})
-	return err
-}
-
-func (r *contactRepository) LinkWithEntityTemplateInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant string, obj *model.CustomFieldEntityType, entityTemplateId string) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactRepository.LinkWithEntityTemplateInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	var rel string
-	var extends model.EntityTemplateExtension
-	if obj.EntityType == model.CustomEntityTypeContact {
-		rel = "CONTACT_BELONGS_TO_TENANT"
-		extends = model.EntityTemplateExtensionContact
-	} else {
-		rel = "ORGANIZATION_BELONGS_TO_TENANT"
-		extends = model.EntityTemplateExtensionOrganization
-	}
-
-	queryResult, err := tx.Run(ctx, fmt.Sprintf(`
-			MATCH (c:%s {id:$Id})-[:%s]->(:Tenant {name:$tenant})<-[:ENTITY_TEMPLATE_BELONGS_TO_TENANT]-(e:EntityTemplate {id:$entityTemplateId})
-			WHERE e.extends=$extends
-			MERGE (c)-[r:IS_DEFINED_BY]->(e)
-			RETURN r`, obj.EntityType, rel),
-		map[string]any{
-			"entityTemplateId": entityTemplateId,
-			"Id":               obj.ID,
-			"tenant":           tenant,
-			"extends":          extends,
-		})
-	if err != nil {
-		return err
-	}
-	_, err = queryResult.Single(ctx)
 	return err
 }
 

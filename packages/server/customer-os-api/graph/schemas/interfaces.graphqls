@@ -37,8 +37,3 @@ interface SourceFieldsInterface {
     sourceOfTruth:  DataSource!
     appSource:      String!
 }
-
-interface ExtensibleEntity implements Node {
-    id: ID!
-    template: EntityTemplate
-}
