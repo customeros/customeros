@@ -427,10 +427,7 @@ func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity L
 		return err
 	}
 
-	switch forEntity.Type.String() {
-	case commonmodel.CONTACT.String():
-		utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), commonmodel.CONTACT.String(), forEntity.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
-	}
+	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), forEntity.Type.String(), forEntity.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
 }

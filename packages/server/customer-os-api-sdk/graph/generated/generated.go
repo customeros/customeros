@@ -1731,7 +1731,7 @@ type MutationResolver interface {
 	EmailMergeToContact(ctx context.Context, contactID string, input model.EmailInput) (*model.Email, error)
 	EmailRemoveFromContact(ctx context.Context, contactID string, email string) (*model.Result, error)
 	EmailReplaceForContact(ctx context.Context, contactID string, previousEmail *string, input model.EmailInput) (*model.Email, error)
-	EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Email, error)
+	EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Result, error)
 	EmailMergeToUser(ctx context.Context, userID string, input model.EmailInput) (*model.Email, error)
 	EmailRemoveFromUser(ctx context.Context, userID string, email string) (*model.Result, error)
 	EmailReplaceForUser(ctx context.Context, userID string, previousEmail *string, input model.EmailInput) (*model.Email, error)
@@ -12730,7 +12730,7 @@ extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailReplaceForContact(contactId : ID!, previousEmail: String, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
-    emailSetPrimaryForContact(contactId : ID!, email: String!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailSetPrimaryForContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailMergeToUser(userId: ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromUser(userId: ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
@@ -53769,10 +53769,10 @@ func (ec *executionContext) _Mutation_emailSetPrimaryForContact(ctx context.Cont
 		if tmp == nil {
 			return nil, nil
 		}
-		if data, ok := tmp.(*model.Email); ok {
+		if data, ok := tmp.(*model.Result); ok {
 			return data, nil
 		}
-		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Email`, tmp)
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Result`, tmp)
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -53784,9 +53784,9 @@ func (ec *executionContext) _Mutation_emailSetPrimaryForContact(ctx context.Cont
 		}
 		return graphql.Null
 	}
-	res := resTmp.(*model.Email)
+	res := resTmp.(*model.Result)
 	fc.Result = res
-	return ec.marshalNEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
+	return ec.marshalNResult2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐResult(ctx, field.Selections, res)
 }
 
 func (ec *executionContext) fieldContext_Mutation_emailSetPrimaryForContact(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
@@ -53797,38 +53797,10 @@ func (ec *executionContext) fieldContext_Mutation_emailSetPrimaryForContact(ctx 
 		IsResolver: true,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			switch field.Name {
-			case "id":
-				return ec.fieldContext_Email_id(ctx, field)
-			case "email":
-				return ec.fieldContext_Email_email(ctx, field)
-			case "rawEmail":
-				return ec.fieldContext_Email_rawEmail(ctx, field)
-			case "emailValidationDetails":
-				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
-			case "work":
-				return ec.fieldContext_Email_work(ctx, field)
-			case "label":
-				return ec.fieldContext_Email_label(ctx, field)
-			case "primary":
-				return ec.fieldContext_Email_primary(ctx, field)
-			case "source":
-				return ec.fieldContext_Email_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Email_appSource(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Email_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Email_updatedAt(ctx, field)
-			case "users":
-				return ec.fieldContext_Email_users(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Email_contacts(ctx, field)
-			case "organizations":
-				return ec.fieldContext_Email_organizations(ctx, field)
+			case "result":
+				return ec.fieldContext_Result_result(ctx, field)
 			}
-			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
+			return nil, fmt.Errorf("no field named %q was found under type Result", field.Name)
 		},
 	}
 	defer func() {
