@@ -24,7 +24,7 @@ func TestFlowExecutionService_FlowExecution_1(t *testing.T) {
 	//A flow with a single email node
 	//2 mailboxes
 	//3 contacts
-	flow, err := CommonServices.FlowService.FlowMerge(ctx, &neo4jentity.FlowEntity{
+	flow, err := CommonServices.FlowService.FlowMerge(ctx, nil, &neo4jentity.FlowEntity{
 		Name:  "flow1",
 		Nodes: ONE_EMAIL_FLOW,
 		Edges: ONE_EMAIL_FLOW_EDGES,
