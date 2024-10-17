@@ -1,10 +1,9 @@
 import { useMemo, ReactElement } from 'react';
 
 import { htmlToText } from 'html-to-text';
-import { FlowActionType } from '@store/Flows/types';
+import { FlowActionType } from '@store/Flows/types.ts';
 import { NodeProps, useReactFlow } from '@xyflow/react';
 
-import { cn } from '@ui/utils/cn';
 import { Mail01 } from '@ui/media/icons/Mail01';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
@@ -109,17 +108,12 @@ export const ActionNode = ({
   return (
     <>
       <div
-        className={`h-[56px] max-w-[300px] w-[300px] bg-white border border-grayModern-300 p-4 rounded-lg group cursor-pointer flex items-center`}
+        className={`aspect-[9/1] max-w-[300px] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer`}
       >
         <div className='text-sm flex items-center justify-between '>
           <div className='truncate text-sm flex items-center'>
             <div
-              className={cn(
-                `size-6 min-w-6 mr-2 bg-${color}-50 text-${color}-500 border border-gray-100 rounded flex items-center justify-center`,
-                {
-                  'border-blue-100': color === 'blue',
-                },
-              )}
+              className={`size-6 min-w-6 mr-2 bg-${color}-50 text-${color}-500 border border-${color}-100  rounded flex items-center justify-center`}
             >
               {iconMap?.[data.action]}
             </div>

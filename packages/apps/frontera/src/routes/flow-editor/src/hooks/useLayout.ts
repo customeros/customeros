@@ -42,7 +42,7 @@ export const useLayout = () => {
         children: nodes.map((node) => ({
           ...node,
           width: getNodeWidth(node).width || 150,
-          height: getNodeWidth(node).height || 56,
+          height: getNodeWidth(node).height || 50,
         })),
         edges: edges as unknown as ElkExtendedEdge[],
       };
@@ -131,14 +131,14 @@ export const useLayout = () => {
 export const getNodeWidth = (node: Node) => {
   switch (node.type) {
     case 'trigger':
-      return { width: 300, height: 56 };
+      return { width: 300, height: 48 };
     case 'control':
-      return { width: 131, height: 56 };
+      return { width: 131, height: 48 };
     case 'wait':
-      return { width: 131, height: 56 };
+      return { width: 131, height: 48 };
     case 'action':
-      return { width: 300, height: 56 };
+      return { width: 300, height: 48 };
     default:
-      return { width: 300, height: 56 };
+      return { width: 300, height: 48 };
   }
 };
