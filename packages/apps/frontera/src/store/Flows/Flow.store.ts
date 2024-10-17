@@ -7,9 +7,9 @@ import { P, match } from 'ts-pattern';
 import { Operation } from '@store/types';
 import { MarkerType } from '@xyflow/react';
 import { Transport } from '@store/transport';
-import { runInAction, makeAutoObservable } from 'mobx';
 import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
+import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
 
 import { uuidv4 } from '@utils/generateUuid.ts';
@@ -138,10 +138,15 @@ export class FlowStore implements Store<Flow> {
 
   init(data: Flow) {
     const output = merge(this.value, data);
+
     const flowContacts = data.contacts?.map((item) => {
       this.root.flowContacts.load([item]);
 
-      return this.root.flowContacts.value.get(item?.metadata?.id)?.value;
+      if (!item.metadata.id) {
+        return;
+      }
+
+      return this.root.flowContacts.value.get(item.metadata.id)?.value;
     });
     const flowSenders = data.senders?.map((item) => {
       this.root.flowSenders.load([item]);
