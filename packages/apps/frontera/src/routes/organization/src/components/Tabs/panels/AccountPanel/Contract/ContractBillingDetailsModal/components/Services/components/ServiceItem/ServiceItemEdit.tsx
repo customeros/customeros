@@ -1,19 +1,17 @@
-import { useState } from 'react';
-
 import { observer } from 'mobx-react-lite';
-import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store';
 
-import { DateTimeUtils } from '@utils/date.ts';
+import { DateTimeUtils } from '@utils/date';
 import { ContractStatus } from '@graphql/types';
-import { Delete } from '@ui/media/icons/Delete.tsx';
+import { Delete } from '@ui/media/icons/Delete';
 import { toastError } from '@ui/presentation/Toast';
-import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
-import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
-import { currencySymbol } from '@shared/util/currencyOptions.ts';
-import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput.tsx';
-import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2.tsx';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
+import { IconButton } from '@ui/form/IconButton/IconButton';
+import { currencySymbol } from '@shared/util/currencyOptions';
+import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput';
+import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2';
 
-import { BilledTypeEditField } from './BilledTypeEditField.tsx';
+import { BilledTypeEditField } from './BilledTypeEditField';
 
 interface ServiceItemProps {
   currency?: string;
@@ -42,9 +40,7 @@ export const ServiceItemEdit = observer(
     contractStatus,
   }: ServiceItemProps) => {
     const sliCurrencySymbol = currency ? currencySymbol?.[currency] : '$';
-    const [value, setValue] = useState(
-      () => service?.value.price.toString() ?? '',
-    );
+
     const isDraft =
       contractStatus &&
       [ContractStatus.Draft, ContractStatus.Scheduled].includes(contractStatus);
@@ -208,13 +204,14 @@ export const ServiceItemEdit = observer(
 
           <MaskedResizableInput
             mask={`num`}
-            value={value}
             placeholder='0'
             className={inputClasses}
             onFocus={(e) => e.target.select()}
-            onAccept={(val, maskRef) => {
-              updatePrice(maskRef._unmaskedValue);
-              setValue(val);
+            value={service?.tempValue?.price?.toString() || ''}
+            onAccept={(_val, maskRef) => {
+              const unmaskedValue = maskRef._unmaskedValue;
+
+              updatePrice(unmaskedValue);
             }}
             blocks={{
               num: {
