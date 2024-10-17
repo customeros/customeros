@@ -233,7 +233,6 @@ func (r *contactRepository) Delete(ctx context.Context, session neo4j.SessionWit
 		_, err := tx.Run(ctx, `
 			MATCH (c:Contact {id:$contactId})-[:CONTACT_BELONGS_TO_TENANT]->(:Tenant {name:$tenant})
 			OPTIONAL MATCH (c)-[:HAS_PROPERTY]->(f:CustomField)
-			OPTIONAL MATCH (c)-[:HAS_COMPLEX_PROPERTY]->(fs:FieldSet)
 			OPTIONAL MATCH (c)-[:WORKS_AS]->(j:JobRole)
 			OPTIONAL MATCH (c)--(soc:Social)
 			OPTIONAL MATCH (c)-[:HAS_ACTION]->(pv:PageView)

@@ -168,107 +168,6 @@ func CreateContactWithId(ctx context.Context, driver *neo4j.DriverWithContext, t
 	return CreateContact(ctx, driver, tenant, contact)
 }
 
-// Deprecated
-func CreateDefaultFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
-	return CreateFieldSet(ctx, driver, contactId, entity.FieldSetEntity{Name: "name", Source: neo4jentity.DataSourceOpenline, SourceOfTruth: neo4jentity.DataSourceOpenline})
-}
-
-// Deprecated
-func CreateFieldSet(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, fieldSet entity.FieldSetEntity) string {
-	var fieldSetId, _ = uuid.NewRandom()
-	query := `
-			MATCH (c:Contact {id:$contactId})
-			MERGE (s:FieldSet {
-				  	id: $fieldSetId,
-				  	name: $name,
-					source: $source,
-					sourceOfTruth: $sourceOfTruth,
-					createdAt :datetime({timezone: 'UTC'})
-				})<-[:HAS_COMPLEX_PROPERTY]-(c)`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"contactId":     contactId,
-		"fieldSetId":    fieldSetId.String(),
-		"name":          fieldSet.Name,
-		"source":        fieldSet.Source,
-		"sourceOfTruth": fieldSet.SourceOfTruth,
-	})
-	return fieldSetId.String()
-}
-
-// Deprecated
-func CreateDefaultCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWithContext, fieldSetId string) string {
-	return createCustomFieldInSet(ctx, driver, fieldSetId,
-		entity.CustomFieldEntity{
-			Name:          "name",
-			Source:        neo4jentity.DataSourceOpenline,
-			SourceOfTruth: neo4jentity.DataSourceOpenline,
-			DataType:      model.CustomFieldDataTypeText.String(),
-			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
-}
-
-// Deprecated
-func createCustomFieldInSet(ctx context.Context, driver *neo4j.DriverWithContext, fieldSetId string, customField entity.CustomFieldEntity) string {
-	var fieldId, _ = uuid.NewRandom()
-	customField.AdjustValueByDatatype()
-	query := fmt.Sprintf(
-		"MATCH (s:FieldSet {id:$fieldSetId}) "+
-			" MERGE (:%s:CustomField { "+
-			"	  id: $fieldId, "+
-			"	  %s: $value, "+
-			"	  datatype: $datatype, "+
-			"	  name: $name, "+
-			"	  source: $source, "+
-			"	  sourceOfTruth: $sourceOfTruth "+
-			"	})<-[:HAS_PROPERTY]-(s)", customField.NodeLabel(), customField.PropertyName())
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"fieldSetId":    fieldSetId,
-		"fieldId":       fieldId.String(),
-		"name":          customField.Name,
-		"datatype":      customField.DataType,
-		"value":         customField.Value.RealValue(),
-		"source":        customField.Source,
-		"sourceOfTruth": customField.SourceOfTruth,
-	})
-	return fieldId.String()
-}
-
-// Deprecated
-func CreateDefaultCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId string) string {
-	return createCustomFieldInContact(ctx, driver, contactId,
-		entity.CustomFieldEntity{
-			Name:          "name",
-			DataType:      model.CustomFieldDataTypeText.String(),
-			Source:        neo4jentity.DataSourceOpenline,
-			SourceOfTruth: neo4jentity.DataSourceOpenline,
-			Value:         model.AnyTypeValue{Str: utils.StringPtr("value")}})
-}
-
-// Deprecated
-func createCustomFieldInContact(ctx context.Context, driver *neo4j.DriverWithContext, contactId string, customField entity.CustomFieldEntity) string {
-	var fieldId, _ = uuid.NewRandom()
-	customField.AdjustValueByDatatype()
-	query := fmt.Sprintf(
-		"MATCH (c:Contact {id:$contactId}) "+
-			" MERGE (:%s:CustomField { "+
-			"	  id: $fieldId, "+
-			"	  %s: $value, "+
-			"	  datatype: $datatype, "+
-			"	  name: $name, "+
-			"	  source: $source, "+
-			"	  sourceOfTruth: $sourceOfTruth "+
-			"	})<-[:HAS_PROPERTY]-(c)", customField.NodeLabel(), customField.PropertyName())
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"contactId":     contactId,
-		"fieldId":       fieldId.String(),
-		"name":          customField.Name,
-		"datatype":      customField.DataType,
-		"value":         customField.Value.RealValue(),
-		"source":        customField.Source,
-		"sourceOfTruth": customField.SourceOfTruth,
-	})
-	return fieldId.String()
-}
-
 // Deprecated, use CreateEmailForEntity
 func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType commonModel.EntityType, tenant, entityId, email string, primary bool, label string) string {
 	query := ""
@@ -304,21 +203,6 @@ func AddEmailTo(ctx context.Context, driver *neo4j.DriverWithContext, entityType
 }
 
 // Deprecated
-func LinkEmail(ctx context.Context, driver *neo4j.DriverWithContext, entityId, emailId string, primary bool) {
-	query :=
-		`	MATCH (n {id:$entityId})--(t:Tenant) 
-			MATCH (e:Email {id: $emailId})-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
-		 	MERGE (e)<-[rel:HAS]-(n) 
-		 	ON CREATE SET rel.primary=$primary `
-
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"entityId": entityId,
-		"primary":  primary,
-		"emailId":  emailId,
-	})
-}
-
-// Deprecated
 func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tenant, id, phoneNumber string, primary bool, label string) string {
 	var phoneNumberId, _ = uuid.NewRandom()
 	query :=
@@ -342,21 +226,6 @@ func AddPhoneNumberTo(ctx context.Context, driver *neo4j.DriverWithContext, tena
 }
 
 // Deprecated
-func LinkPhoneNumber(ctx context.Context, driver *neo4j.DriverWithContext, id, phoneNumberId string, primary bool, label string) {
-	query :=
-		` 	MATCH (n {id:$entityId})--(t:Tenant) 
-			MERGE (p:PhoneNumber {id:$phoneNumberId})-[:PHONE_NUMBER_BELONGS_TO_TENANT]->(t) 
-			MERGE (p)<-[rel:HAS]-(n) 
-			ON CREATE SET rel.label=$label, rel.primary=$primary `
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"entityId":      id,
-		"primary":       primary,
-		"phoneNumberId": phoneNumberId,
-		"label":         label,
-	})
-}
-
-// Deprecated
 func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, tenant, extends string) string {
 	var templateId, _ = uuid.NewRandom()
 	query := `MATCH (t:Tenant {name:$tenant})
@@ -367,68 +236,6 @@ func CreateEntityTemplate(ctx context.Context, driver *neo4j.DriverWithContext, 
 		"tenant":     tenant,
 		"extends":    extends,
 		"name":       "template name",
-	})
-	return templateId.String()
-}
-
-// Deprecated
-func LinkEntityTemplateToContact(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId, contactId string) {
-	query := `MATCH (c:Contact {id:$contactId}),
-			(e:EntityTemplate {id:$TemplateId})
-			MERGE (c)-[:IS_DEFINED_BY]->(e)`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"TemplateId": entityTemplateId,
-		"contactId":  contactId,
-	})
-}
-
-// Deprecated
-func AddFieldTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId string) string {
-	var templateId, _ = uuid.NewRandom()
-	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
-			MERGE (f:CustomFieldTemplate {id:$templateId})<-[:CONTAINS]-(e)
-			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"templateId":       templateId.String(),
-		"entityTemplateId": entityTemplateId,
-		"type":             "TEXT",
-		"order":            1,
-		"mandatory":        false,
-		"name":             "template name",
-	})
-	return templateId.String()
-}
-
-// Deprecated
-func AddFieldTemplateToSet(ctx context.Context, driver *neo4j.DriverWithContext, setTemplateId string) string {
-	var templateId, _ = uuid.NewRandom()
-	query := `MATCH (e:FieldSetTemplate {id:$setTemplateId})
-			MERGE (f:CustomFieldTemplate {id:$templateId})<-[:CONTAINS]-(e)
-			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"templateId":    templateId.String(),
-		"setTemplateId": setTemplateId,
-		"type":          "TEXT",
-		"order":         1,
-		"mandatory":     false,
-		"name":          "template name",
-	})
-	return templateId.String()
-}
-
-// Deprecated
-func AddSetTemplateToEntity(ctx context.Context, driver *neo4j.DriverWithContext, entityTemplateId string) string {
-	var templateId, _ = uuid.NewRandom()
-	query := `MATCH (e:EntityTemplate {id:$entityTemplateId})
-			MERGE (f:FieldSetTemplate {id:$templateId})<-[:CONTAINS]-(e)
-			ON CREATE SET f.name=$name, f.type=$type, f.order=$order, f.mandatory=$mandatory`
-	neo4jtest.ExecuteWriteQuery(ctx, driver, query, map[string]any{
-		"templateId":       templateId.String(),
-		"entityTemplateId": entityTemplateId,
-		"type":             "TEXT",
-		"order":            1,
-		"mandatory":        false,
-		"name":             "set name",
 	})
 	return templateId.String()
 }

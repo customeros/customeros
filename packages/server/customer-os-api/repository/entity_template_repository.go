@@ -154,12 +154,6 @@ func (r *entityTemplateRepository) createFullEntityTemplateInTxWork(ctx context.
 			return nil, err
 		}
 		entityTemplateId := utils.GetPropsFromNode(records[0].Values[0].(dbtype.Node))["id"].(string)
-		for _, v := range entity.FieldSets {
-			err := r.repositories.FieldSetTemplateRepository.createFieldSetTemplateInTx(ctx, tx, tenant, entityTemplateId, v)
-			if err != nil {
-				return nil, err
-			}
-		}
 		for _, v := range entity.CustomFields {
 			err := r.repositories.CustomFieldTemplateRepository.createCustomFieldTemplateForEntityInTx(ctx, tx, tenant, entityTemplateId, v)
 			if err != nil {

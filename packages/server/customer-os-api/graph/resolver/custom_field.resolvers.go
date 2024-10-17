@@ -35,50 +35,15 @@ func (r *customFieldResolver) Template(ctx context.Context, obj *model.CustomFie
 	return mapper.MapEntityToCustomFieldTemplate(entity), err
 }
 
-// CustomFields is the resolver for the customFields field.
-func (r *fieldSetResolver) CustomFields(ctx context.Context, obj *model.FieldSet) ([]*model.CustomField, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FieldSetResolver.CustomFields", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.fieldSetID", obj.ID))
-
-	var customFields []*model.CustomField
-	customFieldEntities, err := r.Services.CustomFieldService.FindAllForFieldSet(ctx, obj)
-	for _, v := range mapper.MapEntitiesToCustomFields(customFieldEntities) {
-		customFields = append(customFields, v)
-	}
-	return customFields, err
-}
-
-// Template is the resolver for the template field.
-func (r *fieldSetResolver) Template(ctx context.Context, obj *model.FieldSet) (*model.FieldSetTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FieldSetResolver.Template", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.fieldSetID", obj.ID))
-
-	entity, err := r.Services.FieldSetTemplateService.FindLinkedWithFieldSet(ctx, obj.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get contact template for field set <%s>", obj.ID)
-		return nil, err
-	}
-	if entity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToFieldSetTemplate(entity), err
-}
-
 // CustomFieldsMergeAndUpdateInContact is the resolver for the customFieldsMergeAndUpdateInContact field.
-func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput, fieldSets []*model.FieldSetInput) (*model.Contact, error) {
+func (r *mutationResolver) CustomFieldsMergeAndUpdateInContact(ctx context.Context, contactID string, customFields []*model.CustomFieldInput) (*model.Contact, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldsMergeAndUpdateInContact", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID))
 	tracing.LogObjectAsJson(span, "request.customFields", customFields)
-	tracing.LogObjectAsJson(span, "request.fieldSets", fieldSets)
 
-	err := r.Services.CustomFieldService.MergeAndUpdateCustomFieldsForContact(ctx, contactID, mapper.MapCustomFieldInputsToEntities(customFields), mapper.MapFieldSetInputsToEntities(fieldSets))
+	err := r.Services.CustomFieldService.MergeAndUpdateCustomFieldsForContact(ctx, contactID, mapper.MapCustomFieldInputsToEntities(customFields))
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to merge and update custom fields for contact %s", contactID)
@@ -163,115 +128,7 @@ func (r *mutationResolver) CustomFieldDeleteFromContactByID(ctx context.Context,
 	}, nil
 }
 
-// CustomFieldMergeToFieldSet is the resolver for the customFieldMergeToFieldSet field.
-func (r *mutationResolver) CustomFieldMergeToFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldInput) (*model.CustomField, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldMergeToFieldSet", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	result, err := r.Services.CustomFieldService.MergeCustomFieldToFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not merge custom field <%s> to contact <%s>, fields set <%s>", utils.IfNotNilString(input.Name), contactID, fieldSetID)
-		return nil, err
-	}
-	return mapper.MapEntityToCustomField(result), nil
-}
-
-// CustomFieldUpdateInFieldSet is the resolver for the customFieldUpdateInFieldSet field.
-func (r *mutationResolver) CustomFieldUpdateInFieldSet(ctx context.Context, contactID string, fieldSetID string, input model.CustomFieldUpdateInput) (*model.CustomField, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldUpdateInFieldSet", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	result, err := r.Services.CustomFieldService.UpdateCustomFieldForFieldSet(ctx, contactID, fieldSetID, mapper.MapCustomFieldUpdateInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not update custom field <%s> in contact <%s>, fields set <%s>", input.ID, contactID, fieldSetID)
-		return nil, err
-	}
-	return mapper.MapEntityToCustomField(result), nil
-}
-
-// CustomFieldDeleteFromFieldSetByID is the resolver for the customFieldDeleteFromFieldSetById field.
-func (r *mutationResolver) CustomFieldDeleteFromFieldSetByID(ctx context.Context, contactID string, fieldSetID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldDeleteFromFieldSetByID", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", fieldSetID), log.String("request.customFieldID", id))
-
-	result, err := r.Services.CustomFieldService.DeleteByIdFromFieldSet(ctx, contactID, fieldSetID, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not remove custom field <%s> from contact <%s>, fields set <%s>", id, contactID, fieldSetID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
-// FieldSetMergeToContact is the resolver for the fieldSetMergeToContact field.
-func (r *mutationResolver) FieldSetMergeToContact(ctx context.Context, contactID string, input model.FieldSetInput) (*model.FieldSet, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.FieldSetMergeToContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	result, err := r.Services.FieldSetService.MergeFieldSetToContact(ctx, contactID, mapper.MapFieldSetInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not merge fields set <%s> to contact <%s>", input.Name, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToFieldSet(result), nil
-}
-
-// FieldSetUpdateInContact is the resolver for the fieldSetUpdateInContact field.
-func (r *mutationResolver) FieldSetUpdateInContact(ctx context.Context, contactID string, input model.FieldSetUpdateInput) (*model.FieldSet, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.FieldSetUpdateInContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID))
-	tracing.LogObjectAsJson(span, "request.input", input)
-
-	result, err := r.Services.FieldSetService.UpdateFieldSetInContact(ctx, contactID, mapper.MapFieldSetUpdateInputToEntity(&input))
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not update fields set <%s> in contact <%s>", input.ID, contactID)
-		return nil, err
-	}
-	return mapper.MapEntityToFieldSet(result), nil
-}
-
-// FieldSetDeleteFromContact is the resolver for the fieldSetDeleteFromContact field.
-func (r *mutationResolver) FieldSetDeleteFromContact(ctx context.Context, contactID string, id string) (*model.Result, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.FieldSetDeleteFromContact", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.contactID", contactID), log.String("request.fieldSetID", id))
-
-	result, err := r.Services.FieldSetService.DeleteByIdFromContact(ctx, contactID, id)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Could not remove fields set <%s> from contact <%s>", id, contactID)
-		return nil, err
-	}
-	return &model.Result{
-		Result: result,
-	}, nil
-}
-
 // CustomField returns generated.CustomFieldResolver implementation.
 func (r *Resolver) CustomField() generated.CustomFieldResolver { return &customFieldResolver{r} }
 
-// FieldSet returns generated.FieldSetResolver implementation.
-func (r *Resolver) FieldSet() generated.FieldSetResolver { return &fieldSetResolver{r} }
-
 type customFieldResolver struct{ *Resolver }
-type fieldSetResolver struct{ *Resolver }

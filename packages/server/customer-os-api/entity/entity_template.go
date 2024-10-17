@@ -14,7 +14,6 @@ type EntityTemplateEntity struct {
 	CreatedAt    time.Time
 	UpdatedAt    time.Time
 	CustomFields []*neo4jentity.CustomFieldTemplateEntity
-	FieldSets    []*FieldSetTemplateEntity
 }
 
 func (template EntityTemplateEntity) ToString() string {

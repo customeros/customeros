@@ -1,18 +1,10 @@
 extend type Mutation {
-    customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!], fieldSets: [FieldSetInput!]): Contact!
+    customFieldsMergeAndUpdateInContact(contactId : ID!, customFields: [CustomFieldInput!]): Contact!
 
     customFieldMergeToContact(contactId : ID!, input: CustomFieldInput!): CustomField!
     customFieldUpdateInContact(contactId : ID!, input: CustomFieldUpdateInput!): CustomField!
     customFieldDeleteFromContactByName(contactId : ID!, fieldName: String!): Result!
     customFieldDeleteFromContactById(contactId : ID!, id: ID!): Result!
-
-    customFieldMergeToFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldInput!): CustomField!
-    customFieldUpdateInFieldSet(contactId : ID!, fieldSetId : ID!, input: CustomFieldUpdateInput!): CustomField!
-    customFieldDeleteFromFieldSetById(contactId : ID!, fieldSetId : ID!, id: ID!): Result!
-
-    fieldSetMergeToContact(contactId : ID!, input: FieldSetInput!): FieldSet
-    fieldSetUpdateInContact(contactId : ID!, input: FieldSetUpdateInput!): FieldSet
-    fieldSetDeleteFromContact(contactId : ID!, id: ID!):Result!
 }
 
 """
@@ -118,28 +110,6 @@ enum CustomFieldDataType {
     DATETIME
     INTEGER
     DECIMAL
-}
-
-type FieldSet {
-    id: ID!
-    name: String!
-    createdAt: Time!
-    updatedAt: Time!
-    customFields: [CustomField!]! @goField(forceResolver: true)
-    template: FieldSetTemplate @goField(forceResolver: true)
-    source: DataSource!
-}
-
-input FieldSetInput {
-    id: ID
-    name: String!
-    customFields: [CustomFieldInput!]
-    templateId: ID
-}
-
-input FieldSetUpdateInput {
-    id: ID!
-    name: String!
 }
 
 enum CustomEntityType {

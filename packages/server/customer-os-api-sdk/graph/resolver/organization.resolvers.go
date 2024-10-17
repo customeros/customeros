@@ -203,11 +203,6 @@ func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.
 	panic(fmt.Errorf("not implemented: SuggestedMergeTo - suggestedMergeTo"))
 }
 
-// FieldSets is the resolver for the fieldSets field.
-func (r *organizationResolver) FieldSets(ctx context.Context, obj *model.Organization) ([]*model.FieldSet, error) {
-	panic(fmt.Errorf("not implemented: FieldSets - fieldSets"))
-}
-
 // EntityTemplate is the resolver for the entityTemplate field.
 func (r *organizationResolver) EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error) {
 	panic(fmt.Errorf("not implemented: EntityTemplate - entityTemplate"))

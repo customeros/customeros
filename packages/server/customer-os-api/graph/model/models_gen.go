@@ -369,7 +369,6 @@ type Contact struct {
 	// User defined metadata appended to the contact record in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	CustomFields []*CustomField `json:"customFields"`
-	FieldSets    []*FieldSet    `json:"fieldSets"`
 	// Template of the contact in customerOS.
 	Template *EntityTemplate `json:"template,omitempty"`
 	// Contact owner (user)
@@ -409,8 +408,6 @@ type ContactInput struct {
 	CreatedAt *time.Time `json:"createdAt,omitempty"`
 	// Deprecated
 	CustomFields []*CustomFieldInput `json:"customFields,omitempty"`
-	// Deprecated
-	FieldSets []*FieldSetInput `json:"fieldSets,omitempty"`
 	// An email addresses associated with the contact.
 	Email *EmailInput `json:"email,omitempty"`
 	// A phone number associated with the contact.
@@ -1040,7 +1037,6 @@ type EntityTemplate struct {
 	Version              int                      `json:"version"`
 	Name                 string                   `json:"name"`
 	Extends              *EntityTemplateExtension `json:"extends,omitempty"`
-	FieldSetTemplates    []*FieldSetTemplate      `json:"fieldSetTemplates"`
 	CustomFieldTemplates []*CustomFieldTemplate   `json:"customFieldTemplates"`
 	CreatedAt            time.Time                `json:"createdAt"`
 	UpdatedAt            time.Time                `json:"updatedAt"`
@@ -1052,7 +1048,6 @@ func (this EntityTemplate) GetID() string { return this.ID }
 type EntityTemplateInput struct {
 	Name                      string                      `json:"name"`
 	Extends                   *EntityTemplateExtension    `json:"extends,omitempty"`
-	FieldSetTemplateInputs    []*FieldSetTemplateInput    `json:"fieldSetTemplateInputs,omitempty"`
 	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
 }
 
@@ -1083,46 +1078,6 @@ type ExternalSystemReferenceInput struct {
 
 type ExternalSystemStripeDetails struct {
 	PaymentMethodTypes []string `json:"paymentMethodTypes"`
-}
-
-type FieldSet struct {
-	ID           string            `json:"id"`
-	Name         string            `json:"name"`
-	CreatedAt    time.Time         `json:"createdAt"`
-	UpdatedAt    time.Time         `json:"updatedAt"`
-	CustomFields []*CustomField    `json:"customFields"`
-	Template     *FieldSetTemplate `json:"template,omitempty"`
-	Source       DataSource        `json:"source"`
-}
-
-type FieldSetInput struct {
-	ID           *string             `json:"id,omitempty"`
-	Name         string              `json:"name"`
-	CustomFields []*CustomFieldInput `json:"customFields,omitempty"`
-	TemplateID   *string             `json:"templateId,omitempty"`
-}
-
-type FieldSetTemplate struct {
-	ID                   string                 `json:"id"`
-	CreatedAt            time.Time              `json:"createdAt"`
-	UpdatedAt            time.Time              `json:"updatedAt"`
-	Name                 string                 `json:"name"`
-	Order                int                    `json:"order"`
-	CustomFieldTemplates []*CustomFieldTemplate `json:"customFieldTemplates"`
-}
-
-func (FieldSetTemplate) IsNode()            {}
-func (this FieldSetTemplate) GetID() string { return this.ID }
-
-type FieldSetTemplateInput struct {
-	Name                      string                      `json:"name"`
-	Order                     int                         `json:"order"`
-	CustomFieldTemplateInputs []*CustomFieldTemplateInput `json:"customFieldTemplateInputs,omitempty"`
-}
-
-type FieldSetUpdateInput struct {
-	ID   string `json:"id"`
-	Name string `json:"name"`
 }
 
 type Filter struct {
@@ -2003,7 +1958,6 @@ type Organization struct {
 	Emails                   []*Email                      `json:"emails"`
 	PhoneNumbers             []*PhoneNumber                `json:"phoneNumbers"`
 	SuggestedMergeTo         []*SuggestedMergeOrganization `json:"suggestedMergeTo"`
-	FieldSets                []*FieldSet                   `json:"fieldSets"`
 	EntityTemplate           *EntityTemplate               `json:"entityTemplate,omitempty"`
 	TimelineEventsTotalCount int64                         `json:"timelineEventsTotalCount"`
 	ExternalLinks            []*ExternalSystem             `json:"externalLinks"`
@@ -2077,8 +2031,6 @@ type OrganizationInput struct {
 	LeadSource         *string                   `json:"leadSource,omitempty"`
 	// Deprecated, use relationship instead
 	IsCustomer *bool `json:"isCustomer,omitempty"`
-	// Deprecated
-	FieldSets []*FieldSetInput `json:"fieldSets,omitempty"`
 	// Deprecated
 	TemplateID *string `json:"templateId,omitempty"`
 	// Deprecated

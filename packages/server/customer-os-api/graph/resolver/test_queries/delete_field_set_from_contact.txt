@@ -1,8 +1,0 @@
-mutation RemoveFieldSetFromContact($contactId: ID!, $fieldSetId: ID!) {
-     fieldSetDeleteFromContact(
-        contactId: $contactId,
-        id: $fieldSetId)
-     {
-        result
-     }
-}

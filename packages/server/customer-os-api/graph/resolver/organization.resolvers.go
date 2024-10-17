@@ -1299,18 +1299,6 @@ func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.
 	return mapper.MapEntitiesToSuggestedMergeOrganizations(organizationEntities), nil
 }
 
-// FieldSets is the resolver for the fieldSets field.
-func (r *organizationResolver) FieldSets(ctx context.Context, obj *model.Organization) ([]*model.FieldSet, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.FieldSets", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", obj.ID))
-
-	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.CustomEntityTypeOrganization}
-	fieldSetEntities, err := r.Services.FieldSetService.FindAll(ctx, entityType)
-	return mapper.MapEntitiesToFieldSets(fieldSetEntities), err
-}
-
 // EntityTemplate is the resolver for the entityTemplate field.
 func (r *organizationResolver) EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.EntityTemplate", graphql.GetOperationContext(ctx))
