@@ -16,7 +16,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -84,7 +84,7 @@ func (r *mutationResolver) EmailMergeToContact(ctx context.Context, contactID st
 			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, &commonservice.LinkWith{
-			Type: commonModel.CONTACT,
+			Type: commonmodel.CONTACT,
 			Id:   contactID,
 		})
 	if err != nil {
@@ -116,7 +116,7 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 
 	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
 		commonservice.LinkWith{
-			Type: commonModel.CONTACT,
+			Type: commonmodel.CONTACT,
 			Id:   contactID,
 		})
 	if err != nil {
@@ -148,7 +148,7 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, commonservice.LinkWith{
-			Type: commonModel.CONTACT,
+			Type: commonmodel.CONTACT,
 			Id:   contactID,
 		})
 	if err != nil {
@@ -171,6 +171,27 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 	return mapper.MapEntityToEmail(emailEntity), nil
 }
 
+// EmailSetPrimaryForContact is the resolver for the emailSetPrimaryForContact field.
+func (r *mutationResolver) EmailSetPrimaryForContact(ctx context.Context, contactID string, email string) (*model.Result, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailSetPrimaryForContact", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.contactID", contactID), log.String("request.email", email))
+
+	err := r.Services.CommonServices.EmailService.SetPrimary(ctx, email,
+		commonservice.LinkWith{
+			Type: commonmodel.CONTACT,
+			Id:   contactID,
+		})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Could not set email %s as primary for contact %s", email, contactID)
+		return nil, nil
+	}
+
+	return &model.Result{Result: true}, nil
+}
+
 // EmailMergeToUser is the resolver for the emailMergeToUser field.
 func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, input model.EmailInput) (*model.Email, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.EmailMergeToUser", graphql.GetOperationContext(ctx))
@@ -186,7 +207,7 @@ func (r *mutationResolver) EmailMergeToUser(ctx context.Context, userID string, 
 			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, &commonservice.LinkWith{
-			Type: commonModel.USER,
+			Type: commonmodel.USER,
 			Id:   userID,
 		})
 	if err != nil {
@@ -218,7 +239,7 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 
 	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
 		commonservice.LinkWith{
-			Type: commonModel.USER,
+			Type: commonmodel.USER,
 			Id:   userID,
 		})
 	if err != nil {
@@ -249,7 +270,7 @@ func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID strin
 			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, commonservice.LinkWith{
-			Type: commonModel.USER,
+			Type: commonmodel.USER,
 			Id:   userID,
 		})
 	if err != nil {
@@ -287,7 +308,7 @@ func (r *mutationResolver) EmailMergeToOrganization(ctx context.Context, organiz
 			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, &commonservice.LinkWith{
-			Type: commonModel.ORGANIZATION,
+			Type: commonmodel.ORGANIZATION,
 			Id:   organizationID,
 		})
 	if err != nil {
@@ -319,7 +340,7 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 
 	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
 		commonservice.LinkWith{
-			Type: commonModel.ORGANIZATION,
+			Type: commonmodel.ORGANIZATION,
 			Id:   organizationID,
 		})
 	if err != nil {
@@ -351,7 +372,7 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 			Source:    neo4jentity.DataSourceOpenline,
 			AppSource: constants.AppSourceCustomerOsApi,
 		}, commonservice.LinkWith{
-			Type: commonModel.ORGANIZATION,
+			Type: commonmodel.ORGANIZATION,
 			Id:   organizationID,
 		})
 	if err != nil {

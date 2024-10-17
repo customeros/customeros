@@ -6,6 +6,7 @@ extend type Mutation {
     emailMergeToContact(contactId : ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailReplaceForContact(contactId : ID!, previousEmail: String, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    emailSetPrimaryForContact(contactId : ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     emailMergeToUser(userId: ID!, input: EmailInput!): Email! @hasRole(roles: [ADMIN, USER]) @hasTenant
     emailRemoveFromUser(userId: ID!, email: String!): Result! @hasRole(roles: [ADMIN, USER]) @hasTenant
