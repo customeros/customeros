@@ -1,13 +1,13 @@
 import React from 'react';
 
 import { observer } from 'mobx-react-lite';
-import { ContractStore } from '@store/Contracts/Contract.store.ts';
-import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store.ts';
+import { ContractStore } from '@store/Contracts/Contract.store';
+import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem.store';
 
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ContractStatus, ServiceLineItem } from '@graphql/types';
 
-import { ServiceCard } from './ServiceCard.tsx';
+import { ServiceCard } from './ServiceCard';
 
 interface ServiceListProps {
   id: string;
@@ -113,9 +113,9 @@ export const ServiceList = observer(
 
             return dateComparison;
           })
-          .map((data, i) => (
+          .map((data) => (
             <React.Fragment
-              key={`subscription-card-item-${data[0]?.parentId}-${data[0].description}-${i}`}
+              key={`subscription-card-item-${data[0]?.parentId}-${data[0].description}-${data[0].metadata.id}`}
             >
               <ServiceCard
                 contractId={id}

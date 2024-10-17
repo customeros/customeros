@@ -49,7 +49,7 @@ export class OrganizationAboutPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Update?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
@@ -73,7 +73,7 @@ export class OrganizationAboutPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Update?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
@@ -96,7 +96,7 @@ export class OrganizationAboutPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Update?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
@@ -121,7 +121,7 @@ export class OrganizationAboutPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Update?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
@@ -147,7 +147,7 @@ export class OrganizationAboutPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Update?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
@@ -173,7 +173,7 @@ export class OrganizationAboutPage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'organization_Update?.metadata?.id',
+      'organization_Save?.metadata?.id',
       undefined,
     );
 
