@@ -167,29 +167,46 @@ export function createRequestPromise(
   expectedKey: string,
   expectedValue: string | number,
 ) {
-  return page.waitForRequest(
-    (request) => {
-      if (
-        request.method() === 'POST' &&
-        request.url().includes('customer-os-api')
-      ) {
-        const postData = request.postData();
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(
+        new Error(
+          `The request "${expectedKey}" didn't get set with the "${expectedValue}" value before timeout`,
+        ),
+      );
+    }, 30000);
 
-        if (postData) {
-          const parsedData = JSON.parse(postData);
-          // const actualValue = parsedData.variables?.input?.[expectedKey];
+    page
+      .waitForRequest(
+        (request) => {
+          if (
+            request.method() === 'POST' &&
+            request.url().includes('customer-os-api')
+          ) {
+            const postData = request.postData();
 
-          // console.log('Request actualValue: ', actualValue);
-          // console.log('Request expectedValue: ', expectedValue);
+            if (postData) {
+              const parsedData = JSON.parse(postData);
 
-          return parsedData.variables?.input?.[expectedKey] === expectedValue;
-        }
-      }
+              return (
+                parsedData.variables?.input?.[expectedKey] === expectedValue
+              );
+            }
+          }
 
-      return false;
-    },
-    { timeout: 30000 },
-  );
+          return false;
+        },
+        { timeout: 30000 },
+      )
+      .then(() => {
+        clearTimeout(timeout);
+        resolve(true);
+      })
+      .catch((error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
+  });
 }
 
 export function createResponsePromise(
@@ -197,36 +214,52 @@ export function createResponsePromise(
   expectedKey: string,
   expectedValue: string | undefined,
 ) {
-  return page.waitForResponse(async (response) => {
-    if (
-      response.request().method() === 'POST' &&
-      response.url().includes('customer-os-api')
-    ) {
-      const responseBody = await response.json();
+  return new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      reject(
+        new Error(
+          `The response "${expectedKey}" remained set with the "${expectedValue}" value before timeout`,
+        ),
+      );
+    }, 30000);
 
-      const getNestedProperty = (obj: unknown, path: string): unknown => {
-        return path.split('.').reduce((prev, curr) => {
-          if (curr.endsWith('?')) {
-            curr = curr.slice(0, -1);
-          }
+    page
+      .waitForResponse(async (response) => {
+        if (
+          response.request().method() === 'POST' &&
+          response.url().includes('customer-os-api')
+        ) {
+          const responseBody = await response.json();
 
-          if (prev && typeof prev === 'object' && curr in prev) {
-            return (prev as Record<string, unknown>)[curr];
-          } else {
-            return undefined;
-          }
-        }, obj);
-      };
+          const getNestedProperty = (obj: unknown, path: string): unknown => {
+            return path.split('.').reduce((prev, curr) => {
+              if (curr.endsWith('?')) {
+                curr = curr.slice(0, -1);
+              }
 
-      const actualValue = getNestedProperty(responseBody.data, expectedKey);
+              if (prev && typeof prev === 'object' && curr in prev) {
+                return (prev as Record<string, unknown>)[curr];
+              } else {
+                return undefined;
+              }
+            }, obj);
+          };
 
-      // console.log('Response actualValue: ', actualValue);
-      // console.log('Response expectedValue: ', expectedValue);
+          const actualValue = getNestedProperty(responseBody.data, expectedKey);
 
-      return actualValue !== expectedValue;
-    }
+          return actualValue !== expectedValue;
+        }
 
-    return false;
+        return false;
+      })
+      .then(() => {
+        clearTimeout(timeout);
+        resolve(true);
+      })
+      .catch((error) => {
+        clearTimeout(timeout);
+        reject(error);
+      });
   });
 }
 
