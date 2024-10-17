@@ -13,7 +13,7 @@ import {
 export class OrganizationsPage {
   private page: Page;
 
-  private sideNavItemAllOrgs = 'button[data-test="side-nav-item-all-orgs"]';
+  private sideNavItemAllOrgs = 'div[data-test="side-nav-item-all-orgs"]';
   private finderTableOrganizations =
     'div[data-test="finder-table-ORGANIZATIONS"]';
   private allOrgsAddOrg = 'button[data-test="all-orgs-add-org"]';
@@ -43,7 +43,7 @@ export class OrganizationsPage {
     'p[data-test="organization-stage-in-all-orgs-table"]';
   private organizationLastTouchpointInAllOrgsTable =
     '[data-test="organization-last-touchpoint-in-all-orgs-table"]';
-  private sideNavItemCustomers = 'button[data-test="side-nav-item-Customers"]';
+  private sideNavItemCustomers = 'div[data-test="side-nav-item-Customers"]';
   private organizationRelationshipButtonInAllOrgsTable =
     'button[data-test="organization-relationship-button-in-all-orgs-table"]';
   private relationshipCustomer = 'div[data-test="relationship-CUSTOMER"]';

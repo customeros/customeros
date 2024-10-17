@@ -3,9 +3,9 @@ import { Page, expect } from '@playwright/test';
 export class CustomersPage {
   constructor(private page: Page) {}
 
-  sideNavItemCustomers = 'button[data-test="side-nav-item-Customers"]';
+  sideNavItemCustomers = 'div[data-test="side-nav-item-Customers"]';
   sideNavItemCustomersSelected =
-    'button[data-test="side-nav-item-Customers"] div[aria-selected="true"]';
+    'div[data-test="side-nav-item-Customers"] div[aria-selected="true"]';
 
   async ensureNumberOfCustomersExist(numberOfCustomers) {
     const elements = await this.page.$$(
