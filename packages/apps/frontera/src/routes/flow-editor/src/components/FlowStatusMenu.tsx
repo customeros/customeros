@@ -58,7 +58,7 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
             <TagLabel className='text-success-500'>Live</TagLabel>
           </Tag>
         </MenuButton>
-        <MenuList align='end' side='bottom' className='p-0'>
+        <MenuList align='end' side='bottom' className='p-0 z-[11]'>
           <MenuItem
             className='flex items-center '
             data-test='stop-flow-menu-button'
