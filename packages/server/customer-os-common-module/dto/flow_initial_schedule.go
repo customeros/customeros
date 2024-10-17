@@ -1,4 +1,3 @@
 package dto
 
-type FlowInitialSchedule struct {
-}
+type FlowInitialSchedule struct{}
