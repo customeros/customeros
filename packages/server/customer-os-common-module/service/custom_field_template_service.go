@@ -4,15 +4,20 @@ import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"github.com/opentracing/opentracing-go"
+	"github.com/pkg/errors"
 )
 
 type CustomFieldTemplateService interface {
 	GetAll(ctx context.Context) (*neo4jentity.CustomFieldTemplateEntities, error)
-	//Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId, opportunityId *string, input *repository.OpportunitySaveFields) (*string, error)
+	GetById(ctx context.Context, customFieldTemplateId string) (*neo4jentity.CustomFieldTemplateEntity, error)
+	Save(ctx context.Context, id *string, input neo4jrepository.CustomFieldTemplateSaveFields) (string, error)
+	Delete(ctx context.Context, customFieldTemplateId string) error
 }
 
 type customFieldTemplateService struct {
@@ -49,4 +54,119 @@ func (s *customFieldTemplateService) GetAll(ctx context.Context) (*neo4jentity.C
 		customFieldTemplateEntities = append(customFieldTemplateEntities, *neo4jmapper.MapDbNodeToCustomFieldTemplateEntity(dbNode))
 	}
 	return &customFieldTemplateEntities, nil
+}
+
+func (s *customFieldTemplateService) GetById(ctx context.Context, customFieldTemplateId string) (*neo4jentity.CustomFieldTemplateEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateService.GetById")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, customFieldTemplateId)
+
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	dbNode, err := s.services.Neo4jRepositories.CustomFieldTemplateReadRepository.GetById(ctx, common.GetTenantFromContext(ctx), customFieldTemplateId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	if dbNode == nil {
+		err = errors.New("custom field template not found")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return neo4jmapper.MapDbNodeToCustomFieldTemplateEntity(dbNode), nil
+}
+
+func (s *customFieldTemplateService) Save(ctx context.Context, id *string, input neo4jrepository.CustomFieldTemplateSaveFields) (string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateService.Save")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "input", input)
+
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+	tenant := common.GetTenantFromContext(ctx)
+
+	createFlow := false
+	customFieldTemplateId := ""
+
+	if id == nil || *id == "" {
+		createFlow = true
+		span.LogKV("flow", "create")
+		customFieldTemplateId, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, model.NodeLabelCustomFieldTemplate)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	} else {
+		span.LogKV("flow", "update")
+		customFieldTemplateId = *id
+
+		// validate custom field template exists
+		_, err = s.GetById(ctx, customFieldTemplateId)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+	tracing.TagEntity(span, customFieldTemplateId)
+
+	if createFlow {
+		// validate entity type is present and is valid when creating new custom field template
+		if !supportedEntityTypeForCustomFieldTemplate(input.EntityType) {
+			err = errors.New("entity type is missing or not supported")
+			tracing.TraceErr(span, err)
+			return "", err
+		}
+	}
+
+	err = s.services.Neo4jRepositories.CustomFieldTemplateWriteRepository.Save(ctx, tenant, customFieldTemplateId, input)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return "", err
+	}
+
+	return customFieldTemplateId, nil
+}
+
+func supportedEntityTypeForCustomFieldTemplate(entityType model.EntityType) bool {
+	return entityType == model.ORGANIZATION || entityType == model.OPPORTUNITY || entityType == model.CONTACT || entityType == model.LOG_ENTRY
+}
+
+func (s *customFieldTemplateService) Delete(ctx context.Context, customFieldTemplateId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateService.Delete")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, customFieldTemplateId)
+
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	// validate custom field template exists
+	_, err = s.GetById(ctx, customFieldTemplateId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	err = s.services.Neo4jRepositories.CustomFieldTemplateWriteRepository.Delete(ctx, common.GetTenantFromContext(ctx), customFieldTemplateId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

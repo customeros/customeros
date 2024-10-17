@@ -7,7 +7,7 @@ import (
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 )
 
-func MapCustomFieldTemplateInputToEntity(input model.CustomFieldTemplateInput) neo4jrepository.CustomFieldTemplateSaveFields {
+func MapCustomFieldTemplateInputToSaveFields(input model.CustomFieldTemplateInput) neo4jrepository.CustomFieldTemplateSaveFields {
 	fields := neo4jrepository.CustomFieldTemplateSaveFields{}
 	if input.Name != nil {
 		fields.Name = *input.Name

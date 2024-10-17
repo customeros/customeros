@@ -6,18 +6,36 @@ package resolver
 
 import (
 	"context"
-	"fmt"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/tracing"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // CustomFieldTemplateSave is the resolver for the customFieldTemplate_Save field.
 func (r *mutationResolver) CustomFieldTemplateSave(ctx context.Context, input model.CustomFieldTemplateInput) (*model.CustomFieldTemplate, error) {
-	// TODO alexb implement
-	panic(fmt.Errorf("not implemented: CustomFieldTemplateSave - customFieldTemplate_Save"))
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.CustomFieldTemplateSave", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	tracing.LogObjectAsJson(span, "request.input", input)
+
+	customFieldTemplateId, err := r.Services.CommonServices.CustomFieldTemplateService.Save(ctx, input.ID, mapper.MapCustomFieldTemplateInputToSaveFields(input))
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "error saving custom field template")
+		return nil, err
+	}
+
+	customFieldTemplateEntity, err := r.Services.CommonServices.CustomFieldTemplateService.GetById(ctx, customFieldTemplateId)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "error getting custom field template")
+		return nil, err
+	}
+
+	return mapper.MapEntityToCustomFieldTemplate(customFieldTemplateEntity), nil
 }
 
 // CustomFieldTemplateDelete is the resolver for the customFieldTemplate_Delete field.
@@ -25,10 +43,16 @@ func (r *mutationResolver) CustomFieldTemplateDelete(ctx context.Context, id str
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "MutationResolver.CustomFieldTemplateDelete", graphql.GetOperationContext(ctx))
 	defer span.Finish()
 	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.String("request.id", id))
 
-	// TODO alexb implement
-	graphql.AddErrorf(ctx, "not implemented yet")
-	return nil, nil
+	err := r.Services.CommonServices.CustomFieldTemplateService.Delete(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "error deleting custom field template")
+		return nil, err
+	}
+
+	return utils.BoolPtr(true), nil
 }
 
 // CustomFieldTemplateList is the resolver for the customFieldTemplate_List field.

@@ -12,28 +12,29 @@ import (
 )
 
 type CustomFieldTemplateSaveFields struct {
-	Name        string
-	EntityType  model.EntityType
-	Type        string
-	ValidValues []string
-	Order       *int64
-	Required    *bool
-	Length      *int64
-	Min         *int64
-	Max         *int64
+	Name        string           `json:"name"`
+	EntityType  model.EntityType `json:"entityType"`
+	Type        string           `json:"type"`
+	ValidValues []string         `json:"validValues"`
+	Order       *int64           `json:"order,omitempty"`
+	Required    *bool            `json:"required,omitempty"`
+	Length      *int64           `json:"length,omitempty"`
+	Min         *int64           `json:"min,omitempty"`
+	Max         *int64           `json:"max,omitempty"`
 
-	UpdateName        bool
-	UpdateType        bool
-	UpdateValidValues bool
-	UpdateOrder       bool
-	UpdateRequired    bool
-	UpdateLength      bool
-	UpdateMin         bool
-	UpdateMax         bool
+	UpdateName        bool `json:"updateName"`
+	UpdateType        bool `json:"updateType"`
+	UpdateValidValues bool `json:"updateValidValues"`
+	UpdateOrder       bool `json:"updateOrder"`
+	UpdateRequired    bool `json:"updateRequired"`
+	UpdateLength      bool `json:"updateLength"`
+	UpdateMin         bool `json:"updateMin"`
+	UpdateMax         bool `json:"updateMax"`
 }
 
 type CustomFieldTemplateWriteRepository interface {
-	Save(ctx context.Context, tenant, customFieldId string, data CustomFieldTemplateSaveFields) error
+	Save(ctx context.Context, tenant, customFieldTemplateId string, data CustomFieldTemplateSaveFields) error
+	Delete(ctx context.Context, tenant, customFieldTemplateId string) error
 }
 
 type customFieldTemplateWriteRepository struct {
@@ -102,6 +103,32 @@ func (r *customFieldTemplateWriteRepository) Save(ctx context.Context, tenant, c
 	if data.UpdateMax {
 		cypher += ", cft.max=$max"
 		params["max"] = data.Max
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	err := utils.ExecuteWriteQuery(ctx, *r.driver, cypher, params)
+	if err != nil {
+		tracing.TraceErr(span, err)
+	}
+	return err
+}
+
+func (r *customFieldTemplateWriteRepository) Delete(ctx context.Context, tenant, customFieldTemplateId string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateWriteRepository.Delete")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	tracing.TagEntity(span, customFieldTemplateId)
+
+	cypher := fmt.Sprintf(`
+		MATCH (t:Tenant {name:$tenant})<-[rel:CUSTOM_FIELD_TEMPLATE_BELONGS_TO_TENANT]-(cft:CustomFieldTemplate {id:$customFieldTemplateId})
+		DELETE rel, cft
+	`)
+	params := map[string]any{
+		"tenant":                tenant,
+		"customFieldTemplateId": customFieldTemplateId,
 	}
 
 	span.LogFields(log.String("cypher", cypher))
