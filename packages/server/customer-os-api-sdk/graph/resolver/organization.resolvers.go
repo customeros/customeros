@@ -203,11 +203,6 @@ func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.
 	panic(fmt.Errorf("not implemented: SuggestedMergeTo - suggestedMergeTo"))
 }
 
-// EntityTemplate is the resolver for the entityTemplate field.
-func (r *organizationResolver) EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error) {
-	panic(fmt.Errorf("not implemented: EntityTemplate - entityTemplate"))
-}
-
 // TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.
 func (r *organizationResolver) TimelineEventsTotalCount(ctx context.Context, obj *model.Organization, timelineEventTypes []model.TimelineEventType) (int64, error) {
 	panic(fmt.Errorf("not implemented: TimelineEventsTotalCount - timelineEventsTotalCount"))

@@ -63,7 +63,7 @@ type CustomerContact {
 A contact represents an individual in customerOS.
 **A `response` object.**
 """
-type Contact implements ExtensibleEntity & MetadataInterface & Node {
+type Contact implements MetadataInterface & Node {
     metadata: Metadata!
     """
     Deprecated, use metadata instead
@@ -153,10 +153,6 @@ type Contact implements ExtensibleEntity & MetadataInterface & Node {
     """
     customFields: [CustomField!]! @goField(forceResolver: true)
 
-    """
-    Template of the contact in customerOS.
-    """
-    template: EntityTemplate @goField(forceResolver: true)
 
     "Contact owner (user)"
     owner: User @goField(forceResolver: true)

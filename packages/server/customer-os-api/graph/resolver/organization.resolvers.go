@@ -545,7 +545,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 			return nil, nil
 		}
 		if !utils.IsEmptyString(field.TemplateID) {
-			customFieldTemplate, err := r.Services.CustomFieldTemplateService.GetById(ctx, *field.TemplateID)
+			customFieldTemplate, err := r.Services.CommonServices.CustomFieldTemplateService.GetById(ctx, *field.TemplateID)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				graphql.AddErrorf(ctx, "Custom field template %s not found", *field.TemplateID)
@@ -1297,26 +1297,6 @@ func (r *organizationResolver) SuggestedMergeTo(ctx context.Context, obj *model.
 		return nil, nil
 	}
 	return mapper.MapEntitiesToSuggestedMergeOrganizations(organizationEntities), nil
-}
-
-// EntityTemplate is the resolver for the entityTemplate field.
-func (r *organizationResolver) EntityTemplate(ctx context.Context, obj *model.Organization) (*model.EntityTemplate, error) {
-	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "OrganizationResolver.EntityTemplate", graphql.GetOperationContext(ctx))
-	defer span.Finish()
-	tracing.SetDefaultResolverSpanTags(ctx, span)
-	span.LogFields(log.String("request.organizationID", obj.ID))
-
-	entityType := &model.CustomFieldEntityType{ID: obj.ID, EntityType: model.CustomEntityTypeOrganization}
-	templateEntity, err := r.Services.EntityTemplateService.FindLinked(ctx, entityType)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to get contact template for contact %s", obj.ID)
-		return nil, err
-	}
-	if templateEntity == nil {
-		return nil, nil
-	}
-	return mapper.MapEntityToEntityTemplate(templateEntity), err
 }
 
 // TimelineEventsTotalCount is the resolver for the timelineEventsTotalCount field.

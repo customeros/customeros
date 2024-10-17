@@ -30,7 +30,6 @@ type Services struct {
 	PhoneNumberService         PhoneNumberService
 	EmailService               EmailService
 	UserService                UserService
-	EntityTemplateService      EntityTemplateService
 	CustomFieldTemplateService CustomFieldTemplateService
 	TimelineEventService       TimelineEventService
 	NoteService                NoteService
@@ -71,7 +70,6 @@ func InitServices(log logger.Logger, driver *neo4j.DriverWithContext, cfg *confi
 		BankAccountService:         NewBankAccountService(log, repositories, grpcClients),
 		CustomFieldService:         NewCustomFieldService(log, repositories),
 		UserService:                NewUserService(log, repositories, grpcClients),
-		EntityTemplateService:      NewEntityTemplateService(log, repositories),
 		CustomFieldTemplateService: NewCustomFieldTemplateService(log, repositories),
 		LocationService:            NewLocationService(log, repositories),
 		PageViewService:            NewPageViewService(log, repositories),

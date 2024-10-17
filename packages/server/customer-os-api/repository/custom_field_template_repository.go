@@ -2,22 +2,14 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
-	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 )
 
 // TODO alexb deprecate and remove all methods
 type CustomFieldTemplateRepository interface {
-	GetById(ctx context.Context, id string) (*dbtype.Node, error)
-	createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *neo4jentity.CustomFieldTemplateEntity) error
-	FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error)
 	FindByCustomFieldId(ctx context.Context, fieldId string) (any, error)
 }
 
@@ -31,60 +23,6 @@ func NewCustomFieldTemplateRepository(driver *neo4j.DriverWithContext, database 
 		driver:   driver,
 		database: database,
 	}
-}
-
-func (r *customFieldTemplateRepository) createCustomFieldTemplateForEntityInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, entityTemplateId string, entity *neo4jentity.CustomFieldTemplateEntity) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.createCustomFieldTemplateForEntityInTx")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	query := "MATCH (e:EntityTemplate {id:$entityTemplateId}) " +
-		" MERGE (e)-[:CONTAINS]->(f:CustomFieldTemplate {id:randomUUID(), name:$name}) " +
-		" ON CREATE SET f:%s, " +
-		"				f.createdAt=$now, " +
-		"				f.updated=$now, " +
-		"  				f.order=$order, " +
-		"				f.mandatory=$mandatory, " +
-		"				f.type=$type, " +
-		"				f.length=$length, " +
-		"  				f.min=$min, " +
-		"				f.max=$max"
-
-	_, err := tx.Run(ctx, fmt.Sprintf(query, "CustomFieldTemplate_"+tenant),
-		map[string]any{
-			"entityTemplateId": entityTemplateId,
-			"name":             entity.Name,
-			"order":            entity.Order,
-			"required":         entity.Required,
-			"type":             entity.Type,
-			"length":           entity.Length,
-			"min":              entity.Min,
-			"max":              entity.Max,
-			"now":              utils.Now(),
-		})
-
-	return err
-}
-
-func (r *customFieldTemplateRepository) FindAllByEntityTemplateId(ctx context.Context, entityTemplateId string) (any, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.FindAllByEntityTemplateId")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	return session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		queryResult, err := tx.Run(ctx, `
-				MATCH (:EntityTemplate {id:$entityTemplateId})-[:CONTAINS]->(f:CustomFieldTemplate) RETURN f ORDER BY f.order`,
-			map[string]any{
-				"entityTemplateId": entityTemplateId,
-			})
-		if err != nil {
-			return nil, err
-		}
-		return queryResult.Collect(ctx)
-	})
 }
 
 func (r *customFieldTemplateRepository) FindByCustomFieldId(ctx context.Context, customFieldId string) (any, error) {
@@ -107,32 +45,4 @@ func (r *customFieldTemplateRepository) FindByCustomFieldId(ctx context.Context,
 		}
 		return queryResult.Collect(ctx)
 	})
-}
-
-func (r *customFieldTemplateRepository) GetById(ctx context.Context, id string) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "CustomFieldTemplateRepository.GetById")
-	defer span.Finish()
-	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
-	span.LogFields(log.String("customFieldTemplateId", id))
-
-	query := fmt.Sprintf(`MATCH (cft:CustomFieldTemplate_%s {id:$id}) RETURN cft`, common.GetTenantFromContext(ctx))
-	span.LogFields(log.String("query", query))
-
-	session := utils.NewNeo4jReadSession(ctx, *r.driver)
-	defer session.Close(ctx)
-
-	if result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
-		if queryResult, err := tx.Run(ctx, query,
-			map[string]any{
-				"id": id,
-			}); err != nil {
-			return nil, err
-		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
-		}
-	}); err != nil {
-		return nil, err
-	} else {
-		return result.(*dbtype.Node), nil
-	}
 }

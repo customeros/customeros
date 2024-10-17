@@ -1,3 +1,6 @@
+type Mutation
+type Query
+
 extend type Mutation {
     addTag(input: AddTagInput!): ID! @hasRole(roles: [ADMIN, USER]) @hasTenant
     removeTag(input: RemoveTagInput!): Result @hasRole(roles: [ADMIN, USER]) @hasTenant
