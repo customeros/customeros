@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
@@ -136,6 +137,18 @@ func (s *customFieldTemplateService) Save(ctx context.Context, id *string, input
 		return "", err
 	}
 
+	if createFlow {
+		err = s.services.RabbitMQService.Publish(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.New_CreateCustomFieldTemplate_From_CustomFieldTemplateSaveFields(input))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message CreateCustomFieldTemplate"))
+		}
+	} else {
+		err = s.services.RabbitMQService.Publish(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.New_UpdateCustomFieldTemplate_From_CustomFieldTemplateSaveFields(input))
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "unable to publish message UpdateCustomFieldTemplate"))
+		}
+	}
+
 	return customFieldTemplateId, nil
 }
 
@@ -166,6 +179,11 @@ func (s *customFieldTemplateService) Delete(ctx context.Context, customFieldTemp
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	err = s.services.RabbitMQService.Publish(ctx, customFieldTemplateId, model.CUSTOM_FIELD_TEMPLATE, dto.Delete{})
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message"))
 	}
 
 	return nil

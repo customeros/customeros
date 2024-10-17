@@ -264,7 +264,10 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 	// Invoke the appropriate handler based on the event type
 	eventHandler, found := r.handlerRegistry[event.Event.EventType]
 	if !found {
-		log.Printf("No handler registered for event type: %s", event.Event.EventType)
+		if err := d.Ack(false); err != nil {
+			log.Printf("Failed to acknowledge message: %s", err.Error())
+			//TODO retry nack
+		}
 		return
 	}
 
