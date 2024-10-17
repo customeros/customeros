@@ -30,7 +30,7 @@ export const TriggerNode = (
   return (
     <>
       <div
-        className={`aspect-[9/1] w-[300px] bg-white border border-grayModern-300 p-3 rounded-lg group relative cursor-pointer`}
+        className={`h-[56px] w-[300px] bg-white border border-grayModern-300 p-4 rounded-lg group relative cursor-pointer flex items-center`}
       >
         <div className='flex items-center justify-between '>
           <div className='truncate text-sm flex items-center'>
