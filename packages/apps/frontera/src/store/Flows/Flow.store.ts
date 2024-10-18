@@ -11,6 +11,7 @@ import { FlowService } from '@store/Flows/__service__';
 import { Store, makeAutoSyncable } from '@store/store';
 import { runInAction, makeAutoObservable } from 'mobx';
 import { makeAutoSyncableGroup } from '@store/group-store';
+import { FlowContactStore } from '@store/FlowContacts/FlowContact.store.ts';
 
 import { uuidv4 } from '@utils/generateUuid.ts';
 import {
@@ -189,38 +190,40 @@ export class FlowStore implements Store<Flow> {
           { mutate: false },
         );
 
-        this.value.contacts = [
-          ...this.value.contacts,
-          {
-            status: FlowParticipantStatus.Scheduled,
-            scheduledAction: '',
-            scheduledAt: new Date().toISOString(),
+        const newFlowContactValue = {
+          ...flowContact_Add,
+          contact: {
+            id: contactId,
             metadata: {
-              id: flowContact_Add?.metadata?.id,
+              id: contactId,
               source: DataSource.Openline,
               appSource: DataSource.Openline,
               created: new Date().toISOString(),
               lastUpdated: new Date().toISOString(),
               sourceOfTruth: DataSource.Openline,
             },
-            contact: {
-              id: contactId,
-              metadata: {
-                id: contactId,
-                source: DataSource.Openline,
-                appSource: DataSource.Openline,
-                created: new Date().toISOString(),
-                lastUpdated: new Date().toISOString(),
-                sourceOfTruth: DataSource.Openline,
-              },
-            } as Contact,
-          },
-        ];
+          } as Contact,
+        } as FlowContact;
+
+        this.value.contacts = [...this.value.contacts, newFlowContactValue];
+
+        const newFLowContact = new FlowContactStore(this.root, this.transport);
+
+        newFLowContact.value = newFlowContactValue;
+        this.root.flowContacts.value.set(
+          newFlowContactValue.metadata.id,
+          newFLowContact,
+        );
+
         this.root.ui.toastSuccess(
           `Contact added to '${this.value.name}'`,
           'link-contact-to-flows-success',
         );
         contactStore?.invalidate();
+
+        // TODO Refactor https://linear.app/customer-os/issue/COS-4820/handle-single-flow-load-invalidate-singular-flow
+        // Invalidate singular flow when this issue is merged https://linear.app/customer-os/issue/COS-4823/create-getflowbyididid-query
+        this.root.flows.invalidate();
       });
     } catch (e) {
       runInAction(() => {
