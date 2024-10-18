@@ -56,7 +56,7 @@ type contactWriteRepository struct {
 }
 
 func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, contactId string, data ContactFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.CreateContact")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactWriteRepository.SaveContactInTx")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -65,12 +65,12 @@ func (r *contactWriteRepository) SaveContactInTx(ctx context.Context, tx *neo4j.
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 		cypher := fmt.Sprintf(`
 				MATCH (t:Tenant {name:$tenant})
-				MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(cft:Contact {id:$contactId})
+				MERGE (t)<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact {id:$contactId})
 				ON CREATE SET
 					c:Contact_%s,
 					c.createdAt = $createdAt,
 					c.hide = false,
-					c.source = $source,
+					c.source = $source
 				WITH c
 				SET
 					c.updatedAt = datetime()`, tenant)
