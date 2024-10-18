@@ -16,7 +16,7 @@ export const MaskedResizableInput = ({ ...props }: MaskedInputProps) => {
       if (spanRef.current) {
         const spanWidth = spanRef.current?.offsetWidth ?? 10;
 
-        setWidth(`${Math.max(spanWidth + 2, 2)}px`); // Add some padding and set a minimum width
+        setWidth(`${Math.max(spanWidth + 2, 2)}px`);
       }
     };
 

@@ -3,10 +3,10 @@ import { useEffect } from 'react';
 import { NodeProps, useNodesData, useReactFlow } from '@xyflow/react';
 
 import { cn } from '@ui/utils/cn';
-import { ResizableInput } from '@ui/form/Input';
 import { Edit03 } from '@ui/media/icons/Edit03';
 import { IconButton } from '@ui/form/IconButton';
 import { Hourglass02 } from '@ui/media/icons/Hourglass02';
+import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput';
 
 import { Handle } from '../components';
 
@@ -23,6 +23,7 @@ export const WaitNode = ({
     setNodes((nds) => {
       const durationInDays = parseFloat(newValue);
       const durationInMinutes = Math.round(durationInDays * MINUTES_PER_DAY);
+
       const updatedNodes = nds.map((node) => {
         if (node.id === id) {
           return {
@@ -71,7 +72,9 @@ export const WaitNode = ({
   const toggleEditing = () => {
     setNodes((nds) =>
       nds.map((n) =>
-        n.id === id ? { ...n, data: { ...n.data, isEditing: true } } : n,
+        n.id === id
+          ? { ...n, selected: true, data: { ...n.data, isEditing: true } }
+          : n,
       ),
     );
   };
@@ -79,15 +82,20 @@ export const WaitNode = ({
   const durationInDays = data.waitDuration
     ? (data.waitDuration as number) / MINUTES_PER_DAY
     : 0;
+
   const displayDuration =
-    durationInDays % 1 === 0
-      ? durationInDays.toString()
-      : durationInDays.toFixed(1);
+    durationInDays === 0
+      ? '0'
+      : new Intl.NumberFormat('en-US', {
+          minimumFractionDigits: 0,
+          maximumFractionDigits: 3,
+        }).format(durationInDays);
+
   const isDaySingular = durationInDays === 1;
 
   return (
-    <div className='w-[131px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer'>
-      <div className='truncate text-sm flex items-center justify-between'>
+    <div className='w-[156px] h-[56px] bg-white border border-grayModern-300 p-4 rounded-lg group cursor-pointer flex items-center'>
+      <div className='truncate text-sm flex items-center justify-between w-full'>
         <div className='flex items-center'>
           <div className='size-6 mr-2 bg-gray-50 border border-gray-100 rounded flex items-center justify-center'>
             <Hourglass02 className='text-gray-500' />
@@ -95,18 +103,37 @@ export const WaitNode = ({
 
           {isEditing ? (
             <div className='flex mr-1 items-baseline'>
-              <ResizableInput
-                min={0}
+              <MaskedResizableInput
                 size='xs'
                 autoFocus
-                step={0.5}
-                type='number'
+                mask={`num`}
+                unmask={true}
                 placeholder={'0'}
                 variant='unstyled'
-                value={displayDuration}
+                value={displayDuration ?? ''}
                 onFocus={(e) => e.target.select()}
-                className='min-w-2.5 min-h-0 max-h-4'
-                onChange={(e) => handleDurationChange(e.target.value)}
+                className='min-w-2.5  min-h-0 max-h-4'
+                onAccept={(_val, maskRef) => {
+                  const unmaskedValue = maskRef._unmaskedValue;
+
+                  handleDurationChange(unmaskedValue);
+                }}
+                blocks={{
+                  num: {
+                    mask: Number,
+                    radix: '.',
+                    scale: 3,
+                    max: 9990,
+                    mapToRadix: [','],
+                    lazy: false,
+                    min: 0,
+                    placeholderChar: '#',
+                    thousandsSeparator: ',',
+                    normalizeZeros: true,
+                    padFractionalZeros: false,
+                    autofix: true,
+                  },
+                }}
               />
               <span className='ml-1'>{isDaySingular ? 'day' : 'days'}</span>
             </div>

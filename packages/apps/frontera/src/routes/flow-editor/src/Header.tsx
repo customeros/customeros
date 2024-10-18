@@ -36,7 +36,7 @@ export const Header = observer(
     const store = useStore();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { getNodes, getEdges } = useReactFlow();
+    const { getNodes, getEdges, setNodes, setEdges } = useReactFlow();
 
     const saveFlag = useFeatureIsOn('flow-editor-save-button_1');
 
@@ -56,12 +56,13 @@ export const Header = observer(
     }, [store.ui.commandMenu.isOpen, id]);
 
     useUnmount(() => {
-      if (saveFlag && !showFinder) {
+      if (saveFlag && !showFinder && hasChanges) {
         const nodes = getNodes();
         const edges = getEdges();
 
         // this should never happen
         if (nodes.length === 0 && edges.length === 0) return;
+        onToggleHasChanges(false);
 
         flow?.updateFlow({
           nodes: JSON.stringify(nodes),
@@ -74,14 +75,20 @@ export const Header = observer(
       const nodes = getNodes();
       const edges = getEdges();
 
-      onToggleHasChanges(false);
-
       flow?.updateFlow(
         {
           nodes: JSON.stringify(nodes),
           edges: JSON.stringify(edges),
         },
         {
+          onSuccess: () => {
+            setNodes(JSON.parse(flow.value.nodes));
+            setEdges(JSON.parse(flow.value.edges));
+
+            setTimeout(() => {
+              onToggleHasChanges(false);
+            }, 0);
+          },
           onError: () => {
             onToggleHasChanges(true);
           },
