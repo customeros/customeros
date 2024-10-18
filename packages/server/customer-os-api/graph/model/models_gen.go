@@ -352,7 +352,8 @@ type Contact struct {
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
 	// All email addresses associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
-	Emails []*Email `json:"emails"`
+	Emails       []*Email `json:"emails"`
+	PrimaryEmail *Email   `json:"primaryEmail,omitempty"`
 	// All locations associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	Locations []*Location `json:"locations"`

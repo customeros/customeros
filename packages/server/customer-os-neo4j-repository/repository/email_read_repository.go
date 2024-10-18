@@ -24,6 +24,7 @@ type EmailReadRepository interface {
 	GetById(ctx context.Context, tenant, emailId string) (*dbtype.Node, error)
 	GetFirstByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 	GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
+	GetPrimaryEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInMinutes, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error)
 	IsLinkedToEntityByEmailAddress(ctx context.Context, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error)
 	GetOrphanEmailNodes(ctx context.Context, limit, hoursFromLastUpdate int) ([]TenantAndEmailId, error)
@@ -207,6 +208,48 @@ func (r *emailReadRepository) GetAllEmailNodesForLinkedEntityIds(ctx context.Con
 	}
 	cypher = cypher + `, (entity)-[rel:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
 					WHERE entity.id IN $entityIds
+					RETURN e, rel, entity.id ORDER BY e.email, e.rawEmail`
+	params := map[string]any{
+		"tenant":    tenant,
+		"entityIds": entityIds,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeWithRelationAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	return result.([]*utils.DbNodeWithRelationAndId), err
+}
+
+func (r *emailReadRepository) GetPrimaryEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetPrimaryEmailNodesForLinkedEntityIds")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+
+	cypher := ""
+	switch entityType {
+	case neo4jenum.CONTACT:
+		cypher = `MATCH (t:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(entity:Contact)`
+	case neo4jenum.USER:
+		cypher = `MATCH (t:Tenant {name:$tenant})<-[:USER_BELONGS_TO_TENANT]-(entity:User)`
+	case neo4jenum.ORGANIZATION:
+		cypher = `MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(entity:Organization)`
+	}
+	cypher = cypher + `, (entity)-[rel:HAS]->(e:Email)-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]->(t)
+					WHERE entity.id IN $entityIds AND rel.primary = true
 					RETURN e, rel, entity.id ORDER BY e.email, e.rawEmail`
 	params := map[string]any{
 		"tenant":    tenant,

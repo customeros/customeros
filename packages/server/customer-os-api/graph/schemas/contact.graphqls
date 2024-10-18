@@ -135,6 +135,8 @@ type Contact implements MetadataInterface & Node {
     """
     emails: [Email!]! @goField(forceResolver: true)
 
+    primaryEmail: Email @goField(forceResolver: true)
+
     """
     All locations associated with a contact in customerOS.
     **Required.  If no values it returns an empty array.**

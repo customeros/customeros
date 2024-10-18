@@ -38,6 +38,11 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 	panic(fmt.Errorf("not implemented: Emails - emails"))
 }
 
+// PrimaryEmail is the resolver for the primaryEmail field.
+func (r *contactResolver) PrimaryEmail(ctx context.Context, obj *model.Contact) (*model.Email, error) {
+	panic(fmt.Errorf("not implemented: PrimaryEmail - primaryEmail"))
+}
+
 // Locations is the resolver for the locations field.
 func (r *contactResolver) Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error) {
 	panic(fmt.Errorf("not implemented: Locations - locations"))
