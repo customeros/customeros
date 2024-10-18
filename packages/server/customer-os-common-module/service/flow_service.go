@@ -201,6 +201,17 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		return nil, err
 	}
 
+	waitNodes := map[string]bool{}
+	for _, v := range nodesMap {
+		if v["data"] != nil {
+			if v["data"].(map[string]interface{})["action"] == "WAIT" {
+				waitNodes[v["id"].(string)] = true
+			}
+		}
+	}
+
+	edgesMap = s.removeWaitNodes(edgesMap, waitNodes)
+
 	graph := &GraphTraversalIterative{
 		nodes:   make(map[string]neo4jentity.FlowActionEntity),
 		edges:   make(map[string][]string),
@@ -290,7 +301,6 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 					//exclude nodes not supported
 					if e.Data.Action == neo4jentity.FlowActionTypeFlowStart ||
 						e.Data.Action == neo4jentity.FlowActionTypeFlowEnd ||
-						e.Data.Action == neo4jentity.FlowActionTypeWait ||
 						e.Data.Action == neo4jentity.FlowActionTypeEmailNew ||
 						e.Data.Action == neo4jentity.FlowActionTypeEmailReply ||
 						e.Data.Action == neo4jentity.FlowActionTypeLinkedinConnectionRequest ||
@@ -386,6 +396,51 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 	return flowEntity.(*neo4jentity.FlowEntity), nil
 }
 
+func (s *flowService) removeWaitNodes(edges []map[string]interface{}, waitNodes map[string]bool) []map[string]interface{} {
+	// Create a map to track node connections
+	connections := make(map[string]map[string]interface{})
+	newEdges := []map[string]interface{}{}
+
+	// First pass: build connections map, ignoring WAIT nodes
+	for _, edge := range edges {
+		source := edge["source"].(string)
+		target := edge["target"].(string)
+
+		// If the target is a WAIT node, record the connection and skip this edge
+		if waitNodes[target] {
+			connections[source] = edge
+			continue
+		}
+
+		// Check if the source was connected to a WAIT node, then bypass
+		for src, connEdge := range connections {
+			if connEdge["target"] == source {
+				// Create a new edge, copying all properties, but updating source and target
+				newEdge := s.copyEdge(connEdge)
+				newEdge["target"] = target
+				newEdges = append(newEdges, newEdge)
+				delete(connections, src) // Remove the used connection
+			}
+		}
+
+		// If no WAIT node involved, add the edge directly
+		if _, exists := waitNodes[source]; !exists {
+			newEdges = append(newEdges, edge)
+		}
+	}
+
+	return newEdges
+}
+
+// Helper function to copy an edge
+func (s *flowService) copyEdge(edge map[string]interface{}) map[string]interface{} {
+	newEdge := make(map[string]interface{})
+	for key, value := range edge {
+		newEdge[key] = value
+	}
+	return newEdge
+}
+
 type GraphTraversalIterative struct {
 	nodes   map[string]neo4jentity.FlowActionEntity
 	edges   map[string][]string // adjacency list of edges
@@ -424,6 +479,11 @@ func (s *flowService) TraverseInputGraph(ctx context.Context, tx *neo4j.ManagedT
 		// Get the next nodes and add them to the queue for further exploration
 		nextNodes := graph.edges[currentNode]
 		queue = append(queue, nextNodes...)
+
+		//exclude the link between start and end nodes
+		if graph.nodes[currentNode].Data.Action == neo4jentity.FlowActionTypeFlowStart && len(nextNodes) == 1 && graph.nodes[nextNodes[0]].Data.Action == neo4jentity.FlowActionTypeFlowEnd {
+			continue
+		}
 
 		// Process the current node and its edges (relationship batch)
 		err := s.ProcessNode(ctx, tx, graph, currentNode, nextNodes)

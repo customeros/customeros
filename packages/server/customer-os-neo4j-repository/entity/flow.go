@@ -108,7 +108,6 @@ const (
 	FlowActionTypeEmailReply                FlowActionType = "EMAIL_REPLY"
 	FlowActionTypeLinkedinConnectionRequest FlowActionType = "LINKEDIN_CONNECTION_REQUEST"
 	FlowActionTypeLinkedinMessage           FlowActionType = "LINKEDIN_MESSAGE"
-	FlowActionTypeWait                      FlowActionType = "WAIT"
 	FlowActionTypeFlowEnd                   FlowActionType = "FLOW_END"
 )
 
