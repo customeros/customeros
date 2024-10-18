@@ -602,6 +602,7 @@ const CONTACTS_QUERY = gql`
         }
         emails {
           id
+          primary
           email
           emailValidationDetails {
             verified

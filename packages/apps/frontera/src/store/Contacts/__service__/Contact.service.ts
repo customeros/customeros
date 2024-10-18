@@ -126,6 +126,15 @@ class ContactService {
     >(FIND_EMAIL_MUTATION, payload);
   }
 
+  async setPrimaryEmail(
+    payload: SET_PRIMARY_EMAIL_FOR_CONTACT_PAYLOAD,
+  ): Promise<SET_PRIMARY_EMAIL_FOR_CONTACT_RESPONSE> {
+    return this.transport.graphql.request<
+      SET_PRIMARY_EMAIL_FOR_CONTACT_RESPONSE,
+      SET_PRIMARY_EMAIL_FOR_CONTACT_PAYLOAD
+    >(SET_PRIMARY_EMAIL_FOR_CONTACT_MUTATION, payload);
+  }
+
   async deleteContact(
     payload: DELETE_CONTACT_PAYLOAD,
   ): Promise<DELETE_CONTACT_RESPONSE> {
@@ -354,6 +363,23 @@ const FIND_EMAIL_MUTATION = gql`
       organizationId: $organizationId
     ) {
       accepted
+    }
+  }
+`;
+
+type SET_PRIMARY_EMAIL_FOR_CONTACT_RESPONSE = {
+  emailSetPrimaryForContact: {
+    result: boolean;
+  };
+};
+type SET_PRIMARY_EMAIL_FOR_CONTACT_PAYLOAD = {
+  email: string;
+  contactId: string;
+};
+const SET_PRIMARY_EMAIL_FOR_CONTACT_MUTATION = gql`
+  mutation setPrimaryEmailForContact($contactId: ID!, $email: String!) {
+    emailSetPrimaryForContact(contactId: $contactId, email: $email) {
+      result
     }
   }
 `;
