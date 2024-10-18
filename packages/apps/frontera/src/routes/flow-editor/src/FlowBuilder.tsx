@@ -24,7 +24,6 @@ import {
   OnBeforeDelete,
   FitViewOptions,
   applyNodeChanges,
-  getConnectedEdges,
   SelectionDragHandler,
 } from '@xyflow/react';
 
@@ -198,33 +197,67 @@ export const FlowBuilder = observer(
 
     const onNodesDelete: OnNodesDelete = useCallback(
       (deleted) => {
-        setEdges(
-          deleted.reduce((acc, node) => {
+        const nodesToDelete = [...deleted];
+
+        // Check for EMAIL nodes and find preceding WAIT nodes, because of how wait node works we need to remove those together
+        nodesToDelete.forEach((node) => {
+          if (
+            node.data.action === FlowActionType.EMAIL_NEW ||
+            node.data.action === FlowActionType.EMAIL_REPLY
+          ) {
             const incomers = getIncomers(node, nodes, edges);
-            const outgoers = getOutgoers(node, nodes, edges);
-            const connectedEdges = getConnectedEdges([node], edges);
+            const precedingWaitNode = incomers.find((n) => n.type === 'wait');
 
-            const remainingEdges = acc.filter(
-              (edge) => !connectedEdges.includes(edge),
-            );
+            if (precedingWaitNode) {
+              nodesToDelete.unshift(precedingWaitNode);
+            }
+          }
+        });
 
-            const createdEdges = incomers.flatMap(({ id: source }) =>
-              outgoers.map(({ id: target }) => ({
-                id: `${source}->${target}`,
-                source,
-                target,
-                type: 'baseEdge',
-                markerEnd: {
-                  type: MarkerType.Arrow,
-                  width: 20,
-                  height: 20,
-                },
-              })),
-            );
+        // Find prev nodes to first deleted node
+        const firstDeletedNode = nodesToDelete[0];
 
-            return [...remainingEdges, ...createdEdges];
-          }, edges),
+        const prevNodes = getIncomers(firstDeletedNode, nodes, edges).filter(
+          (node) => !nodesToDelete.includes(node),
         );
+
+        // Find next nodes to last deleted node
+        const lastDeletedNode = nodesToDelete[nodesToDelete.length - 1];
+
+        const nextNodes = getOutgoers(lastDeletedNode, nodes, edges).filter(
+          (node) => !nodesToDelete.includes(node),
+        );
+
+        setNodes((nodes) =>
+          nodes.filter((node) => !nodesToDelete.some((n) => n.id === node.id)),
+        );
+
+        setEdges((edges) => {
+          // Remove edges connected to deleted nodes
+          const remainingEdges = edges.filter(
+            (edge) =>
+              !nodesToDelete.some(
+                (node) => node.id === edge.source || node.id === edge.target,
+              ),
+          );
+
+          // Create new edges between prevNodes and nextNodes
+          const newEdges = prevNodes.flatMap((prevNode) =>
+            nextNodes.map((nextNode) => ({
+              id: `${prevNode.id}->${nextNode.id}`,
+              source: prevNode.id,
+              target: nextNode.id,
+              type: 'baseEdge',
+              markerEnd: {
+                type: MarkerType.Arrow,
+                width: 20,
+                height: 20,
+              },
+            })),
+          );
+
+          return [...remainingEdges, ...newEdges];
+        });
       },
       [nodes, edges],
     );

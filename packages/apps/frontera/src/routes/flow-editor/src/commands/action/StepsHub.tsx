@@ -98,7 +98,7 @@ export const StepsHub = observer(() => {
     }
 
     const newNode = {
-      id: `${type}-${nodes.length + 1}`,
+      id: `${type}-${crypto.randomUUID()}`,
       type: type === 'WAIT' ? 'wait' : 'action',
       position: {
         x: type === 'WAIT' ? 96.5 : 12,
@@ -115,7 +115,7 @@ export const StepsHub = observer(() => {
 
     if (isEmailNode) {
       const waitNode = {
-        id: `WAIT-${nodes.length + 2}`,
+        id: `WAIT-${crypto.randomUUID()}`,
         type: 'wait',
         position: {
           x: 96.5,
