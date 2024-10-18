@@ -219,6 +219,7 @@ type ComplexityRoot struct {
 		Owner                    func(childComplexity int) int
 		PhoneNumbers             func(childComplexity int) int
 		Prefix                   func(childComplexity int) int
+		PrimaryEmail             func(childComplexity int) int
 		ProfilePhotoURL          func(childComplexity int) int
 		Socials                  func(childComplexity int) int
 		Source                   func(childComplexity int) int
@@ -1560,6 +1561,7 @@ type ContactResolver interface {
 	Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
 	PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
 	Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error)
+	PrimaryEmail(ctx context.Context, obj *model.Contact) (*model.Email, error)
 	Locations(ctx context.Context, obj *model.Contact) ([]*model.Location, error)
 	Socials(ctx context.Context, obj *model.Contact) ([]*model.Social, error)
 	ConnectedUsers(ctx context.Context, obj *model.Contact) ([]*model.User, error)
@@ -2774,6 +2776,13 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 		}
 
 		return e.complexity.Contact.Prefix(childComplexity), true
+
+	case "Contact.primaryEmail":
+		if e.complexity.Contact.PrimaryEmail == nil {
+			break
+		}
+
+		return e.complexity.Contact.PrimaryEmail(childComplexity), true
 
 	case "Contact.profilePhotoUrl":
 		if e.complexity.Contact.ProfilePhotoURL == nil {
@@ -11653,6 +11662,8 @@ type Contact implements MetadataInterface & Node {
     **Required.  If no values it returns an empty array.**
     """
     emails: [Email!]! @goField(forceResolver: true)
+
+    primaryEmail: Email @goField(forceResolver: true)
 
     """
     All locations associated with a contact in customerOS.
@@ -30634,6 +30645,79 @@ func (ec *executionContext) fieldContext_Contact_emails(_ context.Context, field
 	return fc, nil
 }
 
+func (ec *executionContext) _Contact_primaryEmail(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_primaryEmail(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contact().PrimaryEmail(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.Email)
+	fc.Result = res
+	return ec.marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_primaryEmail(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_Email_id(ctx, field)
+			case "email":
+				return ec.fieldContext_Email_email(ctx, field)
+			case "rawEmail":
+				return ec.fieldContext_Email_rawEmail(ctx, field)
+			case "emailValidationDetails":
+				return ec.fieldContext_Email_emailValidationDetails(ctx, field)
+			case "work":
+				return ec.fieldContext_Email_work(ctx, field)
+			case "label":
+				return ec.fieldContext_Email_label(ctx, field)
+			case "primary":
+				return ec.fieldContext_Email_primary(ctx, field)
+			case "source":
+				return ec.fieldContext_Email_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Email_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Email_appSource(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Email_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Email_updatedAt(ctx, field)
+			case "users":
+				return ec.fieldContext_Email_users(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Email_contacts(ctx, field)
+			case "organizations":
+				return ec.fieldContext_Email_organizations(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Email", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Contact_locations(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_locations(ctx, field)
 	if err != nil {
@@ -31342,6 +31426,8 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(_
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -31493,6 +31579,8 @@ func (ec *executionContext) fieldContext_ContactsPage_content(_ context.Context,
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -39239,6 +39327,8 @@ func (ec *executionContext) fieldContext_Email_contacts(_ context.Context, field
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -41454,6 +41544,8 @@ func (ec *executionContext) fieldContext_FlowContact_contact(_ context.Context, 
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -50115,6 +50207,8 @@ func (ec *executionContext) fieldContext_JobRole_contact(_ context.Context, fiel
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -55540,6 +55634,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_CreateForOrganization(
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -55722,6 +55818,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -56020,6 +56118,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -56234,6 +56334,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -56355,6 +56457,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -56589,6 +56693,8 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx con
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -58167,6 +58273,8 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -61808,6 +61916,8 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -81719,6 +81829,8 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(_ context.Context,
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -82376,6 +82488,8 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -82560,6 +82674,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -82681,6 +82797,8 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
 				return ec.fieldContext_Contact_emails(ctx, field)
+			case "primaryEmail":
+				return ec.fieldContext_Contact_primaryEmail(ctx, field)
 			case "locations":
 				return ec.fieldContext_Contact_locations(ctx, field)
 			case "socials":
@@ -105825,6 +105943,39 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+		case "primaryEmail":
+			field := field
+
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Contact_primaryEmail(ctx, field, obj)
+				return res
+			}
+
+			if field.Deferrable != nil {
+				dfs, ok := deferred[field.Deferrable.Label]
+				di := 0
+				if ok {
+					dfs.AddField(field)
+					di = len(dfs.Values) - 1
+				} else {
+					dfs = graphql.NewFieldSet([]graphql.CollectedField{field})
+					deferred[field.Deferrable.Label] = dfs
+				}
+				dfs.Concurrently(di, func(ctx context.Context) graphql.Marshaler {
+					return innerFunc(ctx, dfs)
+				})
+
+				// don't run the out.Concurrently() call below
+				out.Values[i] = graphql.Null
+				continue
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
 		case "locations":
 			field := field
 
@@ -123899,6 +124050,13 @@ func (ec *executionContext) marshalOEmail2ᚕᚖgithubᚗcomᚋopenlineᚑaiᚋo
 	}
 
 	return ret
+}
+
+func (ec *executionContext) marshalOEmail2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmail(ctx context.Context, sel ast.SelectionSet, v *model.Email) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._Email(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOEmailDeliverable2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚋgraphᚋmodelᚐEmailDeliverable(ctx context.Context, v interface{}) (*model.EmailDeliverable, error) {

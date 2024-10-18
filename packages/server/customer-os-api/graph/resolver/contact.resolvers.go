@@ -8,7 +8,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"strings"
 	"time"
 
@@ -27,6 +26,7 @@ import (
 	commonTracing "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
@@ -113,6 +113,23 @@ func (r *contactResolver) Emails(ctx context.Context, obj *model.Contact) ([]*mo
 		return nil, nil
 	}
 	return mapper.MapEntitiesToEmails(emailEntities), nil
+}
+
+// PrimaryEmail is the resolver for the primaryEmail field.
+func (r *contactResolver) PrimaryEmail(ctx context.Context, obj *model.Contact) (*model.Email, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.PrimaryEmail", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.contactID", obj.Metadata.ID)
+
+	emailEntityNillable, err := dataloader.For(ctx).GetPrimaryEmailForContact(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching primary email for contact %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching email for contact %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToEmail(emailEntityNillable), nil
 }
 
 // Locations is the resolver for the locations field.

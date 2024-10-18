@@ -23,6 +23,7 @@ type Loaders struct {
 	TagsForLogEntry                             *dataloader.Loader
 	EmailsForContact                            *dataloader.Loader
 	EmailsForOrganization                       *dataloader.Loader
+	PrimaryEmailForContact                      *dataloader.Loader
 	LocationsForContact                         *dataloader.Loader
 	LocationsForOrganization                    *dataloader.Loader
 	JobRolesForContact                          *dataloader.Loader
@@ -119,7 +120,8 @@ type tagBatcher struct {
 	tagService commonservice.TagService
 }
 type emailBatcher struct {
-	emailService service.EmailService
+	emailService       service.EmailService
+	commonEmailService commonservice.EmailService
 }
 type locationBatcher struct {
 	locationService service.LocationService
@@ -320,6 +322,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		TagsForLogEntry:                             dataloader.NewBatchedLoader(tagBatcher.getTagsForLogEntries, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		EmailsForContact:                            dataloader.NewBatchedLoader(emailBatcher.getEmailsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		EmailsForOrganization:                       dataloader.NewBatchedLoader(emailBatcher.getEmailsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		PrimaryEmailForContact:                      dataloader.NewBatchedLoader(emailBatcher.getPrimaryEmailForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		LocationsForContact:                         dataloader.NewBatchedLoader(locationBatcher.getLocationsForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		LocationsForOrganization:                    dataloader.NewBatchedLoader(locationBatcher.getLocationsForOrganizations, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		JobRolesForContact:                          dataloader.NewBatchedLoader(jobRoleBatcher.getJobRolesForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

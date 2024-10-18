@@ -38,6 +38,7 @@ type EmailService interface {
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
 	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	SetPrimary(ctx context.Context, email string, forEntity LinkWith) error
+	GetPrimaryEmailsForEntityIds(ctx context.Context, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 }
 
 func NewEmailService(services *Services) EmailService {
@@ -430,4 +431,25 @@ func (s *emailService) SetPrimary(ctx context.Context, email string, forEntity L
 	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), forEntity.Type.String(), forEntity.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return nil
+}
+
+func (s *emailService) GetPrimaryEmailsForEntityIds(ctx context.Context, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.GetPrimaryEmailsForEntityIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.String("entityType", entityType.String()), log.Object("entityIds", entityIds))
+
+	emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetPrimaryEmailNodesForLinkedEntityIds(ctx, common.GetTenantFromContext(ctx), entityType, entityIds)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	emailEntities := make(neo4jentity.EmailEntities, 0, len(emailNodes))
+	for _, v := range emailNodes {
+		emailEntity := mapper.MapDbNodeToEmailEntity(v.Node)
+		emailEntity.DataloaderKey = v.LinkedNodeId
+		emailEntities = append(emailEntities, *emailEntity)
+	}
+	return &emailEntities, nil
 }
