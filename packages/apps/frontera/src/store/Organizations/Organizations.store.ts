@@ -29,7 +29,7 @@ import {
 } from '@graphql/types';
 
 import mock from './mock.json';
-import { getDefaultValue, OrganizationStore } from './Organization.store';
+import { OrganizationStore } from './Organization.store';
 import { OrganizationsService } from './__service__/Organizations.service';
 
 export class OrganizationsStore extends SyncableGroup<
@@ -198,7 +198,7 @@ export class OrganizationsStore extends SyncableGroup<
     const newOrganization = new OrganizationStore(
       this.root,
       this.transport,
-      merge(getDefaultValue(), payload),
+      merge(OrganizationStore.getDefaultValue(), payload),
     );
     const tempId = newOrganization.id;
     let serverId = '';

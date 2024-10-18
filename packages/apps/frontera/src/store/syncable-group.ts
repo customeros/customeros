@@ -136,7 +136,8 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
           const newSyncableItem = new this.SyncableStore(
             this.root,
             this.transport,
-            this.SyncableStore.getDefaultValue(),
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            this.SyncableStore.getDefaultValue() as any,
           );
 
           runInAction(() => {

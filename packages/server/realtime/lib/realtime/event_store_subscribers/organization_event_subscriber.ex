@@ -1,6 +1,7 @@
 defmodule Realtime.OrganizationEventSubscriber do
   @moduledoc false
   use GenServer
+  require Logger
 
   alias Realtime.EventStoreClient
   alias RealtimeWeb.Endpoint
@@ -11,6 +12,9 @@ defmodule Realtime.OrganizationEventSubscriber do
 
   def init(state) do
     stream_name = "notifyRealtime-v2"
+
+    Logger.info("Subscribed to EventStore")
+    Logger.info("Listening on persistent subscription: 'notifyRealtime-v2'")
 
     {:ok, subscription} =
       Spear.connect_to_persistent_subscription(EventStoreClient, self(), :all, stream_name)
@@ -23,7 +27,10 @@ defmodule Realtime.OrganizationEventSubscriber do
           body: %{
             "entity" => entity,
             "entityId" => entity_id,
-            "tenant" => tenant
+            "tenant" => tenant,
+            "create" => create,
+            "update" => update,
+            "delete" => delete
           }
         } =
           event,
@@ -51,13 +58,20 @@ defmodule Realtime.OrganizationEventSubscriber do
           nil
       end
 
+    action_type =
+      cond do
+        create -> "APPEND"
+        update -> "INVALIDATE"
+        delete -> "DELETE"
+      end
+
     if channel_topic != nil do
       Endpoint.broadcast!(channel_topic, "sync_group_packet", %{
-        action: "INVALIDATE",
+        action: action_type,
         ids: [entity_id]
       })
 
-      IO.puts("Broadcasted V1_EVENT_COMPLETED to #{channel_topic}")
+      IO.puts("Broadcasted V1_EVENT_COMPLETED:#{action_type} to #{channel_topic}")
     end
 
     Spear.ack(EventStoreClient, subscription, event)

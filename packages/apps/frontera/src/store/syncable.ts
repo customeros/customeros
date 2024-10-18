@@ -213,7 +213,7 @@ export class Syncable<T extends object> {
     return operation;
   }
 
-  static getDefaultValue<T extends object>(_data?: T): T {
-    return {} as T;
+  static getDefaultValue() {
+    return {};
   }
 }
