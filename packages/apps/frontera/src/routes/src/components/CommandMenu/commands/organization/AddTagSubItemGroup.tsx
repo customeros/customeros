@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
@@ -36,21 +36,19 @@ export const AddTagSubItemGroup = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        (entity as OrganizationStore)?.update((o) => {
-          const existingIndex = o.tags?.find((e) => e.name === t.name);
+        const organization = entity as OrganizationStore;
 
-          if (existingIndex) {
-            const newTags = o.tags?.filter((e) => e.name !== t.name);
+        const foundIndex = organization.value.tags?.findIndex(
+          (e) => e.name === t.name,
+        );
 
-            o.tags = newTags;
-          }
+        if (foundIndex && foundIndex > -1) {
+          organization.value.tags?.splice(foundIndex, 1);
+        } else {
+          organization?.value?.tags?.push(t);
+        }
 
-          if (!existingIndex) {
-            o.tags = [...(o.tags ?? []), t];
-          }
-
-          return o;
-        });
+        organization.commit();
       })
       .with('Organizations', () => {
         store.organizations.updateTags(context.ids as string[], [t]);

@@ -79,33 +79,32 @@ export const AssignOwner = observer(() => {
       })
       .with('Organization', () => {
         if (!entity) return;
-        (entity as OrganizationStore)?.update((value) => {
-          if (!value.owner) {
-            Object.assign(value, { owner: user.value });
+        const organization = entity as OrganizationStore;
 
-            return value;
-          }
-
-          Object.assign(value.owner, user.value);
-
-          return value;
+        organization.value.owner = user.value;
+        organization.commit({
+          onCompleted: () => {
+            store.ui.toastSuccess(
+              `Owner assigned to ${organization.value.name}`,
+              'owner-update-success',
+            );
+          },
         });
       })
       .with('Organizations', () => {
         if (!(entity as OrganizationStore[])?.length) return;
-        (entity as OrganizationStore[]).forEach((org) => {
-          org.update((value) => {
-            if (!value.owner) {
-              Object.assign(value, { owner: user.value });
 
-              return value;
-            }
+        const orgs = entity as OrganizationStore[];
 
-            Object.assign(value.owner, user.value);
-
-            return value;
-          });
+        orgs.forEach((o) => {
+          o.value.owner = user?.value;
+          o.commit();
         });
+
+        store.ui.toastSuccess(
+          `Owner assigned to ${orgs.length} organizations`,
+          'owner-update-success',
+        );
       })
       .with('Opportunities', () => {
         if (!(entity as OpportunityStore[])?.length) return;

@@ -1,5 +1,0 @@
-mutation removeContactEmail($contactId: ID!, $email: String!) {
-  emailRemoveFromContact(contactId: $contactId, email: $email) {
-    result
-  }
-}

@@ -86,26 +86,28 @@ export const RenewalForecastCell = observer(
     });
 
     const handleChange = (value: number) => {
-      store.organizations.value.get(id)?.update((org) => {
-        set(
-          org,
-          'accountDetails.renewalSummary.renewalLikelihood',
-          (() => {
-            if (value <= 25) return OpportunityRenewalLikelihood.LowRenewal;
-            if (value > 25 && value < 75)
-              return OpportunityRenewalLikelihood.MediumRenewal;
+      const organization = store.organizations.value.get(id);
 
-            return OpportunityRenewalLikelihood.HighRenewal;
-          })(),
-        );
-        set(
-          org,
-          'accountDetails.renewalSummary.arrForecast',
-          (potentialAmount ?? 0) * (value / 100),
-        );
+      if (!organization) return;
 
-        return org;
-      });
+      set(
+        organization.value,
+        'accountDetails.renewalSummary.renewalLikelihood',
+        (() => {
+          if (value <= 25) return OpportunityRenewalLikelihood.LowRenewal;
+          if (value > 25 && value < 75)
+            return OpportunityRenewalLikelihood.MediumRenewal;
+
+          return OpportunityRenewalLikelihood.HighRenewal;
+        })(),
+      );
+      set(
+        organization.value,
+        'accountDetails.renewalSummary.arrForecast',
+        (potentialAmount ?? 0) * (value / 100),
+      );
+
+      organization.commit();
     };
 
     useEffect(() => {

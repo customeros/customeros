@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority';
 
 export const tagSubtleVariant = cva(
-  ['w-fit', 'flex', 'items-center', 'rounded-[4px]', 'leading-none'],
+  ['w-fit', 'flex', 'items-center', 'rounded-[6px]', 'leading-none'],
   {
     variants: {
       colorScheme: {
@@ -34,7 +34,7 @@ export const tagSubtleVariant = cva(
 );
 
 export const tagSolidVariant = cva(
-  ['w-fit', 'flex', 'items-center', 'rounded-[4px]', 'leading-none'],
+  ['w-fit', 'flex', 'items-center', 'rounded-[6px]', 'leading-none'],
   {
     variants: {
       colorScheme: {
@@ -67,7 +67,7 @@ export const tagSolidVariant = cva(
 );
 
 export const tagOutlineVariant = cva(
-  ['w-fit', 'flex', 'items-center', 'rounded-[4px]', 'leading-none'],
+  ['w-fit', 'flex', 'items-center', 'rounded-[6px]', 'leading-none'],
   {
     variants: {
       colorScheme: {

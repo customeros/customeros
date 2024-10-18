@@ -1,5 +1,3 @@
-import React from 'react';
-
 import { Tag } from '@graphql/types';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 

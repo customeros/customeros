@@ -50,7 +50,7 @@ const tagCommonClasses = `[
   'w-fit',
   'flex',
   'items-center',
-  'rounded-[4px]',
+  'rounded-[6px]',
   'leading-none',
 ]`;
 

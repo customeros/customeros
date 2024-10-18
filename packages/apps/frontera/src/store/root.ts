@@ -1,16 +1,17 @@
 import localforage from 'localforage';
 import { when, makeAutoObservable } from 'mobx';
-import { FlowsStore } from '@store/Flows/Flows.store';
 import { configurePersistable } from 'mobx-persist-store';
 import { FlowSendersStore } from '@store/FlowSenders/FlowSenders.store.ts';
-import { FlowContactsStore } from '@store/FlowContacts/FlowContacts.store';
+
+import type { Transport } from './transport';
 
 import { UIStore } from './UI/UI.store';
-import { Transport } from './transport';
 import { MailStore } from './Mail/Mail.store';
 import { TagsStore } from './Tags/Tags.store';
 import { UsersStore } from './Users/Users.store';
 import { FilesStore } from './Files/Files.store';
+import { FlowsStore } from './Flows/Flows.store';
+import { TransactionService } from './transaction';
 import { SessionStore } from './Session/Session.store';
 import { SettingsStore } from './Settings/Settings.store';
 import { InvoicesStore } from './Invoices/Invoices.store';
@@ -19,6 +20,7 @@ import { ContractsStore } from './Contracts/Contracts.store';
 import { RemindersStore } from './Reminders/Reminders.store';
 import { WorkFlowsStore } from './WorkFlows/WorkFlows.store';
 import { GlobalCacheStore } from './GlobalCache/GlobalCache.store';
+import { FlowContactsStore } from './FlowContacts/FlowContacts.store';
 import { TableViewDefsStore } from './TableViewDefs/TableViewDefs.store';
 import { OrganizationsStore } from './Organizations/Organizations.store';
 import { OpportunitiesStore } from './Opportunities/Opportunities.store';
@@ -43,54 +45,58 @@ configurePersistable({
 
 export class RootStore {
   demoMode = false;
+  transactions: TransactionService;
 
   ui: UIStore;
   mail: MailStore;
   tags: TagsStore;
   files: FilesStore;
   users: UsersStore;
+  flows: FlowsStore;
   session: SessionStore;
   settings: SettingsStore;
   invoices: InvoicesStore;
   contacts: ContactsStore;
-  flows: FlowsStore;
   flowSenders: FlowSendersStore;
-  flowContacts: FlowContactsStore;
   contracts: ContractsStore;
   reminders: RemindersStore;
-  globalCache: GlobalCacheStore;
-  tableViewDefs: TableViewDefsStore;
   workFlows: WorkFlowsStore;
+  globalCache: GlobalCacheStore;
+  flowContacts: FlowContactsStore;
+  tableViewDefs: TableViewDefsStore;
   organizations: OrganizationsStore;
   opportunities: OpportunitiesStore;
   timelineEvents: TimelineEventsStore;
   contractLineItems: ContractLineItemsStore;
-  externalSystemInstances: ExternalSystemInstancesStore;
   flowEmailVariables: FlowEmailVariablesStore;
+  externalSystemInstances: ExternalSystemInstancesStore;
 
   constructor(private transport: Transport, demoMode: boolean = false) {
     makeAutoObservable(this);
+
     this.demoMode = demoMode;
+    this.transactions = new TransactionService(this, this.transport);
 
     this.ui = new UIStore();
     this.mail = new MailStore(this, this.transport);
     this.tags = new TagsStore(this, this.transport);
     this.files = new FilesStore(this, this.transport);
     this.users = new UsersStore(this, this.transport);
+    this.flows = new FlowsStore(this, this.transport);
     this.session = new SessionStore(this, this.transport);
     this.settings = new SettingsStore(this, this.transport);
     this.invoices = new InvoicesStore(this, this.transport);
     this.contacts = new ContactsStore(this, this.transport);
     this.contracts = new ContractsStore(this, this.transport);
     this.reminders = new RemindersStore(this, this.transport);
-    this.globalCache = new GlobalCacheStore(this, this.transport);
     this.workFlows = new WorkFlowsStore(this, this.transport);
+    this.globalCache = new GlobalCacheStore(this, this.transport);
+    this.flowContacts = new FlowContactsStore(this, this.transport);
     this.tableViewDefs = new TableViewDefsStore(this, this.transport);
     this.organizations = new OrganizationsStore(this, this.transport);
     this.opportunities = new OpportunitiesStore(this, this.transport);
     this.timelineEvents = new TimelineEventsStore(this, this.transport);
     this.contractLineItems = new ContractLineItemsStore(this, this.transport);
-    this.flowContacts = new FlowContactsStore(this, this.transport);
     this.flowEmailVariables = new FlowEmailVariablesStore(this, this.transport);
     this.flows = new FlowsStore(this, this.transport);
     this.flowSenders = new FlowSendersStore(this, this.transport);
@@ -112,6 +118,11 @@ export class RootStore {
       async () => {
         await this.bootstrap();
       },
+    );
+
+    when(
+      () => this.isBootstrapped,
+      () => this.transactions.startRunners(),
     );
   }
 

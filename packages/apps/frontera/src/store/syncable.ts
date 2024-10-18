@@ -22,6 +22,7 @@ type SyncableUpdateOptions = {
 
 export class Syncable<T extends object> {
   value: T;
+  snapshot: T;
   version = 0;
   isLoading = false;
   history: Operation[] = [];
@@ -30,6 +31,8 @@ export class Syncable<T extends object> {
 
   constructor(public root: RootStore, public transport: Transport, data: T) {
     this.value = data;
+    this.snapshot = Object.assign({}, data);
+
     makeObservable<Syncable<T>, 'initChannelConnection' | 'subscribe'>(this, {
       id: computed,
       load: action,
@@ -43,6 +46,7 @@ export class Syncable<T extends object> {
       history: observable,
       channel: observable,
       version: observable,
+      snapshot: observable,
       isLoading: observable,
       getChannelName: action,
       initChannelConnection: action,
@@ -127,13 +131,11 @@ export class Syncable<T extends object> {
     });
   }
 
-  public update(
-    updater: (prev: T) => T,
-    options: SyncableUpdateOptions = {
-      mutate: true,
-      syncMutate: false,
-    },
-  ) {
+  /**
+   * @deprecated
+   * use Syncable.commit instead.
+   */
+  public update(updater: (prev: T) => T, options?: SyncableUpdateOptions) {
     const lhs = toJS(this.value);
     const next = updater(this.value);
     const rhs = toJS(next);
@@ -142,7 +144,9 @@ export class Syncable<T extends object> {
     const operation: Operation = {
       id: this.version,
       diff,
+      entityId: this.getId(),
       ref: this.transport.refId,
+      entity: this.getChannelName().split(':')[0],
     };
 
     this.history.push(operation);
@@ -171,12 +175,42 @@ export class Syncable<T extends object> {
     }
   }
 
+  public commit(
+    opts: {
+      syncOnly?: boolean;
+      onFailled?: () => void;
+      onCompleted?: () => void;
+    } = { syncOnly: false },
+  ) {
+    const operation = this.makeChangesetOperation();
+
+    this.root.transactions.commit(operation, opts);
+
+    Object.assign(this.snapshot, toJS(this.value));
+  }
+
   public save(_operation: Operation) {
     /* Placeholder: should be overwritten by sub-classes with the apropiate mutation logic */
   }
 
   public async invalidate() {
     /* Placeholder: should be overwritten by sub-classes with the apropiate invalidation logic */
+  }
+
+  private makeChangesetOperation() {
+    const lhs = toJS(this.snapshot);
+    const rhs = toJS(this.value);
+    const diff = getDiff(lhs, rhs, true);
+
+    const operation: Operation = {
+      id: this.version,
+      diff,
+      entityId: this.getId(),
+      ref: this.transport.refId,
+      entity: this.getChannelName().split(':')[0],
+    };
+
+    return operation;
   }
 
   static getDefaultValue<T extends object>(_data?: T): T {

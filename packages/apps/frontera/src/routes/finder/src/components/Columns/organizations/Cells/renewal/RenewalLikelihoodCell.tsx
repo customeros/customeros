@@ -24,30 +24,36 @@ export const RenewalLikelihoodCell = observer(
     const colors = value ? getLikelihoodColor(value) : 'text-gray-400';
 
     const handleClick = (value: OpportunityRenewalLikelihood) => {
-      store.organizations.value.get(id)?.update((org) => {
-        const potentialAmount =
-          org.accountDetails?.renewalSummary?.maxArrForecast ?? 0;
+      const organization = store.organizations.value.get(id);
 
-        set(org, 'accountDetails.renewalSummary.renewalLikelihood', value);
-        set(
-          org,
-          'accountDetails.renewalSummary.arrForecast',
-          (() => {
-            switch (value) {
-              case OpportunityRenewalLikelihood.HighRenewal:
-                return potentialAmount;
-              case OpportunityRenewalLikelihood.MediumRenewal:
-                return (50 / 100) * potentialAmount;
-              case OpportunityRenewalLikelihood.LowRenewal:
-                return (25 / 100) * potentialAmount;
-              default:
-                return (50 / 100) * potentialAmount;
-            }
-          })(),
-        );
+      if (!organization) return;
 
-        return org;
-      });
+      const potentialAmount =
+        organization.value.accountDetails?.renewalSummary?.maxArrForecast ?? 0;
+
+      set(
+        organization.value,
+        'accountDetails.renewalSummary.renewalLikelihood',
+        value,
+      );
+      set(
+        organization.value,
+        'accountDetails.renewalSummary.arrForecast',
+        (() => {
+          switch (value) {
+            case OpportunityRenewalLikelihood.HighRenewal:
+              return potentialAmount;
+            case OpportunityRenewalLikelihood.MediumRenewal:
+              return (50 / 100) * potentialAmount;
+            case OpportunityRenewalLikelihood.LowRenewal:
+              return (25 / 100) * potentialAmount;
+            default:
+              return (50 / 100) * potentialAmount;
+          }
+        })(),
+      );
+
+      organization.commit();
     };
 
     return (

@@ -119,7 +119,6 @@ const getDefaultValue = (): FlowContact => ({
     createdAt: '',
     customFields: [],
     emails: [],
-    fieldSets: [],
     firstName: '',
     jobRoles: [],
     lastName: '',
@@ -147,7 +146,6 @@ const getDefaultValue = (): FlowContact => ({
     name: '',
     owner: null,
     tags: [],
-    template: null,
     connectedUsers: [],
     metadata: {
       source: DataSource.Openline,

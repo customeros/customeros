@@ -8,12 +8,11 @@ import {
   getContainerClassNames,
 } from '@ui/form/Select/Select';
 
-interface ComboboxProps extends SelectProps {
+interface ComboboxProps extends Omit<SelectProps, 'size'> {
   maxHeight?: string;
 }
 
 export const Combobox = ({
-  size,
   isReadOnly,
   maxHeight,
   ...props
@@ -21,8 +20,8 @@ export const Combobox = ({
   return (
     <Select
       autoFocus
+      size='sm'
       menuIsOpen
-      size={size}
       backspaceRemovesValue
       isReadOnly={isReadOnly}
       controlShouldRenderValue={false}
@@ -33,7 +32,7 @@ export const Combobox = ({
         container: ({ isFocused }) =>
           getContainerClassNames('flex flex-col pt-2', 'unstyled', {
             isFocused,
-            size,
+            size: 'sm',
           }),
         option: ({ isFocused }) =>
           getOptionClassNames('!cursor-pointer', { isFocused }),
@@ -42,8 +41,8 @@ export const Combobox = ({
             cn('p-0 border-none bg-transparent shadow-none'),
           ),
         menu: ({ menuPlacement }) =>
-          getMenuClassNames(menuPlacement)('!relative', size),
-        noOptionsMessage: () => 'text-gray-500 p-1',
+          getMenuClassNames(menuPlacement)('!relative', 'sm'),
+        noOptionsMessage: () => 'text-gray-500',
         valueContainer: () => '!cursor-text',
       }}
       {...props}

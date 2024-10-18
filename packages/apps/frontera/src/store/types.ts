@@ -5,10 +5,18 @@ import {
   FilterItem as ServerFilterItem,
 } from '@graphql/types';
 
-export type Operation = { id: number; ref?: string; diff: rdiffResult[] };
+export type Operation = {
+  id: number;
+  ref?: string;
+  entity: string;
+  entityId?: string;
+  diff: rdiffResult[];
+};
 export type GroupOperation = {
   ref?: string;
   ids: string[];
+  entity?: string;
+  entityId?: string;
   action: 'APPEND' | 'DELETE' | 'INVALIDATE';
 };
 

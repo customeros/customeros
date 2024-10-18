@@ -1,9 +1,15 @@
+import { runInAction } from 'mobx';
 import { observer } from 'mobx-react-lite';
 
-import { Select } from '@ui/form/Select';
+import { Combobox } from '@ui/form/Combobox';
 import { Organization } from '@graphql/types';
 import { useStore } from '@shared/hooks/useStore';
 import { ArrowCircleBrokenUpLeft } from '@ui/media/icons/ArrowCircleBrokenUpLeft';
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from '@ui/overlay/Popover/Popover';
 
 interface ParentOrgInputProps {
   id: string;
@@ -24,54 +30,105 @@ export const ParentOrgInput = observer(
         label: org.value.name,
       }));
 
-    const selection = organization
+    const parentCompany = organization?.parentCompanies?.[0];
+
+    const selection = parentCompany
       ? {
-          value: organization?.parentCompanies?.[0]?.metadata?.id,
-          label: organization?.parentCompanies?.[0]?.name,
+          value: parentCompany?.metadata?.id,
+          label: parentCompany?.name,
         }
-      : { value: '', label: '' };
+      : null;
 
     return (
-      <Select
-        isClearable
-        isReadOnly={isReadOnly}
-        options={options || []}
-        placeholder='Parent organization'
-        value={selection.label ? selection : null}
-        leftElement={<ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />}
-        onChange={(e) => {
-          const findOrg = store.organizations.value.get(e?.value);
+      <Popover open={isReadOnly ? false : undefined}>
+        <PopoverTrigger asChild className='cursor-pointer'>
+          <div className='flex items-center min-h-10'>
+            <ArrowCircleBrokenUpLeft className='text-gray-500 mr-3' />
+            {parentCompany ? (
+              <span>{selection?.label}</span>
+            ) : (
+              <span className='text-gray-400'>Parent organization</span>
+            )}
+          </div>
+        </PopoverTrigger>
+        <PopoverContent align='start' className='min-w-[264px] max-w-[320px]'>
+          <Combobox
+            isClearable
+            value={selection}
+            isReadOnly={isReadOnly}
+            options={options || []}
+            placeholder='Search...'
+            onChange={(option) => {
+              runInAction(() => {
+                if (!organization) return;
 
-          if (!e) {
-            organization?.update((org) => {
-              org.parentCompanies = [];
+                const newParent = store.organizations.value?.get(option?.value);
 
-              return org;
-            });
+                if (!newParent) {
+                  const parentId =
+                    organization.value.parentCompanies?.[0]?.organization
+                      ?.metadata?.id;
 
-            return;
-          }
+                  organization.value.parentCompanies = [];
+                  organization.commit();
 
-          if (!findOrg) return;
+                  const parentCompany =
+                    store.organizations.value?.get(parentId);
 
-          findOrg?.update((org) => {
-            if (!organization) return org;
+                  if (!parentCompany) return;
 
-            org.subsidiaries = [
-              ...org.subsidiaries,
-              {
-                organization: {
-                  id: organization?.value?.metadata?.id,
-                  name: organization?.value?.name,
-                  metadata: { ...organization?.value?.metadata },
-                } as Organization,
-              },
-            ];
+                  parentCompany.value.subsidiaries =
+                    parentCompany.value.subsidiaries.filter(
+                      (s) => s.organization.metadata.id !== organization.id,
+                    );
 
-            return org;
-          });
-        }}
-      />
+                  parentCompany.commit();
+                } else {
+                  const currentParentId =
+                    organization.value.parentCompanies?.[0]?.organization
+                      ?.metadata?.id;
+
+                  const currentParent =
+                    store.organizations.value.get(currentParentId);
+
+                  if (currentParent) {
+                    const subsidiaryIndex =
+                      currentParent.value.subsidiaries.findIndex(
+                        (s) => s.organization.metadata.id === organization.id,
+                      );
+
+                    currentParent.value.subsidiaries.splice(subsidiaryIndex, 1);
+
+                    currentParent.commit();
+
+                    organization.value.parentCompanies = [];
+                    organization.commit();
+                  }
+
+                  newParent.value?.subsidiaries?.push({
+                    organization: {
+                      id: organization?.value?.metadata?.id,
+                      name: organization?.value?.name,
+                      metadata: { ...organization?.value?.metadata },
+                    } as Organization,
+                  });
+                  newParent.commit();
+
+                  if (!Array.isArray(!organization.value.parentCompanies)) {
+                    organization.value.parentCompanies = [];
+                  }
+
+                  organization.value.parentCompanies[0] = {
+                    organization: newParent.value,
+                  };
+
+                  organization.commit();
+                }
+              });
+            }}
+          />
+        </PopoverContent>
+      </Popover>
     );
   },
 );

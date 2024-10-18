@@ -624,7 +624,6 @@ const getDefaultValue = (): Contact => ({
   createdAt: '',
   customFields: [],
   emails: [],
-  fieldSets: [],
   firstName: '',
   jobRoles: [],
   lastName: '',
@@ -651,7 +650,6 @@ const getDefaultValue = (): Contact => ({
   name: '',
   owner: null,
   tags: [],
-  template: null,
   connectedUsers: [],
   metadata: {
     source: DataSource.Openline,

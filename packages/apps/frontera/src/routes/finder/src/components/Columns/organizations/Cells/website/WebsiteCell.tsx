@@ -83,16 +83,16 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
               const value = e.target.value;
 
               if (!organization || value === 'Unknown' || value === '') return;
-              organization.update((org) => {
-                if (value.includes('https://www')) {
-                  const newUrl = getFormattedLink(value);
 
-                  org.website = newUrl;
-                }
-                org.website = value;
+              if (value.includes('https://www')) {
+                const newUrl = getFormattedLink(value);
 
-                return org;
-              });
+                organization.value.website = newUrl;
+              } else {
+                organization.value.website = value;
+              }
+              organization.commit();
+
               setIsEdit(false);
             }}
           />
@@ -143,16 +143,14 @@ export const WebsiteCell = observer(({ organizationId }: WebsiteCellProps) => {
           onChange={(e) => {
             const value = e.target.value;
 
-            organization.update((org) => {
-              if (value.includes('https://www')) {
-                const newUrl = getExternalUrl(value);
+            if (value.includes('https://www')) {
+              const newUrl = getExternalUrl(value);
 
-                org.website = newUrl;
-              }
-              org.website = value;
-
-              return org;
-            });
+              organization.value.website = newUrl;
+            } else {
+              organization.value.website = value;
+            }
+            organization.commit();
           }}
         />
       ) : (

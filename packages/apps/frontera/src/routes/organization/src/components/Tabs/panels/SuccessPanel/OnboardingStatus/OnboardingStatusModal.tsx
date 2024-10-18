@@ -82,12 +82,16 @@ export const OnboardingStatusModal = observer(
     );
 
     const handleSubmit = () => {
-      organization?.update((value) => {
-        set(value, 'accountDetails.onboarding.comments', comments);
-        set(value, 'accountDetails.onboarding.status', initialStatus);
+      if (!organization) return;
 
-        return value;
-      });
+      set(organization.value, 'accountDetails.onboarding.comments', comments);
+      set(
+        organization.value,
+        'accountDetails.onboarding.status',
+        initialStatus,
+      );
+
+      organization.commit();
 
       onClose();
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
@@ -35,27 +36,26 @@ export const OrganizationRelationshipCell = observer(
     );
 
     const handleSelect = (option: SelectOption<OrganizationRelationship>) => {
-      organization?.update((org) => {
-        org.relationship = option.value;
+      if (!organization) return;
 
-        if (option.value === OrganizationRelationship.Prospect) {
-          org.stage = OrganizationStage.Lead;
-        }
+      organization.value.relationship = option.value;
+      organization.value.stage = match(option.value)
+        .with(OrganizationRelationship.Prospect, () => OrganizationStage.Lead)
+        .with(
+          OrganizationRelationship.Customer,
+          () => OrganizationStage.InitialValue,
+        )
+        .with(
+          OrganizationRelationship.NotAFit,
+          () => OrganizationStage.Unqualified,
+        )
+        .with(
+          OrganizationRelationship.FormerCustomer,
+          () => OrganizationStage.Target,
+        )
+        .otherwise(() => undefined);
 
-        if (option.value === OrganizationRelationship.Customer) {
-          org.stage = undefined;
-        }
-
-        if (option.value === OrganizationRelationship.NotAFit) {
-          org.stage = OrganizationStage.Unqualified;
-        }
-
-        if (option.value === OrganizationRelationship.FormerCustomer) {
-          org.stage = undefined;
-        }
-
-        return org;
-      });
+      organization.commit();
       setIsEditing(false);
     };
 

@@ -106,6 +106,7 @@ export function makeAutoSyncable<T extends Record<string, unknown>>(
     const operation: Operation = {
       id: this.version,
       diff,
+      entity: '',
       ref: this.transport.refId,
     };
 

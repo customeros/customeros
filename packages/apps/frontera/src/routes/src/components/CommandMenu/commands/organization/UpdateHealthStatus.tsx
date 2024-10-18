@@ -1,3 +1,4 @@
+import set from 'lodash/set';
 import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { OrganizationStore } from '@store/Organizations/Organization.store';
@@ -43,18 +44,33 @@ export const UpdateHealthStatus = observer(() => {
 
       match(context.entity)
         .with('Organization', () => {
-          (entity as OrganizationStore)?.update((value) => {
-            return {
-              ...value,
-              accountDetails: {
-                ...value.accountDetails,
-                renewalSummary: {
-                  ...value.accountDetails?.renewalSummary,
-                  renewalLikelihood,
-                },
-              },
-            };
-          });
+          const organization = entity as OrganizationStore;
+          const potentialAmount =
+            organization.value.accountDetails?.renewalSummary?.maxArrForecast ??
+            0;
+
+          set(
+            organization.value,
+            'accountDetails.renewalSummary.renewalLikelihood',
+            renewalLikelihood,
+          );
+          set(
+            organization.value,
+            'accountDetails.renewalSummary.arrForecast',
+            (() => {
+              switch (renewalLikelihood) {
+                case OpportunityRenewalLikelihood.HighRenewal:
+                  return potentialAmount;
+                case OpportunityRenewalLikelihood.MediumRenewal:
+                  return (50 / 100) * potentialAmount;
+                case OpportunityRenewalLikelihood.LowRenewal:
+                  return (25 / 100) * potentialAmount;
+                default:
+                  return (50 / 100) * potentialAmount;
+              }
+            })(),
+          );
+          organization.commit();
         })
         .with('Organizations', () =>
           store.organizations.updateHealth(

@@ -1,7 +1,0 @@
-query OrganizationAccountDetails($id: ID!) {
-  organization(id: $id) {
-    id
-    name
-    note
-  }
-}

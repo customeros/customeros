@@ -1,38 +1,142 @@
+import localforage from 'localforage';
 import { computed, reaction, observable, makeObservable } from 'mobx';
 
-import type { Operation } from './types';
+import type { RootStore } from './root';
 import type { Transport } from './transport';
+import type { Operation, GroupOperation } from './types';
 
-type Transaction = {
-  status: string;
-  createdAt: Date;
-  retryDelay: number;
-  channelName: string;
-  lastAttemptAt: Date;
-  operation: Operation;
-  retryAttempts: number;
+import { GraphqlService } from './graphql';
+
+type TransactionType = 'SINGLE' | 'GROUP';
+type TransactionStatus =
+  | 'PENDING'
+  | 'PROCESSING'
+  | 'COMPLETED'
+  | 'RETRYING'
+  | 'FAILED';
+type OperationType = Operation | GroupOperation;
+type TransactionOptions = {
+  syncOnly?: boolean;
+  onFailled?: () => void;
+  onCompleted?: () => void;
 };
 
+class Transaction {
+  type: TransactionType;
+  status: TransactionStatus = 'PENDING';
+  createdAt = new Date();
+  completedAt?: Date;
+  failedAt?: Date;
+  retryDelay = 0;
+  lastAttemptAt: Date | null = null;
+  operation: OperationType;
+  syncOnly: boolean = false;
+  retryAttempts = 0;
+
+  constructor(
+    type: TransactionType,
+    operation: OperationType,
+    private options?: TransactionOptions,
+  ) {
+    this.type = type;
+    this.operation = operation;
+  }
+
+  start() {
+    this.status = 'PROCESSING';
+  }
+
+  complete() {
+    this.status = 'COMPLETED';
+    this.completedAt = new Date();
+    this?.options?.onCompleted?.();
+  }
+
+  retry() {
+    this.status = 'RETRYING';
+    this.retryAttempts++;
+    this.lastAttemptAt = new Date();
+    this.retryDelay = this.calculateBackoff();
+  }
+
+  fail() {
+    this.status = 'FAILED';
+    this.failedAt = new Date();
+    this?.options?.onFailled?.();
+  }
+
+  private calculateBackoff(): number {
+    return 1000 * Math.pow(2, this.retryAttempts);
+  }
+}
+
 class TransactionQueue {
+  private id: string;
   private queue: Transaction[] = [];
 
   get hasCommits() {
     return this.queue.length > 0;
   }
 
-  constructor() {
+  get storageKey() {
+    return `tx-queue-${this.id}`;
+  }
+
+  constructor(id: string) {
+    this.id = id;
+
     makeObservable<TransactionQueue, 'queue'>(this, {
       queue: observable,
       hasCommits: computed,
     });
+
+    window.addEventListener('online', async () => {
+      const savedTxs = await this.loadSaved();
+
+      if (!savedTxs) return;
+
+      savedTxs.forEach((tx) => this.push(tx));
+
+      await this.clearSaved();
+    });
   }
 
   push(tx: Transaction) {
-    this.queue.push(tx);
+    if (navigator?.onLine) {
+      this.queue.push(tx);
+    } else {
+      this.save(tx);
+    }
   }
 
   next() {
     return this.queue.shift();
+  }
+
+  private async save(tx: Transaction) {
+    try {
+      const prev = await localforage.getItem<Transaction[]>(this.storageKey);
+
+      await localforage.setItem(this.storageKey, [...(prev ?? []), tx]);
+    } catch (err) {
+      console.error('Could not save transaction.', err);
+    }
+  }
+
+  private async loadSaved() {
+    try {
+      return await localforage.getItem<Transaction[]>(this.storageKey);
+    } catch (err) {
+      console.error('Could not load saved transactions.', err);
+    }
+  }
+
+  private async clearSaved() {
+    try {
+      await localforage.removeItem(this.storageKey);
+    } catch (err) {
+      console.error('Could not remove saved transactions', err);
+    }
   }
 }
 
@@ -40,13 +144,16 @@ class TransactionRunner {
   private isMainRunning = false;
   private isRetryRunning = false;
   private maxRetries = 3;
-  private baseDelay = 1000;
+  private graphqlService: GraphqlService;
 
   constructor(
+    private root: RootStore,
     private transport: Transport,
     private mainQueue: TransactionQueue,
     private retryQueue: TransactionQueue,
-  ) {}
+  ) {
+    this.graphqlService = new GraphqlService(this.root, this.transport);
+  }
 
   // tx should contain a type property to handle group packets too
   async processMainQueue() {
@@ -57,7 +164,7 @@ class TransactionRunner {
       const tx = this.mainQueue.next();
 
       if (!tx) continue;
-      if (!tx.channelName) continue;
+      if (!tx.operation.entityId) continue;
 
       try {
         this.processTransaction(tx);
@@ -77,7 +184,7 @@ class TransactionRunner {
       const tx = this.retryQueue.next();
 
       if (!tx) continue;
-      if (!tx.channelName) continue;
+      if (!tx.operation.entityId) continue;
 
       const delayPassed = this.hasRetryDelayPassed(tx);
 
@@ -97,31 +204,45 @@ class TransactionRunner {
   }
 
   private async processTransaction(tx: Transaction) {
-    await new Promise((resolve, reject) => {
-      this.transport.channels
-        .get(tx.channelName)
-        ?.push('sync_packet', { payload: { operation: tx.operation } })
-        ?.receive('ok', resolve)
-        ?.receive('error', reject);
+    tx.start();
+
+    if (!tx.syncOnly) {
+      await this.processGraphqlMutation(tx);
+    }
+    await this.processSyncPacket(tx);
+    tx.complete();
+  }
+
+  private async processSyncPacket(tx: Transaction) {
+    return await new Promise<void>((resolve, reject) => {
+      const channelBinding =
+        tx.type === 'SINGLE' ? 'sync_packet' : 'sync_group_packet';
+
+      const channel = this.transport?.channels?.get(
+        tx.operation.entityId as string,
+      );
+
+      channel
+        ?.push(channelBinding, { payload: { operation: tx.operation } })
+        ?.receive('ok', () => {
+          resolve();
+        })
+        ?.receive('error', () => {
+          reject();
+        });
     });
   }
 
+  private async processGraphqlMutation(tx: Transaction) {
+    return await this.graphqlService.mutate(tx.operation as Operation);
+  }
+
   private handleRetry(tx: Transaction) {
-    if (!tx.retryAttempts) {
-      tx.retryAttempts = 0;
-    }
-
     if (tx.retryAttempts < this.maxRetries) {
-      tx.retryAttempts++;
-      tx.lastAttemptAt = new Date();
-
-      const delay = this.calculateBackoff(tx.retryAttempts);
-
-      tx.retryDelay = delay;
-
+      tx.retry();
       this.retryQueue.push(tx);
     } else {
-      // log it or move to a dead letter queue
+      tx.fail();
     }
   }
 
@@ -132,10 +253,6 @@ class TransactionRunner {
 
     return now - lastAttemptTime >= tx.retryDelay;
   }
-
-  private calculateBackoff(attempt: number): number {
-    return this.baseDelay * Math.pow(2, attempt);
-  }
 }
 
 export class TransactionService {
@@ -143,18 +260,23 @@ export class TransactionService {
   private retryQueue: TransactionQueue;
   private runner: TransactionRunner;
 
-  constructor(private transport: Transport) {
-    this.mainQueue = new TransactionQueue();
-    this.retryQueue = new TransactionQueue();
+  constructor(private root: RootStore, private transport: Transport) {
+    this.mainQueue = new TransactionQueue('main');
+    this.retryQueue = new TransactionQueue('retry');
     this.runner = new TransactionRunner(
+      this.root,
       this.transport,
       this.mainQueue,
       this.retryQueue,
     );
   }
 
-  commit(tx: Transaction) {
-    this.mainQueue.push(tx);
+  commit(operation: Operation, options?: TransactionOptions) {
+    this.mainQueue.push(new Transaction('SINGLE', operation, options));
+  }
+
+  groupCommit(operation: GroupOperation, options?: TransactionOptions) {
+    this.mainQueue.push(new Transaction('GROUP', operation, options));
   }
 
   startRunners() {
