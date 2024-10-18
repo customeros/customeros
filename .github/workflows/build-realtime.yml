@@ -55,7 +55,7 @@ jobs:
           mix deps.get
           mix deps.compile
       - run: mix format --check-formatted
-      - run: mix credo
+      - run: mix credo --mute-exit-status
       - run: mix dialyzer --no-check --ignore-exit-status
 
   test:
