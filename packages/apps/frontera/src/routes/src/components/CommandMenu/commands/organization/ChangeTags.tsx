@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 
 import { match } from 'ts-pattern';
 import { CommandGroup } from 'cmdk';
@@ -37,7 +37,7 @@ export const ChangeTags = observer(() => {
     .with('Organizations', () => `${context.ids?.length} organizations`)
     .otherwise(() => '');
 
-  const [search, setSearch] = React.useState('');
+  const [search, setSearch] = useState('');
 
   const handleSelect = (t: TagType) => () => {
     if (!context.ids?.[0]) return;
@@ -46,21 +46,22 @@ export const ChangeTags = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        (entity as OrganizationStore)?.update((o) => {
-          const existingIndex = o.tags?.find((e) => e.name === t.name);
+        const organization = entity as OrganizationStore;
 
-          if (existingIndex) {
-            const newTags = o.tags?.filter((e) => e.name !== t.name);
+        const foundIndex = organization.value.tags?.findIndex(
+          (e) => e.id === t.id,
+        );
 
-            o.tags = newTags;
+        if (typeof foundIndex !== 'undefined' && foundIndex > -1) {
+          organization.value.tags?.splice(foundIndex, 1);
+        } else {
+          if (!Array.isArray(organization?.value?.tags)) {
+            organization.value.tags = [];
           }
+          organization?.value?.tags?.push(t);
+        }
 
-          if (!existingIndex) {
-            o.tags = [...(o.tags ?? []), t];
-          }
-
-          return o;
-        });
+        organization.commit();
       })
       .with('Organizations', () => {
         store.organizations.updateTags(context.ids as string[], [t]);
@@ -73,28 +74,23 @@ export const ChangeTags = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        (entity as OrganizationStore)?.update((org) => {
-          org.tags = [
-            ...(org.tags || []),
-            {
-              id: value,
-              name: value,
-              metadata: {
-                id: value,
-                source: DataSource.Openline,
-                sourceOfTruth: DataSource.Openline,
-                appSource: 'organization',
-                created: new Date().toISOString(),
-                lastUpdated: new Date().toISOString(),
-              },
-              appSource: 'organization',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString(),
-              source: DataSource.Openline,
-            },
-          ];
+        const organization = entity as OrganizationStore;
 
-          return org;
+        organization?.value.tags?.push({
+          id: value,
+          name: value,
+          metadata: {
+            id: value,
+            source: DataSource.Openline,
+            sourceOfTruth: DataSource.Openline,
+            appSource: 'organization',
+            created: new Date().toISOString(),
+            lastUpdated: new Date().toISOString(),
+          },
+          appSource: 'organization',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          source: DataSource.Openline,
         });
       })
       .with('Organizations', () => {

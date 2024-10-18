@@ -7,7 +7,6 @@ import { useStore } from '@shared/hooks/useStore';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
 import { useTimelineMeta } from '@organization/components/Timeline/state';
 import { useGlobalCacheQuery } from '@shared/graphql/global_Cache.generated';
-import { useRemindersQuery } from '@organization/graphql/reminders.generated';
 
 import { ReminderItem } from './ReminderItem';
 
@@ -22,10 +21,9 @@ export const Reminders = observer(() => {
   const client = getGraphQLClient();
   const [_, setTimelineMeta] = useTimelineMeta();
 
-  const { data, isPending } = useRemindersQuery(client, { organizationId });
   const { data: globalCacheData } = useGlobalCacheQuery(client);
 
-  const remindersLength = data?.remindersForOrganization?.length ?? 0;
+  const remindersLength = reminders?.length ?? 0;
   const user = globalCacheData?.global_Cache?.user;
   const currentOwner = [user?.firstName, user?.lastName]
     .filter(Boolean)
@@ -42,7 +40,7 @@ export const Reminders = observer(() => {
     store.reminders.bootstrapByOrganization(organizationId);
   }, []);
 
-  if (isPending) return null;
+  if (store?.reminders?.isLoading) return null;
 
   return (
     <div

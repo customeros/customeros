@@ -39,11 +39,10 @@ export const Branches = observer(({ id, isReadOnly }: BranchesProps) => {
 
                   if (!findOrg) return;
                   setTimeout(() => {
-                    organization.update((org) => {
-                      org.subsidiaries.push({ organization: findOrg.value });
-
-                      return org;
+                    organization?.value.subsidiaries.push({
+                      organization: findOrg.value,
                     });
+                    organization?.commit();
                   }, 100);
 
                   navigate(`/organization/${serverId}?tab=about`);

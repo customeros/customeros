@@ -36,11 +36,9 @@ export const RenameOrganizationProperty = observer(() => {
       return;
     }
 
-    entity?.update((value) => {
-      value[property] = name;
+    entity.value[property] = name;
+    entity.commit();
 
-      return value;
-    });
     handleClose();
   };
 

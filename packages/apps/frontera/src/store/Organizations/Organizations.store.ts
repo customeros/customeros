@@ -1,5 +1,5 @@
+import set from 'lodash/set';
 import merge from 'lodash/merge';
-import { gql } from 'graphql-request';
 import { RootStore } from '@store/root';
 import { Transport } from '@store/transport';
 import { SyncableGroup } from '@store/syncable-group';
@@ -20,34 +20,28 @@ import {
 } from '@utils/orgStageAndRelationshipStatusMap.ts';
 import {
   Tag,
-  Filter,
-  SortBy,
-  Pagination,
   Organization,
   SortingDirection,
   OrganizationInput,
   OrganizationStage,
-  OrganizationSaveInput,
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
 
 import mock from './mock.json';
-import {
-  getDefaultValue,
-  OrganizationStore,
-  ORGANIZATION_QUERY,
-  ORGANIZATION_QUERY_RESULT,
-} from './Organization.store';
+import { getDefaultValue, OrganizationStore } from './Organization.store';
+import { OrganizationsService } from './__service__/Organizations.service';
 
 export class OrganizationsStore extends SyncableGroup<
   Organization,
   OrganizationStore
 > {
   totalElements = 0;
+  private service: OrganizationsService;
 
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, OrganizationStore);
+    this.service = OrganizationsService.getInstance(this.transport);
 
     makeObservable(this, {
       maxLtv: computed,
@@ -128,10 +122,7 @@ export class OrganizationsStore extends SyncableGroup<
       this.isLoading = true;
 
       const { dashboardView_Organizations } =
-        await this.transport.graphql.request<
-          ORGANIZATIONS_QUERY_RESPONSE,
-          ORGANIZATIONS_QUERY_PAYLOAD
-        >(ORGANIZATIONS_QUERY, {
+        await this.service.getOrganizations({
           pagination: { limit: 1000, page: 0 },
           sort: {
             by: 'LAST_TOUCHPOINT',
@@ -140,12 +131,12 @@ export class OrganizationsStore extends SyncableGroup<
           },
         });
 
-      this.load(dashboardView_Organizations.content, {
+      this.load(dashboardView_Organizations?.content as Organization[], {
         getId: (data) => data.metadata.id,
       });
       runInAction(() => {
         this.isBootstrapped = true;
-        this.totalElements = dashboardView_Organizations.totalElements;
+        this.totalElements = dashboardView_Organizations?.totalElements;
       });
     } catch (e) {
       runInAction(() => {
@@ -164,10 +155,7 @@ export class OrganizationsStore extends SyncableGroup<
     while (this.totalElements > this.value.size) {
       try {
         const { dashboardView_Organizations } =
-          await this.transport.graphql.request<
-            ORGANIZATIONS_QUERY_RESPONSE,
-            ORGANIZATIONS_QUERY_PAYLOAD
-          >(ORGANIZATIONS_QUERY, {
+          await this.service.getOrganizations({
             pagination: { limit: 1000, page },
             sort: {
               by: 'LAST_TOUCHPOINT',
@@ -178,7 +166,7 @@ export class OrganizationsStore extends SyncableGroup<
 
         runInAction(() => {
           page++;
-          this.load(dashboardView_Organizations.content, {
+          this.load(dashboardView_Organizations?.content as Organization[], {
             getId: (data) => data.metadata.id,
           });
         });
@@ -219,10 +207,7 @@ export class OrganizationsStore extends SyncableGroup<
     this.isLoading = true;
 
     try {
-      const { organization_Save } = await this.transport.graphql.request<
-        SAVE_ORGANIZATION_RESPONSE,
-        SAVE_ORGANIZATION_PAYLOAD
-      >(SAVE_ORGANIZATION_MUTATION, {
+      const { organization_Save } = await this.service.saveOrganization({
         input: {
           website: payload?.website ?? '',
           name: payload?.name ?? 'Unnamed',
@@ -270,10 +255,7 @@ export class OrganizationsStore extends SyncableGroup<
 
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<unknown, HIDE_ORGANIZATIONS_PAYLOAD>(
-        HIDE_ORGANIZATIONS_MUTATION,
-        { ids },
-      );
+      await this.service.hideOrganizations({ ids });
 
       runInAction(() => {
         this.sync({ action: 'DELETE', ids });
@@ -301,10 +283,7 @@ export class OrganizationsStore extends SyncableGroup<
 
     try {
       this.isLoading = true;
-      await this.transport.graphql.request<
-        unknown,
-        MERGE_ORGANIZATIONS_PAYLOAD
-      >(MERGE_ORGANIZATIONS_MUTATION, {
+      await this.service.mergeOrganizations({
         primaryOrganizationId: primaryId,
         mergedOrganizationIds: mergeIds,
       });
@@ -342,32 +321,46 @@ export class OrganizationsStore extends SyncableGroup<
     });
 
     ids.forEach((id) => {
-      this.value.get(id)?.update((organization) => {
-        if (shouldRemoveTags) {
-          organization.tags = organization.tags?.filter(
-            (existingTag) => !tagIdsToUpdate.has(existingTag.id),
-          );
-        } else {
-          const existingTagIds = new Set(
-            organization.tags?.map((tag) => tag.id) ?? [],
-          );
-          const newTags = tags.filter((tag) => !existingTagIds.has(tag.id));
+      const organization = this.value.get(id);
 
-          organization.tags = [...(organization.tags ?? []), ...newTags];
+      if (!organization) return;
+
+      if (shouldRemoveTags) {
+        organization.value.tags = organization.value.tags?.filter(
+          (t) => !tagIdsToUpdate.has(t.id),
+        );
+      } else {
+        const existingIds = new Set(
+          organization.value.tags?.map((t) => t.id) ?? [],
+        );
+        const newTags = tags.filter((t) => !existingIds.has(t.id));
+
+        if (!Array.isArray(organization.value.tags)) {
+          organization.value.tags = [];
         }
 
-        return organization;
-      });
+        organization.value.tags = [
+          ...(organization.value.tags ?? []),
+          ...newTags,
+        ];
+
+        organization.commit();
+      }
     });
   };
 
   removeTags = (ids: string[]) => {
     ids.forEach((id) => {
-      this.value.get(id)?.update((organization) => {
-        organization.tags = [];
+      const organization = this.value.get(id);
 
-        return organization;
-      });
+      if (!organization) return;
+
+      const count = organization.value.tags?.length ?? 0;
+
+      for (let i = 0; i < count; i++) {
+        organization.value.tags?.pop();
+        organization.commit();
+      }
     });
   };
 
@@ -375,32 +368,30 @@ export class OrganizationsStore extends SyncableGroup<
     let invalidCustomerStageCount = 0;
 
     ids.forEach((id) => {
-      this.value.get(id)?.update(
-        (org) => {
-          const currentRelationship = org.relationship;
-          const newDefaultRelationship = stageRelationshipMap[stage];
-          const validRelationships = validRelationshipsForStage[stage];
+      const organization = this.value.get(id);
 
-          if (
-            currentRelationship &&
-            validRelationships?.includes(currentRelationship)
-          ) {
-            org.stage = stage;
-          } else if (
-            currentRelationship === OrganizationRelationship.Customer
-          ) {
-            invalidCustomerStageCount++;
+      if (!organization) return;
 
-            return org; // Do not update if current relationship is Customer and new stage is not valid
-          } else {
-            org.stage = stage;
-            org.relationship = newDefaultRelationship || org.relationship;
-          }
+      const currentRelationship = organization.value.relationship;
+      const newDefaultRelationship = stageRelationshipMap[stage];
+      const validRelationships = validRelationshipsForStage[stage];
 
-          return org;
-        },
-        { mutate: mutate },
-      );
+      if (
+        currentRelationship &&
+        validRelationships?.includes(currentRelationship)
+      ) {
+        organization.value.stage = stage;
+      } else if (currentRelationship === OrganizationRelationship.Customer) {
+        invalidCustomerStageCount++;
+
+        // Do not update if current relationship is Customer and new stage is not valid
+      } else {
+        organization.value.stage = stage;
+        organization.value.relationship =
+          newDefaultRelationship || organization.value.relationship;
+      }
+
+      organization.commit({ syncOnly: !mutate });
     });
 
     if (invalidCustomerStageCount) {
@@ -421,26 +412,27 @@ export class OrganizationsStore extends SyncableGroup<
     let invalidCustomerStageCount = 0;
 
     ids.forEach((id) => {
-      this.value.get(id)?.update(
-        (org) => {
-          if (
-            org.relationship === OrganizationRelationship.Customer &&
-            ![
-              OrganizationRelationship.FormerCustomer,
-              OrganizationRelationship.NotAFit,
-            ].includes(relationship)
-          ) {
-            invalidCustomerStageCount++;
+      const organization = this.value.get(id);
 
-            return org; // Do not update if current is customer and new is not formet customer or not a fit
-          }
-          org.relationship = relationship;
-          org.stage = relationshipStageMap[org.relationship];
+      if (!organization) return;
 
-          return org;
-        },
-        { mutate: mutate },
-      );
+      if (
+        organization.value.relationship === OrganizationRelationship.Customer &&
+        ![
+          OrganizationRelationship.FormerCustomer,
+          OrganizationRelationship.NotAFit,
+        ].includes(relationship)
+      ) {
+        invalidCustomerStageCount++;
+
+        return; // Do not update if current is customer and new is not formet customer or not a fit
+      }
+
+      organization.value.relationship = relationship;
+      organization.value.stage =
+        relationshipStageMap[organization.value.relationship];
+
+      organization.commit({ syncOnly: !mutate });
     });
 
     if (invalidCustomerStageCount) {
@@ -459,20 +451,17 @@ export class OrganizationsStore extends SyncableGroup<
     mutate = true,
   ) => {
     ids.forEach((id) => {
-      this.value.get(id)?.update(
-        (org) => {
-          org.accountDetails = {
-            ...org.accountDetails,
-            renewalSummary: {
-              ...(org.accountDetails?.renewalSummary ?? {}),
-              renewalLikelihood: health,
-            },
-          };
+      const organization = this.value.get(id);
 
-          return org;
-        },
-        { mutate: mutate },
+      if (!organization) return;
+
+      set(
+        organization.value,
+        'accountDetails.renewalSummary.renewalLikelihood',
+        health,
       );
+
+      organization.commit({ syncOnly: !mutate });
     });
   };
 
@@ -480,17 +469,13 @@ export class OrganizationsStore extends SyncableGroup<
     try {
       this.isLoading = true;
 
-      const { organization } = await this.transport.graphql.request<
-        ORGANIZATION_QUERY_RESULT,
-        { id: string }
-      >(ORGANIZATION_QUERY, { id });
-      const newOrganization = new OrganizationStore(
-        this.root,
-        this.transport,
-        merge(getDefaultValue(), organization),
-      );
+      const { organization } = await this.service.getOrganization(id);
 
-      this.value.set(organization.metadata.id, newOrganization);
+      if (!organization) return;
+
+      this.load([organization as Organization], {
+        getId: (d) => d.metadata.id,
+      });
     } catch (err) {
       runInAction(() => {
         this.error = (err as Error)?.message;
@@ -502,310 +487,3 @@ export class OrganizationsStore extends SyncableGroup<
     }
   }
 }
-
-type ORGANIZATIONS_QUERY_PAYLOAD = {
-  sort?: SortBy;
-  where?: Filter;
-  pagination: Pagination;
-};
-type ORGANIZATIONS_QUERY_RESPONSE = {
-  dashboardView_Organizations: {
-    totalElements: number;
-    totalAvailable: number;
-    content: Organization[];
-  };
-};
-const ORGANIZATIONS_QUERY = gql`
-  query getOrganizations(
-    $pagination: Pagination!
-    $where: Filter
-    $sort: SortBy
-  ) {
-    dashboardView_Organizations(
-      pagination: $pagination
-      where: $where
-      sort: $sort
-    ) {
-      content {
-        name
-        note
-        notes
-
-        metadata {
-          id
-          created
-        }
-        contracts {
-          metadata {
-            id
-          }
-        }
-
-        parentCompanies {
-          organization {
-            metadata {
-              id
-            }
-            name
-          }
-        }
-        owner {
-          id
-          firstName
-          lastName
-          name
-        }
-        contacts(pagination: { page: 0, limit: 100 }) {
-          content {
-            id
-            metadata {
-              id
-            }
-          }
-        }
-        stage
-        description
-        industry
-        market
-        website
-        domains
-        logo
-        icon
-        relationship
-        lastFundingRound
-        leadSource
-        valueProposition
-        slackChannelId
-        public
-        enrichDetails {
-          enrichedAt
-          failedAt
-          requestedAt
-        }
-        socialMedia {
-          id
-          url
-          followersCount
-        }
-        employees
-        tags {
-          id
-          name
-          createdAt
-          updatedAt
-          source
-          appSource
-          metadata {
-            id
-            created
-            lastUpdated
-            source
-            sourceOfTruth
-            appSource
-          }
-        }
-        yearFounded
-        accountDetails {
-          ltv
-          churned
-          renewalSummary {
-            arrForecast
-            maxArrForecast
-            renewalLikelihood
-            nextRenewalDate
-          }
-          onboarding {
-            status
-            comments
-            updatedAt
-          }
-        }
-        locations {
-          id
-          name
-          country
-          region
-          locality
-          zip
-          street
-          postalCode
-          houseNumber
-          rawAddress
-          locality
-          countryCodeA2
-          countryCodeA3
-        }
-        subsidiaries {
-          organization {
-            metadata {
-              id
-            }
-            name
-            parentCompanies {
-              organization {
-                name
-                metadata {
-                  id
-                }
-              }
-            }
-          }
-        }
-        parentCompanies {
-          organization {
-            metadata {
-              id
-            }
-          }
-        }
-        lastTouchpoint {
-          lastTouchPointTimelineEventId
-          lastTouchPointAt
-          lastTouchPointType
-          lastTouchPointTimelineEvent {
-            __typename
-            ... on PageView {
-              id
-            }
-            ... on Issue {
-              id
-              createdAt
-              updatedAt
-            }
-            ... on LogEntry {
-              id
-              createdBy {
-                lastName
-                firstName
-              }
-            }
-            ... on Note {
-              id
-              createdBy {
-                firstName
-                lastName
-              }
-            }
-            ... on InteractionEvent {
-              id
-              channel
-              eventType
-              externalLinks {
-                type
-              }
-              sentBy {
-                __typename
-                ... on EmailParticipant {
-                  type
-                  emailParticipant {
-                    id
-                    email
-                    rawEmail
-                  }
-                }
-                ... on ContactParticipant {
-                  contactParticipant {
-                    id
-                    name
-                    firstName
-                    lastName
-                  }
-                }
-                ... on JobRoleParticipant {
-                  jobRoleParticipant {
-                    contact {
-                      id
-                      name
-                      firstName
-                      lastName
-                    }
-                  }
-                }
-                ... on UserParticipant {
-                  userParticipant {
-                    id
-                    firstName
-                    lastName
-                  }
-                }
-              }
-            }
-            ... on Meeting {
-              id
-              name
-              attendedBy {
-                __typename
-              }
-            }
-            ... on Action {
-              id
-              actionType
-              createdAt
-              source
-              actionType
-              createdBy {
-                id
-                firstName
-                lastName
-              }
-            }
-          }
-        }
-
-        contracts {
-          metadata {
-            id
-          }
-        }
-      }
-      totalElements
-      totalAvailable
-    }
-  }
-`;
-type SAVE_ORGANIZATION_PAYLOAD = {
-  input: OrganizationSaveInput;
-};
-type SAVE_ORGANIZATION_RESPONSE = {
-  organization_Save: {
-    metadata: {
-      id: string;
-    };
-  };
-};
-const SAVE_ORGANIZATION_MUTATION = gql`
-  mutation saveOrganization($input: OrganizationSaveInput!) {
-    organization_Save(input: $input) {
-      metadata {
-        id
-      }
-    }
-  }
-`;
-type HIDE_ORGANIZATIONS_PAYLOAD = {
-  ids: string[];
-};
-const HIDE_ORGANIZATIONS_MUTATION = gql`
-  mutation hideOrganizations($ids: [ID!]!) {
-    organization_HideAll(ids: $ids) {
-      result
-    }
-  }
-`;
-type MERGE_ORGANIZATIONS_PAYLOAD = {
-  primaryOrganizationId: string;
-  mergedOrganizationIds: string[];
-};
-const MERGE_ORGANIZATIONS_MUTATION = gql`
-  mutation mergeOrganizations(
-    $primaryOrganizationId: ID!
-    $mergedOrganizationIds: [ID!]!
-  ) {
-    organization_Merge(
-      primaryOrganizationId: $primaryOrganizationId
-      mergedOrganizationIds: $mergedOrganizationIds
-    ) {
-      id
-    }
-  }
-`;

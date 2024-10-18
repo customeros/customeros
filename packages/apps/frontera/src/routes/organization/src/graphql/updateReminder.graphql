@@ -1,3 +1,0 @@
-mutation updateReminder($input: ReminderUpdateInput!) {
-  reminder_Update(input: $input)
-}

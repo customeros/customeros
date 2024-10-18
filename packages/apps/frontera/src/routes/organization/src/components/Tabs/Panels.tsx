@@ -1,10 +1,8 @@
 import { AboutPanel } from './panels/AboutPanel';
-import { UpNextPanel } from './panels/UpNextPanel';
 import { PeoplePanel } from './panels/PeoplePanel';
 import { IssuesPanel } from './panels/IssuesPanel';
 import { AccountPanel } from './panels/AccountPanel';
 import { SuccessPanel } from './panels/SuccessPanel';
-import { InvoicesPanel } from './panels/InvoicesPanel';
 
 interface PanelsProps {
   tab: string;
@@ -12,8 +10,6 @@ interface PanelsProps {
 
 export const Panels = ({ tab }: PanelsProps) => {
   switch (tab) {
-    case 'up-next':
-      return <UpNextPanel />;
     case 'account':
       return <AccountPanel />;
     case 'success':
@@ -22,8 +18,6 @@ export const Panels = ({ tab }: PanelsProps) => {
       return <PeoplePanel />;
     case 'issues':
       return <IssuesPanel />;
-    case 'invoices':
-      return <InvoicesPanel />;
     default:
       return <AboutPanel />;
   }

@@ -131,13 +131,11 @@ export class Syncable<T extends object> {
     });
   }
 
-  public update(
-    updater: (prev: T) => T,
-    options: SyncableUpdateOptions = {
-      mutate: true,
-      syncMutate: false,
-    },
-  ) {
+  /**
+   * @deprecated
+   * use Syncable.commit instead.
+   */
+  public update(updater: (prev: T) => T, options?: SyncableUpdateOptions) {
     const lhs = toJS(this.value);
     const next = updater(this.value);
     const rhs = toJS(next);
@@ -154,38 +152,39 @@ export class Syncable<T extends object> {
     this.history.push(operation);
     this.value = next;
 
-    this.root.transactions.commit(operation);
+    if (this?.save) {
+      (async () => {
+        try {
+          this.error = null;
 
-    // if (this?.save) {
-    //   (async () => {
-    //     try {
-    //       this.error = null;
-    //
-    //       if (options?.mutate && !this.root.demoMode) {
-    //         await this.save(operation);
-    //       }
-    //
-    //       this?.channel
-    //         ?.push('sync_packet', { payload: { operation } })
-    //         ?.receive('ok', ({ version }: { version: number }) => {
-    //           this.version = version;
-    //         });
-    //     } catch (e) {
-    //       console.error(e);
-    //       this.value = lhs;
-    //       this.history.pop();
-    //     }
-    //   })();
-    // }
+          if (options?.mutate && !this.root.demoMode) {
+            await this.save(operation);
+          }
+
+          this?.channel
+            ?.push('sync_packet', { payload: { operation } })
+            ?.receive('ok', ({ version }: { version: number }) => {
+              this.version = version;
+            });
+        } catch (e) {
+          console.error(e);
+          this.value = lhs;
+          this.history.pop();
+        }
+      })();
+    }
   }
 
-  public commit() {
+  public commit(
+    opts: {
+      syncOnly?: boolean;
+      onFailled?: () => void;
+      onCompleted?: () => void;
+    } = { syncOnly: false },
+  ) {
     const operation = this.makeChangesetOperation();
 
-    this.root.transactions.commit(operation, {
-      onFailled: () => {},
-      onCompleted: () => {},
-    });
+    this.root.transactions.commit(operation, opts);
 
     Object.assign(this.snapshot, toJS(this.value));
   }

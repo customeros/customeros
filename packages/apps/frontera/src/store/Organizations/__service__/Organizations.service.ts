@@ -2,6 +2,7 @@ import type { Operation } from '@store/types';
 import type { Transport } from '@store/transport';
 import type { rdiffResult } from 'recursive-diff';
 
+import get from 'lodash/get';
 import { P, match } from 'ts-pattern';
 import { makePayload } from '@store/util';
 
@@ -22,7 +23,11 @@ import UpdateSocialDocument from './updateSocial.graphql';
 import RemoveSocialDocument from './removeSocial.graphql';
 import AddSubsidiaryDocument from './addSubsidiary.graphql';
 import GetOrganizationDocument from './getOrganization.graphql';
+import GetOrganizationsDocument from './getOrganizations.graphql';
+import SaveOrganizationDocument from './saveOrganization.graphql';
 import RemoveSubsidiaryDocument from './removeSubsidiary.graphql';
+import HideOrganizationsDocument from './hideOrganizations.graphql';
+import MergeOrganizationsDocument from './mergeOrganizations.graphql';
 import UpdateOrganizationDocument from './updateOrganization.graphql';
 import UpdateOnboardingStatusDocument from './updateOnboardingStatus.graphql';
 import UpdateAllOpportunityRenewalsDocument from './updateAllOpportunityRenewals.graphql';
@@ -43,13 +48,29 @@ import {
   RemoveSocialMutationVariables,
 } from './removeSocial.generated';
 import {
+  GetOrganizationsQuery,
+  GetOrganizationsQueryVariables,
+} from './getOrganizations.generated';
+import {
+  SaveOrganizationMutation,
+  SaveOrganizationMutationVariables,
+} from './saveOrganization.generated';
+import {
   AddTagsToOrganizationMutation,
   AddTagsToOrganizationMutationVariables,
 } from './addTag.generated';
 import {
+  HideOrganizationsMutation,
+  HideOrganizationsMutationVariables,
+} from './hideOrganizations.generated';
+import {
   SetOrganizationOwnerMutation,
   SetOrganizationOwnerMutationVariables,
 } from './updateOwner.generated';
+import {
+  MergeOrganizationsMutation,
+  MergeOrganizationsMutationVariables,
+} from './mergeOrganizations.generated';
 import {
   UpdateOrganizationMutation,
   UpdateOrganizationMutationVariables,
@@ -102,6 +123,38 @@ export class OrganizationsService {
     >(GetOrganizationDocument, { id });
   }
 
+  async getOrganizations(payload: GetOrganizationsQueryVariables) {
+    return this.transport.graphql.request<
+      GetOrganizationsQuery,
+      GetOrganizationsQueryVariables
+    >(GetOrganizationsDocument, payload);
+  }
+
+  async saveOrganization(payload: SaveOrganizationMutationVariables) {
+    return this.transport.graphql.request<
+      SaveOrganizationMutation,
+      SaveOrganizationMutationVariables
+    >(SaveOrganizationDocument, payload);
+  }
+
+  async hideOrganizations(payload: HideOrganizationsMutationVariables) {
+    return this.transport.graphql.request<
+      HideOrganizationsMutation,
+      HideOrganizationsMutationVariables
+    >(HideOrganizationsDocument, payload);
+  }
+
+  async mergeOrganizations(payload: MergeOrganizationsMutationVariables) {
+    return this.transport.graphql.request<
+      MergeOrganizationsMutation,
+      MergeOrganizationsMutationVariables
+    >(MergeOrganizationsDocument, payload);
+  }
+
+  /**
+   * @deprecated
+   * use saveOrganization instead
+   * */
   async updateOrganization(payload: UpdateOrganizationMutationVariables) {
     return this.transport.graphql.request<
       UpdateOrganizationMutation,
@@ -212,23 +265,24 @@ export class OrganizationsService {
 
     return match(path)
       .with(['owner', ...P.array()], () => {
-        if (type === 'update') {
-          match(value)
-            .with(null, async () => {
-              await this.removeOwner({ organizationId });
-            })
-            .otherwise(async () => {
-              await this.updateOwner({ organizationId, userId: value });
-            });
-        }
+        this.saveOrganization({
+          input: {
+            id: organizationId,
+            ownerId: store.value.owner?.id || '',
+          },
+        });
       })
       .with(['contracts', ...P.array()], () => {})
+      .with(['contacts', ...P.array()], () => {})
       .with(['accountDetails', 'renewalSummary', ...P.array()], async () => {
         const amount =
           store.value.accountDetails?.renewalSummary?.arrForecast ?? 0;
         const potentialAmount =
           store.value.accountDetails?.renewalSummary?.maxArrForecast ?? 0;
-        const rate = (amount / potentialAmount) * 100;
+        const rate =
+          amount === 0 || potentialAmount === 0
+            ? 0
+            : (amount / potentialAmount) * 100;
 
         await this.updateAllOpportunityRenewals({
           input: {
@@ -251,27 +305,29 @@ export class OrganizationsService {
         });
       })
       .with(['socialMedia', ...P.array()], () => {
-        const index = path[1] as number;
-        const { id, url } = store.value.socialMedia[index];
-
         match(type)
-          .with(
-            'add',
-            async () =>
-              await this.addSocial({
-                organizationId,
-                input: {
-                  url,
-                },
-              }),
-          )
-          .with(
-            'update',
-            async () => await this.updateSocial({ input: { id, url } }),
-          )
+          .with('add', async () => {
+            await this.addSocial({
+              organizationId,
+              input: {
+                url: value.url,
+              },
+            });
+          })
+          .with('update', async () => {
+            const index = path[1] as number;
+
+            const foundSocial = get(store, `value.socialMedia[${index}]`, null);
+
+            if (!foundSocial) return;
+
+            await this.updateSocial({
+              input: { id: foundSocial.id, url: foundSocial.url },
+            });
+          })
           .with(
             'delete',
-            async () => await this.removeSocial({ socialId: id }),
+            async () => await this.removeSocial({ socialId: oldValue?.id }),
           );
       })
       .with(['subsidiaries', ...P.array()], async () => {
@@ -342,8 +398,8 @@ export class OrganizationsService {
       .otherwise(async () => {
         const payload = makePayload<OrganizationUpdateInput>(operation);
 
-        return await this.updateOrganization({
-          input: { ...payload, id: organizationId, patch: true },
+        return await this.saveOrganization({
+          input: { ...payload, id: organizationId },
         });
       });
   }

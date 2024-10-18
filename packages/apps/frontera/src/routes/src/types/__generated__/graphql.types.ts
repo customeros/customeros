@@ -431,8 +431,7 @@ export enum ComparisonOperator {
  * A contact represents an individual in customerOS.
  * **A `response` object.**
  */
-export type Contact = ExtensibleEntity &
-  MetadataInterface &
+export type Contact = MetadataInterface &
   Node & {
     __typename?: 'Contact';
     appSource?: Maybe<Scalars['String']['output']>;
@@ -455,7 +454,6 @@ export type Contact = ExtensibleEntity &
      */
     emails: Array<Email>;
     enrichDetails: EnrichDetails;
-    fieldSets: Array<FieldSet>;
     /** The first name of the contact in customerOS. */
     firstName?: Maybe<Scalars['String']['output']>;
     flows: Array<Flow>;
@@ -499,8 +497,6 @@ export type Contact = ExtensibleEntity &
     source: DataSource;
     sourceOfTruth: DataSource;
     tags?: Maybe<Array<Tag>>;
-    /** Template of the contact in customerOS. */
-    template?: Maybe<EntityTemplate>;
     timelineEvents: Array<TimelineEvent>;
     timelineEventsTotalCount: Scalars['Int64']['output'];
     timezone?: Maybe<Scalars['String']['output']>;
@@ -555,8 +551,6 @@ export type ContactInput = {
   /** An email addresses associated with the contact. */
   email?: InputMaybe<EmailInput>;
   externalReference?: InputMaybe<ExternalSystemReferenceInput>;
-  /** Deprecated */
-  fieldSets?: InputMaybe<Array<FieldSetInput>>;
   /** The first name of the contact. */
   firstName?: InputMaybe<Scalars['String']['input']>;
   /** The last name of the contact. */
@@ -1026,30 +1020,36 @@ export type CustomFieldInput = {
 export type CustomFieldTemplate = Node & {
   __typename?: 'CustomFieldTemplate';
   createdAt: Scalars['Time']['output'];
+  entityType: EntityType;
   id: Scalars['ID']['output'];
-  length?: Maybe<Scalars['Int']['output']>;
-  mandatory: Scalars['Boolean']['output'];
-  max?: Maybe<Scalars['Int']['output']>;
-  min?: Maybe<Scalars['Int']['output']>;
+  length?: Maybe<Scalars['Int64']['output']>;
+  max?: Maybe<Scalars['Int64']['output']>;
+  min?: Maybe<Scalars['Int64']['output']>;
   name: Scalars['String']['output'];
-  order: Scalars['Int']['output'];
+  order?: Maybe<Scalars['Int64']['output']>;
+  required?: Maybe<Scalars['Boolean']['output']>;
   type: CustomFieldTemplateType;
   updatedAt: Scalars['Time']['output'];
+  validValues: Array<Scalars['String']['output']>;
 };
 
 export type CustomFieldTemplateInput = {
-  length?: InputMaybe<Scalars['Int']['input']>;
-  mandatory?: InputMaybe<Scalars['Boolean']['input']>;
-  max?: InputMaybe<Scalars['Int']['input']>;
-  min?: InputMaybe<Scalars['Int']['input']>;
-  name: Scalars['String']['input'];
-  order: Scalars['Int']['input'];
-  type: CustomFieldTemplateType;
+  entityType?: InputMaybe<EntityType>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  length?: InputMaybe<Scalars['Int64']['input']>;
+  max?: InputMaybe<Scalars['Int64']['input']>;
+  min?: InputMaybe<Scalars['Int64']['input']>;
+  name?: InputMaybe<Scalars['String']['input']>;
+  order?: InputMaybe<Scalars['Int64']['input']>;
+  required?: InputMaybe<Scalars['Boolean']['input']>;
+  type?: InputMaybe<CustomFieldTemplateType>;
+  validValues?: InputMaybe<Array<Scalars['String']['input']>>;
 };
 
 export enum CustomFieldTemplateType {
-  Link = 'LINK',
-  Text = 'TEXT',
+  FreeText = 'FREE_TEXT',
+  Number = 'NUMBER',
+  SingleSelect = 'SINGLE_SELECT',
 }
 
 /**
@@ -1445,40 +1445,12 @@ export type EnrichDetails = {
   requestedAt?: Maybe<Scalars['Time']['output']>;
 };
 
-export type EntityTemplate = Node & {
-  __typename?: 'EntityTemplate';
-  createdAt: Scalars['Time']['output'];
-  customFieldTemplates: Array<CustomFieldTemplate>;
-  extends?: Maybe<EntityTemplateExtension>;
-  fieldSetTemplates: Array<FieldSetTemplate>;
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  updatedAt: Scalars['Time']['output'];
-  version: Scalars['Int']['output'];
-};
-
-export enum EntityTemplateExtension {
-  Contact = 'CONTACT',
-  Organization = 'ORGANIZATION',
-}
-
-export type EntityTemplateInput = {
-  customFieldTemplateInputs?: InputMaybe<Array<CustomFieldTemplateInput>>;
-  extends?: InputMaybe<EntityTemplateExtension>;
-  fieldSetTemplateInputs?: InputMaybe<Array<FieldSetTemplateInput>>;
-  name: Scalars['String']['input'];
-};
-
 export enum EntityType {
   Contact = 'CONTACT',
   LogEntry = 'LOG_ENTRY',
+  Opportunity = 'OPPORTUNITY',
   Organization = 'ORGANIZATION',
 }
-
-export type ExtensibleEntity = {
-  id: Scalars['ID']['output'];
-  template?: Maybe<EntityTemplate>;
-};
 
 export type ExternalSystem = {
   __typename?: 'ExternalSystem';
@@ -1529,45 +1501,6 @@ export enum ExternalSystemType {
   ZendeskSell = 'ZENDESK_SELL',
   ZendeskSupport = 'ZENDESK_SUPPORT',
 }
-
-export type FieldSet = {
-  __typename?: 'FieldSet';
-  createdAt: Scalars['Time']['output'];
-  customFields: Array<CustomField>;
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  source: DataSource;
-  template?: Maybe<FieldSetTemplate>;
-  updatedAt: Scalars['Time']['output'];
-};
-
-export type FieldSetInput = {
-  customFields?: InputMaybe<Array<CustomFieldInput>>;
-  id?: InputMaybe<Scalars['ID']['input']>;
-  name: Scalars['String']['input'];
-  templateId?: InputMaybe<Scalars['ID']['input']>;
-};
-
-export type FieldSetTemplate = Node & {
-  __typename?: 'FieldSetTemplate';
-  createdAt: Scalars['Time']['output'];
-  customFieldTemplates: Array<CustomFieldTemplate>;
-  id: Scalars['ID']['output'];
-  name: Scalars['String']['output'];
-  order: Scalars['Int']['output'];
-  updatedAt: Scalars['Time']['output'];
-};
-
-export type FieldSetTemplateInput = {
-  customFieldTemplateInputs?: InputMaybe<Array<CustomFieldTemplateInput>>;
-  name: Scalars['String']['input'];
-  order: Scalars['Int']['input'];
-};
-
-export type FieldSetUpdateInput = {
-  id: Scalars['ID']['input'];
-  name: Scalars['String']['input'];
-};
 
 export type Filter = {
   AND?: InputMaybe<Array<Filter>>;
@@ -1680,6 +1613,7 @@ export enum FlowStatus {
   Archived = 'ARCHIVED',
   Inactive = 'INACTIVE',
   Paused = 'PAUSED',
+  Scheduling = 'SCHEDULING',
 }
 
 export enum FundingRound {
@@ -2323,7 +2257,7 @@ export type MetadataInterface = {
 
 export type Mutation = {
   __typename?: 'Mutation';
-  addTag: ActionResponse;
+  addTag: Scalars['ID']['output'];
   attachment_Create: Attachment;
   bankAccount_Create: BankAccount;
   bankAccount_Delete: DeleteResponse;
@@ -2366,12 +2300,10 @@ export type Mutation = {
   contract_Update: Contract;
   customFieldDeleteFromContactById: Result;
   customFieldDeleteFromContactByName: Result;
-  customFieldDeleteFromFieldSetById: Result;
   customFieldMergeToContact: CustomField;
-  customFieldMergeToFieldSet: CustomField;
-  customFieldTemplate_Create: CustomFieldTemplate;
+  customFieldTemplate_Delete?: Maybe<Scalars['Boolean']['output']>;
+  customFieldTemplate_Save: CustomFieldTemplate;
   customFieldUpdateInContact: CustomField;
-  customFieldUpdateInFieldSet: CustomField;
   customFieldsMergeAndUpdateInContact: Contact;
   customer_contact_Create: CustomerContact;
   customer_user_AddJobRole: CustomerUser;
@@ -2384,12 +2316,9 @@ export type Mutation = {
   emailReplaceForContact: Email;
   emailReplaceForOrganization: Email;
   emailReplaceForUser: Email;
+  emailSetPrimaryForContact: Result;
   email_Validate: ActionResponse;
-  entityTemplateCreate: EntityTemplate;
   externalSystem_Create: Scalars['ID']['output'];
-  fieldSetDeleteFromContact: Result;
-  fieldSetMergeToContact?: Maybe<FieldSet>;
-  fieldSetUpdateInContact?: Maybe<FieldSet>;
   flowContact_Add: FlowContact;
   flowContact_AddBulk: Result;
   flowContact_Delete: Result;
@@ -2474,7 +2403,7 @@ export type Mutation = {
   phoneNumber_Update: PhoneNumber;
   reminder_Create?: Maybe<Scalars['ID']['output']>;
   reminder_Update?: Maybe<Scalars['ID']['output']>;
-  removeTag: ActionResponse;
+  removeTag?: Maybe<Result>;
   serviceLineItem_BulkUpdate: Array<Scalars['ID']['output']>;
   serviceLineItem_Delete: DeleteResponse;
   social_Remove: Result;
@@ -2683,24 +2612,16 @@ export type MutationCustomFieldDeleteFromContactByNameArgs = {
   fieldName: Scalars['String']['input'];
 };
 
-export type MutationCustomFieldDeleteFromFieldSetByIdArgs = {
-  contactId: Scalars['ID']['input'];
-  fieldSetId: Scalars['ID']['input'];
-  id: Scalars['ID']['input'];
-};
-
 export type MutationCustomFieldMergeToContactArgs = {
   contactId: Scalars['ID']['input'];
   input: CustomFieldInput;
 };
 
-export type MutationCustomFieldMergeToFieldSetArgs = {
-  contactId: Scalars['ID']['input'];
-  fieldSetId: Scalars['ID']['input'];
-  input: CustomFieldInput;
+export type MutationCustomFieldTemplate_DeleteArgs = {
+  id: Scalars['ID']['input'];
 };
 
-export type MutationCustomFieldTemplate_CreateArgs = {
+export type MutationCustomFieldTemplate_SaveArgs = {
   input: CustomFieldTemplateInput;
 };
 
@@ -2709,16 +2630,9 @@ export type MutationCustomFieldUpdateInContactArgs = {
   input: CustomFieldUpdateInput;
 };
 
-export type MutationCustomFieldUpdateInFieldSetArgs = {
-  contactId: Scalars['ID']['input'];
-  fieldSetId: Scalars['ID']['input'];
-  input: CustomFieldUpdateInput;
-};
-
 export type MutationCustomFieldsMergeAndUpdateInContactArgs = {
   contactId: Scalars['ID']['input'];
   customFields?: InputMaybe<Array<CustomFieldInput>>;
-  fieldSets?: InputMaybe<Array<FieldSetInput>>;
 };
 
 export type MutationCustomer_Contact_CreateArgs = {
@@ -2778,31 +2692,17 @@ export type MutationEmailReplaceForUserArgs = {
   userId: Scalars['ID']['input'];
 };
 
+export type MutationEmailSetPrimaryForContactArgs = {
+  contactId: Scalars['ID']['input'];
+  email: Scalars['String']['input'];
+};
+
 export type MutationEmail_ValidateArgs = {
   id: Scalars['ID']['input'];
 };
 
-export type MutationEntityTemplateCreateArgs = {
-  input: EntityTemplateInput;
-};
-
 export type MutationExternalSystem_CreateArgs = {
   input: ExternalSystemInput;
-};
-
-export type MutationFieldSetDeleteFromContactArgs = {
-  contactId: Scalars['ID']['input'];
-  id: Scalars['ID']['input'];
-};
-
-export type MutationFieldSetMergeToContactArgs = {
-  contactId: Scalars['ID']['input'];
-  input: FieldSetInput;
-};
-
-export type MutationFieldSetUpdateInContactArgs = {
-  contactId: Scalars['ID']['input'];
-  input: FieldSetUpdateInput;
 };
 
 export type MutationFlowContact_AddArgs = {
@@ -3515,9 +3415,7 @@ export type Organization = MetadataInterface & {
   employeeGrowthRate?: Maybe<Scalars['String']['output']>;
   employees?: Maybe<Scalars['Int64']['output']>;
   enrichDetails: EnrichDetails;
-  entityTemplate?: Maybe<EntityTemplate>;
   externalLinks: Array<ExternalSystem>;
-  fieldSets: Array<FieldSet>;
   headquarters?: Maybe<Scalars['String']['output']>;
   hide: Scalars['Boolean']['output'];
   /** @deprecated Use logo */
@@ -3655,8 +3553,6 @@ export type OrganizationInput = {
   domains?: InputMaybe<Array<Scalars['String']['input']>>;
   employeeGrowthRate?: InputMaybe<Scalars['String']['input']>;
   employees?: InputMaybe<Scalars['Int64']['input']>;
-  /** Deprecated */
-  fieldSets?: InputMaybe<Array<FieldSetInput>>;
   headquarters?: InputMaybe<Scalars['String']['input']>;
   icon?: InputMaybe<Scalars['String']['input']>;
   industry?: InputMaybe<Scalars['String']['input']>;
@@ -3990,6 +3886,7 @@ export type Query = {
   contacts: ContactsPage;
   contract: Contract;
   contracts: ContractPage;
+  customFieldTemplate_List: Array<CustomFieldTemplate>;
   /** sort.By available options: ORGANIZATION, IS_CUSTOMER, DOMAIN, LOCATION, OWNER, LAST_TOUCHPOINT, RENEWAL_LIKELIHOOD, FORECAST_ARR, RENEWAL_DATE, ONBOARDING_STATUS */
   dashboardView_Organizations?: Maybe<OrganizationPage>;
   dashboardView_Renewals?: Maybe<RenewalsPage>;
@@ -4003,7 +3900,6 @@ export type Query = {
   dashboard_RevenueAtRisk?: Maybe<DashboardRevenueAtRisk>;
   dashboard_TimeToOnboard?: Maybe<DashboardTimeToOnboard>;
   email: Email;
-  entityTemplates: Array<EntityTemplate>;
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
   flow_emailVariables: Array<EmailVariableEntity>;
@@ -4120,10 +4016,6 @@ export type QueryDashboard_TimeToOnboardArgs = {
 
 export type QueryEmailArgs = {
   id: Scalars['ID']['input'];
-};
-
-export type QueryEntityTemplatesArgs = {
-  extends?: InputMaybe<EntityTemplateExtension>;
 };
 
 export type QueryExternalMeetingsArgs = {

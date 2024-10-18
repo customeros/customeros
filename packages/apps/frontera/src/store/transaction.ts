@@ -16,8 +16,9 @@ type TransactionStatus =
   | 'FAILED';
 type OperationType = Operation | GroupOperation;
 type TransactionOptions = {
-  onFailled: () => void;
-  onCompleted: () => void;
+  syncOnly?: boolean;
+  onFailled?: () => void;
+  onCompleted?: () => void;
 };
 
 class Transaction {
@@ -29,6 +30,7 @@ class Transaction {
   retryDelay = 0;
   lastAttemptAt: Date | null = null;
   operation: OperationType;
+  syncOnly: boolean = false;
   retryAttempts = 0;
 
   constructor(
@@ -40,16 +42,31 @@ class Transaction {
     this.operation = operation;
   }
 
-  success() {
+  start() {
+    this.status = 'PROCESSING';
+  }
+
+  complete() {
     this.status = 'COMPLETED';
     this.completedAt = new Date();
-    this?.options?.onCompleted();
+    this?.options?.onCompleted?.();
+  }
+
+  retry() {
+    this.status = 'RETRYING';
+    this.retryAttempts++;
+    this.lastAttemptAt = new Date();
+    this.retryDelay = this.calculateBackoff();
   }
 
   fail() {
     this.status = 'FAILED';
     this.failedAt = new Date();
-    this?.options?.onFailled();
+    this?.options?.onFailled?.();
+  }
+
+  private calculateBackoff(): number {
+    return 1000 * Math.pow(2, this.retryAttempts);
   }
 }
 
@@ -127,7 +144,6 @@ class TransactionRunner {
   private isMainRunning = false;
   private isRetryRunning = false;
   private maxRetries = 3;
-  private baseDelay = 1000;
   private graphqlService: GraphqlService;
 
   constructor(
@@ -188,10 +204,13 @@ class TransactionRunner {
   }
 
   private async processTransaction(tx: Transaction) {
-    await this.processGraphqlMutation(tx);
-    console.info('processed gql mutation!');
+    tx.start();
+
+    if (!tx.syncOnly) {
+      await this.processGraphqlMutation(tx);
+    }
     await this.processSyncPacket(tx);
-    console.info('processed sync packet!');
+    tx.complete();
   }
 
   private async processSyncPacket(tx: Transaction) {
@@ -219,21 +238,11 @@ class TransactionRunner {
   }
 
   private handleRetry(tx: Transaction) {
-    if (!tx.retryAttempts) {
-      tx.retryAttempts = 0;
-    }
-
     if (tx.retryAttempts < this.maxRetries) {
-      tx.retryAttempts++;
-      tx.lastAttemptAt = new Date();
-
-      const delay = this.calculateBackoff(tx.retryAttempts);
-
-      tx.retryDelay = delay;
-
+      tx.retry();
       this.retryQueue.push(tx);
     } else {
-      // log it or move to a dead letter queue
+      tx.fail();
     }
   }
 
@@ -243,10 +252,6 @@ class TransactionRunner {
     const lastAttemptTime = tx.lastAttemptAt.getTime();
 
     return now - lastAttemptTime >= tx.retryDelay;
-  }
-
-  private calculateBackoff(attempt: number): number {
-    return this.baseDelay * Math.pow(2, attempt);
   }
 }
 

@@ -1,6 +1,7 @@
 import { useRef } from 'react';
 import { useParams } from 'react-router-dom';
 
+import { match } from 'ts-pattern';
 import { observer } from 'mobx-react-lite';
 import { useFeatureIsOn } from '@growthbook/growthbook-react';
 
@@ -29,6 +30,7 @@ import {
   Social,
   DataSource,
   Tag as TagType,
+  OrganizationStage,
   OrganizationRelationship,
 } from '@graphql/types';
 
@@ -321,15 +323,34 @@ export const AboutPanel = observer(() => {
                   .map((option) => (
                     <MenuItem
                       key={option.value}
-                      onClick={() => {
-                        organization.value.relationship = option.value;
-                        organization.commit();
-                      }}
                       disabled={
                         (selectedRelationshipOption?.label === 'Customer' ||
                           selectedRelationshipOption?.label === 'Not a fit') &&
                         option.label === 'Prospect'
                       }
+                      onClick={() => {
+                        organization.value.relationship = option.value;
+                        organization.value.stage = match(option.value)
+                          .with(
+                            OrganizationRelationship.Prospect,
+                            () => OrganizationStage.Lead,
+                          )
+                          .with(
+                            OrganizationRelationship.Customer,
+                            () => OrganizationStage.InitialValue,
+                          )
+                          .with(
+                            OrganizationRelationship.NotAFit,
+                            () => OrganizationStage.Unqualified,
+                          )
+                          .with(
+                            OrganizationRelationship.FormerCustomer,
+                            () => OrganizationStage.Target,
+                          )
+                          .otherwise(() => undefined);
+
+                        organization.commit();
+                      }}
                     >
                       {iconMap[option.label as keyof typeof iconMap]}
                       {option.label}

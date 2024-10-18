@@ -1,5 +1,0 @@
-query GetCanAccessOrganization($id: ID!) {
-    organization(id: $id) {
-        id
-    }
-}

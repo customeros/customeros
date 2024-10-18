@@ -53,15 +53,10 @@ export const OwnerCell = observer(({ id, owner, ownerId: _ }: OwnerProps) => {
   const handleSelect = (option: SelectOption) => {
     const targetOwner = store.users.value.get(option?.value);
 
-    organization?.update((value) => {
-      if (!option || !option?.value) {
-        value.owner = null;
-      } else {
-        value.owner = targetOwner?.value;
-      }
+    if (!organization) return;
 
-      return value;
-    });
+    organization.value.owner = option?.value ? targetOwner?.value : null;
+    organization.commit();
   };
 
   if (!isEditing) {

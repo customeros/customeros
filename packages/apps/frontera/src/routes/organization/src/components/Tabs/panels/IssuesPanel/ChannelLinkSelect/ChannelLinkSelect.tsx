@@ -36,12 +36,11 @@ export const ChannelLinkSelect = observer(() => {
     ...timelineMeta.getTimelineVariables,
   });
 
-  const handleChange = (value: SelectOption) => {
-    organization?.update((val) => {
-      val.slackChannelId = value?.value ?? '';
+  const handleChange = (option: SelectOption) => {
+    if (!organization) return;
 
-      return val;
-    });
+    organization.value.slackChannelId = option?.value ?? '';
+    organization.commit();
 
     onClose();
     setTimeout(() => {

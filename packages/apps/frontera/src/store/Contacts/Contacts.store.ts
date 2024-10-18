@@ -6,13 +6,7 @@ import { GroupOperation } from '@store/types';
 import { when, runInAction, makeAutoObservable } from 'mobx';
 import { GroupStore, makeAutoSyncableGroup } from '@store/group-store';
 
-import {
-  Contact,
-  DataSource,
-  Pagination,
-  ContactInput,
-  Organization,
-} from '@graphql/types';
+import { Contact, DataSource, Pagination, ContactInput } from '@graphql/types';
 
 import mock from './mock.json';
 import { ContactStore } from './Contact.store';
@@ -158,14 +152,8 @@ export class ContactsStore implements GroupStore<Contact> {
     if (organizationId) {
       const organization = this.root.organizations.value.get(organizationId);
 
-      organization?.update(
-        (v: Organization) => {
-          v.contacts.content.unshift(newContact.value);
-
-          return v;
-        },
-        { mutate: false },
-      );
+      organization?.value.contacts.content.unshift(newContact.value);
+      organization?.commit({ syncOnly: true });
     }
 
     try {
@@ -249,14 +237,8 @@ export class ContactsStore implements GroupStore<Contact> {
     const organization = this.root.organizations.value.get(organizationId);
 
     if (organization) {
-      organization?.update(
-        (v: Organization) => {
-          v.contacts.content.push(newContact.value);
-
-          return v;
-        },
-        { mutate: false },
-      );
+      organization?.value?.contacts.content.unshift(newContact.value);
+      organization.commit({ syncOnly: true });
     }
 
     try {
@@ -403,16 +385,14 @@ export class ContactsStore implements GroupStore<Contact> {
           const organization =
             this.root.organizations.value.get(organizationId);
 
-          organization?.update(
-            (v: Organization) => {
-              v.contacts.content = v.contacts.content.filter(
-                (c) => c.id !== id,
-              );
-
-              return v;
-            },
-            { mutate: false },
+          const foundIdx = organization?.value?.contacts.content.findIndex(
+            (c) => c?.id === id,
           );
+
+          if (foundIdx && foundIdx > -1) {
+            organization?.value?.contacts.content.splice(foundIdx, 1);
+            organization?.commit({ syncOnly: true });
+          }
         }
         this.value.delete(id);
       });
@@ -438,16 +418,14 @@ export class ContactsStore implements GroupStore<Contact> {
           const organization =
             this.root.organizations.value.get(organizationId);
 
-          organization?.update(
-            (v: Organization) => {
-              v.contacts.content = v.contacts.content.filter(
-                (c) => c.id !== id,
-              );
-
-              return v;
-            },
-            { mutate: false },
+          const foundIdx = organization?.value?.contacts.content.findIndex(
+            (c) => c?.id === id,
           );
+
+          if (foundIdx && foundIdx > -1) {
+            organization?.value?.contacts.content.splice(foundIdx, 1);
+            organization?.commit({ syncOnly: true });
+          }
         }
         this.value.delete(id);
       });

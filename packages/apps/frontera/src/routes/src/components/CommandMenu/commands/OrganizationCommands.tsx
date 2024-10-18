@@ -78,7 +78,17 @@ export const OrganizationCommands = observer(() => {
             leftAccessory={<Tag01 />}
             keywords={['change', 'add', 'tags', 'update', 'edit']}
             onSelect={() => {
-              organization?.removeAllTagsFromOrganization();
+              const tagCount = organization?.value?.tags?.length ?? 0;
+
+              for (let i = 0; i < tagCount; i++) {
+                organization?.value?.tags?.pop();
+                organization?.commit();
+              }
+              store.ui.toastSuccess(
+                'All tags were removed',
+                'tags-remove-success',
+              );
+
               store.ui.commandMenu.setOpen(false);
             }}
           >

@@ -10,12 +10,19 @@ query getOrganizations(
   ) {
     content {
       name
-      stage
-      relationship
+      note
+      notes
+
       metadata {
         id
         created
       }
+      contracts {
+        metadata {
+          id
+        }
+      }
+
       parentCompanies {
         organization {
           metadata {
@@ -30,22 +37,59 @@ query getOrganizations(
         lastName
         name
       }
+      contacts(pagination: { page: 0, limit: 100 }) {
+        content {
+          id
+          metadata {
+            id
+          }
+        }
+      }
+      stage
       description
       industry
+      market
       website
       domains
       logo
       icon
+      relationship
+      lastFundingRound
       leadSource
+      valueProposition
+      slackChannelId
+      public
+      enrichDetails {
+        enrichedAt
+        failedAt
+        requestedAt
+      }
       socialMedia {
         id
         url
-
+        followersCount
       }
       employees
+      tags {
+        id
+        name
+        createdAt
+        updatedAt
+        source
+        appSource
+        metadata {
+          id
+          created
+          lastUpdated
+          source
+          sourceOfTruth
+          appSource
+        }
+      }
       yearFounded
-
       accountDetails {
+        ltv
+        churned
         renewalSummary {
           arrForecast
           maxArrForecast
@@ -69,6 +113,32 @@ query getOrganizations(
         postalCode
         houseNumber
         rawAddress
+        locality
+        countryCodeA2
+        countryCodeA3
+      }
+      subsidiaries {
+        organization {
+          metadata {
+            id
+          }
+          name
+          parentCompanies {
+            organization {
+              name
+              metadata {
+                id
+              }
+            }
+          }
+        }
+      }
+      parentCompanies {
+        organization {
+          metadata {
+            id
+          }
+        }
       }
       lastTouchpoint {
         lastTouchPointTimelineEventId
@@ -161,6 +231,12 @@ query getOrganizations(
               lastName
             }
           }
+        }
+      }
+
+      contracts {
+        metadata {
+          id
         }
       }
     }

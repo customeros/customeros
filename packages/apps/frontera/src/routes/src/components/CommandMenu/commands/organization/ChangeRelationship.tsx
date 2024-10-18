@@ -8,8 +8,8 @@ import { Seeding } from '@ui/media/icons/Seeding';
 import { BrokenHeart } from '@ui/media/icons/BrokenHeart';
 import { ActivityHeart } from '@ui/media/icons/ActivityHeart';
 import { MessageXCircle } from '@ui/media/icons/MessageXCircle';
-import { Organization, OrganizationRelationship } from '@graphql/types';
 import { Command, CommandItem, CommandInput } from '@ui/overlay/CommandMenu';
+import { OrganizationStage, OrganizationRelationship } from '@graphql/types';
 import { relationshipOptions } from '@organization/components/Tabs/panels/AboutPanel/util';
 const iconMap = {
   Customer: <ActivityHeart className='text-gray-500' />,
@@ -50,11 +50,26 @@ export const ChangeRelationship = observer(() => {
 
     match(context.entity)
       .with('Organization', () => {
-        (entity as OrganizationStore)?.update((org: Organization) => {
-          org.relationship = value;
+        const organization = entity as OrganizationStore;
 
-          return org;
-        });
+        organization.value.relationship = value;
+        organization.value.stage = match(value)
+          .with(OrganizationRelationship.Prospect, () => OrganizationStage.Lead)
+          .with(
+            OrganizationRelationship.Customer,
+            () => OrganizationStage.InitialValue,
+          )
+          .with(
+            OrganizationRelationship.NotAFit,
+            () => OrganizationStage.Unqualified,
+          )
+          .with(
+            OrganizationRelationship.FormerCustomer,
+            () => OrganizationStage.Target,
+          )
+          .otherwise(() => undefined);
+
+        organization.commit();
       })
       .with('Organizations', () => {
         store.organizations?.updateRelationship(context.ids as string[], value);

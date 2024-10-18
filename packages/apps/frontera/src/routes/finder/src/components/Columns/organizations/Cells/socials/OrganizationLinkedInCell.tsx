@@ -36,19 +36,19 @@ export const OrganizationLinkedInCell = observer(
 
     const handleAddSocial = (url: string) => {
       if (!organization || url === 'Unknown' || url === '') return;
-      organization.update((org) => {
-        const formattedValue =
-          url.includes('https://www') || url.includes('linkedin.com')
-            ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-            : `in/${url}`;
 
-        org.socialMedia.push({
-          id: crypto.randomUUID(),
-          url: `linkedin.com/${formattedValue}`,
-        } as Social);
+      const formattedValue =
+        url.includes('https://www') || url.includes('linkedin.com')
+          ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
+          : `in/${url}`;
 
-        return org;
-      });
+      organization.value.socialMedia.push({
+        id: crypto.randomUUID(),
+        url: `linkedin.com/${formattedValue}`,
+      } as Social);
+
+      organization.commit();
+
       setIsEdit(false);
     };
 
@@ -59,24 +59,26 @@ export const OrganizationLinkedInCell = observer(
 
       if (!linkedinId) return;
 
-      organization.update((org) => {
-        const idx = org.socialMedia.findIndex((s) => s.id === linkedinId);
+      const idx = organization.value.socialMedia.findIndex(
+        (s) => s.id === linkedinId,
+      );
 
-        if (idx !== -1) {
-          const formattedValue =
-            url.includes('https://www') || url.includes('linkedin.com')
-              ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
-              : `in/${url}`;
+      if (idx !== -1) {
+        const formattedValue =
+          url.includes('https://www') || url.includes('linkedin.com')
+            ? getFormattedLink(url).replace(/^linkedin\.com\//, '')
+            : `in/${url}`;
 
-          org.socialMedia[idx].url = `linkedin.com/${formattedValue}`;
-        }
+        organization.value.socialMedia[
+          idx
+        ].url = `linkedin.com/${formattedValue}`;
+      }
 
-        if (url === '') {
-          org.socialMedia.splice(idx, 1);
-        }
+      if (url === '') {
+        organization.value.socialMedia.splice(idx, 1);
+      }
 
-        return org;
-      });
+      organization.commit();
     };
 
     const toggleEditMode = () => setIsEdit(!isEdit);
