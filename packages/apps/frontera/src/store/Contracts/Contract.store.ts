@@ -555,6 +555,7 @@ const CONTRACT_QUERY = gql`
         billingCycle
         price
         quantity
+        paused
         comments
         serviceEnded
         parentId

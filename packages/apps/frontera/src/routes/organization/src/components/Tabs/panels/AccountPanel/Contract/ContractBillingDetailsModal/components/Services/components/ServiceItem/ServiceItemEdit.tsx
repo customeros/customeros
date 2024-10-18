@@ -7,6 +7,7 @@ import { Delete } from '@ui/media/icons/Delete';
 import { toastError } from '@ui/presentation/Toast';
 import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { IconButton } from '@ui/form/IconButton/IconButton';
+import { PauseCircle } from '@ui/media/icons/PauseCircle.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions';
 import { MaskedResizableInput } from '@ui/form/Input/MaskedResizableInput';
 import { DatePickerUnderline2 } from '@ui/form/DatePicker/DatePickerUnderline2';
@@ -204,6 +205,7 @@ export const ServiceItemEdit = observer(
 
           <MaskedResizableInput
             mask={`num`}
+            unmask={true}
             placeholder='0'
             className={inputClasses}
             onFocus={(e) => e.target.select()}
@@ -218,7 +220,6 @@ export const ServiceItemEdit = observer(
                 mask: Number,
                 scale: 2,
                 radix: '.',
-                mapToRadix: [','],
                 lazy: false,
                 min: type === 'one-time' ? -9999999999 : 0,
                 placeholderChar: '#',
@@ -260,26 +261,31 @@ export const ServiceItemEdit = observer(
 
           <span className='whitespace-nowrap  mx-1 text-gray-700'>% VAT</span>
         </div>
-
-        <Tooltip label='Service start date'>
-          <div>
-            <DatePickerUnderline2
-              onChange={onChangeServiceStarted}
-              value={service?.tempValue?.serviceStarted}
-            />
-          </div>
-        </Tooltip>
-
-        <IconButton
-          size='xs'
-          variant='outline'
-          aria-label={'Delete version'}
-          className={deleteButtonClasses}
-          icon={<Delete className='text-inherit' />}
-          onClick={() => {
-            service.updateTemp((prev) => ({ ...prev, closed: true }));
-          }}
-        />
+        <div className='flex items-center'>
+          <Tooltip label='Service start date'>
+            <div>
+              <DatePickerUnderline2
+                onChange={onChangeServiceStarted}
+                value={service?.tempValue?.serviceStarted}
+              />
+            </div>
+          </Tooltip>
+          <IconButton
+            size='xs'
+            variant='outline'
+            aria-label={'Delete version'}
+            className={deleteButtonClasses}
+            icon={<Delete className='text-inherit' />}
+            onClick={() => {
+              service.updateTemp((prev) => ({ ...prev, closed: true }));
+            }}
+          />
+          {service.tempValue.paused && (
+            <Tooltip label={'This service will be invoiced when resumed'}>
+              <PauseCircle className='text-gray-500 size-4 ml-2' />
+            </Tooltip>
+          )}
+        </div>
       </div>
     );
   },

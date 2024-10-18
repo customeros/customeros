@@ -6,7 +6,9 @@ import { ContractLineItemStore } from '@store/ContractLineItems/ContractLineItem
 
 import { cn } from '@ui/utils/cn.ts';
 import { DateTimeUtils } from '@utils/date.ts';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { BilledType, ContractStatus } from '@graphql/types';
+import { PauseCircle } from '@ui/media/icons/PauseCircle.tsx';
 import { FlipBackward } from '@ui/media/icons/FlipBackward.tsx';
 import { IconButton } from '@ui/form/IconButton/IconButton.tsx';
 import { currencySymbol } from '@shared/util/currencyOptions.ts';
@@ -62,7 +64,7 @@ export const ServiceItemPreview: FC<ServiceItemProps> = observer(
       <>
         <div
           className={cn(
-            'flex items-baseline justify-between group text-gray-700 relative',
+            'flex justify-between group text-gray-700 relative items-center',
             {
               'text-gray-400': isEnded,
               'line-through text-gray-400 hover:text-gray-400':
@@ -95,35 +97,44 @@ export const ServiceItemPreview: FC<ServiceItemProps> = observer(
               • {service?.tempValue?.tax?.taxRate}% VAT
             </span>
           </div>
+          <div className='flex items-center'>
+            <div className='ml-1 text-inherit'>
+              {isCurrentVersion && 'Current since '}
 
-          <div className='ml-1 text-inherit'>
-            {isCurrentVersion && 'Current since '}
-
-            {service?.tempValue?.serviceStarted &&
-              DateTimeUtils.format(
-                toZonedTime(
-                  service?.tempValue?.serviceStarted,
-                  'UTC',
-                ).toString(),
-                DateTimeUtils.dateWithShortYear,
+              {service?.tempValue?.serviceStarted &&
+                DateTimeUtils.format(
+                  toZonedTime(
+                    service?.tempValue?.serviceStarted,
+                    'UTC',
+                  ).toString(),
+                  DateTimeUtils.dateWithShortYear,
+                )}
+            </div>
+            {allowIndividualRestore &&
+              (!service?.tempValue?.metadata.id ||
+                isDraft ||
+                isFutureVersion) &&
+              service?.tempValue?.closed && (
+                <IconButton
+                  size='xs'
+                  variant='outline'
+                  aria-label={'Restore version'}
+                  className={deleteButtonClasses}
+                  icon={<FlipBackward className='text-inherit' />}
+                  onClick={() =>
+                    service.update((prev) => ({ ...prev, closed: false }), {
+                      mutate: false,
+                    })
+                  }
+                />
               )}
-          </div>
-          {allowIndividualRestore &&
-            (!service?.tempValue?.metadata.id || isDraft || isFutureVersion) &&
-            service?.tempValue?.closed && (
-              <IconButton
-                size='xs'
-                variant='outline'
-                aria-label={'Restore version'}
-                className={deleteButtonClasses}
-                icon={<FlipBackward className='text-inherit' />}
-                onClick={() =>
-                  service.update((prev) => ({ ...prev, closed: false }), {
-                    mutate: false,
-                  })
-                }
-              />
+
+            {service.tempValue.paused && (
+              <Tooltip label={'This service will be invoiced when resumed'}>
+                <PauseCircle className='text-gray-500 size-4 ml-2' />
+              </Tooltip>
             )}
+          </div>
         </div>
       </>
     );

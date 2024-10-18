@@ -398,6 +398,7 @@ const CONTRACTS_QUERY = gql`
             appSource
             sourceOfTruth
           }
+          paused
           description
           billingCycle
           price
