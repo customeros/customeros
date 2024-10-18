@@ -77,6 +77,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     const operation: Operation = {
       id: this.version,
       diff,
+      entity: 'ContractLineItem',
       ref: this.transport.refId,
     };
 

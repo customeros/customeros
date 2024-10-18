@@ -94,7 +94,6 @@ export const Owner = observer(({ ownerId, opportunityId }: OwnerProps) => {
 
           <PopoverContent ref={contentRef} className='w-[264px]'>
             <Combobox
-              size='xs'
               options={options}
               escapeClearsValue
               onChange={handleSelect}

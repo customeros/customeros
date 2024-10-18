@@ -5,7 +5,6 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import { toastError } from '@ui/presentation/Toast';
 import { getGraphQLClient } from '@shared/util/getGraphQLClient';
-import { OrganizationQuery } from '@organization/graphql/organization.generated';
 import { useTimelineEventCachedData } from '@organization/components/Timeline/shared/TimelineEventPreview/context/useTimelineEventCachedData';
 import {
   GetTimelineEventsQuery,
@@ -45,7 +44,7 @@ export const useDeepLinkToOpenModal = ({
         },
       );
 
-      queryClient.setQueryData<OrganizationQuery>(singleEventQueryKey, () => {
+      queryClient.setQueryData(singleEventQueryKey, () => {
         return result;
       });
 

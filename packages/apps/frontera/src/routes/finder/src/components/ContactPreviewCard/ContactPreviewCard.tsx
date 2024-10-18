@@ -246,7 +246,6 @@ export const ContactPreviewCard = observer(() => {
               Persona
             </div>
             <Tags
-              hideBorder
               placeholder='No tags yet'
               value={
                 contact?.value?.tags?.map((tag: Tag) => ({

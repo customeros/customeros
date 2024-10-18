@@ -20,8 +20,8 @@ import { useCopyToClipboard } from '@shared/hooks/useCopyToClipboard';
 import { emailRegex } from '@organization/components/Timeline/PastZone/events/email/utils';
 import { MultiValueWithActionMenu } from '@shared/components/EmailMultiCreatableSelect/MultiValueWithActionMenu';
 import {
-  FormSelectProps,
   CreatableSelect,
+  CreatableSelectProps,
   getMultiValueLabelClassNames,
 } from '@ui/form/CreatableSelect';
 import {
@@ -32,7 +32,7 @@ import {
 type ExistingContact = { id: string; label: string; value?: string | null };
 export const EmailFormMultiCreatableSelect = forwardRef<
   SelectInstance,
-  FormSelectProps & { navigateAfterAddingToPeople: boolean }
+  CreatableSelectProps & { navigateAfterAddingToPeople: boolean }
 >(({ name, formId, navigateAfterAddingToPeople, ...rest }, ref) => {
   const client = getGraphQLClient();
   const organizationId = useParams()?.id as string;

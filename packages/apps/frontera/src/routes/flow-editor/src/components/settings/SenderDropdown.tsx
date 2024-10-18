@@ -98,7 +98,6 @@ export const SenderDropdown = observer(({ flowId }: SenderDropdownProps) => {
 
         <PopoverContent align='start' ref={contentRef} className='w-[330px]'>
           <Combobox
-            size='xs'
             options={options}
             escapeClearsValue
             onChange={handleSelect}

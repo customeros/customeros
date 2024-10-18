@@ -1,21 +1,17 @@
 import { Transport } from '@store/transport';
 
-import {
-  RemindersQuery,
-  RemindersQueryVariables,
-} from '@organization/graphql/reminders.generated';
-import {
-  CreateReminderMutation,
-  CreateReminderMutationVariables,
-} from '@organization/graphql/createReminder.generated';
-import {
-  UpdateReminderMutation,
-  UpdateReminderMutationVariables,
-} from '@organization/graphql/updateReminder.generated';
-
 import RemindersDocument from './reminders.graphql';
 import UpdateReminderDocument from './updateReminder.graphql';
 import CreateReminderDocument from './createReminder.graphql';
+import { RemindersQuery, RemindersQueryVariables } from './reminders.generated';
+import {
+  CreateReminderMutation,
+  CreateReminderMutationVariables,
+} from './createReminder.generated';
+import {
+  UpdateReminderMutation,
+  UpdateReminderMutationVariables,
+} from './updateReminder.generated';
 
 export class RemindersService {
   private static instance: RemindersService | null = null;
