@@ -296,7 +296,6 @@ func (r *RabbitMQService) ProcessMessage(d amqp091.Delivery) {
 		if err := d.Nack(false, false); err != nil {
 			log.Printf("Failed to negatively acknowledge message: %s", err)
 		}
-		//TODO dead letter queue
 		return
 	}
 

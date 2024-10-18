@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -14,6 +13,7 @@ import (
 	postgresEntity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	"time"
 )
 
@@ -415,31 +415,30 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	session := utils.NewNeo4jWriteSession(ctx, *s.services.Neo4jRepositories.Neo4jDriver)
 	defer session.Close(ctx)
 
+	var emailMessage *postgresEntity.EmailMessage
+
 	_, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		currentAction, err := s.services.FlowService.FlowActionGetById(ctx, scheduledActionExecution.ActionId)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+			return nil, errors.Wrap(err, "failed to get action by id")
 		}
 
 		if currentAction == nil {
-			tracing.TraceErr(span, errors.New("Action not found"))
-			return nil, errors.New("Action not found")
+			return nil, errors.New("action not found")
 		}
+
+		//TODO verify if the action execution hasn't produced an email in the email table by producerId and producerType
 
 		if currentAction.Data.Action == entity.FlowActionTypeEmailNew {
 
 			mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, common.GetTenantFromContext(ctx), *scheduledActionExecution.Mailbox)
 			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
+				return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
 			}
 
 			if mailbox == nil {
-				//mark the execution as failed
-				tracing.TraceErr(span, errors.New("Mailbox not found"))
-				return nil, errors.New("Mailbox not found")
+				return nil, errors.New("mailbox not found in database")
 			}
 
 			toEmail := ""
@@ -447,13 +446,11 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			//identify the primary work email associated with the entity
 			emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, scheduledActionExecution.EntityType, []string{scheduledActionExecution.EntityId})
 			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
+				return nil, errors.Wrap(err, "failed to get all email nodes for linked entity ids")
 			}
 
 			if emailNodes == nil || len(emailNodes) == 0 {
-				tracing.TraceErr(span, errors.New("Email not found"))
-				return nil, errors.New("Email not found")
+				return nil, errors.New("no email nodes found for linked entity ids")
 			}
 
 			for _, emailNode := range emailNodes {
@@ -465,23 +462,17 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			}
 
 			if toEmail == "" {
-				tracing.TraceErr(span, errors.New("Email not found"))
-				return nil, errors.New("Email not found")
+				return nil, errors.New("no work email found for entity")
 			}
 
-			emailMessage := postgresEntity.EmailMessage{
+			emailMessage = &postgresEntity.EmailMessage{
+				Status:       postgresEntity.EmailMessageStatusScheduled,
 				ProducerId:   scheduledActionExecution.Id,
 				ProducerType: model.NodeLabelFlowActionExecution,
 				From:         *scheduledActionExecution.Mailbox,
 				To:           []string{toEmail},
 				Subject:      *currentAction.Data.Subject,
 				Content:      *currentAction.Data.BodyTemplate,
-			}
-
-			err = s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, tenant, &emailMessage)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
 			}
 		}
 		//else if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailReply {
@@ -492,20 +483,17 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 
 		_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, &tx, scheduledActionExecution)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+			return nil, errors.Wrap(err, "failed to merge flow action execution")
 		}
 
 		flowParticipant, err := s.services.FlowService.FlowParticipantByEntity(ctx, scheduledActionExecution.FlowId, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+			return nil, errors.Wrap(err, "failed to get flow participant by entity")
 		}
 
 		err = s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, scheduledActionExecution.FlowId, flowParticipant)
 		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
+			return nil, errors.Wrap(err, "failed to schedule flow")
 		}
 
 		return nil, nil
@@ -514,6 +502,18 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return err
+	}
+
+	if emailMessage == nil {
+		tracing.TraceErr(span, errors.New("email message is nil"))
+		return errors.New("email message is nil")
+	}
+
+	//store in PG after the neo4j transaction is committed
+	err = s.services.PostgresRepositories.EmailMessageRepository.Store(ctx, tenant, emailMessage)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return errors.Wrap(err, "failed to store email message")
 	}
 
 	return nil

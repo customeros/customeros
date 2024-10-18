@@ -28,6 +28,7 @@ const (
 	flowExecutionGroup              = "flowExecutionGroup"
 	flowStatisticsGroup             = "flowStatisticsGroup"
 	sendEmailsGroup                 = "sendEmailsGroup"
+	processSentEmailsGroup          = "processSentEmailsGroup"
 )
 
 var jobLocks = struct {
@@ -54,6 +55,7 @@ var jobLocks = struct {
 		flowExecutionGroup:              {},
 		flowStatisticsGroup:             {},
 		sendEmailsGroup:                 {},
+		processSentEmailsGroup:          {},
 	},
 }
 
@@ -264,13 +266,6 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
 	}
 
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
-	//	lockAndRunJob(cont, flowExecutionGroup, flowExecution)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
-	//}
-
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowStatistics, func() {
 		lockAndRunJob(cont, flowStatisticsGroup, flowStatistics)
 	})
@@ -278,12 +273,26 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "flowStatistics", err.Error())
 	}
 
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
-	//	lockAndRunJob(cont, sendEmailsGroup, sendEmails)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
-	//}
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
+		lockAndRunJob(cont, flowExecutionGroup, flowExecution)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
+		lockAndRunJob(cont, sendEmailsGroup, sendEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessSentEmails, func() {
+		lockAndRunJob(cont, processSentEmailsGroup, processSentEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
+	}
 
 	c.Start()
 
@@ -430,4 +439,8 @@ func flowStatistics(cont *container.Container) {
 
 func sendEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).SendEmails()
+}
+
+func processSentEmails(cont *container.Container) {
+	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ProcessSentEmails()
 }
