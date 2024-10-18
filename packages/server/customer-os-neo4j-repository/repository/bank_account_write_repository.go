@@ -14,19 +14,19 @@ import (
 )
 
 type BankAccountCreateFields struct {
-	Id                  string        `json:"id"`
-	CreatedAt           time.Time     `json:"createdAt"`
-	SourceFields        model.Source  `json:"sourceFields"`
-	BankName            string        `json:"bankName"`
-	BankTransferEnabled bool          `json:"bankTransferEnabled"`
-	AllowInternational  bool          `json:"allowInternational"`
-	Currency            enum.Currency `json:"currency"`
-	Iban                string        `json:"iban"`
-	Bic                 string        `json:"bic"`
-	SortCode            string        `json:"sortCode"`
-	AccountNumber       string        `json:"accountNumber"`
-	RoutingNumber       string        `json:"routingNumber"`
-	OtherDetails        string        `json:"otherDetails"`
+	Id                  string             `json:"id"`
+	CreatedAt           time.Time          `json:"createdAt"`
+	SourceFields        model.SourceFields `json:"sourceFields"`
+	BankName            string             `json:"bankName"`
+	BankTransferEnabled bool               `json:"bankTransferEnabled"`
+	AllowInternational  bool               `json:"allowInternational"`
+	Currency            enum.Currency      `json:"currency"`
+	Iban                string             `json:"iban"`
+	Bic                 string             `json:"bic"`
+	SortCode            string             `json:"sortCode"`
+	AccountNumber       string             `json:"accountNumber"`
+	RoutingNumber       string             `json:"routingNumber"`
+	OtherDetails        string             `json:"otherDetails"`
 }
 
 type BankAccountUpdateFields struct {

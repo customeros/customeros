@@ -46,7 +46,7 @@ func (h *BankAccountEventHandler) OnAddBankAccountV1(ctx context.Context, evt ev
 	data := neo4jrepository.BankAccountCreateFields{
 		Id:        eventData.Id,
 		CreatedAt: eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:    helper.GetSource(eventData.SourceFields.Source),
 			AppSource: helper.GetAppSource(eventData.SourceFields.AppSource),
 		},

@@ -16,11 +16,11 @@ import (
 )
 
 type PlayerFields struct {
-	AuthId       string       `json:"authId"`
-	Provider     string       `json:"provider"`
-	IdentityId   string       `json:"identityId"`
-	CreatedAt    time.Time    `json:"createdAt"`
-	SourceFields model.Source `json:"sourceFields"`
+	AuthId       string             `json:"authId"`
+	Provider     string             `json:"provider"`
+	IdentityId   string             `json:"identityId"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	SourceFields model.SourceFields `json:"sourceFields"`
 }
 
 type PlayerWriteRepository interface {

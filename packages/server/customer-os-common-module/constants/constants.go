@@ -1,6 +1,8 @@
 package constants
 
 const (
+	AppSourceCustomerOsApi = "customer-os-api"
+
 	ComponentResolver        = "resolver"
 	ComponentRest            = "rest"
 	ComponentService         = "service"

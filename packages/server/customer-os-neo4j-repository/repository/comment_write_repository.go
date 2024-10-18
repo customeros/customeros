@@ -14,12 +14,12 @@ import (
 )
 
 type CommentCreateFields struct {
-	Content          string       `json:"content"`
-	CreatedAt        time.Time    `json:"createdAt"`
-	ContentType      string       `json:"contentType"`
-	AuthorUserId     string       `json:"authorUserId"`
-	CommentedIssueId string       `json:"commentedIssueId"`
-	SourceFields     model.Source `json:"sourceFields"`
+	Content          string             `json:"content"`
+	CreatedAt        time.Time          `json:"createdAt"`
+	ContentType      string             `json:"contentType"`
+	AuthorUserId     string             `json:"authorUserId"`
+	CommentedIssueId string             `json:"commentedIssueId"`
+	SourceFields     model.SourceFields `json:"sourceFields"`
 }
 
 type CommentUpdateFields struct {

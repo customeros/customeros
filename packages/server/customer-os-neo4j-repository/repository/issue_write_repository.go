@@ -14,16 +14,16 @@ import (
 )
 
 type IssueCreateFields struct {
-	CreatedAt                 time.Time    `json:"createdAt"`
-	SourceFields              model.Source `json:"sourceFields"`
-	GroupId                   string       `json:"groupId"`
-	Subject                   string       `json:"subject"`
-	Description               string       `json:"description"`
-	Status                    string       `json:"status"`
-	Priority                  string       `json:"priority"`
-	ReportedByOrganizationId  string       `json:"reportedByOrganizationId"`
-	SubmittedByOrganizationId string       `json:"submittedByOrganizationId"`
-	SubmittedByUserId         string       `json:"submittedByUserId"`
+	CreatedAt                 time.Time          `json:"createdAt"`
+	SourceFields              model.SourceFields `json:"sourceFields"`
+	GroupId                   string             `json:"groupId"`
+	Subject                   string             `json:"subject"`
+	Description               string             `json:"description"`
+	Status                    string             `json:"status"`
+	Priority                  string             `json:"priority"`
+	ReportedByOrganizationId  string             `json:"reportedByOrganizationId"`
+	SubmittedByOrganizationId string             `json:"submittedByOrganizationId"`
+	SubmittedByUserId         string             `json:"submittedByUserId"`
 }
 
 type IssueUpdateFields struct {

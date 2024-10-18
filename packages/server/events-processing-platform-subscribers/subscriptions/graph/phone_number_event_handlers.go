@@ -51,7 +51,7 @@ func (h *PhoneNumberEventHandler) OnPhoneNumberCreate(ctx context.Context, evt e
 
 	data := neo4jrepository.PhoneNumberCreateFields{
 		RawPhoneNumber: eventData.RawPhoneNumber,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.SourceFields.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
 			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),

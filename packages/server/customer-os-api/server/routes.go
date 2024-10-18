@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	cosHandler "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/handler"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
 	restbilling "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest/billing"
@@ -99,7 +100,7 @@ func setupRestRoute(ctx context.Context, r *gin.Engine, method, path string, ser
 	r.Handle(method, path,
 		tracing.TracingEnhancer(ctx, method+":"+path),
 		security.ApiKeyCheckerHTTP(services.Repositories.PostgresRepositories.TenantWebhookApiKeyRepository, services.Repositories.PostgresRepositories.AppKeyRepository, security.CUSTOMER_OS_API, security.WithCache(cache)),
-		enrichContextMiddleware(),
+		enrichContextMiddleware(constants.AppSourceCustomerOsApiRest),
 		cosHandler.StatsSuccessHandler(method+":"+path, services),
 		handler)
 }

@@ -25,7 +25,7 @@ type InvoiceCreateFields struct {
 	CreatedAt            time.Time               `json:"createdAt"`
 	IssuedDate           time.Time               `json:"issuedDate"`
 	DueDate              time.Time               `json:"dueDate"`
-	SourceFields         model.Source            `json:"sourceFields"`
+	SourceFields         model.SourceFields      `json:"sourceFields"`
 	BillingCycleInMonths int64                   `json:"billingCycleInMonths"`
 	Status               neo4jenum.InvoiceStatus `json:"status"`
 	Note                 string                  `json:"note"`

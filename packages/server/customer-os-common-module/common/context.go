@@ -61,6 +61,12 @@ func GetIdentityIdFromContext(ctx context.Context) string {
 	return GetContext(ctx).IdentityId
 }
 
+func SetAppSourceInContext(ctx context.Context, appSource string) context.Context {
+	customContext := GetContext(ctx)
+	customContext.AppSource = appSource
+	return WithCustomContext(ctx, customContext)
+}
+
 func ValidateTenant(ctx context.Context) error {
 	if GetTenantFromContext(ctx) == "" {
 		return errors.New("tenant is missing")

@@ -16,16 +16,16 @@ import (
 )
 
 type UserCreateFields struct {
-	Name            string       `json:"name"`
-	FirstName       string       `json:"firstName"`
-	LastName        string       `json:"lastName"`
-	SourceFields    model.Source `json:"sourceFields"`
-	CreatedAt       time.Time    `json:"createdAt"`
-	UpdatedAt       time.Time    `json:"updatedAt"`
-	Internal        bool         `json:"internal"`
-	Bot             bool         `json:"bot"`
-	ProfilePhotoUrl string       `json:"profilePhotoUrl"`
-	Timezone        string       `json:"timezone"`
+	Name            string             `json:"name"`
+	FirstName       string             `json:"firstName"`
+	LastName        string             `json:"lastName"`
+	SourceFields    model.SourceFields `json:"sourceFields"`
+	CreatedAt       time.Time          `json:"createdAt"`
+	UpdatedAt       time.Time          `json:"updatedAt"`
+	Internal        bool               `json:"internal"`
+	Bot             bool               `json:"bot"`
+	ProfilePhotoUrl string             `json:"profilePhotoUrl"`
+	Timezone        string             `json:"timezone"`
 }
 
 type UserUpdateFields struct {

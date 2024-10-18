@@ -69,7 +69,7 @@ func (h *OpportunityEventHandler) OnCreate(ctx context.Context, evt eventstore.E
 	data := neo4jrepository.OpportunityCreateFields{
 		OrganizationId: eventData.OrganizationId,
 		CreatedAt:      eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
@@ -168,7 +168,7 @@ func (h *OpportunityEventHandler) OnCreateRenewal(ctx context.Context, evt event
 	data := neo4jrepository.RenewalOpportunityCreateFields{
 		ContractId: eventData.ContractId,
 		CreatedAt:  eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),

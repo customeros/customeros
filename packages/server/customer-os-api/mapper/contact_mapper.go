@@ -5,8 +5,51 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
+	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"time"
 )
+
+func MapContactUpdateInputToContactFields(input model.ContactUpdateInput) neo4jrepository.ContactFields {
+	fields := neo4jrepository.ContactFields{}
+	if input.Name != nil {
+		fields.Name = *input.Name
+		fields.UpdateName = true
+	}
+	if input.FirstName != nil {
+		fields.FirstName = *input.FirstName
+		fields.UpdateFirstName = true
+	}
+	if input.LastName != nil {
+		fields.LastName = *input.LastName
+		fields.UpdateLastName = true
+	}
+	if input.Prefix != nil {
+		fields.Prefix = *input.Prefix
+		fields.UpdatePrefix = true
+	}
+	if input.Description != nil {
+		fields.Description = *input.Description
+		fields.UpdateDescription = true
+	}
+	if input.Timezone != nil {
+		fields.Timezone = *input.Timezone
+		fields.UpdateTimezone = true
+	}
+	if input.ProfilePhotoURL != nil {
+		fields.ProfilePhotoUrl = *input.ProfilePhotoURL
+		fields.UpdateProfilePhotoUrl = true
+	}
+	if input.Username != nil {
+		fields.Username = *input.Username
+		fields.UpdateUsername = true
+	}
+	fields.SourceFields = neo4jmodel.SourceFields{
+		Source:    neo4jentity.DataSourceOpenline.String(),
+		AppSource: constants.AppSourceCustomerOsApi,
+	}
+	return fields
+}
 
 func MapContactInputToEntity(input model.ContactInput) *neo4jentity.ContactEntity {
 	contactEntity := neo4jentity.ContactEntity{

@@ -21,7 +21,7 @@ type CustomFieldCreateFields struct {
 	CustomFieldName     string                 `json:"customFieldName"`
 	CustomFieldDataType string                 `json:"customFieldDataType"`
 	CustomFieldValue    model.CustomFieldValue `json:"customFieldValue"`
-	SourceFields        model.Source           `json:"sourceFields,omitempty"`
+	SourceFields        model.SourceFields     `json:"sourceFields,omitempty"`
 }
 
 type CustomFieldWriteRepository interface {

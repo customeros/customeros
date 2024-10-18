@@ -19,7 +19,7 @@ import (
 // DEPRECATED use save
 type OrganizationCreateFields struct {
 	AggregateVersion   int64                              `json:"aggregateVersion"`
-	SourceFields       model.Source                       `json:"sourceFields"`
+	SourceFields       model.SourceFields                 `json:"sourceFields"`
 	CreatedAt          time.Time                          `json:"createdAt"`
 	Name               string                             `json:"name"`
 	Hide               bool                               `json:"hide"`
@@ -108,7 +108,7 @@ type OrganizationUpdateFields struct {
 }
 
 type OrganizationSaveFields struct {
-	SourceFields model.Source `json:"sourceFields"`
+	SourceFields model.SourceFields `json:"sourceFields"`
 
 	//not stored directly in node
 	Domains        []string             `json:"domains"`

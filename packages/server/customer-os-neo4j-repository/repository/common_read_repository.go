@@ -84,7 +84,7 @@ func (r *commonReadRepository) ExistsById(ctx context.Context, tenant, id, label
 		return false, err
 	}
 	span.LogFields(log.Bool("result.exists", result.(bool)))
-	return result.(bool), err
+	return result.(bool), nil
 }
 
 func (r *commonReadRepository) ExistsByIdInTx(ctx context.Context, tx neo4j.ManagedTransaction, tenant, id, label string) (bool, error) {

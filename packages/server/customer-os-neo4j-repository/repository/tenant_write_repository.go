@@ -19,24 +19,24 @@ import (
 )
 
 type TenantBillingProfileCreateFields struct {
-	Id                     string       `json:"id"`
-	CreatedAt              time.Time    `json:"createdAt"`
-	SourceFields           model.Source `json:"sourceFields"`
-	Phone                  string       `json:"phone"`
-	LegalName              string       `json:"legalName"`
-	AddressLine1           string       `json:"addressLine1"`
-	AddressLine2           string       `json:"addressLine2"`
-	AddressLine3           string       `json:"addressLine3"`
-	Locality               string       `json:"locality"`
-	Country                string       `json:"country"`
-	Region                 string       `json:"region"`
-	Zip                    string       `json:"zip"`
-	VatNumber              string       `json:"vatNumber"`
-	SendInvoicesFrom       string       `json:"sendInvoicesFrom"`
-	SendInvoicesBcc        string       `json:"sendInvoicesBcc"`
-	CanPayWithPigeon       bool         `json:"canPayWithPigeon"`
-	CanPayWithBankTransfer bool         `json:"canPayWithBankTransfer"`
-	Check                  bool         `json:"check"`
+	Id                     string             `json:"id"`
+	CreatedAt              time.Time          `json:"createdAt"`
+	SourceFields           model.SourceFields `json:"sourceFields"`
+	Phone                  string             `json:"phone"`
+	LegalName              string             `json:"legalName"`
+	AddressLine1           string             `json:"addressLine1"`
+	AddressLine2           string             `json:"addressLine2"`
+	AddressLine3           string             `json:"addressLine3"`
+	Locality               string             `json:"locality"`
+	Country                string             `json:"country"`
+	Region                 string             `json:"region"`
+	Zip                    string             `json:"zip"`
+	VatNumber              string             `json:"vatNumber"`
+	SendInvoicesFrom       string             `json:"sendInvoicesFrom"`
+	SendInvoicesBcc        string             `json:"sendInvoicesBcc"`
+	CanPayWithPigeon       bool               `json:"canPayWithPigeon"`
+	CanPayWithBankTransfer bool               `json:"canPayWithBankTransfer"`
+	Check                  bool               `json:"check"`
 }
 
 type TenantBillingProfileUpdateFields struct {

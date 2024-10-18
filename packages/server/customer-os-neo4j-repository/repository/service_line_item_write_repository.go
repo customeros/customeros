@@ -14,23 +14,23 @@ import (
 )
 
 type ServiceLineItemCreateFields struct {
-	IsNewVersionForExistingSLI bool         `json:"isNewVersionForExistingSLI"`
-	PreviousQuantity           int64        `json:"previousQuantity"`
-	PreviousPrice              float64      `json:"previousPrice"`
-	PreviousBilled             string       `json:"previousBilled"`
-	SourceFields               model.Source `json:"sourceFields"`
-	ContractId                 string       `json:"contractId"`
-	ParentId                   string       `json:"parentId"`
-	CreatedAt                  time.Time    `json:"createdAt"`
-	StartedAt                  time.Time    `json:"startedAt"`
-	EndedAt                    *time.Time   `json:"endedAt"`
-	Price                      float64      `json:"price"`
-	Quantity                   int64        `json:"quantity"`
-	Name                       string       `json:"name"`
-	Billed                     string       `json:"billed"`
-	Comments                   string       `json:"comments"`
-	VatRate                    float64      `json:"vatRate"`
-	PreviousVatRate            float64      `json:"previousVatRate"`
+	IsNewVersionForExistingSLI bool               `json:"isNewVersionForExistingSLI"`
+	PreviousQuantity           int64              `json:"previousQuantity"`
+	PreviousPrice              float64            `json:"previousPrice"`
+	PreviousBilled             string             `json:"previousBilled"`
+	SourceFields               model.SourceFields `json:"sourceFields"`
+	ContractId                 string             `json:"contractId"`
+	ParentId                   string             `json:"parentId"`
+	CreatedAt                  time.Time          `json:"createdAt"`
+	StartedAt                  time.Time          `json:"startedAt"`
+	EndedAt                    *time.Time         `json:"endedAt"`
+	Price                      float64            `json:"price"`
+	Quantity                   int64              `json:"quantity"`
+	Name                       string             `json:"name"`
+	Billed                     string             `json:"billed"`
+	Comments                   string             `json:"comments"`
+	VatRate                    float64            `json:"vatRate"`
+	PreviousVatRate            float64            `json:"previousVatRate"`
 }
 
 type ServiceLineItemUpdateFields struct {

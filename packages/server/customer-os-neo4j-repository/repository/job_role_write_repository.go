@@ -16,13 +16,13 @@ import (
 )
 
 type JobRoleFields struct {
-	Description  string       `json:"description"`
-	JobTitle     string       `json:"jobTitle"`
-	StartedAt    *time.Time   `json:"startedAt"`
-	EndedAt      *time.Time   `json:"endedAt"`
-	SourceFields model.Source `json:"sourceFields"`
-	CreatedAt    time.Time    `json:"createdAt"`
-	Primary      bool         `json:"primary"`
+	Description  string             `json:"description"`
+	JobTitle     string             `json:"jobTitle"`
+	StartedAt    *time.Time         `json:"startedAt"`
+	EndedAt      *time.Time         `json:"endedAt"`
+	SourceFields model.SourceFields `json:"sourceFields"`
+	CreatedAt    time.Time          `json:"createdAt"`
+	Primary      bool               `json:"primary"`
 }
 
 type JobRoleWriteRepository interface {

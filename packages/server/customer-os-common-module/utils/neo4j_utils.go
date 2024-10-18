@@ -638,10 +638,10 @@ func ExecuteWriteInTransaction(
 		return action(*tx)
 	}
 
+	// Otherwise, create a new transaction using ExecuteWrite
 	session := NewNeo4jWriteSession(ctx, *driver, WithDatabaseName(database))
 	defer session.Close(ctx)
 
-	// Otherwise, create a new transaction using ExecuteWrite
 	r, err := session.ExecuteWrite(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
 		// Pass the new transaction to the action
 		result, err := action(tx)

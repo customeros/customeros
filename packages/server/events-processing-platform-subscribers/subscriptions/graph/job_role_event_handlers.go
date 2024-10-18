@@ -39,7 +39,7 @@ func (h *JobRoleEventHandler) OnJobRoleCreate(ctx context.Context, evt eventstor
 		JobTitle:    eventData.JobTitle,
 		StartedAt:   eventData.StartedAt,
 		EndedAt:     eventData.EndedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        eventData.Source,
 			SourceOfTruth: eventData.SourceOfTruth,
 			AppSource:     eventData.AppSource,
