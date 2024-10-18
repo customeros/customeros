@@ -180,6 +180,109 @@ export class OrganizationStore extends Syncable<Organization> {
       });
     }
   }
+
+  static getDefaultValue(): Organization {
+    return {
+      name: 'Unnamed',
+      metadata: {
+        id: crypto.randomUUID(),
+        created: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
+        appSource: DataSource.Openline,
+        source: DataSource.Openline,
+        sourceOfTruth: DataSource.Openline,
+      },
+      icpFit: false,
+      owner: null,
+      contactCount: 0,
+      contacts: {
+        content: [],
+        totalElements: 0,
+        totalPages: 0,
+      },
+      customerOsId: '',
+      customFields: [],
+      domains: [],
+      emails: [],
+      externalLinks: [],
+      industry: '',
+      hide: false,
+      inboundCommsCount: 0,
+      issueSummaryByStatus: [],
+      jobRoles: [],
+      locations: [],
+      outboundCommsCount: 0,
+      phoneNumbers: [],
+      parentCompanies: [],
+      socialMedia: [],
+      stage: OrganizationStage.Target,
+      tags: [],
+      subsidiaries: [],
+      suggestedMergeTo: [],
+      timelineEvents: [],
+      website: '',
+      timelineEventsTotalCount: 0,
+      accountDetails: {
+        onboarding: {
+          status: OnboardingStatus.NotStarted,
+          comments: '',
+          updatedAt: '',
+        },
+        ltv: 0,
+        churned: new Date().toISOString(),
+        renewalSummary: {
+          arrForecast: 0,
+          maxArrForecast: 0,
+          renewalLikelihood: OpportunityRenewalLikelihood.HighRenewal,
+          nextRenewalDate: '',
+        },
+      },
+      contracts: [],
+      customId: '',
+      description: '',
+      employees: 0,
+      employeeGrowthRate: '',
+      // entityTemplate: {} -> ignored | unused
+      headquarters: '',
+      isCustomer: false,
+      logo: '',
+      industryGroup: '',
+      lastFundingAmount: '',
+      lastFundingRound: FundingRound.PreSeed,
+      lastTouchpoint: {
+        lastTouchPointTimelineEventId: crypto.randomUUID(),
+        lastTouchPointAt: new Date().toISOString(),
+        lastTouchPointType: LastTouchpointType.ActionCreated,
+        lastTouchPointTimelineEvent: ActionStore.getDefaultValue(),
+      }, // nested defaults ignored for now -> should be converted into a Store
+      lastTouchPointTimelineEventId: '',
+      leadSource: '',
+      market: Market.B2B,
+      notes: '',
+      public: false,
+      relationship: OrganizationRelationship.Prospect,
+      slackChannelId: '',
+      stageLastUpdated: '',
+      subIndustry: '',
+      targetAudience: '',
+      valueProposition: '',
+      yearFounded: 0,
+      // deprecated field -> needed because they're required in the TS type
+      id: '',
+      appSource: '',
+      source: DataSource.Na,
+      socials: [],
+      createdAt: '',
+      sourceOfTruth: DataSource.Na,
+      subsidiaryOf: [],
+      updatedAt: '',
+      enrichDetails: {
+        enrichedAt: '',
+        failedAt: '',
+        requestedAt: '',
+      },
+    };
+  }
 }
 
 export const getDefaultValue = (): Organization => ({
