@@ -10,6 +10,8 @@ import { Hourglass02 } from '@ui/media/icons/Hourglass02';
 
 import { Handle } from '../components';
 
+const MINUTES_PER_DAY = 1440;
+
 export const WaitNode = ({
   id,
   data,
@@ -19,14 +21,15 @@ export const WaitNode = ({
 
   const handleDurationChange = (newValue: string) => {
     setNodes((nds) => {
-      const duration = parseFloat(newValue);
+      const durationInDays = parseFloat(newValue);
+      const durationInMinutes = Math.round(durationInDays * MINUTES_PER_DAY);
       const updatedNodes = nds.map((node) => {
         if (node.id === id) {
           return {
             ...node,
             data: {
               ...node.data,
-              waitDuration: duration,
+              waitDuration: durationInMinutes,
             },
           };
         }
@@ -43,7 +46,7 @@ export const WaitNode = ({
           ...nextNode,
           data: {
             ...nextNode.data,
-            waitBefore: duration,
+            waitBefore: durationInMinutes,
           },
         };
       }
@@ -73,6 +76,15 @@ export const WaitNode = ({
     );
   };
 
+  const durationInDays = data.waitDuration
+    ? (data.waitDuration as number) / MINUTES_PER_DAY
+    : 0;
+  const displayDuration =
+    durationInDays % 1 === 0
+      ? durationInDays.toString()
+      : durationInDays.toFixed(1);
+  const isDaySingular = durationInDays === 1;
+
   return (
     <div className='w-[131px] bg-white border border-grayModern-300 p-3 rounded-lg group cursor-pointer'>
       <div className='truncate text-sm flex items-center justify-between'>
@@ -91,19 +103,16 @@ export const WaitNode = ({
                 type='number'
                 placeholder={'0'}
                 variant='unstyled'
+                value={displayDuration}
                 onFocus={(e) => e.target.select()}
                 className='min-w-2.5 min-h-0 max-h-4'
-                value={data?.waitDuration?.toString() || ''}
                 onChange={(e) => handleDurationChange(e.target.value)}
               />
-              <span className='ml-1'>
-                {data.waitDuration === 1 ? 'day' : 'days'}
-              </span>
+              <span className='ml-1'>{isDaySingular ? 'day' : 'days'}</span>
             </div>
           ) : (
             <span className='truncate'>
-              {data.waitDuration || 0}{' '}
-              {data.waitDuration === 1 ? 'day' : 'days'}
+              {displayDuration} {isDaySingular ? 'day' : 'days'}
             </span>
           )}
         </div>
