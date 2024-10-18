@@ -417,6 +417,24 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
+  async setPrimaryEmail(emailId: string) {
+    const email = this.value.emails.find((email) => email.id === emailId);
+
+    try {
+      await this.service.setPrimaryEmail({
+        contactId: this.getId(),
+        email: email?.email || '',
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    } finally {
+      this.isLoading = false;
+      this.invalidate();
+    }
+  }
+
   async addTagToContact(tagId: string, tagName: string) {
     try {
       await this.service.addTagsToContact({
@@ -563,6 +581,7 @@ const CONTACT_QUERY = gql`
       }
       emails {
         id
+        primary
         email
         emailValidationDetails {
           verified
