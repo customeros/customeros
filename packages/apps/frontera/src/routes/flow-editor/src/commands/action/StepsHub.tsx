@@ -14,6 +14,7 @@ import { RefreshCw01 } from '@ui/media/icons/RefreshCw01.tsx';
 import { ArrowIfPath } from '@ui/media/icons/ArrowIfPath.tsx';
 import { ClipboardCheck } from '@ui/media/icons/ClipboardCheck.tsx';
 import { LinkedinOutline } from '@ui/media/icons/LinkedinOutline.tsx';
+const MINUTES_PER_DAY = 1440;
 
 import { keywords } from './keywords.ts';
 import { useUndoRedo } from '../../hooks';
@@ -77,7 +78,7 @@ export const StepsHub = observer(() => {
       type === FlowActionType.EMAIL_NEW || type === FlowActionType.EMAIL_REPLY;
 
     if (type === 'WAIT') {
-      typeBasedContent = { waitDuration: 1 };
+      typeBasedContent = { waitDuration: MINUTES_PER_DAY };
     } else if (type === FlowActionType.EMAIL_REPLY) {
       const prevEmailNode = findPreviousEmailNode(nodes, sourceNode.id);
       const prevSubject = prevEmailNode?.data?.subject || '';
@@ -86,10 +87,14 @@ export const StepsHub = observer(() => {
         replyTo: prevEmailNode?.id,
         subject: `RE: ${prevSubject}`,
         bodyTemplate: '',
-        waitBefore: 1,
+        waitBefore: MINUTES_PER_DAY,
       };
     } else if (type === FlowActionType.EMAIL_NEW) {
-      typeBasedContent = { subject: '', bodyTemplate: '', waitBefore: 1 };
+      typeBasedContent = {
+        subject: '',
+        bodyTemplate: '',
+        waitBefore: MINUTES_PER_DAY,
+      };
     }
 
     const newNode = {
@@ -118,7 +123,7 @@ export const StepsHub = observer(() => {
         },
         data: {
           action: 'WAIT',
-          waitDuration: 1,
+          waitDuration: MINUTES_PER_DAY,
           nextStepId: newNode.id,
         },
       };
