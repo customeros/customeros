@@ -76,7 +76,7 @@ func (h *OrganizationEventHandler) OnOrganizationCreate(ctx context.Context, evt
 		data := neo4jrepository.OrganizationCreateFields{
 			AggregateVersion: evt.Version,
 			CreatedAt:        eventData.CreatedAt,
-			SourceFields: neo4jmodel.Source{
+			SourceFields: neo4jmodel.SourceFields{
 				Source:        helper.GetSource(eventData.Source),
 				SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
 				AppSource:     helper.GetSource(eventData.AppSource),
@@ -567,7 +567,7 @@ func (h *OrganizationEventHandler) OnSocialAddedToOrganization(ctx context.Conte
 		ExternalId:     eventData.ExternalId,
 		FollowersCount: eventData.FollowersCount,
 		CreatedAt:      eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
 			AppSource:     helper.GetSource(eventData.AppSource),
@@ -770,7 +770,7 @@ func (h *OrganizationEventHandler) OnUpsertCustomField(ctx context.Context, evt 
 			CustomFieldName:     eventData.CustomFieldName,
 			CustomFieldDataType: eventData.CustomFieldDataType,
 			CustomFieldValue:    eventData.CustomFieldValue,
-			SourceFields: neo4jmodel.Source{
+			SourceFields: neo4jmodel.SourceFields{
 				Source:        helper.GetSource(eventData.Source),
 				SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
 				AppSource:     helper.GetSource(eventData.AppSource),
@@ -983,7 +983,7 @@ func (h *OrganizationEventHandler) OnCreateBillingProfile(ctx context.Context, e
 		LegalName:      eventData.LegalName,
 		TaxId:          eventData.TaxId,
 		CreatedAt:      eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:    helper.GetSource(eventData.SourceFields.Source),
 			AppSource: helper.GetSource(eventData.SourceFields.AppSource),
 		},
@@ -1374,7 +1374,7 @@ func (h *OrganizationEventHandler) OnLocationAddedToOrganization(ctx context.Con
 		RawAddress: eventData.RawAddress,
 		Name:       eventData.Name,
 		CreatedAt:  eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
 			AppSource:     helper.GetSource(eventData.AppSource),

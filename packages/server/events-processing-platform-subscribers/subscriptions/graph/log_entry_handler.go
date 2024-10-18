@@ -53,7 +53,7 @@ func (h *LogEntryEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		StartedAt:            eventData.StartedAt,
 		AuthorUserId:         eventData.AuthorUserId,
 		LoggedOrganizationId: eventData.LoggedOrganizationId,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
 			AppSource:     helper.GetAppSource(eventData.AppSource),

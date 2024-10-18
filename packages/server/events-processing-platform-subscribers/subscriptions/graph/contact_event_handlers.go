@@ -66,17 +66,16 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 			var err error
 
 			data := neo4jrepository.ContactFields{
-				AggregateVersion: evt.Version,
-				FirstName:        eventData.FirstName,
-				LastName:         eventData.LastName,
-				Prefix:           eventData.Prefix,
-				Description:      eventData.Description,
-				Timezone:         eventData.Timezone,
-				ProfilePhotoUrl:  eventData.ProfilePhotoUrl,
-				Username:         eventData.Username,
-				Name:             eventData.Name,
-				CreatedAt:        eventData.CreatedAt,
-				SourceFields: neo4jmodel.Source{
+				FirstName:       eventData.FirstName,
+				LastName:        eventData.LastName,
+				Prefix:          eventData.Prefix,
+				Description:     eventData.Description,
+				Timezone:        eventData.Timezone,
+				ProfilePhotoUrl: eventData.ProfilePhotoUrl,
+				Username:        eventData.Username,
+				Name:            eventData.Name,
+				CreatedAt:       eventData.CreatedAt,
+				SourceFields: neo4jmodel.SourceFields{
 					Source:        helper.GetSource(eventData.Source),
 					SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceOfTruth),
 					AppSource:     helper.GetAppSource(eventData.AppSource),
@@ -110,8 +109,6 @@ func (h *ContactEventHandler) OnContactCreate(ctx context.Context, evt eventstor
 		}
 	}
 
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithCreate())
-
 	return nil
 }
 
@@ -130,16 +127,15 @@ func (h *ContactEventHandler) OnContactUpdate(ctx context.Context, evt eventstor
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
 	data := neo4jrepository.ContactFields{
-		AggregateVersion: evt.Version,
-		FirstName:        eventData.FirstName,
-		LastName:         eventData.LastName,
-		Prefix:           eventData.Prefix,
-		Description:      eventData.Description,
-		Timezone:         eventData.Timezone,
-		ProfilePhotoUrl:  eventData.ProfilePhotoUrl,
-		Username:         eventData.Username,
-		Name:             eventData.Name,
-		SourceFields: neo4jmodel.Source{
+		FirstName:       eventData.FirstName,
+		LastName:        eventData.LastName,
+		Prefix:          eventData.Prefix,
+		Description:     eventData.Description,
+		Timezone:        eventData.Timezone,
+		ProfilePhotoUrl: eventData.ProfilePhotoUrl,
+		Username:        eventData.Username,
+		Name:            eventData.Name,
+		SourceFields: neo4jmodel.SourceFields{
 			Source: eventData.Source,
 		},
 		UpdateFirstName:       eventData.UpdateFirstName(),
@@ -295,7 +291,7 @@ func (h *ContactEventHandler) OnContactLinkToOrganization(ctx context.Context, e
 		CreatedAt:   eventData.CreatedAt,
 		StartedAt:   eventData.StartedAt,
 		EndedAt:     eventData.EndedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.SourceFields.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
 			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),
@@ -392,7 +388,7 @@ func (h *ContactEventHandler) OnLocationAddedToContact(ctx context.Context, evt 
 		RawAddress: eventData.RawAddress,
 		Name:       eventData.Name,
 		CreatedAt:  eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSource(eventData.SourceOfTruth),
 			AppSource:     helper.GetSource(eventData.AppSource),

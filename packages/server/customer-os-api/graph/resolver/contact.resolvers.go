@@ -8,6 +8,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	"strings"
 	"time"
 
@@ -334,12 +335,13 @@ func (r *mutationResolver) ContactUpdate(ctx context.Context, input model.Contac
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	contactId, err := r.Services.ContactService.Update(ctx, input)
+	contactId, err := r.Services.CommonServices.ContactService.SaveContact(ctx, utils.StringPtr(input.ID), mapper.MapContactUpdateInputToContactFields(input), "", neo4jmodel.ExternalSystem{})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to update contact %s", input.ID)
-		return &model.Contact{ID: contactId}, nil
+		return nil, nil
 	}
+
 	updatedContactEntity, err := r.Services.ContactService.GetById(ctx, contactId)
 	if err != nil {
 		tracing.TraceErr(span, err)

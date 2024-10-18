@@ -37,11 +37,11 @@ type AddressDetails struct {
 }
 
 type LocationCreateFields struct {
-	SourceFields   model.Source   `json:"sourceFields"`
-	CreatedAt      time.Time      `json:"createdAt"`
-	RawAddress     string         `json:"rawAddress"`
-	Name           string         `json:"name"`
-	AddressDetails AddressDetails `json:"addressDetails"`
+	SourceFields   model.SourceFields `json:"sourceFields"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	RawAddress     string             `json:"rawAddress"`
+	Name           string             `json:"name"`
+	AddressDetails AddressDetails     `json:"addressDetails"`
 }
 
 type LocationUpdateFields struct {

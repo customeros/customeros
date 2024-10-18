@@ -18,7 +18,6 @@ import (
 	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/model"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
 	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
@@ -29,7 +28,6 @@ import (
 
 type ContactService interface {
 	Create(ctx context.Context, contact *ContactCreateData) (string, error)
-	Update(ctx context.Context, input model.ContactUpdateInput) (string, error)
 	GetById(ctx context.Context, id string) (*neo4jentity.ContactEntity, error)
 	GetFirstContactByEmail(ctx context.Context, email string) (*neo4jentity.ContactEntity, error)
 	GetFirstContactByPhoneNumber(ctx context.Context, phoneNumber string) (*neo4jentity.ContactEntity, error)
@@ -109,9 +107,9 @@ func (s *contactService) Create(ctx context.Context, contactDetails *ContactCrea
 		}
 	}
 
-	contactId, err := s.services.CommonServices.ContactService.CreateContact(ctx, common.GetTenantFromContext(ctx),
+	contactId, err := s.services.CommonServices.ContactService.SaveContact(ctx, nil,
 		neo4jrepository.ContactFields{
-			SourceFields: neo4jmodel.Source{
+			SourceFields: neo4jmodel.SourceFields{
 				Source:    string(contactDetails.Source),
 				AppSource: utils.StringFirstNonEmpty(contactDetails.AppSource, constants.AppSourceCustomerOsApi),
 			},
@@ -182,88 +180,6 @@ func (s *contactService) linkPhoneNumberByEvents(ctx context.Context, contactId,
 			s.log.Errorf("Failed to link phone number %s with contact %s: %s", phoneNumberId, contactId, err.Error())
 		}
 	}
-}
-
-func (s *contactService) Update(ctx context.Context, input model.ContactUpdateInput) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactService.Update")
-	defer span.Finish()
-	tracing.SetDefaultServiceSpanTags(ctx, span)
-	tracing.LogObjectAsJson(span, "input", input)
-
-	if input.ID == "" {
-		err := fmt.Errorf("(ContactService.Update) contact id is missing")
-		s.log.Error(err.Error())
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	currentContactEntity, err := s.GetById(ctx, input.ID)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Error(err)
-		return "", err
-	}
-
-	upsertContactRequest := contactpb.UpsertContactGrpcRequest{
-		Tenant: common.GetTenantFromContext(ctx),
-		SourceFields: &commonpb.SourceFields{
-			Source:    string(neo4jentity.DataSourceOpenline),
-			AppSource: constants.AppSourceCustomerOsApi,
-		},
-		LoggedInUserId:  common.GetUserIdFromContext(ctx),
-		Id:              input.ID,
-		Prefix:          utils.IfNotNilString(input.Prefix),
-		Name:            utils.IfNotNilString(input.Name),
-		FirstName:       utils.IfNotNilString(input.FirstName),
-		LastName:        utils.IfNotNilString(input.LastName),
-		Description:     utils.IfNotNilString(input.Description),
-		Timezone:        utils.IfNotNilString(input.Timezone),
-		ProfilePhotoUrl: utils.StringFirstNonEmpty(utils.IfNotNilString(input.ProfilePhotoURL), currentContactEntity.ProfilePhotoUrl),
-		Username:        utils.StringFirstNonEmpty(utils.IfNotNilString(input.Username), currentContactEntity.Username),
-	}
-	if input.Patch != nil && *input.Patch {
-		var fieldsMask []contactpb.ContactFieldMask
-		if input.FirstName != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_FIRST_NAME)
-		}
-		if input.LastName != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_LAST_NAME)
-		}
-		if input.Prefix != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PREFIX)
-		}
-		if input.Name != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_NAME)
-		}
-		if input.Description != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_DESCRIPTION)
-		}
-		if input.Timezone != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_TIMEZONE)
-		}
-		if input.ProfilePhotoURL != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_PROFILE_PHOTO_URL)
-		}
-		if input.Username != nil {
-			fieldsMask = append(fieldsMask, contactpb.ContactFieldMask_CONTACT_FIELD_USERNAME)
-		}
-		if len(fieldsMask) == 0 {
-			span.LogFields(log.String("result", "No fields to update"))
-			return input.ID, nil
-		}
-		upsertContactRequest.FieldsMask = fieldsMask
-	}
-
-	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	response, err := utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-		return s.grpcClients.ContactClient.UpsertContact(ctx, &upsertContactRequest)
-	})
-	if err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Error("Error from events processing: %s", err.Error())
-		return "", err
-	}
-	return response.Id, nil
 }
 
 func (s *contactService) PermanentDelete(ctx context.Context, contactId string) (bool, error) {
@@ -562,13 +478,13 @@ func (s *contactService) CustomerContactCreate(ctx context.Context, data *Custom
 	result := &model.CustomerContact{}
 
 	ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-	contactId, err := s.services.CommonServices.ContactService.CreateContact(ctx, common.GetTenantFromContext(ctx),
+	contactId, err := s.services.CommonServices.ContactService.SaveContact(ctx, nil,
 		neo4jrepository.ContactFields{
 			FirstName:   data.ContactEntity.FirstName,
 			LastName:    data.ContactEntity.LastName,
 			Prefix:      data.ContactEntity.Prefix,
 			Description: data.ContactEntity.Description,
-			SourceFields: neo4jmodel.Source{
+			SourceFields: neo4jmodel.SourceFields{
 				Source:    string(data.ContactEntity.Source),
 				AppSource: data.ContactEntity.AppSource,
 			},

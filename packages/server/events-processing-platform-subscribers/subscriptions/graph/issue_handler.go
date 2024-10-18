@@ -52,7 +52,7 @@ func (h *IssueEventHandler) OnCreate(ctx context.Context, evt eventstore.Event) 
 	issueId := aggregate.GetIssueObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.IssueCreateFields{
 		CreatedAt: eventData.CreatedAt,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source),
 			AppSource:     helper.GetAppSource(eventData.AppSource),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source),

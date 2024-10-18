@@ -25,7 +25,7 @@ type ContractCreateFields struct {
 	LengthInMonths         int64              `json:"lengthInMonths"`
 	Status                 string             `json:"status"`
 	CreatedAt              time.Time          `json:"createdAt"`
-	SourceFields           model.Source       `json:"sourceFields"`
+	SourceFields           model.SourceFields `json:"sourceFields"`
 	BillingCycleInMonths   int64              `json:"billingCycleInMonths"`
 	Currency               neo4jenum.Currency `json:"currency"`
 	InvoicingStartDate     *time.Time         `json:"invoicingStartDate,omitempty"`

@@ -106,7 +106,7 @@ func (s *socialService) MergeSocialWithEntity(ctx context.Context, tenant, linke
 		ExternalId:     socialEntity.ExternalId,
 		FollowersCount: socialEntity.FollowersCount,
 		CreatedAt:      utils.TimeOrNow(socialEntity.CreatedAt),
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:    neo4jmodel.GetSource(socialEntity.Source.String()),
 			AppSource: neo4jmodel.GetAppSource(socialEntity.AppSource),
 		},

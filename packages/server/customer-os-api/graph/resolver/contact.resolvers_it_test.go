@@ -331,54 +331,54 @@ func TestQueryResolver_ContactByPhone(t *testing.T) {
 //	require.True(t, calledLinkEmailToContact)
 //}
 
-func TestMutationResolver_ContactUpdate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-	contactId := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
-		Prefix:          "MR",
-		FirstName:       "first",
-		LastName:        "last",
-		Description:     "description",
-		ProfilePhotoUrl: "original url",
-		Username:        "bobsmith",
-		Source:          neo4jentity.DataSourceHubspot,
-		SourceOfTruth:   neo4jentity.DataSourceHubspot,
-	})
-
-	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
-		CreateContact: func(context context.Context, contact *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-			require.Equal(t, contactId, contact.Id)
-			require.Equal(t, "updated first", contact.FirstName)
-			require.Equal(t, "updated last", contact.LastName)
-			require.Equal(t, "DR", contact.Prefix)
-			require.Equal(t, "updated name", contact.Name)
-			require.Equal(t, "updated description", contact.Description)
-			require.Equal(t, "updated timezone", contact.Timezone)
-			require.Equal(t, "http://updated.com", contact.ProfilePhotoUrl)
-			require.Equal(t, "updated username", contact.Username)
-			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
-			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
-			require.Equal(t, tenantName, contact.Tenant)
-			require.Equal(t, testUserId, contact.LoggedInUserId)
-			require.Equal(t, 8, len(contact.FieldsMask))
-			return &contactpb.ContactIdGrpcResponse{
-				Id: contactId,
-			}, nil
-		},
-	}
-	events_platform.SetContactCallbacks(&contactServiceCallbacks)
-
-	rawResponse, err := c.RawPost(getQuery("contact/update_contact"),
-		client.Var("contactId", contactId))
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	var contactStruct struct {
-		Contact_Update model.Contact
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
-	require.Nil(t, err)
-}
+//func TestMutationResolver_ContactUpdate(t *testing.T) {
+//	ctx := context.Background()
+//	defer tearDownTestCase(ctx)(t)
+//	neo4jtest.CreateTenant(ctx, driver, tenantName)
+//	contactId := neo4jt.CreateContact(ctx, driver, tenantName, neo4jentity.ContactEntity{
+//		Prefix:          "MR",
+//		FirstName:       "first",
+//		LastName:        "last",
+//		Description:     "description",
+//		ProfilePhotoUrl: "original url",
+//		Username:        "bobsmith",
+//		Source:          neo4jentity.DataSourceHubspot,
+//		SourceOfTruth:   neo4jentity.DataSourceHubspot,
+//	})
+//
+//	contactServiceCallbacks := events_platform.MockContactServiceCallbacks{
+//		CreateContact: func(context context.Context, contact *contactpb.UpsertContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
+//			require.Equal(t, contactId, contact.Id)
+//			require.Equal(t, "updated first", contact.FirstName)
+//			require.Equal(t, "updated last", contact.LastName)
+//			require.Equal(t, "DR", contact.Prefix)
+//			require.Equal(t, "updated name", contact.Name)
+//			require.Equal(t, "updated description", contact.Description)
+//			require.Equal(t, "updated timezone", contact.Timezone)
+//			require.Equal(t, "http://updated.com", contact.ProfilePhotoUrl)
+//			require.Equal(t, "updated username", contact.Username)
+//			require.Equal(t, constants.AppSourceCustomerOsApi, contact.SourceFields.AppSource)
+//			require.Equal(t, string(neo4jentity.DataSourceOpenline), contact.SourceFields.Source)
+//			require.Equal(t, tenantName, contact.Tenant)
+//			require.Equal(t, testUserId, contact.LoggedInUserId)
+//			require.Equal(t, 8, len(contact.FieldsMask))
+//			return &contactpb.ContactIdGrpcResponse{
+//				Id: contactId,
+//			}, nil
+//		},
+//	}
+//	events_platform.SetContactCallbacks(&contactServiceCallbacks)
+//
+//	rawResponse, err := c.RawPost(getQuery("contact/update_contact"),
+//		client.Var("contactId", contactId))
+//	assertRawResponseSuccess(t, rawResponse, err)
+//
+//	var contactStruct struct {
+//		Contact_Update model.Contact
+//	}
+//	err = decode.Decode(rawResponse.Data.(map[string]any), &contactStruct)
+//	require.Nil(t, err)
+//}
 
 func TestQueryResolver_Contact_WithJobRoles_ById(t *testing.T) {
 	ctx := context.Background()

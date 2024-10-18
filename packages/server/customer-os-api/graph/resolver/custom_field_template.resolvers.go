@@ -26,14 +26,14 @@ func (r *mutationResolver) CustomFieldTemplateSave(ctx context.Context, input mo
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "error saving custom field template")
-		return nil, err
+		return nil, nil
 	}
 
 	customFieldTemplateEntity, err := r.Services.CommonServices.CustomFieldTemplateService.GetById(ctx, customFieldTemplateId)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "error getting custom field template")
-		return nil, err
+		return nil, nil
 	}
 
 	return mapper.MapEntityToCustomFieldTemplate(customFieldTemplateEntity), nil
@@ -50,7 +50,7 @@ func (r *mutationResolver) CustomFieldTemplateDelete(ctx context.Context, id str
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "error deleting custom field template")
-		return nil, err
+		return nil, nil
 	}
 
 	return utils.BoolPtr(true), nil
@@ -66,7 +66,7 @@ func (r *queryResolver) CustomFieldTemplateList(ctx context.Context) ([]*model.C
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "error getting custom field templates: %s", err.Error())
-		return nil, err
+		return nil, nil
 	}
 
 	return mapper.MapEntitiesToCustomFieldTemplates(entities), nil

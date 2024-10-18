@@ -91,7 +91,7 @@ func (h *InvoiceEventHandler) OnInvoiceCreateForContractV1(ctx context.Context, 
 		IssuedDate:           issuedDate,
 		DueDate:              dueDate,
 		Status:               neo4jenum.InvoiceStatusInitialized,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:    helper.GetSource(eventData.SourceFields.Source),
 			AppSource: helper.GetAppSource(eventData.SourceFields.AppSource),
 		},
@@ -192,7 +192,7 @@ func (h *InvoiceEventHandler) OnInvoiceFillV1(ctx context.Context, evt eventstor
 			VAT:         item.VAT,
 			TotalAmount: item.TotalAmount,
 			BilledType:  neo4jenum.DecodeBilledType(item.BilledType),
-			SourceFields: neo4jmodel.Source{
+			SourceFields: neo4jmodel.SourceFields{
 				Source:    helper.GetSource(item.SourceFields.Source),
 				AppSource: helper.GetAppSource(item.SourceFields.AppSource),
 			},

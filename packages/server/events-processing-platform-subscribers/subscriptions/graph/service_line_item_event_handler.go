@@ -106,7 +106,7 @@ func (h *ServiceLineItemEventHandler) OnCreateV1(ctx context.Context, evt events
 		PreviousQuantity:           previousQuantity,
 		PreviousPrice:              previousPrice,
 		PreviousVatRate:            previousVatRate,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.SourceOfTruth),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),

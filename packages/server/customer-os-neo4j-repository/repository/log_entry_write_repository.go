@@ -13,14 +13,14 @@ import (
 )
 
 type LogEntryCreateFields struct {
-	AggregateVersion     int64        `json:"aggregateVersion"`
-	Content              string       `json:"content"`
-	ContentType          string       `json:"contentType"`
-	StartedAt            time.Time    `json:"startedAt" `
-	AuthorUserId         string       `json:"authorUserId"`
-	LoggedOrganizationId string       `json:"loggedOrganizationId"`
-	SourceFields         model.Source `json:"sourceFields"`
-	CreatedAt            time.Time    `json:"createdAt"`
+	AggregateVersion     int64              `json:"aggregateVersion"`
+	Content              string             `json:"content"`
+	ContentType          string             `json:"contentType"`
+	StartedAt            time.Time          `json:"startedAt" `
+	AuthorUserId         string             `json:"authorUserId"`
+	LoggedOrganizationId string             `json:"loggedOrganizationId"`
+	SourceFields         model.SourceFields `json:"sourceFields"`
+	CreatedAt            time.Time          `json:"createdAt"`
 }
 
 type LogEntryUpdateFields struct {

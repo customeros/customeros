@@ -16,21 +16,21 @@ import (
 
 // Deprecated
 type OpportunityCreateFields struct {
-	OrganizationId    string        `json:"organizationId"`
-	CreatedAt         time.Time     `json:"createdAt"`
-	SourceFields      model.Source  `json:"sourceFields"`
-	Name              string        `json:"name"`
-	MaxAmount         float64       `json:"maxAmount"`
-	InternalType      string        `json:"internalType"`
-	ExternalType      string        `json:"externalType"`
-	InternalStage     string        `json:"internalStage"`
-	ExternalStage     string        `json:"externalStage"`
-	EstimatedClosedAt *time.Time    `json:"estimatedClosedAt"`
-	GeneralNotes      string        `json:"generalNotes"`
-	NextSteps         string        `json:"nextSteps"`
-	CreatedByUserId   string        `json:"createdByUserId"`
-	Currency          enum.Currency `json:"currency"`
-	LikelihoodRate    int64         `json:"likelihoodRate"`
+	OrganizationId    string             `json:"organizationId"`
+	CreatedAt         time.Time          `json:"createdAt"`
+	SourceFields      model.SourceFields `json:"sourceFields"`
+	Name              string             `json:"name"`
+	MaxAmount         float64            `json:"maxAmount"`
+	InternalType      string             `json:"internalType"`
+	ExternalType      string             `json:"externalType"`
+	InternalStage     string             `json:"internalStage"`
+	ExternalStage     string             `json:"externalStage"`
+	EstimatedClosedAt *time.Time         `json:"estimatedClosedAt"`
+	GeneralNotes      string             `json:"generalNotes"`
+	NextSteps         string             `json:"nextSteps"`
+	CreatedByUserId   string             `json:"createdByUserId"`
+	Currency          enum.Currency      `json:"currency"`
+	LikelihoodRate    int64              `json:"likelihoodRate"`
 }
 
 // Deprecated
@@ -89,15 +89,15 @@ type OpportunitySaveFields struct {
 }
 
 type RenewalOpportunityCreateFields struct {
-	ContractId          string       `json:"contractId"`
-	CreatedAt           time.Time    `json:"createdAt"`
-	SourceFields        model.Source `json:"sourceFields"`
-	InternalType        string       `json:"internalType"`
-	InternalStage       string       `json:"internalStage"`
-	RenewalLikelihood   string       `json:"renewalLikelihood"`
-	RenewalApproved     bool         `json:"renewalApproved"`
-	RenewedAt           *time.Time   `json:"renewedAt"`
-	RenewalAdjustedRate int64        `json:"renewalAdjustedRate"`
+	ContractId          string             `json:"contractId"`
+	CreatedAt           time.Time          `json:"createdAt"`
+	SourceFields        model.SourceFields `json:"sourceFields"`
+	InternalType        string             `json:"internalType"`
+	InternalStage       string             `json:"internalStage"`
+	RenewalLikelihood   string             `json:"renewalLikelihood"`
+	RenewalApproved     bool               `json:"renewalApproved"`
+	RenewedAt           *time.Time         `json:"renewedAt"`
+	RenewalAdjustedRate int64              `json:"renewalAdjustedRate"`
 }
 
 type RenewalOpportunityUpdateFields struct {

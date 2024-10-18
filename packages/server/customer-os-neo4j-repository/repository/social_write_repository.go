@@ -15,13 +15,13 @@ import (
 )
 
 type SocialFields struct {
-	SocialId       string       `json:"socialId"`
-	Url            string       `json:"url"`
-	Alias          string       `json:"alias"`
-	FollowersCount int64        `json:"followersCount"`
-	ExternalId     string       `json:"externalId"`
-	CreatedAt      time.Time    `json:"createdAt"`
-	SourceFields   model.Source `json:"sourceFields"`
+	SocialId       string             `json:"socialId"`
+	Url            string             `json:"url"`
+	Alias          string             `json:"alias"`
+	FollowersCount int64              `json:"followersCount"`
+	ExternalId     string             `json:"externalId"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	SourceFields   model.SourceFields `json:"sourceFields"`
 }
 
 type SocialWriteRepository interface {

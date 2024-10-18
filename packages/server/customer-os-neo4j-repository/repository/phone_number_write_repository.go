@@ -14,9 +14,9 @@ import (
 )
 
 type PhoneNumberCreateFields struct {
-	RawPhoneNumber string       `json:"rawPhoneNumber"`
-	SourceFields   model.Source `json:"sourceFields"`
-	CreatedAt      time.Time    `json:"createdAt"`
+	RawPhoneNumber string             `json:"rawPhoneNumber"`
+	SourceFields   model.SourceFields `json:"sourceFields"`
+	CreatedAt      time.Time          `json:"createdAt"`
 }
 
 type PhoneNumberValidateFields struct {

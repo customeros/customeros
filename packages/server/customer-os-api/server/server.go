@@ -7,6 +7,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/cron"
 	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/validator"
 	neo4jRepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	"io"
@@ -440,11 +441,11 @@ func extractGraphQLMethodName(req *http.Request) string {
 	return ""
 }
 
-func enrichContextMiddleware() gin.HandlerFunc {
+func enrichContextMiddleware(appSource string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		customCtx := &common.CustomContext{}
 
-		customCtx.AppSource = constants.AppSourceCustomerOsApi
+		customCtx.AppSource = utils.StringFirstNonEmpty(appSource, constants.AppSourceCustomerOsApi)
 
 		if c.Keys[security.KEY_TENANT_NAME] != nil {
 			customCtx.Tenant = c.Keys[security.KEY_TENANT_NAME].(string)
@@ -467,21 +468,5 @@ func enrichContextMiddleware() gin.HandlerFunc {
 		c.Request = c.Request.WithContext(ctx)
 
 		c.Next()
-	}
-}
-
-func withCustomContext(handler gin.HandlerFunc) gin.HandlerFunc {
-	return func(c *gin.Context) {
-		customCtx, exists := c.Get("customContext")
-		if !exists {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "Custom context not found"})
-			return
-		}
-
-		// Add the custom context to the request context
-		ctx := context.WithValue(c.Request.Context(), "customContext", customCtx)
-		c.Request = c.Request.WithContext(ctx)
-
-		handler(c)
 	}
 }

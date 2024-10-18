@@ -102,10 +102,10 @@ func CreateContact(services *service.Services, grpcClients *grpc_client.Clients)
 			}
 
 			if contactId == "" {
-				contactId, err = services.CommonServices.ContactService.CreateContact(ctx, tenant, neo4jrepo.ContactFields{}, contactSocialUrl, neo4jmodel.ExternalSystem{})
+				contactId, err = services.CommonServices.ContactService.SaveContact(ctx, nil, neo4jrepo.ContactFields{}, contactSocialUrl, neo4jmodel.ExternalSystem{})
 				if err != nil {
-					span.LogFields(tracingLog.String("result", "Failed to upsert contact"))
-					c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to upsert contact"})
+					span.LogFields(tracingLog.String("result", "Failed to save contact"))
+					c.JSON(http.StatusInternalServerError, gin.H{"status": "error", "message": "Failed to save contact"})
 					return
 				}
 			}

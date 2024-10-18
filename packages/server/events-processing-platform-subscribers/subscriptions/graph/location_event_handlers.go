@@ -38,7 +38,7 @@ func (h *LocationEventHandler) OnLocationCreate(ctx context.Context, evt eventst
 
 	LocationId := aggregate.GetLocationObjectID(evt.AggregateID, eventData.Tenant)
 	data := neo4jrepository.LocationCreateFields{
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.SourceFields.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.SourceFields.SourceOfTruth),
 			AppSource:     helper.GetAppSource(eventData.SourceFields.AppSource),

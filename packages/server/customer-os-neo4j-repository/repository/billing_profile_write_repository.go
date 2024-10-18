@@ -13,11 +13,11 @@ import (
 )
 
 type BillingProfileCreateFields struct {
-	OrganizationId string       `json:"organizationId"`
-	LegalName      string       `json:"legalName"`
-	TaxId          string       `json:"taxId"`
-	CreatedAt      time.Time    `json:"createdAt"`
-	SourceFields   model.Source `json:"sourceFields"`
+	OrganizationId string             `json:"organizationId"`
+	LegalName      string             `json:"legalName"`
+	TaxId          string             `json:"taxId"`
+	CreatedAt      time.Time          `json:"createdAt"`
+	SourceFields   model.SourceFields `json:"sourceFields"`
 }
 
 type BillingProfileUpdateFields struct {

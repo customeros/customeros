@@ -6,10 +6,19 @@ import (
 	"strings"
 )
 
-type Source struct {
-	Source        string `json:"source"`
+type SourceFields struct {
+	Source    string `json:"source"`
+	AppSource string `json:"appSource"`
+	// Deprecated
 	SourceOfTruth string `json:"sourceOfTruth"`
-	AppSource     string `json:"appSource"`
+}
+
+func (s SourceFields) GetSource() string {
+	return GetSource(s.Source)
+}
+
+func (s SourceFields) GetAppSource() string {
+	return GetAppSource(s.AppSource)
 }
 
 func GetSourceOfTruth(input string) string {

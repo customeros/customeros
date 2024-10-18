@@ -58,14 +58,13 @@ func (r *customFieldTemplateWriteRepository) Save(ctx context.Context, tenant, c
 
 	cypher := fmt.Sprintf(`
 		MATCH (t:Tenant {name:$tenant})
-		MERGE (t)<-[:CUSTOM_FIELD_TEMPLATE_BELONGS_TO_TENANT]-(cft:CustomFieldTemplate: {id:$customFieldTemplateId})
+		MERGE (t)<-[:CUSTOM_FIELD_TEMPLATE_BELONGS_TO_TENANT]-(cft:CustomFieldTemplate {id:$customFieldTemplateId})
 		ON CREATE SET
 			cft:CustomFieldTemplate_%s,
 			cft.createdAt=datetime(),
 			cft.entityType=$entityType
 		WITH cft
-			cft.updatedAt=datetime()
-		 `, tenant)
+		SET cft.updatedAt=datetime()`, tenant)
 	params := map[string]any{
 		"tenant":                tenant,
 		"customFieldTemplateId": customFieldTemplateId,

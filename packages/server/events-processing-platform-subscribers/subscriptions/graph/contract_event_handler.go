@@ -87,7 +87,7 @@ func (h *ContractEventHandler) OnCreate(ctx context.Context, evt eventstore.Even
 		DueDays:                eventData.DueDays,
 		Country:                eventData.Country,
 		Approved:               eventData.Approved,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source.Source),
 			AppSource:     helper.GetAppSource(eventData.Source.AppSource),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source.Source),

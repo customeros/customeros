@@ -124,7 +124,7 @@ func prepareOrganizationEnrichDetails(requestedAt, enrichedAt, failedAt *time.Ti
 
 func MapOrganizationSaveInputToEntity(input model.OrganizationSaveInput) *repository.OrganizationSaveFields {
 	mapped := repository.OrganizationSaveFields{
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        constants.SourceOpenline,
 			SourceOfTruth: constants.SourceOpenline,
 			AppSource:     constants.AppSourceCustomerOsApi,

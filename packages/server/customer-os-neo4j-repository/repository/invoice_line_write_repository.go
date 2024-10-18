@@ -14,17 +14,17 @@ import (
 )
 
 type InvoiceLineCreateFields struct {
-	CreatedAt               time.Time       `json:"createdAt"`
-	SourceFields            model.Source    `json:"sourceFields"`
-	Name                    string          `json:"name"`
-	Price                   float64         `json:"price"`
-	Quantity                int64           `json:"quantity"`
-	Amount                  float64         `json:"amount"`
-	VAT                     float64         `json:"vat"`
-	TotalAmount             float64         `json:"totalAmount"`
-	ServiceLineItemId       string          `json:"serviceLineItemId"`
-	ServiceLineItemParentId string          `json:"serviceLineItemParentId"`
-	BilledType              enum.BilledType `json:"billedType"`
+	CreatedAt               time.Time          `json:"createdAt"`
+	SourceFields            model.SourceFields `json:"sourceFields"`
+	Name                    string             `json:"name"`
+	Price                   float64            `json:"price"`
+	Quantity                int64              `json:"quantity"`
+	Amount                  float64            `json:"amount"`
+	VAT                     float64            `json:"vat"`
+	TotalAmount             float64            `json:"totalAmount"`
+	ServiceLineItemId       string             `json:"serviceLineItemId"`
+	ServiceLineItemParentId string             `json:"serviceLineItemParentId"`
+	BilledType              enum.BilledType    `json:"billedType"`
 }
 
 type InvoiceLineWriteRepository interface {

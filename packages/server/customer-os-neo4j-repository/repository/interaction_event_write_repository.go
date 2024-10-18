@@ -15,17 +15,17 @@ import (
 )
 
 type InteractionEventCreateFields struct {
-	SourceFields       model.Source `json:"sourceFields"`
-	CreatedAt          time.Time    `json:"createdAt"`
-	Content            string       `json:"content"`
-	ContentType        string       `json:"contentType"`
-	Channel            string       `json:"channel"`
-	ChannelData        string       `json:"channelData"`
-	Identifier         string       `json:"identifier"`
-	EventType          string       `json:"eventType"`
-	BelongsToIssueId   string       `json:"belongsToIssueId"`
-	BelongsToSessionId string       `json:"belongsToSessionId"`
-	Hide               bool         `json:"hide"`
+	SourceFields       model.SourceFields `json:"sourceFields"`
+	CreatedAt          time.Time          `json:"createdAt"`
+	Content            string             `json:"content"`
+	ContentType        string             `json:"contentType"`
+	Channel            string             `json:"channel"`
+	ChannelData        string             `json:"channelData"`
+	Identifier         string             `json:"identifier"`
+	EventType          string             `json:"eventType"`
+	BelongsToIssueId   string             `json:"belongsToIssueId"`
+	BelongsToSessionId string             `json:"belongsToSessionId"`
+	Hide               bool               `json:"hide"`
 }
 
 type InteractionEventUpdateFields struct {

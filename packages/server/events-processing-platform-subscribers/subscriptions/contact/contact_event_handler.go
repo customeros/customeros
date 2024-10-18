@@ -452,7 +452,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 				UpdateWebsite:      true,
 				UpdateRelationship: true,
 				UpdateStage:        true,
-				SourceFields: neo4jmodel.Source{
+				SourceFields: neo4jmodel.SourceFields{
 					Source:    constants.SourceOpenline,
 					AppSource: constants.AppScrapin,
 				},

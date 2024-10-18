@@ -190,7 +190,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 			createContact = false
 		}
 		if createContact {
-			contactId, err = s.services.CommonServices.ContactService.CreateContact(ctx, tenant,
+			contactId, err = s.services.CommonServices.ContactService.SaveContact(ctx, nil,
 				neo4jrepo.ContactFields{
 					Name:            contactInput.Name,
 					FirstName:       contactInput.FirstName,
@@ -199,7 +199,7 @@ func (s *contactService) syncContact(ctx context.Context, syncMutex *sync.Mutex,
 					Timezone:        contactInput.Timezone,
 					ProfilePhotoUrl: contactInput.ProfilePhotoUrl,
 					CreatedAt:       utils.TimeOrNowFromPtr(contactInput.CreatedAt),
-					SourceFields: neo4jmodel.Source{
+					SourceFields: neo4jmodel.SourceFields{
 						Source:    contactInput.ExternalSystem,
 						AppSource: appSource,
 					},

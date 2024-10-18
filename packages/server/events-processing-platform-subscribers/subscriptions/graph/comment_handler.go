@@ -61,7 +61,7 @@ func (h *CommentEventHandler) OnCreate(ctx context.Context, evt eventstore.Event
 		CreatedAt:        eventData.CreatedAt,
 		AuthorUserId:     eventData.AuthorUserId,
 		CommentedIssueId: eventData.CommentedIssueId,
-		SourceFields: neo4jmodel.Source{
+		SourceFields: neo4jmodel.SourceFields{
 			Source:        helper.GetSource(eventData.Source),
 			SourceOfTruth: helper.GetSourceOfTruth(eventData.Source),
 			AppSource:     helper.GetAppSource(eventData.AppSource),
