@@ -196,11 +196,26 @@ export const ContractDetailsModal = observer(
           if (!itemStore?.tempValue) return;
 
           if (itemStore.tempValue.closed) {
-            promises.push(
-              contractLineItemsStore.closeServiceLineItem({
-                id: e.metadata.id,
-              }),
-            );
+            if (!e.metadata.id.includes('new')) {
+              promises.push(
+                contractLineItemsStore.closeServiceLineItem({
+                  id: e.metadata.id,
+                }),
+              );
+            } else {
+              store.contractLineItems.value.get(e.metadata.id)?.update(
+                (prev) => ({
+                  ...prev,
+                  metadata: {
+                    ...prev.metadata,
+                    id: e.metadata.id.replace('new', ''),
+                  },
+                  serviceEnded: new Date(-1).toISOString(),
+                  closed: true,
+                }),
+                { mutate: false },
+              );
+            }
           } else if (e.metadata.id.includes('new') && !e.parentId) {
             promises.push(
               contractLineItemsStore.createNewServiceLineItem(
