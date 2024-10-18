@@ -15,6 +15,7 @@ import (
 
 type FlowActionWriteRepository interface {
 	Merge(ctx context.Context, tx *neo4j.ManagedTransaction, entity *entity.FlowActionEntity) (*dbtype.Node, error)
+	DeleteForFlow(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error
 	Delete(ctx context.Context, id string) error
 }
 
@@ -141,6 +142,41 @@ func (r *flowActionWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.Man
 		}
 		return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 	}
+}
+
+func (r *flowActionWriteRepositoryImpl) DeleteForFlow(ctx context.Context, tx *neo4j.ManagedTransaction, id string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "CommonWriteRepository.DeleteForFlow")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("id", id))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name: $tenant})<-[:BELONGS_TO_TENANT]-(f:Flow:Flow_%s { id: $id })-[r:HAS]-(fa:FlowAction_%s) detach delete fa`, tenant, tenant)
+
+	params := map[string]any{
+		"tenant": tenant,
+		"id":     id,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		_, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	})
+
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }
 
 func (r *flowActionWriteRepositoryImpl) Delete(ctx context.Context, id string) error {

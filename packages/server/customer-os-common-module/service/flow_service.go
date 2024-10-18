@@ -253,6 +253,13 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 			return nil, err
 		}
 
+		//TODO this is not supporting live updates after scheduling
+		//clear existing nodes in DB and reinsert them
+		err := s.services.Neo4jRepositories.FlowActionWriteRepository.DeleteForFlow(ctx, &tx, toStore.Id)
+		if err != nil {
+			return nil, err
+		}
+
 		//populate the nodes
 		if nodesMap != nil && len(nodesMap) > 0 {
 			for _, v := range nodesMap {
