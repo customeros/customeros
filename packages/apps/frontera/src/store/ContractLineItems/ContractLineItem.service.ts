@@ -28,6 +28,24 @@ class ContractLineItemService {
       CONTRACT_LINE_ITEM_UPDATE_PAYLOAD
     >(CONTRACT_LINE_ITEM_UPDATE_MUTATION, payload);
   }
+
+  async pauseContractLineItem(payload: {
+    id: string;
+  }): Promise<{ accepted: boolean }> {
+    return this.transport.graphql.request<
+      { accepted: boolean },
+      { id: string }
+    >(CONTRACT_LINE_ITEM_PAUSE_MUTATION, payload);
+  }
+
+  async resumeContractLineItem(payload: {
+    id: string;
+  }): Promise<{ accepted: boolean }> {
+    return this.transport.graphql.request<
+      { accepted: boolean },
+      { id: string }
+    >(CONTRACT_LINE_ITEM_RESUME_MUTATION, payload);
+  }
 }
 
 type CONTRACT_LINE_ITEM_UPDATE_RESPONSE = {
@@ -45,6 +63,20 @@ const CONTRACT_LINE_ITEM_UPDATE_MUTATION = gql`
       metadata {
         id
       }
+    }
+  }
+`;
+const CONTRACT_LINE_ITEM_PAUSE_MUTATION = gql`
+  mutation contractLineItemPause($id: ID!) {
+    contractLineItem_Pause(id: $id) {
+      accepted
+    }
+  }
+`;
+const CONTRACT_LINE_ITEM_RESUME_MUTATION = gql`
+  mutation contractLineItemPause($id: ID!) {
+    contractLineItem_Resume(id: $id) {
+      accepted
     }
   }
 `;

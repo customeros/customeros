@@ -179,6 +179,24 @@ export const ContractDetailsModal = observer(
       onChangeModalMode(EditModalMode.ContractDetails);
     };
 
+    // TODO: Refactor to use a single API request for contract changes
+    // https://linear.app/customer-os/issue/COS-5225/api-mutation-changes-for-contract-details
+    // Current implementation:
+    // - Multiple API calls for a single UI action
+    // - Complex and potentially unstable front-end logic
+    // - Risk of partial updates and inconsistent contract state
+    //
+    // Proposed solution:
+    // - Work with backend team to create a bulk update API endpoint
+    // - Refactor this component to use the new endpoint
+    // - Simplify error handling and user feedback
+    //
+    // Benefits:
+    // - Simplified front-end logic
+    // - Improved reliability and data consistency
+    // - Improved stability and maintainability
+    //
+    // NOTE: This refactor is blocked by backend API limitations
     const handleApplyChanges = async () => {
       try {
         setIsSaving(true);
@@ -233,7 +251,6 @@ export const ContractDetailsModal = observer(
           } else {
             promises.push(itemStore?.updateServiceLineItem());
           }
-          itemStore.value = itemStore.tempValue;
         });
 
         await Promise.all(promises);

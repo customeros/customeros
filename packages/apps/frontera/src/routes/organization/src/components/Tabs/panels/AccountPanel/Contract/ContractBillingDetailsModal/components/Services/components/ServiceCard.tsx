@@ -90,6 +90,22 @@ export const ServiceCard = observer(
       setAllowIndividualRestore(!closed);
     };
 
+    const handlePauseChange = (paused: boolean) => {
+      liveServices?.forEach((service) => {
+        (service as ContractLineItemStore)?.updateTemp((prev) => ({
+          ...prev,
+          paused,
+        }));
+      });
+      closedServices?.forEach((service) => {
+        (service as ContractLineItemStore)?.updateTemp((prev) => ({
+          ...prev,
+          paused,
+        }));
+      });
+      setAllowIndividualRestore(!closed);
+    };
+
     return (
       <Card className='px-3 py-2 mb-2 rounded-lg'>
         <CardHeader className={cn('flex justify-between pb-0.5')}>
@@ -143,7 +159,12 @@ export const ServiceCard = observer(
               <ServiceItemMenu
                 contractId={contractId}
                 handleCloseService={handleCloseChange}
+                handlePauseService={handlePauseChange}
                 closed={thisGroupLineItems?.[0]?.tempValue?.closed}
+                paused={thisGroupLineItems?.[0]?.tempValue?.paused}
+                allowPausing={
+                  type !== 'one-time' && contractStatus === ContractStatus.Live
+                }
                 allowAddModification={
                   type !== 'one-time' &&
                   !!thisGroupLineItems?.[0]?.tempValue?.parentId

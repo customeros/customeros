@@ -93,6 +93,14 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
     try {
       this.isLoading = true;
 
+      if (this.value.paused && !this.tempValue.paused) {
+        await this.service.resumeContractLineItem({ id: this.id });
+      }
+
+      if (!this.value.paused && this.tempValue.paused) {
+        await this.service.pauseContractLineItem({ id: this.id });
+      }
+
       await this.transport.graphql.request<
         unknown,
         SERVICE_LINE_UPDATE_PAYLOAD
@@ -119,6 +127,7 @@ export class ContractLineItemStore implements Store<ServiceLineItem> {
       });
     } finally {
       runInAction(() => {
+        this.value = this.tempValue;
         this.isLoading = false;
       });
     }
@@ -175,6 +184,7 @@ const CONTRACT_LINE_ITEM_QUERY = gql`
       serviceEnded
       parentId
       serviceStarted
+      paused
       tax {
         salesTax
         vat
