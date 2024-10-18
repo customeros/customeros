@@ -31,7 +31,11 @@ export const SenderDropdown = observer(({ flowId }: SenderDropdownProps) => {
     flow?.value.senders.map((e) => e.user?.id ?? '') ?? [];
 
   const options = users
-    .filter((e) => !selectedSenders.includes(e.id))
+    .filter(
+      (e) =>
+        !e.name.toLowerCase().includes('customeros') &&
+        !selectedSenders.includes(e.id),
+    )
     .sort((a, b) => {
       const aMailboxesCount = a?.value?.mailboxes.length ?? 0;
       const bMailboxesCount = b?.value?.mailboxes.length ?? 0;
