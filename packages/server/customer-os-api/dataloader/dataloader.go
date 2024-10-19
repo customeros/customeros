@@ -17,13 +17,16 @@ type loadersString string
 const loadersKey = loadersString("dataloaders")
 
 type Loaders struct {
-	TagsForOrganization                         *dataloader.Loader
-	TagsForContact                              *dataloader.Loader
-	TagsForIssue                                *dataloader.Loader
-	TagsForLogEntry                             *dataloader.Loader
-	EmailsForContact                            *dataloader.Loader
-	EmailsForOrganization                       *dataloader.Loader
-	PrimaryEmailForContact                      *dataloader.Loader
+	// tags
+	TagsForOrganization *dataloader.Loader
+	TagsForContact      *dataloader.Loader
+	TagsForIssue        *dataloader.Loader
+	TagsForLogEntry     *dataloader.Loader
+	// emails
+	EmailsForContact       *dataloader.Loader
+	EmailsForOrganization  *dataloader.Loader
+	PrimaryEmailForContact *dataloader.Loader
+
 	LocationsForContact                         *dataloader.Loader
 	LocationsForOrganization                    *dataloader.Loader
 	JobRolesForContact                          *dataloader.Loader
@@ -90,6 +93,7 @@ type Loaders struct {
 	OrganizationForInvoice                      *dataloader.Loader
 	OrganizationForOpportunity                  *dataloader.Loader
 	OrganizationForSlackChannel                 *dataloader.Loader
+	LatestOrganizationForContact                *dataloader.Loader
 	ContactForJobRole                           *dataloader.Loader
 	IssueForInteractionEvent                    *dataloader.Loader
 	MeetingForInteractionEvent                  *dataloader.Loader
@@ -166,7 +170,8 @@ type contactBatcher struct {
 	contactService service.ContactService
 }
 type organizationBatcher struct {
-	organizationService service.OrganizationService
+	organizationService       service.OrganizationService
+	commonOrganizationService commonservice.OrganizationService
 }
 type noteBatcher struct {
 	noteService service.NoteService
@@ -387,6 +392,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		OrganizationForInvoice:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForOpportunity:                  dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForSlackChannel:                 dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForSlackChannels, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		LatestOrganizationForContact:                dataloader.NewBatchedLoader(organizationBatcher.getLatestOrganizationForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactForJobRole:                           dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		IssueForInteractionEvent:                    dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

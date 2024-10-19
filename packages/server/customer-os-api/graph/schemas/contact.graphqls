@@ -121,6 +121,8 @@ type Contact implements MetadataInterface & Node {
     """
     jobRoles: [JobRole!]! @goField(forceResolver: true)
 
+    latestOrganization: Organization @goField(forceResolver: true)
+
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @goField(forceResolver: true)
 
     """

@@ -30,6 +30,8 @@ type OrganizationService interface {
 	Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 
 	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
+
+	GetLatestOrganizationsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationEntities, error)
 }
 
 type organizationService struct {
@@ -430,4 +432,23 @@ func generateNewRandomCustomerOsId() string {
 	charset := "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"
 	customerOsID := "C-" + utils.GenerateRandomStringFromCharset(3, charset) + "-" + utils.GenerateRandomStringFromCharset(3, charset)
 	return customerOsID
+}
+
+func (s *organizationService) GetLatestOrganizationsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetLatestOrganizationsForContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("contactIds", contactIds))
+
+	organizations, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetLatestOrganizationsForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	if err != nil {
+		return nil, err
+	}
+	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
+	for _, v := range organizations {
+		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
+		organizationEntity.DataloaderKey = v.LinkedNodeId
+		organizationEntities = append(organizationEntities, *organizationEntity)
+	}
+	return &organizationEntities, nil
 }

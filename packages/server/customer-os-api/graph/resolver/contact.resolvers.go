@@ -63,6 +63,23 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 	return mapper.MapEntitiesToJobRoles(jobRoleEntities), err
 }
 
+// LatestOrganization is the resolver for the latestOrganization field.
+func (r *contactResolver) LatestOrganization(ctx context.Context, obj *model.Contact) (*model.Organization, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.LatestOrganization", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.contactID", obj.Metadata.ID)
+
+	organizationEntityNillable, err := dataloader.For(ctx).GetLatestOrganizationForContact(ctx, obj.Metadata.ID)
+	if err != nil {
+		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
+		r.log.Errorf("error fetching latest organization for contact %s: %s", obj.Metadata.ID, err.Error())
+		graphql.AddErrorf(ctx, "error fetching latest organization for contact %s", obj.Metadata.ID)
+		return nil, nil
+	}
+	return mapper.MapEntityToOrganization(organizationEntityNillable), nil
+}
+
 // Organizations is the resolver for the organizations field.
 func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
 	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "ContactResolver.Organizations", graphql.GetOperationContext(ctx))
@@ -126,7 +143,7 @@ func (r *contactResolver) PrimaryEmail(ctx context.Context, obj *model.Contact) 
 	if err != nil {
 		tracing.TraceErr(opentracing.SpanFromContext(ctx), err)
 		r.log.Errorf("error fetching primary email for contact %s: %s", obj.Metadata.ID, err.Error())
-		graphql.AddErrorf(ctx, "error fetching email for contact %s", obj.Metadata.ID)
+		graphql.AddErrorf(ctx, "error fetching primary email for contact %s", obj.Metadata.ID)
 		return nil, nil
 	}
 	return mapper.MapEntityToEmail(emailEntityNillable), nil

@@ -23,6 +23,11 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
 }
 
+// LatestOrganization is the resolver for the latestOrganization field.
+func (r *contactResolver) LatestOrganization(ctx context.Context, obj *model.Contact) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: LatestOrganization - latestOrganization"))
+}
+
 // Organizations is the resolver for the organizations field.
 func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
 	panic(fmt.Errorf("not implemented: Organizations - organizations"))

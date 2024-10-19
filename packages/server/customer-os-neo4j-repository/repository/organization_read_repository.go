@@ -48,6 +48,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsForEnrichByDomain(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
+	GetLatestOrganizationsForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error)
 }
 
 type organizationReadRepository struct {
@@ -1065,4 +1066,48 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 	}
 	span.LogFields(log.Int("result.count", len(output)))
 	return output, nil
+}
+
+func (r *organizationReadRepository) GetLatestOrganizationsForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLatestOrganizationsForContacts")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.Object("contactIds", contactIds))
+
+	cypher := `MATCH (:Tenant {name:$tenant})<-[:CONTACT_BELONGS_TO_TENANT]-(c:Contact)-[:WORKS_AS]->(j:JobRole)-[:ROLE_IN]->(o:Organization)
+				WHERE c.id IN $contactIds
+				WITH c, o, j
+				ORDER BY 
+  					CASE 
+    					WHEN j.endedAt IS NULL THEN 1 
+    					ELSE 0 
+  					END DESC, 
+  					j.endedAt DESC, 
+  					j.startedAt DESC
+				WITH c, COLLECT(o)[0] AS latestOrganization
+				RETURN latestOrganization, c.id`
+	params := map[string]any{
+		"tenant":     tenant,
+		"contactIds": contactIds,
+	}
+
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
+	return result.([]*utils.DbNodeAndId), err
 }

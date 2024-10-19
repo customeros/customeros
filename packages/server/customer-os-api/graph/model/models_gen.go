@@ -345,8 +345,9 @@ type Contact struct {
 	Tags          []*Tag     `json:"tags,omitempty"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
-	JobRoles      []*JobRole        `json:"jobRoles"`
-	Organizations *OrganizationPage `json:"organizations"`
+	JobRoles           []*JobRole        `json:"jobRoles"`
+	LatestOrganization *Organization     `json:"latestOrganization,omitempty"`
+	Organizations      *OrganizationPage `json:"organizations"`
 	// All phone numbers associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
