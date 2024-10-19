@@ -2,7 +2,6 @@ package service
 
 import (
 	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/contract/aggregate"
 	sliaggregate "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/aggregate"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/service_line_item/model"
 	grpcerr "github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/grpc_errors"
@@ -13,8 +12,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 type serviceLineItemService struct {
@@ -43,14 +40,6 @@ func (s *serviceLineItemService) CreateServiceLineItem(ctx context.Context, requ
 		return nil, grpcerr.ErrResponse(grpcerr.ErrMissingField("contractId"))
 	}
 	// Check if the contract aggregate exists
-	contractExists, err := s.checkContractExists(ctx, request.Tenant, request.ContractId)
-	if err != nil {
-		s.log.Error(err, "error checking contract existence")
-		return nil, status.Errorf(codes.Internal, "error checking contract existence: %v", err)
-	}
-	if !contractExists {
-		return nil, status.Errorf(codes.NotFound, "contract with ID %s not found", request.ContractId)
-	}
 
 	serviceLineItemId := uuid.New().String()
 
@@ -140,20 +129,6 @@ func (s *serviceLineItemService) CloseServiceLineItem(ctx context.Context, reque
 
 	// Return the ID of the updated service line item
 	return &servicelineitempb.ServiceLineItemIdGrpcResponse{Id: request.Id}, nil
-}
-
-func (s *serviceLineItemService) checkContractExists(ctx context.Context, tenant, contractId string) (bool, error) {
-	contractAggregate := aggregate.NewContractAggregateWithTenantAndID(tenant, contractId)
-	err := s.aggregateStore.Exists(ctx, contractAggregate.GetID())
-	if err != nil {
-		if errors.Is(err, eventstore.ErrAggregateNotFound) {
-			return false, nil
-		} else {
-			return false, err
-		}
-	}
-
-	return true, nil // The contract exists
 }
 
 func (s *serviceLineItemService) checkSLINotEnded(ctx context.Context, tenant, id string) (bool, error) {

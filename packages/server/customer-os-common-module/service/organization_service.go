@@ -31,7 +31,7 @@ type OrganizationService interface {
 
 	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 
-	GetLatestOrganizationsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationEntities, error)
+	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
 }
 
 type organizationService struct {
@@ -434,21 +434,23 @@ func generateNewRandomCustomerOsId() string {
 	return customerOsID
 }
 
-func (s *organizationService) GetLatestOrganizationsForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationEntities, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetLatestOrganizationsForContacts")
+func (s *organizationService) GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetLatestOrganizationsWithJobRolesForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("contactIds", contactIds))
 
-	organizations, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetLatestOrganizationsForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
+	dbResults, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts(ctx, common.GetTenantFromContext(ctx), contactIds)
 	if err != nil {
 		return nil, err
 	}
-	organizationEntities := make(neo4jentity.OrganizationEntities, 0, len(organizations))
-	for _, v := range organizations {
-		organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(v.Node)
-		organizationEntity.DataloaderKey = v.LinkedNodeId
-		organizationEntities = append(organizationEntities, *organizationEntity)
+	orgWithJobRoleEntities := make(neo4jentity.OrganizationWithJobRoleEntities, 0)
+	for _, v := range dbResults {
+		orgWithJobRoleEntity := neo4jentity.OrganizationWithJobRole{}
+		orgWithJobRoleEntity.Organization = *neo4jmapper.MapDbNodeToOrganizationEntity(v.Pair.First)
+		orgWithJobRoleEntity.JobRole = *neo4jmapper.MapDbNodeToJobRoleEntity(v.Pair.Second)
+		orgWithJobRoleEntity.DataloaderKey = v.LinkedNodeId
+		orgWithJobRoleEntities = append(orgWithJobRoleEntities, orgWithJobRoleEntity)
 	}
-	return &organizationEntities, nil
+	return &orgWithJobRoleEntities, nil
 }

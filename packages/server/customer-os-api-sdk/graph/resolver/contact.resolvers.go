@@ -23,14 +23,14 @@ func (r *contactResolver) JobRoles(ctx context.Context, obj *model.Contact) ([]*
 	panic(fmt.Errorf("not implemented: JobRoles - jobRoles"))
 }
 
-// LatestOrganization is the resolver for the latestOrganization field.
-func (r *contactResolver) LatestOrganization(ctx context.Context, obj *model.Contact) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: LatestOrganization - latestOrganization"))
-}
-
 // Organizations is the resolver for the organizations field.
 func (r *contactResolver) Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error) {
 	panic(fmt.Errorf("not implemented: Organizations - organizations"))
+}
+
+// LatestOrganizationWithJobRole is the resolver for the latestOrganizationWithJobRole field.
+func (r *contactResolver) LatestOrganizationWithJobRole(ctx context.Context, obj *model.Contact) (*model.OrganizationWithJobRole, error) {
+	panic(fmt.Errorf("not implemented: LatestOrganizationWithJobRole - latestOrganizationWithJobRole"))
 }
 
 // PhoneNumbers is the resolver for the phoneNumbers field.
@@ -205,3 +205,19 @@ func (r *queryResolver) ContactByPhone(ctx context.Context, e164 string) (*model
 func (r *Resolver) Contact() generated.ContactResolver { return &contactResolver{r} }
 
 type contactResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *contactResolver) LatestOrganizationWithJorRole(ctx context.Context, obj *model.Contact) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: LatestOrganizationWithJorRole - latestOrganizationWithJorRole"))
+}
+func (r *contactResolver) LatestOrganization(ctx context.Context, obj *model.Contact) (*model.Organization, error) {
+	panic(fmt.Errorf("not implemented: LatestOrganization - latestOrganization"))
+}
+func (r *contactResolver) LatestJobRoleInOrganization(ctx context.Context, obj *model.Contact) (*model.JobRole, error) {
+	panic(fmt.Errorf("not implemented: LatestJobRoleInOrganization - latestJobRoleInOrganization"))
+}

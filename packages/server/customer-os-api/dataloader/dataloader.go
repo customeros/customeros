@@ -93,7 +93,7 @@ type Loaders struct {
 	OrganizationForInvoice                      *dataloader.Loader
 	OrganizationForOpportunity                  *dataloader.Loader
 	OrganizationForSlackChannel                 *dataloader.Loader
-	LatestOrganizationForContact                *dataloader.Loader
+	LatestOrganizationWithJobRoleForContact     *dataloader.Loader
 	ContactForJobRole                           *dataloader.Loader
 	IssueForInteractionEvent                    *dataloader.Loader
 	MeetingForInteractionEvent                  *dataloader.Loader
@@ -392,7 +392,7 @@ func NewDataLoader(services *service.Services) *Loaders {
 		OrganizationForInvoice:                      dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForInvoices, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForOpportunity:                  dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForOpportunities, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		OrganizationForSlackChannel:                 dataloader.NewBatchedLoader(organizationBatcher.getOrganizationsForSlackChannels, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
-		LatestOrganizationForContact:                dataloader.NewBatchedLoader(organizationBatcher.getLatestOrganizationForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
+		LatestOrganizationWithJobRoleForContact:     dataloader.NewBatchedLoader(organizationBatcher.getLatestOrganizationWithJobRoleForContacts, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		ContactForJobRole:                           dataloader.NewBatchedLoader(contactBatcher.getContactsForJobRoles, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		IssueForInteractionEvent:                    dataloader.NewBatchedLoader(issueBatcher.getIssuesForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),
 		MeetingForInteractionEvent:                  dataloader.NewBatchedLoader(meetingBatcher.getMeetingsForInteractionEvents, dataloader.WithClearCacheOnBatch(), dataloader.WithWait(defaultDataloaderWaitTime)),

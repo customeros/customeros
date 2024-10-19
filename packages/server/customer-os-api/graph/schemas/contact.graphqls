@@ -121,9 +121,9 @@ type Contact implements MetadataInterface & Node {
     """
     jobRoles: [JobRole!]! @goField(forceResolver: true)
 
-    latestOrganization: Organization @goField(forceResolver: true)
-
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @goField(forceResolver: true)
+
+    latestOrganizationWithJobRole: OrganizationWithJobRole @goField(forceResolver: true)
 
     """
     All phone numbers associated with a contact in customerOS.
@@ -166,6 +166,11 @@ type Contact implements MetadataInterface & Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     enrichDetails: EnrichDetails!
+}
+
+type OrganizationWithJobRole {
+    organization: Organization!
+    jobRole: JobRole!
 }
 
 type EnrichDetails {
