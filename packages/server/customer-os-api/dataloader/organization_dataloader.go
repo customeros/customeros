@@ -122,6 +122,18 @@ func (i *Loaders) GetOrganizationForOpportunityOptional(ctx context.Context, opp
 	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
+func (i *Loaders) GetLatestOrganizationForContact(ctx context.Context, contactId string) (*neo4jentity.OrganizationEntity, error) {
+	thunk := i.LatestOrganizationForContact.Load(ctx, dataloader.StringKey(contactId))
+	result, err := thunk()
+	if err != nil {
+		return nil, err
+	}
+	if result == nil {
+		return nil, nil
+	}
+	return result.(*neo4jentity.OrganizationEntity), nil
+}
+
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getOrganizationsForEmails")
 	defer span.Finish()
@@ -599,6 +611,55 @@ func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Conte
 	}
 
 	span.LogFields(log.Object("result.length", len(results)))
+
+	return results
+}
+
+func (b *organizationBatcher) getLatestOrganizationForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getLatestOrganizationForContacts")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
+
+	ids, keyOrder := sortKeys(keys)
+
+	ctx, cancel := utils.GetLongLivedContext(ctx)
+	defer cancel()
+
+	organizationEntities, err := b.commonOrganizationService.GetLatestOrganizationsForContacts(ctx, ids)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		// check if context deadline exceeded error occurred
+		if errors.Is(ctx.Err(), context.DeadlineExceeded) {
+			return []*dataloader.Result{{Data: nil, Error: errors.New("deadline exceeded to get latest organization for contacts")}}
+		}
+		return []*dataloader.Result{{Data: nil, Error: err}}
+	}
+
+	organizationEntityByContactId := make(map[string]neo4jentity.OrganizationEntity)
+	for _, val := range *organizationEntities {
+		organizationEntityByContactId[val.DataloaderKey] = val
+	}
+
+	// construct an output array of dataloader results
+	results := make([]*dataloader.Result, len(keys))
+	for contactId, _ := range organizationEntityByContactId {
+		if ix, ok := keyOrder[contactId]; ok {
+			val := organizationEntityByContactId[contactId]
+			results[ix] = &dataloader.Result{Data: &val, Error: nil}
+			delete(keyOrder, contactId)
+		}
+	}
+	for _, ix := range keyOrder {
+		results[ix] = &dataloader.Result{Data: nil, Error: nil}
+	}
+
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
+		tracing.TraceErr(span, err)
+		return []*dataloader.Result{{nil, err}}
+	}
+
+	span.LogFields(log.Int("result.length", len(results)))
 
 	return results
 }
