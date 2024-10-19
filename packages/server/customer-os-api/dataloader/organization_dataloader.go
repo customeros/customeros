@@ -626,7 +626,7 @@ func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx co
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	organizationEntities, err := b.commonOrganizationService.GetLatestOrganizationsWithJobRoleForContacts(ctx, ids)
+	organizationEntities, err := b.commonOrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred
@@ -636,16 +636,16 @@ func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx co
 		return []*dataloader.Result{{Data: nil, Error: err}}
 	}
 
-	organizationEntityByContactId := make(map[string]neo4jentity.OrganizationEntity)
+	organizationWithJobRoleEntityByContactId := make(map[string]neo4jentity.OrganizationWithJobRole)
 	for _, val := range *organizationEntities {
-		organizationEntityByContactId[val.DataloaderKey] = val
+		organizationWithJobRoleEntityByContactId[val.DataloaderKey] = val
 	}
 
 	// construct an output array of dataloader results
 	results := make([]*dataloader.Result, len(keys))
-	for contactId, _ := range organizationEntityByContactId {
+	for contactId, _ := range organizationWithJobRoleEntityByContactId {
 		if ix, ok := keyOrder[contactId]; ok {
-			val := organizationEntityByContactId[contactId]
+			val := organizationWithJobRoleEntityByContactId[contactId]
 			results[ix] = &dataloader.Result{Data: &val, Error: nil}
 			delete(keyOrder, contactId)
 		}
@@ -654,7 +654,7 @@ func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx co
 		results[ix] = &dataloader.Result{Data: nil, Error: nil}
 	}
 
-	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationEntity{}), true); err != nil {
+	if err = assertEntitiesPtrType(results, reflect.TypeOf(neo4jentity.OrganizationWithJobRole{}), true); err != nil {
 		tracing.TraceErr(span, err)
 		return []*dataloader.Result{{nil, err}}
 	}
