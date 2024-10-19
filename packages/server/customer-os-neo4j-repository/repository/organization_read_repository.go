@@ -48,7 +48,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsForEnrichByDomain(ctx context.Context, limit, delayInMinutes int) ([]TenantAndOrganizationIdExtended, error)
 	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
-	GetLatestOrganizationsForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error)
+	GetLatestOrganizationWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error)
 }
 
 type organizationReadRepository struct {
@@ -1068,8 +1068,8 @@ func (r *organizationReadRepository) GetOrganizationsForUpdateLastTouchpoint(ctx
 	return output, nil
 }
 
-func (r *organizationReadRepository) GetLatestOrganizationsForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodeAndId, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLatestOrganizationsForContacts")
+func (r *organizationReadRepository) GetLatestOrganizationWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetLatestOrganizationWithJobRoleForContacts")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -1085,8 +1085,8 @@ func (r *organizationReadRepository) GetLatestOrganizationsForContacts(ctx conte
   					END DESC, 
   					j.endedAt DESC, 
   					j.startedAt DESC
-				WITH c, COLLECT(o)[0] AS latestOrganization
-				RETURN latestOrganization, c.id`
+				WITH c, COLLECT(o)[0] AS latestOrganization, COLLECT(j)[0] AS latestJobRole
+				RETURN latestOrganization, latestJobRole, c.id`
 	params := map[string]any{
 		"tenant":     tenant,
 		"contactIds": contactIds,
@@ -1102,12 +1102,12 @@ func (r *organizationReadRepository) GetLatestOrganizationsForContacts(ctx conte
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsAsDbNodeAndId(ctx, queryResult, err)
+			return utils.ExtractAllRecordsAsDbNodePairAndId(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
-	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodeAndId))))
-	return result.([]*utils.DbNodeAndId), err
+	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodePairAndId))))
+	return result.([]*utils.DbNodePairAndId), err
 }

@@ -198,40 +198,40 @@ type ComplexityRoot struct {
 	}
 
 	Contact struct {
-		AppSource                func(childComplexity int) int
-		ConnectedUsers           func(childComplexity int) int
-		CreatedAt                func(childComplexity int) int
-		CustomFields             func(childComplexity int) int
-		Description              func(childComplexity int) int
-		Emails                   func(childComplexity int) int
-		EnrichDetails            func(childComplexity int) int
-		FirstName                func(childComplexity int) int
-		Flows                    func(childComplexity int) int
-		Hide                     func(childComplexity int) int
-		ID                       func(childComplexity int) int
-		JobRoles                 func(childComplexity int) int
-		Label                    func(childComplexity int) int
-		LastName                 func(childComplexity int) int
-		LatestOrganization       func(childComplexity int) int
-		Locations                func(childComplexity int) int
-		Metadata                 func(childComplexity int) int
-		Name                     func(childComplexity int) int
-		Organizations            func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
-		Owner                    func(childComplexity int) int
-		PhoneNumbers             func(childComplexity int) int
-		Prefix                   func(childComplexity int) int
-		PrimaryEmail             func(childComplexity int) int
-		ProfilePhotoURL          func(childComplexity int) int
-		Socials                  func(childComplexity int) int
-		Source                   func(childComplexity int) int
-		SourceOfTruth            func(childComplexity int) int
-		Tags                     func(childComplexity int) int
-		TimelineEvents           func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
-		TimelineEventsTotalCount func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
-		Timezone                 func(childComplexity int) int
-		Title                    func(childComplexity int) int
-		UpdatedAt                func(childComplexity int) int
-		Username                 func(childComplexity int) int
+		AppSource                     func(childComplexity int) int
+		ConnectedUsers                func(childComplexity int) int
+		CreatedAt                     func(childComplexity int) int
+		CustomFields                  func(childComplexity int) int
+		Description                   func(childComplexity int) int
+		Emails                        func(childComplexity int) int
+		EnrichDetails                 func(childComplexity int) int
+		FirstName                     func(childComplexity int) int
+		Flows                         func(childComplexity int) int
+		Hide                          func(childComplexity int) int
+		ID                            func(childComplexity int) int
+		JobRoles                      func(childComplexity int) int
+		Label                         func(childComplexity int) int
+		LastName                      func(childComplexity int) int
+		LatestOrganizationWithJobRole func(childComplexity int) int
+		Locations                     func(childComplexity int) int
+		Metadata                      func(childComplexity int) int
+		Name                          func(childComplexity int) int
+		Organizations                 func(childComplexity int, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
+		Owner                         func(childComplexity int) int
+		PhoneNumbers                  func(childComplexity int) int
+		Prefix                        func(childComplexity int) int
+		PrimaryEmail                  func(childComplexity int) int
+		ProfilePhotoURL               func(childComplexity int) int
+		Socials                       func(childComplexity int) int
+		Source                        func(childComplexity int) int
+		SourceOfTruth                 func(childComplexity int) int
+		Tags                          func(childComplexity int) int
+		TimelineEvents                func(childComplexity int, from *time.Time, size int, timelineEventTypes []model.TimelineEventType) int
+		TimelineEventsTotalCount      func(childComplexity int, timelineEventTypes []model.TimelineEventType) int
+		Timezone                      func(childComplexity int) int
+		Title                         func(childComplexity int) int
+		UpdatedAt                     func(childComplexity int) int
+		Username                      func(childComplexity int) int
 	}
 
 	ContactParticipant struct {
@@ -1228,6 +1228,11 @@ type ComplexityRoot struct {
 		Type                    func(childComplexity int) int
 	}
 
+	OrganizationWithJobRole struct {
+		JobRole      func(childComplexity int) int
+		Organization func(childComplexity int) int
+	}
+
 	PageView struct {
 		AppSource      func(childComplexity int) int
 		Application    func(childComplexity int) int
@@ -1559,8 +1564,8 @@ type CommentResolver interface {
 type ContactResolver interface {
 	Tags(ctx context.Context, obj *model.Contact) ([]*model.Tag, error)
 	JobRoles(ctx context.Context, obj *model.Contact) ([]*model.JobRole, error)
-	LatestOrganization(ctx context.Context, obj *model.Contact) (*model.Organization, error)
 	Organizations(ctx context.Context, obj *model.Contact, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) (*model.OrganizationPage, error)
+	LatestOrganizationWithJobRole(ctx context.Context, obj *model.Contact) (*model.OrganizationWithJobRole, error)
 	PhoneNumbers(ctx context.Context, obj *model.Contact) ([]*model.PhoneNumber, error)
 	Emails(ctx context.Context, obj *model.Contact) ([]*model.Email, error)
 	PrimaryEmail(ctx context.Context, obj *model.Contact) (*model.Email, error)
@@ -2725,12 +2730,12 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Contact.LastName(childComplexity), true
 
-	case "Contact.latestOrganization":
-		if e.complexity.Contact.LatestOrganization == nil {
+	case "Contact.latestOrganizationWithJobRole":
+		if e.complexity.Contact.LatestOrganizationWithJobRole == nil {
 			break
 		}
 
-		return e.complexity.Contact.LatestOrganization(childComplexity), true
+		return e.complexity.Contact.LatestOrganizationWithJobRole(childComplexity), true
 
 	case "Contact.locations":
 		if e.complexity.Contact.Locations == nil {
@@ -9154,6 +9159,20 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.OrganizationParticipant.Type(childComplexity), true
 
+	case "OrganizationWithJobRole.jobRole":
+		if e.complexity.OrganizationWithJobRole.JobRole == nil {
+			break
+		}
+
+		return e.complexity.OrganizationWithJobRole.JobRole(childComplexity), true
+
+	case "OrganizationWithJobRole.organization":
+		if e.complexity.OrganizationWithJobRole.Organization == nil {
+			break
+		}
+
+		return e.complexity.OrganizationWithJobRole.Organization(childComplexity), true
+
 	case "PageView.appSource":
 		if e.complexity.PageView.AppSource == nil {
 			break
@@ -11658,9 +11677,9 @@ type Contact implements MetadataInterface & Node {
     """
     jobRoles: [JobRole!]! @goField(forceResolver: true)
 
-    latestOrganization: Organization @goField(forceResolver: true)
-
     organizations(pagination: Pagination, where: Filter, sort: [SortBy!]): OrganizationPage! @goField(forceResolver: true)
+
+    latestOrganizationWithJobRole: OrganizationWithJobRole @goField(forceResolver: true)
 
     """
     All phone numbers associated with a contact in customerOS.
@@ -11703,6 +11722,11 @@ type Contact implements MetadataInterface & Node {
     timelineEvents(from: Time, size: Int!, timelineEventTypes: [TimelineEventType!]): [TimelineEvent!]! @goField(forceResolver: true)
     timelineEventsTotalCount(timelineEventTypes: [TimelineEventType!]): Int64! @goField(forceResolver: true)
     enrichDetails: EnrichDetails!
+}
+
+type OrganizationWithJobRole {
+    organization: Organization!
+    jobRole: JobRole!
 }
 
 type EnrichDetails {
@@ -24673,193 +24697,6 @@ func (ec *executionContext) fieldContext_Contact_jobRoles(_ context.Context, fie
 	return fc, nil
 }
 
-func (ec *executionContext) _Contact_latestOrganization(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_Contact_latestOrganization(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return ec.resolvers.Contact().LatestOrganization(rctx, obj)
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		return graphql.Null
-	}
-	res := resTmp.(*model.Organization)
-	fc.Result = res
-	return ec.marshalOOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_Contact_latestOrganization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "Contact",
-		Field:      field,
-		IsMethod:   true,
-		IsResolver: true,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			switch field.Name {
-			case "metadata":
-				return ec.fieldContext_Organization_metadata(ctx, field)
-			case "accountDetails":
-				return ec.fieldContext_Organization_accountDetails(ctx, field)
-			case "contracts":
-				return ec.fieldContext_Organization_contracts(ctx, field)
-			case "opportunities":
-				return ec.fieldContext_Organization_opportunities(ctx, field)
-			case "customerOsId":
-				return ec.fieldContext_Organization_customerOsId(ctx, field)
-			case "customFields":
-				return ec.fieldContext_Organization_customFields(ctx, field)
-			case "referenceId":
-				return ec.fieldContext_Organization_referenceId(ctx, field)
-			case "description":
-				return ec.fieldContext_Organization_description(ctx, field)
-			case "domains":
-				return ec.fieldContext_Organization_domains(ctx, field)
-			case "slackChannelId":
-				return ec.fieldContext_Organization_slackChannelId(ctx, field)
-			case "employeeGrowthRate":
-				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
-			case "employees":
-				return ec.fieldContext_Organization_employees(ctx, field)
-			case "headquarters":
-				return ec.fieldContext_Organization_headquarters(ctx, field)
-			case "industry":
-				return ec.fieldContext_Organization_industry(ctx, field)
-			case "industryGroup":
-				return ec.fieldContext_Organization_industryGroup(ctx, field)
-			case "lastFundingAmount":
-				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
-			case "lastFundingRound":
-				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
-			case "lastTouchpoint":
-				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
-			case "locations":
-				return ec.fieldContext_Organization_locations(ctx, field)
-			case "logo":
-				return ec.fieldContext_Organization_logo(ctx, field)
-			case "logoUrl":
-				return ec.fieldContext_Organization_logoUrl(ctx, field)
-			case "icon":
-				return ec.fieldContext_Organization_icon(ctx, field)
-			case "iconUrl":
-				return ec.fieldContext_Organization_iconUrl(ctx, field)
-			case "market":
-				return ec.fieldContext_Organization_market(ctx, field)
-			case "name":
-				return ec.fieldContext_Organization_name(ctx, field)
-			case "notes":
-				return ec.fieldContext_Organization_notes(ctx, field)
-			case "owner":
-				return ec.fieldContext_Organization_owner(ctx, field)
-			case "parentCompanies":
-				return ec.fieldContext_Organization_parentCompanies(ctx, field)
-			case "public":
-				return ec.fieldContext_Organization_public(ctx, field)
-			case "socialMedia":
-				return ec.fieldContext_Organization_socialMedia(ctx, field)
-			case "subIndustry":
-				return ec.fieldContext_Organization_subIndustry(ctx, field)
-			case "subsidiaries":
-				return ec.fieldContext_Organization_subsidiaries(ctx, field)
-			case "tags":
-				return ec.fieldContext_Organization_tags(ctx, field)
-			case "targetAudience":
-				return ec.fieldContext_Organization_targetAudience(ctx, field)
-			case "timelineEvents":
-				return ec.fieldContext_Organization_timelineEvents(ctx, field)
-			case "valueProposition":
-				return ec.fieldContext_Organization_valueProposition(ctx, field)
-			case "website":
-				return ec.fieldContext_Organization_website(ctx, field)
-			case "yearFounded":
-				return ec.fieldContext_Organization_yearFounded(ctx, field)
-			case "stage":
-				return ec.fieldContext_Organization_stage(ctx, field)
-			case "stageLastUpdated":
-				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
-			case "relationship":
-				return ec.fieldContext_Organization_relationship(ctx, field)
-			case "leadSource":
-				return ec.fieldContext_Organization_leadSource(ctx, field)
-			case "icpFit":
-				return ec.fieldContext_Organization_icpFit(ctx, field)
-			case "hide":
-				return ec.fieldContext_Organization_hide(ctx, field)
-			case "contacts":
-				return ec.fieldContext_Organization_contacts(ctx, field)
-			case "jobRoles":
-				return ec.fieldContext_Organization_jobRoles(ctx, field)
-			case "emails":
-				return ec.fieldContext_Organization_emails(ctx, field)
-			case "phoneNumbers":
-				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
-			case "suggestedMergeTo":
-				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
-			case "timelineEventsTotalCount":
-				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
-			case "externalLinks":
-				return ec.fieldContext_Organization_externalLinks(ctx, field)
-			case "issueSummaryByStatus":
-				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
-			case "contactCount":
-				return ec.fieldContext_Organization_contactCount(ctx, field)
-			case "inboundCommsCount":
-				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
-			case "outboundCommsCount":
-				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
-			case "enrichDetails":
-				return ec.fieldContext_Organization_enrichDetails(ctx, field)
-			case "isCustomer":
-				return ec.fieldContext_Organization_isCustomer(ctx, field)
-			case "socials":
-				return ec.fieldContext_Organization_socials(ctx, field)
-			case "isPublic":
-				return ec.fieldContext_Organization_isPublic(ctx, field)
-			case "note":
-				return ec.fieldContext_Organization_note(ctx, field)
-			case "id":
-				return ec.fieldContext_Organization_id(ctx, field)
-			case "createdAt":
-				return ec.fieldContext_Organization_createdAt(ctx, field)
-			case "updatedAt":
-				return ec.fieldContext_Organization_updatedAt(ctx, field)
-			case "source":
-				return ec.fieldContext_Organization_source(ctx, field)
-			case "sourceOfTruth":
-				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
-			case "appSource":
-				return ec.fieldContext_Organization_appSource(ctx, field)
-			case "customId":
-				return ec.fieldContext_Organization_customId(ctx, field)
-			case "lastTouchPointAt":
-				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
-			case "lastTouchPointType":
-				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
-			case "lastTouchPointTimelineEventId":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
-			case "lastTouchPointTimelineEvent":
-				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
-			case "subsidiaryOf":
-				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
-			}
-			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
-		},
-	}
-	return fc, nil
-}
-
 func (ec *executionContext) _Contact_organizations(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Contact_organizations(ctx, field)
 	if err != nil {
@@ -24921,6 +24758,53 @@ func (ec *executionContext) fieldContext_Contact_organizations(ctx context.Conte
 	if fc.Args, err = ec.field_Contact_organizations_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
 		ec.Error(ctx, err)
 		return fc, err
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _Contact_latestOrganizationWithJobRole(ctx context.Context, field graphql.CollectedField, obj *model.Contact) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return ec.resolvers.Contact().LatestOrganizationWithJobRole(rctx, obj)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		return graphql.Null
+	}
+	res := resTmp.(*model.OrganizationWithJobRole)
+	fc.Result = res
+	return ec.marshalOOrganizationWithJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationWithJobRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Contact_latestOrganizationWithJobRole(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Contact",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "organization":
+				return ec.fieldContext_OrganizationWithJobRole_organization(ctx, field)
+			case "jobRole":
+				return ec.fieldContext_OrganizationWithJobRole_jobRole(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type OrganizationWithJobRole", field.Name)
+		},
 	}
 	return fc, nil
 }
@@ -25850,10 +25734,10 @@ func (ec *executionContext) fieldContext_ContactParticipant_contactParticipant(_
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -26005,10 +25889,10 @@ func (ec *executionContext) fieldContext_ContactsPage_content(_ context.Context,
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -33755,10 +33639,10 @@ func (ec *executionContext) fieldContext_Email_contacts(_ context.Context, field
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -35974,10 +35858,10 @@ func (ec *executionContext) fieldContext_FlowContact_contact(_ context.Context, 
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -44639,10 +44523,10 @@ func (ec *executionContext) fieldContext_JobRole_contact(_ context.Context, fiel
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -50024,10 +49908,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_CreateForOrganization(
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -50210,10 +50094,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_Update(ctx context.Con
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -50512,10 +50396,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_Merge(ctx context.Cont
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -50726,10 +50610,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_AddOrganizationById(ct
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -50851,10 +50735,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveOrganizationById
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -51089,10 +50973,10 @@ func (ec *executionContext) fieldContext_Mutation_contact_RemoveLocation(ctx con
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -52635,10 +52519,10 @@ func (ec *executionContext) fieldContext_Mutation_customFieldsMergeAndUpdateInCo
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -56168,10 +56052,10 @@ func (ec *executionContext) fieldContext_Mutation_location_RemoveFromContact(ctx
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -74591,6 +74475,270 @@ func (ec *executionContext) fieldContext_OrganizationParticipant_type(_ context.
 	return fc, nil
 }
 
+func (ec *executionContext) _OrganizationWithJobRole_organization(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationWithJobRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationWithJobRole_organization(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Organization, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Organization)
+	fc.Result = res
+	return ec.marshalNOrganization2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganization(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationWithJobRole_organization(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationWithJobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Organization_metadata(ctx, field)
+			case "accountDetails":
+				return ec.fieldContext_Organization_accountDetails(ctx, field)
+			case "contracts":
+				return ec.fieldContext_Organization_contracts(ctx, field)
+			case "opportunities":
+				return ec.fieldContext_Organization_opportunities(ctx, field)
+			case "customerOsId":
+				return ec.fieldContext_Organization_customerOsId(ctx, field)
+			case "customFields":
+				return ec.fieldContext_Organization_customFields(ctx, field)
+			case "referenceId":
+				return ec.fieldContext_Organization_referenceId(ctx, field)
+			case "description":
+				return ec.fieldContext_Organization_description(ctx, field)
+			case "domains":
+				return ec.fieldContext_Organization_domains(ctx, field)
+			case "slackChannelId":
+				return ec.fieldContext_Organization_slackChannelId(ctx, field)
+			case "employeeGrowthRate":
+				return ec.fieldContext_Organization_employeeGrowthRate(ctx, field)
+			case "employees":
+				return ec.fieldContext_Organization_employees(ctx, field)
+			case "headquarters":
+				return ec.fieldContext_Organization_headquarters(ctx, field)
+			case "industry":
+				return ec.fieldContext_Organization_industry(ctx, field)
+			case "industryGroup":
+				return ec.fieldContext_Organization_industryGroup(ctx, field)
+			case "lastFundingAmount":
+				return ec.fieldContext_Organization_lastFundingAmount(ctx, field)
+			case "lastFundingRound":
+				return ec.fieldContext_Organization_lastFundingRound(ctx, field)
+			case "lastTouchpoint":
+				return ec.fieldContext_Organization_lastTouchpoint(ctx, field)
+			case "locations":
+				return ec.fieldContext_Organization_locations(ctx, field)
+			case "logo":
+				return ec.fieldContext_Organization_logo(ctx, field)
+			case "logoUrl":
+				return ec.fieldContext_Organization_logoUrl(ctx, field)
+			case "icon":
+				return ec.fieldContext_Organization_icon(ctx, field)
+			case "iconUrl":
+				return ec.fieldContext_Organization_iconUrl(ctx, field)
+			case "market":
+				return ec.fieldContext_Organization_market(ctx, field)
+			case "name":
+				return ec.fieldContext_Organization_name(ctx, field)
+			case "notes":
+				return ec.fieldContext_Organization_notes(ctx, field)
+			case "owner":
+				return ec.fieldContext_Organization_owner(ctx, field)
+			case "parentCompanies":
+				return ec.fieldContext_Organization_parentCompanies(ctx, field)
+			case "public":
+				return ec.fieldContext_Organization_public(ctx, field)
+			case "socialMedia":
+				return ec.fieldContext_Organization_socialMedia(ctx, field)
+			case "subIndustry":
+				return ec.fieldContext_Organization_subIndustry(ctx, field)
+			case "subsidiaries":
+				return ec.fieldContext_Organization_subsidiaries(ctx, field)
+			case "tags":
+				return ec.fieldContext_Organization_tags(ctx, field)
+			case "targetAudience":
+				return ec.fieldContext_Organization_targetAudience(ctx, field)
+			case "timelineEvents":
+				return ec.fieldContext_Organization_timelineEvents(ctx, field)
+			case "valueProposition":
+				return ec.fieldContext_Organization_valueProposition(ctx, field)
+			case "website":
+				return ec.fieldContext_Organization_website(ctx, field)
+			case "yearFounded":
+				return ec.fieldContext_Organization_yearFounded(ctx, field)
+			case "stage":
+				return ec.fieldContext_Organization_stage(ctx, field)
+			case "stageLastUpdated":
+				return ec.fieldContext_Organization_stageLastUpdated(ctx, field)
+			case "relationship":
+				return ec.fieldContext_Organization_relationship(ctx, field)
+			case "leadSource":
+				return ec.fieldContext_Organization_leadSource(ctx, field)
+			case "icpFit":
+				return ec.fieldContext_Organization_icpFit(ctx, field)
+			case "hide":
+				return ec.fieldContext_Organization_hide(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Organization_contacts(ctx, field)
+			case "jobRoles":
+				return ec.fieldContext_Organization_jobRoles(ctx, field)
+			case "emails":
+				return ec.fieldContext_Organization_emails(ctx, field)
+			case "phoneNumbers":
+				return ec.fieldContext_Organization_phoneNumbers(ctx, field)
+			case "suggestedMergeTo":
+				return ec.fieldContext_Organization_suggestedMergeTo(ctx, field)
+			case "timelineEventsTotalCount":
+				return ec.fieldContext_Organization_timelineEventsTotalCount(ctx, field)
+			case "externalLinks":
+				return ec.fieldContext_Organization_externalLinks(ctx, field)
+			case "issueSummaryByStatus":
+				return ec.fieldContext_Organization_issueSummaryByStatus(ctx, field)
+			case "contactCount":
+				return ec.fieldContext_Organization_contactCount(ctx, field)
+			case "inboundCommsCount":
+				return ec.fieldContext_Organization_inboundCommsCount(ctx, field)
+			case "outboundCommsCount":
+				return ec.fieldContext_Organization_outboundCommsCount(ctx, field)
+			case "enrichDetails":
+				return ec.fieldContext_Organization_enrichDetails(ctx, field)
+			case "isCustomer":
+				return ec.fieldContext_Organization_isCustomer(ctx, field)
+			case "socials":
+				return ec.fieldContext_Organization_socials(ctx, field)
+			case "isPublic":
+				return ec.fieldContext_Organization_isPublic(ctx, field)
+			case "note":
+				return ec.fieldContext_Organization_note(ctx, field)
+			case "id":
+				return ec.fieldContext_Organization_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_Organization_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_Organization_updatedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_Organization_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_Organization_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_Organization_appSource(ctx, field)
+			case "customId":
+				return ec.fieldContext_Organization_customId(ctx, field)
+			case "lastTouchPointAt":
+				return ec.fieldContext_Organization_lastTouchPointAt(ctx, field)
+			case "lastTouchPointType":
+				return ec.fieldContext_Organization_lastTouchPointType(ctx, field)
+			case "lastTouchPointTimelineEventId":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEventId(ctx, field)
+			case "lastTouchPointTimelineEvent":
+				return ec.fieldContext_Organization_lastTouchPointTimelineEvent(ctx, field)
+			case "subsidiaryOf":
+				return ec.fieldContext_Organization_subsidiaryOf(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Organization", field.Name)
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _OrganizationWithJobRole_jobRole(ctx context.Context, field graphql.CollectedField, obj *model.OrganizationWithJobRole) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_OrganizationWithJobRole_jobRole(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.JobRole, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.JobRole)
+	fc.Result = res
+	return ec.marshalNJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐJobRole(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_OrganizationWithJobRole_jobRole(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "OrganizationWithJobRole",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "id":
+				return ec.fieldContext_JobRole_id(ctx, field)
+			case "createdAt":
+				return ec.fieldContext_JobRole_createdAt(ctx, field)
+			case "updatedAt":
+				return ec.fieldContext_JobRole_updatedAt(ctx, field)
+			case "organization":
+				return ec.fieldContext_JobRole_organization(ctx, field)
+			case "contact":
+				return ec.fieldContext_JobRole_contact(ctx, field)
+			case "jobTitle":
+				return ec.fieldContext_JobRole_jobTitle(ctx, field)
+			case "primary":
+				return ec.fieldContext_JobRole_primary(ctx, field)
+			case "description":
+				return ec.fieldContext_JobRole_description(ctx, field)
+			case "company":
+				return ec.fieldContext_JobRole_company(ctx, field)
+			case "startedAt":
+				return ec.fieldContext_JobRole_startedAt(ctx, field)
+			case "endedAt":
+				return ec.fieldContext_JobRole_endedAt(ctx, field)
+			case "source":
+				return ec.fieldContext_JobRole_source(ctx, field)
+			case "sourceOfTruth":
+				return ec.fieldContext_JobRole_sourceOfTruth(ctx, field)
+			case "appSource":
+				return ec.fieldContext_JobRole_appSource(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type JobRole", field.Name)
+		},
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _PageView_id(ctx context.Context, field graphql.CollectedField, obj *model.PageView) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_PageView_id(ctx, field)
 	if err != nil {
@@ -75760,10 +75908,10 @@ func (ec *executionContext) fieldContext_PhoneNumber_contacts(_ context.Context,
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -76417,10 +76565,10 @@ func (ec *executionContext) fieldContext_Query_contact(ctx context.Context, fiel
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -76605,10 +76753,10 @@ func (ec *executionContext) fieldContext_Query_contact_ByEmail(ctx context.Conte
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -76730,10 +76878,10 @@ func (ec *executionContext) fieldContext_Query_contact_ByPhone(ctx context.Conte
 				return ec.fieldContext_Contact_tags(ctx, field)
 			case "jobRoles":
 				return ec.fieldContext_Contact_jobRoles(ctx, field)
-			case "latestOrganization":
-				return ec.fieldContext_Contact_latestOrganization(ctx, field)
 			case "organizations":
 				return ec.fieldContext_Contact_organizations(ctx, field)
+			case "latestOrganizationWithJobRole":
+				return ec.fieldContext_Contact_latestOrganizationWithJobRole(ctx, field)
 			case "phoneNumbers":
 				return ec.fieldContext_Contact_phoneNumbers(ctx, field)
 			case "emails":
@@ -99661,16 +99809,19 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "latestOrganization":
+		case "organizations":
 			field := field
 
-			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Contact_latestOrganization(ctx, field, obj)
+				res = ec._Contact_organizations(ctx, field, obj)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
 				return res
 			}
 
@@ -99694,19 +99845,16 @@ func (ec *executionContext) _Contact(ctx context.Context, sel ast.SelectionSet, 
 			}
 
 			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
-		case "organizations":
+		case "latestOrganizationWithJobRole":
 			field := field
 
-			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+			innerFunc := func(ctx context.Context, _ *graphql.FieldSet) (res graphql.Marshaler) {
 				defer func() {
 					if r := recover(); r != nil {
 						ec.Error(ctx, ec.Recover(ctx, r))
 					}
 				}()
-				res = ec._Contact_organizations(ctx, field, obj)
-				if res == graphql.Null {
-					atomic.AddUint32(&fs.Invalids, 1)
-				}
+				res = ec._Contact_latestOrganizationWithJobRole(ctx, field, obj)
 				return res
 			}
 
@@ -108840,6 +108988,50 @@ func (ec *executionContext) _OrganizationParticipant(ctx context.Context, sel as
 			}
 		case "type":
 			out.Values[i] = ec._OrganizationParticipant_type(ctx, field, obj)
+		default:
+			panic("unknown field " + strconv.Quote(field.Name))
+		}
+	}
+	out.Dispatch(ctx)
+	if out.Invalids > 0 {
+		return graphql.Null
+	}
+
+	atomic.AddInt32(&ec.deferred, int32(len(deferred)))
+
+	for label, dfs := range deferred {
+		ec.processDeferredGroup(graphql.DeferredGroup{
+			Label:    label,
+			Path:     graphql.GetPath(ctx),
+			FieldSet: dfs,
+			Context:  ctx,
+		})
+	}
+
+	return out
+}
+
+var organizationWithJobRoleImplementors = []string{"OrganizationWithJobRole"}
+
+func (ec *executionContext) _OrganizationWithJobRole(ctx context.Context, sel ast.SelectionSet, obj *model.OrganizationWithJobRole) graphql.Marshaler {
+	fields := graphql.CollectFields(ec.OperationContext, sel, organizationWithJobRoleImplementors)
+
+	out := graphql.NewFieldSet(fields)
+	deferred := make(map[string]*graphql.FieldSet)
+	for i, field := range fields {
+		switch field.Name {
+		case "__typename":
+			out.Values[i] = graphql.MarshalString("OrganizationWithJobRole")
+		case "organization":
+			out.Values[i] = ec._OrganizationWithJobRole_organization(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "jobRole":
+			out.Values[i] = ec._OrganizationWithJobRole_jobRole(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
 		default:
 			panic("unknown field " + strconv.Quote(field.Name))
 		}
@@ -118501,6 +118693,13 @@ func (ec *executionContext) marshalOOrganizationStage2ᚖgithubᚗcomᚋopenline
 		return graphql.Null
 	}
 	return v
+}
+
+func (ec *executionContext) marshalOOrganizationWithJobRole2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐOrganizationWithJobRole(ctx context.Context, sel ast.SelectionSet, v *model.OrganizationWithJobRole) graphql.Marshaler {
+	if v == nil {
+		return graphql.Null
+	}
+	return ec._OrganizationWithJobRole(ctx, sel, v)
 }
 
 func (ec *executionContext) unmarshalOPagination2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐPagination(ctx context.Context, v interface{}) (*model.Pagination, error) {

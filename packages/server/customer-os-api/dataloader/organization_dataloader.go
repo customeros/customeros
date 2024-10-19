@@ -122,8 +122,8 @@ func (i *Loaders) GetOrganizationForOpportunityOptional(ctx context.Context, opp
 	return result.(*neo4jentity.OrganizationEntity), nil
 }
 
-func (i *Loaders) GetLatestOrganizationForContact(ctx context.Context, contactId string) (*neo4jentity.OrganizationEntity, error) {
-	thunk := i.LatestOrganizationForContact.Load(ctx, dataloader.StringKey(contactId))
+func (i *Loaders) GetLatestOrganizationWithJobRoleForContact(ctx context.Context, contactId string) (*neo4jentity.OrganizationWithJobRole, error) {
+	thunk := i.LatestOrganizationWithJobRoleForContact.Load(ctx, dataloader.StringKey(contactId))
 	result, err := thunk()
 	if err != nil {
 		return nil, err
@@ -131,7 +131,7 @@ func (i *Loaders) GetLatestOrganizationForContact(ctx context.Context, contactId
 	if result == nil {
 		return nil, nil
 	}
-	return result.(*neo4jentity.OrganizationEntity), nil
+	return result.(*neo4jentity.OrganizationWithJobRole), nil
 }
 
 func (b *organizationBatcher) getOrganizationsForEmails(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
@@ -615,8 +615,8 @@ func (b *organizationBatcher) getOrganizationsForOpportunities(ctx context.Conte
 	return results
 }
 
-func (b *organizationBatcher) getLatestOrganizationForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getLatestOrganizationForContacts")
+func (b *organizationBatcher) getLatestOrganizationWithJobRoleForContacts(ctx context.Context, keys dataloader.Keys) []*dataloader.Result {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationDataLoader.getLatestOrganizationWithJobRoleForContacts")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	span.LogFields(log.Object("keys", keys), log.Int("keys_length", len(keys)))
@@ -626,7 +626,7 @@ func (b *organizationBatcher) getLatestOrganizationForContacts(ctx context.Conte
 	ctx, cancel := utils.GetLongLivedContext(ctx)
 	defer cancel()
 
-	organizationEntities, err := b.commonOrganizationService.GetLatestOrganizationsForContacts(ctx, ids)
+	organizationEntities, err := b.commonOrganizationService.GetLatestOrganizationsWithJobRoleForContacts(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

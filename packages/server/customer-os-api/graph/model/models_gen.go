@@ -345,9 +345,9 @@ type Contact struct {
 	Tags          []*Tag     `json:"tags,omitempty"`
 	// `organizationName` and `jobTitle` of the contact if it has been associated with an organization.
 	// **Required.  If no values it returns an empty array.**
-	JobRoles           []*JobRole        `json:"jobRoles"`
-	LatestOrganization *Organization     `json:"latestOrganization,omitempty"`
-	Organizations      *OrganizationPage `json:"organizations"`
+	JobRoles                      []*JobRole               `json:"jobRoles"`
+	Organizations                 *OrganizationPage        `json:"organizations"`
+	LatestOrganizationWithJobRole *OrganizationWithJobRole `json:"latestOrganizationWithJobRole,omitempty"`
 	// All phone numbers associated with a contact in customerOS.
 	// **Required.  If no values it returns an empty array.**
 	PhoneNumbers []*PhoneNumber `json:"phoneNumbers"`
@@ -2117,6 +2117,11 @@ type OrganizationUpdateInput struct {
 	Note *string `json:"note,omitempty"`
 	// Deprecated, use customId instead
 	ReferenceID *string `json:"referenceId,omitempty"`
+}
+
+type OrganizationWithJobRole struct {
+	Organization *Organization `json:"organization"`
+	JobRole      *JobRole      `json:"jobRole"`
 }
 
 type PageView struct {
