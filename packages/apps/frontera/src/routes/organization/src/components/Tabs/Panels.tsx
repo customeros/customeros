@@ -3,6 +3,7 @@ import { PeoplePanel } from './panels/PeoplePanel';
 import { IssuesPanel } from './panels/IssuesPanel';
 import { AccountPanel } from './panels/AccountPanel';
 import { SuccessPanel } from './panels/SuccessPanel';
+import { InvoicesPanel } from './panels/InvoicesPanel';
 
 interface PanelsProps {
   tab: string;
@@ -18,6 +19,8 @@ export const Panels = ({ tab }: PanelsProps) => {
       return <PeoplePanel />;
     case 'issues':
       return <IssuesPanel />;
+    case 'invoices':
+      return <InvoicesPanel />;
     default:
       return <AboutPanel />;
   }
