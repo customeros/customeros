@@ -10,7 +10,8 @@ import mock from './mock.json';
 // temporary - will be removed once we drop react-query and getGraphQLClient
 declare global {
   interface Window {
-    intercomSettings: unknown;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    Atlas?: any;
     __COS_SESSION__?: {
       email: string;
       apiKey: string | null;
@@ -93,17 +94,49 @@ export class SessionStore {
         username: this.value.profile.email,
       });
 
-      window.intercomSettings = {
-        api_base: 'https://api-iam.intercom.io',
-        app_id: 'pqerb2dx',
-        alignment: 'right',
-        horizontal_padding: 28,
-        vertical_padding: 28,
+      window.Atlas = {
+        userId: this.value.profile.id,
         name: this.value.profile.name,
         email: this.value.profile.email,
-        created_at: `${new Date().valueOf()}`,
+        createdAt: `${new Date().valueOf()}`,
+        proxyUrl: '', // Add the proxyUrl here
       };
+
+      window.Atlas.identify({
+        userId: this.value.profile.id,
+        name: this.value.profile.name,
+        email: this.value.profile.email,
+      });
+      window?.Atlas.call('start', {
+        chat: {
+          openIncoming: false,
+        },
+      });
     });
+
+    const initAtlas = () => {
+      const atlasScript = document.createElement('script');
+
+      atlasScript.src = 'https://app.atlas.so/client-js/atlas.bundle.js';
+      document.body.appendChild(atlasScript);
+
+      window.Atlas = {
+        ...window.Atlas,
+        appId: 'l3c3ezk1ta',
+        v: 2,
+        q: [],
+        proxyUrl: '',
+        call: function (...args: unknown[]) {
+          this.q?.push(args);
+        },
+      };
+
+      if (window.Atlas) {
+        window.Atlas.call('start');
+      }
+    };
+
+    initAtlas();
   }
 
   async loadSession() {
@@ -142,9 +175,9 @@ export class SessionStore {
       // Save the session token & other required data to the store
       runInAction(() => {
         this.sessionToken = sessionToken;
-        this.value.tenant = jwtParsed.tenant ?? '';
-        this.value.profile.email = jwtParsed.profile.email ?? '';
-        this.value.profile.id = jwtParsed.profile.id ?? '';
+        this.value.tenant = jwtParsed?.tenant ?? '';
+        this.value.profile.email = jwtParsed?.profile?.email ?? '';
+        this.value.profile.id = jwtParsed?.profile?.id ?? '';
       });
 
       return;
@@ -178,7 +211,7 @@ export class SessionStore {
 
       this.error = (err as Error)?.message;
       options?.onError?.(this.error);
-      console.error(err);
+      console.error('Error fetching session:', err);
     } finally {
       runInAction(() => {
         this.isBootstrapping = false;
