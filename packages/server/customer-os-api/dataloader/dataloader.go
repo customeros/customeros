@@ -228,7 +228,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		tagService: services.CommonServices.TagService,
 	}
 	emailBatcher := &emailBatcher{
-		emailService: services.EmailService,
+		emailService:       services.EmailService,
+		commonEmailService: services.CommonServices.EmailService,
 	}
 	locationBatcher := &locationBatcher{
 		locationService: services.LocationService,
@@ -276,7 +277,8 @@ func NewDataLoader(services *service.Services) *Loaders {
 		contactService: services.ContactService,
 	}
 	organizationBatcher := &organizationBatcher{
-		organizationService: services.OrganizationService,
+		organizationService:       services.OrganizationService,
+		commonOrganizationService: services.CommonServices.OrganizationService,
 	}
 	noteBatcher := &noteBatcher{
 		noteService: services.NoteService,
