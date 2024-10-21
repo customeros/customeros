@@ -187,7 +187,7 @@ func addMailbox(ctx context.Context, tenant, domain string, username, password s
 
 	// Save mailbox details in postgres
 	err = services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &entity.TenantSettingsMailbox{
-		Domain: domain, MailboxUsername: username, Tenant: tenant, MailboxPassword: password, MinMinutesBetweenEmails: 5, MaxMinutesBetweenEmails: 5,
+		Domain: domain, MailboxUsername: username, Tenant: tenant, MailboxPassword: password, MinMinutesBetweenEmails: 5, MaxMinutesBetweenEmails: 10,
 	})
 
 	if err != nil {

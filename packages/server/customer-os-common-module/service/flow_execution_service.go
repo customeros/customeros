@@ -311,7 +311,7 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 			return nil, err
 		}
 
-		if emailsScheduledInDay >= int64(mailboxEntity.MaxEmailsPerDay) {
+		if emailsScheduledInDay >= int64(mailboxEntity.RampUpCurrent) {
 			possibleScheduledAt = possibleScheduledAt.AddDate(0, 0, 1)
 			possibleScheduledAt = time.Date(possibleScheduledAt.Year(), possibleScheduledAt.Month(), possibleScheduledAt.Day(), 0, 0, 0, 0, time.UTC)
 			continue

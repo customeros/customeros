@@ -17,6 +17,7 @@ type tenantSettingsMailboxRepository struct {
 
 type TenantSettingsMailboxRepository interface {
 	GetAll(ctx context.Context, tenant string) ([]*entity.TenantSettingsMailbox, error)
+	GetForRampUp(ctx context.Context) ([]*entity.TenantSettingsMailbox, error)
 	GetByMailbox(ctx context.Context, tenant, mailbox string) (*entity.TenantSettingsMailbox, error)
 	GetById(ctx context.Context, tenant, id string) (*entity.TenantSettingsMailbox, error)
 	GetAllByDomain(ctx context.Context, tenant, domain string) ([]entity.TenantSettingsMailbox, error)
@@ -42,9 +43,25 @@ func (r *tenantSettingsMailboxRepository) GetAll(c context.Context, tenant strin
 		Error
 
 	if err != nil {
-		if err == gorm.ErrRecordNotFound {
-			return nil, nil
-		}
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return result, nil
+}
+
+func (r *tenantSettingsMailboxRepository) GetForRampUp(ctx context.Context) ([]*entity.TenantSettingsMailbox, error) {
+	span, _ := opentracing.StartSpanFromContext(ctx, "TenantSettingsMailboxRepository.GetForRampUp")
+	defer span.Finish()
+	tracing.TagComponentPostgresRepository(span)
+
+	var result []*entity.TenantSettingsMailbox
+	err := r.gormDb.
+		Where("ramp_up_current < ramp_up_max and (last_ramp_up_at is null or last_ramp_up_at < ?)", utils.StartOfDayInUTC(utils.Now())).
+		Find(&result).
+		Error
+
+	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
 	}
@@ -177,7 +194,10 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tenant stri
 			MailboxPassword:         input.MailboxPassword,
 			Username:                input.Username,
 			Domain:                  input.Domain,
-			MaxEmailsPerDay:         input.MaxEmailsPerDay,
+			LastRampUpAt:            utils.Now(),
+			RampUpRate:              3,
+			RampUpMax:               40,
+			RampUpCurrent:           3,
 			MinMinutesBetweenEmails: input.MinMinutesBetweenEmails,
 			MaxMinutesBetweenEmails: input.MaxMinutesBetweenEmails,
 		}
@@ -190,7 +210,10 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tenant stri
 	} else {
 		// If found, update the existing mailbox
 		mailbox.MailboxPassword = input.MailboxPassword
-		mailbox.MaxEmailsPerDay = input.MaxEmailsPerDay
+		mailbox.LastRampUpAt = input.LastRampUpAt
+		mailbox.RampUpRate = input.RampUpRate
+		mailbox.RampUpMax = input.RampUpMax
+		mailbox.RampUpCurrent = input.RampUpCurrent
 		mailbox.MinMinutesBetweenEmails = input.MinMinutesBetweenEmails
 		mailbox.MaxMinutesBetweenEmails = input.MaxMinutesBetweenEmails
 		mailbox.UpdatedAt = utils.Now()

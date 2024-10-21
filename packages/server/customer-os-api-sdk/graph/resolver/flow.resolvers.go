@@ -77,6 +77,11 @@ func (r *mutationResolver) FlowSenderDelete(ctx context.Context, id string) (*mo
 	panic(fmt.Errorf("not implemented: FlowSenderDelete - flowSender_Delete"))
 }
 
+// Flow is the resolver for the flow field.
+func (r *queryResolver) Flow(ctx context.Context, id string) (*model.Flow, error) {
+	panic(fmt.Errorf("not implemented: Flow - flow"))
+}
+
 // Flows is the resolver for the flows field.
 func (r *queryResolver) Flows(ctx context.Context) ([]*model.Flow, error) {
 	panic(fmt.Errorf("not implemented: Flows - flows"))

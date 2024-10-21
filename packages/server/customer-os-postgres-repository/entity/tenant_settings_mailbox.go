@@ -12,7 +12,11 @@ type TenantSettingsMailbox struct {
 	Domain          string    `gorm:"column:domain;type:varchar(255)" json:"domain"`
 	Username        string    `gorm:"column:user_name;type:varchar(255)" json:"userName"`
 
-	MaxEmailsPerDay         int `gorm:"type:integer" json:"maxEmailsPerDay"`
+	LastRampUpAt  time.Time `gorm:"column:last_ramp_up_at;type:timestamp" json:"lastRampUpAt"`
+	RampUpRate    int       `gorm:"type:integer" json:"rampUpRate"`
+	RampUpMax     int       `gorm:"type:integer" json:"rampUpMax"`
+	RampUpCurrent int       `gorm:"type:integer" json:"rampUpCurrent"`
+
 	MinMinutesBetweenEmails int `gorm:"type:integer" json:"minMinutesBetweenEmails"`
 	MaxMinutesBetweenEmails int `gorm:"type:integer" json:"maxMinutesBetweenEmails"`
 }

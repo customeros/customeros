@@ -7,6 +7,7 @@ package resolver
 import (
 	"context"
 	"fmt"
+
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -162,7 +163,7 @@ func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeI
 	//		Tenant:                  tenant,
 	//		MailboxUsername:         userEmail,
 	//		Username:                userEmail,
-	//		MaxEmailsPerDay:         2,
+	//		RampUpCurrent:         2,
 	//		MinMinutesBetweenEmails: 5,
 	//		MaxMinutesBetweenEmails: 10,
 	//	})
@@ -289,6 +290,21 @@ func (r *mutationResolver) FlowSenderDelete(ctx context.Context, id string) (*mo
 		return &model.Result{Result: false}, err
 	}
 	return &model.Result{Result: true}, nil
+}
+
+// Flow is the resolver for the flow field.
+func (r *queryResolver) Flow(ctx context.Context, id string) (*model.Flow, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "FlowResolver.Flows", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+
+	entity, err := r.Services.CommonServices.FlowService.FlowGetById(ctx, id)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "")
+		return nil, err
+	}
+	return mapper.MapEntityToFlow(entity), nil
 }
 
 // Flows is the resolver for the flows field.
