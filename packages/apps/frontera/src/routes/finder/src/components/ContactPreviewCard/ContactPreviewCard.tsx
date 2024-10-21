@@ -60,7 +60,9 @@ export const ContactPreviewCard = observer(() => {
   const flag = flags[countryA2 || ''];
   const city = contact?.value.locations?.[0]?.locality;
   const timezone = city
-    ? cityTimezone.lookupViaCity(city)?.[0]?.timezone
+    ? cityTimezone.lookupViaCity(city).find((c) => {
+        return c.iso2 === contact.value.locations?.[0].countryCodeA2;
+      })?.timezone
     : null;
 
   const fromatedUrl = contact?.value?.socials?.[0]?.url.replace(
