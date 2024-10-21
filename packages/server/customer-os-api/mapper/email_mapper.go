@@ -20,6 +20,9 @@ func MapEmailInputToEntity(input *model.EmailInput) *neo4jentity.EmailEntity {
 }
 
 func MapEntityToEmail(entity *neo4jentity.EmailEntity) *model.Email {
+	if entity == nil {
+		return nil
+	}
 	return &model.Email{
 		ID:        entity.Id,
 		Email:     utils.StringPtrFirstNonEmptyNillable(entity.Email, entity.RawEmail),
