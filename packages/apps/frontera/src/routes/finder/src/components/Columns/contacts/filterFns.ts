@@ -80,18 +80,16 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
-      { property: ColumnViewType.ContactsEmails },
+      { property: ColumnViewType.ContactsPrimaryEmail },
       (filter) => (row: ContactStore) => {
         const filterValues = filter?.value;
 
         if (!filter.active) return true;
 
         if (!filterValues) return true;
-        const emails = row.value?.emails
-          .filter((e) => e.work)
-          .map((e) => e.email);
+        const emails = row.value.primaryEmail?.email;
 
-        return filterTypeText(filter, emails?.join(' '));
+        return filterTypeText(filter, emails ?? undefined);
       },
     )
 
@@ -258,79 +256,15 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeList(filter, flow?.split(' ') as string[]);
       };
     })
+
     .with(
-      { property: 'EMAIL_VERIFICATION_WORK_EMAIL' },
+      { property: 'EMAIL_VERIFICATION_PRIMARY_EMAIL' },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
 
         const filterValues = filter.value;
-        const email = row.value?.emails?.find((e) => e.work === true);
-        const emailValidationData = email?.emailValidationDetails;
-
-        if (emailValidationData === undefined) return false;
-
-        return match(filter.operation)
-          .with(ComparisonOperator.Contains, () =>
-            filterValues?.some(
-              (categoryFilter: { value: string; category: string }) =>
-                (categoryFilter.category === 'DELIVERABLE' &&
-                  isDeliverableV2(categoryFilter.value, emailValidationData)) ||
-                (categoryFilter.category === 'UNDELIVERABLE' &&
-                  isNotDeliverableV2(
-                    categoryFilter?.value,
-                    emailValidationData,
-                  )) ||
-                (categoryFilter.category === 'UNKNOWN' &&
-                  isDeliverableUnknownV2(
-                    categoryFilter.value,
-                    emailValidationData,
-                  )),
-            ),
-          )
-
-          .with(ComparisonOperator.NotContains, () =>
-            filterValues.some(
-              (categoryFilter: { value: string; category: string }) =>
-                !(
-                  categoryFilter.category === 'DELIVERABLE' &&
-                  isDeliverableV2(categoryFilter.value, emailValidationData)
-                ) &&
-                !(
-                  categoryFilter.category === 'UNDELIVERABLE' &&
-                  isNotDeliverableV2(categoryFilter.value, emailValidationData)
-                ) &&
-                !(
-                  categoryFilter.category === 'UNKNOWN' &&
-                  isDeliverableUnknownV2(
-                    categoryFilter.value,
-                    emailValidationData,
-                  )
-                ),
-            ),
-          )
-          .with(
-            ComparisonOperator.IsEmpty,
-            () =>
-              !emailValidationData ||
-              Object.keys(emailValidationData).length === 0,
-          )
-          .with(
-            ComparisonOperator.IsNotEmpty,
-            () =>
-              !!emailValidationData &&
-              Object.keys(emailValidationData).length > 1,
-          )
-          .otherwise(() => true);
-      },
-    )
-    .with(
-      { property: 'EMAIL_VERIFICATION_PERSONAL_EMAIL' },
-      (filter) => (row: ContactStore) => {
-        if (!filter.active) return true;
-
-        const filterValues = filter.value;
-        const email = row.value?.emails?.find((e) => e.work === false);
-        const emailValidationData = email?.emailValidationDetails;
+        const emailValidationData =
+          row.value.primaryEmail?.emailValidationDetails;
 
         if (emailValidationData === undefined) return false;
 
@@ -535,34 +469,16 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
-      { property: ColumnViewType.ContactsEmails },
+      { property: ColumnViewType.ContactsPrimaryEmail },
       (filter) => (row: ContactStore) => {
         const filterValues = filter?.value;
 
         if (!filter.active) return true;
 
         if (!filterValues) return true;
-        const emails = row.value?.emails
-          .filter((e) => e.work)
-          .map((e) => e.email);
+        const emails = row.value.primaryEmail?.email;
 
-        return emails?.some((e) => e?.includes(filterValues));
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsPersonalEmails },
-      (filter) => (row: ContactStore) => {
-        const filterValues = filter?.value;
-
-        if (!filter.active) return true;
-
-        if (!filterValues) return true;
-        const emails = row.value?.emails
-          .filter((e) => !e.work)
-          .map((e) => e.email);
-
-        return emails?.some((e) => e?.includes(filterValues));
+        return emails?.includes(filterValues);
       },
     )
 

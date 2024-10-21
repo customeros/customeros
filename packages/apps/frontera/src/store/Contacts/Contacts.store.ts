@@ -551,6 +551,45 @@ const CONTACTS_QUERY = gql`
           id
           name
         }
+        primaryEmail {
+          id
+          primary
+          email
+          emailValidationDetails {
+            verified
+            verifyingCheckAll
+            isValidSyntax
+            isRisky
+            isFirewalled
+            provider
+            firewall
+            isCatchAll
+            canConnectSmtp
+            deliverable
+            isMailboxFull
+            isRoleAccount
+            isFreeAccount
+            smtpSuccess
+          }
+        }
+        latestOrganizationWithJobRole {
+          organization {
+            name
+            metadata {
+              id
+            }
+          }
+          jobRole {
+            id
+            primary
+            jobTitle
+            description
+            company
+            startedAt
+            endedAt
+          }
+        }
+
         jobRoles {
           id
           primary

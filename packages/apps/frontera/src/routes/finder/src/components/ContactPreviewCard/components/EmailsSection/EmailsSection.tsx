@@ -35,9 +35,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
   const validationDetails =
     contactStore?.value.emails?.[0]?.emailValidationDetails;
 
-  const isPrimaryEmail = contactStore?.value.emails.find(
-    (email) => email?.primary === true,
-  );
+  const isPrimaryEmail = contactStore?.value.primaryEmail;
 
   return (
     <>

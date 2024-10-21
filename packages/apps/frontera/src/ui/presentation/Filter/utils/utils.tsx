@@ -127,10 +127,8 @@ export const handlePropertyPlural = (property: string, selection: string[]) => {
       selection.length === 1 ? 'last touchpoint' : 'last touchpoints',
     )
     .with('Country', () => (selection.length === 1 ? 'country' : 'countries'))
-    .with('Work email status', () =>
-      selection.length === 1 ? 'email status' : 'email statuses',
-    )
-    .with('Personal email status', () =>
+
+    .with('Primary email status', () =>
       selection.length === 1 ? 'email status' : 'email statuses',
     )
     .with('Flow status', () =>

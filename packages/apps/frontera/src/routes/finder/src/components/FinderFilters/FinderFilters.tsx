@@ -54,14 +54,8 @@ export const FinderFilters = observer(
     if (tableId === TableIdType.Contacts) {
       columns.push({
         // @ts-expect-error fix later
-        columnType: 'EMAIL_VERIFICATION_WORK_EMAIL',
-        label: 'Work email status',
-        helperText: 'Email Verification',
-      });
-      columns.push({
-        // @ts-expect-error fix later
-        columnType: 'EMAIL_VERIFICATION_PERSONAL_EMAIL',
-        label: 'Personal email statusl',
+        columnType: 'EMAIL_VERIFICATION_PRIMARY_EMAIL',
+        label: 'Primary email status',
         helperText: 'Email Verification',
       });
     }

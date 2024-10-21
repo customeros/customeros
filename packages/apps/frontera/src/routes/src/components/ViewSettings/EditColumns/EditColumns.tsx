@@ -103,6 +103,9 @@ export const EditColumns = observer(({ type, tableId }: EditColumnsProps) => {
       ColumnViewType.ContactsSchools,
       ColumnViewType.ContactsExperience,
       ColumnViewType.ContactsUpdatedAt,
+      'EMAIL_VERIFICATION_PRIMARY_EMAIL',
+      ColumnViewType.ContactsEmails,
+      ColumnViewType.ContactsPersonalEmails,
     ].includes(d?.columnType ?? '');
   });
 

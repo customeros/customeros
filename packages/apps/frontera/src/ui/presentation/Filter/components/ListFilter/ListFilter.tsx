@@ -95,8 +95,7 @@ export const ListFilter = ({
   };
 
   const filterValueLabels =
-    filterName !== 'Email status work email' &&
-    filterName !== 'Email status personal email'
+    filterName !== 'Primary email status'
       ? _options
           .filter((option) => selectedIds?.includes(option.id))
           .map((option) => option.label)
@@ -149,11 +148,7 @@ export const ListFilter = ({
             <span
               className='flex-1'
               style={{
-                marginLeft:
-                  filterName === 'Work email status' ||
-                  filterName === 'Personal email status'
-                    ? '8px'
-                    : '0',
+                marginLeft: filterName === 'Primary email status' ? '8px' : '0',
               }}
             >
               {children}
@@ -192,10 +187,7 @@ export const ListFilter = ({
   );
 
   const getOptions = useCallback(() => {
-    return filterName !== 'Work email status' &&
-      filterName !== 'Personal email status'
-      ? options
-      : groupOptions;
+    return filterName !== 'Primary email status' ? options : groupOptions;
   }, [filterName]);
 
   if (

@@ -31,7 +31,6 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsCity]: 'City',
   [ColumnViewType.ContactsPersona]: 'Persona',
   [ColumnViewType.ContactsLastInteraction]: 'Last Interaction',
-  [ColumnViewType.ContactsEmails]: 'Work Email',
   [ColumnViewType.ContactsPhoneNumbers]: 'Mobile Number',
   [ColumnViewType.ContactsAvatar]: 'Avatar',
   [ColumnViewType.ContactsLanguages]: 'Languages',
@@ -46,7 +45,7 @@ export const contactsOptionsMap: Record<InvoicesColumnType | string, string> = {
   [ColumnViewType.ContactsConnections]: 'LinkedIn Connections',
   [ColumnViewType.ContactsRegion]: 'Region',
   [ColumnViewType.ContactsFlows]: 'Current Flow',
-  [ColumnViewType.ContactsPersonalEmails]: 'Personal Email',
+  [ColumnViewType.ContactsPrimaryEmail]: 'Primary Email',
   [ColumnViewType.ContactsFlowStatus]: 'Status in Flow',
 };
 
