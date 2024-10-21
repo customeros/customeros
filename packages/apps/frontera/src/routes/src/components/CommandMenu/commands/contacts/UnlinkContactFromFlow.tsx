@@ -46,7 +46,7 @@ export const UnlinkContactFromFlow = observer(() => {
   const title =
     context.ids?.length > 1
       ? `Remove ${context.ids?.length} contacts from their flows?`
-      : `Remove ${(entity as ContactStore)?.value.firstName} from ${
+      : `Remove ${(entity as ContactStore)?.name} from ${
           (entity as ContactStore)?.flow?.value?.name
         }?`;
 

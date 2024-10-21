@@ -22,7 +22,7 @@ export const EditPersonaTag = observer(() => {
   const selectedIds = context.ids;
   const label =
     selectedIds?.length === 1
-      ? `Contact - ${contact?.value.name}`
+      ? `Contact - ${contact?.name}`
       : `${selectedIds?.length} contacts`;
 
   const handleSelect = (t: TagType) => () => {

@@ -14,7 +14,7 @@ export const EditName = observer(() => {
 
   const [name, setName] = useState(() => contactName);
 
-  const label = `Contact - ${contact?.value.name}`;
+  const label = `Contact - ${contact?.name}`;
 
   const handleClose = () => {
     store.ui.commandMenu.setOpen(false);

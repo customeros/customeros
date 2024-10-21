@@ -15,7 +15,7 @@ export const EditPhoneNumber = observer(() => {
 
   const [number, setPhone] = useState(() => phoneNumber);
 
-  const label = `Contact - ${contact?.value.name}`;
+  const label = `Contact - ${contact?.name}`;
 
   const handleChangePhoneNumber = () => {
     if (!contact) return;
