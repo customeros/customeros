@@ -239,7 +239,7 @@ export const ContactAvatarHeader = observer(() => {
             </div>
           </ModalBody>
           <ModalFooter className='flex gap-3'>
-            <ModalClose className='w-full'>
+            <ModalClose asChild className='w-full'>
               <Button className='w-full'>Cancel</Button>
             </ModalClose>
 

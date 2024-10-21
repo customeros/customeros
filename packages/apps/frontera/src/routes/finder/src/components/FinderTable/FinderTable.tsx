@@ -10,7 +10,7 @@ import { useTableActions } from '@invoices/hooks/useTableActions';
 import { OpportunitiesTableActions } from '@finder/components/Actions/OpportunityActions';
 
 import { useStore } from '@shared/hooks/useStore';
-import { Invoice, TableViewType } from '@graphql/types';
+import { Invoice, TableViewType, ColumnViewType } from '@graphql/types';
 import { Table, SortingState, TableInstance } from '@ui/presentation/Table';
 import { ConfirmDeleteDialog } from '@ui/overlay/AlertDialog/ConfirmDeleteDialog';
 
@@ -35,16 +35,20 @@ export const FinderTable = observer(({ isSidePanelOpen }: FinderTableProps) => {
   const [searchParams] = useSearchParams();
   const enableFeature = useFeatureIsOn('gp-dedicated-1');
   const tableRef = useRef<TableInstance<object> | null>(null);
+  const preset = searchParams?.get('preset');
+  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
+
+  const contactsPreset = store.tableViewDefs.contactsPreset;
+
   const [sorting, setSorting] = useState<SortingState>([
-    { id: 'ORGANIZATIONS_LAST_TOUCHPOINT', desc: true },
+    preset === contactsPreset
+      ? { id: ColumnViewType.ContactsUpdatedAt, desc: true }
+      : { id: ColumnViewType.OrganizationsLastTouchpoint, desc: true },
   ]);
   const filtersV2 = useFeatureIsOn('filters-v2');
 
   const searchTerm = searchParams?.get('search');
   const { reset, targetId, isConfirming, onConfirm } = useTableActions();
-
-  const preset = searchParams?.get('preset');
-  const tableViewDef = store.tableViewDefs.getById(preset ?? '1');
 
   const tableType =
     tableViewDef?.value?.tableType || TableViewType.Organizations;

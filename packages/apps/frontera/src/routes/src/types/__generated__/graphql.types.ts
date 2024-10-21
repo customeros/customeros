@@ -322,11 +322,13 @@ export enum ColumnViewType {
   ContactsPersona = 'CONTACTS_PERSONA',
   ContactsPersonalEmails = 'CONTACTS_PERSONAL_EMAILS',
   ContactsPhoneNumbers = 'CONTACTS_PHONE_NUMBERS',
+  ContactsPrimaryEmail = 'CONTACTS_PRIMARY_EMAIL',
   ContactsRegion = 'CONTACTS_REGION',
   ContactsSchools = 'CONTACTS_SCHOOLS',
   ContactsSkills = 'CONTACTS_SKILLS',
   ContactsTags = 'CONTACTS_TAGS',
   ContactsTimeInCurrentRole = 'CONTACTS_TIME_IN_CURRENT_ROLE',
+  ContactsUpdatedAt = 'CONTACTS_UPDATED_AT',
   ContractsCurrency = 'CONTRACTS_CURRENCY',
   ContractsEnded = 'CONTRACTS_ENDED',
   ContractsForecastArr = 'CONTRACTS_FORECAST_ARR',
@@ -475,6 +477,7 @@ export type Contact = MetadataInterface &
     label?: Maybe<Scalars['String']['output']>;
     /** The last name of the contact in customerOS. */
     lastName?: Maybe<Scalars['String']['output']>;
+    latestOrganizationWithJobRole?: Maybe<OrganizationWithJobRole>;
     /**
      * All locations associated with a contact in customerOS.
      * **Required.  If no values it returns an empty array.**
@@ -492,6 +495,7 @@ export type Contact = MetadataInterface &
      */
     phoneNumbers: Array<PhoneNumber>;
     prefix?: Maybe<Scalars['String']['output']>;
+    primaryEmail?: Maybe<Email>;
     profilePhotoUrl?: Maybe<Scalars['String']['output']>;
     socials: Array<Social>;
     source: DataSource;
@@ -3694,6 +3698,12 @@ export type OrganizationUpdateInput = {
   valueProposition?: InputMaybe<Scalars['String']['input']>;
   website?: InputMaybe<Scalars['String']['input']>;
   yearFounded?: InputMaybe<Scalars['Int64']['input']>;
+};
+
+export type OrganizationWithJobRole = {
+  __typename?: 'OrganizationWithJobRole';
+  jobRole: JobRole;
+  organization: Organization;
 };
 
 export type PageView = Node &
