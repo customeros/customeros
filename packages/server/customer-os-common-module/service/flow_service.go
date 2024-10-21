@@ -218,6 +218,18 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		visited: make(map[string]bool),
 	}
 
+	if input.Id != "" {
+		flowEntity, err := s.FlowGetById(ctx, input.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if flowEntity.Status != neo4jentity.FlowStatusInactive {
+			return nil, nil
+		}
+	}
+
 	flowEntity, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		toStore := &neo4jentity.FlowEntity{}
