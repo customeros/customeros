@@ -25,8 +25,6 @@ type UserGrpcServiceClient interface {
 	UpsertUser(ctx context.Context, in *UpsertUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkJobRoleToUser(ctx context.Context, in *LinkJobRoleToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(ctx context.Context, in *LinkPhoneNumberToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
-	LinkEmailToUser(ctx context.Context, in *LinkEmailToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
-	UnLinkEmailFromUser(ctx context.Context, in *UnLinkEmailFromUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	AddRole(ctx context.Context, in *AddRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 	RemoveRole(ctx context.Context, in *RemoveRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error)
 }
@@ -66,24 +64,6 @@ func (c *userGrpcServiceClient) LinkPhoneNumberToUser(ctx context.Context, in *L
 	return out, nil
 }
 
-func (c *userGrpcServiceClient) LinkEmailToUser(ctx context.Context, in *LinkEmailToUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
-	out := new(UserIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/userGrpcService/LinkEmailToUser", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *userGrpcServiceClient) UnLinkEmailFromUser(ctx context.Context, in *UnLinkEmailFromUserGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
-	out := new(UserIdGrpcResponse)
-	err := c.cc.Invoke(ctx, "/userGrpcService/UnLinkEmailFromUser", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
 func (c *userGrpcServiceClient) AddRole(ctx context.Context, in *AddRoleGrpcRequest, opts ...grpc.CallOption) (*UserIdGrpcResponse, error) {
 	out := new(UserIdGrpcResponse)
 	err := c.cc.Invoke(ctx, "/userGrpcService/AddRole", in, out, opts...)
@@ -109,8 +89,6 @@ type UserGrpcServiceServer interface {
 	UpsertUser(context.Context, *UpsertUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkJobRoleToUser(context.Context, *LinkJobRoleToUserGrpcRequest) (*UserIdGrpcResponse, error)
 	LinkPhoneNumberToUser(context.Context, *LinkPhoneNumberToUserGrpcRequest) (*UserIdGrpcResponse, error)
-	LinkEmailToUser(context.Context, *LinkEmailToUserGrpcRequest) (*UserIdGrpcResponse, error)
-	UnLinkEmailFromUser(context.Context, *UnLinkEmailFromUserGrpcRequest) (*UserIdGrpcResponse, error)
 	AddRole(context.Context, *AddRoleGrpcRequest) (*UserIdGrpcResponse, error)
 	RemoveRole(context.Context, *RemoveRoleGrpcRequest) (*UserIdGrpcResponse, error)
 }
@@ -127,12 +105,6 @@ func (UnimplementedUserGrpcServiceServer) LinkJobRoleToUser(context.Context, *Li
 }
 func (UnimplementedUserGrpcServiceServer) LinkPhoneNumberToUser(context.Context, *LinkPhoneNumberToUserGrpcRequest) (*UserIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LinkPhoneNumberToUser not implemented")
-}
-func (UnimplementedUserGrpcServiceServer) LinkEmailToUser(context.Context, *LinkEmailToUserGrpcRequest) (*UserIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method LinkEmailToUser not implemented")
-}
-func (UnimplementedUserGrpcServiceServer) UnLinkEmailFromUser(context.Context, *UnLinkEmailFromUserGrpcRequest) (*UserIdGrpcResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method UnLinkEmailFromUser not implemented")
 }
 func (UnimplementedUserGrpcServiceServer) AddRole(context.Context, *AddRoleGrpcRequest) (*UserIdGrpcResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddRole not implemented")
@@ -206,42 +178,6 @@ func _UserGrpcService_LinkPhoneNumberToUser_Handler(srv interface{}, ctx context
 	return interceptor(ctx, in, info, handler)
 }
 
-func _UserGrpcService_LinkEmailToUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(LinkEmailToUserGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserGrpcServiceServer).LinkEmailToUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/userGrpcService/LinkEmailToUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserGrpcServiceServer).LinkEmailToUser(ctx, req.(*LinkEmailToUserGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
-func _UserGrpcService_UnLinkEmailFromUser_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(UnLinkEmailFromUserGrpcRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(UserGrpcServiceServer).UnLinkEmailFromUser(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/userGrpcService/UnLinkEmailFromUser",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(UserGrpcServiceServer).UnLinkEmailFromUser(ctx, req.(*UnLinkEmailFromUserGrpcRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _UserGrpcService_AddRole_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(AddRoleGrpcRequest)
 	if err := dec(in); err != nil {
@@ -296,14 +232,6 @@ var UserGrpcService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "LinkPhoneNumberToUser",
 			Handler:    _UserGrpcService_LinkPhoneNumberToUser_Handler,
-		},
-		{
-			MethodName: "LinkEmailToUser",
-			Handler:    _UserGrpcService_LinkEmailToUser_Handler,
-		},
-		{
-			MethodName: "UnLinkEmailFromUser",
-			Handler:    _UserGrpcService_UnLinkEmailFromUser_Handler,
 		},
 		{
 			MethodName: "AddRole",

@@ -178,48 +178,6 @@ func (s *contactService) LinkPhoneNumberToContact(ctx context.Context, request *
 	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
 }
 
-func (s *contactService) LinkEmailToContact(ctx context.Context, request *contactpb.LinkEmailToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkEmailToContact")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	agg, err := contact.LoadContactAggregate(ctx, s.services.es, request.Tenant, request.ContactId, *eventstore.NewLoadAggregateOptions())
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
-	}
-
-	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
-		if agg.Contact.HasEmail(request.EmailId, request.Primary) {
-			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
-			return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-		}
-	}
-
-	evt, err := event.NewContactLinkEmailEvent(agg, request.EmailId, request.Email, request.Primary, time.Now())
-
-	eventstore.EnrichEventWithMetadataExtended(&evt, span, eventstore.EventMetadata{
-		Tenant: request.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	err = agg.Apply(evt)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
-	}
-
-	err = s.services.es.Save(ctx, agg)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return nil, s.errResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
 func (s *contactService) LinkLocationToContact(ctx context.Context, request *contactpb.LinkLocationToContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
 	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.LinkLocationToContact")
 	defer span.Finish()
@@ -445,24 +403,6 @@ func (s *contactService) ShowContact(ctx context.Context, request *contactpb.Con
 	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request, params); err != nil {
 		tracing.TraceErr(span, err)
 		s.log.Errorf("(ShowContact.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
-		return nil, grpcerr.ErrResponse(err)
-	}
-
-	return &contactpb.ContactIdGrpcResponse{Id: request.ContactId}, nil
-}
-
-func (s *contactService) UnLinkEmailFromContact(ctx context.Context, request *contactpb.UnLinkEmailFromContactGrpcRequest) (*contactpb.ContactIdGrpcResponse, error) {
-	ctx, span := tracing.StartGrpcServerTracerSpan(ctx, "ContactService.UnLinkEmailFromContact")
-	defer span.Finish()
-	tracing.SetServiceSpanTags(ctx, span, request.Tenant, request.LoggedInUserId)
-	tracing.LogObjectAsJson(span, "request", request)
-
-	initAggregateFunc := func() eventstore.Aggregate {
-		return contact.NewContactAggregateWithTenantAndID(request.Tenant, request.ContactId)
-	}
-	if _, err := s.services.RequestHandler.HandleGRPCRequest(ctx, initAggregateFunc, eventstore.LoadAggregateOptions{}, request); err != nil {
-		tracing.TraceErr(span, err)
-		s.log.Errorf("(UnLinkEmailFromContact.HandleGRPCRequest) tenant:{%s}, contact ID: {%s}, err: %s", request.Tenant, request.ContactId, err.Error())
 		return nil, grpcerr.ErrResponse(err)
 	}
 

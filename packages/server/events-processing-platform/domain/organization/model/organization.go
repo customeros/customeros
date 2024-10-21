@@ -81,7 +81,6 @@ type Organization struct {
 	CreatedAt         time.Time                          `json:"createdAt,omitempty"`
 	UpdatedAt         time.Time                          `json:"updatedAt,omitempty"`
 	PhoneNumbers      map[string]OrganizationPhoneNumber `json:"phoneNumbers"`
-	Emails            map[string]OrganizationEmail       `json:"emails"`
 	// Deprecated
 	LocationIds         []string                      `json:"locationIds,omitempty"`
 	Domains             []string                      `json:"domains,omitempty"`
@@ -126,10 +125,6 @@ type OnboardingDetails struct {
 type OrganizationPhoneNumber struct {
 	Primary bool   `json:"primary"`
 	Label   string `json:"label"`
-}
-
-type OrganizationEmail struct {
-	Primary bool `json:"primary"`
 }
 
 type ParentOrganization struct {

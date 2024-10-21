@@ -9,10 +9,12 @@ import (
 )
 
 const (
-	ContactCreateV1           = "V1_CONTACT_CREATE"
-	ContactUpdateV1           = "V1_CONTACT_UPDATE"
-	ContactPhoneNumberLinkV1  = "V1_CONTACT_PHONE_NUMBER_LINK"
-	ContactEmailLinkV1        = "V1_CONTACT_EMAIL_LINK"
+	ContactCreateV1          = "V1_CONTACT_CREATE"
+	ContactUpdateV1          = "V1_CONTACT_UPDATE"
+	ContactPhoneNumberLinkV1 = "V1_CONTACT_PHONE_NUMBER_LINK"
+	// Deprecated
+	ContactEmailLinkV1 = "V1_CONTACT_EMAIL_LINK"
+	// Deprecated
 	ContactEmailUnlinkV1      = "V1_CONTACT_EMAIL_UNLINK"
 	ContactLocationLinkV1     = "V1_CONTACT_LOCATION_LINK"
 	ContactOrganizationLinkV1 = "V1_CONTACT_ORGANIZATION_LINK"

@@ -190,46 +190,6 @@ func (h *UserEventHandler) OnPhoneNumberLinkedToUser(ctx context.Context, evt ev
 	return err
 }
 
-func (h *UserEventHandler) OnEmailLinkedToUser(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnEmailLinkedToUser")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UserLinkEmailEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, eventData.Tenant, userId, eventData.EmailId, eventData.Primary)
-
-	return err
-}
-
-func (h *UserEventHandler) OnEmailUnlinkedFromUser(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "UserEventHandler.OnEmailUnlinkedFromUser")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.UserUnlinkEmailEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	userId := aggregate.GetUserObjectID(evt.AggregateID, eventData.Tenant)
-	tracing.TagTenant(span, eventData.Tenant)
-	tracing.TagEntity(span, userId)
-
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.UnlinkFromUser(ctx, eventData.Tenant, userId, eventData.Email)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromUser"))
-		h.log.Errorf("Error while unlinking email %s from user %s: %s", eventData.Email, userId, err.Error())
-	}
-
-	return nil
-}
-
 func (h *UserEventHandler) OnAddRole(c context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "UserEventHandler.OnAddRole")
 	defer span.Finish()
