@@ -30,7 +30,7 @@ type emailService struct {
 
 type EmailService interface {
 	Merge(ctx context.Context, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error)
-	ReplaceEmail(ctx context.Context, tenant, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
+	ReplaceEmail(ctx context.Context, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
 	LinkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error
 	UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
@@ -126,20 +126,23 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 	return &emailId, nil
 }
 
-func (s *emailService) ReplaceEmail(ctx context.Context, tenant, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error) {
+func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.ReplaceEmail")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.LogObjectAsJson(span, "input", emailFields)
 	span.LogKV("previousEmail", previousEmail)
 
+	// validate tenant
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	if previousEmail == emailFields.Email {
 		span.LogFields(log.Bool("email.same", true))
 		return nil, nil
-	}
-
-	if tenant == "" {
-		tenant = common.GetTenantFromContext(ctx)
 	}
 
 	if previousEmail != "" {
@@ -149,7 +152,7 @@ func (s *emailService) ReplaceEmail(ctx context.Context, tenant, previousEmail s
 		}
 	}
 
-	return s.Merge(ctx, tenant, emailFields, &linkWith)
+	return s.Merge(ctx, common.GetTenantFromContext(ctx), emailFields, &linkWith)
 }
 
 func (s *emailService) LinkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error {
