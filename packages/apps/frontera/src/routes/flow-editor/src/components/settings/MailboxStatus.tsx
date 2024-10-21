@@ -34,7 +34,7 @@ export const MailboxStatus = observer(({ id }: { id: string }) => {
         {totalMailboxes} {totalMailboxes === 1 ? 'mailbox' : 'mailboxes'}
       </span>{' '}
       available allowing you to send up to{' '}
-      <span className='font-medium'>{totalMailboxes * 6} emails per day.</span>
+      <span className='font-medium'>{totalMailboxes * 40} emails per day.</span>
     </p>
   );
 });

@@ -16,7 +16,10 @@ import { useStore } from '@shared/hooks/useStore';
 import { Settings03 } from '@ui/media/icons/Settings03.tsx';
 import { ChevronRight } from '@ui/media/icons/ChevronRight';
 import { ViewSettings } from '@shared/components/ViewSettings';
-import { TableViewType } from '@shared/types/__generated__/graphql.types';
+import {
+  FlowStatus,
+  TableViewType,
+} from '@shared/types/__generated__/graphql.types';
 
 import { FlowStatusMenu } from './components';
 
@@ -41,9 +44,12 @@ export const Header = observer(
     const saveFlag = useFeatureIsOn('flow-editor-save-button_1');
 
     const flow = store.flows.value.get(id) as FlowStore;
+    const status = flow?.value?.status;
     const contactsStore = store.contacts;
     const showFinder = searchParams.get('show') === 'finder';
     const flowContactsPreset = store.tableViewDefs.flowContactsPreset;
+    const canSave =
+      !showFinder && saveFlag && hasChanges && status === FlowStatus.Inactive;
 
     useEffect(() => {
       if (!store.ui.commandMenu.isOpen) {
@@ -56,7 +62,7 @@ export const Header = observer(
     }, [store.ui.commandMenu.isOpen, id]);
 
     useUnmount(() => {
-      if (saveFlag && !showFinder && hasChanges) {
+      if (canSave) {
         const nodes = getNodes();
         const edges = getEdges();
 
@@ -162,7 +168,7 @@ export const Header = observer(
           </div>
           <div className='flex gap-2'>
             {showFinder && <ViewSettings type={TableViewType.Contacts} />}
-            {!showFinder && saveFlag && hasChanges && (
+            {canSave && (
               <Button
                 size='xs'
                 variant='outline'
