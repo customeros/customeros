@@ -114,7 +114,7 @@ func (r *mutationResolver) EmailRemoveFromContact(ctx context.Context, contactID
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.email", email))
 
-	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
+	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, email, constants.AppSourceCustomerOsApi,
 		commonservice.LinkWith{
 			Type: commonmodel.CONTACT,
 			Id:   contactID,
@@ -140,7 +140,7 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 	span.LogFields(log.String("request.contactID", contactID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx,
 		utils.IfNotNilString(previousEmail),
 		commonservice.EmailFields{
 			Email:     input.Email,
@@ -237,7 +237,7 @@ func (r *mutationResolver) EmailRemoveFromUser(ctx context.Context, userID strin
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.userID", userID), log.String("request.email", email))
 
-	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
+	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, email, constants.AppSourceCustomerOsApi,
 		commonservice.LinkWith{
 			Type: commonmodel.USER,
 			Id:   userID,
@@ -262,7 +262,7 @@ func (r *mutationResolver) EmailReplaceForUser(ctx context.Context, userID strin
 	span.LogFields(log.String("request.userID", userID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx,
 		utils.IfNotNilString(previousEmail),
 		commonservice.EmailFields{
 			Email:     input.Email,
@@ -338,7 +338,7 @@ func (r *mutationResolver) EmailRemoveFromOrganization(ctx context.Context, orga
 	tracing.SetDefaultResolverSpanTags(ctx, span)
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.email", email))
 
-	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, common.GetTenantFromContext(ctx), email, constants.AppSourceCustomerOsApi,
+	err := r.Services.CommonServices.EmailService.UnlinkEmail(ctx, email, constants.AppSourceCustomerOsApi,
 		commonservice.LinkWith{
 			Type: commonmodel.ORGANIZATION,
 			Id:   organizationID,
@@ -364,7 +364,7 @@ func (r *mutationResolver) EmailReplaceForOrganization(ctx context.Context, orga
 	span.LogFields(log.String("request.organizationID", organizationID), log.String("request.previousEmail", utils.IfNotNilString(previousEmail)))
 	tracing.LogObjectAsJson(span, "request.input", input)
 
-	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx, common.GetTenantFromContext(ctx),
+	emailId, err := r.Services.CommonServices.EmailService.ReplaceEmail(ctx,
 		utils.IfNotNilString(previousEmail),
 		commonservice.EmailFields{
 			Email:     input.Email,
