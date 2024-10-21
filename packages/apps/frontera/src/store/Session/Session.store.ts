@@ -93,24 +93,10 @@ export class SessionStore {
         user_id: this.value.profile.id,
         username: this.value.profile.email,
       });
-
-      window.Atlas = {
+      window.Atlas.call('identify', {
         userId: this.value.profile.id,
         name: this.value.profile.name,
         email: this.value.profile.email,
-        createdAt: `${new Date().valueOf()}`,
-        proxyUrl: '', // Add the proxyUrl here
-      };
-
-      window.Atlas.identify({
-        userId: this.value.profile.id,
-        name: this.value.profile.name,
-        email: this.value.profile.email,
-      });
-      window?.Atlas.call('start', {
-        chat: {
-          openIncoming: false,
-        },
       });
     });
 
@@ -137,6 +123,11 @@ export class SessionStore {
     };
 
     initAtlas();
+    window?.Atlas.call('start', {
+      chat: {
+        openIncoming: false,
+      },
+    });
   }
 
   async loadSession() {
