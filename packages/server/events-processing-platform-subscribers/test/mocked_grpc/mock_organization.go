@@ -9,7 +9,6 @@ type MockOrganizationServiceCallbacks struct {
 	CreateOrganization            func(ctx context.Context, proto *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	AddParent                     func(ctx context.Context, proto *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RemoveParent                  func(ctx context.Context, proto *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	LinkEmailToOrganization       func(ctx context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization func(ctx context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint         func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	UpdateOnboardingStatus        func(ctx context.Context, proto *organizationpb.UpdateOnboardingStatusGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
@@ -32,13 +31,6 @@ func (MockOrganizationService) UpsertOrganization(ctx context.Context, proto *or
 		panic("organizationCallbacks.CreateOrganization is not set")
 	}
 	return organizationCallbacks.CreateOrganization(ctx, proto)
-}
-
-func (MockOrganizationService) LinkEmailToOrganization(ctx context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.LinkEmailToOrganization == nil {
-		panic("organizationCallbacks.LinkEmailToOrganization is not set")
-	}
-	return organizationCallbacks.LinkEmailToOrganization(ctx, proto)
 }
 
 func (MockOrganizationService) LinkPhoneNumberToOrganization(ctx context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
