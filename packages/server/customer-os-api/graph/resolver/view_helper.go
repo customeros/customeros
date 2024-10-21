@@ -238,7 +238,7 @@ func DefaultTableViewDefinitionContacts(span opentracing.Span) (postgresEntity.T
 		Order:       0,
 		Icon:        "Users01",
 		Filters:     ``,
-		Sorting:     ``,
+		Sorting:     `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
 		IsPreset:    true,
 		IsShared:    false,
 	}, nil
@@ -261,7 +261,7 @@ func DefaultTableViewDefinitionTargetOrganizationsContacts(span opentracing.Span
 		Order:       0,
 		Icon:        "HeartHand",
 		Filters:     fmt.Sprintf(`{"AND":[{"filter":{"includeEmpty":false,"operation":"EQ","property":"STAGE","value":["%s"]}},{"filter":{"includeEmpty":false,"operation":"EQ","property":"RELATIONSHIP","value":["%s"]}}]}`, neo4jenum.Target.String(), neo4jenum.Prospect.String()),
-		Sorting:     ``,
+		Sorting:     `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
 		IsPreset:    true,
 		IsShared:    false,
 	}, nil
@@ -376,7 +376,7 @@ func DefaultTableViewDefinitionFlowContacts(span opentracing.Span) (postgresEnti
 		Order:       0,
 		Icon:        "Users01",
 		Filters:     ``,
-		Sorting:     ``,
+		Sorting:     `{"id": "CONTACTS_UPDATED_AT", "desc": true}`,
 		IsPreset:    true,
 		IsShared:    false,
 	}, nil
@@ -506,6 +506,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 14, ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 17, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 24, ColumnType: model.ColumnViewTypeContactsUpdatedAt.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeContactsForTargetOrganizations.String():
@@ -534,6 +535,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 14, ColumnType: model.ColumnViewTypeContactsLanguages.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 16, ColumnType: model.ColumnViewTypeContactsExperience.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 				{ColumnId: 17, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 24, ColumnType: model.ColumnViewTypeContactsUpdatedAt.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	case model.TableIDTypeOpportunities.String():
@@ -601,6 +603,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 10, ColumnType: model.ColumnViewTypeContactsRegion.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 11, ColumnType: model.ColumnViewTypeContactsCity.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 12, ColumnType: model.ColumnViewTypeContactsFlowStatus.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 13, ColumnType: model.ColumnViewTypeContactsUpdatedAt.String(), Width: 100, Visible: false, Name: "", Filter: ""},
 			},
 		}
 	}
