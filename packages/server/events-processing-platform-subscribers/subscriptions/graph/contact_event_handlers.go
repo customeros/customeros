@@ -209,50 +209,6 @@ func (h *ContactEventHandler) OnPhoneNumberLinkToContact(ctx context.Context, ev
 	return err
 }
 
-func (h *ContactEventHandler) OnEmailLinkToContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnEmailLinkToContact")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContactLinkEmailEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, eventData.Tenant, contactId, eventData.EmailId, eventData.Primary)
-
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return err
-}
-
-func (h *ContactEventHandler) OnEmailUnlinkFromContact(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnEmailUnlinkFromContact")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData event.ContactUnlinkEmailEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	contactId := contact.GetContactObjectID(evt.AggregateID, eventData.Tenant)
-	tracing.TagTenant(span, eventData.Tenant)
-	tracing.TagEntity(span, contactId)
-
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.UnlinkFromContact(ctx, eventData.Tenant, contactId, eventData.Email)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromContact"))
-		h.log.Errorf("Error while unlinking email %s from contact %s: %s", eventData.Email, contactId, err.Error())
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, model.CONTACT.String(), contactId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 func (h *ContactEventHandler) OnLocationLinkToContact(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "ContactEventHandler.OnLocationLinkToContact")
 	defer span.Finish()

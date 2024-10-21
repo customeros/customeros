@@ -43,8 +43,6 @@ func (a *UserAggregate) HandleRequest(ctx context.Context, request any, params m
 	switch r := request.(type) {
 	case *userpb.LinkPhoneNumberToUserGrpcRequest:
 		return nil, a.linkPhoneNumber(ctx, r)
-	case *userpb.LinkEmailToUserGrpcRequest:
-		return nil, a.linkEmail(ctx, r)
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
@@ -197,78 +195,6 @@ func (a *UserAggregate) SetPhoneNumberNonPrimary(ctx context.Context, tenant, ph
 			Tenant: a.Tenant,
 			UserId: loggedInUserId,
 		})
-		return a.Apply(event)
-	}
-	return nil
-}
-
-func (a *UserAggregate) linkEmail(ctx context.Context, request *userpb.LinkEmailToUserGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.linkEmail")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-
-	if eventstore.AllowCheckForNoChanges(request.AppSource, request.LoggedInUserId) {
-		if a.User.HasEmail(request.EmailId) {
-			span.SetTag(tracing.SpanTagRedundantEventSkipped, true)
-			return nil
-		}
-	}
-
-	updatedAtNotNil := utils.Now()
-
-	event, err := events.NewUserLinkEmailEvent(a, request.Tenant, request.EmailId, request.Email, request.Primary, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUserLinkEmailEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: request.Tenant,
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	err = a.Apply(event)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if request.Primary {
-		for k, v := range a.User.Emails {
-			if k != request.EmailId && v.Primary {
-				if err = a.SetEmailNonPrimary(ctx, request.Tenant, k, request.LoggedInUserId); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
-func (a *UserAggregate) SetEmailNonPrimary(ctx context.Context, tenant, emailId, loggedInUserId string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.SetEmailNonPrimary")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-
-	updatedAtNotNil := utils.Now()
-
-	email, ok := a.User.Emails[emailId]
-	if !ok {
-		return local_errors.ErrEmailNotFound
-	}
-
-	if email.Primary {
-		event, err := events.NewUserLinkEmailEvent(a, tenant, emailId, "", false, updatedAtNotNil)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewUserLinkEmailEvent")
-		}
-
-		eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, loggedInUserId)
 		return a.Apply(event)
 	}
 	return nil

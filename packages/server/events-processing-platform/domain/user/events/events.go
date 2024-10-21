@@ -13,11 +13,13 @@ const (
 	UserCreateV1          = "V1_USER_CREATE"
 	UserUpdateV1          = "V1_USER_UPDATE"
 	UserPhoneNumberLinkV1 = "V1_USER_PHONE_NUMBER_LINK"
-	UserEmailLinkV1       = "V1_USER_EMAIL_LINK"
-	UserEmailUnlinkV1     = "V1_USER_EMAIL_UNLINK"
-	UserJobRoleLinkV1     = "V1_USER_JOB_ROLE_LINK"
-	UserAddRoleV1         = "V1_USER_ADD_ROLE"
-	UserRemoveRoleV1      = "V1_USER_REMOVE_ROLE"
+	// Deprecated
+	UserEmailLinkV1 = "V1_USER_EMAIL_LINK"
+	// Deprecated
+	UserEmailUnlinkV1 = "V1_USER_EMAIL_UNLINK"
+	UserJobRoleLinkV1 = "V1_USER_JOB_ROLE_LINK"
+	UserAddRoleV1     = "V1_USER_ADD_ROLE"
+	UserRemoveRoleV1  = "V1_USER_REMOVE_ROLE"
 	//Deprecated
 	UserAddPlayerV1 = "V1_USER_ADD_PLAYER"
 )
@@ -156,34 +158,6 @@ func NewUserLinkPhoneNumberEvent(aggregate eventstore.Aggregate, tenant, phoneNu
 	event := eventstore.NewBaseEvent(aggregate, UserPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserLinkPhoneNumberEvent")
-	}
-	return event, nil
-}
-
-type UserLinkEmailEvent struct {
-	Tenant    string    `json:"tenant" validate:"required"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	EmailId   string    `json:"emailId" validate:"required"`
-	Primary   bool      `json:"primary"`
-	Email     string    `json:"email"`
-}
-
-func NewUserLinkEmailEvent(aggregate eventstore.Aggregate, tenant, emailId, email string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := UserLinkEmailEvent{
-		Tenant:    tenant,
-		UpdatedAt: updatedAt,
-		EmailId:   emailId,
-		Primary:   primary,
-		Email:     email,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate UserLinkEmailEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, UserEmailLinkV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for UserLinkEmailEvent")
 	}
 	return event, nil
 }

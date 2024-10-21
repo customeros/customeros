@@ -12,7 +12,6 @@ type CommandHandlers struct {
 	UpsertOrganization           UpsertOrganizationCommandHandler
 	UpdateOrganization           UpdateOrganizationCommandHandler
 	LinkPhoneNumberCommand       LinkPhoneNumberCommandHandler
-	LinkEmailCommand             LinkEmailCommandHandler
 	LinkLocationCommand          LinkLocationCommandHandler
 	LinkDomainCommand            LinkDomainCommandHandler
 	ShowOrganizationCommand      ShowOrganizationCommandHandler
@@ -30,7 +29,6 @@ func NewCommandHandlers(log logger.Logger, cfg *config.Config, es eventstore.Agg
 		UpsertOrganization:           NewUpsertOrganizationCommandHandler(log, es),
 		UpdateOrganization:           NewUpdateOrganizationCommandHandler(log, es, cfg.Utils),
 		LinkPhoneNumberCommand:       NewLinkPhoneNumberCommandHandler(log, es),
-		LinkEmailCommand:             NewLinkEmailCommandHandler(log, es),
 		LinkLocationCommand:          NewLinkLocationCommandHandler(log, es),
 		LinkDomainCommand:            NewLinkDomainCommandHandler(log, es, cfg.Utils),
 		ShowOrganizationCommand:      NewShowOrganizationCommandHandler(log, es),
