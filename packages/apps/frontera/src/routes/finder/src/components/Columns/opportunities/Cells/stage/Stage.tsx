@@ -14,7 +14,7 @@ const internalStageOptions: Record<string, string> = {
   [InternalStage.ClosedWon]: 'Closed Won',
 };
 
-const makeStageLabels = (store: RootStore, preset?: string) => {
+export const makeStageLabels = (store: RootStore, preset?: string) => {
   const cacheKey = 'cache' as keyof typeof makeStageLabels;
 
   if (makeStageLabels?.[cacheKey]) {

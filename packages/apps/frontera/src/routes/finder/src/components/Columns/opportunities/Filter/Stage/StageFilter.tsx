@@ -11,6 +11,7 @@ import {
   ComparisonOperator,
 } from '@graphql/types';
 
+import { makeStageLabels } from '../../Cells';
 import { FilterHeader } from '../../../shared/Filters/abstract/FilterHeader';
 
 const defaultFilter: FilterItem = {
@@ -29,7 +30,7 @@ const internalStageOptions = [
 
 export const StageFilter = observer(() => {
   const [searchParams] = useSearchParams();
-  const preset = searchParams.get('preset');
+  const preset = searchParams.get('preset') ?? undefined;
 
   const store = useStore();
   const tableViewDef = store.tableViewDefs.getById(preset ?? '');
@@ -39,9 +40,11 @@ export const StageFilter = observer(() => {
   const toggle = () => {
     tableViewDef?.toggleFilter(filter);
   };
-  const statuses =
-    store.settings.tenant.value?.opportunityStages?.filter((e) => e.visible) ??
-    [];
+  const stageLabels = makeStageLabels(store, preset) ?? {};
+  const statuses = Object.entries(stageLabels).map(([value, label]) => ({
+    label,
+    value,
+  }));
 
   const handleSelect = (value: string) => () => {
     const newValue = filter.value.includes(value)
