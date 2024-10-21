@@ -5,6 +5,7 @@ import { ContractStore } from '@store/Contracts/Contract.store.ts';
 
 import { useStore } from '@shared/hooks/useStore';
 import { BilledType, ServiceLineItem } from '@graphql/types';
+import { PauseCircle } from '@ui/media/icons/PauseCircle.tsx';
 import { formatCurrency } from '@utils/getFormattedCurrencyNumber';
 import { groupServicesByParentId } from '@organization/components/Tabs/panels/AccountPanel/Contract/Services/utils.ts';
 
@@ -31,9 +32,11 @@ const ServiceItem = observer(
   ({
     onOpen,
     currency,
+    isPaused,
     id,
   }: {
     id: string;
+    isPaused?: boolean;
     currency?: string | null;
     onOpen: (props: ServiceLineItem) => void;
   }) => {
@@ -69,6 +72,9 @@ const ServiceItem = observer(
                 currency || 'USD',
               )}
               {getBilledTypeLabel(contractLineItem?.billingCycle as BilledType)}
+              {isPaused && (
+                <PauseCircle className='ml-2 text-gray-500 size-4' />
+              )}
             </p>
           </div>
         </div>
@@ -124,6 +130,7 @@ export const ServicesList = observer(
                     currency={currency}
                     onOpen={onModalOpen}
                     id={service?.currentLineItem?.metadata?.id}
+                    isPaused={service?.currentLineItem?.paused}
                   />
                 </React.Fragment>
               ))}
