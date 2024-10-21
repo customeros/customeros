@@ -77,7 +77,7 @@ export const ConfirmDeleteDialog = ({
                   {cancelButtonLabel}
                 </Button>
               </AlertDialogCloseButton>
-              <AlertDialogConfirmButton>
+              <AlertDialogConfirmButton asChild>
                 <Button
                   size='md'
                   variant='outline'

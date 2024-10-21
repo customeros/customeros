@@ -90,6 +90,7 @@ export class Syncable<T extends object> {
     requestIdleCallback(() => {
       runInAction(() => {
         Object.assign(this.value, data);
+        Object.assign(this.snapshot, data);
         this.initChannelConnection();
       });
     });
