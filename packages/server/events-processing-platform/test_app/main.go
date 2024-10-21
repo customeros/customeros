@@ -515,20 +515,6 @@ func testOrganizationLinkWithPhoneNumber() {
 	print(result)
 }
 
-func testOrganizationLinkWithEmail() {
-
-	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
-	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
-
-	result, _ := clients.OrganizationClient.LinkEmailToOrganization(context.Background(), &organizationpb.LinkEmailToOrganizationGrpcRequest{
-		Tenant:         tenant,
-		OrganizationId: orgId,
-		EmailId:        emailId,
-		Primary:        true,
-	})
-	print(result)
-}
-
 func testContactLinkWithOrganization() {
 	contactId := "2f7660a8-a40b-4f21-b81f-1b73f025f79c"
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
