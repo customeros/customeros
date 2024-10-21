@@ -18,7 +18,6 @@ type User struct {
 	CreatedAt       time.Time                    `json:"createdAt"`
 	UpdatedAt       time.Time                    `json:"updatedAt"`
 	PhoneNumbers    map[string]UserPhoneNumber   `json:"phoneNumbers"`
-	Emails          map[string]UserEmail         `json:"emails"`
 	JobRoles        map[string]bool              `json:"jobRoles"`
 	Source          commonmodel.Source           `json:"source"`
 	ExternalSystems []commonmodel.ExternalSystem `json:"externalSystems"`
@@ -30,22 +29,8 @@ type UserPhoneNumber struct {
 	Label   string `json:"label"`
 }
 
-type UserEmail struct {
-	Primary bool `json:"primary"`
-}
-
 func (u *User) String() string {
-	return fmt.Sprintf("User{ID: %s, Name: %s, FirstName: %s, LastName: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, PhoneNumbers: %v, Emails: %v}", u.ID, u.Name, u.FirstName, u.LastName, u.Source, u.CreatedAt, u.UpdatedAt, u.PhoneNumbers, u.Emails)
-}
-
-func (u *User) HasEmail(emailId string) bool {
-	if len(u.Emails) == 0 {
-		return false
-	}
-	if _, ok := u.Emails[emailId]; ok {
-		return true
-	}
-	return false
+	return fmt.Sprintf("User{ID: %s, Name: %s, FirstName: %s, LastName: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s, PhoneNumbers: %v}", u.ID, u.Name, u.FirstName, u.LastName, u.Source, u.CreatedAt, u.UpdatedAt, u.PhoneNumbers)
 }
 
 func (u *User) HasPhoneNumber(phoneNumberId, label string) bool {

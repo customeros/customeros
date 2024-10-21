@@ -100,7 +100,6 @@ func main() {
 	//testRemoveParentOrganization()
 	//testCreateContact()
 	//testUpdateContact()
-	//testContactLinkWithEmail()
 	//testContactLinkWithPhoneNumber()
 	//testContactLinkWithLocation()
 	//testOrganizationLinkWithEmail()
@@ -110,7 +109,6 @@ func main() {
 	//testCreateIssue()
 	//testUpdateIssue()
 	//testCreateComment()
-	//testUserLinkWithEmail()
 	//testCreateContract()
 	//testUpdateContract()
 	//testAddContractService()
@@ -489,21 +487,6 @@ func testContactLinkWithPhoneNumber() {
 	print(result)
 }
 
-func testContactLinkWithEmail() {
-
-	contactId := "dd7bd45e-d6d3-405c-a7ba-cd4127479c20"
-	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
-
-	result, _ := clients.ContactClient.LinkEmailToContact(context.Background(), &contactpb.LinkEmailToContactGrpcRequest{
-		Tenant:    tenant,
-		ContactId: contactId,
-		EmailId:   emailId,
-		Primary:   true,
-		AppSource: appSource,
-	})
-	print(result)
-}
-
 func testOrganizationLinkWithLocation() {
 
 	orgId := "cfaaf31f-ec3b-44d1-836e-4e50834632ae"
@@ -650,27 +633,6 @@ func testCreateComment() {
 		log.Fatalf("Failed: %v", err.Error())
 	}
 	log.Printf("Created comment id: %v", result.Id)
-}
-
-func testUserLinkWithEmail() {
-
-	userId := "05f382ba-0fa9-4828-940c-efb4e2e6b84c"
-	emailId := "548a69d2-90fe-439d-b5bb-ee7b68e17d34"
-	appSource := "integration.app"
-	loggedInUserid := ""
-
-	result, err := clients.UserClient.LinkEmailToUser(context.Background(), &userpb.LinkEmailToUserGrpcRequest{
-		Tenant:         tenant,
-		UserId:         userId,
-		LoggedInUserId: loggedInUserid,
-		EmailId:        emailId,
-		Primary:        true,
-		AppSource:      appSource,
-	})
-	if err != nil {
-		log.Fatalf("Failed: %v", err.Error())
-	}
-	log.Printf("Result: %v", result.Id)
 }
 
 func testCreateContract() {

@@ -5,12 +5,10 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-processing-platform/domain/user/models"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/constants"
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/events/eventstore"
 	"github.com/opentracing/opentracing-go"
-	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"strings"
@@ -40,35 +38,11 @@ func (a *UserAggregate) HandleGRPCRequest(ctx context.Context, request any, para
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.HandleGRPCRequest")
 	defer span.Finish()
 
-	switch r := request.(type) {
-	case *userpb.UnLinkEmailFromUserGrpcRequest:
-		return nil, a.unlinkEmail(ctx, r)
+	switch request.(type) {
 	default:
 		tracing.TraceErr(span, eventstore.ErrInvalidRequestType)
 		return nil, eventstore.ErrInvalidRequestType
 	}
-}
-
-func (a *UserAggregate) unlinkEmail(ctx context.Context, request *userpb.UnLinkEmailFromUserGrpcRequest) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "UserAggregate.unlinkEmail")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.Tenant)
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "request", request)
-
-	unlinkEmailEvent, err := events.NewUserUnlinkEmailEvent(a, request.Email)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewUserUnlinkEmailEvent")
-	}
-	eventstore.EnrichEventWithMetadataExtended(&unlinkEmailEvent, span, eventstore.EventMetadata{
-		Tenant: a.GetTenant(),
-		UserId: request.LoggedInUserId,
-		App:    request.AppSource,
-	})
-
-	return a.Apply(unlinkEmailEvent)
 }
 
 func (a *UserAggregate) When(event eventstore.Event) error {
@@ -83,10 +57,9 @@ func (a *UserAggregate) When(event eventstore.Event) error {
 		return a.onUserUpdate(event)
 	case events.UserPhoneNumberLinkV1:
 		return a.onPhoneNumberLink(event)
-	case events.UserEmailLinkV1:
-		return a.onEmailLink(event)
-	case events.UserEmailUnlinkV1:
-		return a.onEmailUnlink(event)
+	case events.UserEmailLinkV1,
+		events.UserEmailUnlinkV1:
+		return nil
 	case events.UserAddRoleV1:
 		return a.onAddRole(event)
 	case events.UserRemoveRoleV1:
@@ -194,30 +167,6 @@ func (a *UserAggregate) onPhoneNumberLink(event eventstore.Event) error {
 		Primary: eventData.Primary,
 	}
 	a.User.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *UserAggregate) onEmailLink(event eventstore.Event) error {
-	var eventData events.UserLinkEmailEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	if a.User.Emails == nil {
-		a.User.Emails = make(map[string]models.UserEmail)
-	}
-	a.User.Emails[eventData.EmailId] = models.UserEmail{
-		Primary: eventData.Primary,
-	}
-	a.User.UpdatedAt = eventData.UpdatedAt
-	return nil
-}
-
-func (a *UserAggregate) onEmailUnlink(event eventstore.Event) error {
-	var eventData events.UserUnlinkEmailEvent
-	if err := event.GetJsonData(&eventData); err != nil {
-		return errors.Wrap(err, "GetJsonData")
-	}
-	a.User.Emails = make(map[string]models.UserEmail)
 	return nil
 }
 

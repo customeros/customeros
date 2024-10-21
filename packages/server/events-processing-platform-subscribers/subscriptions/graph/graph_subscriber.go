@@ -209,8 +209,14 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		orgevents.OrganizationHideV1,
 		orgevents.OrganizationAddTagV1,
 		orgevents.OrganizationRemoveTagV1,
+		orgevents.OrganizationEmailLinkV1,
+		orgevents.OrganizationEmailUnlinkV1,
+		userevents.UserEmailLinkV1,
+		userevents.UserEmailUnlinkV1,
 		logentryevents.LogEntryAddTagV1,
 		logentryevents.LogEntryRemoveTagV1,
+		contactevent.ContactEmailLinkV1,
+		contactevent.ContactEmailUnlinkV1,
 		contactevent.ContactAddTagV1,
 		contactevent.ContactRemoveTagV1:
 
@@ -258,12 +264,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 	case contactevent.ContactPhoneNumberLinkV1:
 		_ = s.contactEventHandler.OnPhoneNumberLinkToContact(ctx, evt)
 		return nil
-	case contactevent.ContactEmailLinkV1:
-		_ = s.contactEventHandler.OnEmailLinkToContact(ctx, evt)
-		return nil
-	case contactevent.ContactEmailUnlinkV1:
-		_ = s.contactEventHandler.OnEmailUnlinkFromContact(ctx, evt)
-		return nil
 	case contactevent.ContactLocationLinkV1:
 		_ = s.contactEventHandler.OnLocationLinkToContact(ctx, evt)
 		return nil
@@ -294,12 +294,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case orgevents.OrganizationPhoneNumberLinkV1:
 		_ = s.organizationEventHandler.OnPhoneNumberLinkedToOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationEmailLinkV1:
-		_ = s.organizationEventHandler.OnEmailLinkToOrganization(ctx, evt)
-		return nil
-	case orgevents.OrganizationEmailUnlinkV1:
-		_ = s.organizationEventHandler.OnEmailUnlinkFromOrganization(ctx, evt)
 		return nil
 	case orgevents.OrganizationLocationLinkV1:
 		_ = s.organizationEventHandler.OnLocationLinkedToOrganization(ctx, evt)
@@ -370,12 +364,6 @@ func (s *GraphSubscriber) When(ctx context.Context, evt eventstore.Event) error 
 		return nil
 	case userevents.UserPhoneNumberLinkV1:
 		_ = s.userEventHandler.OnPhoneNumberLinkedToUser(ctx, evt)
-		return nil
-	case userevents.UserEmailLinkV1:
-		_ = s.userEventHandler.OnEmailLinkedToUser(ctx, evt)
-		return nil
-	case userevents.UserEmailUnlinkV1:
-		_ = s.userEventHandler.OnEmailUnlinkedFromUser(ctx, evt)
 		return nil
 	case userevents.UserJobRoleLinkV1:
 		_ = s.userEventHandler.OnJobRoleLinkedToUser(ctx, evt)
