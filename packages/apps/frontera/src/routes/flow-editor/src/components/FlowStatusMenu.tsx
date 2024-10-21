@@ -2,13 +2,16 @@ import React from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn.ts';
 import { FlowStatus } from '@graphql/types';
 import { Play } from '@ui/media/icons/Play';
 import { Button } from '@ui/form/Button/Button';
 import { useStore } from '@shared/hooks/useStore';
 import { DotLive } from '@ui/media/icons/DotLive';
 import { StopCircle } from '@ui/media/icons/StopCircle';
+import { Tooltip } from '@ui/overlay/Tooltip/Tooltip.tsx';
 import { Tag, TagLabel, TagLeftIcon } from '@ui/presentation/Tag';
+import { CircleProgress2 } from '@ui/media/icons/CircleProgress2.tsx';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 
 interface FlowStatusMenuSelectProps {
@@ -23,18 +26,34 @@ export const FlowStatusMenu = observer(({ id }: FlowStatusMenuSelectProps) => {
 
   if (status !== FlowStatus.Active) {
     return (
-      <Button
-        size='xs'
-        variant='outline'
-        leftIcon={<Play />}
-        colorScheme='primary'
-        dataTest='start-flow'
-        onClick={() => {
-          store.ui.commandMenu.toggle('StartFlow');
-        }}
+      <Tooltip
+        label={
+          status === FlowStatus.Scheduling
+            ? 'We’re scheduling this flow’s contacts'
+            : ''
+        }
       >
-        Start flow
-      </Button>
+        <div>
+          <Button
+            size='xs'
+            variant='outline'
+            dataTest='start-flow'
+            colorScheme={status === FlowStatus.Scheduling ? 'gray' : 'primary'}
+            onClick={() => {
+              store.ui.commandMenu.toggle('StartFlow');
+            }}
+            leftIcon={
+              status === FlowStatus.Scheduling ? <CircleProgress2 /> : <Play />
+            }
+            className={cn({
+              'text-gray-500 pointer-events-none':
+                status === FlowStatus.Scheduling,
+            })}
+          >
+            {status === FlowStatus.Scheduling ? 'Scheduling...' : 'Start flow'}
+          </Button>
+        </div>
+      </Tooltip>
     );
   }
 

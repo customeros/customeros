@@ -206,6 +206,8 @@ export class FlowStore implements Store<Flow> {
         } as FlowContact;
 
         this.value.contacts = [...this.value.contacts, newFlowContactValue];
+        this.value.statistics.pending += 1;
+        this.value.statistics.total += 1;
 
         const newFLowContact = new FlowContactStore(this.root, this.transport);
 
@@ -223,7 +225,6 @@ export class FlowStore implements Store<Flow> {
 
         // TODO Refactor https://linear.app/customer-os/issue/COS-4820/handle-single-flow-load-invalidate-singular-flow
         // Invalidate singular flow when this issue is merged https://linear.app/customer-os/issue/COS-4823/create-getflowbyididid-query
-        this.root.flows.invalidate();
       });
     } catch (e) {
       runInAction(() => {
@@ -234,6 +235,9 @@ export class FlowStore implements Store<Flow> {
       });
     } finally {
       runInAction(() => {
+        setTimeout(() => {
+          this.root.flows.invalidate();
+        }, 6000);
         this.isLoading = false;
       });
     }
@@ -344,14 +348,13 @@ const getDefaultValue = (): Flow => ({
   nodes: JSON.stringify(initialNodes),
   edges: JSON.stringify(initialEdges),
 });
+
 const initialNodes = [
   {
     $H: 497,
     data: { action: 'FLOW_START', entity: null, triggerType: null },
     height: 48,
     id: 'tn-1',
-    internalId: '00370d94-5f6d-4d00-a1c0-3147413da9fb',
-    measured: { height: 48, width: 300 },
     position: { x: 12, y: 12 },
     properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },
     sourcePosition: 'bottom',
@@ -366,7 +369,6 @@ const initialNodes = [
     data: { action: 'FLOW_END' },
     height: 48,
     id: 'tn-2',
-    internalId: 'ba2070b8-79ad-4f59-8b5a-c4dd77c8cff5',
     measured: { height: 48, width: 131 },
     position: { x: 96.5, y: 160 },
     properties: { 'org.eclipse.elk.portConstraints': 'FIXED_ORDER' },

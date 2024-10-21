@@ -34,6 +34,7 @@ query getFlows {
       metadata {
         id
       }
+
       contact {
         metadata {
           id

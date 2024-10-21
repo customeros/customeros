@@ -146,8 +146,11 @@ export class FlowsStore implements GroupStore<Flow> {
       serverId && options?.onSuccess?.(serverId);
       setTimeout(() => {
         if (serverId) {
-          this.value.get(serverId)?.invalidate();
           this.root.flows.bootstrap();
+          this.sync({
+            action: 'APPEND',
+            ids: [serverId],
+          });
         }
       }, 1000);
     }
@@ -176,7 +179,7 @@ export class FlowsStore implements GroupStore<Flow> {
           );
 
           this.sync({
-            action: 'INVALIDATE',
+            action: 'DELETE',
             ids: [id],
           });
         });
@@ -223,7 +226,7 @@ export class FlowsStore implements GroupStore<Flow> {
         });
 
         if (successfulIds.length > 0) {
-          this.sync({ action: 'INVALIDATE', ids: successfulIds });
+          this.sync({ action: 'DELETE', ids: successfulIds });
           this.root.ui.toastSuccess(
             `${successfulIds.length} flows archived`,
             'archive-flows-success',
