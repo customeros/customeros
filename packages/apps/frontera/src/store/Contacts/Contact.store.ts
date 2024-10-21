@@ -609,6 +609,7 @@ const CONTACT_QUERY = gql`
       connectedUsers {
         id
       }
+      updatedAt
       enrichDetails {
         enrichedAt
         failedAt

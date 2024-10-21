@@ -58,5 +58,8 @@ export const getContactSortFn = (columnId: string) =>
     .with(ColumnViewType.ContactsFlows, () => (row: ContactStore) => {
       return row.flow?.value?.name?.toLowerCase() || null;
     })
+    .with(ColumnViewType.ContactsUpdatedAt, () => (row: ContactStore) => {
+      return row.value.updatedAt;
+    })
 
     .otherwise(() => (_row: ContactStore) => false);
