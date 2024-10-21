@@ -17,7 +17,6 @@ import (
 	cmnmod "github.com/openline-ai/openline-customer-os/packages/server/events/event/common"
 	"github.com/stretchr/testify/require"
 	"testing"
-	"time"
 )
 
 const (
@@ -464,77 +463,6 @@ func TestGraphUserEventHandler_OnPhoneNumberLinkedToUser(t *testing.T) {
 	userPhoneRelationProps := utils.GetPropsFromRelationship(*userPhoneRelation)
 	require.Equal(t, true, utils.GetBoolPropOrFalse(userPhoneRelationProps, "primary"))
 	require.Equal(t, phoneNumberLabel, utils.GetStringPropOrEmpty(userPhoneRelationProps, "label"))
-}
-
-func TestGraphUserEventHandler_OnEmailLinkedToUser(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx, testDatabase)(t)
-
-	neo4jtest.CreateTenant(ctx, testDatabase.Driver, tenantName)
-	userCreateTime := utils.Now()
-	userId := neo4jtest.CreateUser(ctx, testDatabase.Driver, tenantName, neo4jentity.UserEntity{
-		FirstName:        "UserFirstNameCreate",
-		LastName:         "UserLastNameCreate",
-		CreatedAt:        userCreateTime,
-		UpdatedAt:        userCreateTime,
-		Source:           constants.SourceOpenline,
-		SourceOfTruth:    constants.SourceOpenline,
-		AppSource:        constants.AppSourceEventProcessingPlatformSubscribers,
-		Roles:            []string{RoleUser, RoleOwner},
-		ProfilePhotoUrl:  "www.photo.com/create",
-		Timezone:         "userTimezoneCreate",
-		Internal:         false,
-		Bot:              false,
-		DefaultForPlayer: false,
-		Tenant:           tenantName,
-	})
-
-	neo4jtest.AssertNeo4jNodeCount(ctx, t, testDatabase.Driver, map[string]int{"User": 1, "User_" + tenantName: 1})
-	dbNodeAfterUserCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "User_"+tenantName, userId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNodeAfterUserCreate)
-	propsAfterUserCreate := utils.GetPropsFromNode(*dbNodeAfterUserCreate)
-	require.Equal(t, userId, utils.GetStringPropOrEmpty(propsAfterUserCreate, "id"))
-
-	primary := true
-	email := "email@website.com"
-	emailId := neo4jtest.CreateEmail(ctx, testDatabase.Driver, tenantName, neo4jentity.EmailEntity{
-		Email:    email,
-		RawEmail: email,
-		Primary:  primary,
-		Source:   constants.SourceOpenline,
-	})
-
-	dbNodeAfterEmailCreate, err := neo4jtest.GetNodeById(ctx, testDatabase.Driver, "Email_"+tenantName, emailId)
-	require.Nil(t, err)
-	require.NotNil(t, dbNodeAfterEmailCreate)
-	propsAfterEmailCreate := utils.GetPropsFromNode(*dbNodeAfterEmailCreate)
-	require.Equal(t, false, utils.GetBoolPropOrFalse(propsAfterEmailCreate, "primary"))
-	creationTime := time.Date(1, time.January, 1, 0, 0, 0, 0, time.UTC)
-	require.Equal(t, &creationTime, utils.GetTimePropOrNil(propsAfterEmailCreate, "updatedAt"))
-
-	userEventHandler := &UserEventHandler{
-		services: testDatabase.Services,
-	}
-	userAggregate := user_aggregate.NewUserAggregateWithTenantAndID(tenantName, userId)
-	userLinkEmailTime := utils.Now()
-	userLinkEmailEvent, err := user_events.NewUserLinkEmailEvent(userAggregate, tenantName, emailId, "", true, userLinkEmailTime)
-	require.Nil(t, err)
-	err = userEventHandler.OnEmailLinkedToUser(context.Background(), userLinkEmailEvent)
-	require.Nil(t, err)
-	userNode, err := neo4jtest.GetFirstNodeByLabel(ctx, testDatabase.Driver, "User_"+tenantName)
-	require.Nil(t, err)
-	require.NotNil(t, userNode)
-	userProps := utils.GetPropsFromNode(*userNode)
-	require.Less(t, userCreateTime, utils.GetTimePropOrNow(userProps, "updatedAt"))
-
-	require.Equal(t, 1, neo4jtest.GetCountOfRelationships(ctx, testDatabase.Driver, "HAS"), "Incorrect number of PHONE_NUMBER_BELONGS_TO_TENANT relationships in Neo4j")
-	neo4jtest.AssertRelationship(ctx, t, testDatabase.Driver, userId, "HAS", emailId)
-	userEmailRelation, err := neo4jtest.GetRelationship(ctx, testDatabase.Driver, userId, emailId)
-	require.Nil(t, err)
-	userEmailRelationProps := utils.GetPropsFromRelationship(*userEmailRelation)
-	require.Equal(t, 1, len(userEmailRelationProps))
-	require.Equal(t, true, utils.GetBoolPropOrFalse(userEmailRelationProps, "primary"))
 }
 
 func TestGraphUserEventHandler_OnJobRoleLinkedToUser(t *testing.T) {

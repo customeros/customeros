@@ -10,7 +10,6 @@ type MockOrganizationServiceCallbacks struct {
 	UpsertOrganization               func(context.Context, *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	AddParent                        func(context.Context, *organizationpb.AddParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RemoveParent                     func(context.Context, *organizationpb.RemoveParentOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
-	LinkEmailToOrganization          func(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	LinkPhoneNumberToOrganization    func(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshLastTouchpoint            func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
 	RefreshArr                       func(ctx context.Context, proto *organizationpb.OrganizationIdGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error)
@@ -40,13 +39,6 @@ func (MockOrganizationService) UpsertOrganization(context context.Context, proto
 		panic("organizationCallbacks.UpsertOrganization is not set")
 	}
 	return organizationCallbacks.UpsertOrganization(context, proto)
-}
-
-func (MockOrganizationService) LinkEmailToOrganization(context context.Context, proto *organizationpb.LinkEmailToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-	if organizationCallbacks.LinkEmailToOrganization == nil {
-		panic("organizationCallbacks.LinkEmailToOrganization is not set")
-	}
-	return organizationCallbacks.LinkEmailToOrganization(context, proto)
 }
 
 func (MockOrganizationService) LinkPhoneNumberToOrganization(context context.Context, proto *organizationpb.LinkPhoneNumberToOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
