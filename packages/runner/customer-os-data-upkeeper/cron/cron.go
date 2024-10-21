@@ -27,6 +27,7 @@ const (
 	emailBulkValidationGroup        = "emailBulkValidation"
 	flowExecutionGroup              = "flowExecutionGroup"
 	flowStatisticsGroup             = "flowStatisticsGroup"
+	rampUpMailboxesGroup            = "rampUpMailboxesGroup"
 	sendEmailsGroup                 = "sendEmailsGroup"
 	processSentEmailsGroup          = "processSentEmailsGroup"
 )
@@ -54,6 +55,7 @@ var jobLocks = struct {
 		emailBulkValidationGroup:        {},
 		flowExecutionGroup:              {},
 		flowStatisticsGroup:             {},
+		rampUpMailboxesGroup:            {},
 		sendEmailsGroup:                 {},
 		processSentEmailsGroup:          {},
 	},
@@ -266,6 +268,13 @@ func StartCron(cont *container.Container) *cron.Cron {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
 	}
 
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRampUpMailboxes, func() {
+		lockAndRunJob(cont, rampUpMailboxesGroup, rampUpMailboxes)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "rampUpMailboxes", err.Error())
+	}
+
 	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowStatistics, func() {
 		lockAndRunJob(cont, flowStatisticsGroup, flowStatistics)
 	})
@@ -431,6 +440,10 @@ func cleanEmails(cont *container.Container) {
 
 func flowExecution(cont *container.Container) {
 	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).ExecuteScheduledFlowActions()
+}
+
+func rampUpMailboxes(cont *container.Container) {
+	service.NewFlowExecutionService(cont.Cfg, cont.Log, cont.CommonServices).RampUpMailboxes()
 }
 
 func flowStatistics(cont *container.Container) {

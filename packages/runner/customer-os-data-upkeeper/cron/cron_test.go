@@ -51,6 +51,7 @@ func TestStartCron(t *testing.T) {
 			CronScheduleValidateEmailsFromBulkRequests:                        "0 0 */1 * * *",
 			CronScheduleCheckScrubbyResult:                                    "0 0 */1 * * *",
 			CronScheduleCheckEnrowResults:                                     "0 0 */1 * * *",
+			CronScheduleRampUpMailboxes:                                       "0 0 */1 * * *",
 			CronScheduleFlowExecution:                                         "0 0 */1 * * *",
 			CronScheduleFlowStatistics:                                        "0 0 */1 * * *",
 			CronScheduleCleanEmails:                                           "0 0 */1 * * *",

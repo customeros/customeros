@@ -67,8 +67,9 @@ type Config struct {
 	CronScheduleCleanEmails                    string `env:"CRON_SCHEDULE_CLEAN_EMAILS" envDefault:"0 0 */6 * * *"`
 
 	// Flows
-	CronScheduleFlowExecution  string `env:"CRON_SCHEDULE_FLOW_EXECUTION" envDefault:"*/5 * * * * *"`
-	CronScheduleFlowStatistics string `env:"CRON_SCHEDULE_FLOW_STATISTICS" envDefault:"* */5 * * * *"`
+	CronScheduleRampUpMailboxes string `env:"CRON_SCHEDULE_RAMP_UP_MAILBOXES" envDefault:"* */1 * * * *"`
+	CronScheduleFlowExecution   string `env:"CRON_SCHEDULE_FLOW_EXECUTION" envDefault:"*/5 * * * * *"`
+	CronScheduleFlowStatistics  string `env:"CRON_SCHEDULE_FLOW_STATISTICS" envDefault:"* */5 * * * *"`
 
 	CronScheduleSendEmails        string `env:"CRON_SCHEDULE_SEND_EMAILS" envDefault:"*/5 * * * * *"`
 	CronScheduleProcessSentEmails string `env:"CRON_SCHEDULE_PROCESS_SENT_EMAILS" envDefault:"*/5 * * * * *"`

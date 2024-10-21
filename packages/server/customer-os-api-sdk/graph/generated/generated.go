@@ -1295,6 +1295,7 @@ type ComplexityRoot struct {
 		Email                              func(childComplexity int, id string) int
 		ExternalMeetings                   func(childComplexity int, externalSystemID string, externalID *string, pagination *model.Pagination, where *model.Filter, sort []*model.SortBy) int
 		ExternalSystemInstances            func(childComplexity int) int
+		Flow                               func(childComplexity int, id string) int
 		FlowEmailVariables                 func(childComplexity int) int
 		Flows                              func(childComplexity int) int
 		GcliSearch                         func(childComplexity int, keyword string, limit *int) int
@@ -1925,6 +1926,7 @@ type QueryResolver interface {
 	DashboardOnboardingCompletion(ctx context.Context, period *model.DashboardPeriodInput) (*model.DashboardOnboardingCompletion, error)
 	Email(ctx context.Context, id string) (*model.Email, error)
 	ExternalSystemInstances(ctx context.Context) ([]*model.ExternalSystemInstance, error)
+	Flow(ctx context.Context, id string) (*model.Flow, error)
 	Flows(ctx context.Context) ([]*model.Flow, error)
 	FlowEmailVariables(ctx context.Context) ([]*model.EmailVariableEntity, error)
 	InteractionEvent(ctx context.Context, id string) (*model.InteractionEvent, error)
@@ -9632,6 +9634,18 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.Query.ExternalSystemInstances(childComplexity), true
 
+	case "Query.flow":
+		if e.complexity.Query.Flow == nil {
+			break
+		}
+
+		args, err := ec.field_Query_flow_args(context.TODO(), rawArgs)
+		if err != nil {
+			return 0, false
+		}
+
+		return e.complexity.Query.Flow(childComplexity, args["id"].(string)), true
+
 	case "Query.flow_emailVariables":
 		if e.complexity.Query.FlowEmailVariables == nil {
 			break
@@ -12955,6 +12969,7 @@ enum ComparisonOperator {
     NOT_EQUAL
 }`, BuiltIn: false},
 	{Name: "../../../customer-os-api/graph/schemas/flow.graphqls", Input: `extend type Query {
+    flow(id: ID!): Flow! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flows: [Flow!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
     flow_emailVariables: [EmailVariableEntity!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
@@ -19341,6 +19356,21 @@ func (ec *executionContext) field_Query_externalMeetings_args(ctx context.Contex
 		}
 	}
 	args["sort"] = arg4
+	return args, nil
+}
+
+func (ec *executionContext) field_Query_flow_args(ctx context.Context, rawArgs map[string]interface{}) (map[string]interface{}, error) {
+	var err error
+	args := map[string]interface{}{}
+	var arg0 string
+	if tmp, ok := rawArgs["id"]; ok {
+		ctx := graphql.WithPathContext(ctx, graphql.NewPathWithField("id"))
+		arg0, err = ec.unmarshalNID2string(ctx, tmp)
+		if err != nil {
+			return nil, err
+		}
+	}
+	args["id"] = arg0
 	return args, nil
 }
 
@@ -78159,6 +78189,111 @@ func (ec *executionContext) fieldContext_Query_externalSystemInstances(_ context
 	return fc, nil
 }
 
+func (ec *executionContext) _Query_flow(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_Query_flow(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		directive0 := func(rctx context.Context) (interface{}, error) {
+			ctx = rctx // use context from middleware stack in children
+			return ec.resolvers.Query().Flow(rctx, fc.Args["id"].(string))
+		}
+		directive1 := func(ctx context.Context) (interface{}, error) {
+			roles, err := ec.unmarshalNRole2ᚕgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐRoleᚄ(ctx, []interface{}{"ADMIN", "USER"})
+			if err != nil {
+				return nil, err
+			}
+			if ec.directives.HasRole == nil {
+				return nil, errors.New("directive hasRole is not implemented")
+			}
+			return ec.directives.HasRole(ctx, nil, directive0, roles)
+		}
+		directive2 := func(ctx context.Context) (interface{}, error) {
+			if ec.directives.HasTenant == nil {
+				return nil, errors.New("directive hasTenant is not implemented")
+			}
+			return ec.directives.HasTenant(ctx, nil, directive1)
+		}
+
+		tmp, err := directive2(rctx)
+		if err != nil {
+			return nil, graphql.ErrorOnPath(ctx, err)
+		}
+		if tmp == nil {
+			return nil, nil
+		}
+		if data, ok := tmp.(*model.Flow); ok {
+			return data, nil
+		}
+		return nil, fmt.Errorf(`unexpected type %T from directive, should be *github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model.Flow`, tmp)
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(*model.Flow)
+	fc.Result = res
+	return ec.marshalNFlow2ᚖgithubᚗcomᚋopenlineᚑaiᚋopenlineᚑcustomerᚑosᚋpackagesᚋserverᚋcustomerᚑosᚑapiᚑsdkᚋgraphᚋmodelᚐFlow(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_Query_flow(ctx context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "Query",
+		Field:      field,
+		IsMethod:   true,
+		IsResolver: true,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			switch field.Name {
+			case "metadata":
+				return ec.fieldContext_Flow_metadata(ctx, field)
+			case "name":
+				return ec.fieldContext_Flow_name(ctx, field)
+			case "description":
+				return ec.fieldContext_Flow_description(ctx, field)
+			case "nodes":
+				return ec.fieldContext_Flow_nodes(ctx, field)
+			case "edges":
+				return ec.fieldContext_Flow_edges(ctx, field)
+			case "status":
+				return ec.fieldContext_Flow_status(ctx, field)
+			case "contacts":
+				return ec.fieldContext_Flow_contacts(ctx, field)
+			case "senders":
+				return ec.fieldContext_Flow_senders(ctx, field)
+			case "statistics":
+				return ec.fieldContext_Flow_statistics(ctx, field)
+			}
+			return nil, fmt.Errorf("no field named %q was found under type Flow", field.Name)
+		},
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			err = ec.Recover(ctx, r)
+			ec.Error(ctx, err)
+		}
+	}()
+	ctx = graphql.WithFieldContext(ctx, fc)
+	if fc.Args, err = ec.field_Query_flow_args(ctx, field.ArgumentMap(ec.Variables)); err != nil {
+		ec.Error(ctx, err)
+		return fc, err
+	}
+	return fc, nil
+}
+
 func (ec *executionContext) _Query_flows(ctx context.Context, field graphql.CollectedField) (ret graphql.Marshaler) {
 	fc, err := ec.fieldContext_Query_flows(ctx, field)
 	if err != nil {
@@ -109878,6 +110013,28 @@ func (ec *executionContext) _Query(ctx context.Context, sel ast.SelectionSet) gr
 					}
 				}()
 				res = ec._Query_externalSystemInstances(ctx, field)
+				if res == graphql.Null {
+					atomic.AddUint32(&fs.Invalids, 1)
+				}
+				return res
+			}
+
+			rrm := func(ctx context.Context) graphql.Marshaler {
+				return ec.OperationContext.RootResolverMiddleware(ctx,
+					func(ctx context.Context) graphql.Marshaler { return innerFunc(ctx, out) })
+			}
+
+			out.Concurrently(i, func(ctx context.Context) graphql.Marshaler { return rrm(innerCtx) })
+		case "flow":
+			field := field
+
+			innerFunc := func(ctx context.Context, fs *graphql.FieldSet) (res graphql.Marshaler) {
+				defer func() {
+					if r := recover(); r != nil {
+						ec.Error(ctx, ec.Recover(ctx, r))
+					}
+				}()
+				res = ec._Query_flow(ctx, field)
 				if res == graphql.Null {
 					atomic.AddUint32(&fs.Invalids, 1)
 				}
