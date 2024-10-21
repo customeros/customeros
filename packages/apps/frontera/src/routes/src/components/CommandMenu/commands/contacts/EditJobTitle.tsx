@@ -19,7 +19,7 @@ export const EditJobTitle = observer(() => {
 
   const label =
     selectedIds?.length === 1
-      ? `Contact - ${contact?.value.name}`
+      ? `Contact - ${contact?.name}`
       : `${selectedIds?.length} contacts`;
 
   const handleChangeJobTitle = () => {
