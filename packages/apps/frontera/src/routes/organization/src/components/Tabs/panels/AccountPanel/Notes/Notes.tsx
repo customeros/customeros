@@ -23,11 +23,12 @@ export const Notes = observer(({ id }: NotesProps) => {
     onUpdate: ({ editor }) => {
       const newValue = editor?.getHTML();
 
-      organization?.update((org) => {
-        org.notes = newValue;
+      if (!organization) return;
 
-        return org;
-      });
+      organization.value.notes = newValue;
+    },
+    onBlur: () => {
+      organization?.commit();
     },
     content: organization?.value?.notes,
     extensions: [

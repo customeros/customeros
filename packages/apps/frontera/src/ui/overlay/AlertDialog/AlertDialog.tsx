@@ -164,6 +164,7 @@ export const AlertDialogCloseIconButton = forwardRef<
 >(({ asChild, children, className, ...props }, ref) => {
   return (
     <RadixAlertDialog.Cancel
+      asChild
       ref={ref}
       className={twMerge('absolute right-3 top-3', className)}
       {...props}
