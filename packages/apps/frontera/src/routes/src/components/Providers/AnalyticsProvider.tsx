@@ -14,6 +14,9 @@ declare const heap: {
   ) => void;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+declare const window: any;
+
 H.init('ldwno7wd', {
   environment: import.meta.env.MODE,
   serviceName: 'customer-os',
@@ -49,6 +52,16 @@ export const AnalyticsProvider = observer(
             name,
             playerIdentityId: id,
           });
+        }
+
+        if (import.meta.env.PROD) {
+          if (window.Atlas) {
+            window.Atlas.call('identify', {
+              userId: id,
+              name,
+              email,
+            });
+          }
         }
       });
     }, []);

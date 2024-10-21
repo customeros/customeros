@@ -10,8 +10,6 @@ import mock from './mock.json';
 // temporary - will be removed once we drop react-query and getGraphQLClient
 declare global {
   interface Window {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    Atlas?: any;
     __COS_SESSION__?: {
       email: string;
       apiKey: string | null;
@@ -93,40 +91,6 @@ export class SessionStore {
         user_id: this.value.profile.id,
         username: this.value.profile.email,
       });
-      window.Atlas.call('identify', {
-        userId: this.value.profile.id,
-        name: this.value.profile.name,
-        email: this.value.profile.email,
-      });
-    });
-
-    const initAtlas = () => {
-      const atlasScript = document.createElement('script');
-
-      atlasScript.src = 'https://app.atlas.so/client-js/atlas.bundle.js';
-      document.body.appendChild(atlasScript);
-
-      window.Atlas = {
-        ...window.Atlas,
-        appId: 'l3c3ezk1ta',
-        v: 2,
-        q: [],
-        proxyUrl: '',
-        call: function (...args: unknown[]) {
-          this.q?.push(args);
-        },
-      };
-
-      if (window.Atlas) {
-        window.Atlas.call('start');
-      }
-    };
-
-    initAtlas();
-    window?.Atlas.call('start', {
-      chat: {
-        openIncoming: false,
-      },
     });
   }
 
