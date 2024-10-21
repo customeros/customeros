@@ -9,6 +9,9 @@ export type FlowContactAddMutation = {
   __typename?: 'Mutation';
   flowContact_Add: {
     __typename?: 'FlowContact';
+    status: Types.FlowParticipantStatus;
+    scheduledAction?: string | null;
+    scheduledAt?: any | null;
     metadata: { __typename?: 'Metadata'; id: string };
     contact: {
       __typename?: 'Contact';
