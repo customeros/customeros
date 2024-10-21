@@ -418,53 +418,6 @@ func (h *OrganizationEventHandler) OnPhoneNumberLinkedToOrganization(ctx context
 	return nil
 }
 
-func (h *OrganizationEventHandler) OnEmailLinkToOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailLinkToOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationLinkEmailEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, eventData.Tenant, organizationId, eventData.EmailId, eventData.Primary)
-	if err != nil {
-		tracing.TraceErr(span, err)
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
-func (h *OrganizationEventHandler) OnEmailUnlinkFromOrganization(ctx context.Context, evt eventstore.Event) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnEmailUnlinkFromOrganization")
-	defer span.Finish()
-	setEventSpanTagsAndLogFields(span, evt)
-
-	var eventData events.OrganizationUnlinkEmailEvent
-	if err := evt.GetJsonData(&eventData); err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "evt.GetJsonData")
-	}
-	organizationId := aggregate.GetOrganizationObjectID(evt.AggregateID, eventData.Tenant)
-	tracing.TagTenant(span, eventData.Tenant)
-	tracing.TagEntity(span, organizationId)
-
-	err := h.services.CommonServices.Neo4jRepositories.EmailWriteRepository.UnlinkFromOrganization(ctx, eventData.Tenant, organizationId, eventData.Email)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromOrganization"))
-		h.log.Errorf("Error while unlinking email %s from organization %s: %s", eventData.Email, organizationId, err.Error())
-	}
-
-	utils.EventCompleted(ctx, eventData.Tenant, commonmodel.ORGANIZATION.String(), organizationId, h.grpcClients, utils.NewEventCompletedDetails().WithUpdate())
-
-	return nil
-}
-
 func (h *OrganizationEventHandler) OnLocationLinkedToOrganization(ctx context.Context, evt eventstore.Event) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationEventHandler.OnLocationLinkedToOrganization")
 	defer span.Finish()

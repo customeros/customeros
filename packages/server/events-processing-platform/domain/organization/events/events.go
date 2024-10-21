@@ -17,8 +17,10 @@ const (
 	OrganizationCreateV1          = "V1_ORGANIZATION_CREATE"
 	OrganizationUpdateV1          = "V1_ORGANIZATION_UPDATE"
 	OrganizationPhoneNumberLinkV1 = "V1_ORGANIZATION_PHONE_NUMBER_LINK"
-	OrganizationEmailLinkV1       = "V1_ORGANIZATION_EMAIL_LINK"
-	OrganizationEmailUnlinkV1     = "V1_ORGANIZATION_EMAIL_UNLINK"
+	// Deprecated
+	OrganizationEmailLinkV1 = "V1_ORGANIZATION_EMAIL_LINK"
+	// Deprecated
+	OrganizationEmailUnlinkV1 = "V1_ORGANIZATION_EMAIL_UNLINK"
 	//Deprecated
 	OrganizationLocationLinkV1 = "V1_ORGANIZATION_LOCATION_LINK"
 	OrganizationLinkDomainV1   = "V1_ORGANIZATION_LINK_DOMAIN"
@@ -89,34 +91,6 @@ func NewOrganizationLinkPhoneNumberEvent(aggregate eventstore.Aggregate, phoneNu
 	event := eventstore.NewBaseEvent(aggregate, OrganizationPhoneNumberLinkV1)
 	if err := event.SetJsonData(&eventData); err != nil {
 		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkPhoneNumberEvent")
-	}
-	return event, nil
-}
-
-type OrganizationLinkEmailEvent struct {
-	Tenant    string    `json:"tenant" validate:"required"`
-	UpdatedAt time.Time `json:"updatedAt"`
-	EmailId   string    `json:"emailId" validate:"required"`
-	Primary   bool      `json:"primary"`
-	Email     string    `json:"email"`
-}
-
-func NewOrganizationLinkEmailEvent(aggregate eventstore.Aggregate, emailId, email string, primary bool, updatedAt time.Time) (eventstore.Event, error) {
-	eventData := OrganizationLinkEmailEvent{
-		Tenant:    aggregate.GetTenant(),
-		UpdatedAt: updatedAt,
-		EmailId:   emailId,
-		Primary:   primary,
-		Email:     email,
-	}
-
-	if err := validator.GetValidator().Struct(eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "failed to validate OrganizationLinkEmailEvent")
-	}
-
-	event := eventstore.NewBaseEvent(aggregate, OrganizationEmailLinkV1)
-	if err := event.SetJsonData(&eventData); err != nil {
-		return eventstore.Event{}, errors.Wrap(err, "error setting json data for OrganizationLinkEmailEvent")
 	}
 	return event, nil
 }

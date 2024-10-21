@@ -215,8 +215,6 @@ func (a *OrganizationAggregate) HandleCommand(ctx context.Context, cmd eventstor
 		return a.showOrganization(ctx, c)
 	case *command.UpsertCustomFieldCommand:
 		return a.upsertCustomField(ctx, c)
-	case *command.LinkEmailCommand:
-		return a.linkEmail(ctx, c)
 	case *command.LinkPhoneNumberCommand:
 		return a.linkPhoneNumber(ctx, c)
 	case *command.LinkLocationCommand:
@@ -380,46 +378,6 @@ func (a *OrganizationAggregate) SetPhoneNumberNonPrimary(ctx context.Context, te
 	return nil
 }
 
-func (a *OrganizationAggregate) linkEmail(ctx context.Context, cmd *command.LinkEmailCommand) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.linkEmail")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()))
-	tracing.LogObjectAsJson(span, "command", cmd)
-
-	updatedAtNotNil := utils.Now()
-
-	event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, cmd.EmailId, cmd.Email, cmd.Primary, updatedAtNotNil)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
-	}
-
-	eventstore.EnrichEventWithMetadataExtended(&event, span, eventstore.EventMetadata{
-		Tenant: a.Tenant,
-		UserId: cmd.LoggedInUserId,
-		App:    cmd.AppSource,
-	})
-
-	err = a.Apply(event)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-
-	if cmd.Primary {
-		for k, v := range a.Organization.Emails {
-			if k != cmd.EmailId && v.Primary {
-				if err = a.SetEmailNonPrimary(ctx, k, cmd.LoggedInUserId); err != nil {
-					return err
-				}
-			}
-		}
-	}
-	return nil
-}
-
 func (a *OrganizationAggregate) linkLocation(ctx context.Context, cmd *command.LinkLocationCommand) error {
 	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.linkLocation")
 	defer span.Finish()
@@ -439,33 +397,6 @@ func (a *OrganizationAggregate) linkLocation(ctx context.Context, cmd *command.L
 	eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, cmd.LoggedInUserId)
 
 	return a.Apply(event)
-}
-
-func (a *OrganizationAggregate) SetEmailNonPrimary(ctx context.Context, emailId, userId string) error {
-	span, _ := opentracing.StartSpanFromContext(ctx, "OrganizationAggregate.SetEmailNonPrimary")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, a.GetTenant())
-	span.SetTag(tracing.SpanTagAggregateId, a.GetID())
-	span.LogFields(log.Int64("aggregateVersion", a.GetVersion()), log.String("emailId", emailId), log.String("userId", userId))
-
-	updatedAtNotNil := utils.Now()
-
-	email, ok := a.Organization.Emails[emailId]
-	if !ok {
-		return localerror.ErrEmailNotFound
-	}
-
-	if email.Primary {
-		event, err := organizationEvents.NewOrganizationLinkEmailEvent(a, emailId, "", false, updatedAtNotNil)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return errors.Wrap(err, "NewOrganizationLinkEmailEvent")
-		}
-
-		eventstore.EnrichEventWithMetadata(&event, &span, a.Tenant, userId)
-		return a.Apply(event)
-	}
-	return nil
 }
 
 func (a *OrganizationAggregate) linkDomain(ctx context.Context, cmd *command.LinkDomainCommand) error {

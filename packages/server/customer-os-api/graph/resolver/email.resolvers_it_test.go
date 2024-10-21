@@ -5,60 +5,15 @@ import (
 	"github.com/99designs/gqlgen/client"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/grpc/events_platform"
 	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/test/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/utils/decode"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/stretchr/testify/require"
 	"testing"
 )
-
-func TestMutationResolver_EmailRemoveFromUser(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-
-	// Create a tenant in the Neo4j database
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	// Create user and email
-	userId := neo4jtest.CreateDefaultUser(ctx, driver, tenantName)
-	neo4jtest.CreateEmailForEntity(ctx, driver, tenantName, userId, neo4jentity.EmailEntity{
-		Email: "original@email.com",
-	})
-
-	userServiceCalled := false
-	userServiceCallbacks := events_platform.MockUserServiceCallbacks{
-		UnLinkEmailFromUser: func(context context.Context, request *userpb.UnLinkEmailFromUserGrpcRequest) (*userpb.UserIdGrpcResponse, error) {
-			require.Equal(t, tenantName, request.Tenant)
-			require.Equal(t, "original@email.com", request.Email)
-			userServiceCalled = true
-			return &userpb.UserIdGrpcResponse{
-				Id: userId,
-			}, nil
-		},
-	}
-	events_platform.SetUserCallbacks(&userServiceCallbacks)
-
-	// Make the RawPost request and check for errors
-	rawResponse, err := c.RawPost(getQuery("email/remove_email_from_user"),
-		client.Var("userId", userId),
-		client.Var("email", "original@email.com"),
-	)
-	assertRawResponseSuccess(t, rawResponse, err)
-
-	// Unmarshal the response data into the email struct
-	var emailStruct struct {
-		EmailRemoveFromUser model.Result
-	}
-	err = decode.Decode(rawResponse.Data.(map[string]any), &emailStruct)
-	require.Nil(t, err, "Error unmarshalling response data")
-	require.Equal(t, true, emailStruct.EmailRemoveFromUser.Result)
-	require.True(t, userServiceCalled, "User service was not called")
-}
 
 func TestQueryResolver_GetEmail_WithParentOwners(t *testing.T) {
 	ctx := context.Background()

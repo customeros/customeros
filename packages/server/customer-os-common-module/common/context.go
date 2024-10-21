@@ -67,6 +67,12 @@ func SetAppSourceInContext(ctx context.Context, appSource string) context.Contex
 	return WithCustomContext(ctx, customContext)
 }
 
+func SetTenantInContext(ctx context.Context, tenant string) context.Context {
+	customContext := GetContext(ctx)
+	customContext.Tenant = tenant
+	return WithCustomContext(ctx, customContext)
+}
+
 func ValidateTenant(ctx context.Context) error {
 	if GetTenantFromContext(ctx) == "" {
 		return errors.New("tenant is missing")

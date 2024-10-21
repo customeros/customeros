@@ -7,7 +7,6 @@ import (
 
 type MockContactServiceCallbacks struct {
 	CreateContact            func(context.Context, *contactproto.UpsertContactGrpcRequest) (*contactproto.ContactIdGrpcResponse, error)
-	LinkEmailToContact       func(context context.Context, proto *contactproto.LinkEmailToContactGrpcRequest) (*contactproto.ContactIdGrpcResponse, error)
 	LinkPhoneNumberToContact func(context context.Context, proto *contactproto.LinkPhoneNumberToContactGrpcRequest) (*contactproto.ContactIdGrpcResponse, error)
 	LinkWithOrganization     func(context context.Context, proto *contactproto.LinkWithOrganizationGrpcRequest) (*contactproto.ContactIdGrpcResponse, error)
 }
@@ -27,13 +26,6 @@ func (MockContactService) UpsertContact(context context.Context, proto *contactp
 		panic("contactCallbacks.CreateContact is not set")
 	}
 	return contactCallbacks.CreateContact(context, proto)
-}
-
-func (MockContactService) LinkEmailToContact(context context.Context, proto *contactproto.LinkEmailToContactGrpcRequest) (*contactproto.ContactIdGrpcResponse, error) {
-	if contactCallbacks.LinkEmailToContact == nil {
-		panic("contactCallbacks.LinkEmailToContact is not set")
-	}
-	return contactCallbacks.LinkEmailToContact(context, proto)
 }
 
 func (MockContactService) LinkPhoneNumberToContact(context context.Context, proto *contactproto.LinkPhoneNumberToContactGrpcRequest) (*contactproto.ContactIdGrpcResponse, error) {

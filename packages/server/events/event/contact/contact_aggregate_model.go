@@ -24,7 +24,6 @@ type Contact struct {
 	CreatedAt       time.Time                     `json:"createdAt"`
 	UpdatedAt       time.Time                     `json:"updatedAt"`
 	PhoneNumbers    map[string]ContactPhoneNumber `json:"phoneNumbers"`
-	Emails          map[string]ContactEmail       `json:"emails"`
 	Socials         map[string]cmnmod.Social      `json:"socials,omitempty"`
 	// Deprecated
 	LocationIds            []string                   `json:"locationIds,omitempty"`
@@ -57,18 +56,8 @@ func (c *Contact) String() string {
 	return fmt.Sprintf("Contact{ID: %s, FirstName: %s, LastName: %s, Prefix: %s, Source: %s, CreatedAt: %s, UpdatedAt: %s}", c.ID, c.FirstName, c.LastName, c.Prefix, c.Source, c.CreatedAt, c.UpdatedAt)
 }
 
-func (c *Contact) HasEmail(emailId string, primary bool) bool {
-	if len(c.Emails) == 0 {
-		return false
-	}
-	if email, ok := c.Emails[emailId]; ok {
-		return email.Primary == primary
-	}
-	return false
-}
-
 func (c *Contact) HasPhoneNumber(phoneNumberId, label string, primary bool) bool {
-	if len(c.Emails) == 0 {
+	if len(c.PhoneNumbers) == 0 {
 		return false
 	}
 	if email, ok := c.PhoneNumbers[phoneNumberId]; ok {
