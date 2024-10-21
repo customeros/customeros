@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.20.0",
+    "express": "^4.21.1",
     "googleapis": "^135.0.0",
     "http-proxy-middleware": "^3.0.0",
     "jsonwebtoken": "^9.0.2"
