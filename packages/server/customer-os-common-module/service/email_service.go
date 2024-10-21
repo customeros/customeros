@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
 	commonmodel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -10,10 +11,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	neo4jrepository "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
 	commonpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/common"
-	contactpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/contact"
 	emailpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/email"
-	organizationpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/organization"
-	userpb "github.com/openline-ai/openline-customer-os/packages/server/events-processing-proto/gen/proto/go/api/grpc/v1/user"
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
@@ -33,8 +31,8 @@ type emailService struct {
 type EmailService interface {
 	Merge(ctx context.Context, tenant string, emailFields EmailFields, linkWith *LinkWith) (*string, error)
 	ReplaceEmail(ctx context.Context, tenant, previousEmail string, emailFields EmailFields, linkWith LinkWith) (*string, error)
-	LinkEmail(ctx context.Context, tenant, emailId, email, appSource string, primary bool, linkWith LinkWith) error
-	UnlinkEmail(ctx context.Context, tenant, email, appSource string, linkWith LinkWith) error
+	LinkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error
+	UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error
 	DeleteOrphanEmail(ctx context.Context, tenant, emailId, appSource string) error
 	GetAllEmailsForEntityIds(ctx context.Context, tenant string, entityType commonmodel.EntityType, entityIds []string) (*neo4jentity.EmailEntities, error)
 	SetPrimary(ctx context.Context, email string, forEntity LinkWith) error
@@ -56,6 +54,10 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 	if tenant == "" {
 		tenant = common.GetTenantFromContext(ctx)
 	}
+	if common.GetTenantFromContext(ctx) == "" {
+		common.SetTenantInContext(ctx, tenant)
+	}
+
 	emailId := ""
 	var err error
 	createdAt := utils.Now()
@@ -114,7 +116,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 	}
 
 	if linkWith != nil && linkWith.Id != "" && linkWith.Type != "" {
-		err = s.LinkEmail(ctx, tenant, emailId, emailFields.Email, emailFields.AppSource, emailFields.Primary, *linkWith)
+		err = s.LinkEmail(ctx, emailId, emailFields.Email, emailFields.AppSource, emailFields.Primary, *linkWith)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return &emailId, err
@@ -141,7 +143,7 @@ func (s *emailService) ReplaceEmail(ctx context.Context, tenant, previousEmail s
 	}
 
 	if previousEmail != "" {
-		err := s.UnlinkEmail(ctx, tenant, previousEmail, emailFields.AppSource, linkWith)
+		err := s.UnlinkEmail(ctx, previousEmail, emailFields.AppSource, linkWith)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to unlink email"))
 		}
@@ -150,9 +152,17 @@ func (s *emailService) ReplaceEmail(ctx context.Context, tenant, previousEmail s
 	return s.Merge(ctx, tenant, emailFields, &linkWith)
 }
 
-func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, appSource string, primary bool, linkWith LinkWith) error {
+func (s *emailService) LinkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.LinkEmail")
 	defer span.Finish()
+
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	tenant := common.GetTenantFromContext(ctx)
 
 	if linkWith.Id == "" {
 		tracing.TraceErr(span, errors.New("linkWith id is required"))
@@ -161,6 +171,11 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 	if linkWith.Type == "" {
 		tracing.TraceErr(span, errors.New("linkWith type is required"))
 		return errors.New("linkWith type is required")
+	}
+
+	// set default values
+	if appSource != "" {
+		common.SetAppSourceInContext(ctx, appSource)
 	}
 
 	// check if email is already linked to entity, if so, skip linking
@@ -187,63 +202,56 @@ func (s *emailService) LinkEmail(ctx context.Context, tenant, emailId, email, ap
 
 	switch linkWith.Type.String() {
 	case commonmodel.CONTACT.String():
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.services.GrpcClients.ContactClient.LinkEmailToContact(ctx, &contactpb.LinkEmailToContactGrpcRequest{
-				Tenant:         tenant,
-				EmailId:        emailId,
-				ContactId:      linkWith.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      appSource,
-				Primary:        primary,
-				Email:          email,
-			})
-		})
+		err = s.services.Neo4jRepositories.EmailWriteRepository.LinkWithContact(ctx, tenant, linkWith.Id, emailId, primary)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to contact"))
+			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithContact"))
+			return err
 		}
 	case commonmodel.USER.String():
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return s.services.GrpcClients.UserClient.LinkEmailToUser(ctx, &userpb.LinkEmailToUserGrpcRequest{
-				Tenant:         tenant,
-				EmailId:        emailId,
-				UserId:         linkWith.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      appSource,
-				Primary:        primary,
-				Email:          email,
-			})
-		})
+		err = s.services.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, linkWith.Id, emailId, primary)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
+			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithUser"))
+			return err
 		}
 	case commonmodel.ORGANIZATION.String():
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.LinkEmailToOrganization(ctx, &organizationpb.LinkEmailToOrganizationGrpcRequest{
-				Tenant:         tenant,
-				EmailId:        emailId,
-				OrganizationId: linkWith.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      appSource,
-				Primary:        primary,
-				Email:          email,
-			})
-		})
+		err = s.services.Neo4jRepositories.EmailWriteRepository.LinkWithOrganization(ctx, tenant, linkWith.Id, emailId, primary)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
+			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.LinkWithOrganization"))
+			return err
 		}
 	default:
-		tracing.TraceErr(span, errors.New("unsupported linkWith type %s"+linkWith.Type.String()))
+		tracing.TraceErr(span, errors.New("unsupported linkWith type "+linkWith.Type.String()))
+		return errors.New("unsupported linkWith type " + linkWith.Type.String())
 	}
+
+	// publish event to rabbit mq
+	err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, linkWith.Type, dto.NewAddEmailEvent(email))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message AddEmailEvent"))
+	}
+
+	// publish event to eventstore for completion
+	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), linkWith.Type.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }
 
-func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource string, linkWith LinkWith) error {
+func (s *emailService) UnlinkEmail(ctx context.Context, email, appSource string, linkWith LinkWith) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailService.UnlinkEmail")
 	defer span.Finish()
+
+	err := common.ValidateTenant(ctx)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	// set default values
+	if appSource != "" {
+		common.SetAppSourceInContext(ctx, appSource)
+	}
 
 	if linkWith.Id == "" {
 		tracing.TraceErr(span, errors.New("linkWith id is required"))
@@ -267,52 +275,37 @@ func (s *emailService) UnlinkEmail(ctx context.Context, tenant, email, appSource
 	}
 
 	switch linkWith.Type.String() {
-
 	case commonmodel.CONTACT.String():
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*contactpb.ContactIdGrpcResponse](func() (*contactpb.ContactIdGrpcResponse, error) {
-			return s.services.GrpcClients.ContactClient.UnLinkEmailFromContact(ctx, &contactpb.UnLinkEmailFromContactGrpcRequest{
-				Tenant:         tenant,
-				ContactId:      linkWith.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      appSource,
-				Email:          email,
-			})
-		})
+		err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromContact(ctx, tenant, linkWith.Id, email)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to contact"))
+			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromContact"))
+			return err
 		}
 	case commonmodel.USER.String():
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*userpb.UserIdGrpcResponse](func() (*userpb.UserIdGrpcResponse, error) {
-			return s.services.GrpcClients.UserClient.UnLinkEmailFromUser(ctx, &userpb.UnLinkEmailFromUserGrpcRequest{
-				Tenant:         tenant,
-				UserId:         linkWith.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      appSource,
-				Email:          email,
-			})
-		})
+		err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromUser(ctx, tenant, linkWith.Id, email)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
+			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromUser"))
+			return err
 		}
+
 	case commonmodel.ORGANIZATION.String():
-		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
-		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-			return s.services.GrpcClients.OrganizationClient.UnLinkEmailFromOrganization(ctx, &organizationpb.UnLinkEmailFromOrganizationGrpcRequest{
-				Tenant:         tenant,
-				OrganizationId: linkWith.Id,
-				LoggedInUserId: common.GetUserIdFromContext(ctx),
-				AppSource:      appSource,
-				Email:          email,
-			})
-		})
+		err = s.services.Neo4jRepositories.EmailWriteRepository.UnlinkFromOrganization(ctx, tenant, linkWith.Id, email)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to link email to user"))
+			tracing.TraceErr(span, errors.Wrap(err, "EmailWriteRepository.UnlinkFromOrganization"))
+			return err
 		}
 	default:
-		tracing.TraceErr(span, errors.New("unsupported linkWith type %s"+linkWith.Type.String()))
+		tracing.TraceErr(span, errors.New("unsupported linkWith type "+linkWith.Type.String()))
+		return errors.New("unsupported linkWith type " + linkWith.Type.String())
 	}
+	// publish event to rabbit mq
+	err = s.services.RabbitMQService.Publish(ctx, linkWith.Id, linkWith.Type, dto.NewRemoveEmailEvent(email))
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "unable to publish message RemoveEmailEvent"))
+	}
+
+	// publish event to eventstore for completion
+	utils.EventCompleted(ctx, common.GetTenantFromContext(ctx), linkWith.Type.String(), linkWith.Id, s.services.GrpcClients, utils.NewEventCompletedDetails().WithUpdate())
 
 	return err
 }
