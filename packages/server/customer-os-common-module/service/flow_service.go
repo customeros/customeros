@@ -404,36 +404,36 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 }
 
 func (s *flowService) removeWaitNodes(edges []map[string]interface{}, waitNodes map[string]bool) []map[string]interface{} {
-	// Create a map to track node connections
-	connections := make(map[string]map[string]interface{})
 	newEdges := []map[string]interface{}{}
+	targetMapping := make(map[string]string)
 
-	// First pass: build connections map, ignoring WAIT nodes
+	// Step 1: Map out where each node points to
+	for _, edge := range edges {
+		source := edge["source"].(string)
+		target := edge["target"].(string)
+		targetMapping[source] = target
+	}
+
+	// Step 2: Rebuild edges, bypassing WAIT nodes
 	for _, edge := range edges {
 		source := edge["source"].(string)
 		target := edge["target"].(string)
 
-		// If the target is a WAIT node, record the connection and skip this edge
-		if waitNodes[target] {
-			connections[source] = edge
+		// If the source is a WAIT node, skip processing this edge
+		if waitNodes[source] {
 			continue
 		}
 
-		// Check if the source was connected to a WAIT node, then bypass
-		for src, connEdge := range connections {
-			if connEdge["target"] == source {
-				// Create a new edge, copying all properties, but updating source and target
-				newEdge := s.copyEdge(connEdge)
-				newEdge["target"] = target
-				newEdges = append(newEdges, newEdge)
-				delete(connections, src) // Remove the used connection
-			}
+		// Recursively find the final target if there are multiple WAIT nodes in a row
+		finalTarget := target
+		for waitNodes[finalTarget] {
+			finalTarget = targetMapping[finalTarget] // Keep following the target chain until it's not a WAIT node
 		}
 
-		// If no WAIT node involved, add the edge directly
-		if _, exists := waitNodes[source]; !exists {
-			newEdges = append(newEdges, edge)
-		}
+		// Create a new edge linking source directly to the final non-WAIT target
+		newEdge := s.copyEdge(edge)
+		newEdge["target"] = finalTarget
+		newEdges = append(newEdges, newEdge)
 	}
 
 	return newEdges
