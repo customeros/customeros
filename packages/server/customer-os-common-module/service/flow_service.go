@@ -769,61 +769,73 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 		if entityType == model.CONTACT {
 			contactNode, err := s.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, common.GetTenantFromContext(ctx), entityId)
 			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
+				return nil, errors.Wrap(err, "failed to get contact")
 			}
 			if contactNode == nil {
-				tracing.TraceErr(span, errors.New("contact not found"))
 				return nil, errors.New("contact not found")
 			}
 		}
 
-		toStore := neo4jentity.FlowParticipantEntity{
-			Status:     neo4jentity.FlowParticipantStatusPending,
-			EntityId:   entityId,
-			EntityType: entityType,
-		}
+		e, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
+			toStore := neo4jentity.FlowParticipantEntity{
+				Status:     neo4jentity.FlowParticipantStatusPending,
+				EntityId:   entityId,
+				EntityType: entityType,
+			}
 
-		toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, common.GetTenantFromContext(ctx), model.NodeLabelFlowParticipant)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+			toStore.Id, err = s.services.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, common.GetTenantFromContext(ctx), model.NodeLabelFlowParticipant)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to generate id")
+			}
 
-		//TODO use transaction
-		identified, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, nil, &toStore)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		entity := mapper.MapDbNodeToFlowParticipantEntity(identified)
+			//TODO use transaction
+			identified, err = s.services.Neo4jRepositories.FlowParticipantWriteRepository.Merge(ctx, &tx, &toStore)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to merge flow participant")
+			}
+			entity := mapper.MapDbNodeToFlowParticipantEntity(identified)
 
-		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
-			FromEntityId:   flowId,
-			FromEntityType: model.FLOW,
-			Relationship:   model.HAS,
-			ToEntityId:     entity.Id,
-			ToEntityType:   model.FLOW_PARTICIPANT,
+			err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
+				FromEntityId:   flowId,
+				FromEntityType: model.FLOW,
+				Relationship:   model.HAS,
+				ToEntityId:     entity.Id,
+				ToEntityType:   model.FLOW_PARTICIPANT,
+			})
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to link flow to flow participant")
+			}
+
+			err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, &tx, common.GetTenantFromContext(ctx), repository.LinkDetails{
+				FromEntityId:   entity.Id,
+				FromEntityType: model.FLOW_PARTICIPANT,
+				Relationship:   model.HAS,
+				ToEntityId:     entityId,
+				ToEntityType:   entityType,
+			})
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to link flow participant to entity")
+			}
+
+			if flow.Status == neo4jentity.FlowStatusActive {
+				err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flowId, entity)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to schedule flow")
+				}
+			}
+
+			return entity, nil
 		})
+
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
 
-		err = s.services.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, common.GetTenantFromContext(ctx), repository.LinkDetails{
-			FromEntityId:   entity.Id,
-			FromEntityType: model.FLOW_PARTICIPANT,
-			Relationship:   model.HAS,
-			ToEntityId:     entityId,
-			ToEntityType:   entityType,
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
+		return e.(*neo4jentity.FlowParticipantEntity), nil
+	} else {
+		return mapper.MapDbNodeToFlowParticipantEntity(identified), nil
 	}
-
-	return mapper.MapDbNodeToFlowParticipantEntity(identified), nil
 }
 
 func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipantId string) error {
@@ -886,6 +898,9 @@ func (s *flowService) FlowParticipantDelete(ctx context.Context, flowParticipant
 		tracing.TraceErr(span, err)
 		return err
 	}
+
+	//TODO
+	//remove scheduled events???
 
 	return nil
 }

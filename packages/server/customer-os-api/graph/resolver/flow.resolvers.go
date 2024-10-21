@@ -7,12 +7,6 @@ package resolver
 import (
 	"context"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/service"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/repository"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-
 	"github.com/99designs/gqlgen/graphql"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/generated"
@@ -126,64 +120,64 @@ func (r *mutationResolver) FlowMerge(ctx context.Context, input model.FlowMergeI
 	}
 
 	//TODO this is correct and used in testing
-	tenant := common.GetTenantFromContext(ctx)
-
-	t := true
-
-	for i := 1; i <= 100; i++ {
-		contactId, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
-			ContactEntity: &neo4jentity.ContactEntity{
-				FirstName: "Test",
-				LastName:  fmt.Sprintf("%d", i),
-			},
-			EmailEntity: &neo4jentity.EmailEntity{
-				RawEmail: fmt.Sprintf("%d@test.com", i),
-				Work:     &t,
-			},
-		})
-
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "")
-			return nil, err
-		}
-
-		_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactId, commonModel.CONTACT)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			graphql.AddErrorf(ctx, "")
-			return nil, err
-		}
-	}
-
-	userId := uuid.New().String()
-	err = r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
-
-	for i := 1; i <= 10; i++ {
-		userEmail := fmt.Sprintf("mailbox%d@test.com%s", i, uuid.New().String())
-		mailboxdId := uuid.New().String()
-		r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
-		r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, mailboxdId, false)
-		r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &entity.TenantSettingsMailbox{
-			Tenant:                  tenant,
-			MailboxUsername:         userEmail,
-			Username:                userEmail,
-			MaxEmailsPerDay:         2,
-			MinMinutesBetweenEmails: 5,
-			MaxMinutesBetweenEmails: 10,
-		})
-	}
-
-	r.FlowSenderMerge(ctx, flow.Id, model.FlowSenderMergeInput{
-		UserID: &userId,
-	})
-
-	entity, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, flow.Id, neo4jentity.FlowStatusActive)
-	if err != nil || entity == nil {
-		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "")
-		return nil, err
-	}
+	//tenant := common.GetTenantFromContext(ctx)
+	//
+	//t := true
+	//
+	//for i := 1; i <= 100; i++ {
+	//	contactId, err := r.Services.ContactService.Create(ctx, &service.ContactCreateData{
+	//		ContactEntity: &neo4jentity.ContactEntity{
+	//			FirstName: "Test",
+	//			LastName:  fmt.Sprintf("%d", i),
+	//		},
+	//		EmailEntity: &neo4jentity.EmailEntity{
+	//			RawEmail: fmt.Sprintf("%d@test.com", i),
+	//			Work:     &t,
+	//		},
+	//	})
+	//
+	//	if err != nil {
+	//		tracing.TraceErr(span, err)
+	//		graphql.AddErrorf(ctx, "")
+	//		return nil, err
+	//	}
+	//
+	//	_, err = r.Services.CommonServices.FlowService.FlowParticipantAdd(ctx, flow.Id, contactId, commonModel.CONTACT)
+	//	if err != nil {
+	//		tracing.TraceErr(span, err)
+	//		graphql.AddErrorf(ctx, "")
+	//		return nil, err
+	//	}
+	//}
+	//
+	//userId := uuid.New().String()
+	//err = r.Services.CommonServices.Neo4jRepositories.UserWriteRepository.CreateUser(ctx, neo4jentity.UserEntity{Id: userId})
+	//
+	//for i := 1; i <= 10; i++ {
+	//	userEmail := fmt.Sprintf("mailbox%d@test.com%s", i, uuid.New().String())
+	//	mailboxdId := uuid.New().String()
+	//	r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, mailboxdId, repository.EmailCreateFields{RawEmail: userEmail})
+	//	r.Services.CommonServices.Neo4jRepositories.EmailWriteRepository.LinkWithUser(ctx, tenant, userId, mailboxdId, false)
+	//	r.Services.CommonServices.PostgresRepositories.TenantSettingsMailboxRepository.Merge(ctx, tenant, &entity.TenantSettingsMailbox{
+	//		Tenant:                  tenant,
+	//		MailboxUsername:         userEmail,
+	//		Username:                userEmail,
+	//		MaxEmailsPerDay:         2,
+	//		MinMinutesBetweenEmails: 5,
+	//		MaxMinutesBetweenEmails: 10,
+	//	})
+	//}
+	//
+	//r.FlowSenderMerge(ctx, flow.Id, model.FlowSenderMergeInput{
+	//	UserID: &userId,
+	//})
+	//
+	//entity, err := r.Services.CommonServices.FlowService.FlowChangeStatus(ctx, flow.Id, neo4jentity.FlowStatusActive)
+	//if err != nil || entity == nil {
+	//	tracing.TraceErr(span, err)
+	//	graphql.AddErrorf(ctx, "")
+	//	return nil, err
+	//}
 
 	return mapper.MapEntityToFlow(flow), nil
 }
