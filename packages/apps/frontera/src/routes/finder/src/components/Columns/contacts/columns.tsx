@@ -63,8 +63,8 @@ const columns: Record<string, Column> = {
         <AvatarCell
           icon={icon}
           logo={logo}
+          id={props.row.original.id}
           name={props.getValue().name}
-          id={props.row.original.organizationId}
           canNavigate={props.getValue()?.hasActiveOrganization}
         />
       );

@@ -1,10 +1,8 @@
-import { memo } from 'react';
-import { useNavigate } from 'react-router-dom';
-
-import { useLocalStorage } from 'usehooks-ts';
+import { observer } from 'mobx-react-lite';
 
 import { cn } from '@ui/utils/cn';
 import { Avatar } from '@ui/media/Avatar/Avatar';
+import { useStore } from '@shared/hooks/useStore';
 
 interface AvatarCellProps {
   id: string;
@@ -14,24 +12,11 @@ interface AvatarCellProps {
   canNavigate?: boolean;
 }
 
-export const AvatarCell = memo(
+export const AvatarCell = observer(
   ({ name, id, icon, logo, canNavigate }: AvatarCellProps) => {
-    const navigate = useNavigate();
-    const [tabs] = useLocalStorage<{
-      [key: string]: string;
-    }>(`customeros-player-last-position`, { root: 'organization' });
-
+    const store = useStore();
     const src = icon || logo;
     const fullName = name || 'Unnamed';
-
-    const handleNavigate = () => {
-      if (!canNavigate) return;
-
-      const lastPositionParams = tabs[id];
-      const href = getHref(id, lastPositionParams);
-
-      navigate(href);
-    };
 
     return (
       <div className='items-center ml-[1px]'>
@@ -42,22 +27,23 @@ export const AvatarCell = memo(
           name={fullName}
           src={src || undefined}
           variant='outlineCircle'
-          onClick={handleNavigate}
           className={cn(
             'text-gray-700 cursor-pointer focus:outline-none',
             !canNavigate && 'cursor-default',
           )}
+          onClick={() => {
+            if (
+              store.ui.contactPreviewCardOpen === true &&
+              store.ui.focusRow === id
+            ) {
+              store.ui.setContactPreviewCardOpen(false);
+            } else {
+              store.ui.setFocusRow(id);
+              store.ui.setContactPreviewCardOpen(true);
+            }
+          }}
         />
       </div>
     );
   },
-  (prevProps, nextProps) => {
-    return (
-      prevProps.icon === nextProps.icon && prevProps.logo === nextProps.logo
-    );
-  },
 );
-
-function getHref(id: string, lastPositionParams: string | undefined) {
-  return `/organization/${id}?${lastPositionParams || 'tab=people'}`;
-}

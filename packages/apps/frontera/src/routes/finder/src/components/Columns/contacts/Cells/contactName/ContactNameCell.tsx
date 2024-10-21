@@ -68,11 +68,17 @@ export const ContactNameCell = observer(
               'overflow-ellipsis overflow-hidden font-medium no-underline hover:no-underline cursor-pointer',
               !canNavigate && 'cursor-default',
             )}
-            onClick={() =>
-              store.ui.contactPreviewCardOpen
-                ? store.ui.setContactPreviewCardOpen(false)
-                : store.ui.setContactPreviewCardOpen(true)
-            }
+            onClick={() => {
+              if (
+                store.ui.contactPreviewCardOpen === true &&
+                store.ui.focusRow === contactId
+              ) {
+                store.ui.setContactPreviewCardOpen(false);
+              } else {
+                store.ui.setFocusRow(contactId);
+                store.ui.setContactPreviewCardOpen(true);
+              }
+            }}
           >
             {contactName}
           </p>
