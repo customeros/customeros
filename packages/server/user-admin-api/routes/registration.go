@@ -9,6 +9,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
+	commonservice "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	commonUtils "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -22,6 +23,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/user-admin-api/utils"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 	tokenOauth "golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	googleOauth "google.golang.org/api/oauth2/v2"
@@ -97,7 +99,7 @@ func addRegistrationRoutes(rg *gin.RouterGroup, config *config.Config, services 
 					Tenant: *tenantName,
 				})
 
-				err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName, ginContext)
+				err = initializeUser(ctx, services, signInRequest.Provider, signInRequest.OAuthToken.ProviderAccountId, *tenantName, signInRequest.LoggedInEmail, firstName, lastName)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					ginContext.JSON(http.StatusInternalServerError, gin.H{
@@ -487,27 +489,14 @@ func getUserInfoFromGoogle(c context.Context, config *config.Config, signInReque
 	return userInfo, nil
 }
 
-func initializeUser(c context.Context, services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string, ginContext *gin.Context) error {
+func initializeUser(c context.Context, services *service.Services, provider, providerAccountId, tenant, email string, firstName, lastName *string) error {
 	span, ctx := opentracing.StartSpanFromContext(c, "Registration.initializeUser")
 	defer span.Finish()
 
 	appSource := APP_SOURCE
 
 	userId := ""
-	emailId := ""
 	playerId := ""
-
-	emailNode, err := services.CommonServices.Neo4jRepositories.EmailReadRepository.GetFirstByEmail(ctx, tenant, email)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return err
-	}
-	if emailNode != nil {
-		emailId = neo4jmapper.MapDbNodeToEmailEntity(emailNode).Id
-		span.LogFields(tracingLog.Object("email", "found"))
-	} else {
-		span.LogFields(tracingLog.Object("email", "not found"))
-	}
 
 	userNode, err := services.CommonServices.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, email)
 	if err != nil {
@@ -533,19 +522,6 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 		span.LogFields(tracingLog.Object("player", "not found"))
 	}
 
-	if emailId == "" {
-		emailId, err = services.CommonServices.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelEmail)
-		err := services.CommonServices.Neo4jRepositories.EmailWriteRepository.CreateEmail(ctx, tenant, emailId, neo4jrepository.EmailCreateFields{
-			RawEmail:  email,
-			CreatedAt: commonUtils.Now(),
-			Source:    neo4jentity.DataSourceOpenline,
-		})
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-	}
-
 	if userId == "" {
 		userId, err = services.CommonServices.Neo4jRepositories.CommonReadRepository.GenerateId(ctx, tenant, commonModel.NodeLabelUser)
 		if err != nil {
@@ -565,20 +541,19 @@ func initializeUser(c context.Context, services *service.Services, provider, pro
 			return err
 		}
 
-		err := services.CommonServices.Neo4jRepositories.CommonWriteRepository.Link(ctx, nil, tenant, neo4jrepository.LinkDetails{
-			FromEntityId:   userId,
-			FromEntityType: commonModel.USER,
-			Relationship:   commonModel.HAS,
-			ToEntityId:     emailId,
-			ToEntityType:   commonModel.EMAIL,
+		_, err := services.CommonServices.EmailService.Merge(ctx, tenant, commonservice.EmailFields{
+			Email:     email,
+			Source:    neo4jentity.DataSourceOpenline,
+			AppSource: APP_SOURCE,
+		}, &commonservice.LinkWith{
+			Type: commonModel.USER,
+			Id:   userId,
 		})
 		if err != nil {
-			tracing.TraceErr(span, err)
+			tracing.TraceErr(span, errors.Wrap(err, "unable to link user to email"))
 			return err
 		}
-
 	} else {
-
 		err = addDefaultMissingRoles(ctx, services, tenant, userId)
 		if err != nil {
 			tracing.TraceErr(span, err)
