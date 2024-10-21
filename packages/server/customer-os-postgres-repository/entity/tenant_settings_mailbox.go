@@ -12,6 +12,7 @@ type TenantSettingsMailbox struct {
 	Domain          string    `gorm:"column:domain;type:varchar(255)" json:"domain"`
 	Username        string    `gorm:"column:user_name;type:varchar(255)" json:"userName"`
 
+	MaxEmailsPerDay         int `gorm:"type:integer" json:"maxEmailsPerDay"`
 	MinMinutesBetweenEmails int `gorm:"type:integer" json:"minMinutesBetweenEmails"`
 	MaxMinutesBetweenEmails int `gorm:"type:integer" json:"maxMinutesBetweenEmails"`
 }

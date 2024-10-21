@@ -177,6 +177,7 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tenant stri
 			MailboxPassword:         input.MailboxPassword,
 			Username:                input.Username,
 			Domain:                  input.Domain,
+			MaxEmailsPerDay:         input.MaxEmailsPerDay,
 			MinMinutesBetweenEmails: input.MinMinutesBetweenEmails,
 			MaxMinutesBetweenEmails: input.MaxMinutesBetweenEmails,
 		}
@@ -189,6 +190,7 @@ func (r *tenantSettingsMailboxRepository) Merge(ctx context.Context, tenant stri
 	} else {
 		// If found, update the existing mailbox
 		mailbox.MailboxPassword = input.MailboxPassword
+		mailbox.MaxEmailsPerDay = input.MaxEmailsPerDay
 		mailbox.MinMinutesBetweenEmails = input.MinMinutesBetweenEmails
 		mailbox.MaxMinutesBetweenEmails = input.MaxMinutesBetweenEmails
 		mailbox.UpdatedAt = utils.Now()

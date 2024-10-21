@@ -303,6 +303,23 @@ func (s *flowExecutionService) getFirstAvailableSlotForMailbox(ctx context.Conte
 		possibleScheduledAt = scheduleAt
 	}
 
+	//check the number of emails scheduled for the day
+	for {
+		emailsScheduledInDay, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.CountEmailsPerMailboxPerDay(ctx, tx, mailbox, utils.StartOfDayInUTC(possibleScheduledAt), utils.EndOfDayInUTC(possibleScheduledAt))
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if emailsScheduledInDay >= int64(mailboxEntity.MaxEmailsPerDay) {
+			possibleScheduledAt = possibleScheduledAt.AddDate(0, 0, 1)
+			possibleScheduledAt = time.Date(possibleScheduledAt.Year(), possibleScheduledAt.Month(), possibleScheduledAt.Day(), 0, 0, 0, 0, time.UTC)
+			continue
+		} else {
+			break
+		}
+	}
+
 	// Ensure possibleScheduledAt is not in the past and within working hours
 	possibleScheduledAt = nextWorkingTime(maxTime(possibleScheduledAt, time.Now().UTC()))
 
