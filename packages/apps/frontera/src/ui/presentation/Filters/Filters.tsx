@@ -178,10 +178,7 @@ export const Filters = ({
     filter: FilterItem,
     index: number,
   ) => {
-    if (
-      filter.property === 'EMAIL_VERIFICATION_WORK_EMAIL' ||
-      filter.property === 'EMAIL_VERIFICATION_PERSONAL_EMAIL'
-    ) {
+    if (filter.property === 'EMAIL_VERIFICATION_PRIMARY_EMAIL') {
       const emailVerificationValues = Array.isArray(value) ? value : [value];
 
       const updatedValue = emailVerificationValues.map((val) => ({
@@ -210,10 +207,7 @@ export const Filters = ({
       }
     }
 
-    if (
-      filter.property !== 'EMAIL_VERIFICATION_WORK_EMAIL' &&
-      filter.property !== 'EMAIL_VERIFICATION_PERSONAL_EMAIL'
-    ) {
+    if (filter.property !== 'EMAIL_VERIFICATION_PRIMARY_EMAIL') {
       if (Array.isArray(value) && value.length === 0) {
         setFilters(
           {
