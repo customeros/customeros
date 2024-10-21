@@ -94,6 +94,15 @@ export class FlowStore implements Store<Flow> {
     { nodes, edges }: { nodes: string; edges: string },
     options?: { onError: () => void; onSuccess: () => void },
   ) {
+    if (this.value.status !== FlowStatus.Inactive) {
+      this.root.ui.toastError(
+        'You can only edit draft flows',
+        'update-flow-error',
+      );
+
+      return;
+    }
+
     this.isLoading = true;
 
     try {
