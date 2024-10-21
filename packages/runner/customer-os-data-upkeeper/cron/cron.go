@@ -65,243 +65,243 @@ func StartCron(cont *container.Container) *cron.Cron {
 	c := cron.New()
 
 	// Add jobs
-	//err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
-	//	lockAndRunJob(cont, contractGroup, updateContractsStatusAndRenewal)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateOrganization, func() {
-	//	lockAndRunJob(cont, organizationGroup, updateOrganizations)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "updateOrganizations", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoice, func() {
-	//	lockAndRunJob(cont, invoiceGroup, generateCycleInvoices)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "generateCycleInvoices", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateOffCycleInvoice, func() {
-	//	lockAndRunJob(cont, invoiceGroup, generateOffCycleInvoices)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "generateOffCycleInvoices", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateNextPreviewInvoice, func() {
-	//	lockAndRunJob(cont, invoiceGroup, generateNextPreviewInvoices)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "generateNextPreviewInvoices", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoicePaymentLink, func() {
-	//	lockAndRunJob(cont, invoiceGroup, generateInvoicePaymentLinks)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoicePaymentLinks", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckInvoiceFinalized, func() {
-	//	lockAndRunJob(cont, invoiceGroup, sendInvoiceFinalizedEvents)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "autoPayInvoices", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanupInvoices, func() {
-	//	lockAndRunJob(cont, invoiceGroup, cleanupInvoices)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "cleanupInvoices", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleAdjustInvoiceStatus, func() {
-	//	lockAndRunJob(cont, invoiceGroup, adjustInvoiceStatus)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "adjustInvoiceStatus", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
-	//	lockAndRunJob(cont, invoiceGroup, sendPayInvoiceNotifications)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "sendPayInvoiceNotifications", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendRemindInvoiceNotification, func() {
-	//	lockAndRunJob(cont, invoiceGroup, sendRemindInvoiceNotifications)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "sendRemindInvoiceNotifications", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshLastTouchpoint, func() {
-	//	lockAndRunJob(cont, refreshLastTouchpointGroup, refreshLastTouchpoint)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "refreshLastTouchpoint", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleGetCurrencyRatesECB, func() {
-	//	lockAndRunJob(cont, currencyGroup, getCurrencyRatesECB)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "getCurrencyRatesECB", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkUnthreadIssues, func() {
-	//	lockAndRunJob(cont, linkUnthreadIssuesGroup, linkUnthreadIssues)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "linkUnthreadIssues", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpkeepContacts, func() {
-	//	lockAndRunJob(cont, contactGroup, upkeepContacts)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForWorkEmailOnBetterContact, func() {
-	//	lockAndRunJob(cont, contactBettercontactGroup, askForWorkEmailOnBetterContactJob)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "askForWorkEmailOnBetterContactJob", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, func() {
-	//	lockAndRunJob(cont, contactBettercontactGroup, enrichWithWorkEmailFromBetterContactJob)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "enrichWithWorkEmailFromBetterContactJob", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, func() {
-	//	lockAndRunJob(cont, contactBettercontactGroup, checkBetterContactRequestsWithoutResponseJob)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "checkBetterContactRequestsWithoutResponseJob", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForLinkedInConnections, func() {
-	//	lockAndRunJob(cont, askForLinkedInConnectionsGroup, askForLinkedInConnections)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "triggerAskLinkedInConnections", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessLinkedInConnections, func() {
-	//	lockAndRunJob(cont, processLinkedInConnectionsGroup, processLinkedInConnections)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "syncLinkedInConnections", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContacts, func() {
-	//	lockAndRunJob(cont, contactEnrichGroup, enrichContacts)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, func() {
-	//	lockAndRunJob(cont, orphanContactsGroup, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshApiCache, func() {
-	//	lockAndRunJob(cont, apiCacheGroup, refreshApiCache)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "refreshApiCache", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleExecuteWorkflow, func() {
-	//	lockAndRunJob(cont, workflowGroup, executeWorkflows)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "executeWorkflows", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateCustomerOSEmails, func() {
-	//	lockAndRunJob(cont, emailGroup, validateEmails)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmailsFromBulkRequests, func() {
-	//	lockAndRunJob(cont, emailBulkValidationGroup, validateEmailsFromBulkRequests)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmailFromBulkRequests", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckScrubbyResult, func() {
-	//	lockAndRunJob(cont, emailGroup, checkScrubbyResult)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckEnrowResults, func() {
-	//	lockAndRunJob(cont, emailGroup, checkEnrowResult)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanEmails, func() {
-	//	lockAndRunJob(cont, emailGroup, cleanEmails)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
-	//}
+	err := c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateContract, func() {
+		lockAndRunJob(cont, contractGroup, updateContractsStatusAndRenewal)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "updateContractsStatusAndRenewal", err.Error())
+	}
 
-	err := c.AddFunc(cont.Cfg.Cron.CronScheduleRampUpMailboxes, func() {
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpdateOrganization, func() {
+		lockAndRunJob(cont, organizationGroup, updateOrganizations)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "updateOrganizations", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoice, func() {
+		lockAndRunJob(cont, invoiceGroup, generateCycleInvoices)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateCycleInvoices", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateOffCycleInvoice, func() {
+		lockAndRunJob(cont, invoiceGroup, generateOffCycleInvoices)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateOffCycleInvoices", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateNextPreviewInvoice, func() {
+		lockAndRunJob(cont, invoiceGroup, generateNextPreviewInvoices)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateNextPreviewInvoices", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGenerateInvoicePaymentLink, func() {
+		lockAndRunJob(cont, invoiceGroup, generateInvoicePaymentLinks)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "generateInvoicePaymentLinks", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckInvoiceFinalized, func() {
+		lockAndRunJob(cont, invoiceGroup, sendInvoiceFinalizedEvents)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "autoPayInvoices", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanupInvoices, func() {
+		lockAndRunJob(cont, invoiceGroup, cleanupInvoices)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "cleanupInvoices", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAdjustInvoiceStatus, func() {
+		lockAndRunJob(cont, invoiceGroup, adjustInvoiceStatus)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "adjustInvoiceStatus", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendPayInvoiceNotification, func() {
+		lockAndRunJob(cont, invoiceGroup, sendPayInvoiceNotifications)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendPayInvoiceNotifications", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendRemindInvoiceNotification, func() {
+		lockAndRunJob(cont, invoiceGroup, sendRemindInvoiceNotifications)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendRemindInvoiceNotifications", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshLastTouchpoint, func() {
+		lockAndRunJob(cont, refreshLastTouchpointGroup, refreshLastTouchpoint)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "refreshLastTouchpoint", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleGetCurrencyRatesECB, func() {
+		lockAndRunJob(cont, currencyGroup, getCurrencyRatesECB)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "getCurrencyRatesECB", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkUnthreadIssues, func() {
+		lockAndRunJob(cont, linkUnthreadIssuesGroup, linkUnthreadIssues)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "linkUnthreadIssues", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleUpkeepContacts, func() {
+		lockAndRunJob(cont, contactGroup, upkeepContacts)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "upkeepContacts", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForWorkEmailOnBetterContact, func() {
+		lockAndRunJob(cont, contactBettercontactGroup, askForWorkEmailOnBetterContactJob)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "askForWorkEmailOnBetterContactJob", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichWithWorkEmailFromBetterContact, func() {
+		lockAndRunJob(cont, contactBettercontactGroup, enrichWithWorkEmailFromBetterContactJob)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichWithWorkEmailFromBetterContactJob", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckBetterContactRequestsWithoutResponse, func() {
+		lockAndRunJob(cont, contactBettercontactGroup, checkBetterContactRequestsWithoutResponseJob)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkBetterContactRequestsWithoutResponseJob", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleAskForLinkedInConnections, func() {
+		lockAndRunJob(cont, askForLinkedInConnectionsGroup, askForLinkedInConnections)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "triggerAskLinkedInConnections", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessLinkedInConnections, func() {
+		lockAndRunJob(cont, processLinkedInConnectionsGroup, processLinkedInConnections)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "syncLinkedInConnections", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleEnrichContacts, func() {
+		lockAndRunJob(cont, contactEnrichGroup, enrichContacts)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "enrichContacts", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleLinkOrphanContactsToOrganizationBaseOnLinkedinScrapIn, func() {
+		lockAndRunJob(cont, orphanContactsGroup, linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRefreshApiCache, func() {
+		lockAndRunJob(cont, apiCacheGroup, refreshApiCache)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "refreshApiCache", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleExecuteWorkflow, func() {
+		lockAndRunJob(cont, workflowGroup, executeWorkflows)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "executeWorkflows", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateCustomerOSEmails, func() {
+		lockAndRunJob(cont, emailGroup, validateEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleValidateEmailsFromBulkRequests, func() {
+		lockAndRunJob(cont, emailBulkValidationGroup, validateEmailsFromBulkRequests)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmailFromBulkRequests", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckScrubbyResult, func() {
+		lockAndRunJob(cont, emailGroup, checkScrubbyResult)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "validateEmails", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckEnrowResults, func() {
+		lockAndRunJob(cont, emailGroup, checkEnrowResult)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCleanEmails, func() {
+		lockAndRunJob(cont, emailGroup, cleanEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkEnrowResult", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleRampUpMailboxes, func() {
 		lockAndRunJob(cont, rampUpMailboxesGroup, rampUpMailboxes)
 	})
 	if err != nil {
 		cont.Log.Fatalf("Could not add cron job %s: %v", "rampUpMailboxes", err.Error())
 	}
 
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowStatistics, func() {
-	//	lockAndRunJob(cont, flowStatisticsGroup, flowStatistics)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "flowStatistics", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
-	//	lockAndRunJob(cont, flowExecutionGroup, flowExecution)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
-	//	lockAndRunJob(cont, sendEmailsGroup, sendEmails)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
-	//}
-	//
-	//err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessSentEmails, func() {
-	//	lockAndRunJob(cont, processSentEmailsGroup, processSentEmails)
-	//})
-	//if err != nil {
-	//	cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
-	//}
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowStatistics, func() {
+		lockAndRunJob(cont, flowStatisticsGroup, flowStatistics)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "flowStatistics", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleFlowExecution, func() {
+		lockAndRunJob(cont, flowExecutionGroup, flowExecution)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "flowExecution", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleSendEmails, func() {
+		lockAndRunJob(cont, sendEmailsGroup, sendEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleProcessSentEmails, func() {
+		lockAndRunJob(cont, processSentEmailsGroup, processSentEmails)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
+	}
 
 	c.Start()
 
