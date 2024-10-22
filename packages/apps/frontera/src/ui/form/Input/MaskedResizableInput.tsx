@@ -5,7 +5,8 @@ import { MaskElement } from 'imask';
 
 import { InputProps } from '@ui/form/Input/Input';
 import { MaskedInput } from '@ui/form/Input/MaskedInput';
-type MaskedInputProps = IMaskMixinProps<MaskElement> & InputProps;
+type MaskedInputProps = IMaskMixinProps<MaskElement> &
+  InputProps & { measureValue?: string }; // measure value is for properly calc masked numbers with decimals
 
 export const MaskedResizableInput = ({ ...props }: MaskedInputProps) => {
   const spanRef = useRef<HTMLSpanElement>(null);
@@ -37,7 +38,11 @@ export const MaskedResizableInput = ({ ...props }: MaskedInputProps) => {
         ref={spanRef}
         className={`z-[-1] absolute h-0 inline-block invisible`}
       >
-        {props.value || props.defaultValue || props.placeholder || ''}
+        {props.measureValue ||
+          props.value ||
+          props.defaultValue ||
+          props.placeholder ||
+          ''}
       </span>
 
       <MaskedInput
