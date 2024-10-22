@@ -23,6 +23,7 @@ type EmailMessage struct {
 	ProducerType string `gorm:"size:255;not null;"`
 
 	//Email message data
+	FromName     string   `gorm:"size:255;"`
 	From         string   `gorm:"size:255;"`
 	FromProvider string   `gorm:"size:255;"`
 	To           []string `gorm:"-"`
