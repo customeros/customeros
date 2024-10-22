@@ -29,7 +29,7 @@ func (b *domainBatcher) getDomainsForOrganizations(ctx context.Context, keys dat
 
 	ids, keyOrder := sortKeys(keys)
 
-	domainEntitiesPtr, err := b.domainService.GetDomainsForOrganizations(ctx, ids)
+	domainEntitiesPtr, err := b.domainService.GetAllDomainsForOrganizations(ctx, ids)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		// check if context deadline exceeded error occurred

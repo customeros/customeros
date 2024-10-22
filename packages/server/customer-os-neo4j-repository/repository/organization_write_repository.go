@@ -716,8 +716,7 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
 	cypher := fmt.Sprintf(`MERGE (d:Domain {domain:$domain}) 
-				ON CREATE SET 	d.id=randomUUID(), 
-								d.createdAt=$now, 
+				ON CREATE SET 	d.createdAt=$now, 
 								d.updatedAt=datetime(),
 								d.appSource=$appSource
 				WITH d

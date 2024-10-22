@@ -30,6 +30,7 @@ const (
 	rampUpMailboxesGroup            = "rampUpMailboxesGroup"
 	sendEmailsGroup                 = "sendEmailsGroup"
 	processSentEmailsGroup          = "processSentEmailsGroup"
+	domainGroup                     = "domainGroup"
 )
 
 var jobLocks = struct {
@@ -58,6 +59,7 @@ var jobLocks = struct {
 		rampUpMailboxesGroup:            {},
 		sendEmailsGroup:                 {},
 		processSentEmailsGroup:          {},
+		domainGroup:                     {},
 	},
 }
 
@@ -300,7 +302,14 @@ func StartCron(cont *container.Container) *cron.Cron {
 		lockAndRunJob(cont, processSentEmailsGroup, processSentEmails)
 	})
 	if err != nil {
-		cont.Log.Fatalf("Could not add cron job %s: %v", "sendEmails", err.Error())
+		cont.Log.Fatalf("Could not add cron job %s: %v", "processSentEmails", err.Error())
+	}
+
+	err = c.AddFunc(cont.Cfg.Cron.CronScheduleCheckDomains, func() {
+		lockAndRunJob(cont, domainGroup, checkDomains)
+	})
+	if err != nil {
+		cont.Log.Fatalf("Could not add cron job %s: %v", "checkDomains", err.Error())
 	}
 
 	c.Start()
@@ -456,4 +465,8 @@ func sendEmails(cont *container.Container) {
 
 func processSentEmails(cont *container.Container) {
 	service.NewEmailService(cont.Cfg, cont.Log, cont.CommonServices).ProcessSentEmails()
+}
+
+func checkDomains(cont *container.Container) {
+	service.NewDomainService(cont.Cfg, cont.Log, cont.CommonServices).CheckDomains()
 }

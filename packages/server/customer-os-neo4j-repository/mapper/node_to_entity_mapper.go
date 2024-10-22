@@ -60,7 +60,7 @@ func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *entity.WorkspaceEntity {
 		return &entity.WorkspaceEntity{}
 	}
 	props := utils.GetPropsFromNode(*dbNode)
-	domain := entity.WorkspaceEntity{
+	workspace := entity.WorkspaceEntity{
 		Id:            utils.GetStringPropOrEmpty(props, "id"),
 		Name:          utils.GetStringPropOrEmpty(props, "domain"),
 		Provider:      utils.GetStringPropOrEmpty(props, "provider"),
@@ -70,7 +70,7 @@ func MapDbNodeToWorkspaceEntity(dbNode *dbtype.Node) *entity.WorkspaceEntity {
 		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
 		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
 	}
-	return &domain
+	return &workspace
 }
 
 func MapDbNodeToPlayerEntity(node *neo4j.Node) *entity.PlayerEntity {
@@ -961,13 +961,16 @@ func MapDbNodeToDomainEntity(node *dbtype.Node) *entity.DomainEntity {
 	}
 	props := utils.GetPropsFromNode(*node)
 	domain := entity.DomainEntity{
-		Id:            utils.GetStringPropOrEmpty(props, "id"),
-		CreatedAt:     utils.GetTimePropOrEpochStart(props, "createdAt"),
-		UpdatedAt:     utils.GetTimePropOrEpochStart(props, "updatedAt"),
-		AppSource:     utils.GetStringPropOrEmpty(props, "appSource"),
-		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "source")),
-		SourceOfTruth: entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, "sourceOfTruth")),
-		Domain:        utils.GetStringPropOrEmpty(props, "domain"),
+		CreatedAt:     utils.GetTimePropOrEpochStart(props, string(entity.DomainPropertyCreatedAt)),
+		UpdatedAt:     utils.GetTimePropOrEpochStart(props, string(entity.DomainPropertyUpdatedAt)),
+		AppSource:     utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyAppSource)),
+		Source:        entity.DecodeDataSource(utils.GetStringPropOrEmpty(props, string(entity.DomainPropertySource))),
+		Domain:        utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyDomain)),
+		IsPrimary:     utils.GetBoolPropOrNil(props, string(entity.DomainPropertyIsPrimary)),
+		PrimaryDomain: utils.GetStringPropOrEmpty(props, string(entity.DomainPropertyPrimaryDomain)),
+		InternalFields: entity.DomainInternalFields{
+			PrimaryDomainCheckRequestedAt: utils.GetTimePropOrNil(props, string(entity.DomainPropertyPrimaryDomainCheckRequestedAt)),
+		},
 	}
 	return &domain
 }

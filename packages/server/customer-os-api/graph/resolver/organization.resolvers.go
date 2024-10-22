@@ -462,7 +462,7 @@ func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, org
 	}
 	outputOrganization := mapper.MapEntityToOrganization(organizationEntity)
 
-	domainEntities, err := r.Services.CommonServices.DomainService.GetDomainsForOrganizations(ctx, []string{organizationID})
+	domainEntities, err := r.Services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{organizationID})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		graphql.AddErrorf(ctx, "Failed to get domains for organization %s", organizationID)

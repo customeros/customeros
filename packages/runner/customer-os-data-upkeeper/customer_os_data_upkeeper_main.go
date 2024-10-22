@@ -69,10 +69,12 @@ func main() {
 	eventBufferStoreService := eventbuffer.NewEventBufferStoreService(repositories.PostgresRepositories.EventBufferRepository, appLogger)
 
 	cntnr := &container.Container{
-		Cfg:                           cfg,
-		Log:                           appLogger,
-		Repositories:                  repositories,
-		CommonServices:                commonService.InitServices(&commconf.GlobalConfig{}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient, appLogger),
+		Cfg:          cfg,
+		Log:          appLogger,
+		Repositories: repositories,
+		CommonServices: commonService.InitServices(&commconf.GlobalConfig{
+			RabbitMQConfig: &cfg.RabbitMQConfig,
+		}, postgresDb.GormDB, &neo4jDriver, cfg.Neo4j.Database, epClient, appLogger),
 		EventProcessingServicesClient: epClient,
 		CustomerOSApiClient:           cosClient.NewCustomerOsClient(cfg.CustomerOS.CustomerOsAPI, cfg.CustomerOS.CustomerOsAPIKey),
 		EventBufferStoreService:       eventBufferStoreService,

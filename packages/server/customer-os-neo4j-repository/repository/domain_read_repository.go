@@ -14,11 +14,45 @@ import (
 type DomainReadRepository interface {
 	GetDomain(ctx context.Context, domain string) (*dbtype.Node, error)
 	GetForOrganizations(ctx context.Context, tenant string, organizationIds []string) ([]*utils.DbNodeAndId, error)
+	GetDomainsForPrimaryCheck(ctx context.Context, delayFromPreviousCheckInDays, limit int) ([]string, error)
 }
 
 type domainReadRepository struct {
 	driver   *neo4j.DriverWithContext
 	database string
+}
+
+func (r *domainReadRepository) GetDomainsForPrimaryCheck(ctx context.Context, delayFromPreviousCheckInDays, limit int) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainReadRepository.GetDomainsForPrimaryCheck")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+	span.LogFields(log.Int("delayFromPreviousCheckInDays", delayFromPreviousCheckInDays), log.Int("limit", limit))
+
+	cypher := `MATCH (d:Domain)
+		WHERE d.lastPrimaryCheckAt IS NULL OR d.techPrimaryDomainCheckRequestedAt < datetime() - duration({days:$delayFromPreviousCheckInDays})
+		RETURN d.domain AS domain
+		ORDER BY CASE WHEN d.techPrimaryDomainCheckRequestedAt IS NULL THEN 0 ELSE 1 END, d.techPrimaryDomainCheckRequestedAt ASC
+				LIMIT $limit`
+	params := map[string]any{
+		"delayFromPreviousCheckInDays": delayFromPreviousCheckInDays,
+		"limit":                        limit,
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	domains, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+	})
+	if err != nil {
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(domains.([]string))))
+	return domains.([]string), err
 }
 
 func NewDomainReadRepository(driver *neo4j.DriverWithContext, database string) DomainReadRepository {

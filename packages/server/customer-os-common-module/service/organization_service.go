@@ -68,6 +68,27 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	var err error
 	var existing *neo4jentity.OrganizationEntity
 
+	// prepare domains in advance
+	for _, domain := range input.Domains {
+		err = s.services.DomainService.MergeDomain(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
+		}
+	}
+	primaryDomainFromWebsite := ""
+	if input.UpdateWebsite && input.Website != "" {
+		domain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
+		err = s.services.DomainService.MergeDomain(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
+		}
+		domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain"))
+		}
+		primaryDomainFromWebsite = domainEntity.PrimaryDomain
+	}
+
 	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
 	if organizationId == nil {
 		domains := input.Domains
@@ -161,8 +182,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		organizationId = &generatedId
 	}
 
-	domainForEnrich := ""
-
+	newDomains := make([]string, 0)
 	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, &tx, tenant, *organizationId, *input)
@@ -185,8 +205,15 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 				tracing.TraceErr(span, err)
 				return nil, err
 			}
-			if domain != "" && domainForEnrich == "" {
-				domainForEnrich = domain
+			if domain != "" {
+				newDomains = append(newDomains, domain)
+				if primaryDomainFromWebsite != "" {
+					newDomains = append(newDomains, primaryDomainFromWebsite)
+					err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, &tx, tenant, *organizationId, domain)
+					if err != nil {
+						tracing.TraceErr(span, err)
+					}
+				}
 			}
 		}
 
@@ -197,9 +224,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 					tracing.TraceErr(span, err)
 					return nil, err
 				}
-				if domainForEnrich == "" {
-					domainForEnrich = domain
-				}
+				newDomains = append(newDomains, domain)
 			}
 		}
 
@@ -249,16 +274,29 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		utils.EventCompleted(ctx, tenant, commonModel.ORGANIZATION.String(), *organizationId, s.services.GrpcClients, details)
 	}
 
-	// request organization enriching by domain event
-	if domainForEnrich != "" {
+	// select primary domain from new domains
+	newDomains = utils.RemoveEmpties(newDomains)
+	newDomains = utils.RemoveDuplicates(newDomains)
+	primaryDomain := ""
+	for _, domain := range newDomains {
+		domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
+		if err != nil {
+			tracing.TraceErr(span, err)
+		} else if domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
+			primaryDomain = domain
+			break
+		}
+	}
+
+	if primaryDomain != "" {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.services.GrpcClients.OrganizationClient.EnrichOrganization(ctx, &organizationpb.EnrichOrganizationGrpcRequest{
 				Tenant:         tenant,
 				OrganizationId: *organizationId,
-				Url:            domainForEnrich,
 				LoggedInUserId: common.GetUserIdFromContext(ctx),
 				AppSource:      input.SourceFields.AppSource,
+				Url:            primaryDomain,
 			})
 		})
 		if err != nil {
