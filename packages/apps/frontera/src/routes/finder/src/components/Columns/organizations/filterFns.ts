@@ -68,7 +68,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       (filter) => (row: OrganizationStore) => {
         if (!filter.active) return true;
 
-        const values = row.value.name.toLowerCase();
+        const values = row.value.name?.toLowerCase();
 
         return filterTypeText(filter, values);
       },
@@ -79,7 +79,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         if (!filter.active) return true;
 
         const values =
-          row.value.parentCompanies?.[0]?.organization.name.toLowerCase();
+          row.value.parentCompanies?.[0]?.organization.name?.toLowerCase();
 
         return filterTypeText(filter, values);
       },
@@ -395,7 +395,7 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
 };
 
 const filterTypeText = (filter: FilterItem, value: string | undefined) => {
-  const filterValue = filter?.value.toLowerCase();
+  const filterValue = filter?.value?.toLowerCase();
   const filterOperator = filter?.operation;
   const valueLower = value?.toLowerCase();
 
@@ -520,7 +520,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const filterValue = filter?.value?.toLowerCase();
         const filterOperator = filter?.operation;
 
-        const values = row.value.name.toLowerCase();
+        const values = row.value.name?.toLowerCase();
 
         if (
           filter.includeEmpty &&
@@ -550,7 +550,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
         const filterOperator = filter?.operation;
 
         const values =
-          row.value.parentCompanies?.[0]?.organization.name.toLowerCase();
+          row.value.parentCompanies?.[0]?.organization.name?.toLowerCase();
 
         if (
           filter.includeEmpty &&
@@ -586,7 +586,7 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
           return !filter.includeEmpty;
         }
 
-        return websiteUrl.toLowerCase().includes(filterText.toLowerCase());
+        return websiteUrl?.toLowerCase().includes(filterText?.toLowerCase());
       },
     )
     .with(
