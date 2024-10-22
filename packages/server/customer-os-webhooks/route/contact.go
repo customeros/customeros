@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
@@ -47,7 +47,10 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
 			return
 		}
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceCustomerOsWebhooks,
+		})
 
 		// Limit the size of the request body
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeCommon)
@@ -74,7 +77,7 @@ func syncContactsHandler(services *service.Services, log logger.Logger) gin.Hand
 		}
 
 		// Context timeout, allocate per contact
-		timeout := time.Duration(len(contacts)) * common.Min5Duration
+		timeout := time.Duration(len(contacts)) * constants.Duration5Min
 		if timeout > constants.RequestMaxTimeout {
 			timeout = constants.RequestMaxTimeout
 		}
@@ -129,7 +132,7 @@ func syncContactHandler(services *service.Services, log logger.Logger) gin.Handl
 		}
 
 		// Context timeout, allocate per contact
-		ctx, cancel := context.WithTimeout(ctx, common.Min5Duration)
+		ctx, cancel := context.WithTimeout(ctx, constants.Duration5Min)
 		defer cancel()
 
 		syncResult, err := services.ContactService.SyncContacts(ctx, []model.ContactData{contact})
@@ -180,7 +183,7 @@ func syncBetterContactResponse(cfg *config.Config, services *service.Services, l
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
+		ctx, cancel := context.WithTimeout(ctx, constants.Duration1Min)
 		defer cancel()
 
 		err = services.CommonServices.PostgresRepositories.EnrichDetailsBetterContactRepository.AddResponse(ctx, betterContactResponse.Id, string(requestBody))

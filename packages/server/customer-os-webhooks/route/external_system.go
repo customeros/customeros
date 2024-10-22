@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"github.com/gin-gonic/gin"
 	commoncaches "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/model"
@@ -35,7 +35,10 @@ func syncExternalSystemHandler(services *service.Services, log logger.Logger) gi
 			c.JSON(http.StatusBadRequest, gin.H{"error": "Missing or empty tenant header"})
 			return
 		}
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{Tenant: tenant})
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    tenant,
+			AppSource: constants.AppSourceCustomerOsWebhooks,
+		})
 
 		// Limit the size of the request body
 		c.Request.Body = http.MaxBytesReader(c.Writer, c.Request.Body, constants.RequestMaxBodySizeMessages)
@@ -56,7 +59,7 @@ func syncExternalSystemHandler(services *service.Services, log logger.Logger) gi
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
+		ctx, cancel := context.WithTimeout(ctx, constants.Duration1Min)
 		defer cancel()
 
 		syncResult, err := services.ExternalSystemService.SyncExternalSystem(ctx, externalSystemData)

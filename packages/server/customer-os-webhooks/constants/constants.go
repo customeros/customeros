@@ -6,6 +6,9 @@ const (
 	ServiceName                 = "CUSTOMER-OS-WEBHOOKS"
 	AppSourceCustomerOsWebhooks = "customer-os-webhooks"
 
+	Duration1Min = 1 * time.Minute
+	Duration5Min = 5 * time.Minute
+
 	ComponentService = "service"
 	// Deprecated, all methods with this constants should be deprecated
 	ComponentNeo4jRepository = "neo4jRepository"
