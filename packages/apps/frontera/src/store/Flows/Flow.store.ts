@@ -64,8 +64,14 @@ export class FlowStore implements Store<Flow> {
           id: this.id,
           status: this.value.status as FlowStatus,
         });
+
+        // we need to send Active status to start the flow but the actual status immediately after activation is always scheduling
+        if (this.value.status === FlowStatus.Active) {
+          this.value.status = FlowStatus.Scheduling;
+        }
       })
       .with(['name', ...P.array()], () => {
+        // todo COS-5311 - use another mutation to not update nodes and edges when updating the name
         this.updateFlow({ nodes: this.value.nodes, edges: this.value.edges });
       });
   }
@@ -146,7 +152,7 @@ export class FlowStore implements Store<Flow> {
   }
 
   invalidate() {
-    // todo
+    // todo COS-4820
     return Promise.resolve();
   }
 

@@ -28,6 +28,8 @@ export const nodes = [
     with: (node: TextNode) => new ExtendedTextNode(node.__text),
     withKlass: ExtendedTextNode,
   },
+
+  // TODO remove it from usages - replace with default QuoteNode COS-5321
   {
     replace: QuoteNode,
     with: () => new ExtendedQuoteNode(),

@@ -2,17 +2,22 @@ import * as React from 'react';
 import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useCallback } from 'react';
 
-import { $findMatchingParent } from '@lexical/utils';
 import { offset, computePosition } from '@floating-ui/dom';
-import { $isLinkNode, $toggleLink, $createLinkNode } from '@lexical/link';
+import { mergeRegister, $findMatchingParent } from '@lexical/utils';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
+import {
+  $isLinkNode,
+  $toggleLink,
+  $createLinkNode,
+  $isAutoLinkNode,
+} from '@lexical/link';
 import {
   $getSelection,
   CLICK_COMMAND,
   $createTextNode,
+  $isLineBreakNode,
   $isRangeSelection,
-  COMMAND_PRIORITY_HIGH,
-  COMMAND_PRIORITY_NORMAL,
+  COMMAND_PRIORITY_LOW,
   SELECTION_CHANGE_COMMAND,
 } from 'lexical';
 
@@ -42,6 +47,7 @@ export function FloatingLinkEditor({
 }: FloatingLinkEditorComponentProps) {
   const [linkUrl, setLinkUrl] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     editor.getEditorState().read(() => {
@@ -60,12 +66,6 @@ export function FloatingLinkEditor({
     });
   }, [editor, isLink]);
 
-  useEffect(() => {
-    if (isLink && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isLink]);
-
   const handleLinkSubmission = useCallback(() => {
     editor.update(() => {
       const selection = $getSelection();
@@ -76,14 +76,9 @@ export function FloatingLinkEditor({
 
         if (linkUrl.trim() === '') {
           if ($isLinkNode(parent)) {
-            const children = parent.getChildren();
-
-            for (const child of children) {
-              parent.insertBefore(child);
-            }
-            parent.remove();
+            $toggleLink(null);
           } else if ($isLinkNode(node)) {
-            node.remove();
+            $toggleLink(null);
           }
         } else {
           let linkNode;
@@ -99,7 +94,7 @@ export function FloatingLinkEditor({
             selection.insertNodes([linkNode]);
           }
 
-          const spaceNode = $createTextNode(' ');
+          const spaceNode = $createTextNode('');
 
           linkNode.insertAfter(spaceNode);
           spaceNode.select(0, 0);
@@ -108,6 +103,7 @@ export function FloatingLinkEditor({
         setIsLink(false);
       }
     });
+
     setIsLink(false);
   }, [editor, linkUrl, setIsLink]);
 
@@ -117,46 +113,96 @@ export function FloatingLinkEditor({
 
       if ($isRangeSelection(selection)) {
         $toggleLink(null);
-        setTimeout(() => {
-          setIsLink(false);
-        }, 0);
+        setIsLink(false);
       }
     });
   }, [editor, setIsLink]);
 
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        editorRef.current &&
+        !editorRef.current.contains(event.target as Node)
+      ) {
+        // todo - this condition could be more sofisticated
+        if (linkUrl.trim().length || linkUrl !== 'https://') {
+          handleLinkSubmission();
+        } else {
+          handleDeleteLink();
+        }
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isLink, handleLinkSubmission]);
+
+  const monitorInputInteraction = (
+    event: React.KeyboardEvent<HTMLInputElement>,
+  ) => {
+    if (event.key === 'Enter') {
+      event.preventDefault();
+      handleLinkSubmission();
+      setIsLink(false);
+    } else if (event.key === 'Escape') {
+      event.preventDefault();
+      setIsLink(false);
+    }
+  };
+
   return (
-    <div className='bg-gray-700 flex items-center min-w-[auto] max-w-[800px] p-1 pl-3 shadow-lg rounded-md'>
+    <div
+      ref={editorRef}
+      className='bg-gray-700 flex items-center min-w-[auto] max-w-[800px] p-1 pl-3 shadow-lg rounded-md'
+    >
       <Input
         size='sm'
         ref={inputRef}
         value={linkUrl}
         variant='unstyled'
         placeholder='Enter a URL'
+        onMouseDown={(event) => event.stopPropagation()}
         onChange={(event) => setLinkUrl(event.target.value)}
-        className='leading-none min-h-0 pointer-events-auto text-gray-25 overflow-ellipsis'
         onKeyDown={(event) => {
-          if (event.key === 'Enter') {
-            event.preventDefault();
-            handleLinkSubmission();
-          }
+          monitorInputInteraction(event);
+        }}
+        className='leading-none min-h-0 pointer-events-auto text-gray-25 overflow-ellipsis'
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          inputRef?.current?.focus();
         }}
       />
 
       <Divider className='w-[1px] h-3 border-b-0 border-l-[1px] border-gray-500 mx-2' />
 
-      <FloatingToolbarButton
-        aria-label='Open link'
-        icon={<LinkExternal02 className='text-inherit' />}
-        onClick={() => {
-          const link = getExternalUrl(sanitizeUrl(linkUrl));
+      {!!linkUrl.trim().length && linkUrl.trim() !== 'https://' && (
+        <FloatingToolbarButton
+          aria-label='Open link'
+          icon={<LinkExternal02 className='text-inherit' />}
+          onMouseDown={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          }}
+          onClick={() => {
+            const link = getExternalUrl(sanitizeUrl(linkUrl));
 
-          window.open(link, '_blank', 'noopener,noreferrer');
-        }}
-      />
+            window.open(link, '_blank', 'noopener,noreferrer');
+          }}
+        />
+      )}
+
       <FloatingToolbarButton
         aria-label='Delete link'
         onClick={handleDeleteLink}
         icon={<Trash01 className='text-inherit' />}
+        onMouseDown={(event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        }}
       />
     </div>
   );
@@ -176,18 +222,12 @@ export function FloatingLinkEditorPlugin({
   } | null>(null);
   const anchorRef = useRef<HTMLElement | null>(null);
   const { isPointerDown, isPointerReleased } = usePointerInteractions();
-  const closeTimeoutRef = useRef<number | null>(null);
 
   const updateMenuPosition = useCallback(() => {
     if (anchorRef.current && ref.current && !isPointerDown) {
       computePosition(anchorRef.current, ref.current, {
-        placement: 'top-start',
-        middleware: [
-          offset({
-            mainAxis: (anchorRef.current?.offsetHeight ?? 0) + 18,
-            crossAxis: 0,
-          }),
-        ],
+        placement: 'bottom-start',
+        middleware: [offset(8)],
       }).then(({ x, y }) => {
         setMenuPosition({ top: y, left: x });
       });
@@ -197,7 +237,10 @@ export function FloatingLinkEditorPlugin({
   const $handleSelectionChange = useCallback(() => {
     if (editor.isComposing()) return false;
 
-    if (editor.getRootElement() !== document.activeElement) {
+    if (
+      editor.getRootElement() !== document.activeElement ||
+      !isPointerReleased
+    ) {
       setMenuPosition(null);
 
       return false;
@@ -236,142 +279,115 @@ export function FloatingLinkEditorPlugin({
       setMenuPosition(null);
     }
 
-    return false;
+    return true;
   }, [editor, updateMenuPosition]);
 
   useEffect(() => {
-    return editor.registerCommand(
-      SELECTION_CHANGE_COMMAND,
-      $handleSelectionChange,
-      COMMAND_PRIORITY_HIGH,
+    return mergeRegister(
+      editor.registerUpdateListener(({ editorState }) => {
+        editorState.read(() => {
+          $handleSelectionChange();
+        });
+      }),
+      editor.registerCommand(
+        SELECTION_CHANGE_COMMAND,
+        $handleSelectionChange,
+        COMMAND_PRIORITY_LOW,
+      ),
     );
   }, [editor, $handleSelectionChange]);
 
   useEffect(() => {
-    if (!isLink && isPointerReleased) {
-      editor.getEditorState().read(() => {
-        $handleSelectionChange();
-      });
-    }
-  }, [isPointerReleased, $handleSelectionChange, editor, isLink]);
+    function $updateToolbar() {
+      const selection = $getSelection();
 
-  const closeMenu = useCallback(() => {
-    if (closeTimeoutRef.current === null) {
-      closeTimeoutRef.current = window.setTimeout(() => {
-        setIsLink(false);
-        setMenuPosition(null);
-        closeTimeoutRef.current = null;
-      }, 100);
-    }
-  }, []);
+      if ($isRangeSelection(selection)) {
+        const focusNode = getSelectedNode(selection);
+        const focusLinkNode = $findMatchingParent(focusNode, $isLinkNode);
+        const focusAutoLinkNode = $findMatchingParent(
+          focusNode,
+          $isAutoLinkNode,
+        );
 
-  useEffect(() => {
-    return editor.registerCommand(
-      CLICK_COMMAND,
-      () => {
-        if (isLink) {
-          return true;
+        if (!(focusLinkNode || focusAutoLinkNode)) {
+          setIsLink(false);
+
+          return;
         }
-        const selection = $getSelection();
+        const badNode = selection
+          .getNodes()
+          .filter((node) => !$isLineBreakNode(node))
+          .find((node) => {
+            const linkNode = $findMatchingParent(node, $isLinkNode);
+            const autoLinkNode = $findMatchingParent(node, $isAutoLinkNode);
 
-        if ($isRangeSelection(selection)) {
-          const node = getSelectedNode(selection);
-          const linkNode = $findMatchingParent(node, $isLinkNode);
+            return (
+              (focusLinkNode && !focusLinkNode.is(linkNode)) ||
+              (linkNode && !linkNode.is(focusLinkNode)) ||
+              (focusAutoLinkNode && !focusAutoLinkNode.is(autoLinkNode))
+            );
+          });
 
-          linkNode?.select(0, linkNode?.getTextContentSize());
+        if (!badNode) {
+          setIsLink(true);
+        } else {
+          setIsLink(false);
         }
+      }
+    }
 
-        return false;
-      },
-      COMMAND_PRIORITY_NORMAL,
+    return mergeRegister(
+      editor.registerUpdateListener(({ editorState }) => {
+        editorState.read(() => {
+          $updateToolbar();
+        });
+      }),
+
+      editor.registerCommand(
+        CLICK_COMMAND,
+        (payload) => {
+          const selection = $getSelection();
+
+          if ($isRangeSelection(selection)) {
+            const node = getSelectedNode(selection);
+            const linkNode = $findMatchingParent(node, $isLinkNode);
+
+            if ($isLinkNode(linkNode) && (payload.metaKey || payload.ctrlKey)) {
+              window.open(linkNode.getURL(), '_blank');
+
+              return true;
+            }
+          }
+
+          return false;
+        },
+        COMMAND_PRIORITY_LOW,
+      ),
     );
   }, [editor]);
-  useEffect(() => {
-    const rootElement = editor.getRootElement();
 
-    if (!rootElement) {
-      return;
-    }
-
-    const handleDoubleClick = (event: MouseEvent) => {
-      event.preventDefault();
-
-      editor.update(() => {
-        const selection = $getSelection();
-
-        if ($isRangeSelection(selection)) {
-          const node = getSelectedNode(selection);
-          const linkNode = $findMatchingParent(node, $isLinkNode);
-
-          if (linkNode) {
-            linkNode.select(0, linkNode.getTextContentSize());
-            setIsLink(true);
-            updateMenuPosition();
-          }
-        }
-      });
-    };
-
-    rootElement.addEventListener('dblclick', handleDoubleClick);
-
-    return () => {
-      rootElement.removeEventListener('dblclick', handleDoubleClick);
-    };
-  }, [editor, updateMenuPosition]);
-  useEffect(() => {
-    if (!isLink && isPointerReleased) {
-      editor.getEditorState().read(() => {
-        $handleSelectionChange();
-      });
-    }
-  }, [isPointerReleased, $handleSelectionChange, editor, isLink]);
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        ref.current &&
-        !ref.current.contains(event.target as Node) &&
-        anchorRef.current &&
-        !anchorRef.current.contains(event.target as Node)
-      ) {
-        closeMenu();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [closeMenu]);
-
-  return (
-    <>
-      {isLink &&
-        createPortal(
-          <div
-            ref={ref}
-            tabIndex={-1}
-            aria-hidden={!isLink}
-            style={{
-              position: 'absolute',
-              top: menuPosition?.top ?? 0,
-              left: menuPosition?.left ?? 0,
-              visibility: isLink && menuPosition ? 'visible' : 'hidden',
-              opacity: isLink && menuPosition ? 1 : 0,
-              pointerEvents: 'all',
-            }}
-          >
-            {isLink && menuPosition && (
-              <FloatingLinkEditor
-                editor={editor}
-                isLink={isLink}
-                setIsLink={setIsLink}
-              />
-            )}
-          </div>,
-          anchorElem,
-        )}
-    </>
+  return createPortal(
+    <div
+      ref={ref}
+      aria-hidden={!isLink}
+      style={{
+        position: 'absolute',
+        top: menuPosition?.top ?? 0,
+        left: menuPosition?.left ?? 0,
+        visibility: isLink && menuPosition ? 'visible' : 'hidden',
+        opacity: isLink && menuPosition ? 1 : 0,
+        pointerEvents: 'all',
+      }}
+    >
+      {isLink && menuPosition && (
+        <FloatingLinkEditor
+          isLink={isLink}
+          editor={editor}
+          setIsLink={setIsLink}
+        />
+      )}
+    </div>,
+    anchorElem,
   );
 }
 export default FloatingLinkEditorPlugin;

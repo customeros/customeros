@@ -200,7 +200,7 @@ export const FlowBuilder = observer(
         const nodesToDelete = [...deleted];
 
         // Check for EMAIL nodes and find preceding WAIT nodes, because of how wait node works we need to remove those together
-        nodesToDelete.forEach((node) => {
+        deleted.forEach((node) => {
           if (
             node.data.action === FlowActionType.EMAIL_NEW ||
             node.data.action === FlowActionType.EMAIL_REPLY
@@ -347,6 +347,7 @@ export const FlowBuilder = observer(
             maxZoom: 5,
           }}
           onClick={() => {
+            // this behaves as click outside
             if (ui.flowCommandMenu.isOpen) {
               ui.flowCommandMenu.setOpen(false);
             }
