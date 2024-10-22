@@ -263,6 +263,7 @@ export const AboutPanel = observer(() => {
           }}
         />
         <Tags
+          dataTest='org-about-tags'
           className='min-h-10 py-2'
           inputPlaceholder='Search...'
           onCreate={handleCreateOption}

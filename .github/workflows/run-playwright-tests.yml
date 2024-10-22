@@ -105,7 +105,7 @@ jobs:
               TEST_NAME=$(echo "$line" | sed 's/.*❌[^:]*: //')
               echo "Creating issue for test: $TEST_NAME"
           
-              JSON_DATA="{\"query\":\"mutation IssueCreate(\$input: IssueCreateInput!) { issueCreate(input: \$input) { success issue { id title identifier url } } }\",\"variables\":{\"input\":{\"title\":\"$TEST_NAME\",\"description\":\"$TEST_NAME\",\"teamId\":\"$LINEAR_PRODUCT_TEAMID\",\"labelIds\":[\"$LINEAR_LABEL_BUG\"],\"assigneeId\":\"$LINEAR_USER_SILVIU\"}}}"
+              JSON_DATA="{\"query\":\"mutation IssueCreate(\$input: IssueCreateInput!) { issueCreate(input: \$input) { success issue { id title identifier url } } }\",\"variables\":{\"input\":{\"title\":\"[Playwright] $TEST_NAME\",\"description\":\"$TEST_NAME\",\"teamId\":\"$LINEAR_PRODUCT_TEAMID\",\"labelIds\":[\"$LINEAR_LABEL_BUG\"],\"assigneeId\":\"$LINEAR_USER_SILVIU\"}}}"
           
               echo "Sending request to Linear API..."
               RESPONSE=$(curl -s \
