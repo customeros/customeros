@@ -123,6 +123,18 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 
+	// check if domain is primary
+	domainEntity, err := h.services.CommonServices.DomainService.GetDomain(ctx, domain)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get domain"))
+		h.log.Errorf("Error getting domain %s: %s", domain, err.Error())
+		return nil
+	}
+	if domainEntity.IsPrimary == nil || !*domainEntity.IsPrimary {
+		h.log.Infof("Domain %s is not primary", domain)
+		return nil
+	}
+
 	organizationDbNode, err := h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganization(ctx, tenant, organizationId)
 	if err != nil {
 		tracing.TraceErr(span, err)
@@ -137,7 +149,7 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 	}
 
 	// create domain node if not exist
-	err = h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers, utils.Now())
+	err = h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		h.log.Errorf("Error creating domain node: %v", err)

@@ -73,4 +73,7 @@ type Config struct {
 
 	CronScheduleSendEmails        string `env:"CRON_SCHEDULE_SEND_EMAILS" envDefault:"*/5 * * * * *"`
 	CronScheduleProcessSentEmails string `env:"CRON_SCHEDULE_PROCESS_SENT_EMAILS" envDefault:"*/5 * * * * *"`
+
+	// Domains
+	CronScheduleCheckDomains string `env:"CRON_SCHEDULE_CHECK_DOMAINS" envDefault:"0 */10 * * * *"`
 }

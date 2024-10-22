@@ -276,7 +276,7 @@ func GetOrganization(services *service.Services) gin.HandlerFunc {
 
 		// Fetch domains associated with the organization
 		partialSuccess := false
-		domainEntities, err := services.CommonServices.DomainService.GetDomainsForOrganizations(ctx, []string{organizationEntity.ID})
+		domainEntities, err := services.CommonServices.DomainService.GetAllDomainsForOrganizations(ctx, []string{organizationEntity.ID})
 		if err != nil {
 			partialSuccess = true
 			tracing.TraceErr(span, errors.Wrap(err, "Failed to retrieve domains"))

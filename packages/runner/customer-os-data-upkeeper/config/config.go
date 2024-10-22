@@ -18,6 +18,7 @@ type Config struct {
 	Jaeger           tracing.JaegerConfig
 	Cron             cronconf.Config
 	GrpcClientConfig commconf.GrpcClientConfig
+	RabbitMQConfig   commconf.RabbitMQConfig
 	CustomerOS       struct {
 		CustomerOsAPI    string `env:"CUSTOMER_OS_API,required"`
 		CustomerOsAPIKey string `env:"CUSTOMER_OS_API_KEY,required"`
