@@ -610,11 +610,7 @@ func (s *trackingService) notifyOnSlack(c context.Context, r *entity.Tracking) e
 		organizationName = "Unknown"
 	}
 
-	if snitcherDataResponse.Company != nil && snitcherDataResponse.HasLocation() {
-		organizationLocation = snitcherDataResponse.LocationToString()
-	} else {
-		organizationLocation = "Unknown"
-	}
+	organizationLocation = snitcherDataResponse.LocationToString()
 
 	if snitcherDataResponse.Company != nil && snitcherDataResponse.Company.Website != "" {
 		t := strings.Replace(snitcherDataResponse.Company.Website, "https://", "", -1)
