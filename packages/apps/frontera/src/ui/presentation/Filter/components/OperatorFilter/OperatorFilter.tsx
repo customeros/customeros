@@ -64,7 +64,11 @@ export const OperatorFilter = ({
           </Button>
         )}
       </MenuButton>
-      <MenuList side='bottom' align='start'>
+      <MenuList
+        side='bottom'
+        align='start'
+        onKeyDown={(e) => e.stopPropagation()}
+      >
         {operators?.map((operator) => (
           <MenuItem
             key={operator}
