@@ -208,11 +208,12 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			if domain != "" {
 				newDomains = append(newDomains, domain)
 				if primaryDomainFromWebsite != "" {
-					newDomains = append(newDomains, primaryDomainFromWebsite)
-					err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, &tx, tenant, *organizationId, domain)
+					primaryAddedDomain, err := s.AddDomainFromWebsite(ctx, &tx, tenant, *organizationId, primaryDomainFromWebsite)
 					if err != nil {
 						tracing.TraceErr(span, err)
+						return nil, err
 					}
+					newDomains = append(newDomains, primaryAddedDomain)
 				}
 			}
 		}
