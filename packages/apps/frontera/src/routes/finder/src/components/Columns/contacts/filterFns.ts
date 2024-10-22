@@ -1,5 +1,6 @@
 import { match } from 'ts-pattern';
 import { FilterItem } from '@store/types.ts';
+import { isAfter, isBefore } from 'date-fns';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { EmailVerificationStatus } from '@finder/components/Columns/contacts/Filters/Email/utils.ts';
 
@@ -257,6 +258,17 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       };
     })
 
+    .with({ property: ColumnViewType.ContactsTimeInCurrentRole }, (filter) => {
+      if (!filter.active) return () => true;
+
+      return (row: ContactStore) => {
+        const timeInCurrentRole =
+          row.value?.latestOrganizationWithJobRole?.jobRole.startedAt;
+
+        return filterTypeDate(filter, timeInCurrentRole);
+      };
+    })
+
     .with(
       { property: 'EMAIL_VERIFICATION_PRIMARY_EMAIL' },
       (filter) => (row: ContactStore) => {
@@ -391,6 +403,23 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
       () => value?.length && value.some((v) => filterValue?.includes(v)),
     )
     .otherwise(() => false);
+};
+
+const filterTypeDate = (filter: FilterItem, value: string | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  if (!value) return false;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.Lt, () =>
+      isBefore(new Date(value), new Date(filterValue)),
+    )
+    .with(ComparisonOperator.Gt, () =>
+      isAfter(new Date(value), new Date(filterValue)),
+    )
+
+    .otherwise(() => true);
 };
 
 const getFilterFn = (filter: FilterItem | undefined | null) => {
@@ -714,13 +743,11 @@ function isNotDeliverable(
   statuses: EmailVerificationStatus[],
   data: EmailValidationDetails,
 ): boolean {
-  if (data?.deliverable !== EmailDeliverable.Undeliverable || !data.verified)
-    return false;
-
   if (!statuses.length && data.deliverable && data.verified) return true;
 
   const statusChecks: Record<string, () => boolean> = {
-    [EmailVerificationStatus.InvalidMailbox]: () => !data.canConnectSmtp,
+    [EmailVerificationStatus.InvalidMailbox]: () =>
+      !data.canConnectSmtp || data.deliverable !== EmailDeliverable.Deliverable,
     [EmailVerificationStatus.MailboxFull]: () => !!data?.isMailboxFull,
     [EmailVerificationStatus.IncorrectFormat]: () => !data.isValidSyntax,
   };
@@ -787,13 +814,12 @@ function isNotDeliverableV2(
   statuses: string,
   data: EmailValidationDetails,
 ): boolean {
-  if (data?.deliverable !== EmailDeliverable.Undeliverable || !data.verified)
-    return false;
-
   if (!statuses?.length && data?.deliverable && data?.verified) return true;
 
   const statusChecks: Record<string, () => boolean> = {
-    [EmailVerificationStatus.InvalidMailbox]: () => !data.canConnectSmtp,
+    [EmailVerificationStatus.InvalidMailbox]: () =>
+      !data.canConnectSmtp || data.deliverable !== EmailDeliverable.Deliverable,
+
     [EmailVerificationStatus.MailboxFull]: () => !!data?.isMailboxFull,
     [EmailVerificationStatus.IncorrectFormat]: () => !data.isValidSyntax,
   };

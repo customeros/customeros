@@ -130,7 +130,9 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
           <Fragment key={email.id}>
             <div className=' flex items-center justify-between '>
               <div key={email.id} className='flex items-center gap-1 '>
-                <span className='text-sm'>{email.email}</span>
+                <span className='text-sm max-w-[170px] text-ellipsis overflow-hidden'>
+                  {email.email}
+                </span>
                 {isPrimaryEmail?.id === email.id && (
                   <span className='text-gray-500 text-sm'> • Primary</span>
                 )}

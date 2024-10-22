@@ -10,13 +10,7 @@ import { DateTimeUtils } from '@utils/date.ts';
 import { createColumnHelper } from '@ui/presentation/Table';
 import { Skeleton } from '@ui/feedback/Skeleton/Skeleton.tsx';
 import THead, { getTHeadProps } from '@ui/presentation/Table/THead';
-import {
-  User,
-  Social,
-  JobRole,
-  TableViewDef,
-  ColumnViewType,
-} from '@graphql/types';
+import { User, Social, TableViewDef, ColumnViewType } from '@graphql/types';
 
 import { EmailCell } from './Cells/email';
 import { PhoneCell } from './Cells/phone';
@@ -387,9 +381,8 @@ const columns: Record<string, Column> = {
       enableColumnFilter: true,
       enableSorting: false,
       cell: (props) => {
-        const jobRole = props.getValue()?.find((role: JobRole) => {
-          return role?.endedAt !== null;
-        });
+        const jobRole =
+          props.row.original.value.latestOrganizationWithJobRole?.jobRole;
         const enrichedContact = props.row.original.value.enrichDetails;
 
         const enrichingStatus =

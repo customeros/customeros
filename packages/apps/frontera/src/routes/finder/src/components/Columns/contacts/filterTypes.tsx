@@ -221,15 +221,10 @@ export const getFilterTypes = (store?: RootStore) => {
       ),
     },
     [ColumnViewType.ContactsTimeInCurrentRole]: {
-      filterType: 'number',
+      filterType: 'date',
       filterName: 'Time in current role',
       filterAccesor: ColumnViewType.ContactsTimeInCurrentRole,
-      filterOperators: [
-        ComparisonOperator.Gt,
-        ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
-      ],
+      filterOperators: [ComparisonOperator.Gt, ComparisonOperator.Lt],
       icon: <ClockCheck className='group-hover:text-gray-700 text-gray-500' />,
     },
     [ColumnViewType.ContactsLinkedinFollowerCount]: {
