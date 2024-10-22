@@ -29,4 +29,5 @@ type Config struct {
 	Postgres         config.PostgresConfig
 	Neo4j            config.Neo4jConfig
 	Jaeger           tracing.JaegerConfig
+	RabbitMQConfig   config.RabbitMQConfig
 }

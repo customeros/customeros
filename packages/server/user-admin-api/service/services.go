@@ -31,7 +31,10 @@ func InitServices(cfg *config.Config, db *gorm.DB, driver *neo4j.DriverWithConte
 		CustomerOSApiClient: service.NewCustomerOsClient(cfg.CustomerOS.CustomerOsAPI, cfg.CustomerOS.CustomerOsAPIKey),
 	}
 
-	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{GoogleOAuthConfig: &cfg.GoogleOAuth}, db, driver, cfg.Neo4j.Database, grpcClients, appLogger)
+	services.CommonServices = commonService.InitServices(&commonConfig.GlobalConfig{
+		GoogleOAuthConfig: &cfg.GoogleOAuth,
+		RabbitMQConfig:    &cfg.RabbitMQConfig,
+	}, db, driver, cfg.Neo4j.Database, grpcClients, appLogger)
 	services.RegistrationService = NewRegistrationService(&services)
 
 	return &services
