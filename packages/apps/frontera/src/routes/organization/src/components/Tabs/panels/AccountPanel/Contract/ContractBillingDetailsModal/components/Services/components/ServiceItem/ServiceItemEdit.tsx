@@ -31,6 +31,24 @@ const inputClasses =
 const deleteButtonClasses =
   'border-none bg-transparent shadow-none text-gray-400 pr-3 pl-4 py-2 -mx-4 absolute -right-7 top-0 bottom-0 invisible group-hover:visible hover:bg-transparent';
 
+const formatPrice = (price: number | undefined): string => {
+  if (price === undefined || price === null) return '';
+
+  const priceStr = price.toString();
+
+  // If no decimal point, return as is
+  if (!priceStr.includes('.')) return priceStr;
+
+  const [whole, decimal] = priceStr.split('.');
+
+  // If decimal part exists and is single digit, add a zero
+  if (decimal && decimal.length === 1) {
+    return `${whole}.${decimal}0`;
+  }
+
+  return priceStr;
+};
+
 export const ServiceItemEdit = observer(
   ({
     service,
@@ -162,7 +180,7 @@ export const ServiceItemEdit = observer(
     const updatePrice = (price: string) => {
       service.updateTemp(
         // @ts-expect-error  we allow undefined during edition but on blur we still enforce value therefore this is false positive
-        (prev) => ({ ...prev, price: price ? parseFloat(price) : undefined }),
+        (prev) => ({ ...prev, price: price ? price : undefined }),
       );
     };
 
@@ -210,10 +228,9 @@ export const ServiceItemEdit = observer(
             className={inputClasses}
             onFocus={(e) => e.target.select()}
             value={service?.tempValue?.price?.toString() || ''}
-            onAccept={(_val, maskRef) => {
-              const unmaskedValue = maskRef._unmaskedValue;
-
-              updatePrice(unmaskedValue);
+            measureValue={formatPrice(service?.tempValue?.price) || ''}
+            onAccept={(val) => {
+              updatePrice(val);
             }}
             blocks={{
               num: {
