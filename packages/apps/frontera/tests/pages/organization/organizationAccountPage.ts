@@ -216,6 +216,7 @@ export class OrganizationAccountPage {
 
     // Type the note
     await editor.pressSequentially('Test Note!', { delay: 500 });
+    await editor.press('Tab');
 
     await Promise.all([requestPromise, responsePromise]);
 

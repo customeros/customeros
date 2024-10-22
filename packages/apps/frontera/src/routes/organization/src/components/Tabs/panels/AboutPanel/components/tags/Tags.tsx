@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 
 import { cn } from '@ui/utils/cn';
 import { Plus } from '@ui/media/icons/Plus';
@@ -12,6 +12,7 @@ import {
 } from '@ui/overlay/Popover/Popover';
 
 interface TagsProps {
+  dataTest?: string;
   className?: string;
   placeholder?: string;
   value: SelectOption[];
@@ -31,6 +32,7 @@ export const Tags = ({
   placeholder,
   leftAccessory,
   inputPlaceholder,
+  dataTest,
 }: TagsProps) => {
   const [inputValue, setInputValue] = useState('');
 
@@ -46,7 +48,10 @@ export const Tags = ({
     <Popover>
       <PopoverTrigger className={cn('flex items-center', className)}>
         {leftAccessory}
-        <div className='flex flex-wrap gap-1 w-fit items-center'>
+        <div
+          data-test={dataTest}
+          className='flex flex-wrap gap-1 w-fit items-center'
+        >
           {value.length ? (
             value.map((option) => (
               <Tag size={'md'} variant='subtle' key={option.value}>
