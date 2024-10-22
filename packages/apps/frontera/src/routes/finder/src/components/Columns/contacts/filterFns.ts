@@ -1,5 +1,6 @@
 import { match } from 'ts-pattern';
 import { FilterItem } from '@store/types.ts';
+import { isAfter, isBefore } from 'date-fns';
 import { ContactStore } from '@store/Contacts/Contact.store.ts';
 import { EmailVerificationStatus } from '@finder/components/Columns/contacts/Filters/Email/utils.ts';
 
@@ -80,18 +81,16 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
-      { property: ColumnViewType.ContactsEmails },
+      { property: ColumnViewType.ContactsPrimaryEmail },
       (filter) => (row: ContactStore) => {
         const filterValues = filter?.value;
 
         if (!filter.active) return true;
 
         if (!filterValues) return true;
-        const emails = row.value?.emails
-          .filter((e) => e.work)
-          .map((e) => e.email);
+        const emails = row.value.primaryEmail?.email;
 
-        return filterTypeText(filter, emails?.join(' '));
+        return filterTypeText(filter, emails ?? undefined);
       },
     )
 
@@ -258,79 +257,26 @@ const getFilterV2Fn = (filter: FilterItem | undefined | null) => {
         return filterTypeList(filter, flow?.split(' ') as string[]);
       };
     })
+
+    .with({ property: ColumnViewType.ContactsTimeInCurrentRole }, (filter) => {
+      if (!filter.active) return () => true;
+
+      return (row: ContactStore) => {
+        const timeInCurrentRole =
+          row.value?.latestOrganizationWithJobRole?.jobRole.startedAt;
+
+        return filterTypeDate(filter, timeInCurrentRole);
+      };
+    })
+
     .with(
-      { property: 'EMAIL_VERIFICATION_WORK_EMAIL' },
+      { property: 'EMAIL_VERIFICATION_PRIMARY_EMAIL' },
       (filter) => (row: ContactStore) => {
         if (!filter.active) return true;
 
         const filterValues = filter.value;
-        const email = row.value?.emails?.find((e) => e.work === true);
-        const emailValidationData = email?.emailValidationDetails;
-
-        if (emailValidationData === undefined) return false;
-
-        return match(filter.operation)
-          .with(ComparisonOperator.Contains, () =>
-            filterValues?.some(
-              (categoryFilter: { value: string; category: string }) =>
-                (categoryFilter.category === 'DELIVERABLE' &&
-                  isDeliverableV2(categoryFilter.value, emailValidationData)) ||
-                (categoryFilter.category === 'UNDELIVERABLE' &&
-                  isNotDeliverableV2(
-                    categoryFilter?.value,
-                    emailValidationData,
-                  )) ||
-                (categoryFilter.category === 'UNKNOWN' &&
-                  isDeliverableUnknownV2(
-                    categoryFilter.value,
-                    emailValidationData,
-                  )),
-            ),
-          )
-
-          .with(ComparisonOperator.NotContains, () =>
-            filterValues.some(
-              (categoryFilter: { value: string; category: string }) =>
-                !(
-                  categoryFilter.category === 'DELIVERABLE' &&
-                  isDeliverableV2(categoryFilter.value, emailValidationData)
-                ) &&
-                !(
-                  categoryFilter.category === 'UNDELIVERABLE' &&
-                  isNotDeliverableV2(categoryFilter.value, emailValidationData)
-                ) &&
-                !(
-                  categoryFilter.category === 'UNKNOWN' &&
-                  isDeliverableUnknownV2(
-                    categoryFilter.value,
-                    emailValidationData,
-                  )
-                ),
-            ),
-          )
-          .with(
-            ComparisonOperator.IsEmpty,
-            () =>
-              !emailValidationData ||
-              Object.keys(emailValidationData).length === 0,
-          )
-          .with(
-            ComparisonOperator.IsNotEmpty,
-            () =>
-              !!emailValidationData &&
-              Object.keys(emailValidationData).length > 1,
-          )
-          .otherwise(() => true);
-      },
-    )
-    .with(
-      { property: 'EMAIL_VERIFICATION_PERSONAL_EMAIL' },
-      (filter) => (row: ContactStore) => {
-        if (!filter.active) return true;
-
-        const filterValues = filter.value;
-        const email = row.value?.emails?.find((e) => e.work === false);
-        const emailValidationData = email?.emailValidationDetails;
+        const emailValidationData =
+          row.value.primaryEmail?.emailValidationDetails;
 
         if (emailValidationData === undefined) return false;
 
@@ -459,6 +405,23 @@ const filterTypeList = (filter: FilterItem, value: string[] | undefined) => {
     .otherwise(() => false);
 };
 
+const filterTypeDate = (filter: FilterItem, value: string | undefined) => {
+  const filterValue = filter?.value;
+  const filterOperator = filter?.operation;
+
+  if (!value) return false;
+
+  return match(filterOperator)
+    .with(ComparisonOperator.Lt, () =>
+      isBefore(new Date(value), new Date(filterValue)),
+    )
+    .with(ComparisonOperator.Gt, () =>
+      isAfter(new Date(value), new Date(filterValue)),
+    )
+
+    .otherwise(() => true);
+};
+
 const getFilterFn = (filter: FilterItem | undefined | null) => {
   const noop = (_row: ContactStore) => true;
 
@@ -535,34 +498,16 @@ const getFilterFn = (filter: FilterItem | undefined | null) => {
       },
     )
     .with(
-      { property: ColumnViewType.ContactsEmails },
+      { property: ColumnViewType.ContactsPrimaryEmail },
       (filter) => (row: ContactStore) => {
         const filterValues = filter?.value;
 
         if (!filter.active) return true;
 
         if (!filterValues) return true;
-        const emails = row.value?.emails
-          .filter((e) => e.work)
-          .map((e) => e.email);
+        const emails = row.value.primaryEmail?.email;
 
-        return emails?.some((e) => e?.includes(filterValues));
-      },
-    )
-
-    .with(
-      { property: ColumnViewType.ContactsPersonalEmails },
-      (filter) => (row: ContactStore) => {
-        const filterValues = filter?.value;
-
-        if (!filter.active) return true;
-
-        if (!filterValues) return true;
-        const emails = row.value?.emails
-          .filter((e) => !e.work)
-          .map((e) => e.email);
-
-        return emails?.some((e) => e?.includes(filterValues));
+        return emails?.includes(filterValues);
       },
     )
 
@@ -798,13 +743,11 @@ function isNotDeliverable(
   statuses: EmailVerificationStatus[],
   data: EmailValidationDetails,
 ): boolean {
-  if (data?.deliverable !== EmailDeliverable.Undeliverable || !data.verified)
-    return false;
-
   if (!statuses.length && data.deliverable && data.verified) return true;
 
   const statusChecks: Record<string, () => boolean> = {
-    [EmailVerificationStatus.InvalidMailbox]: () => !data.canConnectSmtp,
+    [EmailVerificationStatus.InvalidMailbox]: () =>
+      !data.canConnectSmtp || data.deliverable !== EmailDeliverable.Deliverable,
     [EmailVerificationStatus.MailboxFull]: () => !!data?.isMailboxFull,
     [EmailVerificationStatus.IncorrectFormat]: () => !data.isValidSyntax,
   };
@@ -871,13 +814,12 @@ function isNotDeliverableV2(
   statuses: string,
   data: EmailValidationDetails,
 ): boolean {
-  if (data?.deliverable !== EmailDeliverable.Undeliverable || !data.verified)
-    return false;
-
   if (!statuses?.length && data?.deliverable && data?.verified) return true;
 
   const statusChecks: Record<string, () => boolean> = {
-    [EmailVerificationStatus.InvalidMailbox]: () => !data.canConnectSmtp,
+    [EmailVerificationStatus.InvalidMailbox]: () =>
+      !data.canConnectSmtp || data.deliverable !== EmailDeliverable.Deliverable,
+
     [EmailVerificationStatus.MailboxFull]: () => !!data?.isMailboxFull,
     [EmailVerificationStatus.IncorrectFormat]: () => !data.isValidSyntax,
   };

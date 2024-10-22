@@ -24,7 +24,10 @@ export const EmailCell = observer(
     const [isHovered, setIsHovered] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
-    const oldEmail = useMemo(() => contactStore?.value?.emails?.[0]?.email, []);
+    const oldEmail = useMemo(
+      () => contactStore?.value?.primaryEmail?.email,
+      [],
+    );
 
     const enrichedContact = contactStore?.value.enrichDetails;
 
@@ -85,7 +88,7 @@ export const EmailCell = observer(
               ref={emailInputRef}
               placeholder='Email'
               onFocus={(e) => e.target.select()}
-              value={contactStore?.value?.emails?.[0]?.email ?? ''}
+              value={contactStore?.value?.primaryEmail?.email ?? ''}
               onBlur={() => {
                 contactStore?.updateEmail(oldEmail ?? '');
               }}

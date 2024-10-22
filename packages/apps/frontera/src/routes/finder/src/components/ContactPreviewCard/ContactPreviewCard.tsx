@@ -50,17 +50,20 @@ export const ContactPreviewCard = observer(() => {
 
   const fullName = contact?.name || 'Unnamed';
   const src = contact?.value?.profilePhotoUrl;
-  const activeCompany =
-    (contact?.value?.organizations?.content?.length ?? 1) - 1;
-  const company = contact?.value.organizations?.content?.[activeCompany]?.name;
 
-  const role = contact?.value.jobRoles?.[0]?.jobTitle;
+  const company =
+    contact?.value.latestOrganizationWithJobRole?.organization.name;
+
+  const role = contact?.value.latestOrganizationWithJobRole?.jobRole.jobTitle;
+
   const countryA3 = contact?.value.locations?.[0]?.countryCodeA3;
   const countryA2 = contact?.value.locations?.[0]?.countryCodeA2;
   const flag = flags[countryA2 || ''];
   const city = contact?.value.locations?.[0]?.locality;
   const timezone = city
-    ? cityTimezone.lookupViaCity(city)?.[0]?.timezone
+    ? cityTimezone.lookupViaCity(city).find((c) => {
+        return c.iso2 === contact.value.locations?.[0].countryCodeA2;
+      })?.timezone
     : null;
 
   const fromatedUrl = contact?.value?.socials?.[0]?.url.replace(
@@ -314,12 +317,14 @@ export const ContactPreviewCard = observer(() => {
                 {contact?.value?.connectedUsers?.[0]?.name || 'No one yet'}
               </span>
             </div>
-            <div className='bg-grayModern-50 w-full rounded-[4px] border-[1px] border-grayModern-100 px-2 py-1'>
-              <p className='text-sm text-center'>{`Last enriched on ${DateTimeUtils.format(
-                contact?.value.enrichDetails.enrichedAt,
-                DateTimeUtils.dateWithHourWithQomma,
-              )} `}</p>
-            </div>
+            {contact?.value?.enrichDetails.enrichedAt && (
+              <div className='bg-grayModern-50 w-full rounded-[4px] border-[1px] border-grayModern-100 px-2 py-1'>
+                <p className='text-sm text-center'>{`Last enriched on ${DateTimeUtils.format(
+                  contact?.value.enrichDetails.enrichedAt,
+                  DateTimeUtils.dateWithHourWithQomma,
+                )} `}</p>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -14,11 +14,8 @@ export type FilterType = {
   filterName: string;
   filterOperators: ComparisonOperator[];
   filterType: 'text' | 'date' | 'number' | 'list';
+  filterAccesor: ColumnViewType | 'EMAIL_VERIFICATION_PRIMARY_EMAIL';
   groupOptions?: { label: string; options: { id: string; label: string }[] }[];
-  filterAccesor:
-    | ColumnViewType
-    | 'EMAIL_VERIFICATION_WORK_EMAIL'
-    | 'EMAIL_VERIFICATION_PERSONAL_EMAIL';
 };
 
 import { uniqBy } from 'lodash';
@@ -39,12 +36,7 @@ import { EmailVerificationStatus } from './Filters/Email/utils';
 
 export const getFilterTypes = (store?: RootStore) => {
   const filterTypes: Partial<
-    Record<
-      | ColumnViewType
-      | 'EMAIL_VERIFICATION_WORK_EMAIL'
-      | 'EMAIL_VERIFICATION_PERSONAL_EMAIL',
-      FilterType
-    >
+    Record<ColumnViewType | 'EMAIL_VERIFICATION_PRIMARY_EMAIL', FilterType>
   > = {
     [ColumnViewType.ContactsName]: {
       filterType: 'text',
@@ -70,10 +62,11 @@ export const getFilterTypes = (store?: RootStore) => {
       ],
       icon: <Building07 className='group-hover:text-gray-700 text-gray-500' />,
     },
-    [ColumnViewType.ContactsEmails]: {
+
+    [ColumnViewType.ContactsPrimaryEmail]: {
       filterType: 'text',
-      filterName: 'Work email',
-      filterAccesor: ColumnViewType.ContactsEmails,
+      filterName: 'Primary email',
+      filterAccesor: ColumnViewType.ContactsPrimaryEmail,
       filterOperators: [
         ComparisonOperator.Contains,
         ComparisonOperator.NotContains,
@@ -82,88 +75,10 @@ export const getFilterTypes = (store?: RootStore) => {
       ],
       icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
     },
-    ['EMAIL_VERIFICATION_WORK_EMAIL']: {
+    ['EMAIL_VERIFICATION_PRIMARY_EMAIL']: {
       filterType: 'list',
-      filterName: 'Work email status',
-      filterAccesor: 'EMAIL_VERIFICATION_WORK_EMAIL',
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
-      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
-      options: [],
-      groupOptions: [
-        {
-          label: 'Deliverable',
-          options: [
-            {
-              id: EmailVerificationStatus.FirewallProtected,
-              label: 'Firewall protected',
-            },
-            {
-              id: EmailVerificationStatus.FreeAccount,
-              label: 'Free account',
-            },
-            {
-              id: EmailVerificationStatus.NoRisk,
-              label: 'No risk',
-            },
-          ],
-        },
-        {
-          label: 'Not deliverable',
-          options: [
-            {
-              id: EmailVerificationStatus.IncorrectFormat,
-              label: 'Incorrect email format',
-            },
-            {
-              id: EmailVerificationStatus.InvalidMailbox,
-              label: 'Mailbox doesn’t exist',
-            },
-            {
-              id: EmailVerificationStatus.MailboxFull,
-              label: 'Mailbox full',
-            },
-          ],
-        },
-        {
-          label: "Don't know",
-          options: [
-            {
-              id: EmailVerificationStatus.CatchAll,
-              label: 'Catch all',
-            },
-            {
-              id: EmailVerificationStatus.NotVerified,
-              label: 'Not verified yet',
-            },
-            {
-              id: EmailVerificationStatus.VerificationInProgress,
-              label: 'Verification in progress',
-            },
-          ],
-        },
-      ],
-    },
-    [ColumnViewType.ContactsPersonalEmails]: {
-      filterType: 'text',
-      filterName: 'Personal email',
-      filterAccesor: ColumnViewType.ContactsPersonalEmails,
-      filterOperators: [
-        ComparisonOperator.Contains,
-        ComparisonOperator.NotContains,
-        ComparisonOperator.IsEmpty,
-        ComparisonOperator.IsNotEmpty,
-      ],
-      icon: <Mail01 className='group-hover:text-gray-700 text-gray-500' />,
-    },
-    ['EMAIL_VERIFICATION_PERSONAL_EMAIL']: {
-      filterType: 'list',
-      filterName: 'Personal email status',
-      filterAccesor: 'EMAIL_VERIFICATION_PERSONAL_EMAIL',
+      filterName: 'Primary email status',
+      filterAccesor: 'EMAIL_VERIFICATION_PRIMARY_EMAIL',
       filterOperators: [
         ComparisonOperator.Contains,
         ComparisonOperator.NotContains,
@@ -306,15 +221,10 @@ export const getFilterTypes = (store?: RootStore) => {
       ),
     },
     [ColumnViewType.ContactsTimeInCurrentRole]: {
-      filterType: 'number',
+      filterType: 'date',
       filterName: 'Time in current role',
       filterAccesor: ColumnViewType.ContactsTimeInCurrentRole,
-      filterOperators: [
-        ComparisonOperator.Gt,
-        ComparisonOperator.Lt,
-        ComparisonOperator.Eq,
-        ComparisonOperator.NotEqual,
-      ],
+      filterOperators: [ComparisonOperator.Gt, ComparisonOperator.Lt],
       icon: <ClockCheck className='group-hover:text-gray-700 text-gray-500' />,
     },
     [ColumnViewType.ContactsLinkedinFollowerCount]: {
