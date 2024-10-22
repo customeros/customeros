@@ -1,5 +1,6 @@
 import { Fragment, useState } from 'react';
 
+import { uniqBy } from 'lodash';
 import { observer } from 'mobx-react-lite';
 
 import { Plus } from '@ui/media/icons/Plus';
@@ -37,13 +38,25 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
 
   const isPrimaryEmail = contactStore?.value.primaryEmail;
 
+  const allEmails = uniqBy(
+    contactStore
+      ? [
+          ...contactStore.value.emails,
+          ...(contactStore.value.primaryEmail
+            ? [contactStore.value.primaryEmail]
+            : []),
+        ]
+      : [],
+    'id',
+  );
+
   return (
     <>
       <div className='flex items-center justify-between w-full text-sm group/menu'>
         <div className='flex items-center gap-2'>
           <Mail02 className='mt-[1px] text-gray-500' />
           <span className='text-gray-500'>Emails</span>
-          {contactStore?.value.emails.length === 0 && (
+          {allEmails.length === 0 && (
             <span className='text-gray-400 ml-[57px]'>No emails yet</span>
           )}
         </div>
@@ -126,12 +139,12 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
         )}
       </div>
       <div className='ml-6'>
-        {contactStore?.value.emails.map((email, idx) => (
+        {allEmails?.map((email, idx) => (
           <Fragment key={email.id}>
             <div className=' flex items-center justify-between '>
               <div key={email.id} className='flex items-center gap-1 '>
                 <span className='text-sm max-w-[170px] text-ellipsis overflow-hidden'>
-                  {email.email}
+                  {email.email || 'Not set'}
                 </span>
                 {isPrimaryEmail?.id === email.id && (
                   <span className='text-gray-500 text-sm'> • Primary</span>
@@ -158,7 +171,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                       <MenuItem
                         className='group/edit-email'
                         onClick={() => {
-                          contactStore.setPrimaryEmail(email.id);
+                          contactStore?.setPrimaryEmail(email.id);
                         }}
                       >
                         <div className='flex items-center gap-2'>
@@ -174,7 +187,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                         store.ui.setSelectionId(idx);
                         store.ui.commandMenu.setType('EditEmail');
                         store.ui.commandMenu.setContext({
-                          ids: [contactStore.value.id],
+                          ids: [contactStore?.value.id ?? ''],
                           entity: 'Contact',
                           property: 'email',
                         });
@@ -189,7 +202,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                     <MenuItem
                       className='group/archive-email'
                       onClick={() => {
-                        contactStore.update(
+                        contactStore?.update(
                           (c) => {
                             c.emails.splice(idx, 1);
 
@@ -197,7 +210,8 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                           },
                           { mutate: false },
                         );
-                        contactStore.updateEmail(email?.email ?? '');
+
+                        contactStore?.updateEmail(email?.email ?? '');
                       }}
                     >
                       <Archive className='text-gray-500 group-hover/archive-email:text-gray-700' />
@@ -213,3 +227,6 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
     </>
   );
 });
+
+//todo:archiving primary email not working from contactPreviewCard
+//todo:archiving primary from the table ( delete everything and submit ) not working

@@ -140,13 +140,11 @@ const columns: Record<string, Column> = {
       enableColumnFilter: true,
       enableSorting: false,
       cell: (props) => {
-        const email = props.row.original.value.primaryEmail?.email || '';
         const validationDetails =
           props.row.original.value.primaryEmail?.emailValidationDetails;
 
         return (
           <EmailCell
-            email={email}
             contactId={props.row.id}
             validationDetails={validationDetails}
           />

@@ -12,13 +12,12 @@ import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 
 interface EmailCellProps {
-  email: string;
   contactId: string;
   validationDetails: EmailValidationDetails | undefined;
 }
 
 export const EmailCell = observer(
-  ({ email, validationDetails, contactId }: EmailCellProps) => {
+  ({ validationDetails, contactId }: EmailCellProps) => {
     const emailInputRef = useRef<HTMLInputElement | null>(null);
     const store = useStore();
     const [isHovered, setIsHovered] = useState(false);
@@ -61,12 +60,14 @@ export const EmailCell = observer(
         emailInputRef?.current?.blur();
         setIsEdit(false);
       }
+      e.stopPropagation();
     };
+
+    const email = contactStore?.value?.primaryEmail?.email;
 
     return (
       <div
         ref={ref}
-        onKeyDown={handleEscape}
         className='flex justify-between'
         onDoubleClick={() => setIsEdit(true)}
         onMouseEnter={() => setIsHovered(true)}
@@ -87,15 +88,16 @@ export const EmailCell = observer(
               variant='unstyled'
               ref={emailInputRef}
               placeholder='Email'
+              onKeyDown={handleEscape}
               onFocus={(e) => e.target.select()}
               value={contactStore?.value?.primaryEmail?.email ?? ''}
               onBlur={() => {
-                contactStore?.updateEmail(oldEmail ?? '');
+                contactStore?.updateEmailPrimary(oldEmail ?? '');
               }}
               onChange={(e) => {
                 contactStore?.update(
                   (value) => {
-                    set(value, 'emails[0].email', e.target.value);
+                    set(value, 'primaryEmail.email', e.target.value);
 
                     return value;
                   },

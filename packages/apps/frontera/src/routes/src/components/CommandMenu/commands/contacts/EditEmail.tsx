@@ -14,16 +14,26 @@ export const EditEmail = observer(() => {
 
   const contact = store.contacts.value.get(context.ids?.[0] as string);
   const oldEmail = useMemo(
-    () => contact?.value?.emails?.[selectedId ?? 0]?.email,
+    () =>
+      contact?.value?.emails?.[selectedId ?? 0]?.email ||
+      contact?.value?.primaryEmail?.email,
     [contact?.isLoading, selectedId],
   );
-  const emailAdress = contact?.value?.emails?.[selectedId ?? 0]?.email ?? '';
+  const emailAdress =
+    selectedId !== null
+      ? contact?.value?.emails?.[selectedId ?? 0]?.email ?? ''
+      : contact?.value?.primaryEmail?.email ?? '';
 
   const label = `Contact - ${contact?.name}`;
 
   const handleSaveEmail = () => {
-    contact?.updateEmail(oldEmail ?? '', selectedId ?? 0);
+    if (selectedId !== null) {
+      contact?.updateEmail(oldEmail ?? '', selectedId ?? 0);
+    } else {
+      contact?.updateEmailPrimary(oldEmail ?? '');
+    }
     store.ui.commandMenu.setOpen(false);
+    store.ui.setSelectionId(null);
     store.ui.commandMenu.setType('ContactCommands');
   };
 
@@ -41,7 +51,15 @@ export const EditEmail = observer(() => {
         onValueChange={(newValue) => {
           contact?.update(
             (value) => {
-              set(value, ['emails', selectedId ?? 0, 'email'], newValue);
+              if (selectedId !== null) {
+                set(value, ['emails', selectedId ?? 0, 'email'], newValue);
+              } else {
+                if (newValue.length === 0) {
+                  set(value, 'primaryEmail', null);
+                } else {
+                  set(value, 'primaryEmail.email', newValue);
+                }
+              }
 
               return value;
             },
