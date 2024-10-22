@@ -2,16 +2,15 @@ package tracing
 
 import (
 	"context"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/opentracing/opentracing-go"
 )
 
 const (
-	SpanTagTenant         = tracing.SpanTagTenant
-	SpanTagComponent      = tracing.SpanTagComponent
-	SpanTagExternalSystem = tracing.SpanTagExternalSystem
+	SpanTagTenant    = tracing.SpanTagTenant
+	SpanTagComponent = tracing.SpanTagComponent
 )
 
 func setDefaultSpanTags(ctx context.Context, span opentracing.Span) {

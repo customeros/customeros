@@ -6,8 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	postgresentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/config"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-webhooks/service"
 	"github.com/pkg/errors"
 	"io"
@@ -53,7 +53,7 @@ func syncEnrowEmailResponse(cfg *config.Config, services *service.Services) gin.
 			return
 		}
 
-		ctx, cancel := context.WithTimeout(ctx, common.Min1Duration)
+		ctx, cancel := context.WithTimeout(ctx, constants.Duration1Min)
 		defer cancel()
 
 		err = services.CommonServices.PostgresRepositories.CacheEmailEnrowRepository.AddResponse(ctx, enrowResponseBody.Id, enrowResponseBody.Qualification, string(body))
