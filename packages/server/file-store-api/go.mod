@@ -51,6 +51,7 @@ require (
 	github.com/cloudwego/base64x v0.1.4 // indirect
 	github.com/cloudwego/iasm v0.2.0 // indirect
 	github.com/coocood/freecache v1.2.4 // indirect
+	github.com/customeros/mailsherpa v0.2.15 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emersion/go-message v0.18.1 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
@@ -90,7 +91,7 @@ require (
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/rabbitmq/amqp091-go v1.10.0 // indirect
-	github.com/rivo/uniseg v0.4.3 // indirect
+	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/sosodev/duration v1.3.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
@@ -108,7 +109,7 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	golang.org/x/arch v0.8.0 // indirect
 	golang.org/x/crypto v0.28.0 // indirect
-	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3 // indirect
+	golang.org/x/exp v0.0.0-20240719175910-8a7402abbf56 // indirect
 	golang.org/x/net v0.30.0 // indirect
 	golang.org/x/oauth2 v0.23.0 // indirect
 	golang.org/x/sync v0.8.0 // indirect
