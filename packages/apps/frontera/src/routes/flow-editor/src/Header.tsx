@@ -39,7 +39,7 @@ export const Header = observer(
     const store = useStore();
     const [searchParams] = useSearchParams();
     const navigate = useNavigate();
-    const { getNodes, getEdges, setNodes, setEdges } = useReactFlow();
+    const { getNodes, getEdges } = useReactFlow();
 
     const saveFlag = useFeatureIsOn('flow-editor-save-button_1');
 
@@ -88,9 +88,6 @@ export const Header = observer(
         },
         {
           onSuccess: () => {
-            setNodes(JSON.parse(flow.value.nodes));
-            setEdges(JSON.parse(flow.value.edges));
-
             setTimeout(() => {
               onToggleHasChanges(false);
             }, 0);

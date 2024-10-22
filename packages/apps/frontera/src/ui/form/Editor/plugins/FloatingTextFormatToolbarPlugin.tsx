@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { useRef, useState, useEffect, useCallback, KeyboardEvent } from 'react';
 
 import { computePosition } from '@floating-ui/dom';
-import { $findMatchingParent } from '@lexical/utils';
 import { $isLinkNode, $toggleLink } from '@lexical/link';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import {
@@ -28,6 +27,7 @@ import { BlockQuote } from '@ui/media/icons/BlockQuote';
 import { BracketsPlus } from '@ui/media/icons/BracketsPlus';
 import { Strikethrough01 } from '@ui/media/icons/Strikethrough01';
 import { FloatingToolbarButton } from '@ui/form/Editor/components';
+import { getSelectedNode } from '@ui/form/Editor/utils/getSelectedNode.ts';
 import { $isExtendedQuoteNode } from '@ui/form/Editor/nodes/ExtendedQuoteNode';
 
 import { usePointerInteractions } from './../utils/usePointerInteractions';
@@ -44,7 +44,6 @@ const DEFAULT_DOM_ELEMENT = document.body;
 type FloatingMenuCoords = { x: number; y: number } | undefined;
 
 export type FloatingMenuComponentProps = {
-  shouldShow: boolean;
   variableOptions: string[];
   editor: ReturnType<typeof useLexicalComposerContext>[0];
 };
@@ -80,7 +79,11 @@ export function FloatingMenu({
       const selection = $getSelection();
 
       if ($isRangeSelection(selection)) {
-        $toggleLink('');
+        if (isLink) {
+          $toggleLink(null);
+        } else {
+          $toggleLink('https://');
+        }
       }
     });
   }, [editor, isLink]);
@@ -94,16 +97,17 @@ export function FloatingMenu({
           setIsStrikethrough(selection.hasFormat('strikethrough'));
           setIsBold(selection.hasFormat('bold'));
           setIsItalic(selection.hasFormat('italic'));
-          setIsLink(
-            selection
-              .getNodes()
-              .some(
-                (node) =>
-                  $isLinkNode(node) ||
-                  ($isLinkNode(node.getParent()) &&
-                    node?.getParent()?.isInline()),
-              ),
-          );
+
+          const node = getSelectedNode(selection);
+
+          // Update links
+          const parent = node.getParent();
+
+          if ($isLinkNode(parent) || $isLinkNode(node)) {
+            setIsLink(true);
+          } else {
+            setIsLink(false);
+          }
           setIsBlockquote(
             selection
               .getNodes()
@@ -161,12 +165,14 @@ export function FloatingMenu({
           </div>
         </Tooltip>
         <Tooltip label='Insert or remove link: ⌘ + K'>
-          <FloatingToolbarButton
-            active={isLink}
-            onClick={toggleLink}
-            aria-label='Insert or remove link'
-            icon={<Link01 className='text-inherit' />}
-          />
+          <div>
+            <FloatingToolbarButton
+              active={isLink}
+              onClick={toggleLink}
+              aria-label='Insert or remove link'
+              icon={<Link01 className='text-inherit' />}
+            />
+          </div>
         </Tooltip>
         <Tooltip label='Blockquote: ⌘ + Shift + >'>
           <div>
@@ -241,21 +247,19 @@ export function FloatingMenuPlugin({
     const selection = $getSelection();
 
     if ($isRangeSelection(selection) && !selection.anchor.is(selection.focus)) {
-      const node = selection.getNodes()[0];
-      const linkNode = $findMatchingParent(node, $isLinkNode);
+      const node = getSelectedNode(selection);
 
-      if ($isLinkNode(linkNode)) {
+      if ($isLinkNode(node)) {
         setCoords(undefined);
 
         return false;
       }
-
       calculatePosition();
     } else {
       setCoords(undefined);
     }
 
-    return true;
+    return false;
   }, [editor, calculatePosition]);
 
   const handleClickOutside = useCallback(
@@ -388,11 +392,7 @@ export function FloatingMenuPlugin({
         opacity: show ? 1 : 0,
       }}
     >
-      <FloatingMenu
-        editor={editor}
-        shouldShow={show}
-        variableOptions={variableOptions}
-      />
+      <FloatingMenu editor={editor} variableOptions={variableOptions} />
     </div>,
     element ?? DEFAULT_DOM_ELEMENT,
   );
