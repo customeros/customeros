@@ -39,7 +39,9 @@ func InitServices(cfg *config.Config, driver *neo4j.DriverWithContext, gormDb *g
 	services.EmailService = NewEmailService(cfg, repositories, services)
 	services.MeetingService = NewMeetingService(cfg, repositories, services)
 
-	services.CommonServices = commonService.InitServices(&config2.GlobalConfig{}, repositories.PostgresDriver, repositories.Neo4jDriver, "neo4j", grpcClients, appLogger)
+	services.CommonServices = commonService.InitServices(&config2.GlobalConfig{
+		RabbitMQConfig: &cfg.RabbitMQConfig,
+	}, repositories.PostgresDriver, repositories.Neo4jDriver, "neo4j", grpcClients, appLogger)
 
 	return services
 }

@@ -7,9 +7,9 @@ import (
 )
 
 type Config struct {
-	Neo4jDb    config.Neo4jConfig
-	PostgresDb config.PostgresConfig
-
+	Neo4jDb          config.Neo4jConfig
+	PostgresDb       config.PostgresConfig
+	RabbitMQConfig   config.RabbitMQConfig
 	GrpcClientConfig config.GrpcClientConfig
 
 	SyncData struct {
