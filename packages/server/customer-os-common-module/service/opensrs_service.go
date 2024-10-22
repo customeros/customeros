@@ -137,7 +137,6 @@ Content-Type: text/html; charset=UTF-8
 		PlainBody  string
 		HTMLBody   string
 	}{
-		FromEmail:  request.From,
 		ToEmail:    strings.Join(toEmail, ", "),
 		CCEmail:    strings.Join(ccEmail, ", "),
 		BCCEmail:   strings.Join(bccEmail, ", "),
@@ -149,6 +148,12 @@ Content-Type: text/html; charset=UTF-8
 		Boundary:   fmt.Sprintf("=_%x", time.Now().UnixNano()),
 		PlainBody:  plainText,
 		HTMLBody:   request.Content,
+	}
+
+	if request.FromName != "" {
+		data.FromEmail = fmt.Sprintf("%s <%s>", request.FromName, request.From)
+	} else {
+		data.FromEmail = request.From
 	}
 
 	tmpl, err := template.New("email").Parse(messageTemplate)

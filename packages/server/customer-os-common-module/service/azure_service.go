@@ -134,7 +134,12 @@ func (s *azureService) SendEmail(ctx context.Context, tenant string, request *po
 	message.Subject = request.Subject
 	message.Body.ContentType = "HTML"
 	message.Body.Content = request.Content
-	message.From.EmailAddress.Address = request.From
+
+	if request.FromName != "" {
+		message.From.EmailAddress.Address = fmt.Sprintf("%s <%s>", request.FromName, request.From)
+	} else {
+		message.From.EmailAddress.Address = request.From
+	}
 
 	for _, to := range request.To {
 		message.ToRecipients = append(message.ToRecipients, Recipient{

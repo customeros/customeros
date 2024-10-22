@@ -14,6 +14,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"strings"
 	"time"
 )
 
@@ -482,14 +483,54 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 				return nil, errors.New("no work email found for entity")
 			}
 
+			bodyTemplate := *currentAction.Data.BodyTemplate
+
+			if scheduledActionExecution.EntityType == model.CONTACT {
+				contactNode, err := s.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, scheduledActionExecution.EntityId)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to get contact")
+				}
+
+				contact := mapper.MapDbNodeToContactEntity(contactNode)
+
+				firstName, lastName := contact.DeriveFirstAndLastNames()
+				bodyTemplate = replacePlaceholders(bodyTemplate, "contact_first_name", firstName)
+				bodyTemplate = replacePlaceholders(bodyTemplate, "contact_last_name", lastName)
+				bodyTemplate = replacePlaceholders(bodyTemplate, "contact_email", toEmail)
+
+				contactWithOrganizations, err := s.services.OrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, []string{contact.Id})
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to get latest organizations with job roles for contacts")
+				}
+
+				if len(*contactWithOrganizations) > 0 {
+					contactWithOrganization := (*contactWithOrganizations)[0]
+					bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", contactWithOrganization.Organization.Name)
+				} else {
+					bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", "")
+				}
+			}
+
+			userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, *scheduledActionExecution.Mailbox)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get first user by email")
+			}
+
+			if userNode == nil {
+				return nil, errors.New("user not found")
+			}
+
+			user := mapper.MapDbNodeToUserEntity(userNode)
+
 			emailMessage = &postgresEntity.EmailMessage{
 				Status:       postgresEntity.EmailMessageStatusScheduled,
 				ProducerId:   scheduledActionExecution.Id,
 				ProducerType: model.NodeLabelFlowActionExecution,
+				FromName:     user.FirstName + " " + user.LastName,
 				From:         *scheduledActionExecution.Mailbox,
 				To:           []string{toEmail},
 				Subject:      *currentAction.Data.Subject,
-				Content:      *currentAction.Data.BodyTemplate,
+				Content:      bodyTemplate,
 			}
 		}
 		//else if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailReply {
@@ -534,6 +575,10 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	}
 
 	return nil
+}
+
+func replacePlaceholders(input, variableName, value string) string {
+	return strings.Replace(input, "{{"+variableName+"}}", value, -1)
 }
 
 func isWorkingDay(t time.Time) bool {

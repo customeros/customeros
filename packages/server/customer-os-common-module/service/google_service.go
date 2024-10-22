@@ -511,7 +511,7 @@ func (s *googleService) SendEmail(ctx context.Context, tenant string, request *p
 		return err
 	}
 
-	fromAddress := []*mimemail.Address{{"", request.From}}
+	fromAddress := []*mimemail.Address{{request.FromName, request.From}}
 	var toAddress []*mimemail.Address
 	var ccAddress []*mimemail.Address
 	var bccAddress []*mimemail.Address
