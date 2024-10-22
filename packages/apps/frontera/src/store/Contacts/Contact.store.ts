@@ -279,7 +279,11 @@ export class ContactStore implements Store<Contact> {
     }
   }
 
-  async updateEmail(previousEmail: string, index?: number) {
+  async updateEmail(
+    previousEmail: string,
+    index?: number,
+    primary: boolean = false,
+  ) {
     const email = this.value.emails?.[index ?? 0]?.email ?? '';
 
     try {
@@ -288,6 +292,7 @@ export class ContactStore implements Store<Contact> {
         contactId: this.getId(),
         input: {
           email,
+          primary: primary,
         },
         previousEmail,
       });
@@ -298,6 +303,29 @@ export class ContactStore implements Store<Contact> {
       runInAction(() => {
         this.error = (e as Error).message;
       });
+    } finally {
+      this.invalidate();
+    }
+  }
+
+  async updateEmailPrimary(previousEmail: string) {
+    const email = this.value.primaryEmail?.email ?? '';
+
+    try {
+      await this.service.updateContactEmail({
+        contactId: this.getId(),
+        input: {
+          email,
+          primary: true,
+        },
+        previousEmail,
+      });
+    } catch (e) {
+      runInAction(() => {
+        this.error = (e as Error).message;
+      });
+    } finally {
+      this.invalidate();
     }
   }
 

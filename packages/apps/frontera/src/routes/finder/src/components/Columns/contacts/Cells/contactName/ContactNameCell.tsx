@@ -48,13 +48,13 @@ export const ContactNameCell = observer(
         contactNameInputRef?.current?.blur();
         setIsEdit(false);
       }
+      e.stopPropagation();
     };
 
     return (
       <div
         ref={ref}
         className='flex'
-        onKeyDown={handleEscape}
         onDoubleClick={() => setIsEdit(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
@@ -88,6 +88,7 @@ export const ContactNameCell = observer(
             size='xs'
             placeholder='Name'
             variant='unstyled'
+            onKeyDown={handleEscape}
             ref={contactNameInputRef}
             value={contactStore?.name ?? ''}
             onFocus={(e) => e.target.select()}
