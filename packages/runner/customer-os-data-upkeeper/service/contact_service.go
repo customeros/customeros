@@ -10,6 +10,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/runner/customer-os-data-upkeeper/logger"
 	cosClient "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/client"
 	cosModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api-sdk/graph/model"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -315,13 +316,6 @@ func (s *contactService) AskForWorkEmailOnBetterContact() {
 	defer cancel() // Cancel context on exit
 
 	s.findEmailsWithBetterContact(ctx)
-}
-
-func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel() // Cancel context on exit
-
-	s.enrichWithWorkEmailFromBetterContact(ctx)
 }
 
 func (s *contactService) CheckBetterContactRequestsWithoutResponse() {
@@ -743,8 +737,11 @@ func (s *contactService) callEnrichmentApiFindWorkEmail(ctx context.Context, det
 	return &findWorkEmailApiResponse, nil
 }
 
-func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Context) {
-	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.enrichWithWorkEmailFromBetterContact")
+func (s *contactService) EnrichWithWorkEmailFromBetterContact() {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel() // Cancel context on exit
+
+	span, ctx := tracing.StartTracerSpan(ctx, "ContactService.EnrichWithWorkEmailFromBetterContact")
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
@@ -757,6 +754,12 @@ func (s *contactService) enrichWithWorkEmailFromBetterContact(ctx context.Contex
 	}
 
 	for _, record := range records {
+		// create new context from main one with custom context
+		ctx := common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant:    record.Tenant,
+			AppSource: constants.AppSourceDataUpkeeper,
+		})
+
 		// mark contact with update requested
 		err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, record.Tenant, model.NodeLabelContact, record.ContactId, string(neo4jentity.ContactPropertyUpdateWithWorkEmailRequestedAt), utils.NowPtr())
 		if err != nil {
