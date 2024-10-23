@@ -1,6 +1,7 @@
 package restmailstack
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	coserrors "github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/errors"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/rest"
@@ -113,7 +114,12 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		}
 
 		// add mailbox
-		response, err := addMailbox(ctx, tenant, domain, username, password, mailboxRequest.ForwardingEnabled, mailboxRequest.WebmailEnabled, mailboxRequest.ForwardingTo, services)
+		forwardingEnabled := true
+		forwardingTo := mailboxRequest.ForwardingTo
+		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", tenant)
+		forwardingTo = append(forwardingTo, additionalForwardingTo)
+
+		response, err := addMailbox(ctx, tenant, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, mailboxRequest.ForwardingTo, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,
