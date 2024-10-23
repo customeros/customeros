@@ -170,6 +170,10 @@
           "name": "Incorrect domain capitalization",
           "query": "MATCH (d:Domain) WHERE d.domain <> toLower(d.domain) RETURN count(d)",
           "description": "Domain property should be lowercase."
+        },
+        {
+          "name": "Domains without primary flag",
+          "query": "MATCH (d:Domain) WHERE d.isPrimary IS NULL RETURN count(d)"
         }
       ]
     },
