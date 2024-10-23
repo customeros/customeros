@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
@@ -13,7 +14,6 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"strings"
-	"time"
 )
 
 type DomainService interface {
@@ -40,6 +40,7 @@ func NewDomainService(log logger.Logger, services *Services) DomainService {
 func (s *domainService) ExtractDomainFromOrganizationWebsite(ctx context.Context, websiteUrl string) string {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.ExtractDomainFromOrganizationWebsite")
 	defer span.Finish()
+	span.LogKV("websiteUrl", websiteUrl)
 
 	if strings.TrimSpace(websiteUrl) == "" {
 		return ""
@@ -49,7 +50,20 @@ func (s *domainService) ExtractDomainFromOrganizationWebsite(ctx context.Context
 		return ""
 	}
 
-	return utils.ExtractDomain(websiteUrl)
+	personalEmailProviders := s.services.Cache.GetPersonalEmailProviders()
+	if personalEmailProviders == nil || len(personalEmailProviders) == 0 {
+		err := fmt.Errorf("personal email providers not loaded")
+		tracing.TraceErr(span, err)
+		return ""
+	}
+
+	domain := utils.ExtractDomain(websiteUrl)
+
+	if s.services.Cache.IsPersonalEmailProvider(domain) {
+		return ""
+	}
+
+	return ""
 }
 
 func (s *domainService) IsKnownCompanyHostingUrl(ctx context.Context, website string) bool {
@@ -115,67 +129,30 @@ func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain s
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 	tracing.TagEntity(span, domain)
 
-	// Create a channel to signal completion of the primary domain check
-	resultChan := make(chan struct {
-		isPrimary     bool
-		primaryDomain string
-		err           error
-	}, 1)
-
-	// Run domain check in a goroutine
+	// Run primary domain check in a separate goroutine
 	go func() {
+		// Perform the primary domain check asynchronously
 		isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(domain)
-		resultChan <- struct {
-			isPrimary     bool
-			primaryDomain string
-			err           error
-		}{isPrimary, primaryDomain, nil}
+
+		// Call the saving logic after the primary domain check finishes
+		err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(context.Background(), domain, primaryDomain, isPrimary)
+		if err != nil {
+			// Log the error in tracing
+			tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
+		}
+
+		// If the domain is not primary, trigger the domain merge
+		if !isPrimary && primaryDomain != "" {
+			err = s.MergeDomain(context.Background(), primaryDomain)
+			if err != nil {
+				// Log the error during domain merging
+				tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain asynchronously"))
+			}
+		}
 	}()
 
-	// Create a context with a 1-second timeout
-	timeoutCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
-	defer cancel()
-
-	select {
-	case res := <-resultChan:
-		// Got a result within the timeout
-		err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, res.primaryDomain, res.isPrimary)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details"))
-			return err
-		}
-
-		if !res.isPrimary && res.primaryDomain != "" {
-			err = s.MergeDomain(ctx, res.primaryDomain)
-			if err != nil {
-				tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain"))
-			}
-		}
-		return nil
-
-	case <-timeoutCtx.Done():
-		// Timed out, switch to async mode
-		go func() {
-			res := <-resultChan
-			// Handle the result asynchronously here
-			err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, res.primaryDomain, res.isPrimary)
-			if err != nil {
-				// Log error, etc.
-				tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
-			}
-
-			if !res.isPrimary && res.primaryDomain != "" {
-				err = s.MergeDomain(ctx, res.primaryDomain)
-				if err != nil {
-					// Log error, etc.
-					tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain asynchronously"))
-				}
-			}
-		}()
-
-		// Return nil to indicate async mode
-		return nil
-	}
+	// Return early, as the operation is now async
+	return nil
 }
 
 func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
