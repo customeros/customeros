@@ -39,9 +39,7 @@ func (d domainWriteRepository) MergeDomain(ctx context.Context, domain, source, 
 		d.createdAt=datetime(),
 		d.updatedAt=datetime(),
 		d.source=$source,
-		d.appSource=$appSource
-	RETURN d
-`)
+		d.appSource=$appSource`)
 
 	params := map[string]interface{}{
 		"domain":    domain,

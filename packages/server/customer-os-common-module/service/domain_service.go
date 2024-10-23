@@ -163,6 +163,11 @@ func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
 	domain = strings.TrimSpace(domain)
 	domain = strings.ToLower(domain)
 
+	if domain == "" {
+		tracing.TraceErr(span, fmt.Errorf("domain is empty"))
+		return nil
+	}
+
 	// create domain db node in neo4j if missing
 	err := s.services.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, neo4jentity.DataSourceOpenline.String(), common.GetAppSourceFromContext(ctx))
 	if err != nil {

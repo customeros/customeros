@@ -68,7 +68,7 @@ func (h *OrganizationEventHandler) OnRefreshLastTouchPointV1(ctx context.Context
 	}
 
 	if lastTouchpointAt == nil {
-		timelineEventNode, err = h.services.CommonServices.Neo4jRepositories.ActionReadRepository.GetSingleAction(ctx, eventData.Tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated)
+		timelineEventNode, err = h.services.CommonServices.Neo4jRepositories.ActionReadRepository.GetLastAction(ctx, eventData.Tenant, organizationId, model.ORGANIZATION, neo4jenum.ActionCreated)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			h.log.Errorf("Failed to get created action: %v", err.Error())

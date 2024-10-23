@@ -15,7 +15,7 @@ import (
 
 type ActionReadRepository interface {
 	GetFor(ctx context.Context, tenant string, entityType model.EntityType, entityIds []string) ([]*utils.DbNodeAndId, error)
-	GetSingleAction(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType) (*dbtype.Node, error)
+	GetLastAction(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType) (*dbtype.Node, error)
 }
 
 type actionReadRepository struct {
@@ -66,8 +66,8 @@ func (r *actionReadRepository) prepareReadSession(ctx context.Context) neo4j.Ses
 	return utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
 }
 
-func (r *actionReadRepository) GetSingleAction(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType) (*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetSingleAction")
+func (r *actionReadRepository) GetLastAction(ctx context.Context, tenant, entityId string, entityType model.EntityType, actionType enum.ActionType) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "ActionReadRepository.GetLastAction")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
@@ -78,7 +78,8 @@ func (r *actionReadRepository) GetSingleAction(ctx context.Context, tenant, enti
 	cypher := fmt.Sprintf(`MATCH  (n:%s_%s {id:$entityId}) `, entityType.Neo4jLabel(), tenant)
 	cypher += `WITH n
 			  MATCH (n)<-[:ACTION_ON]-(a:Action {type:$type})
-			  return a limit 1`
+			  ORDER BY a.createdAt DESC
+			  RETURN a limit 1`
 	params := map[string]any{
 		"entityId": entityId,
 		"type":     actionType,
@@ -93,12 +94,15 @@ func (r *actionReadRepository) GetSingleAction(ctx context.Context, tenant, enti
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
+			return utils.ExtractFirstRecordFirstValueAsDbNodePtr(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
+	}
+	if result == nil {
+		return nil, nil
 	}
 	return result.(*dbtype.Node), nil
 }
