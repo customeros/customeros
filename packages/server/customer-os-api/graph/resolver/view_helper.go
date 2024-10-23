@@ -594,6 +594,7 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 1, ColumnType: model.ColumnViewTypeContactsAvatar.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeContactsName.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 3, ColumnType: model.ColumnViewTypeContactsOrganization.String(), Width: 100, Visible: true, Name: "", Filter: ""},
+				{ColumnId: 14, ColumnType: model.ColumnViewTypeContactsPrimaryEmail.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 4, ColumnType: model.ColumnViewTypeContactsEmails.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 5, ColumnType: model.ColumnViewTypeContactsPhoneNumbers.String(), Width: 100, Visible: true, Name: "", Filter: ""},
 				{ColumnId: 6, ColumnType: model.ColumnViewTypeContactsLinkedin.String(), Width: 100, Visible: true, Name: "", Filter: ""},
