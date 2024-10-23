@@ -102,6 +102,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
 	if organizationId == nil {
+		createFlow = true
 		domains := input.Domains
 		if input.UpdateWebsite && input.Website != "" {
 			websiteDomain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
@@ -142,7 +143,6 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
-		createFlow = true
 	}
 
 	//validate stage and relationship combination all the time ( from input or existing computed )
@@ -204,6 +204,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	newDomains := make([]string, 0)
+
 	_, err = utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		err = s.services.Neo4jRepositories.OrganizationWriteRepository.Save(ctx, &tx, tenant, *organizationId, *input)

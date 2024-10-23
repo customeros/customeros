@@ -534,7 +534,7 @@ func (r *organizationWriteRepository) UpdateOrganization(ctx context.Context, te
 }
 
 func (r *organizationWriteRepository) Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string, data OrganizationSaveFields) error {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OpportunityWriteRepository.Save")
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationWriteRepository.Save")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	tracing.TagTenant(span, tenant)
