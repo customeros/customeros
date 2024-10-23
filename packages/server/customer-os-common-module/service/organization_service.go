@@ -67,6 +67,14 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 
 	var err error
 	var existing *neo4jentity.OrganizationEntity
+	createFlow := false
+
+	personalEmailProviders := s.services.Cache.GetPersonalEmailProviders()
+	if personalEmailProviders == nil || len(personalEmailProviders) == 0 {
+		err := fmt.Errorf("personal email providers not loaded")
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
 
 	// prepare domains in advance
 	for _, domain := range input.Domains {
@@ -75,6 +83,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
 		}
 	}
+
 	primaryDomainFromWebsite := ""
 	if input.UpdateWebsite && input.Website != "" {
 		domain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
@@ -86,7 +95,9 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain"))
 		}
-		primaryDomainFromWebsite = domainEntity.PrimaryDomain
+		if domainEntity.PrimaryDomain != "" && !s.services.Cache.IsPersonalEmailProvider(domain) {
+			primaryDomainFromWebsite = domainEntity.PrimaryDomain
+		}
 	}
 
 	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
@@ -131,6 +142,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			tracing.TraceErr(span, err)
 			return nil, err
 		}
+		createFlow = true
 	}
 
 	//validate stage and relationship combination all the time ( from input or existing computed )
@@ -149,7 +161,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	//generate customerOsId if not provided or if it is empty in the db
-	if organizationId == nil || (existing != nil && existing.CustomerOsId == "") {
+	if createFlow || (existing != nil && existing.CustomerOsId == "") {
 		customerOsId, err := s.generateCustomerOSId(ctx, tenant)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -160,11 +172,20 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		input.UpdateCustomerOsId = true
 	}
 
-	if organizationId == nil {
+	if createFlow {
 		//if no name is provided, we try to extract if from domain
-		if utils.IfNotNilString(input.Name) == "" && len(input.Domains) > 0 {
-			input.Name = utils.CapitalizeAllParts(utils.GetDomainPrefix(input.Domains[0]), []string{"-", "_"})
-			input.UpdateName = true
+		if utils.IfNotNilString(input.Name) == "" {
+			domain := primaryDomainFromWebsite
+			if domain == "" {
+				domain = s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
+			}
+			if domain == "" && len(input.Domains) > 0 {
+				domain = input.Domains[0]
+			}
+			if domain != "" {
+				input.Name = utils.CapitalizeAllParts(utils.GetDomainPrefix(domain), []string{"-", "_"})
+				input.UpdateName = true
+			}
 		}
 
 		input.SourceFields.Source = constants.SourceOpenline
@@ -213,13 +234,19 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 						tracing.TraceErr(span, err)
 						return nil, err
 					}
-					newDomains = append(newDomains, primaryAddedDomain)
+					if primaryAddedDomain != "" {
+						newDomains = append(newDomains, primaryAddedDomain)
+					}
 				}
 			}
 		}
 
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
+				if s.services.Cache.IsPersonalEmailProvider(domain) {
+					continue
+				}
+
 				err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, &tx, tenant, *organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
@@ -280,6 +307,9 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	newDomains = utils.RemoveDuplicates(newDomains)
 	primaryDomain := ""
 	for _, domain := range newDomains {
+		if s.services.Cache.IsPersonalEmailProvider(primaryDomain) {
+			continue
+		}
 		domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
@@ -306,7 +336,7 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	// request last touchpoint refresh for new organizations
-	if existing == nil {
+	if createFlow {
 		ctx = tracing.InjectSpanContextIntoGrpcMetadata(ctx, span)
 		_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 			return s.services.GrpcClients.OrganizationClient.RefreshLastTouchpoint(ctx, &organizationpb.OrganizationIdGrpcRequest{

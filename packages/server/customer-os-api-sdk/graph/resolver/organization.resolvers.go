@@ -273,6 +273,11 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 	panic(fmt.Errorf("not implemented: OrganizationDistinctOwners - organization_DistinctOwners"))
 }
 
+// OrganizationCheckWebsite is the resolver for the organization_CheckWebsite field.
+func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error) {
+	panic(fmt.Errorf("not implemented: OrganizationCheckWebsite - organization_CheckWebsite"))
+}
+
 // LastTouchpoint returns generated.LastTouchpointResolver implementation.
 func (r *Resolver) LastTouchpoint() generated.LastTouchpointResolver {
 	return &lastTouchpointResolver{r}

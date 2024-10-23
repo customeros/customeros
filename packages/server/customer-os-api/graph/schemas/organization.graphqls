@@ -4,6 +4,7 @@ extend type Query {
     organization_ByCustomerOsId(customerOsId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_ByCustomId(customId: String!): Organization @hasRole(roles: [ADMIN, USER]) @hasTenant
     organization_DistinctOwners: [User!]! @hasRole(roles: [ADMIN, USER]) @hasTenant
+    organization_CheckWebsite(website: String!): WebsiteDetails! @hasRole(roles: [ADMIN, USER]) @hasTenant
 }
 
 extend type Mutation {
@@ -367,6 +368,13 @@ type SuggestedMergeOrganization {
     confidence: Float
     suggestedAt: Time
     suggestedBy: String
+}
+
+type WebsiteDetails {
+    website:                        String!
+    domain:                         String!
+    primary:                        Boolean!
+    alternativePrimaryDomain:       String!
 }
 
 enum Market {

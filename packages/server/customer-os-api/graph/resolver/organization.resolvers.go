@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/99designs/gqlgen/graphql"
+	"github.com/customeros/mailsherpa/domaincheck"
 	"github.com/google/uuid"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/dataloader"
@@ -1557,6 +1558,37 @@ func (r *queryResolver) OrganizationDistinctOwners(ctx context.Context) ([]*mode
 		return nil, nil
 	}
 	return mapper.MapEntitiesToUsers(userEntities), nil
+}
+
+// OrganizationCheckWebsite is the resolver for the organization_CheckWebsite field.
+func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website string) (*model.WebsiteDetails, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationCheckWebsite", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogKV("request.website", website)
+
+	if website == "" {
+		return &model.WebsiteDetails{
+			Website: website,
+		}, nil
+	}
+
+	// step 1 get domain from website
+	domain := r.Services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, website)
+	if domain == "" {
+		return &model.WebsiteDetails{
+			Website: website,
+		}, nil
+	}
+
+	// step 2 check if domain is primary
+	isPrimary, altPrimaryDomain := domaincheck.PrimaryDomainCheck(domain)
+	return &model.WebsiteDetails{
+		Website:                  website,
+		Domain:                   domain,
+		Primary:                  isPrimary,
+		AlternativePrimaryDomain: altPrimaryDomain,
+	}, nil
 }
 
 // LastTouchpoint returns generated.LastTouchpointResolver implementation.
