@@ -13,6 +13,7 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"strings"
+	"time"
 )
 
 type DomainService interface {
@@ -20,7 +21,7 @@ type DomainService interface {
 	ExtractDomainFromOrganizationWebsite(ctx context.Context, websiteUrl string) string
 	IsKnownCompanyHostingUrl(ctx context.Context, website string) bool
 	GetAllDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.DomainEntities, error)
-	UpdateDomainPrimaryDetails(ctx context.Context, domain string) (bool, error)
+	UpdateDomainPrimaryDetails(ctx context.Context, domain string) error
 	GetDomain(ctx context.Context, domain string) (*neo4jentity.DomainEntity, error)
 }
 
@@ -108,28 +109,73 @@ func (s *domainService) GetAllDomainsForOrganizations(ctx context.Context, organ
 	return &domainEntities, nil
 }
 
-func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain string) (bool, error) {
+func (s *domainService) UpdateDomainPrimaryDetails(ctx context.Context, domain string) error {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.UpdateDomainPrimaryDetails")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, domain)
 
-	// check primary details with mailsherpa
-	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(domain)
+	// Create a channel to signal completion of the primary domain check
+	resultChan := make(chan struct {
+		isPrimary     bool
+		primaryDomain string
+		err           error
+	}, 1)
 
-	err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, primaryDomain, isPrimary)
-	if err != nil {
-		tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details"))
-		return false, err
-	}
+	// Run domain check in a goroutine
+	go func() {
+		isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(domain)
+		resultChan <- struct {
+			isPrimary     bool
+			primaryDomain string
+			err           error
+		}{isPrimary, primaryDomain, nil}
+	}()
 
-	if !isPrimary && primaryDomain != "" {
-		err = s.MergeDomain(ctx, primaryDomain)
+	// Create a context with a 1-second timeout
+	timeoutCtx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+
+	select {
+	case res := <-resultChan:
+		// Got a result within the timeout
+		err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, res.primaryDomain, res.isPrimary)
 		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain"))
+			tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details"))
+			return err
 		}
-	}
 
-	return isPrimary, nil
+		if !res.isPrimary && res.primaryDomain != "" {
+			err = s.MergeDomain(ctx, res.primaryDomain)
+			if err != nil {
+				tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain"))
+			}
+		}
+		return nil
+
+	case <-timeoutCtx.Done():
+		// Timed out, switch to async mode
+		go func() {
+			res := <-resultChan
+			// Handle the result asynchronously here
+			err := s.services.Neo4jRepositories.DomainWriteRepository.SetPrimaryDetails(ctx, domain, res.primaryDomain, res.isPrimary)
+			if err != nil {
+				// Log error, etc.
+				tracing.TraceErr(span, errors.Wrap(err, "Error while setting primary details asynchronously"))
+			}
+
+			if !res.isPrimary && res.primaryDomain != "" {
+				err = s.MergeDomain(ctx, res.primaryDomain)
+				if err != nil {
+					// Log error, etc.
+					tracing.TraceErr(span, errors.Wrap(err, "Error while merging primary domain asynchronously"))
+				}
+			}
+		}()
+
+		// Return nil to indicate async mode
+		return nil
+	}
 }
 
 func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
@@ -156,7 +202,7 @@ func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
 
 	// if domain was already checked for primary skip the check
 	if domainEntity.IsPrimary == nil {
-		_, err = s.UpdateDomainPrimaryDetails(ctx, domain)
+		err = s.UpdateDomainPrimaryDetails(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error while checking and updating domain primary"))
 		}

@@ -59,7 +59,7 @@ func (s *domainService) CheckDomains() {
 		}
 
 		for _, record := range records {
-			_, err = s.commonServices.DomainService.UpdateDomainPrimaryDetails(ctx, record)
+			err = s.commonServices.DomainService.UpdateDomainPrimaryDetails(ctx, record)
 			if err != nil {
 				tracing.TraceErr(span, errors.Wrap(err, "Error updating domain primary details"))
 				s.log.Errorf("Error updating domain primary details: %s", err.Error())
