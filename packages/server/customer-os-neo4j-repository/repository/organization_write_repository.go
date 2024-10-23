@@ -190,7 +190,7 @@ type OrganizationWriteRepository interface {
 	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error
 	UnlinkFromDomain(ctx context.Context, tenant, organizationId, domain string) error
 	ReplaceOwner(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, userId string) error
-	//Deprecated -> use Save with Hide property
+	// Deprecated -> use Save with Hide property
 	SetVisibility(ctx context.Context, tenant, organizationId string, hide bool) error
 	UpdateLastTouchpoint(ctx context.Context, tenant, organizationId string, touchpointAt *time.Time, touchpointId, touchpointType string) error
 	SetCustomerOsIdIfMissing(ctx context.Context, tenant, organizationId, customerOsId string) error
@@ -857,7 +857,10 @@ func (r *organizationWriteRepository) UpdateLastTouchpoint(ctx context.Context, 
 	span.LogFields(log.String("organizationId", organizationId), log.String("touchpointId", touchpointId), log.Object("touchpointAt", touchpointAt))
 
 	cypher := `MATCH (:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id:$organizationId})
-		 SET org.lastTouchpointAt=$touchpointAt, org.lastTouchpointId=$touchpointId, org.lastTouchpointType=$touchpointType`
+		 SET 	org.updatedAt = CASE WHEN org.lastTouchpointId <> $touchpointId THEN datetime() ELSE org.updatedAt END,
+				org.lastTouchpointAt=$touchpointAt, 
+				org.lastTouchpointId=$touchpointId, 
+				org.lastTouchpointType=$touchpointType`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
