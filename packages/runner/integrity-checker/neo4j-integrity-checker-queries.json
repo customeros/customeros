@@ -129,7 +129,7 @@
         },
         {
           "name": "Organizations not enriched",
-          "query": "MATCH (:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})--(d:Domain) WHERE (d.isPrimary = true OR d.isPrimary IS NULL) AND o.enrichedAt IS NULL AND (o.techEnrichAttempts IS NULL OR o.techEnrichAttempts < 1) AND (o.techEnrichRequestedAt < datetime()-duration({hours:245}) OR o.techEnrichRequestedAt IS NULL) AND o.createdAt < datetime()-duration({minutes:60}) return count(o)"
+          "query": "MATCH (:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(o:Organization {hide:false})--(d:Domain) WHERE (d.primary = true OR d.primary IS NULL) AND o.enrichedAt IS NULL AND (o.techEnrichAttempts IS NULL OR o.techEnrichAttempts < 1) AND (o.techEnrichRequestedAt < datetime()-duration({hours:245}) OR o.techEnrichRequestedAt IS NULL) AND o.createdAt < datetime()-duration({minutes:60}) return count(o)"
         },
         {
           "name": "Organization ltv not updated",
@@ -173,7 +173,7 @@
         },
         {
           "name": "Domains without primary flag",
-          "query": "MATCH (d:Domain) WHERE d.isPrimary IS NULL RETURN count(d)"
+          "query": "MATCH (d:Domain) WHERE d.primary IS NULL RETURN count(d)"
         }
       ]
     },

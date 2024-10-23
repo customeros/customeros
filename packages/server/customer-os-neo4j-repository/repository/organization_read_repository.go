@@ -927,7 +927,7 @@ func (r *organizationReadRepository) GetOrganizationsForEnrichByDomain(ctx conte
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(log.Int("limit", limit), log.Int("delayInMinutes", delayInMinutes))
 
-	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {isPrimary:true})
+	cypher := `MATCH (t:Tenant {active:true})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization)-[:HAS_DOMAIN]->(d:Domain {primary:true})
 				WHERE 	org.enrichedAt IS NULL AND
 						org.hide = false AND
 						(org.techEnrichAttempts IS NULL OR org.techEnrichAttempts < $maxAttempts OR org.techEnrichRequestedAt IS NULL) AND
