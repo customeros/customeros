@@ -388,7 +388,7 @@ func processEmailForFlows(ctx context.Context, services *service.Services, tenan
 						return err
 					}
 
-					if flowContact == nil {
+					if flowContact == nil || flowContact.Status == neo4jentity.FlowParticipantStatusCompleted || flowContact.Status == neo4jentity.FlowParticipantStatusGoalAchieved {
 						continue
 					}
 

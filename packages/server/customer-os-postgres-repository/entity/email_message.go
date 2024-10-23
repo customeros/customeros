@@ -36,6 +36,7 @@ type EmailMessage struct {
 	Content      string
 
 	//COS interaction event id
+	//deprecated
 	ReplyTo *string
 
 	//Values taken from providers

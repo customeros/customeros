@@ -19,7 +19,7 @@ import (
 )
 
 const (
-	workingDayStart = 9
+	workingDayStart = 6
 	workingDayEnd   = 18
 )
 
@@ -46,7 +46,7 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 	now := utils.Now()
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
-		flowExecutions, err := s.getFlowActionExecutions(ctx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
+		flowExecutions, err := s.getFlowActionExecutions(ctx, &tx, flowId, flowParticipant.EntityId, flowParticipant.EntityType)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -128,13 +128,13 @@ func (s *flowExecutionService) ScheduleFlow(ctx context.Context, tx *neo4j.Manag
 	return nil
 }
 
-func (s *flowExecutionService) getFlowActionExecutions(ctx context.Context, flowId, entityId string, entityType model.EntityType) ([]*entity.FlowActionExecutionEntity, error) {
+func (s *flowExecutionService) getFlowActionExecutions(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*entity.FlowActionExecutionEntity, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.GetForContact")
 	defer span.Finish()
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	//get executions for contact
-	nodes, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetForEntity(ctx, flowId, entityId, entityType.String())
+	nodes, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetForEntity(ctx, tx, flowId, entityId, entityType)
 	if err != nil {
 		tracing.TraceErr(span, err)
 		return nil, err
@@ -446,97 +446,157 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 			return nil, errors.New("action not found")
 		}
 
-		//TODO verify if the action execution hasn't produced an email in the email table by producerId and producerType
+		if currentAction.Data.Action == entity.FlowActionTypeEmailNew || currentAction.Data.Action == entity.FlowActionTypeEmailReply {
 
-		if currentAction.Data.Action == entity.FlowActionTypeEmailNew {
-
-			mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, common.GetTenantFromContext(ctx), *scheduledActionExecution.Mailbox)
+			//prevent duplicate emails for same action
+			existingEmail, err := s.services.PostgresRepositories.EmailMessageRepository.GetByProducer(ctx, tenant, scheduledActionExecution.Id, model.NodeLabelFlowActionExecution)
 			if err != nil {
-				return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
+				//todo this is producing an error below when trying to insert the email. need to rewrite how we store the email
+				return nil, errors.Wrap(err, "failed to get email by producer")
 			}
 
-			if mailbox == nil {
-				return nil, errors.New("mailbox not found in database")
-			}
+			if existingEmail == nil {
 
-			toEmail := ""
-
-			//identify the primary work email associated with the entity
-			emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, scheduledActionExecution.EntityType, []string{scheduledActionExecution.EntityId})
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to get all email nodes for linked entity ids")
-			}
-
-			if emailNodes == nil || len(emailNodes) == 0 {
-				return nil, errors.New("no email nodes found for linked entity ids")
-			}
-
-			for _, emailNode := range emailNodes {
-				emailEntity := mapper.MapDbNodeToEmailEntity(emailNode.Node)
-				if emailEntity != nil && emailEntity.Work != nil && *emailEntity.Work {
-					toEmail = emailEntity.RawEmail // TODO we should look for verified emails?
-					break
-				}
-			}
-
-			if toEmail == "" {
-				return nil, errors.New("no work email found for entity")
-			}
-
-			bodyTemplate := *currentAction.Data.BodyTemplate
-
-			if scheduledActionExecution.EntityType == model.CONTACT {
-				contactNode, err := s.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, scheduledActionExecution.EntityId)
+				mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, common.GetTenantFromContext(ctx), *scheduledActionExecution.Mailbox)
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to get contact")
+					return nil, errors.Wrap(err, "failed to get mailbox by mailbox")
 				}
 
-				contact := mapper.MapDbNodeToContactEntity(contactNode)
+				if mailbox == nil {
+					return nil, errors.New("mailbox not found in database")
+				}
 
-				firstName, lastName := contact.DeriveFirstAndLastNames()
-				bodyTemplate = replacePlaceholders(bodyTemplate, "contact_first_name", firstName)
-				bodyTemplate = replacePlaceholders(bodyTemplate, "contact_last_name", lastName)
-				bodyTemplate = replacePlaceholders(bodyTemplate, "contact_email", toEmail)
+				toEmail := ""
 
-				contactWithOrganizations, err := s.services.OrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, []string{contact.Id})
+				//identify the primary work email associated with the entity
+				emailNodes, err := s.services.Neo4jRepositories.EmailReadRepository.GetAllEmailNodesForLinkedEntityIds(ctx, tenant, scheduledActionExecution.EntityType, []string{scheduledActionExecution.EntityId})
 				if err != nil {
-					return nil, errors.Wrap(err, "failed to get latest organizations with job roles for contacts")
+					return nil, errors.Wrap(err, "failed to get all email nodes for linked entity ids")
 				}
 
-				if len(*contactWithOrganizations) > 0 {
-					contactWithOrganization := (*contactWithOrganizations)[0]
-					bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", contactWithOrganization.Organization.Name)
-				} else {
-					bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", "")
+				if emailNodes == nil || len(emailNodes) == 0 {
+					return nil, errors.New("no email nodes found for linked entity ids")
 				}
-			}
 
-			userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, *scheduledActionExecution.Mailbox)
-			if err != nil {
-				return nil, errors.Wrap(err, "failed to get first user by email")
-			}
+				for _, emailNode := range emailNodes {
+					emailEntity := mapper.MapDbNodeToEmailEntity(emailNode.Node)
+					if emailEntity != nil && emailEntity.Work != nil && *emailEntity.Work {
+						toEmail = emailEntity.RawEmail // TODO we should look for verified emails?
+						break
+					}
+				}
 
-			if userNode == nil {
-				return nil, errors.New("user not found")
-			}
+				if toEmail == "" {
+					return nil, errors.New("no work email found for entity")
+				}
 
-			user := mapper.MapDbNodeToUserEntity(userNode)
+				bodyTemplate := *currentAction.Data.BodyTemplate
 
-			emailMessage = &postgresEntity.EmailMessage{
-				Status:       postgresEntity.EmailMessageStatusScheduled,
-				ProducerId:   scheduledActionExecution.Id,
-				ProducerType: model.NodeLabelFlowActionExecution,
-				FromName:     user.FirstName + " " + user.LastName,
-				From:         *scheduledActionExecution.Mailbox,
-				To:           []string{toEmail},
-				Subject:      *currentAction.Data.Subject,
-				Content:      bodyTemplate,
+				if scheduledActionExecution.EntityType == model.CONTACT {
+					contactNode, err := s.services.Neo4jRepositories.ContactReadRepository.GetContact(ctx, tenant, scheduledActionExecution.EntityId)
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to get contact")
+					}
+
+					contact := mapper.MapDbNodeToContactEntity(contactNode)
+
+					firstName, lastName := contact.DeriveFirstAndLastNames()
+					bodyTemplate = replacePlaceholders(bodyTemplate, "contact_first_name", firstName)
+					bodyTemplate = replacePlaceholders(bodyTemplate, "contact_last_name", lastName)
+					bodyTemplate = replacePlaceholders(bodyTemplate, "contact_email", toEmail)
+
+					contactWithOrganizations, err := s.services.OrganizationService.GetLatestOrganizationsWithJobRolesForContacts(ctx, []string{contact.Id})
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to get latest organizations with job roles for contacts")
+					}
+
+					if len(*contactWithOrganizations) > 0 {
+						contactWithOrganization := (*contactWithOrganizations)[0]
+						bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", contactWithOrganization.Organization.Name)
+					} else {
+						bodyTemplate = replacePlaceholders(bodyTemplate, "organization_name", "")
+					}
+				}
+
+				userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, *scheduledActionExecution.Mailbox)
+				if err != nil {
+					return nil, errors.Wrap(err, "failed to get first user by email")
+				}
+
+				if userNode == nil {
+					return nil, errors.New("user not found")
+				}
+
+				user := mapper.MapDbNodeToUserEntity(userNode)
+
+				emailMessage = &postgresEntity.EmailMessage{
+					Status:       postgresEntity.EmailMessageStatusScheduled,
+					ProducerId:   scheduledActionExecution.Id,
+					ProducerType: model.NodeLabelFlowActionExecution,
+					FromName:     user.FirstName + " " + user.LastName,
+					From:         *scheduledActionExecution.Mailbox,
+					To:           []string{toEmail},
+					Content:      bodyTemplate,
+				}
+
+				if currentAction.Data.Action == entity.FlowActionTypeEmailNew {
+					emailMessage.Subject = *currentAction.Data.Subject
+				}
+
+				if currentAction.Data.Action == entity.FlowActionTypeEmailReply {
+					//walk back the flow and identify the previous email
+					//get previous email execution from neo4j
+					//get previous email from postgres
+					//reply to the previous email
+
+					parentEmailAction, err := s.getEmailActionToReply(ctx, scheduledActionExecution.ActionId)
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to get email action to reply")
+					}
+
+					if parentEmailAction == nil {
+						return nil, errors.New("no parent email action found")
+					}
+
+					parentEmailExecution, err := s.services.Neo4jRepositories.FlowActionExecutionReadRepository.GetExecution(ctx, scheduledActionExecution.FlowId, parentEmailAction.Id, scheduledActionExecution.EntityId, scheduledActionExecution.EntityType)
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to get execution")
+					}
+
+					if parentEmailExecution == nil {
+						return nil, errors.New("no parent email execution found")
+					}
+
+					parentEmail := mapper.MapDbNodeToFlowActionExecutionEntity(parentEmailExecution)
+
+					parentEmailSent, err := s.services.PostgresRepositories.EmailMessageRepository.GetByProducer(ctx, tenant, parentEmail.Id, model.NodeLabelFlowActionExecution)
+					if err != nil {
+						return nil, errors.Wrap(err, "failed to get email by producer")
+					}
+
+					if parentEmailSent == nil {
+						return nil, errors.New("no parent email sent found")
+					}
+
+					emailMessage.Subject = "Re: " + parentEmailSent.Subject
+					emailMessage.ProviderInReplyTo = parentEmailSent.ProviderMessageId
+					emailMessage.ProviderReferences = parentEmailSent.ProviderReferences + " " + parentEmailSent.ProviderMessageId
+				}
+
 			}
 		}
-		//else if currentAction.ActionType == neo4jEntity.FlowActionTypeEmailReply {
-		//	TODO reply to previous email
+
+		////mark the action execution as success
+		//err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateStringProperty(ctx, &tx, tenant, scheduledActionExecution.Id, model.NodeLabelFlowActionExecution, "status", string(entity.FlowActionExecutionStatusSuccess))
+		//if err != nil {
+		//	return nil, errors.Wrap(err, "failed to update status")
+		//}
+		//err = s.services.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, &tx, tenant, scheduledActionExecution.Id, model.NodeLabelFlowActionExecution, "executedAt", utils.TimePtr(utils.Now()))
+		//if err != nil {
+		//	return nil, errors.Wrap(err, "failed to update status")
 		//}
 
+		scheduledActionExecution.ExecutedAt = utils.TimePtr(utils.Now())
 		scheduledActionExecution.Status = entity.FlowActionExecutionStatusSuccess
 
 		_, err = s.services.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, &tx, scheduledActionExecution)
@@ -575,6 +635,53 @@ func (s *flowExecutionService) ProcessActionExecution(ctx context.Context, sched
 	}
 
 	return nil
+}
+
+func (s *flowExecutionService) getEmailActionToReply(ctx context.Context, actionId string) (*entity.FlowActionEntity, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowExecutionService.getEmailActionToReply")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+
+	var previous *entity.FlowActionEntity
+
+	previousNodes, err := s.services.Neo4jRepositories.FlowActionReadRepository.GetPrevious(ctx, actionId)
+	if err != nil {
+		return nil, errors.Wrap(err, "failed to get previous nodes for action")
+	}
+
+	if previousNodes == nil || len(previousNodes) == 0 {
+		return nil, errors.New("no previous nodes found for action")
+	}
+
+	if len(previousNodes) == 1 {
+		previousEntity := mapper.MapDbNodeToFlowActionEntity(previousNodes[0])
+
+		if previousEntity.Data.Action == entity.FlowActionTypeFlowStart {
+			return nil, errors.New("reached start of flow")
+		} else if previousEntity.Data.Action == entity.FlowActionTypeEmailNew {
+			previous = previousEntity
+		} else {
+			return s.getEmailActionToReply(ctx, previousEntity.Id)
+		}
+	}
+
+	// Handle multiple previous nodes
+	for _, previousNode := range previousNodes {
+		previousEntity := mapper.MapDbNodeToFlowActionEntity(previousNode)
+
+		// Base case: If we find an email action, return it
+		if previousEntity.Data.Action == entity.FlowActionTypeEmailNew {
+			return previousEntity, nil
+		}
+
+		// Recursively search for an email action
+		result, err := s.getEmailActionToReply(ctx, previousEntity.Id)
+		if err == nil && result != nil {
+			return result, nil
+		}
+	}
+
+	return previous, nil
 }
 
 func replacePlaceholders(input, variableName, value string) string {
