@@ -148,14 +148,6 @@ func (h *organizationEventHandler) enrichOrganization(ctx context.Context, tenan
 		return nil
 	}
 
-	// create domain node if not exist
-	err = h.services.CommonServices.Neo4jRepositories.DomainWriteRepository.MergeDomain(ctx, domain, constants.SourceOpenline, constants.AppSourceEventProcessingPlatformSubscribers)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		h.log.Errorf("Error creating domain node: %v", err)
-		return nil
-	}
-
 	err = h.services.CommonServices.Neo4jRepositories.CommonWriteRepository.UpdateTimeProperty(ctx, tenant, model.NodeLabelOrganization, organizationId, string(neo4jentity.OrganizationPropertyEnrichRequestedAt), utils.NowPtr())
 	if err != nil {
 		tracing.TraceErr(span, errors.Wrap(err, "failed to update enrich requested at"))
