@@ -33,9 +33,6 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
   const company =
     contactStore?.value.organizations?.content?.[activeCompany]?.name;
 
-  const validationDetails =
-    contactStore?.value.emails?.[0]?.emailValidationDetails;
-
   const isPrimaryEmail = contactStore?.value.primaryEmail;
 
   const allEmails = uniqBy(
@@ -154,7 +151,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
                 {email && (
                   <EmailValidationMessage
                     email={email?.email || ''}
-                    validationDetails={validationDetails}
+                    validationDetails={email.emailValidationDetails}
                   />
                 )}
                 <Menu>
@@ -227,6 +224,3 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
     </>
   );
 });
-
-//todo:archiving primary email not working from contactPreviewCard
-//todo:archiving primary from the table ( delete everything and submit ) not working

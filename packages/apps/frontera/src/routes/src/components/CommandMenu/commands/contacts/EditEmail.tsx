@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useEffect } from 'react';
 
 import { set } from 'lodash';
 import { observer } from 'mobx-react-lite';
@@ -27,15 +27,27 @@ export const EditEmail = observer(() => {
   const label = `Contact - ${contact?.name}`;
 
   const handleSaveEmail = () => {
-    if (selectedId !== null) {
+    if (selectedId !== null && !store.ui.focusRow) {
       contact?.updateEmail(oldEmail ?? '', selectedId ?? 0);
-    } else {
+    }
+
+    if (selectedId === null) {
       contact?.updateEmailPrimary(oldEmail ?? '');
+    }
+
+    if (store.ui.focusRow) {
+      contact?.updateEmail('', selectedId ?? 0);
     }
     store.ui.commandMenu.setOpen(false);
     store.ui.setSelectionId(null);
     store.ui.commandMenu.setType('ContactCommands');
   };
+
+  useEffect(() => {
+    if (store.ui.commandMenu.isOpen === false) {
+      store.ui.setSelectionId(null);
+    }
+  }, [store.ui.commandMenu.isOpen]);
 
   return (
     <Command>
