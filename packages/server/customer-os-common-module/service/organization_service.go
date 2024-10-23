@@ -94,11 +94,14 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain"))
+			return nil, err
 		}
+		span.LogFields(log.Object("domainFromWebsite", domain))
 		if domainEntity.PrimaryDomain != "" && !s.services.Cache.IsPersonalEmailProvider(domain) {
 			primaryDomainFromWebsite = domainEntity.PrimaryDomain
 		}
 	}
+	span.LogFields(log.String("primaryDomainFromWebsite", primaryDomainFromWebsite))
 
 	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
 	if organizationId == nil {
@@ -308,13 +311,13 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	newDomains = utils.RemoveDuplicates(newDomains)
 	primaryDomain := ""
 	for _, domain := range newDomains {
-		if s.services.Cache.IsPersonalEmailProvider(primaryDomain) {
+		if s.services.Cache.IsPersonalEmailProvider(domain) {
 			continue
 		}
 		domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
 		if err != nil {
 			tracing.TraceErr(span, err)
-		} else if domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
+		} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
 			primaryDomain = domain
 			break
 		}

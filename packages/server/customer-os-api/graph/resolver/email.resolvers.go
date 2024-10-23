@@ -153,12 +153,12 @@ func (r *mutationResolver) EmailReplaceForContact(ctx context.Context, contactID
 		})
 	if err != nil {
 		tracing.TraceErr(span, err)
-		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		graphql.AddErrorf(ctx, "Failed to replace email %s", input.Email)
 		return nil, err
 	}
 
 	if utils.IfNotNilString(emailId) == "" {
-		graphql.AddErrorf(ctx, "Failed to merge email %s", input.Email)
+		graphql.AddErrorf(ctx, "Failed to replace email %s", input.Email)
 		return nil, nil
 	}
 
