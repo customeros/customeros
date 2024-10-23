@@ -35,7 +35,7 @@ func (s *domainService) CheckDomains() {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 50
+	limit := 500
 	delayFromLastUpdateInDays := 90
 
 	for {
