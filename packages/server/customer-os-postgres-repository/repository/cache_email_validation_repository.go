@@ -95,6 +95,7 @@ func (r cacheEmailValidationRepository) Save(ctx context.Context, cacheEmailVali
 			"data":                  cacheEmailValidation.Data,
 		}
 		if err := r.db.WithContext(ctx).Model(&existingData).Updates(updates).Error; err != nil {
+			tracing.TraceErr(span, errors.Wrap(err, "failed to update cache email validation"))
 			return nil, err
 		}
 		cacheEmailValidation = existingData

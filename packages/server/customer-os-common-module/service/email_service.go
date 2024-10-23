@@ -140,6 +140,20 @@ func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, e
 		return nil, err
 	}
 
+	tenant := common.GetTenantFromContext(ctx)
+
+	// check if linkWith is valid
+	exists, err := s.services.Neo4jRepositories.CommonReadRepository.ExistsById(ctx, tenant, linkWith.Id, linkWith.Type.Neo4jLabel())
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to check linked entity exists"))
+		return nil, err
+	}
+	if !exists {
+		err = errors.Errorf("linked entity %s with id %s not found", linkWith.Type.String(), linkWith.Id)
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	if previousEmail == emailFields.Email {
 		span.LogFields(log.Bool("email.same", true))
 		return nil, nil
@@ -152,7 +166,7 @@ func (s *emailService) ReplaceEmail(ctx context.Context, previousEmail string, e
 		}
 	}
 
-	return s.Merge(ctx, common.GetTenantFromContext(ctx), emailFields, &linkWith)
+	return s.Merge(ctx, tenant, emailFields, &linkWith)
 }
 
 func (s *emailService) LinkEmail(ctx context.Context, emailId, email, appSource string, primary bool, linkWith LinkWith) error {
