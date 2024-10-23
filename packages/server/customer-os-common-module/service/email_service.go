@@ -55,7 +55,7 @@ func (s *emailService) Merge(ctx context.Context, tenant string, emailFields Ema
 		tenant = common.GetTenantFromContext(ctx)
 	}
 	if common.GetTenantFromContext(ctx) == "" {
-		common.SetTenantInContext(ctx, tenant)
+		ctx = common.SetTenantInContext(ctx, tenant)
 	}
 
 	emailId := ""
