@@ -18,7 +18,9 @@ interface Props {
 const emailStatuses = {
   DELIVERABLE_NO_RISK: {
     message: 'Deliverable • No risk',
-    icon: <CheckCircleBroken className='text-greenLight-500 size-3' />,
+    icon: (
+      <CheckCircleBroken className='text-greenLight-500 size-3 first-of-type' />
+    ),
     value: EmailVerificationStatus.NoRisk,
   },
   DELIVERABLE_FIREWALL: {
