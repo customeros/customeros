@@ -17,6 +17,7 @@ type FlowActionReadRepository interface {
 	GetList(ctx context.Context, flowIds []string) ([]*utils.DbNodeAndId, error)
 	GetById(ctx context.Context, id string) (*neo4j.Node, error)
 	GetStartAction(ctx context.Context, flowId string) (*neo4j.Node, error)
+	GetPrevious(ctx context.Context, actionId string) ([]*neo4j.Node, error)
 	GetNext(ctx context.Context, actionId string) ([]*neo4j.Node, error)
 	GetFlowByActionId(ctx context.Context, id string) (*neo4j.Node, error)
 	GetFlowByEntity(ctx context.Context, entityId string, entityType model.EntityType) (*neo4j.Node, error)
@@ -149,6 +150,46 @@ func (r flowActionReadRepositoryImpl) GetStartAction(ctx context.Context, flowId
 		return nil, err
 	}
 	return result.(*dbtype.Node), nil
+}
+
+func (r flowActionReadRepositoryImpl) GetPrevious(ctx context.Context, actionId string) ([]*neo4j.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionReadRepository.GetPrevious")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	span.LogFields(log.String("actionId", actionId))
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	params := map[string]any{
+		"tenant":   tenant,
+		"actionId": actionId,
+	}
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(previous:FlowAction_%s )-[:NEXT]->(current:FlowAction_%s {id: $actionId}) RETURN previous`, tenant, tenant)
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := utils.NewNeo4jReadSession(ctx, *r.driver, utils.WithDatabaseName(r.database))
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]*dbtype.Node))))
+	if len(result.([]*dbtype.Node)) == 0 {
+		return nil, nil
+	}
+	return result.([]*dbtype.Node), err
 }
 
 func (r flowActionReadRepositoryImpl) GetNext(ctx context.Context, actionId string) ([]*neo4j.Node, error) {

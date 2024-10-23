@@ -7,6 +7,7 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/db"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
 	"github.com/opentracing/opentracing-go"
@@ -15,7 +16,8 @@ import (
 )
 
 type FlowActionExecutionReadRepository interface {
-	GetForEntity(ctx context.Context, flowId, entityId, entityType string) ([]*dbtype.Node, error)
+	GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error)
+	GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error)
 	GetFirstSlotForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*time.Time, error)
 	GetLastScheduledForMailbox(ctx context.Context, tx *neo4j.ManagedTransaction, mailbox string) (*dbtype.Node, error)
 	GetScheduledBefore(ctx context.Context, before time.Time) ([]*dbtype.Node, error)
@@ -33,19 +35,20 @@ func NewFlowActionExecutionReadRepository(driver *neo4j.DriverWithContext, datab
 	return &flowActionExecutionReadRepositoryImpl{driver: driver, database: database}
 }
 
-func (r flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context, flowId, entityId, entityType string) ([]*dbtype.Node, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForEntity")
+func (r flowActionExecutionReadRepositoryImpl) GetExecution(ctx context.Context, flowId, actionId, entityId string, entityType model.EntityType) (*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetExecution")
 	defer span.Finish()
 	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
 
 	tenant := common.GetTenantFromContext(ctx)
 
-	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fa:FlowAction_%s)-[:HAS_EXECUTION]->(fae:FlowActionExecution_%s {entityId: $entityId, entityType: $entityType}) RETURN fae order by fae.executedAt`, tenant, tenant, tenant)
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fa:FlowAction_%s {id: $actionId})-[:HAS_EXECUTION]->(fae:FlowActionExecution_%s {entityId: $entityId, entityType: $entityType}) RETURN fae order by fae.executedAt`, tenant, tenant, tenant)
 	params := map[string]any{
 		"tenant":     tenant,
 		"flowId":     flowId,
+		"actionId":   actionId,
 		"entityId":   entityId,
-		"entityType": entityType,
+		"entityType": entityType.String(),
 	}
 
 	span.LogFields(log.String("cypher", cypher))
@@ -58,12 +61,49 @@ func (r flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context,
 		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
 			return nil, err
 		} else {
-			return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+			return utils.ExtractSingleRecordFirstValueAsNode(ctx, queryResult, err)
 		}
 	})
 	if err != nil {
 		return nil, err
 	}
+	return result.(*dbtype.Node), nil
+}
+
+func (r flowActionExecutionReadRepositoryImpl) GetForEntity(ctx context.Context, tx *neo4j.ManagedTransaction, flowId, entityId string, entityType model.EntityType) ([]*dbtype.Node, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "FlowActionExecutionReadRepository.GetForEntity")
+	defer span.Finish()
+	tracing.SetDefaultNeo4jRepositorySpanTags(ctx, span)
+
+	tenant := common.GetTenantFromContext(ctx)
+
+	cypher := fmt.Sprintf(`MATCH (t:Tenant {name:$tenant})<-[:BELONGS_TO_TENANT]-(f:Flow_%s {id: $flowId})-[:HAS]->(fa:FlowAction_%s)-[:HAS_EXECUTION]->(fae:FlowActionExecution_%s {entityId: $entityId, entityType: $entityType}) RETURN fae order by fae.executedAt`, tenant, tenant, tenant)
+	params := map[string]any{
+		"tenant":     tenant,
+		"flowId":     flowId,
+		"entityId":   entityId,
+		"entityType": entityType.String(),
+	}
+
+	span.LogFields(log.String("cypher", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	result, err := utils.ExecuteReadInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
+		queryResult, err := tx.Run(ctx, cypher, params)
+		if err != nil {
+			return nil, err
+		}
+		return utils.ExtractAllRecordsFirstValueAsDbNodePtrs(ctx, queryResult, err)
+	})
+
+	if err != nil {
+		return nil, nil
+	}
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
 	return result.([]*dbtype.Node), nil
 }
 

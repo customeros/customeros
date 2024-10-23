@@ -40,6 +40,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 			ON MATCH SET
 				fae.updatedAt = $updatedAt,
 				fae.scheduledAt = $scheduledAt,
+				fae.executedAt = $executedAt,
 				fae.error = $error,
 				fae.status = $status
 				
@@ -70,10 +71,10 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 		"entityType":  entity.EntityType,
 		"actionId":    entity.ActionId,
 		"scheduledAt": entity.ScheduledAt,
+		"executedAt":  utils.TimePtrAsAny(entity.ExecutedAt),
 		"status":      entity.Status,
 		"mailbox":     entity.Mailbox,
 		"userId":      entity.UserId,
-		"executedAt":  entity.ExecutedAt,
 		"error":       entity.Error,
 	}
 

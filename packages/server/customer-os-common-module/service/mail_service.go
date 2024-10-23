@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"errors"
+	"encoding/json"
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -15,6 +15,7 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	tracingLog "github.com/opentracing/opentracing-go/log"
+	"github.com/pkg/errors"
 )
 
 type mailService struct {
@@ -59,6 +60,60 @@ func (s *mailService) SendMail(ctx context.Context, emailMessage *entity.EmailMe
 	// Append an image tag pointing to the spy endpoint to the request content
 	imgTag := "<img id=\"customer-os-email-track-open\" height=1 width=1 src=\"" + s.services.GlobalConfig.InternalServices.UserAdminApiPublicPath + "/mail/" + uniqueInternalIdentifier + "/track\" />"
 	emailMessage.Content += imgTag
+
+	subject := ""
+	inReplyTo := emailMessage.ProviderInReplyTo
+	references := emailMessage.ProviderReferences
+
+	if emailMessage.ReplyTo != nil {
+		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *emailMessage.ReplyTo, commonModel.NodeLabelInteractionEvent)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return err
+		}
+		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
+
+		emailChannelData := neo4jentity.EmailChannelData{}
+		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return fmt.Errorf("unable to parse email channel data for %s", *emailMessage.ReplyTo)
+		}
+
+		subject = emailChannelData.Subject
+		if len(emailChannelData.Subject) < 3 || emailChannelData.Subject[:3] != "Re:" {
+			subject = "Re: " + emailChannelData.Subject
+		}
+
+		if emailChannelData.Reference != "" {
+			references = emailChannelData.Reference + " " + emailChannelData.ProviderMessageId
+		} else {
+			references = emailChannelData.ProviderMessageId
+		}
+
+		inReplyTo = emailChannelData.ProviderMessageId
+	} else {
+		subject = emailMessage.Subject
+	}
+
+	emailMessage.Subject = subject
+	emailMessage.ProviderInReplyTo = inReplyTo
+	emailMessage.ProviderReferences = references
+
+	userNode, err := s.services.Neo4jRepositories.UserReadRepository.GetFirstUserByEmail(ctx, tenant, emailMessage.From)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to get first user by email"))
+		return err
+	}
+
+	if userNode == nil {
+		tracing.TraceErr(span, errors.New("user not found"))
+		return err
+	}
+
+	user := neo4jmapper.MapDbNodeToUserEntity(userNode)
+
+	emailMessage.FromName = user.FirstName + " " + user.LastName
 
 	if oauthToken == nil {
 		mailbox, err := s.services.PostgresRepositories.TenantSettingsMailboxRepository.GetByMailbox(ctx, tenant, emailMessage.From)

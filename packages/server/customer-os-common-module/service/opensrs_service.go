@@ -4,13 +4,9 @@ import (
 	"bytes"
 	"context"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"github.com/PuerkitoBio/goquery"
-	commonModel "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
-	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
-	neo4jmapper "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/mapper"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-postgres-repository/entity"
 	"github.com/opentracing/opentracing-go"
 	"net/smtp"
@@ -59,40 +55,9 @@ func (s *openSRSService) SendEmail(ctx context.Context, tenant string, request *
 		}
 	}
 
-	subject := ""
-	inReplyTo := ""
-	references := make([]string, 0)
-
-	if request.ReplyTo != nil {
-		interactionEventNode, err := s.services.Neo4jRepositories.CommonReadRepository.GetById(ctx, tenant, *request.ReplyTo, commonModel.NodeLabelInteractionEvent)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return err
-		}
-		interactionEvent := neo4jmapper.MapDbNodeToInteractionEventEntity(interactionEventNode)
-
-		emailChannelData := neo4jentity.EmailChannelData{}
-		err = json.Unmarshal([]byte(interactionEvent.ChannelData), &emailChannelData)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return fmt.Errorf("unable to parse email channel data for %s", *request.ReplyTo)
-		}
-
-		subject = emailChannelData.Subject
-		if len(emailChannelData.Subject) < 3 || emailChannelData.Subject[:3] != "Re:" {
-			subject = "Re: " + emailChannelData.Subject
-		}
-
-		if emailChannelData.Reference != "" {
-			emailChannelData.Reference = emailChannelData.Reference + " " + emailChannelData.ProviderMessageId
-		} else {
-			emailChannelData.Reference = emailChannelData.ProviderMessageId
-		}
-
-		inReplyTo = emailChannelData.ProviderMessageId
-	} else {
-		subject = request.Subject
-	}
+	subject := request.Subject
+	inReplyTo := request.ProviderInReplyTo
+	references := request.ProviderReferences
 
 	// Compose the email headers and body
 	messageTemplate := `From: {{.FromEmail}}
@@ -144,7 +109,7 @@ Content-Type: text/html; charset=UTF-8
 		Date:       time.Now().Format("Mon, 02 Jan 2006 15:04:05 -0700"),
 		MessageId:  generateMessageID(mailbox.MailboxUsername),
 		InReplyTo:  inReplyTo,
-		References: strings.Join(references, " "),
+		References: references,
 		Boundary:   fmt.Sprintf("=_%x", time.Now().UnixNano()),
 		PlainBody:  plainText,
 		HTMLBody:   request.Content,
