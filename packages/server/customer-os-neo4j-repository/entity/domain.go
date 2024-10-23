@@ -12,7 +12,7 @@ const (
 	DomainPropertyDomain                        DomainProperty = "domain"
 	DomainPropertySource                        DomainProperty = "source"
 	DomainPropertyAppSource                     DomainProperty = "appSource"
-	DomainPropertyIsPrimary                     DomainProperty = "isPrimary"
+	DomainPropertyIsPrimary                     DomainProperty = "primary"
 	DomainPropertyPrimaryDomain                 DomainProperty = "primaryDomain"
 	DomainPropertyPrimaryDomainCheckRequestedAt DomainProperty = "techPrimaryDomainCheckRequestedAt"
 )
