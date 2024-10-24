@@ -8,7 +8,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 )
 
-// TODO alexb deprecate and remove all methods
+// TODO deprecate and remove all methods
 type CustomFieldTemplateRepository interface {
 	FindByCustomFieldId(ctx context.Context, fieldId string) (any, error)
 }

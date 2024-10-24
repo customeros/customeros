@@ -10,7 +10,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 )
 
-// TODO alexb deprecate and remove
+// TODO deprecate and remove
 type CustomFieldTemplateService interface {
 	FindLinkedWithCustomField(ctx context.Context, customFieldId string) (*neo4jentity.CustomFieldTemplateEntity, error)
 }
@@ -38,7 +38,7 @@ func (s *customFieldTemplateService) FindLinkedWithCustomField(ctx context.Conte
 	return s.mapDbNodeToCustomFieldTemplate((queryResult.([]*db.Record))[0].Values[0].(dbtype.Node)), nil
 }
 
-// TODO alexb delete it
+// TODO delete it
 func (s *customFieldTemplateService) mapDbNodeToCustomFieldTemplate(dbNode dbtype.Node) *neo4jentity.CustomFieldTemplateEntity {
 	props := utils.GetPropsFromNode(dbNode)
 	customFieldTemplate := neo4jentity.CustomFieldTemplateEntity{

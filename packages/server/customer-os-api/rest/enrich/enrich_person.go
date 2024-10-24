@@ -232,7 +232,7 @@ func EnrichPerson(services *service.Services) gin.HandlerFunc {
 		companyName, companyDomain := "", ""
 		if enrichPersonApiResponse.Data.PersonProfile.Company != nil {
 			companyName = enrichPersonApiResponse.Data.PersonProfile.Company.Name
-			companyDomain = services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl)
+			companyDomain, _ = services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, enrichPersonApiResponse.Data.PersonProfile.Company.WebsiteUrl)
 		}
 
 		findWorkEmailApiResponse, err := services.EnrichmentService.CallApiFindWorkEmail(ctx, enrichPersonApiResponse.Data.PersonProfile.Person.FirstName, enrichPersonApiResponse.Data.PersonProfile.Person.LastName,

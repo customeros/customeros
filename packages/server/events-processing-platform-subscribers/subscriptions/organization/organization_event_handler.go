@@ -104,7 +104,7 @@ func (h *organizationEventHandler) EnrichOrganizationByRequest(ctx context.Conte
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 	span.SetTag(tracing.SpanTagTenant, eventData.Tenant)
 
-	domain := h.services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, eventData.Website)
+	domain := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, eventData.Website)
 	if domain == "" {
 		return nil
 	}

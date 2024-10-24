@@ -715,30 +715,26 @@ func (r *organizationWriteRepository) LinkWithDomain(ctx context.Context, tx *ne
 	tracing.TagTenant(span, tenant)
 	span.SetTag(tracing.SpanTagEntityId, organizationId)
 
-	cypher := fmt.Sprintf(`MERGE (d:Domain {domain:$domain}) 
-				ON CREATE SET 	d.createdAt=$now, 
-								d.updatedAt=datetime(),
-								d.appSource=$appSource
+	cypher := `MERGE (d:Domain {domain: $domain}) 
+  				ON CREATE SET 	d.createdAt = datetime(), 
+                				d.updatedAt = datetime()
 				WITH d
-				MATCH (t:Tenant {name:$tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization_%s {id:$organizationId})
-				MERGE (org)-[rel:HAS_DOMAIN]->(d)`, tenant)
+				MATCH (t:Tenant {name: $tenant})<-[:ORGANIZATION_BELONGS_TO_TENANT]-(org:Organization {id: $organizationId})
+				OPTIONAL MATCH (d)<-[:HAS_DOMAIN]-(otherOrg:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(t)
+				WITH d, org, COUNT(otherOrg) AS existingOrgCount
+				WHERE existingOrgCount = 0
+				MERGE (org)-[rel:HAS_DOMAIN]->(d)`
 	params := map[string]any{
 		"tenant":         tenant,
 		"organizationId": organizationId,
 		"domain":         strings.ToLower(domain),
-		"appSource":      "", //TODO
-		"now":            utils.Now(),
 	}
 	span.LogFields(log.String("cypher", cypher))
 	tracing.LogObjectAsJson(span, "params", params)
 
 	_, err := utils.ExecuteWriteInTransaction(ctx, r.driver, r.database, tx, func(tx neo4j.ManagedTransaction) (interface{}, error) {
 		_, err := tx.Run(ctx, cypher, params)
-		if err != nil {
-			tracing.TraceErr(span, err)
-			return nil, err
-		}
-		return nil, nil
+		return nil, err
 	})
 
 	if err != nil {

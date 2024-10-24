@@ -1549,10 +1549,9 @@ type ComplexityRoot struct {
 	}
 
 	WebsiteDetails struct {
-		AlternativePrimaryDomain func(childComplexity int) int
-		Domain                   func(childComplexity int) int
-		Primary                  func(childComplexity int) int
-		Website                  func(childComplexity int) int
+		Domain  func(childComplexity int) int
+		Primary func(childComplexity int) int
+		Website func(childComplexity int) int
 	}
 
 	Workflow struct {
@@ -11094,13 +11093,6 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.UserParticipant.UserParticipant(childComplexity), true
 
-	case "WebsiteDetails.alternativePrimaryDomain":
-		if e.complexity.WebsiteDetails.AlternativePrimaryDomain == nil {
-			break
-		}
-
-		return e.complexity.WebsiteDetails.AlternativePrimaryDomain(childComplexity), true
-
 	case "WebsiteDetails.domain":
 		if e.complexity.WebsiteDetails.Domain == nil {
 			break
@@ -14368,7 +14360,6 @@ type WebsiteDetails {
     website:                        String!
     domain:                         String!
     primary:                        Boolean!
-    alternativePrimaryDomain:       String!
 }
 
 enum Market {
@@ -80547,8 +80538,6 @@ func (ec *executionContext) fieldContext_Query_organization_CheckWebsite(ctx con
 				return ec.fieldContext_WebsiteDetails_domain(ctx, field)
 			case "primary":
 				return ec.fieldContext_WebsiteDetails_primary(ctx, field)
-			case "alternativePrimaryDomain":
-				return ec.fieldContext_WebsiteDetails_alternativePrimaryDomain(ctx, field)
 			}
 			return nil, fmt.Errorf("no field named %q was found under type WebsiteDetails", field.Name)
 		},
@@ -90205,50 +90194,6 @@ func (ec *executionContext) fieldContext_WebsiteDetails_primary(_ context.Contex
 		IsResolver: false,
 		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
 			return nil, errors.New("field of type Boolean does not have child fields")
-		},
-	}
-	return fc, nil
-}
-
-func (ec *executionContext) _WebsiteDetails_alternativePrimaryDomain(ctx context.Context, field graphql.CollectedField, obj *model.WebsiteDetails) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_WebsiteDetails_alternativePrimaryDomain(ctx, field)
-	if err != nil {
-		return graphql.Null
-	}
-	ctx = graphql.WithFieldContext(ctx, fc)
-	defer func() {
-		if r := recover(); r != nil {
-			ec.Error(ctx, ec.Recover(ctx, r))
-			ret = graphql.Null
-		}
-	}()
-	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
-		ctx = rctx // use context from middleware stack in children
-		return obj.AlternativePrimaryDomain, nil
-	})
-	if err != nil {
-		ec.Error(ctx, err)
-		return graphql.Null
-	}
-	if resTmp == nil {
-		if !graphql.HasFieldError(ctx, fc) {
-			ec.Errorf(ctx, "must not be null")
-		}
-		return graphql.Null
-	}
-	res := resTmp.(string)
-	fc.Result = res
-	return ec.marshalNString2string(ctx, field.Selections, res)
-}
-
-func (ec *executionContext) fieldContext_WebsiteDetails_alternativePrimaryDomain(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
-	fc = &graphql.FieldContext{
-		Object:     "WebsiteDetails",
-		Field:      field,
-		IsMethod:   false,
-		IsResolver: false,
-		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
-			return nil, errors.New("field of type String does not have child fields")
 		},
 	}
 	return fc, nil
@@ -112952,11 +112897,6 @@ func (ec *executionContext) _WebsiteDetails(ctx context.Context, sel ast.Selecti
 			}
 		case "primary":
 			out.Values[i] = ec._WebsiteDetails_primary(ctx, field, obj)
-			if out.Values[i] == graphql.Null {
-				out.Invalids++
-			}
-		case "alternativePrimaryDomain":
-			out.Values[i] = ec._WebsiteDetails_alternativePrimaryDomain(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
