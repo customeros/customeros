@@ -93,11 +93,6 @@ func (r *mutationResolver) OrganizationUnlinkAllDomains(ctx context.Context, org
 	panic(fmt.Errorf("not implemented: OrganizationUnlinkAllDomains - organization_UnlinkAllDomains"))
 }
 
-// OrganizationCreate is the resolver for the organization_Create field.
-func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.OrganizationInput) (*model.Organization, error) {
-	panic(fmt.Errorf("not implemented: OrganizationCreate - organization_Create"))
-}
-
 // OrganizationUpdate is the resolver for the organization_Update field.
 func (r *mutationResolver) OrganizationUpdate(ctx context.Context, input model.OrganizationUpdateInput) (*model.Organization, error) {
 	panic(fmt.Errorf("not implemented: OrganizationUpdate - organization_Update"))

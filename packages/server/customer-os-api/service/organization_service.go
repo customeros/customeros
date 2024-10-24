@@ -11,7 +11,6 @@ import (
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j/dbtype"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/constants"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/entity"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/graph/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-api/repository"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
@@ -54,13 +53,6 @@ type OrganizationService interface {
 	GetSuggestedMergeToForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error)
 	GetMinMaxRenewalForecastArr(ctx context.Context) (float64, float64, error)
 	GetOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.OrganizationEntities, error)
-}
-
-type OrganizationCreateData struct {
-	OrganizationEntity *neo4jentity.OrganizationEntity
-	CustomFields       *entity.CustomFieldEntities
-	TemplateId         *string
-	Domains            []string
 }
 
 type OrganizationUpdateData struct {
