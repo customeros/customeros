@@ -1,4 +1,4 @@
-import { Page, expect, Locator } from '@playwright/test';
+import { Page, expect, Locator, Response } from '@playwright/test';
 
 export async function assertWithRetry(
   assertionFunc: () => Promise<void>,
@@ -214,7 +214,7 @@ export function createResponsePromise(
   expectedKey: string,
   expectedValue: string | undefined,
 ) {
-  return new Promise((resolve, reject) => {
+  return new Promise<Response>((resolve, reject) => {
     const timeout = setTimeout(() => {
       reject(
         new Error(
@@ -247,14 +247,16 @@ export function createResponsePromise(
 
           const actualValue = getNestedProperty(responseBody.data, expectedKey);
 
-          return actualValue !== expectedValue;
+          if (actualValue !== expectedValue) {
+            resolve(response); // Now using Playwright's Response type
+
+            return true;
+          }
+
+          return false;
         }
 
         return false;
-      })
-      .then(() => {
-        clearTimeout(timeout);
-        resolve(true);
       })
       .catch((error) => {
         clearTimeout(timeout);

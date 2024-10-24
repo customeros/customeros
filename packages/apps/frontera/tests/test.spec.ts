@@ -73,11 +73,12 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
 
   // Go to About page
   await organizationSideNavPage.goToAbout();
-  await organizationAboutPage.populateAboutFields();
-  await organizationAboutPage.checkPopulatedAboutFields(
-    organizationName,
-    'customeros.fe.testing',
-  );
+  // await organizationAboutPage.populateAboutFields();
+  await organizationAboutPage.enrichOrganization(organizationName);
+  // await organizationAboutPage.checkPopulatedAboutFields(
+  //   organizationName,
+  //   'customeros.fe.testing',
+  // );
 });
 
 test('Create People entry in an Organization', async ({ page }, testInfo) => {

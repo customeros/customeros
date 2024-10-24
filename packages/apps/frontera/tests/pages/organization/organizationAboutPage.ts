@@ -20,7 +20,7 @@ export class OrganizationAboutPage {
   private orgAboutTags = 'div[data-test="org-about-tags"]';
   private orgAboutRelationship = 'button[data-test="org-about-relationship"]';
   private relationshipNotAFit = 'div[role="menuitem"]:has-text("Not a fit")';
-  // private orgAboutStage = 'div[data-test="org-about-stage"]';
+  private orgAboutStage = 'div[data-test="org-about-stage"]';
   private orgAboutIndustry = 'div[data-test="org-about-industry"]';
   private industryIndependentPowerAndRenewableElectricityProducers =
     'div[role="option"]:has-text("Independent Power and Renewable Electricity Producers")';
@@ -36,6 +36,9 @@ export class OrganizationAboutPage {
     'div[role="option"]:has-text("10000+ employees")';
   private orgAboutOrgOwner = 'div[data-test="org-about-org-owner"]';
   private orgAboutSocialLink = 'input[data-test="org-about-social-link"]';
+  private readonly socialLinkDataTest =
+    this.orgAboutSocialLink.match(/data-test="([^"]+)"/)?.[1] ??
+    'org-about-social-link';
   private orgAboutSocialLinkFilledIn = 'p[data-test="org-about-social-link"]';
 
   async addWebsiteToOrg() {
@@ -44,7 +47,7 @@ export class OrganizationAboutPage {
     const requestPromise = createRequestPromise(
       this.page,
       'website',
-      'www.qweasdzxc123ads.com',
+      'https://www.cognyte.com',
     );
 
     const responsePromise = createResponsePromise(
@@ -55,10 +58,13 @@ export class OrganizationAboutPage {
 
     await this.page
       .locator(this.orgAboutWww)
-      .pressSequentially('www.qweasdzxc123ads.com', { delay: 200 });
+      .pressSequentially('https://www.cognyte.com', { delay: 200 });
     await this.page.keyboard.press('Tab');
 
     await Promise.all([requestPromise, responsePromise]);
+    await this.page.waitForTimeout(5000);
+    await this.page.reload();
+    await this.page.waitForLoadState('networkidle');
   }
 
   async addRelationshipToOrg() {
@@ -185,6 +191,7 @@ export class OrganizationAboutPage {
 
   async populateAboutFields() {
     await this.addWebsiteToOrg();
+
     await this.page.fill(
       this.orgAaboutDescription,
       'This org is simply the best, better than all the rest',
@@ -249,5 +256,52 @@ export class OrganizationAboutPage {
         .soft(this.page.locator(this.orgAboutSocialLinkFilledIn))
         .toContainText('/qweasdzxc123ads'),
     ]);
+  }
+
+  async enrichOrganization(organizationName: string) {
+    await this.addWebsiteToOrg();
+
+    await this.page.waitForLoadState('networkidle');
+    await this.page.locator(this.orgAboutName).waitFor({ state: 'visible' });
+
+    await Promise.all([
+      expect
+        .soft(this.page.locator(this.orgAboutName))
+        .toHaveValue(organizationName),
+      expect
+        .soft(this.page.locator(this.orgAboutWww))
+        .toHaveValue('https://www.cognyte.com'),
+      expect
+        .soft(this.page.locator(this.orgAaboutDescription))
+        .toHaveValue('Actionable Intelligence for a Safer World™ '),
+      expect
+        .soft(this.page.locator(this.orgAboutRelationship))
+        .toContainText('Prospect'),
+      expect
+        .soft(this.page.locator(this.orgAboutStage))
+        .toContainText('Target'),
+      expect
+        .soft(this.page.locator(this.orgAboutIndustry))
+        .toContainText('Internet Software & Services'),
+      expect
+        .soft(this.getSocialLinkLocator('facebook.com/cognyte'))
+        .toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/cognyte')).toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/Cognyte')).toHaveCount(1),
+      expect.soft(this.getSocialLinkLocator('/3669')).toHaveCount(1),
+      expect
+        .soft(
+          this.getSocialLinkLocator(
+            'youtube.com/channel/UCqIvlQRaVQ38kr03p5QTDWA',
+          ),
+        )
+        .toHaveCount(1),
+    ]);
+  }
+
+  private getSocialLinkLocator(exactText: string) {
+    return this.page.locator(
+      `p[data-test="${this.socialLinkDataTest}"]:text-is("${exactText}")`,
+    );
   }
 }
