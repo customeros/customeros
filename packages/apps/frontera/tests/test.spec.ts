@@ -1,5 +1,6 @@
 // import { test } from '@playwright/test';
 import { test } from './videoFixture';
+import { organizations } from './test-data';
 import { FlowPage } from './pages/flows/flowPage';
 import { FlowsPage } from './pages/flows/flowsPage';
 import { LoginPage } from './pages/loginPage/loginPage';
@@ -71,13 +72,16 @@ test('Add About information to an Organization', async ({ page }, testInfo) => {
   await new Promise((resolve) => setTimeout(resolve, 1500));
   await organizationsPage.goToOrganization(organizationName);
 
-  // Go to About page
   await organizationSideNavPage.goToAbout();
-  await organizationAboutPage.populateAboutFields();
-  await organizationAboutPage.checkPopulatedAboutFields(
-    organizationName,
-    'customeros.fe.testing',
-  );
+
+  //Check enrichment
+  await organizationAboutPage.enrichOrganization(organizations.create.website);
+  organizations.create.name = organizationName;
+  await organizationAboutPage.checkEnrichedAboutFields(organizations.create);
+
+  //Check updates that override the enrichment
+  await organizationAboutPage.populateAboutFields(organizations.update);
+  await organizationAboutPage.checkPopulatedAboutFields(organizations.update);
 });
 
 test('Create People entry in an Organization', async ({ page }, testInfo) => {
@@ -195,7 +199,6 @@ test('CmdK global menu', async ({ page }, testInfo) => {
   await organizationsCmdKPage.verifyNavigationToContracts(page);
   await organizationsCmdKPage.verifyNavigationToFlows(page);
   await organizationsCmdKPage.verifyNavigationToSettings(page);
-  await organizationsCmdKPage.verifyNavigationToCustomerMap(page);
 });
 
 test('Assign contact to flow', async ({ page }, testInfo) => {

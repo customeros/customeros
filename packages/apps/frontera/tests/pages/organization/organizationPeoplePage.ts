@@ -39,22 +39,30 @@ export class OrganizationPeoplePage {
     'div[data-test="org-people-contact-timezone"]';
 
   async addContactEmpty() {
-    await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddSomeone);
-
-    const response = await this.page.waitForResponse(
-      (response) =>
-        response.url().includes('customer-os-api') && //createContact
-        response
-          .json()
-          .then(
-            (body) =>
-              body.data &&
-              body.data?.contact_CreateForOrganization?.id !== undefined,
-          )
-          .catch(() => false),
+    const createContactResponsePromise = createResponsePromise(
+      this.page,
+      'contact_CreateForOrganization?.id',
+      undefined,
     );
 
-    await response.json();
+    const contactResponsePromise = createResponsePromise(
+      this.page,
+      'contact?.metadata?.id',
+      undefined,
+    );
+    const organizationResponsePromise = createResponsePromise(
+      this.page,
+      'organization?.metadata?.id',
+      undefined,
+    );
+
+    await clickLocatorsThatAreVisible(this.page, this.orgPeopleAddSomeone);
+
+    await Promise.all([
+      createContactResponsePromise,
+      contactResponsePromise,
+      organizationResponsePromise,
+    ]);
   }
 
   async addNameToContact() {
@@ -122,7 +130,7 @@ export class OrganizationPeoplePage {
 
     const responsePromise = createResponsePromise(
       this.page,
-      'jobRole_Create?.id',
+      'jobRole_Update?.id',
       undefined,
     );
 
