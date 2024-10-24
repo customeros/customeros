@@ -450,16 +450,6 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
-		" MATCH (merged)-[rel:IS]->(or:OrganizationRelationship) "+
-		" MERGE (primary)-[newRel:IS]->(or) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+
-		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS_CONTRACT]->(n:Contract) "+
 		" MERGE (primary)-[newRel:HAS_CONTRACT]->(n) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
@@ -512,16 +502,6 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WITH primary, merged "+
 		" MATCH (merged)<-[rel:REMINDER_BELONGS_TO_ORGANIZATION]-(n:Reminder) "+
 		" MERGE (primary)<-[newRel:REMINDER_BELONGS_TO_ORGANIZATION]-(n) "+
-		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
-		"				newRel.createdAt = $now "+
-		"			SET	rel.merged=true", params); err != nil {
-		return err
-	}
-
-	if _, err := tx.Run(ctx, matchQuery+
-		" WITH primary, merged "+
-		" MATCH (merged)-[rel:IS]->(or:OrganizationRelationship) "+
-		" MERGE (primary)-[newRel:IS]->(or) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
