@@ -17,16 +17,18 @@ declare const heap: {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 declare const window: any;
 
-H.init('ldwno7wd', {
-  environment: import.meta.env.MODE,
-  serviceName: 'customer-os',
-  tracingOrigins: true,
-  networkRecording: {
-    enabled: import.meta.env.MODE === 'production',
-    recordHeadersAndBody: true,
-    urlBlocklist: [],
-  },
-});
+if (import.meta.env.PROD) {
+  H.init('ldwno7wd', {
+    environment: import.meta.env.MODE,
+    serviceName: 'customer-os',
+    tracingOrigins: true,
+    networkRecording: {
+      enabled: import.meta.env.MODE === 'production',
+      recordHeadersAndBody: true,
+      urlBlocklist: [],
+    },
+  });
+}
 
 export const AnalyticsProvider = observer(
   ({ children }: { isProduction?: boolean; children: React.ReactNode }) => {

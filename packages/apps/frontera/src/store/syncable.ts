@@ -1,6 +1,7 @@
 import type { Channel } from 'phoenix';
 
 import { getDiff, applyDiff } from 'recursive-diff';
+import { Persister, type PersisterInstance } from '@store/persister';
 import {
   toJS,
   when,
@@ -20,20 +21,31 @@ type SyncableUpdateOptions = {
   syncMutate?: boolean;
 };
 
+type LoadOptions = {
+  fromPersisted?: boolean;
+};
+
 export class Syncable<T extends object> {
   value: T;
   snapshot: T;
-  version = 0;
   isLoading = false;
-  history: Operation[] = [];
   error: string | null = null;
   channel: Channel | null = null;
+  private persister?: PersisterInstance;
 
-  constructor(public root: RootStore, public transport: Transport, data: T) {
+  constructor(
+    public root: RootStore,
+    public transport: Transport,
+    data: T,
+    _channel?: Channel,
+  ) {
     this.value = data;
     this.snapshot = Object.assign({}, data);
+    this.persister = Persister.getInstance(this.getChannelName().split(':')[0]);
+    this.persist = this.persist.bind(this);
+    this.subscribe = this.subscribe.bind(this);
 
-    makeObservable<Syncable<T>, 'initChannelConnection' | 'subscribe'>(this, {
+    makeObservable<Syncable<T>, 'subscribe'>(this, {
       id: computed,
       load: action,
       save: action,
@@ -43,22 +55,18 @@ export class Syncable<T extends object> {
       subscribe: action,
       error: observable,
       value: observable,
-      history: observable,
-      channel: observable,
-      version: observable,
-      snapshot: observable,
       isLoading: observable,
       getChannelName: action,
-      initChannelConnection: action,
     });
 
     when(
       () => !!this.root.session.value.tenant && !this.root.demoMode,
-      async () => {
-        try {
-          // await this.initChannelConnection();
-        } catch (e) {
-          console.error(e);
+      () => {
+        const channel = this.transport.channels.get(this.getChannelName());
+
+        if (channel) {
+          this.channel = channel;
+          this.subscribe();
         }
       },
     );
@@ -86,38 +94,25 @@ export class Syncable<T extends object> {
     return '';
   }
 
-  async load(data: T) {
+  public async load(data: T, opts?: LoadOptions) {
     requestIdleCallback(() => {
       runInAction(() => {
         Object.assign(this.value, data);
         Object.assign(this.snapshot, data);
-        this.initChannelConnection();
+        !opts?.fromPersisted && this.persist();
       });
     });
-  }
-
-  private async initChannelConnection() {
-    try {
-      const connection = await this.transport.join(
-        this.getChannelName(),
-        this.id,
-        this.version,
-      );
-
-      if (!connection) return;
-
-      this.channel = connection.channel;
-      this.subscribe();
-    } catch (e) {
-      console.error(e);
-    }
   }
 
   private subscribe() {
     if (!this.channel || this.root.demoMode) return;
 
     this.channel.on('sync_packet', (packet: SyncPacket) => {
-      if (packet.operation.ref === this.transport.refId) return;
+      if (
+        packet.operation?.entityId !== this.getId() ||
+        packet.operation.ref === this.transport.refId
+      )
+        return;
 
       const prev = toJS(this.value);
       const diff = packet.operation.diff;
@@ -126,8 +121,6 @@ export class Syncable<T extends object> {
 
       runInAction(() => {
         this.value = next;
-        this.version = packet.version;
-        this.history.push(packet.operation);
       });
     });
   }
@@ -143,14 +136,13 @@ export class Syncable<T extends object> {
     const diff = getDiff(lhs, rhs, true);
 
     const operation: Operation = {
-      id: this.version,
+      id: 0,
       diff,
       entityId: this.getId(),
       ref: this.transport.refId,
       entity: this.getChannelName().split(':')[0],
     };
 
-    this.history.push(operation);
     this.value = next;
 
     if (this?.save) {
@@ -164,13 +156,10 @@ export class Syncable<T extends object> {
 
           this?.channel
             ?.push('sync_packet', { payload: { operation } })
-            ?.receive('ok', ({ version }: { version: number }) => {
-              this.version = version;
-            });
+            ?.receive('ok', ({ version: _version }: { version: number }) => {});
         } catch (e) {
           console.error(e);
           this.value = lhs;
-          this.history.pop();
         }
       })();
     }
@@ -185,11 +174,18 @@ export class Syncable<T extends object> {
   ) {
     const operation = this.makeChangesetOperation();
 
-    this.root.transactions.commit(operation, opts);
-
     Object.assign(this.snapshot, toJS(this.value));
+
+    this.root.transactions.commit(operation, {
+      ...opts,
+      persist: this.persist,
+    });
   }
 
+  /**
+   * @deprecated
+   * will be removed as soon as we migrate all stores to tx queues
+   */
   public save(_operation: Operation) {
     /* Placeholder: should be overwritten by sub-classes with the apropiate mutation logic */
   }
@@ -204,14 +200,23 @@ export class Syncable<T extends object> {
     const diff = getDiff(lhs, rhs, true);
 
     const operation: Operation = {
-      id: this.version,
+      id: 0,
       diff,
       entityId: this.getId(),
       ref: this.transport.refId,
+      tenant: this.root.session.value.tenant,
       entity: this.getChannelName().split(':')[0],
     };
 
     return operation;
+  }
+
+  private async persist() {
+    try {
+      await this.persister?.setItem(this.getId(), toJS(this.snapshot));
+    } catch (e) {
+      console.error('Failed to persist', e);
+    }
   }
 
   static getDefaultValue() {

@@ -17,6 +17,10 @@ import {
   PopoverTrigger,
 } from '@ui/overlay/Popover/Popover';
 
+// localDate and utcDate namings are misused.
+// It should be the other way around.
+// TODO: swap names of localDate and utcDate;
+
 interface DueDatePickerProps {
   value: string;
   onChange: (value: string) => void;

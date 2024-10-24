@@ -17,6 +17,7 @@ type TransactionStatus =
 type OperationType = Operation | GroupOperation;
 type TransactionOptions = {
   syncOnly?: boolean;
+  persist?: () => void;
   onFailled?: () => void;
   onCompleted?: () => void;
 };
@@ -50,6 +51,7 @@ class Transaction {
     this.status = 'COMPLETED';
     this.completedAt = new Date();
     this?.options?.onCompleted?.();
+    this?.options?.persist?.();
   }
 
   retry() {
@@ -217,10 +219,8 @@ class TransactionRunner {
     return await new Promise<void>((resolve, reject) => {
       const channelBinding =
         tx.type === 'SINGLE' ? 'sync_packet' : 'sync_group_packet';
-
-      const channel = this.transport?.channels?.get(
-        tx.operation.entityId as string,
-      );
+      const channelKey = tx.operation?.entity;
+      const channel = this.transport?.channels?.get(channelKey as string);
 
       channel
         ?.push(channelBinding, { payload: { operation: tx.operation } })

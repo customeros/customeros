@@ -16,6 +16,10 @@ export class InvoicesStore extends SyncableGroup<Invoice, InvoiceStore> {
     return 'Invoices';
   }
 
+  get persisterKey() {
+    return 'Invoices';
+  }
+
   constructor(public root: RootStore, public transport: Transport) {
     super(root, transport, InvoiceStore);
 

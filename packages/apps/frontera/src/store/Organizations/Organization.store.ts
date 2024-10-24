@@ -154,7 +154,7 @@ export class OrganizationStore extends Syncable<Organization> {
   }
 
   getChannelName() {
-    return 'Organization';
+    return 'Organizations';
   }
 
   deleteTag(tagId: string) {

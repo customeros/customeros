@@ -24,7 +24,7 @@ export class GraphqlService {
     }
 
     return match(operation.entity)
-      .with('Organization', async () => {
+      .with('Organizations', async () => {
         const store = this.getStore(operation, 'organizations');
 
         if (!store) return;

@@ -54,7 +54,15 @@ defmodule RealtimeWeb.GenericMultiChannel do
   def handle_in("sync_packet", payload, socket) do
     %{"payload" => %{"operation" => operation}} = payload
 
-    broadcast!(socket, "sync_packet", operation)
+    entity_id = socket.assigns.entity_id
+
+    sync_packet = %{
+      version: 0,
+      entity_id: entity_id,
+      operation: operation
+    }
+
+    broadcast!(socket, "sync_packet", sync_packet)
     {:reply, {:ok, %{version: 0}}, socket}
   end
 

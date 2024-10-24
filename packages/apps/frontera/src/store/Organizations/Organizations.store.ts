@@ -24,6 +24,7 @@ import {
   SortingDirection,
   OrganizationInput,
   OrganizationStage,
+  ComparisonOperator,
   OrganizationRelationship,
   OpportunityRenewalLikelihood,
 } from '@graphql/types';
@@ -45,11 +46,11 @@ export class OrganizationsStore extends SyncableGroup<
 
     makeObservable(this, {
       maxLtv: computed,
-      isFullyLoaded: computed,
       hide: action.bound,
       merge: action.bound,
       create: action.bound,
       channelName: override,
+      isFullyLoaded: computed,
       updateStage: action.bound,
       totalElements: observable,
     });
@@ -64,6 +65,10 @@ export class OrganizationsStore extends SyncableGroup<
   }
 
   get channelName() {
+    return 'Organizations';
+  }
+
+  get persisterKey() {
     return 'Organizations';
   }
 
@@ -119,6 +124,18 @@ export class OrganizationsStore extends SyncableGroup<
     if (this.isBootstrapped || this.isLoading) return;
 
     try {
+      const canHydrate = await this.checkIfCanHydrate();
+
+      if (canHydrate) {
+        await this.hydrate();
+
+        return;
+      }
+
+      const lastActiveAtUTC = this.root.windowManager
+        .getLastActiveAtUTC()
+        .toISOString();
+
       this.isLoading = true;
 
       const { dashboardView_Organizations } =
@@ -128,6 +145,17 @@ export class OrganizationsStore extends SyncableGroup<
             by: 'LAST_TOUCHPOINT',
             caseSensitive: false,
             direction: SortingDirection.Desc,
+          },
+          where: {
+            AND: [
+              {
+                filter: {
+                  property: 'UPDATED_AT',
+                  value: lastActiveAtUTC,
+                  operation: ComparisonOperator.Gte,
+                },
+              },
+            ],
           },
         });
 

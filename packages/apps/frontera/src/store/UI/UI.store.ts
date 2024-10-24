@@ -5,8 +5,6 @@ import { toastError, toastSuccess } from '@ui/presentation/Toast';
 
 import { CommandMenuStore } from './CommandMenu.store';
 
-type NetworkStatus = 'offline' | 'online';
-
 export class UIStore {
   searchCount: number = 0;
   filteredTable: Array<unknown> = [];
@@ -22,18 +20,10 @@ export class UIStore {
   commandMenu = new CommandMenuStore();
   selectionId: number | null = null;
   flowCommandMenu = new FlowStepCommandMenuStore();
-  networkStatus: NetworkStatus = 'online';
   private activeConfirmationCallback: () => void = () => {};
 
   constructor() {
     makeAutoObservable(this);
-
-    window?.addEventListener('online', () => {
-      this.setNetworkStatus.bind(this)('online');
-    });
-    window?.addEventListener('offline', () => {
-      this.setNetworkStatus.bind(this)('offline');
-    });
   }
 
   toastSuccess(text: string, id: string) {
@@ -102,9 +92,5 @@ export class UIStore {
 
   setSelectionId(value: number | null) {
     this.selectionId = value;
-  }
-
-  private setNetworkStatus(status: NetworkStatus) {
-    this.networkStatus = status;
   }
 }
