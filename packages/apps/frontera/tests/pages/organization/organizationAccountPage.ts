@@ -53,19 +53,26 @@ export class OrganizationAccountPage {
   private relationshipCustomer = 'div[data-test="relationship-CUSTOMER"]';
 
   async addContractEmpty() {
+    const responsePromise = createResponsePromise(
+      this.page,
+      'contract_Update?.id',
+      undefined,
+    );
+
     await clickLocatorsThatAreVisible(
       this.page,
       this.orgAccountEmptyAddContract,
     );
+    await Promise.all([responsePromise]);
 
-    await this.page.waitForResponse(
-      (response) =>
-        response.url().includes('customer-os-api') &&
-        response
-          .json()
-          .then((body) => body.data && body.data.contract_Update !== undefined)
-          .catch(() => false),
-    );
+    // await this.page.waitForResponse(
+    //   (response) =>
+    //     response.url().includes('customer-os-api') &&
+    //     response
+    //       .json()
+    //       .then((body) => body.data && body.data.contract_Update !== undefined)
+    //       .catch(() => false),
+    // );
   }
 
   async addContractNonEmpty() {
