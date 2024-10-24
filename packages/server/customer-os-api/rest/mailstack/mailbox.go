@@ -119,7 +119,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
 		forwardingTo = append(forwardingTo, additionalForwardingTo)
 
-		response, err := addMailbox(ctx, tenant, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, mailboxRequest.ForwardingTo, services)
+		response, err := addMailbox(ctx, tenant, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, forwardingTo, services)
 		if err != nil {
 			if errors.Is(err, coserrors.ErrDomainNotFound) {
 				c.JSON(http.StatusNotFound,
