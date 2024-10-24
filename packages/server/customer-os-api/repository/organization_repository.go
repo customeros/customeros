@@ -311,7 +311,6 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" MATCH (merged)-[rel:HAS]->(e:Email) "+
 		" MERGE (primary)-[newRel:HAS]->(e) "+
 		" ON CREATE SET newRel.primary=false, "+
-		"				newRel.label=rel.label, "+
 		"				newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
@@ -324,6 +323,17 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" MERGE (primary)-[newRel:HAS]->(p) "+
 		" ON CREATE SET newRel.primary=false, "+
 		"				newRel.label=rel.label, "+
+		"				newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS]->(s:Social) "+
+		" MERGE (primary)-[newRel:HAS]->(s) "+
+		" ON CREATE SET newRel.primary=false, "+
 		"				newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
@@ -460,6 +470,16 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 
 	if _, err := tx.Run(ctx, matchQuery+
 		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS_CONTRACT]->(n:DeletedContract) "+
+		" MERGE (primary)-[newRel:HAS_CONTRACT]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS_BILLING_PROFILE]->(n:BillingProfile) "+
 		" MERGE (primary)-[newRel:HAS_BILLING_PROFILE]->(n) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
@@ -472,6 +492,36 @@ func (r *organizationRepository) MergeOrganizationRelationsInTx(ctx context.Cont
 		" WITH primary, merged "+
 		" MATCH (merged)-[rel:HAS_OPPORTUNITY]->(n:Opportunity) "+
 		" MERGE (primary)-[newRel:HAS_OPPORTUNITY]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:HAS_OPPORTUNITY]->(n:ArchivedOpportunity) "+
+		" MERGE (primary)-[newRel:HAS_OPPORTUNITY]->(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)<-[rel:REMINDER_BELONGS_TO_ORGANIZATION]-(n:Reminder) "+
+		" MERGE (primary)<-[newRel:REMINDER_BELONGS_TO_ORGANIZATION]-(n) "+
+		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
+		"				newRel.createdAt = $now "+
+		"			SET	rel.merged=true", params); err != nil {
+		return err
+	}
+
+	if _, err := tx.Run(ctx, matchQuery+
+		" WITH primary, merged "+
+		" MATCH (merged)-[rel:IS]->(or:OrganizationRelationship) "+
+		" MERGE (primary)-[newRel:IS]->(or) "+
 		" ON CREATE SET newRel.mergedFrom = $mergedOrganizationId, "+
 		"				newRel.createdAt = $now "+
 		"			SET	rel.merged=true", params); err != nil {
