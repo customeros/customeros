@@ -11,10 +11,11 @@ import { Columns03 } from '@ui/media/icons/Columns03';
 import { Calculator } from '@ui/media/icons/Calculator';
 import { ArrowsRight } from '@ui/media/icons/ArrowsRight';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
+import { GlobalSharedCommands } from './GlobalHub';
 import { OwnerSubItemGroup } from './shared/OwnerSubItemGroup';
 import { ChangeStageSubItemGroup } from './shared/ChangeStageSubItemGroup';
 import { AddCurrencySubItemGroup } from './opportunity/AddCurrencySubItemGroup';
@@ -54,8 +55,6 @@ export const OpportunityCommands = observer(() => {
         >
           Change stage...
         </CommandItem>
-
-        <ChangeStageSubItemGroup />
 
         <CommandItem
           leftAccessory={<ArrowsRight />}
@@ -122,7 +121,6 @@ export const OpportunityCommands = observer(() => {
         >
           Change ARR currency...
         </CommandItem>
-        <AddCurrencySubItemGroup />
 
         <CommandItem
           leftAccessory={<Edit03 />}
@@ -169,7 +167,6 @@ export const OpportunityCommands = observer(() => {
         >
           Assign owner...
         </CommandItem>
-        <OwnerSubItemGroup />
 
         <CommandItem
           leftAccessory={<Archive />}
@@ -195,6 +192,14 @@ export const OpportunityCommands = observer(() => {
         >
           Archive opportunity
         </CommandItem>
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
+
+        <ChangeStageSubItemGroup />
+        <AddCurrencySubItemGroup />
+
+        <OwnerSubItemGroup />
       </>
     </CommandsContainer>
   );

@@ -6,10 +6,12 @@ import { Archive } from '@ui/media/icons/Archive';
 import { useStore } from '@shared/hooks/useStore';
 import { Columns03 } from '@ui/media/icons/Columns03.tsx';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 import { flowKeywords } from '@shared/components/CommandMenu/commands/flows/keywords.ts';
 import { UpdateStatusSubItemGroup } from '@shared/components/CommandMenu/commands/flows/UpdateStatusSubItemGroup.tsx';
+
+import { GlobalSharedCommands } from './GlobalHub';
 
 export const FlowsCommands = observer(() => {
   const store = useStore();
@@ -85,6 +87,9 @@ export const FlowsCommands = observer(() => {
         >
           Archive flow
         </CommandItem>
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
       </>
     </CommandsContainer>
   );
