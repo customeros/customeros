@@ -13,9 +13,10 @@ import { EyeOff } from '@ui/media/icons/EyeOff.tsx';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 
+import { GlobalSharedCommands } from './GlobalHub.tsx';
 import { AddJobRolesSubItemGroup } from './contacts/AddJobRolesSubItemGroup';
 import { AddPersonaTagSubItemGroup } from './contacts/AddPersonaTagSubItemGroup';
 import { AddContactFlowSubItemGroup } from './contacts/AddContactFlowSubItemGroup.tsx';
@@ -46,7 +47,6 @@ export const ContactCommands = observer(() => {
         >
           Edit persona tag...
         </CommandItem>
-        <AddPersonaTagSubItemGroup />
 
         <CommandItem
           leftAccessory={<Shuffle01 />}
@@ -65,7 +65,6 @@ export const ContactCommands = observer(() => {
         >
           Move to flow...
         </CommandItem>
-        <AddContactFlowSubItemGroup />
 
         {!!contact?.value?.tags?.length && (
           <CommandItem
@@ -156,7 +155,6 @@ export const ContactCommands = observer(() => {
         >
           Edit job roles...
         </CommandItem>
-        <AddJobRolesSubItemGroup />
         <CommandItem
           leftAccessory={<Clock />}
           keywords={contactKeywords.edit_time_zone}
@@ -196,6 +194,14 @@ export const ContactCommands = observer(() => {
         >
           Archive contact
         </CommandItem>
+
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
+
+        <AddPersonaTagSubItemGroup />
+        <AddContactFlowSubItemGroup />
+        <AddJobRolesSubItemGroup />
       </>
     </CommandsContainer>
   );

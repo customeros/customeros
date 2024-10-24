@@ -12,7 +12,7 @@ import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   InternalType,
@@ -29,6 +29,7 @@ import {
   UpdateHealthStatusSubItemGroup,
 } from '@shared/components/CommandMenu/commands/organization';
 
+import { GlobalSharedCommands } from './GlobalHub';
 import { OwnerSubItemGroup } from './shared/OwnerSubItemGroup';
 import { AddTagSubItemGroup } from './organization/AddTagSubItemGroup';
 
@@ -71,7 +72,6 @@ export const OrganizationCommands = observer(() => {
         >
           Change or add tags...
         </CommandItem>
-        <AddTagSubItemGroup />
 
         {!!organization?.value?.tags?.length && (
           <CommandItem
@@ -147,6 +147,7 @@ export const OrganizationCommands = observer(() => {
         >
           Edit website
         </CommandItem>
+
         <CommandItem
           leftAccessory={<AlignHorizontalCentre02 />}
           onSelect={() => {
@@ -166,11 +167,6 @@ export const OrganizationCommands = observer(() => {
         >
           Change relationship...
         </CommandItem>
-        <RelationshipSubItemGroup
-          selectedIds={selectedIds}
-          closeMenu={() => store.ui.commandMenu.setOpen(false)}
-          updateRelationship={store.organizations.updateRelationship}
-        />
 
         {organization?.value?.relationship ===
           OrganizationRelationship.Prospect && (
@@ -184,11 +180,6 @@ export const OrganizationCommands = observer(() => {
             Change org stage...
           </CommandItem>
         )}
-        <StageSubItemGroup
-          selectedIds={selectedIds}
-          updateStage={store.organizations.updateStage}
-          closeMenu={() => store.ui.commandMenu.setOpen(false)}
-        />
 
         <CommandItem
           leftAccessory={<Archive />}
@@ -217,11 +208,6 @@ export const OrganizationCommands = observer(() => {
         >
           Health status...
         </CommandItem>
-        <UpdateHealthStatusSubItemGroup
-          selectedIds={selectedIds}
-          updateHealth={store.organizations.updateHealth}
-          closeMenu={() => store.ui.commandMenu.setOpen(false)}
-        />
 
         <CommandItem
           leftAccessory={<User01 />}
@@ -240,7 +226,6 @@ export const OrganizationCommands = observer(() => {
         >
           Assign owner...
         </CommandItem>
-        <OwnerSubItemGroup />
 
         <CommandItem
           rightAccessory={<Kbd>O</Kbd>}
@@ -270,6 +255,28 @@ export const OrganizationCommands = observer(() => {
         {/*>*/}
         {/*  Change onboarding stage*/}
         {/*</CommandItem>*/}
+        <AddTagSubItemGroup />
+        <RelationshipSubItemGroup
+          selectedIds={selectedIds}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+          updateRelationship={store.organizations.updateRelationship}
+        />
+        <StageSubItemGroup
+          selectedIds={selectedIds}
+          updateStage={store.organizations.updateStage}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
+        <UpdateHealthStatusSubItemGroup
+          selectedIds={selectedIds}
+          updateHealth={store.organizations.updateHealth}
+          closeMenu={() => store.ui.commandMenu.setOpen(false)}
+        />
+
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
+
+        <OwnerSubItemGroup />
       </>
     </CommandsContainer>
   );

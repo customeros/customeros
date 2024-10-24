@@ -1,9 +1,11 @@
 import { observer } from 'mobx-react-lite';
 
 import { useStore } from '@shared/hooks/useStore';
-import { CommandItem } from '@ui/overlay/CommandMenu';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
+import { Command, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
+
+import { GlobalSharedCommands } from './GlobalHub';
 
 export const FlowHub = observer(() => {
   const store = useStore();
@@ -18,6 +20,9 @@ export const FlowHub = observer(() => {
       >
         Add new flow...
       </CommandItem>
+      <Command.Group heading='Navigate'>
+        <GlobalSharedCommands />
+      </Command.Group>
     </CommandsContainer>
   );
 });

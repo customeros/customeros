@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 
 import { Command, CommandInput } from '@ui/overlay/CommandMenu';
-import { GlobalSharedCommands } from '@shared/components/CommandMenu/commands';
 
 import { GlobalSearchResultNavigationCommands } from './GlobalSearchResultNavigationCommands.tsx';
 
@@ -42,9 +41,6 @@ export const CommandsContainer = ({
       <Command.List>
         <Command.Group>{children}</Command.Group>
         <GlobalSearchResultNavigationCommands />
-        <Command.Group heading='Navigate' data-test={`${dataTest}-navigate`}>
-          <GlobalSharedCommands dataTest={dataTest} />
-        </Command.Group>
       </Command.List>
     </Command>
   );

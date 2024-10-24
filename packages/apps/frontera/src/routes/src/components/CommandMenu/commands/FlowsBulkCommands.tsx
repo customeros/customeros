@@ -5,11 +5,13 @@ import { useStore } from '@shared/hooks/useStore';
 import { Delete } from '@ui/media/icons/Delete.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03.tsx';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 import { flowKeywords } from '@shared/components/CommandMenu/commands/flows/keywords';
 import { organizationKeywords } from '@shared/components/CommandMenu/commands/organization';
 import { UpdateStatusSubItemGroup } from '@shared/components/CommandMenu/commands/flows/UpdateStatusSubItemGroup.tsx';
+
+import { GlobalSharedCommands } from './GlobalHub';
 
 export const FlowsBulkCommands = observer(() => {
   const store = useStore();
@@ -37,7 +39,6 @@ export const FlowsBulkCommands = observer(() => {
         >
           Change flow status...
         </CommandItem>
-        <UpdateStatusSubItemGroup />
 
         <CommandItem
           leftAccessory={<Archive />}
@@ -56,6 +57,11 @@ export const FlowsBulkCommands = observer(() => {
         >
           Archive flows
         </CommandItem>
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
+
+        <UpdateStatusSubItemGroup />
       </>
     </CommandsContainer>
   );

@@ -9,10 +9,12 @@ import { Delete } from '@ui/media/icons/Delete.tsx';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { Calculator } from '@ui/media/icons/Calculator.tsx';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CurrencyDollarCircle } from '@ui/media/icons/CurrencyDollarCircle';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
 import { organizationKeywords } from '@shared/components/CommandMenu/commands/organization';
+
+import { GlobalSharedCommands } from './GlobalHub';
 
 export const OpportunityBulkCommands = observer(() => {
   const store = useStore();
@@ -120,6 +122,9 @@ export const OpportunityBulkCommands = observer(() => {
         >
           Archive opportunities
         </CommandItem>
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
       </>
     </CommandsContainer>
   );

@@ -11,7 +11,7 @@ import { Activity } from '@ui/media/icons/Activity';
 import { Columns03 } from '@ui/media/icons/Columns03';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
 import { CoinsStacked01 } from '@ui/media/icons/CoinsStacked01';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 import { AlignHorizontalCentre02 } from '@ui/media/icons/AlignHorizontalCentre02';
 import {
   CommandsContainer,
@@ -22,6 +22,8 @@ import {
   RelationshipSubItemGroup,
   UpdateHealthStatusSubItemGroup,
 } from '@shared/components/CommandMenu/commands/organization';
+
+import { GlobalSharedCommands } from './GlobalHub';
 
 export const OrganizationBulkCommands = observer(() => {
   const store = useStore();
@@ -168,6 +170,9 @@ export const OrganizationBulkCommands = observer(() => {
         >
           Create new opportunity
         </CommandItem>
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
 
         {/*<CommandItem*/}
         {/*  leftAccessory={<Trophy01 />}*/}

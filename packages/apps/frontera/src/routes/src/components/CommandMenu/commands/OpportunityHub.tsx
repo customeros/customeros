@@ -5,10 +5,13 @@ import { useStore } from '@shared/hooks/useStore';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
 // import { Command as CommandIcon } from '@ui/media/icons/Command';
 import {
+  Command,
   // Kbd,
   CommandItem,
 } from '@ui/overlay/CommandMenu';
 import { CommandsContainer } from '@shared/components/CommandMenu/commands/shared';
+
+import { GlobalSharedCommands } from './GlobalHub';
 
 export const OpportunityHub = observer(() => {
   const store = useStore();
@@ -33,6 +36,9 @@ export const OpportunityHub = observer(() => {
       >
         Add new opportunity...
       </CommandItem>
+      <Command.Group heading='Navigate'>
+        <GlobalSharedCommands />
+      </Command.Group>
     </CommandsContainer>
   );
 });

@@ -8,9 +8,10 @@ import { Archive } from '@ui/media/icons/Archive';
 import { Shuffle01 } from '@ui/media/icons/Shuffle01.tsx';
 import { Certificate02 } from '@ui/media/icons/Certificate02';
 import { ArrowBlockUp } from '@ui/media/icons/ArrowBlockUp.tsx';
-import { Kbd, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
+import { Kbd, Command, CommandKbd, CommandItem } from '@ui/overlay/CommandMenu';
 
 import { CommandsContainer } from './shared';
+import { GlobalSharedCommands } from './GlobalHub';
 
 export const ContactBulkCommands = observer(() => {
   const store = useStore();
@@ -104,6 +105,9 @@ export const ContactBulkCommands = observer(() => {
         >
           Archive contacts
         </CommandItem>
+        <Command.Group heading='Navigate'>
+          <GlobalSharedCommands />
+        </Command.Group>
       </>
     </CommandsContainer>
   );
