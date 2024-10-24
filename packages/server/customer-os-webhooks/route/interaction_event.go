@@ -140,7 +140,7 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 		}
 		if postmarkEmailWebhookData.BccFull != nil {
 			for _, bcc := range postmarkEmailWebhookData.BccFull {
-				if bcc.Email != "" && bcc.Email != "bcc@"+tenantByName+".customeros.ai" {
+				if bcc.Email != "" && bcc.Email != "bcc@"+strings.ToLower(tenantByName)+".customeros.ai" {
 					participants = append(participants, bcc.Email)
 				}
 			}
@@ -307,7 +307,7 @@ func mapPostmarkToEmailRawData(tenant string, pmData model.PostmarkEmailWebhookD
 
 	bcc := make([]string, 0)
 	for _, b := range pmData.BccFull {
-		if b.Email != "" && b.Email != "bcc@"+tenant+".customeros.ai" {
+		if b.Email != "" && b.Email != "bcc@"+strings.ToLower(tenant)+".customeros.ai" {
 			bcc = append(bcc, b.Email)
 		}
 	}

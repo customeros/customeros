@@ -116,7 +116,7 @@ func RegisterNewMailbox(services *service.Services) gin.HandlerFunc {
 		// add mailbox
 		forwardingEnabled := true
 		forwardingTo := mailboxRequest.ForwardingTo
-		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", tenant)
+		additionalForwardingTo := fmt.Sprintf("bcc@%s.customeros.ai", strings.ToLower(tenant))
 		forwardingTo = append(forwardingTo, additionalForwardingTo)
 
 		response, err := addMailbox(ctx, tenant, domain, username, password, forwardingEnabled, mailboxRequest.WebmailEnabled, mailboxRequest.ForwardingTo, services)
