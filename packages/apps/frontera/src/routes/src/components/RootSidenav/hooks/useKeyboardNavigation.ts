@@ -95,14 +95,14 @@ export const useKeyboardNavigation = (
     options,
   );
 
-  useSequentialShortcut(
-    'G',
-    'D',
-    () => {
-      navigate('/customer-map');
-    },
-    options,
-  );
+  // useSequentialShortcut(
+  //   'G',
+  //   'D',
+  //   () => {
+  //     navigate('/customer-map');
+  //   },
+  //   options,
+  // );
 
   useSequentialShortcut(
     'G',

@@ -1,5 +1,5 @@
 import { useParams } from 'react-router-dom';
-import React, { useState, MouseEvent, useCallback } from 'react';
+import { useState, MouseEvent, useCallback } from 'react';
 
 import { observer } from 'mobx-react-lite';
 import { OnConnect } from '@xyflow/system';
