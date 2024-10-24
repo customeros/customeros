@@ -67,6 +67,7 @@ export function makeAutoSyncableGroup<T extends Record<string, unknown>>(
             channelName,
             tenant,
             this.version,
+            true,
           );
 
           if (!connection) return;

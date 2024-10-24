@@ -47,7 +47,7 @@
       null === (t = s.parentNode) || void 0 === t || t.insertBefore(n, s);
     })();
 
-    window.Atlas.call("start");
+    if (window.Atlas) window.Atlas.call("start");
 
     document.addEventListener('DOMContentLoaded', () => {
         const atlasChatTextarea = document.querySelector('#atlas-chat');

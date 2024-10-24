@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { ToastContainer } from 'react-toastify';
 
 import { RecoilRoot } from 'recoil';

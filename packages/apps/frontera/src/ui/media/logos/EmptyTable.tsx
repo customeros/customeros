@@ -11,8 +11,8 @@ export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
     <g filter='url(#filter0_dd_2336_1296)'>
       <path
         fill='#F9F5FF'
-        fill-rule='evenodd'
-        clip-rule='evenodd'
+        fillRule='evenodd'
+        clipRule='evenodd'
         d='M78.1 16C67.3273 16 57.7978 21.3233 51.9987 29.4829C50.105 29.0363 48.1301 28.8 46.1 28.8C31.9615 28.8 20.5 40.2615 20.5 54.4C20.5 68.5385 31.9615 80 46.1 80L46.12 80H110.1C122.471 80 132.5 69.9712 132.5 57.6C132.5 45.2288 122.471 35.2 110.1 35.2C109.221 35.2 108.354 35.2506 107.502 35.349C102.598 23.9677 91.2797 16 78.1 16Z'
       />
       <ellipse
@@ -43,13 +43,13 @@ export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
         width='48'
         height='48'
         fill='#6941C6'
-        fill-opacity='0.4'
+        fillOpacity='0.4'
       />
       <path
         stroke='white'
-        stroke-width='2'
-        stroke-linecap='round'
-        stroke-linejoin='round'
+        strokeWidth='2'
+        strokeLinecap='round'
+        strokeLinejoin='round'
         d='M85.5 95L79.5001 89M81.5 84C81.5 87.866 78.366 91 74.5 91C70.634 91 67.5 87.866 67.5 84C67.5 80.134 70.634 77 74.5 77C78.366 77 81.5 80.134 81.5 84Z'
       />
     </g>
@@ -61,9 +61,9 @@ export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
         height='104'
         id='filter0_dd_2336_1296'
         filterUnits='userSpaceOnUse'
-        color-interpolation-filters='sRGB'
+        colorInterpolationFilters='sRGB'
       >
-        <feFlood flood-opacity='0' result='BackgroundImageFix' />
+        <feFlood floodOpacity='0' result='BackgroundImageFix' />
         <feColorMatrix
           type='matrix'
           in='SourceAlpha'
@@ -124,9 +124,9 @@ export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
         height='64'
         id='filter1_b_2336_1296'
         filterUnits='userSpaceOnUse'
-        color-interpolation-filters='sRGB'
+        colorInterpolationFilters='sRGB'
       >
-        <feFlood flood-opacity='0' result='BackgroundImageFix' />
+        <feFlood floodOpacity='0' result='BackgroundImageFix' />
         <feGaussianBlur stdDeviation='4' in='BackgroundImageFix' />
         <feComposite
           operator='in'
@@ -148,8 +148,8 @@ export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
         id='paint0_linear_2336_1296'
         gradientUnits='userSpaceOnUse'
       >
-        <stop stop-color='#E9D7FE' />
-        <stop stop-opacity='0' offset='0.350715' stop-color='white' />
+        <stop stopColor='#E9D7FE' />
+        <stop stopOpacity='0' offset='0.350715' stopColor='white' />
       </linearGradient>
       <linearGradient
         y2='80'
@@ -159,8 +159,8 @@ export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
         id='paint1_linear_2336_1296'
         gradientUnits='userSpaceOnUse'
       >
-        <stop stop-color='#E9D7FE' />
-        <stop stop-opacity='0' offset='0.350715' stop-color='white' />
+        <stop stopColor='#E9D7FE' />
+        <stop stopOpacity='0' offset='0.350715' stopColor='white' />
       </linearGradient>
       <linearGradient
         y2='80'
@@ -170,8 +170,8 @@ export const EmptyTable = (props: React.SVGAttributes<SVGElement>) => (
         id='paint2_linear_2336_1296'
         gradientUnits='userSpaceOnUse'
       >
-        <stop stop-color='#E9D7FE' />
-        <stop stop-opacity='0' offset='0.350715' stop-color='white' />
+        <stop stopColor='#E9D7FE' />
+        <stop stopOpacity='0' offset='0.350715' stopColor='white' />
       </linearGradient>
     </defs>
   </svg>

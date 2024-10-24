@@ -2,8 +2,8 @@ import type { RootStore } from '@store/root';
 
 import { AxiosError } from 'axios';
 import { Transport } from '@store/transport';
-import { isHydrated, makePersistable } from 'mobx-persist-store';
-import { action, autorun, runInAction, makeAutoObservable } from 'mobx';
+import { Persister } from '@store/persister';
+import { toJS, autorun, runInAction, makeAutoObservable } from 'mobx';
 
 import mock from './mock.json';
 
@@ -60,18 +60,19 @@ export class SessionStore {
   tenantApiKey: string | null = null;
   error: string | null = null;
   isBootstrapping = true;
+  isHydrated = false;
   isLoading: 'google' | 'azure-ad' | null = null;
+  private persister = Persister.getSharedInstance('Session');
 
   constructor(public root: RootStore, public transport: Transport) {
     makeAutoObservable(this);
-    makePersistable(this, {
-      name: 'SessionStore',
-      properties: ['value', 'sessionToken', 'tenantApiKey'],
-    }).then(
-      action(() => {
+
+    this.hydrate();
+    autorun(() => {
+      if (this.isHydrated) {
         this.loadSession();
-      }),
-    );
+      }
+    });
 
     autorun(() => {
       if (this.sessionToken) {
@@ -79,6 +80,9 @@ export class SessionStore {
           Authorization: `Bearer ${this.sessionToken}`,
           'X-Openline-USERNAME': this.value.profile.email ?? '',
         });
+
+        Persister.setTenant(this.value.tenant);
+        this.persist();
       }
     });
 
@@ -189,10 +193,16 @@ export class SessionStore {
     }
   }
 
-  clearSession() {
-    this.sessionToken = null;
-    this.value = defaultSession;
-    this.removeSessionFromWindow();
+  async clearSession() {
+    try {
+      this.sessionToken = null;
+      this.value = defaultSession;
+      this.removeSessionFromWindow();
+
+      await this.persister?.clear();
+    } catch (e) {
+      console.error('Failed clearing persisted data', e);
+    }
   }
 
   getLocalStorageSession() {
@@ -225,12 +235,6 @@ export class SessionStore {
     delete window.__COS_SESSION__;
   }
 
-  get isHydrated() {
-    if (this.root.demoMode) return true;
-
-    return isHydrated(this);
-  }
-
   get isAuthenticated() {
     if (this.root.demoMode) return true;
 
@@ -241,5 +245,36 @@ export class SessionStore {
     if (this.root.demoMode) return true;
 
     return this.isHydrated && !this.isBootstrapping;
+  }
+
+  private async persist() {
+    try {
+      this.persister?.setItem('value', toJS(this.value));
+      this.persister?.setItem('sessionToken', this.sessionToken);
+      this.persister?.setItem('tenantApiKey', this.tenantApiKey);
+    } catch (e) {
+      console.error('Failed to persist', e);
+    }
+  }
+
+  private async hydrate() {
+    try {
+      const value = await this.persister?.getItem<Session>('value');
+      const sessionToken = await this.persister?.getItem<string>(
+        'sessionToken',
+      );
+      const tenantApiKey = await this.persister?.getItem<string>(
+        'tenantApiKey',
+      );
+
+      runInAction(() => {
+        value && (this.value = value);
+        sessionToken && (this.sessionToken = sessionToken);
+        tenantApiKey && (this.tenantApiKey = tenantApiKey);
+        this.isHydrated = true;
+      });
+    } catch (e) {
+      console.error('Failed to hydrate', e);
+    }
   }
 }

@@ -83,7 +83,6 @@
     "localforage": "^1.10.0",
     "lodash": "^4.17.21",
     "mobx": "^6.12.3",
-    "mobx-persist-store": "^1.1.5",
     "mobx-react-lite": "^4.0.7",
     "papaparse": "^5.4.1",
     "phoenix": "^1.7.12",

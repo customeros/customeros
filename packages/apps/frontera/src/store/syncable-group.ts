@@ -1,5 +1,7 @@
-import { Channel } from 'phoenix';
+import type { Channel } from 'phoenix';
+
 import { match } from 'ts-pattern';
+import { Persister, type PersisterInstance } from '@store/persister';
 import {
   when,
   action,
@@ -9,17 +11,21 @@ import {
   makeObservable,
 } from 'mobx';
 
-import { RootStore } from './root';
+import type { RootStore } from './root';
+import type { Transport } from './transport';
+import type { GroupOperation, GroupSyncPacket } from './types';
+
 import { Syncable } from './syncable';
-import { Transport } from './transport';
-import { GroupOperation, GroupSyncPacket } from './types';
 
 export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
   version = 0;
   channel?: Channel;
   isLoading = false;
+  isHydrated = false;
   isBootstrapped = false;
+  canBypassBootstrap = false;
   error: string | null = null;
+  persister?: PersisterInstance;
   history: GroupOperation[] = [];
   value: Map<string, TSyncable> = new Map();
 
@@ -30,22 +36,42 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
   ) {
     makeObservable<
       SyncableGroup<T, TSyncable>,
-      'initChannelConnection' | 'subscribe' | 'applyGroupOperation'
+      | 'initChannelConnection'
+      | 'subscribe'
+      | 'applyGroupOperation'
+      | 'initPersister'
+      | 'checkIfCanHydrate'
     >(this, {
       load: action,
       sync: action,
+      hydrate: action,
       subscribe: action,
       error: observable,
       value: observable,
       version: observable,
       channel: observable,
       history: observable,
+      isHydrated: observable,
       isLoading: observable,
       channelName: computed,
+      initPersister: action,
+      checkIfCanHydrate: action,
       isBootstrapped: observable,
       applyGroupOperation: action,
       initChannelConnection: action,
+      canBypassBootstrap: observable,
     });
+
+    when(
+      () => !!this.root.session.sessionToken && !this.root.demoMode,
+      async () => {
+        try {
+          await this.initPersister();
+        } catch (e) {
+          console.error(e);
+        }
+      },
+    );
 
     when(
       () => !!this.root.session.value.tenant && !this.root.demoMode,
@@ -65,7 +91,11 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
     return '';
   }
 
-  load(data: T[], options: { getId: (data: T) => string }) {
+  get persisterKey() {
+    return '';
+  }
+
+  public load(data: T[], options: { getId: (data: T) => string }) {
     data.forEach((item) => {
       const id = options.getId(item);
 
@@ -79,6 +109,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
         this.root,
         this.transport,
         item,
+        this.channel,
       );
 
       syncableItem.load(item);
@@ -88,7 +119,33 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
     this.isBootstrapped = true;
   }
 
-  sync(operation: GroupOperation) {
+  public async hydrate() {
+    try {
+      const stores: [string, TSyncable][] = [];
+
+      await this.persister?.iterate<T, void>((data, id) => {
+        const syncableItem = new this.SyncableStore(
+          this.root,
+          this.transport,
+          data,
+          this.channel,
+        );
+
+        stores.push([id, syncableItem as TSyncable]);
+      });
+
+      runInAction(() => {
+        this.value = new Map<string, TSyncable>(stores);
+      });
+    } catch (e) {
+      console.error('Failed to hydrate group', e);
+    }
+    runInAction(() => {
+      this.isHydrated = true;
+    });
+  }
+
+  public sync(operation: GroupOperation) {
     const op = {
       ...operation,
       ref: this.transport.refId,
@@ -108,6 +165,7 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
         this.channelName,
         tenant,
         this.version,
+        true,
       );
 
       if (!connection) return;
@@ -167,6 +225,26 @@ export class SyncableGroup<T extends object, TSyncable extends Syncable<T>> {
         });
       })
       .otherwise(() => {});
+  }
+
+  private async initPersister() {
+    this.persister = Persister.getInstance(this.persisterKey);
+  }
+
+  public async checkIfCanHydrate() {
+    try {
+      const idsCount = await this.persister?.length();
+      const canBypass = typeof idsCount !== 'undefined' && idsCount > 0;
+
+      runInAction(() => {
+        this.canBypassBootstrap = canBypass;
+        this.isBootstrapped = true;
+      });
+
+      return canBypass;
+    } catch (e) {
+      console.error('Failed to get persisted ids length', e);
+    }
   }
 
   static SyncableStore = Syncable;

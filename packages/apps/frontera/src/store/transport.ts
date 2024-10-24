@@ -43,9 +43,11 @@ export class Transport {
     channelName: string,
     id: string,
     version: number,
+    group?: boolean,
   ): Promise<void | { channel: Channel; latest: LatestDiff | null }> {
     return new Promise((resolve, reject) => {
-      const existingChannel = this.channels.get(`${channelName}:${id}`);
+      const channelKey = group ? channelName : id;
+      const existingChannel = this.channels.get(channelKey);
 
       if (existingChannel) {
         resolve({ channel: existingChannel, latest: null });
@@ -67,7 +69,7 @@ export class Transport {
       channel
         .join()
         .receive('ok', (res: LatestDiff) => {
-          this.channels.set(id, channel);
+          this.channels.set(channelKey, channel);
           resolve({ latest: res, channel });
         })
         .receive('error', () => {
