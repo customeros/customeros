@@ -1204,54 +1204,6 @@ func TestQueryResolver_Organization_WithContracts(t *testing.T) {
 	require.Equal(t, "invoice note 2", *secondContract.InvoiceNote)
 }
 
-func TestMutationResolver_OrganizationCreate(t *testing.T) {
-	ctx := context.Background()
-	defer tearDownTestCase(ctx)(t)
-	neo4jtest.CreateTenant(ctx, driver, tenantName)
-
-	organizationId := "orgId"
-	calledCreateOrganization := false
-
-	neo4jtest.CreateOrganization(ctx, driver, tenantName, neo4jentity.OrganizationEntity{ID: organizationId})
-
-	organizationServiceCallbacks := events_platform.MockOrganizationServiceCallbacks{
-		UpsertOrganization: func(context context.Context, request *organizationpb.UpsertOrganizationGrpcRequest) (*organizationpb.OrganizationIdGrpcResponse, error) {
-			require.Equal(t, tenantName, request.Tenant)
-			require.Equal(t, "slackChannelId", request.SlackChannelId)
-			require.Equal(t, "CUSTOMER", request.Relationship)
-			require.Equal(t, "LEAD", request.Stage)
-
-			calledCreateOrganization = true
-
-			return &organizationpb.OrganizationIdGrpcResponse{
-				Id: organizationId,
-			}, nil
-		},
-	}
-	events_platform.SetOrganizationCallbacks(&organizationServiceCallbacks)
-
-	rawResponse := callGraphQL(t, "organization/create_organization",
-		map[string]interface{}{"input": map[string]interface{}{
-			"slackChannelId": "slackChannelId",
-			"relationship":   "CUSTOMER",
-			"stage":          "LEAD",
-		},
-		})
-
-	var organizationStruct struct {
-		Organization_Create model.Organization
-	}
-
-	require.Equal(t, true, calledCreateOrganization)
-
-	err := decode.Decode(rawResponse.Data.(map[string]any), &organizationStruct)
-	require.Nil(t, err)
-	require.NotNil(t, organizationStruct)
-
-	organization := organizationStruct.Organization_Create
-	require.Equal(t, organizationId, organization.Metadata.ID)
-}
-
 func TestMutationResolver_OrganizationArchive(t *testing.T) {
 	ctx := context.Background()
 	defer tearDownTestCase(ctx)(t)

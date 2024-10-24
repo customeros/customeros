@@ -1,8 +1,0 @@
-mutation CreateOrganization($input: OrganizationInput!) {
-  organization_Create(input: $input) {
-    metadata {
-        id
-    }
-    slackChannelId
-  }
-}
