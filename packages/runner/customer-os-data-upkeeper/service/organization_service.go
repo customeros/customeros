@@ -187,7 +187,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 0 // TODO: alexb rework with new method for sync linking
+	limit := 100
 
 	for {
 		select {
@@ -219,16 +219,9 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 			}
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-			domain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, organizationEntity.Website)
-			if domain != "" {
-				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
-					return s.eventsProcessingClient.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{
-						Tenant:         record.Tenant,
-						OrganizationId: record.OrganizationId,
-						Domain:         domain,
-						AppSource:      constants.AppSourceDataUpkeeper,
-					})
-				})
+			primaryDomain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, organizationEntity.Website)
+			if primaryDomain != "" {
+				err = s.commonServices.OrganizationService.LinkWithDomain(ctx, nil, record.Tenant, record.OrganizationId, primaryDomain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					s.log.Errorf("Error linking with domain {%s}: %s", record.OrganizationId, err.Error())
@@ -245,9 +238,6 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 		if len(records) < limit {
 			return
 		}
-
-		//sleep for async processing, then check again
-		time.Sleep(5 * time.Second)
 
 		// force exit after single iteration
 		return

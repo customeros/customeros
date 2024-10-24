@@ -28,12 +28,12 @@ extend type Mutation {
     organization_UnlinkAllDomains(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant
 
     #TODO: to remove after FE migration
-    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-    organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-    organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-    organization_AddTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
-    organization_RemoveTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant #deprecated
+    organization_Create(input: OrganizationInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_Update(input: OrganizationUpdateInput!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_SetOwner(organizationId: ID!, userId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_UnsetOwner(organizationId: ID!): Organization! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_AddTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
+    organization_RemoveTag(input: OrganizationTagInput!): ActionResponse! @hasRole(roles: [ADMIN, USER]) @hasTenant @deprecated
 }
 
 type LinkedOrganization {
