@@ -414,7 +414,7 @@ func (h *ContactEventHandler) enrichContactWithScrapInEnrichDetails(ctx context.
 		// step 2 - check org exists by social url
 		if organizationDbNode == nil {
 			// step 2 - find by domain
-			domain := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+			domain, _ := h.services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 			span.LogFields(log.String("extractedDomainFromWebsite", domain))
 			if domain != "" {
 				organizationDbNode, err = h.services.CommonServices.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, domain)
