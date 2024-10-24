@@ -500,7 +500,7 @@ func (r *mutationResolver) OrganizationCreate(ctx context.Context, input model.O
 	// Before creating organization check that same organization does not exist by domain
 	domains := input.Domains
 	if input.Website != nil && *input.Website != "" {
-		websiteDomain := r.Services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, *input.Website)
+		websiteDomain, _ := r.Services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, *input.Website)
 		if websiteDomain != "" {
 			domains = append(domains, websiteDomain)
 		}
@@ -1574,20 +1574,19 @@ func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website st
 	}
 
 	// step 1 get domain from website
-	domain := r.Services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, website)
+	domain, altWebsite := r.Services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, website)
 	if domain == "" {
 		return &model.WebsiteDetails{
-			Website: website,
+			Website: altWebsite,
 		}, nil
 	}
 
 	// step 2 check if domain is primary
-	isPrimary, altPrimaryDomain := domaincheck.PrimaryDomainCheck(domain)
+	isPrimary, _ := domaincheck.PrimaryDomainCheck(domain)
 	return &model.WebsiteDetails{
-		Website:                  website,
-		Domain:                   domain,
-		Primary:                  isPrimary,
-		AlternativePrimaryDomain: altPrimaryDomain,
+		Website: altWebsite,
+		Domain:  domain,
+		Primary: isPrimary,
 	}, nil
 }
 

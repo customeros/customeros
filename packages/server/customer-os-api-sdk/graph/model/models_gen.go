@@ -2821,10 +2821,9 @@ type UserUpdateInput struct {
 }
 
 type WebsiteDetails struct {
-	Website                  string `json:"website"`
-	Domain                   string `json:"domain"`
-	Primary                  bool   `json:"primary"`
-	AlternativePrimaryDomain string `json:"alternativePrimaryDomain"`
+	Website string `json:"website"`
+	Domain  string `json:"domain"`
+	Primary bool   `json:"primary"`
 }
 
 type Workflow struct {

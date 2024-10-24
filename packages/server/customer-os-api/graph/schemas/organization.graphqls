@@ -374,7 +374,6 @@ type WebsiteDetails {
     website:                        String!
     domain:                         String!
     primary:                        Boolean!
-    alternativePrimaryDomain:       String!
 }
 
 enum Market {

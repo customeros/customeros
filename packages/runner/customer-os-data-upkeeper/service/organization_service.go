@@ -187,7 +187,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 	defer span.Finish()
 	tracing.TagComponentCronJob(span)
 
-	limit := 100
+	limit := 0 // TODO: alexb rework with new method for sync linking
 
 	for {
 		select {
@@ -219,7 +219,7 @@ func (s *organizationService) linkWithDomain(ctx context.Context) {
 			}
 			organizationEntity := neo4jmapper.MapDbNodeToOrganizationEntity(organizationDbNode)
 
-			domain := s.commonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, organizationEntity.Website)
+			domain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, organizationEntity.Website)
 			if domain != "" {
 				_, err = utils.CallEventsPlatformGRPCWithRetry[*organizationpb.OrganizationIdGrpcResponse](func() (*organizationpb.OrganizationIdGrpcResponse, error) {
 					return s.eventsProcessingClient.OrganizationClient.LinkDomainToOrganization(ctx, &organizationpb.LinkDomainToOrganizationGrpcRequest{

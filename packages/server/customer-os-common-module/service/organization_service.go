@@ -24,7 +24,7 @@ type OrganizationService interface {
 	GetById(ctx context.Context, tenant, organizationId string) (*neo4jentity.OrganizationEntity, error)
 
 	Save(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId *string, input *repository.OrganizationSaveFields) (*string, error)
-	AddDomainFromWebsite(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId string, website string) (string, error)
+	LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error
 
 	Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 	Show(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
@@ -69,14 +69,19 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	var existing *neo4jentity.OrganizationEntity
 	createFlow := false
 
-	personalEmailProviders := s.services.Cache.GetPersonalEmailProviders()
-	if personalEmailProviders == nil || len(personalEmailProviders) == 0 {
-		err := fmt.Errorf("personal email providers not loaded")
-		tracing.TraceErr(span, err)
-		return nil, err
+	// prepare primary domain from website
+	primaryDomainFromWebsite := ""
+	adjustedWebsite := input.Website
+	if input.UpdateWebsite && input.Website != "" {
+		primaryDomainFromWebsite, adjustedWebsite = s.services.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, input.Website)
+		span.LogFields(log.String("primaryDomainFromWebsite", primaryDomainFromWebsite))
 	}
 
 	// prepare domains in advance
+	err = s.services.DomainService.MergeDomain(ctx, primaryDomainFromWebsite)
+	if err != nil {
+		tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
+	}
 	for _, domain := range input.Domains {
 		err = s.services.DomainService.MergeDomain(ctx, domain)
 		if err != nil {
@@ -84,34 +89,12 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		}
 	}
 
-	primaryDomainFromWebsite := ""
-	if input.UpdateWebsite && input.Website != "" {
-		domain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
-		err = s.services.DomainService.MergeDomain(ctx, domain)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to merge domain"))
-		}
-		domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
-		if err != nil {
-			tracing.TraceErr(span, errors.Wrap(err, "failed to get domain"))
-			return nil, err
-		}
-		span.LogFields(log.Object("domainFromWebsite", domain))
-		if domainEntity.PrimaryDomain != "" && !s.services.Cache.IsPersonalEmailProvider(domain) {
-			primaryDomainFromWebsite = domainEntity.PrimaryDomain
-		}
-	}
-	span.LogFields(log.String("primaryDomainFromWebsite", primaryDomainFromWebsite))
-
 	// if the org is new, we are looking for existing orgs with the same domain based on the website, we show it and we return it
 	if organizationId == nil {
 		createFlow = true
 		domains := input.Domains
-		if input.UpdateWebsite && input.Website != "" {
-			websiteDomain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
-			if websiteDomain != "" {
-				domains = append(domains, websiteDomain)
-			}
+		if input.UpdateWebsite && input.Website != "" && primaryDomainFromWebsite != "" {
+			domains = append(domains, primaryDomainFromWebsite)
 		}
 		domains = utils.RemoveEmpties(domains)
 		domains = utils.RemoveDuplicates(domains)
@@ -179,9 +162,6 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 		//if no name is provided, we try to extract if from domain
 		if utils.IfNotNilString(input.Name) == "" {
 			domain := primaryDomainFromWebsite
-			if domain == "" {
-				domain = s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, input.Website)
-			}
 			if domain == "" && len(input.Domains) > 0 {
 				domain = input.Domains[0]
 			}
@@ -224,34 +204,21 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 			}
 		}
 
-		if input.UpdateWebsite && input.Website != "" {
-			domain, err := s.AddDomainFromWebsite(ctx, &tx, tenant, *organizationId, input.Website)
-			if err != nil {
-				tracing.TraceErr(span, err)
-				return nil, err
-			}
-			if domain != "" {
-				newDomains = append(newDomains, domain)
-				if primaryDomainFromWebsite != "" {
-					primaryAddedDomain, err := s.AddDomainFromWebsite(ctx, &tx, tenant, *organizationId, primaryDomainFromWebsite)
-					if err != nil {
-						tracing.TraceErr(span, err)
-						return nil, err
-					}
-					if primaryAddedDomain != "" {
-						newDomains = append(newDomains, primaryAddedDomain)
-					}
+		if input.UpdateWebsite && adjustedWebsite != "" {
+			input.Website = adjustedWebsite
+			if primaryDomainFromWebsite != "" {
+				newDomains = append(newDomains, primaryDomainFromWebsite)
+				err = s.LinkWithDomain(ctx, &tx, tenant, *organizationId, primaryDomainFromWebsite)
+				if err != nil {
+					tracing.TraceErr(span, err)
+					return nil, err
 				}
 			}
 		}
 
 		if input.Domains != nil && len(input.Domains) > 0 {
 			for _, domain := range input.Domains {
-				if s.services.Cache.IsPersonalEmailProvider(domain) {
-					continue
-				}
-
-				err = s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, &tx, tenant, *organizationId, domain)
+				err = s.LinkWithDomain(ctx, &tx, tenant, *organizationId, domain)
 				if err != nil {
 					tracing.TraceErr(span, err)
 					return nil, err
@@ -307,19 +274,18 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	// select primary domain from new domains
-	newDomains = utils.RemoveEmpties(newDomains)
-	newDomains = utils.RemoveDuplicates(newDomains)
-	primaryDomain := ""
-	for _, domain := range newDomains {
-		if s.services.Cache.IsPersonalEmailProvider(domain) {
-			continue
-		}
-		domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
-		if err != nil {
-			tracing.TraceErr(span, err)
-		} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
-			primaryDomain = domain
-			break
+	primaryDomain := primaryDomainFromWebsite
+	if primaryDomain == "" && len(newDomains) > 0 {
+		newDomains = utils.RemoveEmpties(newDomains)
+		newDomains = utils.RemoveDuplicates(newDomains)
+		for _, domain := range newDomains {
+			domainEntity, err := s.services.DomainService.GetDomain(ctx, domain)
+			if err != nil {
+				tracing.TraceErr(span, err)
+			} else if domainEntity != nil && domainEntity.IsPrimary != nil && *domainEntity.IsPrimary {
+				primaryDomain = domain
+				break
+			}
 		}
 	}
 
@@ -356,39 +322,6 @@ func (s *organizationService) Save(ctx context.Context, tx *neo4j.ManagedTransac
 	}
 
 	return organizationId, nil
-}
-
-func (s *organizationService) AddDomainFromWebsite(ctx context.Context, tx *neo4j.ManagedTransaction, tenant string, organizationId string, website string) (string, error) {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.AddDomainFromWebsite")
-	defer span.Finish()
-	span.SetTag(tracing.SpanTagTenant, tenant)
-	span.SetTag(tracing.SpanTagEntityId, organizationId)
-	span.LogFields(log.String("website", website))
-
-	domain := s.services.DomainService.ExtractDomainFromOrganizationWebsite(ctx, website)
-	if domain == "" {
-		return "", nil
-	}
-
-	providers := s.services.Cache.GetPersonalEmailProviders()
-	if providers == nil || len(providers) == 0 {
-		err := fmt.Errorf("personal email providers not loaded")
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	if s.services.Cache.IsPersonalEmailProvider(domain) {
-		span.LogFields(log.String("result", "personal email provider"))
-		return "", nil
-	}
-
-	err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, tx, tenant, organizationId, domain)
-	if err != nil {
-		tracing.TraceErr(span, err)
-		return "", err
-	}
-
-	return domain, nil
 }
 
 func (s *organizationService) Hide(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error {
@@ -526,4 +459,24 @@ func (s *organizationService) GetLatestOrganizationsWithJobRolesForContacts(ctx 
 		orgWithJobRoleEntities = append(orgWithJobRoleEntities, orgWithJobRoleEntity)
 	}
 	return &orgWithJobRoleEntities, nil
+}
+
+func (s *organizationService) LinkWithDomain(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId, domain string) error {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.LinkWithDomain")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, organizationId)
+	span.LogKV("domain", domain)
+
+	if !s.services.DomainService.AcceptedDomainForOrganization(ctx, domain) {
+		return nil
+	}
+
+	err := s.services.Neo4jRepositories.OrganizationWriteRepository.LinkWithDomain(ctx, tx, tenant, organizationId, domain)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return err
+	}
+
+	return nil
 }

@@ -68,7 +68,7 @@ func CreateOrganization(services *service.Services, grpcClients *grpc_client.Cli
 		}
 
 		// step 1 validate no organization exist with given domain
-		websiteDomain := services.CommonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, request.Website)
+		websiteDomain, _ := services.CommonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, request.Website)
 		if websiteDomain != "" {
 			orgDbNode, err := services.Repositories.Neo4jRepositories.OrganizationReadRepository.GetOrganizationByDomain(ctx, tenant, websiteDomain)
 			if err != nil {

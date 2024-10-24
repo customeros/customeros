@@ -124,6 +124,7 @@ func (server *server) Run(parentCtx context.Context) error {
 	defer postgresDb.SqlDB.Close()
 
 	appCache := caches.NewCache()
+	commonCache := commonCaches.NewCommonCache()
 
 	serviceContainer := service.InitServices(server.log, &neo4jDriver, server.cfg, commonServices, grpcContainer, postgresDb.GormDB, appCache)
 	r.Use(cors.New(corsConfig))
@@ -135,8 +136,6 @@ func (server *server) Run(parentCtx context.Context) error {
 	r.Use(ginzap.RecoveryWithZap(server.log.Logger(), true))
 	r.Use(prometheusMiddleware())
 	r.Use(bodyLoggerMiddleware)
-
-	commonCache := commonCaches.NewCommonCache()
 
 	// health check
 	r.GET("/", rootHandler)

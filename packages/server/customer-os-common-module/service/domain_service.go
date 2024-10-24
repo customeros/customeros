@@ -18,11 +18,12 @@ import (
 
 type DomainService interface {
 	MergeDomain(ctx context.Context, domain string) error
-	ExtractDomainFromOrganizationWebsite(ctx context.Context, websiteUrl string) string
+	GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) (string, string)
 	IsKnownCompanyHostingUrl(ctx context.Context, website string) bool
 	GetAllDomainsForOrganizations(ctx context.Context, organizationIds []string) (*neo4jentity.DomainEntities, error)
 	UpdateDomainPrimaryDetails(ctx context.Context, domain string) error
 	GetDomain(ctx context.Context, domain string) (*neo4jentity.DomainEntity, error)
+	AcceptedDomainForOrganization(ctx context.Context, domain string) bool
 }
 
 type domainService struct {
@@ -37,33 +38,41 @@ func NewDomainService(log logger.Logger, services *Services) DomainService {
 	}
 }
 
-func (s *domainService) ExtractDomainFromOrganizationWebsite(ctx context.Context, websiteUrl string) string {
-	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.ExtractDomainFromOrganizationWebsite")
+func (s *domainService) GetPrimaryDomainForOrganizationWebsite(ctx context.Context, websiteUrl string) (string, string) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.GetPrimaryDomainForOrganizationWebsite")
 	defer span.Finish()
 	span.LogKV("websiteUrl", websiteUrl)
+	returnedWebsiteUrl := websiteUrl
 
 	if strings.TrimSpace(websiteUrl) == "" {
-		return ""
+		return "", ""
 	}
 
 	if s.IsKnownCompanyHostingUrl(ctx, websiteUrl) {
-		return ""
+		return "", returnedWebsiteUrl
 	}
 
-	personalEmailProviders := s.services.Cache.GetPersonalEmailProviders()
-	if personalEmailProviders == nil || len(personalEmailProviders) == 0 {
-		err := fmt.Errorf("personal email providers not loaded")
-		tracing.TraceErr(span, err)
-		return ""
+	domain := ""
+	isPrimary, primaryDomain := domaincheck.PrimaryDomainCheck(websiteUrl)
+	if isPrimary {
+		domain = utils.ExtractDomain(websiteUrl)
+	} else if primaryDomain != "" {
+		domain = primaryDomain
+		returnedWebsiteUrl = primaryDomain
 	}
 
-	domain := utils.ExtractDomain(websiteUrl)
-
-	if s.services.Cache.IsPersonalEmailProvider(domain) {
-		return ""
+	if domain == "" {
+		return "", returnedWebsiteUrl
 	}
 
-	return ""
+	// TODO: this to be moved into linking org with domain
+	if !s.AcceptedDomainForOrganization(ctx, domain) {
+		return "", returnedWebsiteUrl
+	}
+
+	span.LogKV("result.domain", domain, "result.websiteUrl", returnedWebsiteUrl)
+
+	return domain, returnedWebsiteUrl
 }
 
 func (s *domainService) IsKnownCompanyHostingUrl(ctx context.Context, website string) bool {
@@ -164,7 +173,6 @@ func (s *domainService) MergeDomain(ctx context.Context, domain string) error {
 	domain = strings.ToLower(domain)
 
 	if domain == "" {
-		tracing.TraceErr(span, fmt.Errorf("domain is empty"))
 		return nil
 	}
 
@@ -206,4 +214,24 @@ func (s *domainService) GetDomain(ctx context.Context, domain string) (*neo4jent
 	}
 	domainEntity := neo4jmapper.MapDbNodeToDomainEntity(domainDbNode)
 	return domainEntity, nil
+}
+
+func (s *domainService) AcceptedDomainForOrganization(ctx context.Context, domain string) bool {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "DomainService.AcceptedDomainForOrganization")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	tracing.TagEntity(span, domain)
+
+	personalEmailProviders := s.services.Cache.GetPersonalEmailProviders()
+	if personalEmailProviders == nil || len(personalEmailProviders) == 0 {
+		err := fmt.Errorf("personal email providers not loaded")
+		tracing.TraceErr(span, err)
+		return false
+	}
+
+	if s.services.Cache.IsPersonalEmailProvider(domain) {
+		return false
+	}
+
+	return true
 }

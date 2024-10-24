@@ -584,7 +584,7 @@ func (s *contactService) linkOrphanContactsToOrganizationBaseOnLinkedinScrapIn(c
 				return
 			}
 
-			domain := s.commonServices.DomainService.ExtractDomainFromOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
+			domain, _ := s.commonServices.DomainService.GetPrimaryDomainForOrganizationWebsite(ctx, scrapinContactResponse.Company.WebsiteUrl)
 			if domain == "" {
 				continue
 			}
