@@ -25,7 +25,7 @@ type EmailReadRepository interface {
 	GetFirstByEmail(ctx context.Context, tenant, email string) (*dbtype.Node, error)
 	GetAllEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
 	GetPrimaryEmailNodesForLinkedEntityIds(ctx context.Context, tenant string, entityType neo4jenum.EntityType, entityIds []string) ([]*utils.DbNodeWithRelationAndId, error)
-	GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInMinutes, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error)
+	GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInSeconds, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error)
 	IsLinkedToEntityByEmailAddress(ctx context.Context, tenant, email, entityId string, entityType neo4jenum.EntityType) (bool, error)
 	GetOrphanEmailNodes(ctx context.Context, limit, hoursFromLastUpdate int) ([]TenantAndEmailId, error)
 	IsOrphanEmail(ctx context.Context, tenant, emailId string) (bool, error)
@@ -275,19 +275,19 @@ func (r *emailReadRepository) GetPrimaryEmailNodesForLinkedEntityIds(ctx context
 	return result.([]*utils.DbNodeWithRelationAndId), err
 }
 
-func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInMinutes, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error) {
+func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayFromLastUpdateInSeconds, delayFromLastValidationAttemptInMinutes, limit int) ([]TenantAndEmailId, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "EmailReadRepository.GetEmailsForValidation")
 	defer span.Finish()
 	tracing.TagComponentNeo4jRepository(span)
 	span.LogFields(
-		log.Int("delayFromLastUpdateInMinutes", delayFromLastUpdateInMinutes),
+		log.Int("delayFromLastUpdateInSeconds", delayFromLastUpdateInSeconds),
 		log.Int("delayFromLastValidationAttemptInMinutes", delayFromLastValidationAttemptInMinutes),
 		log.Int("limit", limit))
 
 	cypher := `MATCH (t:Tenant {active:true})<-[:EMAIL_ADDRESS_BELONGS_TO_TENANT]-(e:Email)
 				WHERE
 					e.rawEmail <> '' AND					
-					(e.updatedAt < datetime() - duration({minutes: $delayFromLastUpdateInMinutes})) AND					
+					(e.updatedAt < datetime() - duration({seconds: $delayFromLastUpdateInSeconds})) AND					
 					(
 						(
 							e.techValidatedAt IS NULL AND 
@@ -309,7 +309,7 @@ func (r *emailReadRepository) GetEmailsForValidation(ctx context.Context, delayF
 				LIMIT $limit
 				RETURN DISTINCT tenant, emailId`
 	params := map[string]any{
-		"delayFromLastUpdateInMinutes":            delayFromLastUpdateInMinutes,
+		"delayFromLastUpdateInSeconds":            delayFromLastUpdateInSeconds,
 		"delayFromLastValidationAttemptInMinutes": delayFromLastValidationAttemptInMinutes,
 		"delayForRetryValidationInDays":           7,
 		"limit":                                   limit,

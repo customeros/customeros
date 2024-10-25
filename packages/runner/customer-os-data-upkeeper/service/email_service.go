@@ -139,7 +139,7 @@ func (s *emailService) ValidateEmails() {
 	tracing.TagComponentCronJob(span)
 
 	limit := s.cfg.Limits.EmailsValidationLimit
-	delayFromLastUpdateInMinutes := 2
+	delayFromLastUpdateInSeconds := 10
 	delayFromLastValidationAttemptInMinutes := 24 * 60 // 24 hours
 
 	for {
@@ -151,7 +151,7 @@ func (s *emailService) ValidateEmails() {
 			// continue as normal
 		}
 
-		records, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetEmailsForValidation(ctx, delayFromLastUpdateInMinutes, delayFromLastValidationAttemptInMinutes, limit)
+		records, err := s.commonServices.Neo4jRepositories.EmailReadRepository.GetEmailsForValidation(ctx, delayFromLastUpdateInSeconds, delayFromLastValidationAttemptInMinutes, limit)
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return
