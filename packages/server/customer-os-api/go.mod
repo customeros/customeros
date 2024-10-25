@@ -21,7 +21,7 @@ replace github.com/openline-ai/openline-customer-os/packages/server/enrichment-a
 require (
 	github.com/99designs/gqlgen v0.17.55
 	github.com/caarlos0/env/v6 v6.10.1
-	github.com/customeros/mailsherpa v0.2.16
+	github.com/customeros/mailsherpa v0.2.17
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.7.2
 	github.com/gin-contrib/zap v1.1.4
