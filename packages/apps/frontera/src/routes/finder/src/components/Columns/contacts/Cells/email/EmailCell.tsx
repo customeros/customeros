@@ -13,7 +13,6 @@ import { Tooltip } from '@ui/overlay/Tooltip/Tooltip';
 import { EmailValidationDetails } from '@graphql/types';
 import { PlusCircle } from '@ui/media/icons/PlusCircle';
 import { DotsVertical } from '@ui/media/icons/DotsVertical';
-import { useOutsideClick } from '@ui/utils/hooks/useOutsideClick.ts';
 import { Menu, MenuItem, MenuList, MenuButton } from '@ui/overlay/Menu/Menu';
 import { EmailValidationMessage } from '@organization/components/Tabs/panels/PeoplePanel/ContactCard/EmailValidationMessage';
 
@@ -26,7 +25,6 @@ export const EmailCell = observer(
   ({ validationDetails, contactId }: EmailCellProps) => {
     const store = useStore();
     const [isLoading, setIsLoading] = useState(false);
-
     const [isHovered, setIsHovered] = useState(false);
 
     const contactStore = store.contacts.value.get(contactId);
@@ -42,15 +40,7 @@ export const EmailCell = observer(
       enrichedContact?.requestedAt &&
       !enrichedContact?.failedAt;
 
-    const [isEdit, setIsEdit] = useState(false);
     const ref = useRef(null);
-
-    useOutsideClick({
-      ref: ref,
-      handler: () => {
-        setIsEdit(false);
-      },
-    });
 
     const orgActive =
       contactStore?.value.latestOrganizationWithJobRole?.organization.name;
@@ -61,14 +51,13 @@ export const EmailCell = observer(
       <div
         ref={ref}
         className='flex cursor-pointer'
-        onDoubleClick={() => setIsEdit(true)}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
       >
         <Menu>
           <MenuButton className='text-ellipsis overflow-hidden whitespace-nowrap'>
             <div className='flex items-center gap-2'>
-              {!isEdit && !email && (
+              {!email && (
                 <p className='text-gray-400 '>
                   {enrichingStatus
                     ? 'Enriching...'
@@ -191,10 +180,10 @@ export const EmailCell = observer(
               />
             </Tooltip>
           ))}
-        {(contactStore?.value.primaryEmail?.email ?? '').length > 0 &&
-          isHovered && (
-            <Menu>
-              <MenuButton asChild>
+        {(contactStore?.value.primaryEmail?.email ?? '').length > 0 && (
+          <Menu>
+            <MenuButton asChild>
+              {isHovered && (
                 <IconButton
                   size='xxs'
                   variant='ghost'
@@ -202,53 +191,54 @@ export const EmailCell = observer(
                   className='rounded-[5px] ml-[2px] '
                   icon={<DotsVertical className='text-gray-500' />}
                 />
-              </MenuButton>
+              )}
+            </MenuButton>
 
-              <MenuList align='start'>
-                <MenuItem
-                  className='group/edit-email'
-                  onClick={() => {
-                    store.ui.commandMenu.setType('EditEmail');
-                    store.ui.commandMenu.setOpen(true);
-                  }}
-                >
-                  <div className='overflow-hidden text-ellipsis'>
-                    <TextInput className='mr-2 group-hover/edit-email:text-gray-700 text-gray-500 ' />
-                    Edit email
-                  </div>
-                </MenuItem>
-                <MenuItem
-                  className='group/archive-email'
-                  onClick={() => {
-                    const idx = contactStore?.value.emails.findIndex(
-                      (e) => e.email === email,
-                    );
+            <MenuList align='start' side='bottom'>
+              <MenuItem
+                className='group/edit-email'
+                onClick={() => {
+                  store.ui.commandMenu.setType('EditEmail');
+                  store.ui.commandMenu.setOpen(true);
+                }}
+              >
+                <div className='overflow-hidden text-ellipsis'>
+                  <TextInput className='mr-2 group-hover/edit-email:text-gray-700 text-gray-500 ' />
+                  Edit email
+                </div>
+              </MenuItem>
+              <MenuItem
+                className='group/archive-email'
+                onClick={() => {
+                  const idx = contactStore?.value.emails.findIndex(
+                    (e) => e.email === email,
+                  );
 
-                    contactStore?.update(
-                      (c) => {
-                        if (idx === 0) {
-                          c.emails = [];
-                        }
+                  contactStore?.update(
+                    (c) => {
+                      if (idx === 0) {
+                        c.emails = [];
+                      }
 
-                        if (idx !== undefined && idx > -1) {
-                          c.emails.splice(idx, 1);
-                        }
+                      if (idx !== undefined && idx > -1) {
+                        c.emails.splice(idx, 1);
+                      }
 
-                        return c;
-                      },
-                      { mutate: false },
-                    );
-                    contactStore?.updateEmail(oldEmail || '', idx);
-                  }}
-                >
-                  <div className='overflow-hidden text-ellipsis'>
-                    <Archive className='mr-2 group-hover/archive-email:text-gray-700 text-gray-500' />
-                    Archive email
-                  </div>
-                </MenuItem>
-              </MenuList>
-            </Menu>
-          )}
+                      return c;
+                    },
+                    { mutate: false },
+                  );
+                  contactStore?.updateEmail(oldEmail || '', idx);
+                }}
+              >
+                <div className='overflow-hidden text-ellipsis'>
+                  <Archive className='mr-2 group-hover/archive-email:text-gray-700 text-gray-500' />
+                  Archive email
+                </div>
+              </MenuItem>
+            </MenuList>
+          </Menu>
+        )}
       </div>
     );
   },
