@@ -2,6 +2,7 @@ import { useRef, useMemo, useState } from 'react';
 
 import { observer } from 'mobx-react-lite';
 
+import { cn } from '@ui/utils/cn';
 import { Check } from '@ui/media/icons/Check';
 import { Spinner } from '@ui/feedback/Spinner';
 import { Star06 } from '@ui/media/icons/Star06';
@@ -60,16 +61,17 @@ export const EmailCell = observer(
     return (
       <div
         ref={ref}
-        className='flex  cursor-pointer'
         onDoubleClick={() => setIsEdit(true)}
+        className={cn('flex  cursor-pointer')}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
+        style={{ marginRight: isHovered ? '-20px' : '0px' }}
       >
         <Menu>
           <MenuButton className='truncate'>
             <div className='flex items-center gap-2 '>
               {!isEdit && !email && (
-                <p className='text-gray-400 max-w-[100px]'>
+                <p className='text-gray-400 '>
                   {enrichingStatus
                     ? 'Enriching...'
                     : isLoading
@@ -86,7 +88,7 @@ export const EmailCell = observer(
               <p>{email}</p>
             </div>
           </MenuButton>
-          <MenuList align='center' className='max-w-[600px] w-[250px]'>
+          <MenuList align='center' className={cn('max-w-[600px] w-[250px]')}>
             {orgActive && (
               <MenuItem
                 onClick={() => {
@@ -168,7 +170,7 @@ export const EmailCell = observer(
               <Spinner
                 size='sm'
                 label='finding email'
-                className='text-gray-400 fill-gray-700'
+                className='text-gray-400 fill-gray-700 ml-2'
               />
             </Tooltip>
           ) : (
@@ -176,8 +178,8 @@ export const EmailCell = observer(
               <IconButton
                 size='xxs'
                 variant='ghost'
-                className='ml-2'
                 icon={<Star06 />}
+                className={'ml-4 '}
                 aria-label='Find work email'
                 onClick={() => {
                   setIsLoading(true);
@@ -190,64 +192,67 @@ export const EmailCell = observer(
               />
             </Tooltip>
           ))}
-        {(contactStore?.value.primaryEmail?.email ?? '').length > 0 && (
-          <Menu>
-            <MenuButton asChild>
-              {isHovered && (
+        {(contactStore?.value.primaryEmail?.email ?? '').length > 0 &&
+          isHovered && (
+            <Menu>
+              <MenuButton asChild>
                 <IconButton
                   size='xxs'
                   variant='ghost'
                   aria-label='edit'
-                  className='rounded-[5px] ml-[2px]'
                   icon={<DotsVertical className='text-gray-500' />}
+                  className={cn(
+                    'rounded-[5px] ml-[2px] opacity-0',
+                    isHovered && 'opacity-100',
+                  )}
                 />
-              )}
-            </MenuButton>
-            <MenuList align='start'>
-              <MenuItem
-                className='group/edit-email'
-                onClick={() => {
-                  store.ui.commandMenu.setType('EditEmail');
-                  store.ui.commandMenu.setOpen(true);
-                }}
-              >
-                <div className='overflow-hidden text-ellipsis'>
-                  <TextInput className='mr-2 group-hover/edit-email:text-gray-700 text-gray-500 ' />
-                  Edit email
-                </div>
-              </MenuItem>
-              <MenuItem
-                className='group/archive-email'
-                onClick={() => {
-                  const idx = contactStore?.value.emails.findIndex(
-                    (e) => e.email === email,
-                  );
+              </MenuButton>
 
-                  contactStore?.update(
-                    (c) => {
-                      if (idx === 0) {
-                        c.emails = [];
-                      }
+              <MenuList align='start'>
+                <MenuItem
+                  className='group/edit-email'
+                  onClick={() => {
+                    store.ui.commandMenu.setType('EditEmail');
+                    store.ui.commandMenu.setOpen(true);
+                  }}
+                >
+                  <div className='overflow-hidden text-ellipsis'>
+                    <TextInput className='mr-2 group-hover/edit-email:text-gray-700 text-gray-500 ' />
+                    Edit email
+                  </div>
+                </MenuItem>
+                <MenuItem
+                  className='group/archive-email'
+                  onClick={() => {
+                    const idx = contactStore?.value.emails.findIndex(
+                      (e) => e.email === email,
+                    );
 
-                      if (idx !== undefined && idx > -1) {
-                        c.emails.splice(idx, 1);
-                      }
+                    contactStore?.update(
+                      (c) => {
+                        if (idx === 0) {
+                          c.emails = [];
+                        }
 
-                      return c;
-                    },
-                    { mutate: false },
-                  );
-                  contactStore?.updateEmail(oldEmail || '', idx);
-                }}
-              >
-                <div className='overflow-hidden text-ellipsis'>
-                  <Archive className='mr-2 group-hover/archive-email:text-gray-700 text-gray-500' />
-                  Archive email
-                </div>
-              </MenuItem>
-            </MenuList>
-          </Menu>
-        )}
+                        if (idx !== undefined && idx > -1) {
+                          c.emails.splice(idx, 1);
+                        }
+
+                        return c;
+                      },
+                      { mutate: false },
+                    );
+                    contactStore?.updateEmail(oldEmail || '', idx);
+                  }}
+                >
+                  <div className='overflow-hidden text-ellipsis'>
+                    <Archive className='mr-2 group-hover/archive-email:text-gray-700 text-gray-500' />
+                    Archive email
+                  </div>
+                </MenuItem>
+              </MenuList>
+            </Menu>
+          )}
       </div>
     );
   },

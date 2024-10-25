@@ -134,7 +134,7 @@ const columns: Record<string, Column> = {
     'value.primaryEmail',
     {
       id: ColumnViewType.ContactsPrimaryEmail,
-      minSize: 200,
+      minSize: 230,
       maxSize: 650,
       enableResizing: true,
       enableColumnFilter: true,
