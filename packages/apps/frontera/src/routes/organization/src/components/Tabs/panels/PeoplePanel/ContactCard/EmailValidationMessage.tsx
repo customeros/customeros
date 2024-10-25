@@ -102,7 +102,6 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
     if (!emailData?.isRisky) return emailStatuses.DELIVERABLE_NO_RISK;
     if (emailData?.isFirewalled) return emailStatuses.DELIVERABLE_FIREWALL;
     if (emailData?.isFreeAccount) return emailStatuses.DELIVERABLE_FREE_ACCOUNT;
-    if (emailData?.isCatchAll) return emailStatuses.CATCH_ALL;
   }
 
   if (
@@ -111,6 +110,10 @@ function checkEmailStatus(emailData?: EmailValidationDetails, email?: string) {
   ) {
     if (emailData?.isMailboxFull) return emailStatuses.MAILBOX_FULL;
     if (!emailData?.canConnectSmtp) return emailStatuses.INVALID_MAILBOX;
+  }
+
+  if (emailData?.deliverable === EmailDeliverable.Unknown) {
+    if (emailData?.isCatchAll) return emailStatuses.CATCH_ALL;
   }
 
   return null;
