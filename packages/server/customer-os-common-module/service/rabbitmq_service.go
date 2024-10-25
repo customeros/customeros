@@ -70,8 +70,8 @@ func failOnError(err error, msg string) {
 }
 
 // NewRabbitMQService initializes the RabbitMQ service with connection retry logic
-func NewRabbitMQService(url string, services *Services) *RabbitMQService {
-	rabbitMQService := &RabbitMQService{
+func NewRabbitMQService(url string, services *Services) RabbitMQService {
+	rabbitMQService := RabbitMQService{
 		url:             url,
 		services:        services,
 		handlerRegistry: make(map[string]EventHandler),
@@ -132,6 +132,11 @@ func (r *RabbitMQService) Publish(ctx context.Context, entityId string, entityTy
 	tracing.SetDefaultServiceSpanTags(ctx, span)
 
 	tracing.LogObjectAsJson(span, "message", message)
+
+	if r.conn == nil {
+		tracing.TraceErr(span, errors.New("RabbitMQ connection is nil"))
+		return nil
+	}
 
 	r.mu.Lock()
 	defer r.mu.Unlock()

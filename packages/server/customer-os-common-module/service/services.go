@@ -18,7 +18,7 @@ type Services struct {
 	PostgresRepositories *postgresRepository.Repositories
 	Neo4jRepositories    *neo4jRepository.Repositories
 
-	RabbitMQService *RabbitMQService
+	RabbitMQService RabbitMQService
 	GrpcClients     *grpc_client.Clients
 
 	AttachmentService          AttachmentService
