@@ -1,6 +1,7 @@
 package route
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/caches"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service/security"
@@ -91,9 +92,13 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 							if enrowResponseStr == "valid" {
 								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusDeliverable)
 							} else if enrowResponseStr == "invalid" {
-								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+								// accept invalid response only if it's not catch-all
+								if !emailValidationData.DomainData.IsCatchAll {
+									emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+								}
 							} else {
-								err = errors.New("Unexpected: Enrow response: " + enrowResponseStr)
+								err = fmt.Errorf("Unexpected: Enrow response: {%s}" + enrowResponseStr)
+								tracing.TraceErr(span, err)
 							}
 						}
 					}
@@ -110,7 +115,13 @@ func validateEmailV2(ctx context.Context, r *gin.Engine, services *service.Servi
 									emailValidationData.DomainData.Provider = mapProvider(trueInboxResponse.SmtpProvider)
 								}
 							} else if trueInboxResponse.Result == "invalid" {
-								emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+								// accept invalid response only if it's not catch-all
+								if !emailValidationData.DomainData.IsCatchAll {
+									emailValidationData.EmailData.Deliverable = string(model.EmailDeliverableStatusUndeliverable)
+								}
+							} else {
+								err = fmt.Errorf("Unexpected: Trueinbox response: {%s}" + trueInboxResponse.Result)
+								tracing.TraceErr(span, err)
 							}
 						}
 					}
