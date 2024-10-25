@@ -273,6 +273,11 @@ func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website st
 	panic(fmt.Errorf("not implemented: OrganizationCheckWebsite - organization_CheckWebsite"))
 }
 
+// OrganizationsHiddenAfter is the resolver for the organizations_HiddenAfter field.
+func (r *queryResolver) OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationsHiddenAfter - organizations_HiddenAfter"))
+}
+
 // LastTouchpoint returns generated.LastTouchpointResolver implementation.
 func (r *Resolver) LastTouchpoint() generated.LastTouchpointResolver {
 	return &lastTouchpointResolver{r}
@@ -283,3 +288,16 @@ func (r *Resolver) Organization() generated.OrganizationResolver { return &organ
 
 type lastTouchpointResolver struct{ *Resolver }
 type organizationResolver struct{ *Resolver }
+
+// !!! WARNING !!!
+// The code below was going to be deleted when updating resolvers. It has been copied here so you have
+// one last chance to move it out of harms way if you want. There are two reasons this happens:
+//   - When renaming or deleting a resolver the old code will be put in here. You can safely delete
+//     it when you're done.
+//   - You have helper methods in this file. Move them out to keep these resolver files clean.
+func (r *queryResolver) OrganizationsHiddenSince(ctx context.Context, date time.Time) ([]string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationsHiddenSince - organizations_HiddenSince"))
+}
+func (r *queryResolver) OrganizationHiddenSince(ctx context.Context, date time.Time) ([]string, error) {
+	panic(fmt.Errorf("not implemented: OrganizationHiddenSince - organization_HiddenSince"))
+}

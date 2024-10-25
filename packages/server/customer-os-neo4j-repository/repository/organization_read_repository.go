@@ -49,6 +49,7 @@ type OrganizationReadRepository interface {
 	GetOrganizationsForAdjustIndustry(ctx context.Context, delayInMinutes, limit int, validIndustries []string) ([]TenantAndOrganizationId, error)
 	GetOrganizationsForUpdateLastTouchpoint(ctx context.Context, limit, delayFromPreviousCheckMin int) ([]TenantAndOrganizationId, error)
 	GetLatestOrganizationWithJobRoleForContacts(ctx context.Context, tenant string, contactIds []string) ([]*utils.DbNodePairAndId, error)
+	GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error)
 }
 
 type organizationReadRepository struct {
@@ -1110,4 +1111,39 @@ func (r *organizationReadRepository) GetLatestOrganizationWithJobRoleForContacts
 	}
 	span.LogFields(log.Int("result.count", len(result.([]*utils.DbNodePairAndId))))
 	return result.([]*utils.DbNodePairAndId), err
+}
+
+func (r *organizationReadRepository) GetHiddenOrganizationIds(ctx context.Context, tenant string, hiddenAfter time.Time) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationReadRepository.GetHiddenOrganizationIds")
+	defer span.Finish()
+	tracing.TagComponentNeo4jRepository(span)
+	tracing.TagTenant(span, tenant)
+	span.LogFields(log.String("hiddenAfter", hiddenAfter.String()))
+
+	cypher := `MATCH (org:Organization)-[:ORGANIZATION_BELONGS_TO_TENANT]->(:Tenant {name:$tenant}) 
+				WHERE org.hide = true AND org.hiddenAt > $hiddenAfter
+				RETURN org.id ORDER BY org.hiddenAt DESC`
+	params := map[string]any{
+		"tenant":      tenant,
+		"hiddenAfter": hiddenAfter,
+	}
+	span.LogFields(log.String("query", cypher))
+	tracing.LogObjectAsJson(span, "params", params)
+
+	session := r.prepareReadSession(ctx)
+	defer session.Close(ctx)
+
+	result, err := session.ExecuteRead(ctx, func(tx neo4j.ManagedTransaction) (any, error) {
+		if queryResult, err := tx.Run(ctx, cypher, params); err != nil {
+			return nil, err
+		} else {
+			return utils.ExtractAllRecordsAsString(ctx, queryResult, err)
+		}
+	})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+	span.LogFields(log.Int("result.count", len(result.([]string))))
+	return result.([]string), err
 }

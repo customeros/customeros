@@ -18,6 +18,7 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
+	"time"
 )
 
 type OrganizationService interface {
@@ -32,10 +33,27 @@ type OrganizationService interface {
 	Archive(ctx context.Context, tx *neo4j.ManagedTransaction, tenant, organizationId string) error
 
 	GetLatestOrganizationsWithJobRolesForContacts(ctx context.Context, contactIds []string) (*neo4jentity.OrganizationWithJobRoleEntities, error)
+
+	GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error)
 }
 
 type organizationService struct {
 	services *Services
+}
+
+func (s *organizationService) GetHiddenOrganizationIds(ctx context.Context, hiddenAfter time.Time) ([]string, error) {
+	span, ctx := opentracing.StartSpanFromContext(ctx, "OrganizationService.GetHiddenOrganizationIds")
+	defer span.Finish()
+	tracing.SetDefaultServiceSpanTags(ctx, span)
+	span.LogFields(log.Object("hiddenAfter", hiddenAfter))
+
+	organizationIds, err := s.services.Neo4jRepositories.OrganizationReadRepository.GetHiddenOrganizationIds(ctx, common.GetTenantFromContext(ctx), hiddenAfter)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return organizationIds, nil
 }
 
 func NewOrganizationService(services *Services) OrganizationService {

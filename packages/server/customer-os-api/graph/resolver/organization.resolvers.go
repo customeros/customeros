@@ -1326,6 +1326,22 @@ func (r *queryResolver) OrganizationCheckWebsite(ctx context.Context, website st
 	}, nil
 }
 
+// OrganizationsHiddenAfter is the resolver for the organizations_HiddenAfter field.
+func (r *queryResolver) OrganizationsHiddenAfter(ctx context.Context, date time.Time) ([]string, error) {
+	ctx, span := tracing.StartGraphQLTracerSpan(ctx, "QueryResolver.OrganizationsHiddenAfter", graphql.GetOperationContext(ctx))
+	defer span.Finish()
+	tracing.SetDefaultResolverSpanTags(ctx, span)
+	span.LogFields(log.Object("request.date", date))
+
+	organizationIDs, err := r.Services.CommonServices.OrganizationService.GetHiddenOrganizationIds(ctx, date)
+	if err != nil {
+		tracing.TraceErr(span, err)
+		graphql.AddErrorf(ctx, "Error fetching organizations hidden after %s", date.String())
+		return nil, nil
+	}
+	return organizationIDs, nil
+}
+
 // LastTouchpoint returns generated.LastTouchpointResolver implementation.
 func (r *Resolver) LastTouchpoint() generated.LastTouchpointResolver {
 	return &lastTouchpointResolver{r}
