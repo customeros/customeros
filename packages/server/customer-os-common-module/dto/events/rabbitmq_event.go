@@ -1,4 +1,4 @@
-package dto
+package events
 
 type Event struct {
 	Event    EventDetails  `json:"event"`

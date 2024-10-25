@@ -5,7 +5,7 @@ import (
 	"github.com/caarlos0/env/v6"
 	"github.com/joho/godotenv"
 	commonConfig "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
 	commonService "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/service"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/events-subscribers/config"
@@ -53,7 +53,8 @@ func main() {
 	commonServices := commonService.InitServices(&commonConfig.GlobalConfig{RabbitMQConfig: &cfg.RabbitMQ}, db.GormDB, &neo4jDriver, cfg.Neo4j.Database, nil, appLogger)
 
 	//Register listeners
-	commonServices.RabbitMQService.RegisterHandler(dto.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
+	commonServices.RabbitMQService.RegisterHandler(events.FlowInitialSchedule{}, listeners.Handle_FlowInitialSchedule)
+	commonServices.RabbitMQService.RegisterHandler(events.FlowComputeParticipantsRequirements{}, listeners.Handle_FlowComputeParticipantsRequirements)
 
 	// Listen for messages
 	commonServices.RabbitMQService.Listen()

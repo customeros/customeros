@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/neo4j/neo4j-go-driver/v5/neo4j"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
-	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto"
+	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/dto/events"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/model"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/tracing"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/utils"
@@ -230,6 +230,19 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		}
 	}
 
+	var existing *neo4jentity.FlowEntity
+	if input.Id != "" {
+		existing, err = s.FlowGetById(ctx, input.Id)
+		if err != nil {
+			tracing.TraceErr(span, err)
+			return nil, err
+		}
+
+		if existing == nil {
+			return nil, errors.New("flow not found")
+		}
+	}
+
 	flowEntity, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, tx, func(tx neo4j.ManagedTransaction) (any, error) {
 
 		toStore := &neo4jentity.FlowEntity{}
@@ -412,7 +425,15 @@ func (s *flowService) FlowMerge(ctx context.Context, tx *neo4j.ManagedTransactio
 		return nil, err
 	}
 
-	return flowEntity.(*neo4jentity.FlowEntity), nil
+	e := flowEntity.(*neo4jentity.FlowEntity)
+
+	err = s.services.RabbitMQService.Publish(ctx, e.Id, model.FLOW, events.FlowComputeParticipantsRequirements{})
+	if err != nil {
+		tracing.TraceErr(span, err)
+		return nil, err
+	}
+
+	return e, nil
 }
 
 func (s *flowService) removeWaitNodes(edges []map[string]interface{}, waitNodes map[string]bool) []map[string]interface{} {
@@ -605,7 +626,7 @@ func (s *flowService) FlowChangeStatus(ctx context.Context, id string, status ne
 	})
 
 	if startInitialSchedule {
-		err := s.services.RabbitMQService.Publish(ctx, flow.Id, model.FLOW, dto.FlowInitialSchedule{})
+		err := s.services.RabbitMQService.Publish(ctx, flow.Id, model.FLOW, events.FlowInitialSchedule{})
 		if err != nil {
 			tracing.TraceErr(span, err)
 			return nil, err
@@ -790,7 +811,7 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 
 		e, err := utils.ExecuteWriteInTransaction(ctx, s.services.Neo4jRepositories.Neo4jDriver, s.services.Neo4jRepositories.Database, nil, func(tx neo4j.ManagedTransaction) (any, error) {
 			toStore := neo4jentity.FlowParticipantEntity{
-				Status:     neo4jentity.FlowParticipantStatusPending,
+				Status:     neo4jentity.FlowParticipantStatusOnHold,
 				EntityId:   entityId,
 				EntityType: entityType,
 			}
@@ -829,7 +850,17 @@ func (s *flowService) FlowParticipantAdd(ctx context.Context, flowId, entityId s
 				return nil, errors.Wrap(err, "failed to link flow participant to entity")
 			}
 
-			if flow.Status == neo4jentity.FlowStatusActive {
+			requirements, err := s.services.FlowExecutionService.GetFlowRequirements(ctx, flowId)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to get flow requirements")
+			}
+
+			err = s.services.FlowExecutionService.UpdateParticipantFlowRequirements(ctx, &tx, entity, requirements)
+			if err != nil {
+				return nil, errors.Wrap(err, "failed to update participant flow requirements")
+			}
+
+			if flow.Status == neo4jentity.FlowStatusActive && entity.Status == neo4jentity.FlowParticipantStatusReady {
 				err := s.services.FlowExecutionService.ScheduleFlow(ctx, &tx, flowId, entity)
 				if err != nil {
 					return nil, errors.Wrap(err, "failed to schedule flow")

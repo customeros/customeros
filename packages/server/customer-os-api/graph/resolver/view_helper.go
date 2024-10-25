@@ -583,9 +583,12 @@ func DefaultColumns(tableId string) postgresEntity.Columns {
 				{ColumnId: 2, ColumnType: model.ColumnViewTypeFlowName.String(), Width: 100, Visible: true, Name: "Flow", Filter: ""},
 				{ColumnId: 1, ColumnType: model.ColumnViewTypeFlowActionName.String(), Width: 100, Visible: true, Name: "Status", Filter: ""},
 				{ColumnId: 5, ColumnType: model.ColumnViewTypeFlowTotalCount.String(), Width: 100, Visible: true, Name: "Contacts", Filter: ""},
-				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowPendingCount.String(), Width: 100, Visible: true, Name: "Pending", Filter: ""},
-				{ColumnId: 7, ColumnType: model.ColumnViewTypeFlowCompletedCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},
-				{ColumnId: 8, ColumnType: model.ColumnViewTypeFlowGoalAchievedCount.String(), Width: 100, Visible: true, Name: "Goal achieved", Filter: ""},
+				{ColumnId: 6, ColumnType: model.ColumnViewTypeFlowOnHoldCount.String(), Width: 100, Visible: true, Name: "On Hold", Filter: ""},
+				{ColumnId: 7, ColumnType: model.ColumnViewTypeFlowReadyCount.String(), Width: 100, Visible: true, Name: "Ready", Filter: ""},
+				{ColumnId: 8, ColumnType: model.ColumnViewTypeFlowScheduledCount.String(), Width: 100, Visible: true, Name: "Scheduled", Filter: ""},
+				{ColumnId: 9, ColumnType: model.ColumnViewTypeFlowInProgressCount.String(), Width: 100, Visible: true, Name: "In Progress", Filter: ""},
+				{ColumnId: 10, ColumnType: model.ColumnViewTypeFlowCompletedCount.String(), Width: 100, Visible: true, Name: "Completed", Filter: ""},
+				{ColumnId: 11, ColumnType: model.ColumnViewTypeFlowGoalAchievedCount.String(), Width: 100, Visible: true, Name: "Goal achieved", Filter: ""},
 			},
 		}
 	case model.TableIDTypeFlowContacts.String():

@@ -73,8 +73,8 @@ const columns: Record<string, Column> = {
     skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
   }),
 
-  [ColumnViewType.FlowPendingCount]: columnHelper.accessor((row) => row, {
-    id: ColumnViewType.FlowPendingCount,
+  [ColumnViewType.FlowOnHoldCount]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowOnHoldCount,
     size: 150,
     minSize: 150,
     maxSize: 300,
@@ -83,9 +83,9 @@ const columns: Record<string, Column> = {
     enableSorting: true,
     header: (props) => (
       <THead
+        title='On hold'
         filterWidth={250}
-        title='In Progress'
-        id={ColumnViewType.FlowPendingCount}
+        id={ColumnViewType.FlowOnHoldCount}
         {...getTHeadProps(props)}
       />
     ),
@@ -95,7 +95,97 @@ const columns: Record<string, Column> = {
       return (
         <FlowStatisticsCell
           total={statistics.total}
-          value={statistics.pending}
+          value={statistics.onHold}
+          dataTest={'flow-on-hold'}
+        />
+      );
+    },
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+
+  [ColumnViewType.FlowReadyCount]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowReadyCount,
+    size: 150,
+    minSize: 150,
+    maxSize: 300,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        title='Ready'
+        filterWidth={250}
+        id={ColumnViewType.FlowReadyCount}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (cell) => {
+      const statistics = cell.getValue()?.value?.statistics;
+
+      return (
+        <FlowStatisticsCell
+          dataTest={'flow-ready'}
+          total={statistics.total}
+          value={statistics.ready}
+        />
+      );
+    },
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+
+  [ColumnViewType.FlowScheduledCount]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowScheduledCount,
+    size: 150,
+    minSize: 150,
+    maxSize: 300,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        filterWidth={250}
+        title='Scheduled'
+        id={ColumnViewType.FlowScheduledCount}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (cell) => {
+      const statistics = cell.getValue()?.value?.statistics;
+
+      return (
+        <FlowStatisticsCell
+          total={statistics.total}
+          dataTest={'flow-scheduled'}
+          value={statistics.scheduled}
+        />
+      );
+    },
+    skeleton: () => <Skeleton className='w-[200px] h-[18px]' />,
+  }),
+
+  [ColumnViewType.FlowInProgressCount]: columnHelper.accessor((row) => row, {
+    id: ColumnViewType.FlowInProgressCount,
+    size: 150,
+    minSize: 150,
+    maxSize: 300,
+    enableResizing: true,
+    enableColumnFilter: false,
+    enableSorting: true,
+    header: (props) => (
+      <THead
+        filterWidth={250}
+        title='In progress'
+        id={ColumnViewType.FlowInProgressCount}
+        {...getTHeadProps(props)}
+      />
+    ),
+    cell: (cell) => {
+      const statistics = cell.getValue()?.value?.statistics;
+
+      return (
+        <FlowStatisticsCell
+          total={statistics.total}
+          value={statistics.inProgress}
           dataTest={'flow-in-progress'}
         />
       );

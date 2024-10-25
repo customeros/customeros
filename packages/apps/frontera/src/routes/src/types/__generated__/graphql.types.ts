@@ -344,8 +344,11 @@ export enum ColumnViewType {
   FlowActionStatus = 'FLOW_ACTION_STATUS',
   FlowCompletedCount = 'FLOW_COMPLETED_COUNT',
   FlowGoalAchievedCount = 'FLOW_GOAL_ACHIEVED_COUNT',
+  FlowInProgressCount = 'FLOW_IN_PROGRESS_COUNT',
   FlowName = 'FLOW_NAME',
-  FlowPendingCount = 'FLOW_PENDING_COUNT',
+  FlowOnHoldCount = 'FLOW_ON_HOLD_COUNT',
+  FlowReadyCount = 'FLOW_READY_COUNT',
+  FlowScheduledCount = 'FLOW_SCHEDULED_COUNT',
   FlowStatus = 'FLOW_STATUS',
   FlowTotalCount = 'FLOW_TOTAL_COUNT',
   InvoicesAmount = 'INVOICES_AMOUNT',
@@ -1587,8 +1590,8 @@ export enum FlowParticipantStatus {
   Completed = 'COMPLETED',
   GoalAchieved = 'GOAL_ACHIEVED',
   InProgress = 'IN_PROGRESS',
-  Paused = 'PAUSED',
-  Pending = 'PENDING',
+  OnHold = 'ON_HOLD',
+  Ready = 'READY',
   Scheduled = 'SCHEDULED',
 }
 
@@ -1608,7 +1611,10 @@ export type FlowStatistics = {
   __typename?: 'FlowStatistics';
   completed: Scalars['Int64']['output'];
   goalAchieved: Scalars['Int64']['output'];
-  pending: Scalars['Int64']['output'];
+  inProgress: Scalars['Int64']['output'];
+  onHold: Scalars['Int64']['output'];
+  ready: Scalars['Int64']['output'];
+  scheduled: Scalars['Int64']['output'];
   total: Scalars['Int64']['output'];
 };
 
@@ -3912,6 +3918,7 @@ export type Query = {
   email: Email;
   externalMeetings: MeetingsPage;
   externalSystemInstances: Array<ExternalSystemInstance>;
+  flow: Flow;
   flow_emailVariables: Array<EmailVariableEntity>;
   flows: Array<Flow>;
   gcli_Search: Array<GCliItem>;
@@ -3928,6 +3935,7 @@ export type Query = {
   organization?: Maybe<Organization>;
   organization_ByCustomId?: Maybe<Organization>;
   organization_ByCustomerOsId?: Maybe<Organization>;
+  organization_CheckWebsite: WebsiteDetails;
   organization_DistinctOwners: Array<User>;
   organizations: OrganizationPage;
   phoneNumber: PhoneNumber;
@@ -4036,6 +4044,10 @@ export type QueryExternalMeetingsArgs = {
   where?: InputMaybe<Filter>;
 };
 
+export type QueryFlowArgs = {
+  id: Scalars['ID']['input'];
+};
+
 export type QueryGcli_SearchArgs = {
   keyword: Scalars['String']['input'];
   limit?: InputMaybe<Scalars['Int']['input']>;
@@ -4090,6 +4102,10 @@ export type QueryOrganization_ByCustomIdArgs = {
 
 export type QueryOrganization_ByCustomerOsIdArgs = {
   customerOsId: Scalars['String']['input'];
+};
+
+export type QueryOrganization_CheckWebsiteArgs = {
+  website: Scalars['String']['input'];
 };
 
 export type QueryOrganizationsArgs = {
@@ -4827,6 +4843,14 @@ export type UserUpdateInput = {
   name?: InputMaybe<Scalars['String']['input']>;
   profilePhotoUrl?: InputMaybe<Scalars['String']['input']>;
   timezone?: InputMaybe<Scalars['String']['input']>;
+};
+
+export type WebsiteDetails = {
+  __typename?: 'WebsiteDetails';
+  alternativePrimaryDomain: Scalars['String']['output'];
+  domain: Scalars['String']['output'];
+  primary: Scalars['Boolean']['output'];
+  website: Scalars['String']['output'];
 };
 
 export type Workflow = Node & {

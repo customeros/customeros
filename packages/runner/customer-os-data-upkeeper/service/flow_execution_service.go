@@ -120,6 +120,7 @@ func (s *flowExecutionService) ExecuteScheduledFlowActions() {
 		if err != nil {
 			tracing.TraceErr(span, err)
 
+			actionExecution.StatusUpdatedAt = utils.Now()
 			actionExecution.Status = neo4jEntity.FlowActionExecutionStatusTechError
 
 			_, err = s.commonServices.Neo4jRepositories.FlowActionExecutionWriteRepository.Merge(ctx, nil, actionExecution)
@@ -163,12 +164,45 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				Tenant: tenant.Name,
 			})
 
-			pending, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusPending)
+			onHold, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusOnHold)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
 			}
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "pending", pending)
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "onHold", onHold)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			ready, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusReady)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "ready", ready)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			scheduled, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusScheduled)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "scheduled", scheduled)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+
+			inProgress, err := s.commonServices.Neo4jRepositories.FlowParticipantReadRepository.CountWithStatus(ctx, flow.Id, neo4jEntity.FlowParticipantStatusInProgress)
+			if err != nil {
+				tracing.TraceErr(span, err)
+				return
+			}
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "inProgress", inProgress)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return
@@ -196,7 +230,7 @@ func (s *flowExecutionService) ComputeFlowStatistics() {
 				return
 			}
 
-			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", pending+completed+goalAchieved)
+			err = s.commonServices.Neo4jRepositories.CommonWriteRepository.UpdateInt64Property(ctx, tenant.Name, model.NodeLabelFlow, flow.Id, "total", onHold+ready+inProgress+completed+goalAchieved)
 			if err != nil {
 				tracing.TraceErr(span, err)
 				return

@@ -566,7 +566,10 @@ type ComplexityRoot struct {
 	FlowStatistics struct {
 		Completed    func(childComplexity int) int
 		GoalAchieved func(childComplexity int) int
-		Pending      func(childComplexity int) int
+		InProgress   func(childComplexity int) int
+		OnHold       func(childComplexity int) int
+		Ready        func(childComplexity int) int
+		Scheduled    func(childComplexity int) int
 		Total        func(childComplexity int) int
 	}
 
@@ -4393,12 +4396,33 @@ func (e *executableSchema) Complexity(typeName, field string, childComplexity in
 
 		return e.complexity.FlowStatistics.GoalAchieved(childComplexity), true
 
-	case "FlowStatistics.pending":
-		if e.complexity.FlowStatistics.Pending == nil {
+	case "FlowStatistics.inProgress":
+		if e.complexity.FlowStatistics.InProgress == nil {
 			break
 		}
 
-		return e.complexity.FlowStatistics.Pending(childComplexity), true
+		return e.complexity.FlowStatistics.InProgress(childComplexity), true
+
+	case "FlowStatistics.onHold":
+		if e.complexity.FlowStatistics.OnHold == nil {
+			break
+		}
+
+		return e.complexity.FlowStatistics.OnHold(childComplexity), true
+
+	case "FlowStatistics.ready":
+		if e.complexity.FlowStatistics.Ready == nil {
+			break
+		}
+
+		return e.complexity.FlowStatistics.Ready(childComplexity), true
+
+	case "FlowStatistics.scheduled":
+		if e.complexity.FlowStatistics.Scheduled == nil {
+			break
+		}
+
+		return e.complexity.FlowStatistics.Scheduled(childComplexity), true
 
 	case "FlowStatistics.total":
 		if e.complexity.FlowStatistics.Total == nil {
@@ -13046,7 +13070,10 @@ type Flow implements MetadataInterface {
 
 type FlowStatistics {
     total: Int64!
-    pending: Int64!
+    onHold: Int64!
+    ready: Int64!
+    scheduled: Int64!
+    inProgress: Int64!
     completed: Int64!
     goalAchieved: Int64!
 }
@@ -13126,10 +13153,10 @@ enum FlowActionStatus {
 }
 
 enum FlowParticipantStatus {
-    PENDING
+    ON_HOLD
+    READY
     SCHEDULED
     IN_PROGRESS
-    PAUSED
     COMPLETED
     GOAL_ACHIEVED
 }
@@ -15460,7 +15487,10 @@ enum ColumnViewType {
 
     FLOW_NAME
     FLOW_TOTAL_COUNT
-    FLOW_PENDING_COUNT
+    FLOW_ON_HOLD_COUNT
+    FLOW_READY_COUNT
+    FLOW_SCHEDULED_COUNT
+    FLOW_IN_PROGRESS_COUNT
     FLOW_COMPLETED_COUNT
     FLOW_GOAL_ACHIEVED_COUNT
     FLOW_STATUS
@@ -35800,8 +35830,14 @@ func (ec *executionContext) fieldContext_Flow_statistics(_ context.Context, fiel
 			switch field.Name {
 			case "total":
 				return ec.fieldContext_FlowStatistics_total(ctx, field)
-			case "pending":
-				return ec.fieldContext_FlowStatistics_pending(ctx, field)
+			case "onHold":
+				return ec.fieldContext_FlowStatistics_onHold(ctx, field)
+			case "ready":
+				return ec.fieldContext_FlowStatistics_ready(ctx, field)
+			case "scheduled":
+				return ec.fieldContext_FlowStatistics_scheduled(ctx, field)
+			case "inProgress":
+				return ec.fieldContext_FlowStatistics_inProgress(ctx, field)
 			case "completed":
 				return ec.fieldContext_FlowStatistics_completed(ctx, field)
 			case "goalAchieved":
@@ -36359,8 +36395,8 @@ func (ec *executionContext) fieldContext_FlowStatistics_total(_ context.Context,
 	return fc, nil
 }
 
-func (ec *executionContext) _FlowStatistics_pending(ctx context.Context, field graphql.CollectedField, obj *model.FlowStatistics) (ret graphql.Marshaler) {
-	fc, err := ec.fieldContext_FlowStatistics_pending(ctx, field)
+func (ec *executionContext) _FlowStatistics_onHold(ctx context.Context, field graphql.CollectedField, obj *model.FlowStatistics) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowStatistics_onHold(ctx, field)
 	if err != nil {
 		return graphql.Null
 	}
@@ -36373,7 +36409,7 @@ func (ec *executionContext) _FlowStatistics_pending(ctx context.Context, field g
 	}()
 	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
 		ctx = rctx // use context from middleware stack in children
-		return obj.Pending, nil
+		return obj.OnHold, nil
 	})
 	if err != nil {
 		ec.Error(ctx, err)
@@ -36390,7 +36426,139 @@ func (ec *executionContext) _FlowStatistics_pending(ctx context.Context, field g
 	return ec.marshalNInt642int64(ctx, field.Selections, res)
 }
 
-func (ec *executionContext) fieldContext_FlowStatistics_pending(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+func (ec *executionContext) fieldContext_FlowStatistics_onHold(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowStatistics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowStatistics_ready(ctx context.Context, field graphql.CollectedField, obj *model.FlowStatistics) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowStatistics_ready(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Ready, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowStatistics_ready(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowStatistics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowStatistics_scheduled(ctx context.Context, field graphql.CollectedField, obj *model.FlowStatistics) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowStatistics_scheduled(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.Scheduled, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowStatistics_scheduled(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
+	fc = &graphql.FieldContext{
+		Object:     "FlowStatistics",
+		Field:      field,
+		IsMethod:   false,
+		IsResolver: false,
+		Child: func(ctx context.Context, field graphql.CollectedField) (*graphql.FieldContext, error) {
+			return nil, errors.New("field of type Int64 does not have child fields")
+		},
+	}
+	return fc, nil
+}
+
+func (ec *executionContext) _FlowStatistics_inProgress(ctx context.Context, field graphql.CollectedField, obj *model.FlowStatistics) (ret graphql.Marshaler) {
+	fc, err := ec.fieldContext_FlowStatistics_inProgress(ctx, field)
+	if err != nil {
+		return graphql.Null
+	}
+	ctx = graphql.WithFieldContext(ctx, fc)
+	defer func() {
+		if r := recover(); r != nil {
+			ec.Error(ctx, ec.Recover(ctx, r))
+			ret = graphql.Null
+		}
+	}()
+	resTmp, err := ec.ResolverMiddleware(ctx, func(rctx context.Context) (interface{}, error) {
+		ctx = rctx // use context from middleware stack in children
+		return obj.InProgress, nil
+	})
+	if err != nil {
+		ec.Error(ctx, err)
+		return graphql.Null
+	}
+	if resTmp == nil {
+		if !graphql.HasFieldError(ctx, fc) {
+			ec.Errorf(ctx, "must not be null")
+		}
+		return graphql.Null
+	}
+	res := resTmp.(int64)
+	fc.Result = res
+	return ec.marshalNInt642int64(ctx, field.Selections, res)
+}
+
+func (ec *executionContext) fieldContext_FlowStatistics_inProgress(_ context.Context, field graphql.CollectedField) (fc *graphql.FieldContext, err error) {
 	fc = &graphql.FieldContext{
 		Object:     "FlowStatistics",
 		Field:      field,
@@ -103355,8 +103523,23 @@ func (ec *executionContext) _FlowStatistics(ctx context.Context, sel ast.Selecti
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}
-		case "pending":
-			out.Values[i] = ec._FlowStatistics_pending(ctx, field, obj)
+		case "onHold":
+			out.Values[i] = ec._FlowStatistics_onHold(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "ready":
+			out.Values[i] = ec._FlowStatistics_ready(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "scheduled":
+			out.Values[i] = ec._FlowStatistics_scheduled(ctx, field, obj)
+			if out.Values[i] == graphql.Null {
+				out.Invalids++
+			}
+		case "inProgress":
+			out.Values[i] = ec._FlowStatistics_inProgress(ctx, field, obj)
 			if out.Values[i] == graphql.Null {
 				out.Invalids++
 			}

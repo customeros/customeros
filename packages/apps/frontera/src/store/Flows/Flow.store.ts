@@ -221,7 +221,7 @@ export class FlowStore implements Store<Flow> {
         } as FlowContact;
 
         this.value.contacts = [...this.value.contacts, newFlowContactValue];
-        this.value.statistics.pending += 1;
+        this.value.statistics.onHold += 1;
         this.value.statistics.total += 1;
 
         const newFLowContact = new FlowContactStore(this.root, this.transport);
@@ -354,7 +354,10 @@ const getDefaultValue = (): Flow => ({
   },
   statistics: {
     total: 0,
-    pending: 0,
+    onHold: 0,
+    ready: 0,
+    scheduled: 0,
+    inProgress: 0,
     completed: 0,
     goalAchieved: 0,
   },

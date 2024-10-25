@@ -25,7 +25,10 @@ func MapEntityToFlow(entity *neo4jentity.FlowEntity) *model.Flow {
 		Status: entity.Status,
 		Statistics: &model.FlowStatistics{
 			Total:        entity.Total,
-			Pending:      entity.Pending,
+			OnHold:       entity.OnHold,
+			Ready:        entity.Ready,
+			Scheduled:    entity.Scheduled,
+			InProgress:   entity.InProgress,
 			Completed:    entity.Completed,
 			GoalAchieved: entity.GoalAchieved,
 		},

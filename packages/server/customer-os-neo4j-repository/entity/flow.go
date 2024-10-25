@@ -21,7 +21,10 @@ type FlowEntity struct {
 	// Statistics
 
 	Total        int64
-	Pending      int64
+	OnHold       int64
+	Ready        int64
+	Scheduled    int64
+	InProgress   int64
 	Completed    int64
 	GoalAchieved int64
 }
@@ -118,10 +121,10 @@ func GetFlowActionType(s string) FlowActionType {
 type FlowParticipantStatus string
 
 const (
-	FlowParticipantStatusPending      FlowParticipantStatus = "PENDING"
+	FlowParticipantStatusOnHold       FlowParticipantStatus = "ON_HOLD"
+	FlowParticipantStatusReady        FlowParticipantStatus = "READY"
 	FlowParticipantStatusScheduled    FlowParticipantStatus = "SCHEDULED"
 	FlowParticipantStatusInProgress   FlowParticipantStatus = "IN_PROGRESS"
-	FlowParticipantStatusPaused       FlowParticipantStatus = "PAUSED"
 	FlowParticipantStatusCompleted    FlowParticipantStatus = "COMPLETED"
 	FlowParticipantStatusGoalAchieved FlowParticipantStatus = "GOAL_ACHIEVED"
 )
@@ -154,9 +157,10 @@ type FlowActionExecutionEntity struct {
 	EntityType model.EntityType
 
 	// Scheduling Info
-	ScheduledAt time.Time
-	ExecutedAt  *time.Time
-	Status      FlowActionExecutionStatus
+	ScheduledAt     time.Time
+	ExecutedAt      *time.Time
+	StatusUpdatedAt time.Time
+	Status          FlowActionExecutionStatus
 
 	//Config
 	Mailbox *string

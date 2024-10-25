@@ -216,15 +216,20 @@ export const flowsMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'Flow',
   [ColumnViewType.FlowActionName]: 'Status', // This is the actual status of the flow - Wrong naming of enum -> to be refactored
   [ColumnViewType.FlowTotalCount]: 'Total',
+  [ColumnViewType.FlowOnHoldCount]: 'On Hold',
+  [ColumnViewType.FlowReadyCount]: 'Ready',
+  [ColumnViewType.FlowScheduledCount]: 'Scheduled',
+  [ColumnViewType.FlowInProgressCount]: 'In progress',
   [ColumnViewType.FlowCompletedCount]: 'Completed',
-  [ColumnViewType.FlowPendingCount]: 'In Progress',
   [ColumnViewType.FlowGoalAchievedCount]: 'Goal Achieved',
 };
 export const flowsHelperTextMap: Record<string, string> = {
   [ColumnViewType.FlowName]: 'E.g. Aerospace CTO',
   [ColumnViewType.FlowActionName]: 'E.g. Education',
-  [ColumnViewType.FlowPendingCount]: 'E.g. 34 (27%)',
-  [ColumnViewType.FlowCompletedCount]: 'E.g. 78 (62%)',
   [ColumnViewType.FlowTotalCount]: 'E.g. 125',
-  [ColumnViewType.FlowGoalAchievedCount]: 'E.g. 47 (38%)',
+  [ColumnViewType.FlowReadyCount]: 'E.g. 12',
+  [ColumnViewType.FlowScheduledCount]: 'E.g. 23',
+  [ColumnViewType.FlowInProgressCount]: 'E.g. 34',
+  [ColumnViewType.FlowCompletedCount]: 'E.g. 78',
+  [ColumnViewType.FlowGoalAchievedCount]: 'E.g. 47',
 };

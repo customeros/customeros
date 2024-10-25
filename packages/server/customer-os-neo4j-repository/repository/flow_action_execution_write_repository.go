@@ -41,6 +41,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 				fae.updatedAt = $updatedAt,
 				fae.scheduledAt = $scheduledAt,
 				fae.executedAt = $executedAt,
+				fae.statusUpdatedAt = $statusUpdatedAt,
 				fae.error = $error,
 				fae.status = $status
 				
@@ -52,6 +53,7 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 				fae.entityType = $entityType,
 				fae.actionId = $actionId,
 				fae.scheduledAt = $scheduledAt,
+				fae.statusUpdatedAt = $statusUpdatedAt,
 				fae.status = $status,
 
 				fae.mailbox = $mailbox,
@@ -62,20 +64,21 @@ func (r *flowActionExecutionWriteRepositoryImpl) Merge(ctx context.Context, tx *
 			RETURN fae`, tenant, tenant, tenant)
 
 	params := map[string]any{
-		"tenant":      tenant,
-		"id":          entity.Id,
-		"createdAt":   utils.TimeOrNow(entity.CreatedAt),
-		"updatedAt":   utils.TimeOrNow(entity.UpdatedAt),
-		"flowId":      entity.FlowId,
-		"entityId":    entity.EntityId,
-		"entityType":  entity.EntityType,
-		"actionId":    entity.ActionId,
-		"scheduledAt": entity.ScheduledAt,
-		"executedAt":  utils.TimePtrAsAny(entity.ExecutedAt),
-		"status":      entity.Status,
-		"mailbox":     entity.Mailbox,
-		"userId":      entity.UserId,
-		"error":       entity.Error,
+		"tenant":          tenant,
+		"id":              entity.Id,
+		"createdAt":       utils.TimeOrNow(entity.CreatedAt),
+		"updatedAt":       utils.TimeOrNow(entity.UpdatedAt),
+		"flowId":          entity.FlowId,
+		"entityId":        entity.EntityId,
+		"entityType":      entity.EntityType,
+		"actionId":        entity.ActionId,
+		"scheduledAt":     entity.ScheduledAt,
+		"executedAt":      utils.TimePtrAsAny(entity.ExecutedAt),
+		"statusUpdatedAt": entity.StatusUpdatedAt,
+		"status":          entity.Status,
+		"mailbox":         entity.Mailbox,
+		"userId":          entity.UserId,
+		"error":           entity.Error,
 	}
 
 	span.LogFields(log.String("cypher", cypher))

@@ -35,7 +35,10 @@ type Flow implements MetadataInterface {
 
 type FlowStatistics {
     total: Int64!
-    pending: Int64!
+    onHold: Int64!
+    ready: Int64!
+    scheduled: Int64!
+    inProgress: Int64!
     completed: Int64!
     goalAchieved: Int64!
 }
@@ -115,10 +118,10 @@ enum FlowActionStatus {
 }
 
 enum FlowParticipantStatus {
-    PENDING
+    ON_HOLD
+    READY
     SCHEDULED
     IN_PROGRESS
-    PAUSED
     COMPLETED
     GOAL_ACHIEVED
 }

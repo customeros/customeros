@@ -654,14 +654,6 @@ func ExecuteWriteInTransaction(
 	return r, err
 }
 
-func ExecuteWriteQueryOptionalTx(ctx context.Context, driver neo4j.DriverWithContext, tx *neo4j.ManagedTransaction, cypher string, params map[string]any) error {
-	if tx == nil {
-		return ExecuteWriteQuery(ctx, driver, cypher, params)
-	} else {
-		return ExecuteQueryInTx(ctx, *tx, cypher, params)
-	}
-}
-
 func ExecuteWriteQuery(ctx context.Context, driver neo4j.DriverWithContext, cypher string, params map[string]any) error {
 	session := NewNeo4jWriteSession(ctx, driver)
 	defer session.Close(ctx)

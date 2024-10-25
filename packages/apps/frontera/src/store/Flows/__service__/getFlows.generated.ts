@@ -23,7 +23,10 @@ export type GetFlowsQuery = {
     statistics: {
       __typename?: 'FlowStatistics';
       total: any;
-      pending: any;
+      onHold: any;
+      ready: any;
+      scheduled: any;
+      inProgress: any;
       completed: any;
       goalAchieved: any;
     };

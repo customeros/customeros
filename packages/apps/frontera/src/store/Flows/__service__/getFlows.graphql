@@ -23,7 +23,10 @@ query getFlows {
     }
     statistics {
       total
-      pending
+      onHold
+      ready
+      scheduled
+      inProgress
       completed
       goalAchieved
     }

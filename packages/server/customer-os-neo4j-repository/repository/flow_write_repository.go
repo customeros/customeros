@@ -40,7 +40,10 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 				f.nodes = $nodes,
 				f.edges = $edges,
 				f.status = $status,
-				f.pending = $pending,
+				f.onHold = $onHold,
+				f.ready = $ready,
+				f.scheduled = $scheduled,
+				f.inProgress = $inProgress,
 				f.completed = $completed,
 				f.goalAchieved = $goalAchieved
 			ON CREATE SET
@@ -50,7 +53,10 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 				f.nodes = $nodes,
 				f.edges = $edges,
 				f.status = $status,
-				f.pending = $pending,
+				f.onHold = $onHold,
+				f.ready = $ready,
+				f.scheduled = $scheduled,
+				f.inProgress = $inProgress,
 				f.completed = $completed,
 				f.goalAchieved = $goalAchieved
 			RETURN f`, common.GetTenantFromContext(ctx))
@@ -64,7 +70,10 @@ func (r *flowWriteRepositoryImpl) Merge(ctx context.Context, tx *neo4j.ManagedTr
 		"status":       entity.Status,
 		"createdAt":    utils.TimeOrNow(entity.CreatedAt),
 		"updatedAt":    utils.TimeOrNow(entity.UpdatedAt),
-		"pending":      entity.Pending,
+		"onHold":       entity.OnHold,
+		"ready":        entity.Ready,
+		"scheduled":    entity.Scheduled,
+		"inProgress":   entity.InProgress,
 		"completed":    entity.Completed,
 		"goalAchieved": entity.GoalAchieved,
 	}
