@@ -6,8 +6,9 @@ import (
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/common"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/config"
 	"github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/logger"
-	neo4jt "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
+	test "github.com/openline-ai/openline-customer-os/packages/server/customer-os-common-module/test"
 	neo4jtest "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/test"
+	"github.com/rabbitmq/amqp091-go"
 	"github.com/testcontainers/testcontainers-go"
 	"golang.org/x/net/context"
 	"gorm.io/gorm"
@@ -23,22 +24,30 @@ var (
 	postgresGormDB    *gorm.DB
 	postgresSqlDB     *sql.DB
 
+	rabbitMqContainer testcontainers.Container
+	rabbitMqConn      *amqp091.Connection
+
 	CommonServices *Services
 )
 
 const tenantName = "openline"
 
 func TestMain(m *testing.M) {
-	neo4jContainer, driver = neo4jt.InitTestNeo4jDB()
+	neo4jContainer, driver = test.InitTestNeo4jDB()
 	defer func(dbContainer testcontainers.Container, driver neo4j.DriverWithContext, ctx context.Context) {
-		neo4jt.CloseDriver(driver)
-		neo4jt.TerminateNeo4j(dbContainer, ctx)
+		test.CloseDriver(driver)
+		test.TerminateNeo4j(dbContainer, ctx)
 	}(neo4jContainer, *driver, context.Background())
 
-	postgresContainer, postgresGormDB, postgresSqlDB = neo4jt.InitTestDB()
+	postgresContainer, postgresGormDB, postgresSqlDB = test.InitTestDB()
 	defer func(postgresContainer testcontainers.Container, ctx context.Context) {
-		neo4jt.TerminatePostgres(postgresContainer, ctx)
+		test.TerminatePostgres(postgresContainer, ctx)
 	}(postgresContainer, context.Background())
+
+	rabbitMqContainer, rabbitMqConn = test.InitTestRabbitMQ()
+	defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
+		test.TerminateRabbitMq(rabbitMqContainer, ctx)
+	}(rabbitMqContainer, context.Background())
 
 	prepareClient()
 
@@ -51,7 +60,11 @@ func prepareClient() {
 	})
 	appLogger.InitLogger()
 
-	CommonServices = InitServices(&config.GlobalConfig{}, postgresGormDB, driver, "neo4j", nil, appLogger)
+	CommonServices = InitServices(&config.GlobalConfig{
+		RabbitMQConfig: &config.RabbitMQConfig{
+			Url: "amqp://127.0.0.1:5672/",
+		},
+	}, postgresGormDB, driver, "neo4j", nil, appLogger)
 }
 
 func initContext() context.Context {

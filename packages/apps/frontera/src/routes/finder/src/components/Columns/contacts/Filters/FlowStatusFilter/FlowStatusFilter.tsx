@@ -17,10 +17,10 @@ import { FilterHeader } from '../../../shared/Filters/abstract';
 
 const optionsDict = {
   // Temporary - Should be replaced with correct enum
-  PENDING: 'Pending',
+  [FlowParticipantStatus.OnHold]: 'On Hold',
+  [FlowParticipantStatus.Ready]: 'Ready',
   [FlowParticipantStatus.Scheduled]: 'Scheduled',
   [FlowParticipantStatus.InProgress]: 'In Progress',
-  [FlowParticipantStatus.Paused]: 'Paused',
   [FlowParticipantStatus.Completed]: 'Completed',
   [FlowParticipantStatus.GoalAchieved]: 'Goal achieved',
 };

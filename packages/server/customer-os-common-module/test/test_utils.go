@@ -10,7 +10,7 @@ import (
 type TestDatabase struct {
 	Driver *neo4j.DriverWithContext
 
-	Neo4jContainer    testcontainers.Container
-	Neo4jRepositories *repository.Repositories
-	PostgresRepositi  *gorm.DB
+	Neo4jContainer     testcontainers.Container
+	Neo4jRepositories  *repository.Repositories
+	PostgresRepository *gorm.DB
 }
