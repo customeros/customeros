@@ -61,9 +61,9 @@ func prepareClient() {
 	appLogger.InitLogger()
 
 	CommonServices = InitServices(&config.GlobalConfig{
-		RabbitMQConfig: &config.RabbitMQConfig{
-			Url: "amqp://127.0.0.1:5672/",
-		},
+		//RabbitMQConfig: &config.RabbitMQConfig{
+		//	Url: "amqp://127.0.0.1:5672/",
+		//},
 	}, postgresGormDB, driver, "neo4j", nil, appLogger)
 }
 
