@@ -19,8 +19,14 @@ export const getFlowsColumnSortFn = (columnId: string) =>
 
       return value || null;
     })
-    .with(ColumnViewType.FlowPendingCount, () => (row: FlowStore) => {
-      return row.value?.statistics?.pending ?? null;
+    .with(ColumnViewType.FlowOnHoldCount, () => (row: FlowStore) => {
+      return row.value?.statistics?.onHold ?? null;
+    })
+    .with(ColumnViewType.FlowReadyCount, () => (row: FlowStore) => {
+      return row.value?.statistics?.ready ?? null;
+    })
+    .with(ColumnViewType.FlowScheduledCount, () => (row: FlowStore) => {
+      return row.value?.statistics?.scheduled ?? null;
     })
     .with(ColumnViewType.FlowCompletedCount, () => (row: FlowStore) => {
       return row.value?.statistics?.completed ?? null;

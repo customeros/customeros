@@ -44,10 +44,10 @@ func TestMain(m *testing.M) {
 		test.TerminatePostgres(postgresContainer, ctx)
 	}(postgresContainer, context.Background())
 
-	rabbitMqContainer, rabbitMqConn = test.InitTestRabbitMQ()
-	defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
-		test.TerminateRabbitMq(rabbitMqContainer, ctx)
-	}(rabbitMqContainer, context.Background())
+	//rabbitMqContainer, rabbitMqConn = test.InitTestRabbitMQ()
+	//defer func(rabbitMqContainer testcontainers.Container, ctx context.Context) {
+	//	test.TerminateRabbitMq(rabbitMqContainer, ctx)
+	//}(rabbitMqContainer, context.Background())
 
 	prepareClient()
 

@@ -353,16 +353,20 @@ export const getFilterTypes = (store?: RootStore) => {
       icon: <Shuffle01 className='group-hover:text-gray-700 text-gray-500' />,
       options: [
         {
+          id: FlowParticipantStatus.OnHold,
+          label: 'On Hold',
+        },
+        {
+          id: FlowParticipantStatus.Ready,
+          label: 'Ready',
+        },
+        {
           id: FlowParticipantStatus.Scheduled,
           label: 'Scheduled',
         },
         {
           id: FlowParticipantStatus.InProgress,
           label: 'In progress',
-        },
-        {
-          id: FlowParticipantStatus.Paused,
-          label: 'Paused',
         },
         {
           id: FlowParticipantStatus.Completed,
