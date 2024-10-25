@@ -30,7 +30,7 @@ export const SuccessPage = observer(() => {
           const decoratedPath = match(originPath)
             .with(
               P.string.startsWith('/finder'),
-              () => `/finder?preset=${store.tableViewDefs.defaultPreset}`,
+              () => `/finder?preset=${store.tableViewDefs.organizationsPreset}`,
             )
             .otherwise(() => originPath ?? '/auth/signin');
 
