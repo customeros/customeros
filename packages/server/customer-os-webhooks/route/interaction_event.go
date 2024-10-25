@@ -104,10 +104,6 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 			return
 		}
 
-		ctx = common.WithCustomContext(ctx, &common.CustomContext{
-			Tenant: tenantByName,
-		})
-
 		n, err := services.CommonServices.Neo4jRepositories.TenantReadRepository.GetTenantByNameIgnoreCase(ctx, tenantByName)
 		if err != nil {
 			span.LogFields(tracingLog.Bool("tenant.found", false))
@@ -124,6 +120,10 @@ func syncPostmarkInteractionEventHandler(services *service.Services, cfg *config
 
 		tenant := mapper.MapDbNodeToTenantEntity(n)
 		tenantByName = tenant.Name
+
+		ctx = common.WithCustomContext(ctx, &common.CustomContext{
+			Tenant: tenantByName,
+		})
 
 		span.LogFields(tracingLog.Bool("tenant.found", true))
 		span.LogFields(tracingLog.String("tenant.name", tenantByName))
