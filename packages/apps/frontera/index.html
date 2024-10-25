@@ -48,6 +48,19 @@
     })();
 
     window.Atlas.call("start");
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const atlasChatTextarea = document.querySelector('#atlas-chat');
+
+        if (atlasChatTextarea) {
+          atlasChatTextarea.addEventListener('keydown', (event) => {
+            event.stopPropagation();
+          });
+          atlasChatTextarea.addEventListener('keyup', (event) => {
+            event.stopPropagation();
+          });
+        }
+      });
   </script>
   <title>CustomerOS</title>
 </head>
