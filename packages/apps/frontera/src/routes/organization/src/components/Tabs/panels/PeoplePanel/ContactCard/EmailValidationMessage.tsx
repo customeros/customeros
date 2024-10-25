@@ -124,7 +124,7 @@ export const EmailValidationMessage = observer(
     if (!data) return null;
 
     return (
-      <Tooltip side='right' label={data?.message}>
+      <Tooltip side='bottom' label={data?.message}>
         <div
           role='button'
           className='flex items-center cursor-pointer'

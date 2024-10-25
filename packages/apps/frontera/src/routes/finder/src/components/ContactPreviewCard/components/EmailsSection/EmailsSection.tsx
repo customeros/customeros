@@ -137,7 +137,7 @@ export const EmailsSection = observer(({ contactId }: EmailsSectionProps) => {
       </div>
       <div className='ml-6'>
         {allEmails?.map((email, idx) => (
-          <Fragment key={email.id}>
+          <Fragment key={`${idx}-${email.id}`}>
             <div className=' flex items-center justify-between '>
               <div key={email.id} className='flex items-center gap-1 '>
                 <span className='text-sm max-w-[170px] text-ellipsis overflow-hidden'>

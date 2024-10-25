@@ -38,6 +38,14 @@ export const EditEmail = observer(() => {
     if (store.ui.focusRow) {
       contact?.updateEmail('', selectedId ?? 0);
     }
+
+    if (
+      store.ui.focusRow &&
+      !contact?.value.primaryEmail?.email &&
+      selectedId === null
+    ) {
+      contact?.updateEmailPrimary('');
+    }
     store.ui.commandMenu.setOpen(false);
     store.ui.setSelectionId(null);
     store.ui.commandMenu.setType('ContactCommands');
