@@ -12,6 +12,7 @@ import (
 	neo4jentity "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/entity"
 	neo4jenum "github.com/openline-ai/openline-customer-os/packages/server/customer-os-neo4j-repository/enum"
 	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/log"
 	"github.com/pkg/errors"
 	"golang.org/x/net/context"
 	"net/http"
@@ -19,7 +20,7 @@ import (
 	"time"
 )
 
-const retryCountFetchFreshData = 15
+const retryCountFetchFreshData = 20
 
 func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -56,18 +57,21 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 
 		paymentLink := invoice.PaymentDetails.PaymentLink
 		validUntil := invoice.PaymentDetails.PaymentLinkValidUntil
+		span.LogFields(log.String("initial.paymentLink", paymentLink), log.Object("initial.validUntil", validUntil), log.Object("now", utils.Now()))
 		generateNewLink := false
 		if paymentLink == "" {
 			generateNewLink = true
 		} else if validUntil != nil && validUntil.Before(utils.Now()) {
 			generateNewLink = true
 		}
+		span.LogFields(log.Bool("generateNewLink", generateNewLink))
 
 		if generateNewLink {
 			paymentLink, err = generateAndGetNewStripeCheckoutSession(ctx, services, invoice, tenant)
 		}
 
 		if paymentLink == "" {
+			tracing.TraceErr(span, errors.New("Payment link not found"))
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Please try again later"})
 			return
 		}
@@ -80,6 +84,9 @@ func RedirectToPayInvoice(services *service.Services) gin.HandlerFunc {
 func generateAndGetNewStripeCheckoutSession(ctx context.Context, services *service.Services, invoice *neo4jentity.InvoiceEntity, tenant string) (string, error) {
 	span, ctx := opentracing.StartSpanFromContext(ctx, "generateAndGetNewStripeCheckoutSession")
 	defer span.Finish()
+	tracing.TagTenant(span, tenant)
+	previousPaymentLink := invoice.PaymentDetails.PaymentLink
+	span.LogKV("previousPaymentLink", previousPaymentLink)
 
 	// Call integration app to create new payment link
 	err := callIntegrationAppWithApiRequestForNewPaymentLink(ctx, services.Cfg.ExternalServices.IntegrationApp.WorkspaceKey, services.Cfg.ExternalServices.IntegrationApp.WorkspaceSecret, tenant, services.Cfg.ExternalServices.IntegrationApp.ApiTriggerUrlCreatePaymentLinks, invoice)
@@ -91,23 +98,28 @@ func generateAndGetNewStripeCheckoutSession(ctx context.Context, services *servi
 	// Wait for payment link to be generated
 	for i := 0; i < retryCountFetchFreshData; i++ {
 		// Fetch invoice again to get updated payment link
-		latestInvoice, _, err := services.CommonServices.InvoiceService.GetByIdAcrossAllTenants(ctx, invoice.Id)
+		freshInvoice, _, err := services.CommonServices.InvoiceService.GetByIdAcrossAllTenants(ctx, invoice.Id)
 		if err != nil {
 			tracing.TraceErr(span, errors.Wrap(err, "Error fetching invoice"))
 			return "", err
 		}
-		linkValid := latestInvoice.PaymentDetails.PaymentLinkValidUntil == nil ||
-			(invoice.PaymentDetails.PaymentLinkValidUntil != nil && latestInvoice.PaymentDetails.PaymentLinkValidUntil.After(utils.Now()))
-		if latestInvoice.PaymentDetails.PaymentLink != "" &&
-			latestInvoice.PaymentDetails.PaymentLink != invoice.PaymentDetails.PaymentLink &&
-			linkValid {
-			span.LogKV("result.paymentLink", latestInvoice.PaymentDetails.PaymentLink)
-			return latestInvoice.PaymentDetails.PaymentLink, nil
+		linkValidByExpiration := freshInvoice.PaymentDetails.PaymentLinkValidUntil == nil ||
+			(freshInvoice.PaymentDetails.PaymentLinkValidUntil != nil && freshInvoice.PaymentDetails.PaymentLinkValidUntil.After(utils.Now()))
+		if linkValidByExpiration {
+			span.LogFields(log.Bool("linkValid", linkValidByExpiration))
+		}
+		if freshInvoice.PaymentDetails.PaymentLink != "" &&
+			freshInvoice.PaymentDetails.PaymentLink != previousPaymentLink &&
+			linkValidByExpiration {
+			span.LogKV("result.paymentLink", freshInvoice.PaymentDetails.PaymentLink)
+			span.LogFields(log.Int("retryCount", i))
+			return freshInvoice.PaymentDetails.PaymentLink, nil
 		}
 		// sleep for 1 second
 		time.Sleep(time.Second)
 	}
 
+	span.LogKV("result.paymentLink", "")
 	return "", nil
 }
 
